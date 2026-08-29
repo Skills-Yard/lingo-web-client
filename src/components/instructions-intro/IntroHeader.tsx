@@ -9,7 +9,6 @@ interface IntroHeaderProps {
   onToggleBookmark: () => void;
 }
 
-/** Fixed top bar: back button, step counter + progress segments, bookmark and theme toggle. */
 export function IntroHeader({
   stepNumber,
   stepTotal,

@@ -9,7 +9,6 @@ interface TeacherQuizScreenProps {
   onSelect: (idx: number) => void;
 }
 
-/** "What teacher is doing?" — the compact illustration plus the option cards (idle -> selected -> checked). */
 export function TeacherQuizScreen({
   slide,
   selected,
@@ -142,7 +141,6 @@ export function TeacherQuizScreen({
                 {feedbackBody}
               </p>
             </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/sliceAnswer.png"
               alt=""

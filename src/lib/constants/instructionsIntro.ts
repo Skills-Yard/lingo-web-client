@@ -28,6 +28,10 @@ export type InstructionsSlide =
       highlightLine: string;
       revealLabel: string;
       revealSubject: string;
+      /** Modal popup: body paragraph shown after the title. */
+      revealDescription: string;
+      /** Modal popup: short callout shown in the REMEMBER box. */
+      revealRemember: string;
       cta: string;
     }
   | {
@@ -85,6 +89,9 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     highlightLine: "programmer think.",
     revealLabel: "Tap to reveal",
     revealSubject: "PROGRAMMER",
+    revealDescription:
+      "A programmer breaks down complex problems into small steps and builds solutions using logic, patterns, and creativity.",
+    revealRemember: "Great code starts with a great way of thinking.",
     cta: "Let's Begin",
   },
   {

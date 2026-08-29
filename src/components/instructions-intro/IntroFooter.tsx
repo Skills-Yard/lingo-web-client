@@ -6,23 +6,16 @@ export interface QuizFeedback {
   body: string;
 }
 
-/** "disabled" = nothing picked yet, "retry" = wrong answer checked, "go" = normal advance. */
 export type PrimaryState = "disabled" | "retry" | "go";
 
 interface IntroFooterProps {
   primaryLabel: string;
   primaryState: PrimaryState;
   onPrimaryAction: () => void;
-  /** Quiz result banner shown above the button once an answer has been checked. */
   feedback?: QuizFeedback | null;
-  /**
-   * Full-width CTA bar (default). When false the CTA shrinks to a bottom-right pill
-   * with an arrow — the "Got It" treatment on the teacher-intro screen (desktop).
-   */
   ctaFullWidth?: boolean;
 }
 
-/** Fixed bottom bar: the optional quiz feedback banner plus the primary call-to-action. */
 export function IntroFooter({
   primaryLabel,
   primaryState,

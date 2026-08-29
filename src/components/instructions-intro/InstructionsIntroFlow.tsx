@@ -20,14 +20,9 @@ const poppins = Poppins({
 
 interface InstructionsIntroFlowProps {
   onComplete?: () => void;
-  /** Slide to open on, for deep-linking/testing a specific screen (defaults to the first). */
   initialIndex?: number;
 }
 
-/**
- * Orchestrates the instructions-intro flow: owns the step / quiz state and swaps in the
- * screen component for the current slide. Each screen lives in `./` alongside this file.
- */
 export function InstructionsIntroFlow({
   onComplete,
   initialIndex = 0,

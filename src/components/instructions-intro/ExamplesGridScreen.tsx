@@ -1,7 +1,6 @@
 import Image from "next/image";
 import type { ExamplesGridSlide } from "@/lib/constants/instructionsIntro";
 
-/** "Some examples of instruction" — rows of source -> action image pairs joined by an arrow. */
 export function ExamplesGridScreen({ slide }: { slide: ExamplesGridSlide }) {
   return (
     <div className="flex flex-col gap-3 md:flex-row md:items-center md:gap-10 md:min-h-full">

@@ -1,25 +1,11 @@
 interface TeacherIllustrationProps {
-  /**
-   * Sizing for the outer container. Each screen passes its own height/aspect so the
-   * two usages stay independent — the intro is a tall panel, the quiz version a short banner.
-   * Defaults to the intro height (275px).
-   */
   className?: string;
-  /** How the teacher image fills the container. */
   fit?: "contain" | "cover";
-  /**
-   * "card" — bordered, rounded panel (quiz screen).
-   * "bleed" — edge-to-edge image with no frame (intro screen).
-   */
   variant?: "card" | "bleed";
-  /** Light-theme artwork. Each screen can pass its own (intro vs quiz use different images). */
   imageLight?: string;
-  /** Dark-theme artwork. */
   imageDark?: string;
   alt?: string;
-  /** Overlay the "Open Your Notebook" speech card on the image. */
   showNote?: boolean;
-  /** Extra classes for the note overlay (e.g. "md:hidden" to only show it on mobile). */
   noteClassName?: string;
 }
 

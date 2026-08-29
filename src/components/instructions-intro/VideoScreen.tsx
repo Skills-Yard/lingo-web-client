@@ -2,7 +2,6 @@ import Image from "next/image";
 import { List, Maximize2, Network, Play, Sparkles } from "lucide-react";
 import type { VideoSlide } from "@/lib/constants/instructionsIntro";
 
-/** "What are Instructions?" — video thumbnail with a play badge and the takeaway caption. */
 export function VideoScreen({ slide }: { slide: VideoSlide }) {
   return (
     <div className="flex flex-col gap-5 md:grid md:grid-cols-5 md:gap-x-8 md:items-center md:min-h-full md:content-center">
