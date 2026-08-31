@@ -1,4 +1,5 @@
 import { ArrowRight, Check, X, Sparkle } from "lucide-react";
+import type { ReactNode } from "react";
 
 export interface QuizFeedback {
   isCorrect: boolean;
@@ -14,6 +15,10 @@ interface IntroFooterProps {
   onPrimaryAction: () => void;
   feedback?: QuizFeedback | null;
   ctaFullWidth?: boolean;
+  /** Optional icon pinned to the left edge of the primary button. */
+  leadingIcon?: ReactNode;
+  /** "brand" = green CTA (default); "dark" = the #1A1C22 reward CTA. */
+  primaryTone?: "brand" | "dark";
 }
 
 export function IntroFooter({
@@ -22,6 +27,8 @@ export function IntroFooter({
   onPrimaryAction,
   feedback,
   ctaFullWidth = true,
+  leadingIcon,
+  primaryTone = "brand",
 }: IntroFooterProps) {
   return (
     <footer className="shrink-0 px-4 pt-3 pb-3 bg-background dark:bg-[#0D1016]">
@@ -88,16 +95,23 @@ export function IntroFooter({
           type="button"
           onClick={onPrimaryAction}
           disabled={primaryState === "disabled"}
-          className={`w-full h-13 rounded-[6px] font-medium text-base transition-all flex items-center justify-center gap-2 shadow-lg active:scale-98 cursor-pointer ${
+          className={`relative w-full h-13 rounded-[6px] font-medium text-base transition-all flex items-center justify-center gap-2 shadow-lg active:scale-98 cursor-pointer ${
             ctaFullWidth ? "" : "md:w-auto md:self-end md:min-w-44 md:px-10"
           } ${
             primaryState === "disabled"
               ? "bg-muted text-muted-foreground cursor-not-allowed shadow-none"
               : primaryState === "retry"
                 ? "bg-destructive hover:bg-destructive/90 text-white"
-                : "bg-primary hover:bg-primary/90 text-primary-foreground"
+                : primaryTone === "dark"
+                  ? "bg-[#1A1C22] hover:bg-[#24262E] text-white"
+                  : "bg-primary hover:bg-primary/90 text-primary-foreground"
           }`}
         >
+          {leadingIcon && (
+            <span className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center text-primary">
+              {leadingIcon}
+            </span>
+          )}
           <span>{primaryLabel}</span>
           <ArrowRight className={`w-5 h-5 ${ctaFullWidth ? "md:hidden" : ""}`} />
         </button>

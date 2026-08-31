@@ -208,8 +208,8 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   },
   {
     kind: "questionnaire",
-    highlightWord: "What",
-    title: "are instructions known as?",
+    highlightWord: "instructions",
+    title: "What are instructions known as?",
     items: [
       {
         id: "statement",

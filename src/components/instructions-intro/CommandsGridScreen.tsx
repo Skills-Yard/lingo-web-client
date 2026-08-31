@@ -2,96 +2,97 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import type { CommandsGridSlide, CommandItem } from "@/lib/constants/instructionsIntro";
+import { Check } from "lucide-react";
+import type { CommandsGridSlide } from "@/lib/constants/instructionsIntro";
 
 interface CommandsGridScreenProps {
   slide: CommandsGridSlide;
   onCommand?: (commandId: string) => void;
 }
 
-export function CommandsGridScreen({
-  slide,
-  onCommand,
-}: CommandsGridScreenProps) {
+export function CommandsGridScreen({ slide, onCommand }: CommandsGridScreenProps) {
   const [selectedCommands, setSelectedCommands] = useState<Set<string>>(
     new Set()
   );
 
   const handleCommandClick = (commandId: string) => {
-    const newSelected = new Set(selectedCommands);
-    if (newSelected.has(commandId)) {
-      newSelected.delete(commandId);
-    } else {
-      newSelected.add(commandId);
-    }
-    setSelectedCommands(newSelected);
+    const next = new Set(selectedCommands);
+    if (next.has(commandId)) next.delete(commandId);
+    else next.add(commandId);
+    setSelectedCommands(next);
     onCommand?.(commandId);
   };
 
+  const colClass =
+    slide.columns === 2
+      ? "grid-cols-2"
+      : slide.columns === 3
+        ? "grid-cols-3"
+        : slide.columns === 4
+          ? "grid-cols-2 sm:grid-cols-4"
+          : "grid-cols-2 md:grid-cols-4";
+
   return (
-    <div className="flex flex-col gap-6">
-      {/* Header */}
-      <div className="text-center">
-        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
+    <div className="flex flex-col gap-5 md:mx-auto md:max-w-2xl md:min-h-full md:justify-center">
+      {/* ── Header — Frame 60 style: "Let's" accent + rest in ink ── */}
+      <div className="text-center md:text-left">
+        <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">
           <span className="text-primary">{slide.highlightWord}</span>{" "}
-          <span className="text-foreground">{slide.title}</span>
+          {slide.title}
         </h1>
         {slide.description && (
-          <p className="text-base md:text-lg text-muted-foreground mt-2">
+          <p className="mt-2 text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
             {slide.description}
           </p>
         )}
       </div>
 
-      {/* Commands Grid */}
-      <div className={`grid gap-4 ${
-        slide.columns === 2 ? "grid-cols-2" : 
-        slide.columns === 3 ? "grid-cols-3" : 
-        slide.columns === 4 ? "grid-cols-4" : 
-        "grid-cols-2 md:grid-cols-4"
-      }`}>
-        {slide.commands.map((command) => (
-          <button
-            key={command.id}
-            onClick={() => handleCommandClick(command.id)}
-            className={`relative flex flex-col items-center gap-2 p-3 md:p-4 rounded-lg border-2 transition-all cursor-pointer ${
-              selectedCommands.has(command.id)
-                ? "border-primary bg-primary/10 dark:bg-primary/20 scale-105"
-                : "border-border bg-background hover:border-primary/50 dark:border-neutral-700"
-            }`}
-          >
-            {/* Command Icon/Image */}
-            {command.icon && (
-              <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
-                <Image
-                  src={command.icon}
-                  alt={command.label}
-                  width={60}
-                  height={60}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-            )}
-            
-            {/* Command Label */}
-            <p className="text-xs md:text-sm font-semibold text-center text-foreground leading-tight">
-              {command.label}
-            </p>
+      {/* ── Commands grid — Frame 12/61/62 card language ── */}
+      <div className={`grid gap-[18px] ${colClass}`}>
+        {slide.commands.map((command) => {
+          const isSelected = selectedCommands.has(command.id);
 
-            {/* Selected Indicator */}
-            {selectedCommands.has(command.id) && (
-              <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                <span className="text-white text-xs font-bold">✓</span>
-              </div>
-            )}
-          </button>
-        ))}
+          return (
+            <button
+              key={command.id}
+              type="button"
+              onClick={() => handleCommandClick(command.id)}
+              className={`relative flex min-h-[92px] flex-col items-center justify-center gap-2 rounded-[12px] px-3 py-4 transition-all active:scale-[0.98] ${
+                isSelected
+                  ? "border border-primary [background:linear-gradient(180deg,#FFFFFF_1.3%,#EEFAF6_67.42%)] dark:[background:linear-gradient(180deg,#15181E_1.3%,#0F2921_67.42%)]"
+                  : "cursor-pointer border border-black/[0.04] bg-white shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] hover:border-primary/40 dark:border-white/[0.06] dark:bg-[#15181E]"
+              }`}
+            >
+              {command.icon && (
+                <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full bg-[#E9F5F0] dark:bg-[#0F2921]">
+                  <Image
+                    src={command.icon}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 object-contain"
+                  />
+                </span>
+              )}
+
+              <span className="text-center text-[13px] font-medium leading-tight text-[#2C2C2C] dark:text-white">
+                {command.label}
+              </span>
+
+              {isSelected && (
+                <span className="absolute right-2 top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                  <Check className="h-3 w-3 text-white" strokeWidth={3} />
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Info Message */}
+      {/* ── Info message — soft green wash, matches the feedback panels ── */}
       {slide.infoMessage && (
-        <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800">
-          <p className="text-sm text-blue-900 dark:text-blue-200">
+        <div className="rounded-[12px] p-4 [background:linear-gradient(180deg,rgba(223,255,248,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(1,161,127,0.20)_0%,rgba(255,255,255,0)_98.7%)]">
+          <p className="text-sm font-medium leading-[1.4] text-[#2C2C2C] dark:text-neutral-200">
             {slide.infoMessage}
           </p>
         </div>

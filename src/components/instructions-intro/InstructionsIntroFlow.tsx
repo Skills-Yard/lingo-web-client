@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Gift } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
@@ -133,6 +134,10 @@ export function InstructionsIntroFlow({
             ? "retry"
             : "go";
 
+  // The questionnaire's "Claim Reward" CTA gets the dark tone + gift icon (see command9).
+  const isRewardCta =
+    isQuestionnaire && checked && questionnaireIsCorrect;
+
   const feedback =
     slide.kind === "teacher-quiz" && checked && selectedOption
       ? {
@@ -203,6 +208,8 @@ export function InstructionsIntroFlow({
             onPrimaryAction={handlePrimaryAction}
             feedback={feedback}
             ctaFullWidth={slide.kind !== "teacher-intro"}
+            primaryTone={isRewardCta ? "dark" : "brand"}
+            leadingIcon={isRewardCta ? <Gift className="w-5 h-5" /> : undefined}
           />
         )}
       </div>
