@@ -11,6 +11,9 @@ import { TeacherIntroScreen } from "./TeacherIntroScreen";
 import { TeacherQuizScreen } from "./TeacherQuizScreen";
 import { ExamplesGridScreen } from "./ExamplesGridScreen";
 import { VideoScreen } from "./VideoScreen";
+import { QuestionnaireScreen } from "./QuestionnaireScreen";
+import { RewardScreen } from "./RewardScreen";
+import { CommandsGridScreen } from "./CommandsGridScreen";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -29,6 +32,8 @@ export function InstructionsIntroFlow({
 }: InstructionsIntroFlowProps) {
   const [index, setIndex] = useState(initialIndex);
   const [selected, setSelected] = useState<number | null>(null);
+  const [selectedQuestionnaireId, setSelectedQuestionnaireId] = useState<string | null>(null);
+  const [rewardClaimed, setRewardClaimed] = useState(false);
   const [checked, setChecked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const triggerSound = useSound(true);
@@ -39,6 +44,8 @@ export function InstructionsIntroFlow({
 
   const goNext = () => {
     setSelected(null);
+    setSelectedQuestionnaireId(null);
+    setRewardClaimed(false);
     setChecked(false);
     if (index >= total - 1) {
       onComplete?.();
@@ -50,18 +57,34 @@ export function InstructionsIntroFlow({
   const goBack = () => {
     if (index === 0) return;
     setSelected(null);
+    setSelectedQuestionnaireId(null);
     setChecked(false);
     setIndex((i) => i - 1);
   };
 
   const isQuiz = slide.kind === "teacher-quiz";
+  const isQuestionnaire = slide.kind === "questionnaire";
+  
   const selectedOption =
     isQuiz && selected !== null ? slide.options[selected] : null;
   const isCorrect = !!selectedOption?.isCorrect;
 
+  // For questionnaire: find the selected item and check if it's correct
+  let selectedQuestionnaireItem = null;
+  let questionnaireIsCorrect = false;
+  if (isQuestionnaire && selectedQuestionnaireId) {
+    selectedQuestionnaireItem = slide.items.find(item => item.id === selectedQuestionnaireId);
+    questionnaireIsCorrect = !!selectedQuestionnaireItem?.isCorrect;
+  }
+
   const handleSelect = (idx: number) => {
     triggerSound("tap");
     setSelected(idx);
+  };
+
+  const handleQuestionnaireSelect = (id: string) => {
+    triggerSound("tap");
+    setSelectedQuestionnaireId(id);
   };
 
   const handlePrimaryAction = () => {
@@ -77,22 +100,38 @@ export function InstructionsIntroFlow({
       setChecked(false);
       return;
     }
+    if (isQuestionnaire && !checked) {
+      if (selectedQuestionnaireId === null) return;
+      setChecked(true);
+      triggerSound(questionnaireIsCorrect ? "win" : "lose");
+      return;
+    }
+    if (isQuestionnaire && checked && !questionnaireIsCorrect) {
+      // Wrong answer: let them try again
+      setSelectedQuestionnaireId(null);
+      setChecked(false);
+      return;
+    }
     goNext();
   };
 
   const primaryLabel =
-    slide.kind === "teacher-quiz" && !checked
-      ? slide.submitLabel
-      : isQuiz && checked && !isCorrect
+    (slide.kind === "teacher-quiz" || slide.kind === "questionnaire") && !checked
+      ? slide.kind === "teacher-quiz" ? slide.submitLabel : "Check"
+      : (isQuiz || isQuestionnaire) && checked && !(isCorrect || questionnaireIsCorrect)
         ? "Try Again"
         : slide.cta;
 
   const primaryState: PrimaryState =
     isQuiz && !checked && selected === null
       ? "disabled"
-      : isQuiz && checked && !isCorrect
-        ? "retry"
-        : "go";
+      : isQuestionnaire && !checked && selectedQuestionnaireId === null
+        ? "disabled"
+        : isQuiz && checked && !isCorrect
+          ? "retry"
+          : isQuestionnaire && checked && !questionnaireIsCorrect
+            ? "retry"
+            : "go";
 
   const feedback =
     slide.kind === "teacher-quiz" && checked && selectedOption
@@ -135,17 +174,37 @@ export function InstructionsIntroFlow({
             )}
             {slide.kind === "examples-grid" && <ExamplesGridScreen slide={slide} />}
             {slide.kind === "video" && <VideoScreen slide={slide} />}
+            {slide.kind === "questionnaire" && (
+              <QuestionnaireScreen 
+                slide={slide} 
+                selectedId={selectedQuestionnaireId}
+                checked={checked}
+                onSelect={handleQuestionnaireSelect} 
+              />
+            )}
+            {slide.kind === "reward" && (
+              <RewardScreen 
+                slide={slide} 
+                onClaim={() => console.log("Reward claimed")}
+                onClaimStateChange={setRewardClaimed}
+              />
+            )}
+            {slide.kind === "commands-grid" && (
+              <CommandsGridScreen slide={slide} onCommand={(id) => console.log("Command:", id)} />
+            )}
           </div>
         </div>
 
         {/* ── Footer — shrink-0, in normal flow, so it can never overlap scrollable content above it ── */}
-        <IntroFooter
-          primaryLabel={primaryLabel}
-          primaryState={primaryState}
-          onPrimaryAction={handlePrimaryAction}
-          feedback={feedback}
-          ctaFullWidth={slide.kind !== "teacher-intro"}
-        />
+        {!(slide.kind === "reward" && !rewardClaimed) && (
+          <IntroFooter
+            primaryLabel={primaryLabel}
+            primaryState={primaryState}
+            onPrimaryAction={handlePrimaryAction}
+            feedback={feedback}
+            ctaFullWidth={slide.kind !== "teacher-intro"}
+          />
+        )}
       </div>
     </main>
   );
