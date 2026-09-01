@@ -130,6 +130,14 @@ export type InstructionsSlide =
       columns?: 2 | 3 | 4;
       infoMessage?: string;
       cta: string;
+    }
+  | {
+      // "Guide Sprouty to the flag" — playable mini-game board (screen 08).
+      kind: "game";
+      highlightWord: string;
+      title: string;
+      description?: string;
+      cta: string;
     };
 
 /** Per-screen slide types, so each screen component can be strictly typed to its own slide. */
@@ -141,6 +149,7 @@ export type VideoSlide = Extract<InstructionsSlide, { kind: "video" }>;
 export type QuestionnaireSlide = Extract<InstructionsSlide, { kind: "questionnaire" }>;
 export type RewardSlide = Extract<InstructionsSlide, { kind: "reward" }>;
 export type CommandsGridSlide = Extract<InstructionsSlide, { kind: "commands-grid" }>;
+export type GameSlide = Extract<InstructionsSlide, { kind: "game" }>;
 
 export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   {
@@ -268,34 +277,11 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     cta: "Continue",
   },
   {
-    kind: "commands-grid",
-    highlightWord: "Let's",
-    title: "give some commands to sprout",
-    description: "Tap on the commands to guide Sprouty!",
-    commands: [
-      {
-        id: "move-forward",
-        icon: "/images/arrowLines.png",
-        label: "Move Forward",
-      },
-      {
-        id: "turn-left",
-        icon: "/images/arrowLines.png",
-        label: "Turn Left",
-      },
-      {
-        id: "turn-right",
-        icon: "/images/arrowLines.png",
-        label: "Turn Right",
-      },
-      {
-        id: "jump",
-        icon: "/images/arrowLines.png",
-        label: "Jump",
-      },
-    ],
-    columns: 4,
-    infoMessage: "You can select one or more commands to create a sequence.",
+    kind: "game",
+    highlightWord: "Guide",
+    title: "Sprouty to the flag",
+    description:
+      "Give Sprouty a set of commands, then run the program to reach the flag.",
     cta: "Continue",
   },
 ];

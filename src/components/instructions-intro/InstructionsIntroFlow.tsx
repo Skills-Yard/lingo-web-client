@@ -14,7 +14,7 @@ import { ExamplesGridScreen } from "./ExamplesGridScreen";
 import { VideoScreen } from "./VideoScreen";
 import { QuestionnaireScreen } from "./QuestionnaireScreen";
 import { RewardScreen } from "./RewardScreen";
-import { CommandsGridScreen } from "./CommandsGridScreen";
+import { GameBoardScreen } from "./GameBoardScreen";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -37,6 +37,7 @@ export function InstructionsIntroFlow({
   const [rewardClaimed, setRewardClaimed] = useState(false);
   const [checked, setChecked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const [gameSolved, setGameSolved] = useState(false);
   const triggerSound = useSound(true);
 
   const total = INSTRUCTIONS_INTRO_SLIDES.length;
@@ -48,6 +49,7 @@ export function InstructionsIntroFlow({
     setSelectedQuestionnaireId(null);
     setRewardClaimed(false);
     setChecked(false);
+    setGameSolved(false);
     if (index >= total - 1) {
       onComplete?.();
       return;
@@ -60,6 +62,7 @@ export function InstructionsIntroFlow({
     setSelected(null);
     setSelectedQuestionnaireId(null);
     setChecked(false);
+    setGameSolved(false);
     setIndex((i) => i - 1);
   };
 
@@ -124,15 +127,17 @@ export function InstructionsIntroFlow({
         : slide.cta;
 
   const primaryState: PrimaryState =
-    isQuiz && !checked && selected === null
+    slide.kind === "game" && !gameSolved
       ? "disabled"
-      : isQuestionnaire && !checked && selectedQuestionnaireId === null
+      : isQuiz && !checked && selected === null
         ? "disabled"
-        : isQuiz && checked && !isCorrect
-          ? "retry"
-          : isQuestionnaire && checked && !questionnaireIsCorrect
+        : isQuestionnaire && !checked && selectedQuestionnaireId === null
+          ? "disabled"
+          : isQuiz && checked && !isCorrect
             ? "retry"
-            : "go";
+            : isQuestionnaire && checked && !questionnaireIsCorrect
+              ? "retry"
+              : "go";
 
   // The questionnaire's "Claim Reward" CTA gets the dark tone + gift icon (see command9).
   const isRewardCta =
@@ -194,8 +199,8 @@ export function InstructionsIntroFlow({
                 onClaimStateChange={setRewardClaimed}
               />
             )}
-            {slide.kind === "commands-grid" && (
-              <CommandsGridScreen slide={slide} onCommand={(id) => console.log("Command:", id)} />
+            {slide.kind === "game" && (
+              <GameBoardScreen slide={slide} onSolvedChange={setGameSolved} />
             )}
           </div>
         </div>
