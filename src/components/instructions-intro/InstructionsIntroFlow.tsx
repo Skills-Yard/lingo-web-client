@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Gift } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
@@ -214,7 +213,12 @@ export function InstructionsIntroFlow({
             feedback={feedback}
             ctaFullWidth={slide.kind !== "teacher-intro"}
             primaryTone={isRewardCta ? "dark" : "brand"}
-            leadingIcon={isRewardCta ? <Gift className="w-5 h-5" /> : undefined}
+            leadingIcon={
+              isRewardCta ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src="/images/clam-box.png" alt="" className="w-6 h-6 object-contain" />
+              ) : undefined
+            }
           />
         )}
       </div>

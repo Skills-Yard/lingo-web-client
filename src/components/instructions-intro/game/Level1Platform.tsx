@@ -152,7 +152,7 @@ export const Level1Platform: React.FC<Level1PlatformProps> = ({
             >
               {/* Direction indicator (only for main levels) */}
               <div
-                className="absolute bottom-0 left-1/2 w-12 h-12 rounded-full border border-white/50 bg-[#fbbf24]  flex items-center justify-center  transition-transform drop-shadow-[0_5px_6px_rgb(251,191,36)] duration-300 z-0"
+                className="absolute bottom-0 left-1/2 w-12 h-12 rounded-full border border-white/50 bg-[#0bc98077]  flex items-center justify-center  transition-transform drop-shadow-[0_5px_6px_rgb(251,191,36)] duration-300 z-0"
                 style={{
                   transform: `translate(-50%, 50%) scaleY(0.5) rotate(${
                     playerDir === "up" ? -90 : playerDir === "right" ? 0 : playerDir === "down" ? 90 : 180
@@ -164,7 +164,7 @@ export const Level1Platform: React.FC<Level1PlatformProps> = ({
 
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/running-lumi.webp"
+                src="/images/sprouty-running.png"
                 alt="Lumi"
                 className="w-full h-auto object-contain drop-shadow-[0_5px_6px_rgba(0,0,0,0.3)]  z-10"
                 style={{ filter: "url(#chroma-white)" }}
