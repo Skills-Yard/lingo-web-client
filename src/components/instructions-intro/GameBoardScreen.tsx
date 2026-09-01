@@ -7,8 +7,8 @@ import { useSound } from "@/hooks/useSound";
 import { lesson1Level } from "./game/levels";
 import { useGameState } from "./game/useGameState";
 import { useGameExecution } from "./game/useGameExecution";
-import { MascotBanner } from "./game/MascotBanner";
 import { GameBoard } from "./game/GameBoard";
+import { ProgramSlots } from "./game/ProgramSlots";
 import { CommandPalette } from "./game/CommandPalette";
 import { GameFooter } from "./game/GameFooter";
 
@@ -48,7 +48,7 @@ export function GameBoardScreen({ slide, onSolvedChange }: GameBoardScreenProps)
   }, [success, onSolvedChange]);
 
   return (
-    <div className="flex flex-col gap-3 md:mx-auto md:max-w-xl md:min-h-full md:justify-center">
+    <div className="flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center">
       {/* ── Header — matches the other intro screens ── */}
       <div className="text-center md:text-left">
         <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">
@@ -61,34 +61,47 @@ export function GameBoardScreen({ slide, onSolvedChange }: GameBoardScreenProps)
         )}
       </div>
 
-      <MascotBanner level={LEVEL} collectedStar={collectedStar} success={success} />
+      {/* Board on the left, controls on the right (stacked on small screens). */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-center lg:gap-6">
+        {/* ── Left column — the game board ── */}
+        <div className="lg:order-1 lg:w-105 lg:shrink-0">
+          <GameBoard
+            level={LEVEL}
+            commands={commands}
+            isPlaying={isPlaying}
+            playerPos={playerPos}
+            playerDir={playerDir}
+            executingStep={executingStep}
+            collectedStar={collectedStar}
+            soundEnabled={soundEnabled}
+            fillHint={fillHint}
+            setSoundEnabled={setSoundEnabled}
+            triggerSound={triggerSound}
+          />
+        </div>
 
-      <GameBoard
-        level={LEVEL}
-        commands={commands}
-        isPlaying={isPlaying}
-        playerPos={playerPos}
-        playerDir={playerDir}
-        executingStep={executingStep}
-        collectedStar={collectedStar}
-        success={success}
-        soundEnabled={soundEnabled}
-        fillHint={fillHint}
-        setSoundEnabled={setSoundEnabled}
-        removeCommand={removeCommand}
-        triggerSound={triggerSound}
-      />
+        {/* ── Right column — program slots, actions and run controls ── */}
+        <div className="flex flex-col gap-3 lg:order-2 lg:w-100 lg:shrink-0">
+          <ProgramSlots
+            commands={commands}
+            isPlaying={isPlaying}
+            success={success}
+            executingStep={executingStep}
+            removeCommand={removeCommand}
+          />
 
-      <CommandPalette level={LEVEL} isPlaying={isPlaying} success={success} addCommand={addCommand} />
+          <CommandPalette level={LEVEL} isPlaying={isPlaying} success={success} addCommand={addCommand} />
 
-      <GameFooter
-        isPlaying={isPlaying}
-        success={success}
-        commands={commands}
-        runSequence={runSequence}
-        resetLevel={resetLevel}
-        triggerSound={triggerSound}
-      />
+          <GameFooter
+            isPlaying={isPlaying}
+            success={success}
+            commands={commands}
+            runSequence={runSequence}
+            resetLevel={resetLevel}
+            triggerSound={triggerSound}
+          />
+        </div>
+      </div>
 
       {/* ── Inline result banner (no CompletionModal in the intro flow) ── */}
       {success !== null && (
@@ -134,7 +147,7 @@ export function GameBoardScreen({ slide, onSolvedChange }: GameBoardScreenProps)
       )}
 
       {/* Confetti overlay on win */}
-      {success === true && (
+     {success === true && (
         <canvas ref={canvasRef} className="fixed inset-0 w-full h-full pointer-events-none z-50" />
       )}
 
