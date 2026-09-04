@@ -1,5 +1,5 @@
 import React from "react";
-import { LevelConfig } from "./types";
+import { LevelConfig } from "../../../utils/types";
 
 // Ported from lingo-website-client/src/components/programming-basic/sections/MascotBanner.tsx
 

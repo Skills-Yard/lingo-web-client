@@ -1,5 +1,5 @@
 import React from "react";
-import { CommandType } from "./types";
+import { CommandType } from "../../../utils/types";
 import { Play, RotateCcw } from "lucide-react";
 
 // Ported from lingo-website-client/src/components/programming-basic/sections/GameFooter.tsx

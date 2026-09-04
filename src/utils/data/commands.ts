@@ -1,4 +1,4 @@
-import { CommandType, CommandInfo } from "./types";
+import { CommandType, CommandInfo } from "../types";
 
 // Ported from lingo-website-client/src/lib/constants/commands.ts
 

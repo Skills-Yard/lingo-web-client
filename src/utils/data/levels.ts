@@ -1,4 +1,4 @@
-import { LevelConfig } from "./types";
+import { LevelConfig } from "../types";
 
 // Ported from lingo-website-client/src/config/levels/{demo,lesson1}.ts
 

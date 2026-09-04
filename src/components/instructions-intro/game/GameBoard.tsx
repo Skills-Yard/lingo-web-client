@@ -1,7 +1,7 @@
 import React from "react";
 import { DemoPlatform } from "./DemoPlatform";
 import { Level1Platform } from "./Level1Platform";
-import { LevelConfig, CommandType, Position, Direction } from "./types";
+import { LevelConfig, CommandType, Position, Direction } from "../../../utils/types";
 
 // Ported from lingo-website-client/src/components/programming-basic/sections/GameBoard.tsx
 

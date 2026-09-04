@@ -1,6 +1,6 @@
 import React from "react";
-import { LevelConfig, CommandType } from "./types";
-import { COMMAND_DETAILS } from "./commands";
+import { LevelConfig, CommandType } from "../../../utils/types";
+import { COMMAND_DETAILS } from "../../../utils/data/commands";
 
 // Ported from lingo-website-client/src/components/programming-basic/sections/CommandPalette.tsx
 

@@ -1,6 +1,6 @@
 import React from "react";
-import { Position, Direction } from "./types";
-import { lesson1Level } from "./levels";
+import { Position, Direction } from "../../../utils/types";
+import { lesson1Level } from "../../../utils/data/levels";
 
 // Ported from lingo-website-client/src/components/programming-basic/level1.tsx
 

@@ -1,6 +1,6 @@
 import React from "react";
-import { CommandType } from "./types";
-import { COMMAND_DETAILS } from "./commands";
+import { CommandType } from "../../../utils/types";
+import { COMMAND_DETAILS } from "../../../utils/data/commands";
 
 // Extracted from GameBoard so it can sit in the left-hand control column beside the board.
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { CommandType, Position, Direction, LevelConfig } from "./types";
+import { CommandType, Position, Direction, LevelConfig } from "../utils/types";
 
 // Ported from lingo-website-client/src/hooks/useGameState.ts
 
