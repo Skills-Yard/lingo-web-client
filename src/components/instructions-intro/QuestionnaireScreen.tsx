@@ -153,10 +153,11 @@ export function QuestionnaireScreen({
         })}
       </div>
 
-      {/* ── Feedback — command9 Frame 13 + Frame 23/24, spans both columns ── */}
+      {/* ── Feedback — command9 Frame 13 + Frame 23/24, spans both columns ──
+          Desktop shows this inline panel; mobile keeps it in the footer (see IntroFooter). */}
       {checked && selectedItem && (
         <div
-          className={`relative overflow-hidden rounded-[12px] p-4 pr-28 md:col-span-2 md:row-start-3 md:pr-44 animate-pop-in ${
+          className={`hidden md:block relative overflow-hidden rounded-[12px] p-4 pr-28 md:col-span-2 md:row-start-3 md:pr-44 animate-pop-in ${
             isCorrect
               ? "[background:linear-gradient(180deg,rgba(223,255,248,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(1,161,127,0.20)_0%,rgba(255,255,255,0)_98.7%)]"
               : "[background:linear-gradient(180deg,rgba(255,226,226,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(220,38,38,0.20)_0%,rgba(255,255,255,0)_98.7%)]"

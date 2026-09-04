@@ -35,7 +35,7 @@ export function VideoScreen({ slide }: { slide: VideoSlide }) {
         </div>
       </div>
 
-      <div className="relative w-full h-[400px] min-[996px]:h-105 overflow-hidden rounded-[8px] bg-[#1A1C22] shadow-lg min-[996px]:col-span-3 min-[996px]:col-start-2 min-[996px]:row-start-1">
+      <div className="relative w-full aspect-video max-h-100 min-[996px]:aspect-auto min-[996px]:max-h-none min-[996px]:h-105 overflow-hidden rounded-[8px] bg-[#1A1C22] shadow-lg min-[996px]:col-span-3 min-[996px]:col-start-2 min-[996px]:row-start-1">
         <video
           src="/vedio/lumi.mp4"
           controls

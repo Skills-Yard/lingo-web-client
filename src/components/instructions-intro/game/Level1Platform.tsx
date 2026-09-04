@@ -46,12 +46,12 @@ export const Level1Platform: React.FC<Level1PlatformProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-1 w-full">
       <div
-        className="relative select-none animate-fade-in"
+        className="relative select-none animate-fade-in w-full"
         style={{
-          width: dims.platformWidth,
-          height: dims.platformHeight,
+          maxWidth: dims.platformWidth,
+          aspectRatio: `${parseFloat(dims.platformWidth)} / ${parseFloat(dims.platformHeight)}`,
         }}
       >
         {/* Game Platform Background */}

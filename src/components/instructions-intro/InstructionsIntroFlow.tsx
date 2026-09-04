@@ -149,7 +149,15 @@ export function InstructionsIntroFlow({
           title: isCorrect ? slide.correctTitle : slide.incorrectTitle,
           body: isCorrect ? slide.correctText : slide.incorrectText,
         }
-      : null;
+      : isQuestionnaire && checked && selectedQuestionnaireItem
+        ? {
+            isCorrect: questionnaireIsCorrect,
+            title: questionnaireIsCorrect ? "Correct, you got it!" : "Oops! Not quite.",
+            body: selectedQuestionnaireItem.feedback ?? "",
+            image: questionnaireIsCorrect ? "/images/sprouty.png" : "/images/sprouty-worng-ans.png",
+            flipImage: false,
+          }
+        : null;
 
   return (
     <main

@@ -5,6 +5,10 @@ export interface QuizFeedback {
   isCorrect: boolean;
   title: string;
   body: string;
+  /** Mascot shown next to the feedback text. Defaults to the sliceAnswer character. */
+  image?: string;
+  /** sliceAnswer is mirrored by default; set false for mascots (e.g. sprouty) drawn already facing the right way. */
+  flipImage?: boolean;
 }
 
 export type PrimaryState = "disabled" | "retry" | "go";
@@ -82,9 +86,11 @@ export function IntroFooter({
               <span className="absolute w-1.5 h-1.5 rounded-full bg-[#FF8585]" style={{ left: 106, top: 58 }} />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/sliceAnswer.png"
+                src={feedback.image ?? "/images/sliceAnswer.png"}
                 alt=""
-                className="absolute w-20.5 h-19.75 object-contain -scale-x-100 animate-bounce-slow"
+                className={`absolute w-20.5 h-19.75 object-contain animate-bounce-slow ${
+                  feedback.flipImage ?? true ? "-scale-x-100" : ""
+                }`}
                 style={{ left: 20, top: 5 }}
               />
             </div>

@@ -31,15 +31,15 @@ export const DemoPlatform: React.FC<DemoPlatformProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center gap-1">
+    <div className="flex flex-col items-center gap-1 w-full">
       <div className="flex items-center gap-2 bg-amber-100 border border-amber-300 rounded-full px-3 py-0.5 mb-1 select-none">
         <span className="text-amber-600 text-[10px] font-black uppercase tracking-widest">🎓 Practice Level</span>
       </div>
       <div
-        className="relative select-none animate-fade-in"
+        className="relative select-none animate-fade-in w-full"
         style={{
-          width: dims.platformWidth,
-          height: dims.platformHeight,
+          maxWidth: dims.platformWidth,
+          aspectRatio: `${parseFloat(dims.platformWidth)} / ${parseFloat(dims.platformHeight)}`,
         }}
       >
         {/* Game Platform Background */}
