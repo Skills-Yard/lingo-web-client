@@ -33,7 +33,7 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
           />
         </div>
 
-        <div className="md:col-span-2 md:col-start-1 md:row-start-1 md:order-1">
+        <div className="md:col-span-2 md:col-start-1 md:row-start-1 md:order-1 ">
           {slide.lines.map((line) => (
             <p
               key={line}
@@ -51,7 +51,7 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
         <button
           type="button"
           onClick={() => setModalOpen(true)}
-          className="w-full h-40 rounded-[8px] bg-[#1A1C22] p-6 flex items-center gap-5 shadow-lg mt-1 md:mt-0 md:col-span-2 md:col-start-1 md:row-start-2 md:order-3 text-left cursor-pointer hover:bg-[#22252e] active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          className="w-full h-40 rounded-[8px] bg-[#1A1C22] p-6 flex items-center gap-8 shadow-lg mt-1 md:mt-0 md:col-span-2 md:col-start-1 md:row-start-2 md:order-3 text-left cursor-pointer hover:bg-[#22252e] active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
         >
           <div className="w-16 h-40 shrink-0 flex items-center justify-center">
@@ -62,9 +62,9 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
             />
           </div>
           <div className="text-left">
-            <p className="text-[14px] text-white font-medium">{slide.revealLabel}</p>
-            <p className="text-sm text-[#BEBEBE] font-medium">about</p>
-            <p className="text-lg font-semibold tracking-wide text-primary">
+            <p className="text-[15px] md:text-base text-white font-medium">{slide.revealLabel}</p>
+            <p className="text-[15px] md:text-base text-[#BEBEBE] font-medium">about</p>
+            <p className="text-xl md:text-2xl font-semibold tracking-wide text-primary">
               {slide.revealSubject}
             </p>
           </div>

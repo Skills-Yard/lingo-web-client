@@ -63,29 +63,35 @@ export function QuestionnaireScreen({
   };
 
   return (
-    <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-10 md:gap-y-6 md:min-h-full md:content-center md:items-start">
-      {/* ── Question header — Frame 60 / Frame 59 (the "Q." badge) ── */}
-      <div className="flex items-center gap-2.5 md:col-start-1 md:row-start-1">
-        <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-[6px] bg-[#E9F5F0] dark:bg-[#0F2921]">
-          <span className="text-2xl font-semibold leading-none text-primary">
-            Q.
+    <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-8 md:gap-y-6 md:min-h-full md:content-center md:items-start">
+      {/* ── Left column — "Q." badge, heading, prompt, illustration ── */}
+      <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1 md:row-span-2 md:self-stretch md:border-r border-black/10 dark:border-white/10 md:pr-8">
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-[6px] bg-[#E9F5F0] dark:bg-[#0F2921]">
+            <span className="text-2xl font-semibold leading-none text-primary">
+              Q.
+            </span>
           </span>
-        </span>
-        <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">
-          <Highlight text={slide.title} terms={[slide.highlightWord]} />
-        </h1>
-      </div>
+          <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">
+            <Highlight text={slide.title} terms={[slide.highlightWord]} />
+          </h1>
+        </div>
 
-      {/* ── Supporting illustration — desktop only (mobile keeps the compact spec) ── */}
-      <div className="hidden md:col-start-1 md:row-start-2 md:flex md:items-center md:justify-center md:pr-4">
-        <Image
-          src="/images/computer.png"
-          alt=""
-          width={480}
-          height={360}
-          className="h-auto w-full max-w-[360px] object-contain"
-          priority
-        />
+        <p className="text-sm font-medium leading-[1.5] text-[#666666] dark:text-neutral-400">
+          {slide.description}
+        </p>
+
+        {/* Supporting illustration — desktop only (mobile keeps the compact spec) */}
+        <div className="hidden md:mt-2 md:flex md:items-center md:justify-center">
+          <Image
+            src="/images/computer.png"
+            alt=""
+            width={480}
+            height={360}
+            className="h-auto w-full max-w-[360px] object-contain"
+            priority
+          />
+        </div>
       </div>
 
       {/* ── Option cards — Frame 12 / 61 / 62 (idle) & Frame 11 (selected) ── */}
@@ -99,40 +105,47 @@ export function QuestionnaireScreen({
               type="button"
               onClick={() => handleSelect(item.id)}
               disabled={checked}
-              className={`flex min-h-[92px] w-full items-center justify-between gap-4 rounded-[12px] px-4 py-2.5 text-left transition-all active:scale-[0.99] disabled:cursor-not-allowed ${
+              className={`flex min-h-[92px] w-full items-center gap-4 rounded-[12px] px-5 py-4 text-left transition-all active:scale-[0.99] disabled:cursor-not-allowed ${
                 isSelected
                   ? "border border-primary [background:linear-gradient(180deg,#FFFFFF_1.3%,#EEFAF6_67.42%)] dark:[background:linear-gradient(180deg,#15181E_1.3%,#0F2921_67.42%)]"
                   : "cursor-pointer border border-black/[0.04] bg-white shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] hover:border-primary/40 dark:border-white/[0.06] dark:bg-[#15181E]"
               } ${checked && !isSelected ? "opacity-50" : ""}`}
             >
-              {/* Frame 23 — icon pill + label */}
-              <span className="flex items-center gap-3.5">
-                <span className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-full bg-[#E9F5F0] dark:bg-[#0F2921]">
-                  {item.icon && (
-                    <Image
-                      src={item.icon}
-                      alt=""
-                      width={30}
-                      height={30}
-                      className="h-[30px] w-[30px] object-contain"
-                    />
-                  )}
-                </span>
-                <span className="text-base font-medium text-[#2C2C2C] dark:text-white">
+              {/* Frame 23 — icon tile */}
+              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[12px] bg-[#E9F5F0] dark:bg-[#0F2921]">
+                {item.icon && (
+                  <Image
+                    src={item.icon}
+                    alt=""
+                    width={28}
+                    height={28}
+                    className="h-7 w-7 object-contain"
+                  />
+                )}
+              </span>
+
+              {/* label + description */}
+              <span className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span className="text-base font-semibold text-[#2C2C2C] dark:text-white">
                   {item.label}
                 </span>
+                {item.description && (
+                  <span className="text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
+                    {item.description}
+                  </span>
+                )}
               </span>
 
               {/* Ellipse 2 — radio (Ellipse 6 fill when selected) */}
               <span
-                className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                className={`flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                   isSelected
                     ? "border-primary"
-                    : "border-black/[0.08] dark:border-white/10"
+                    : "border-black/12 dark:border-white/20"
                 }`}
               >
                 {isSelected && (
-                  <span className="h-[18px] w-[18px] rounded-full bg-primary" />
+                  <span className="h-3.5 w-3.5 rounded-full bg-primary" />
                 )}
               </span>
             </button>

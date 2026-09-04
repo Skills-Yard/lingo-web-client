@@ -120,7 +120,7 @@ export function InstructionsIntroFlow({
 
   const primaryLabel =
     (slide.kind === "teacher-quiz" || slide.kind === "questionnaire") && !checked
-      ? slide.kind === "teacher-quiz" ? slide.submitLabel : "Check"
+      ? slide.kind === "teacher-quiz" ? slide.submitLabel : "Check Answer"
       : (isQuiz || isQuestionnaire) && checked && !(isCorrect || questionnaireIsCorrect)
         ? "Try Again"
         : slide.cta;

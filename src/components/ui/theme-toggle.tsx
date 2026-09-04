@@ -15,7 +15,7 @@ export function ThemeToggle({ className = "", showLabel = false }: ThemeTogglePr
   return (
     <button
       type="button"
-      onClick={toggleTheme}
+      onClick={(e) => toggleTheme({ x: e.clientX, y: e.clientY })}
       className={`inline-flex items-center justify-center gap-2 p-2.5 rounded-2xl border transition-all duration-200 cursor-pointer shadow-xs active:scale-95 ${
         theme === "dark"
           ? "bg-surface-strong border-border text-amber-400 hover:bg-border"
@@ -25,9 +25,9 @@ export function ThemeToggle({ className = "", showLabel = false }: ThemeTogglePr
       title={theme === "dark" ? "Switch to light theme" : "Switch to dark theme"}
     >
       {theme === "dark" ? (
-        <Sun className="w-5 h-5 transition-transform rotate-0 scale-100" />
+        <Sun key="sun" className="w-5 h-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
       ) : (
-        <Moon className="w-5 h-5 transition-transform rotate-0 scale-100" />
+        <Moon key="moon" className="w-5 h-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
       )}
       {showLabel && (
         <span className="text-xs font-bold capitalize">

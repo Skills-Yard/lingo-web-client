@@ -23,13 +23,22 @@ export function TeacherIntroScreen({ slide }: { slide: TeacherIntroSlide }) {
         </div>
       </div>
 
+      {/* Mobile keeps this screen's own teacher artwork; laptop reuses the wider
+          "answer" illustration from screen 03 so it fills the 3-col space cleanly. */}
       <TeacherIllustration
-        className="h-68.75 md:h-105 md:col-span-3"
-        fit="cover"
+        className="h-68.75 md:hidden"
+        fit="contain"
         variant="bleed"
-        noteClassName="md:hidden"
         imageLight="/images/teacherWhite.png"
         imageDark="/images/teacherBlack.png"
+      />
+      <TeacherIllustration
+        className="hidden md:block md:h-105 md:col-span-3"
+        fit="contain"
+        variant="bleed"
+        showNote={false}
+        imageLight="/images/answerImgWhite.png"
+        imageDark="/images/answerImgBlack.png"
       />
     </div>
   );

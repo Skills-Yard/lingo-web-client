@@ -142,6 +142,17 @@ html {
   }
 }
 
+@keyframes spinIn {
+  0% {
+    transform: rotate(-90deg) scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: rotate(0deg) scale(1);
+    opacity: 1;
+  }
+}
+
 .animate-bounce-slow {
   animation: bobSlow 3s infinite ease-in-out;
 }
@@ -163,4 +174,29 @@ html {
 
 .scrollbar-none::-webkit-scrollbar {
   display: none;
+}
+
+/* ── Theme-change circular reveal (View Transitions API) ──────────────────── */
+/* Disable the browser's default cross-fade; the JS animates a clip-path circle
+   on the incoming snapshot instead (see ThemeContext `runThemeChange`). */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+}
+
+::view-transition-new(root) {
+  z-index: 2147483646;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
 }

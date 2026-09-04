@@ -102,6 +102,8 @@ export type InstructionsSlide =
       kind: "questionnaire";
       highlightWord: string;
       title: string;
+      /** Prompt shown under the heading, e.g. "Select the correct option…". */
+      description: string;
       items: QuestionnaireItem[];
       cta: string;
     }
@@ -219,11 +221,14 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     kind: "questionnaire",
     highlightWord: "instructions",
     title: "What are instructions known as?",
+    description:
+      "Select the correct option that best describes instructions in programming.",
     items: [
       {
         id: "statement",
         label: "Statement",
         icon: "/images/statement.png",
+        description: "A declaration that performs an action.",
         isCorrect: false,
         feedback: "Statements are lines of code, but not all statements are instructions.",
       },
@@ -231,6 +236,7 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
         id: "command",
         label: "Command",
         icon: "/images/command.png",
+        description: "An instruction that tells the computer to do something.",
         isCorrect: true,
         feedback: "Yes! Instructions in a program is called commands.",
       },
@@ -238,6 +244,7 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
         id: "question",
         label: "Question",
         icon: "/images/question.png",
+        description: "A query used to get information.",
         isCorrect: false,
         feedback: "Questions are not instructions; they're used to check conditions.",
       },

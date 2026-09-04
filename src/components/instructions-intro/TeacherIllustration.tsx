@@ -42,9 +42,17 @@ export function TeacherIllustration({
       />
       {showNote && (
         <div
-          className={`absolute top-5 right-5 max-w-32.5 bg-white text-[#2C2C2C] rounded-2xl rounded-bl-sm px-3.5 py-2.5 shadow-lg ${noteClassName}`}
+          className={`absolute right-5 top-5 max-w-36 rounded-[12px] rounded-bl-sm bg-white px-4 py-3.5 text-[#2C2C2C] drop-shadow-[1px_1px_12.8px_rgba(0,0,0,0.12)] ${noteClassName}`}
         >
-          <span className="text-xs md:text-sm font-semibold leading-snug">Open Your Notebook</span>
+          <span
+            aria-hidden
+            className="absolute left-2.5 top-1.5 font-serif text-4xl leading-none text-primary"
+          >
+            &ldquo;
+          </span>
+          <span className="relative block pt-3 text-[15px] font-semibold leading-[1.34]">
+            Open Your Notebook
+          </span>
         </div>
       )}
     </div>
