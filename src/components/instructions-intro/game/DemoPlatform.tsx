@@ -1,6 +1,7 @@
 import React from "react";
 import { Position, Direction } from "../../../utils/types";
 import { demoLevel } from "../../../utils/data/levels";
+import { RobuEyeBlink } from "../RobuEyeBlink";
 
 // Ported from lingo-website-client/src/components/programming-basic/demo.tsx
 
@@ -125,13 +126,8 @@ export const DemoPlatform: React.FC<DemoPlatformProps> = ({
                 <span className="text-white text-[12px] font-black leading-none">➔</span>
               </div>
 
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/running-lumi.webp"
-                alt="Lumi"
-                className="w-full h-auto object-contain drop-shadow-[0_5px_6px_rgba(0,0,0,0.3)]  z-10"
-                style={{ filter: "url(#chroma-white)" }}
-              />
+              {/* Player character — the Robu mascot (Rive) */}
+              <RobuEyeBlink className="w-full aspect-square z-10 drop-shadow-[0_5px_6px_rgba(0,0,0,0.3)]" />
             </div>
           );
         })()}

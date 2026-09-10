@@ -11,6 +11,7 @@ import { GameBoard } from "./game/GameBoard";
 import { ProgramSlots } from "./game/ProgramSlots";
 import { CommandPalette } from "./game/CommandPalette";
 import { GameFooter } from "./game/GameFooter";
+import { RobuEyeBlink } from "./RobuEyeBlink";
 
 interface GameBoardScreenProps {
   slide: GameSlide;
@@ -49,16 +50,19 @@ export function GameBoardScreen({ slide, onSolvedChange }: GameBoardScreenProps)
 
   return (
     <div className="flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center">
-      {/* ── Header — matches the other intro screens ── */}
-      <div className="text-center md:text-left">
-        <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">
-          <span className="text-primary">{slide.highlightWord}</span> {slide.title}
-        </h1>
-        {slide.description && (
-          <p className="mt-2 text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
-            {slide.description}
-          </p>
-        )}
+      {/* ── Header — matches the other intro screens, with Robu keeping watch ── */}
+      <div className="flex items-center justify-center gap-3 md:justify-start">
+        <RobuEyeBlink className="h-12 w-12 shrink-0 sm:h-14 sm:w-14 md:h-16 md:w-16" />
+        <div className="text-center md:text-left">
+          <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">
+            <span className="text-primary">{slide.highlightWord}</span> {slide.title}
+          </h1>
+          {slide.description && (
+            <p className="mt-2 text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
+              {slide.description}
+            </p>
+          )}
+        </div>
       </div>
 
       {/* Board on the left, controls on the right (stacked on small screens). */}

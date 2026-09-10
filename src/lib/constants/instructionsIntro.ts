@@ -140,6 +140,14 @@ export type InstructionsSlide =
       title: string;
       description?: string;
       cta: string;
+    }
+  | {
+      // "Meet Robu" — closing screen with the blinking Robu mascot.
+      kind: "robu";
+      highlightWord: string;
+      title: string;
+      description?: string;
+      cta: string;
     };
 
 /** Per-screen slide types, so each screen component can be strictly typed to its own slide. */
@@ -152,6 +160,7 @@ export type QuestionnaireSlide = Extract<InstructionsSlide, { kind: "questionnai
 export type RewardSlide = Extract<InstructionsSlide, { kind: "reward" }>;
 export type CommandsGridSlide = Extract<InstructionsSlide, { kind: "commands-grid" }>;
 export type GameSlide = Extract<InstructionsSlide, { kind: "game" }>;
+export type RobuSlide = Extract<InstructionsSlide, { kind: "robu" }>;
 
 export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   {
@@ -290,5 +299,13 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     description:
       "Give Sprouty a set of commands, then run the program to reach the flag.",
     cta: "Continue",
+  },
+  {
+    kind: "robu",
+    highlightWord: "Meet",
+    title: "Robu",
+    description:
+      "Robu will be with you from here on, keeping an eye on every command you write.",
+    cta: "Finish",
   },
 ];
