@@ -50,7 +50,9 @@ export function IntroFooter({
               <div className="flex items-center gap-2.5 mb-1">
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                    feedback.isCorrect ? "bg-primary" : "bg-rose-600 dark:bg-rose-500"
+                    feedback.isCorrect
+                      ? "bg-primary"
+                      : "bg-rose-600 dark:bg-rose-500"
                   }`}
                 >
                   {feedback.isCorrect ? (
@@ -81,15 +83,24 @@ export function IntroFooter({
                 className="absolute w-3 h-3 text-[#ABA8FC] fill-[#ABA8FC]"
                 style={{ left: 0, top: 49 }}
               />
-              <span className="absolute w-1.5 h-1.5 rounded-full bg-[#ABA8FC]" style={{ left: 2, top: 22 }} />
-              <span className="absolute w-1.5 h-1.5 rounded-full bg-[#FF8585]" style={{ left: 0, top: 25 }} />
-              <span className="absolute w-1.5 h-1.5 rounded-full bg-[#FF8585]" style={{ left: 106, top: 58 }} />
+              <span
+                className="absolute w-1.5 h-1.5 rounded-full bg-[#ABA8FC]"
+                style={{ left: 2, top: 22 }}
+              />
+              <span
+                className="absolute w-1.5 h-1.5 rounded-full bg-[#FF8585]"
+                style={{ left: 0, top: 25 }}
+              />
+              <span
+                className="absolute w-1.5 h-1.5 rounded-full bg-[#FF8585]"
+                style={{ left: 106, top: 58 }}
+              />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={feedback.image ?? "/images/sliceAnswer.png"}
                 alt=""
                 className={`absolute w-20.5 h-19.75 object-contain animate-bounce-slow ${
-                  feedback.flipImage ?? true ? "-scale-x-100" : ""
+                  (feedback.flipImage ?? true) ? "-scale-x-100" : ""
                 }`}
                 style={{ left: 20, top: 5 }}
               />
@@ -114,12 +125,18 @@ export function IntroFooter({
           }`}
         >
           {leadingIcon && (
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center text-primary">
-              {leadingIcon}
+            <span className="">
+              <img
+                src="/animations/svg/box.svg"
+                alt=""
+                className="w-10 h-10 object-contain"
+              />
             </span>
           )}
           <span>{primaryLabel}</span>
-          <ArrowRight className={`w-5 h-5 ${ctaFullWidth ? "md:hidden" : ""}`} />
+          <ArrowRight
+            className={`w-5 h-5 ${ctaFullWidth ? "md:hidden" : ""}`}
+          />
         </button>
       </div>
     </footer>

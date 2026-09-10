@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ShieldCheck, ChevronRight } from "lucide-react";
 import type { RewardSlide } from "@/lib/constants/instructionsIntro";
+import { useRive, useStateMachineInput } from "@rive-app/react-canvas";
+import { configureRiveRuntime, REWARD_RIVE_SRC } from "@/lib/rive/runtime";
+
+// Register the same-origin WASM URLs before the first canvas mounts.
+configureRiveRuntime();
+
+const RIVE_STATE_MACHINE = "State Machine 1";
+
+// Let the box-open animation play before the reward cards take over the screen.
+const BOX_OPEN_DELAY_MS = 500;
 
 interface RewardScreenProps {
   slide: RewardSlide;
@@ -18,10 +28,86 @@ export function RewardScreen({
 }: RewardScreenProps) {
   const [claimed, setClaimed] = useState(false);
 
+  const { rive, RiveComponent } = useRive({
+    src: REWARD_RIVE_SRC,
+    stateMachine: RIVE_STATE_MACHINE,
+    autoplay: true,
+  });
+
+  // Once the instance is ready, match the drawing surface to the container so
+  // the first paint is sharp and does not trigger a resize-driven repaint
+  // partway through the animation.
+  useEffect(() => {
+    rive?.resizeDrawingSurfaceToCanvas();
+  }, [rive]);
+
+  const clickedInput = useStateMachineInput(
+    rive,
+    RIVE_STATE_MACHINE,
+    "clicked",
+  );
+  const hoverInput = useStateMachineInput(rive, RIVE_STATE_MACHINE, "hover");
+
+  // Hold the hover input in a ref so the pointer handlers can write to it
+  // without the React compiler flagging a direct write to a hook return value.
+  const hoverInputRef = useRef<typeof hoverInput>(null);
+  const clickedInputRef = useRef<typeof clickedInput>(null);
+  const isOpeningRef = useRef(false);
+
+  useEffect(() => {
+    hoverInputRef.current = hoverInput;
+  }, [hoverInput]);
+
+  useEffect(() => {
+    clickedInputRef.current = clickedInput;
+  }, [clickedInput]);
+
+  // Play the box-open animation. Fired both by tapping the canvas and by the
+  // "Claim Instantly" button. The state machine only takes the "open"
+  // transition while its `hover` flag is set, so engage that first — otherwise
+  // firing `clicked` from the button (pointer nowhere near the canvas) leaves
+  // the animation stuck.
+  const openBox = () => {
+    const hover = hoverInputRef.current;
+    const clicked = clickedInputRef.current;
+
+    if (!hover || !clicked) {
+      console.log("Rive inputs not ready");
+      return;
+    }
+
+    // The Rive state machine requires hover=true
+    hover.value = true;
+
+    // Give Rive a frame to process the hover state,
+    // then fire the click trigger.
+    requestAnimationFrame(() => {
+      clicked.fire();
+    });
+  };
+
   const handleClaim = () => {
-    setClaimed(true);
-    onClaimStateChange?.(true);
-    onClaim?.();
+    isOpeningRef.current = true;
+
+    openBox();
+
+    window.setTimeout(() => {
+      setClaimed(true);
+      onClaimStateChange?.(true);
+      onClaim?.();
+    }, BOX_OPEN_DELAY_MS);
+  };
+
+  const handleMouseEnter = () => {
+    // if (hoverInputRef.current) hoverInputRef.current.value = true;
+  };
+
+  const handleMouseLeave = () => {
+    // if (isOpeningRef.current) return;
+
+    // if (hoverInputRef.current) {
+    //   hoverInputRef.current.value = false;
+    // }
   };
 
   return (
@@ -60,14 +146,22 @@ export function RewardScreen({
             />
           </>
         )}
-        <Image
+        {/* <Image
           src={slide.imageLight}
           alt="Reward"
           width={208}
           height={267}
           priority
           className="relative z-10 h-full w-auto max-w-full object-contain animate-pop-in"
-        />
+        /> */}
+        <div
+          className="relative h-[220px] w-[220px]"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={openBox}
+        >
+          <RiveComponent />
+        </div>
       </div>
 
       {claimed ? (
@@ -152,7 +246,9 @@ function SecurityCard({ slide }: { slide: RewardSlide }) {
       <div className="mx-auto flex w-full max-w-[310px] items-center gap-3">
         <ShieldCheck className="h-[34px] w-[34px] shrink-0 text-[#7EEBC1]" />
         <div className="min-w-0 flex-1">
-          <p className="text-base font-medium text-white">{slide.securityInfo}</p>
+          <p className="text-base font-medium text-white">
+            {slide.securityInfo}
+          </p>
           {slide.securitySubInfo && (
             <p className="mt-1 text-xs font-medium text-[#818185]">
               {slide.securitySubInfo}

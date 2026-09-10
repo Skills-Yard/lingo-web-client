@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { preload } from "react-dom";
 import { Poppins } from "next/font/google";
+import { configureRiveRuntime, REWARD_RIVE_SRC } from "@/lib/rive/runtime";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
 import { IntroHeader } from "./IntroHeader";
@@ -32,7 +34,9 @@ export function InstructionsIntroFlow({
 }: InstructionsIntroFlowProps) {
   const [index, setIndex] = useState(initialIndex);
   const [selected, setSelected] = useState<number | null>(null);
-  const [selectedQuestionnaireId, setSelectedQuestionnaireId] = useState<string | null>(null);
+  const [selectedQuestionnaireId, setSelectedQuestionnaireId] = useState<
+    string | null
+  >(null);
   const [rewardClaimed, setRewardClaimed] = useState(false);
   const [checked, setChecked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
@@ -67,7 +71,7 @@ export function InstructionsIntroFlow({
 
   const isQuiz = slide.kind === "teacher-quiz";
   const isQuestionnaire = slide.kind === "questionnaire";
-  
+
   const selectedOption =
     isQuiz && selected !== null ? slide.options[selected] : null;
   const isCorrect = !!selectedOption?.isCorrect;
@@ -76,7 +80,9 @@ export function InstructionsIntroFlow({
   let selectedQuestionnaireItem = null;
   let questionnaireIsCorrect = false;
   if (isQuestionnaire && selectedQuestionnaireId) {
-    selectedQuestionnaireItem = slide.items.find(item => item.id === selectedQuestionnaireId);
+    selectedQuestionnaireItem = slide.items.find(
+      (item) => item.id === selectedQuestionnaireId,
+    );
     questionnaireIsCorrect = !!selectedQuestionnaireItem?.isCorrect;
   }
 
@@ -119,9 +125,14 @@ export function InstructionsIntroFlow({
   };
 
   const primaryLabel =
-    (slide.kind === "teacher-quiz" || slide.kind === "questionnaire") && !checked
-      ? slide.kind === "teacher-quiz" ? slide.submitLabel : "Check Answer"
-      : (isQuiz || isQuestionnaire) && checked && !(isCorrect || questionnaireIsCorrect)
+    (slide.kind === "teacher-quiz" || slide.kind === "questionnaire") &&
+    !checked
+      ? slide.kind === "teacher-quiz"
+        ? slide.submitLabel
+        : "Check Answer"
+      : (isQuiz || isQuestionnaire) &&
+          checked &&
+          !(isCorrect || questionnaireIsCorrect)
         ? "Try Again"
         : slide.cta;
 
@@ -139,8 +150,7 @@ export function InstructionsIntroFlow({
               : "go";
 
   // The questionnaire's "Claim Reward" CTA gets the dark tone + gift icon (see command9).
-  const isRewardCta =
-    isQuestionnaire && checked && questionnaireIsCorrect;
+  const isRewardCta = isQuestionnaire && checked && questionnaireIsCorrect;
 
   const feedback =
     slide.kind === "teacher-quiz" && checked && selectedOption
@@ -152,12 +162,25 @@ export function InstructionsIntroFlow({
       : isQuestionnaire && checked && selectedQuestionnaireItem
         ? {
             isCorrect: questionnaireIsCorrect,
-            title: questionnaireIsCorrect ? "Correct, you got it!" : "Oops! Not quite.",
+            title: questionnaireIsCorrect
+              ? "Correct, you got it!"
+              : "Oops! Not quite.",
             body: selectedQuestionnaireItem.feedback ?? "",
-            image: questionnaireIsCorrect ? "/images/sprouty.png" : "/images/sprouty-worng-ans.png",
+            image: questionnaireIsCorrect
+              ? "/images/sprouty.png"
+              : "/images/sprouty-worng-ans.png",
             flipImage: false,
           }
         : null;
+
+  // Warm the Rive assets while the user is still on the earlier slides so the
+  // reward screen has its WASM runtime and .riv file cached by the time it
+  // mounts — this is what removes the long "blank canvas" delay.
+  useEffect(() => {
+    configureRiveRuntime();
+    preload("/rive/rive.wasm", { as: "fetch" });
+    preload(REWARD_RIVE_SRC, { as: "fetch" });
+  }, []);
 
   return (
     <main
@@ -180,7 +203,9 @@ export function InstructionsIntroFlow({
         >
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
             {slide.kind === "cover" && <CoverScreen slide={slide} />}
-            {slide.kind === "teacher-intro" && <TeacherIntroScreen slide={slide} />}
+            {slide.kind === "teacher-intro" && (
+              <TeacherIntroScreen slide={slide} />
+            )}
             {slide.kind === "teacher-quiz" && (
               <TeacherQuizScreen
                 slide={slide}
@@ -189,19 +214,21 @@ export function InstructionsIntroFlow({
                 onSelect={handleSelect}
               />
             )}
-            {slide.kind === "examples-grid" && <ExamplesGridScreen slide={slide} />}
+            {slide.kind === "examples-grid" && (
+              <ExamplesGridScreen slide={slide} />
+            )}
             {slide.kind === "video" && <VideoScreen slide={slide} />}
             {slide.kind === "questionnaire" && (
-              <QuestionnaireScreen 
-                slide={slide} 
+              <QuestionnaireScreen
+                slide={slide}
                 selectedId={selectedQuestionnaireId}
                 checked={checked}
-                onSelect={handleQuestionnaireSelect} 
+                onSelect={handleQuestionnaireSelect}
               />
             )}
             {slide.kind === "reward" && (
-              <RewardScreen 
-                slide={slide} 
+              <RewardScreen
+                slide={slide}
                 onClaim={() => console.log("Reward claimed")}
                 onClaimStateChange={setRewardClaimed}
               />
@@ -224,7 +251,11 @@ export function InstructionsIntroFlow({
             leadingIcon={
               isRewardCta ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src="/images/clam-box.png" alt="" className="w-6 h-6 object-contain" />
+                <img
+                  src="/images/clam-box.png"
+                  alt=""
+                  className="w-6 h-6 object-contain"
+                />
               ) : undefined
             }
           />
