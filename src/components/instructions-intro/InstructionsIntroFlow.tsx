@@ -12,6 +12,7 @@ import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
 import { IntroHeader } from "./IntroHeader";
 import { IntroFooter, type PrimaryState } from "./IntroFooter";
+import { RobuIntroScreen } from "./RobuIntroScreen";
 import { CoverScreen } from "./CoverScreen";
 import { TeacherIntroScreen } from "./TeacherIntroScreen";
 import { TeacherQuizScreen } from "./TeacherQuizScreen";
@@ -208,6 +209,7 @@ export function InstructionsIntroFlow({
           style={{ msOverflowStyle: "none" }}
         >
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
+            {slide.kind === "robu-intro" && <RobuIntroScreen slide={slide} />}
             {slide.kind === "cover" && <CoverScreen slide={slide} />}
             {slide.kind === "teacher-intro" && (
               <TeacherIntroScreen slide={slide} />

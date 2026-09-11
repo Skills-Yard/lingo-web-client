@@ -44,6 +44,14 @@ export interface CommandItem {
 
 export type InstructionsSlide =
   | {
+      // "Hi, I'm Robu" — opening greeting screen, before the cover slide.
+      kind: "robu-intro";
+      highlightWord: string;
+      title: string;
+      description?: string;
+      cta: string;
+    }
+  | {
       // "Programmer is a problem solver" — cover slide with the code/thinking
       // illustration, the "Before we write code..." line and the reveal card.
       kind: "cover";
@@ -151,6 +159,7 @@ export type InstructionsSlide =
     };
 
 /** Per-screen slide types, so each screen component can be strictly typed to its own slide. */
+export type RobuIntroSlide = Extract<InstructionsSlide, { kind: "robu-intro" }>;
 export type CoverSlide = Extract<InstructionsSlide, { kind: "cover" }>;
 export type TeacherIntroSlide = Extract<InstructionsSlide, { kind: "teacher-intro" }>;
 export type TeacherQuizSlide = Extract<InstructionsSlide, { kind: "teacher-quiz" }>;
@@ -164,6 +173,14 @@ export type RobuSlide = Extract<InstructionsSlide, { kind: "robu" }>;
 
 export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   {
+    kind: "robu-intro",
+    highlightWord: "Hi, I'm",
+    title: "Robu!",
+    description:
+      "I'll be your guide through this journey — helping you think, learn, and write your very first lines of code.",
+    cta: "Let's Begin",
+  },
+  {
     kind: "cover",
     highlightWord: "Programmer",
     title: "is a problem solver.",
@@ -176,7 +193,7 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     revealDescription:
       "A programmer breaks down complex problems into small steps and builds solutions using logic, patterns, and creativity.",
     revealRemember: "Great code starts with a great way of thinking.",
-    cta: "Let's Begin",
+    cta: "Continue",
   },
   {
     kind: "teacher-intro",

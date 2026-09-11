@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Image from "next/image";
 import type { CoverSlide } from "@/lib/constants/instructionsIntro";
+import { RobuEyeBlink } from "./RobuEyeBlink";
 
 interface RevealModalProps {
   slide: CoverSlide;
@@ -48,6 +49,11 @@ export function RevealModal({ slide, onClose }: RevealModalProps) {
         >
           ✕
         </button>
+
+        {/* Robu comes to sit beside the opened card. */}
+        <div className="reveal-modal-robu" aria-hidden="true">
+          <RobuEyeBlink className="h-full w-full" />
+        </div>
 
         {/* Glowing box image */}
         <div className="reveal-modal-img-wrap">
@@ -193,6 +199,31 @@ export function RevealModal({ slide, onClose }: RevealModalProps) {
         }
         .dark .reveal-modal-close:hover {
           background: #3a3f52;
+        }
+
+        .reveal-modal-robu {
+          position: absolute;
+          top: -2.25rem;
+          left: 1.5rem;
+          width: 4rem;
+          height: 4rem;
+          animation: reveal-robu-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.25s both;
+        }
+        @media (min-width: 768px) {
+          .reveal-modal-robu {
+            width: 4.5rem;
+            height: 4.5rem;
+            top: -2.5rem;
+          }
+        }
+        @keyframes reveal-robu-in {
+          from { transform: translateY(14px) scale(0.6); opacity: 0; }
+          to   { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .reveal-modal-robu {
+            animation: none;
+          }
         }
 
         .reveal-modal-img-wrap {
