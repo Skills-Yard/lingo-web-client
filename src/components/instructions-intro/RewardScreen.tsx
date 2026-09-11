@@ -46,7 +46,13 @@ export function RewardScreen({
     RIVE_STATE_MACHINE,
     "clicked",
   );
-  const hoverInput = useStateMachineInput(rive, RIVE_STATE_MACHINE, "hover");
+  // NB: the .riv input is named "hovering" (not "hover") — getting this wrong
+  // makes hoverInput null and openBox() silently bails.
+  const hoverInput = useStateMachineInput(
+    rive,
+    RIVE_STATE_MACHINE,
+    "hovering",
+  );
 
   // Hold the hover input in a ref so the pointer handlers can write to it
   // without the React compiler flagging a direct write to a hook return value.
@@ -63,7 +69,7 @@ export function RewardScreen({
   }, [clickedInput]);
 
   // Play the box-open animation. Fired both by tapping the canvas and by the
-  // "Claim Instantly" button. The state machine only takes the "open"
+  // "Open Gift" button. The state machine only takes the "open"
   // transition while its `hover` flag is set, so engage that first — otherwise
   // firing `clicked` from the button (pointer nowhere near the canvas) leaves
   // the animation stuck.
@@ -87,6 +93,8 @@ export function RewardScreen({
   };
 
   const handleClaim = () => {
+    // Ignore repeat taps on "Open Gift" while the box-open animation is running.
+    if (isOpeningRef.current) return;
     isOpeningRef.current = true;
 
     openBox();
@@ -215,17 +223,14 @@ export function RewardScreen({
         </>
       ) : (
         <>
-          {/* Claim Instantly — Frame 22 */}
-          {slide.actionButtons?.map((button) => (
-            <button
-              key={button.id}
-              type="button"
-              onClick={() => button.id === "claim" && handleClaim()}
-              className="h-[63px] w-full max-w-[280px] rounded-[6px] text-base font-semibold text-[#2C2C2C] shadow-[1px_1px_16px_3px_rgba(0,0,0,0.29)] transition-all hover:opacity-90 active:scale-95 [background:linear-gradient(90deg,#59EBCE_0%,#CCF772_100%)]"
-            >
-              {button.label}
-            </button>
-          ))}
+          {/* Open Gift — plays the box-open animation, then reveals the rewards */}
+          <button
+            type="button"
+            onClick={handleClaim}
+            className="h-[63px] w-full max-w-[280px] rounded-[6px] text-base font-semibold text-[#2C2C2C] shadow-[1px_1px_16px_3px_rgba(0,0,0,0.29)] transition-all hover:opacity-90 active:scale-95 [background:linear-gradient(90deg,#59EBCE_0%,#CCF772_100%)]"
+          >
+            Open Gift
+          </button>
 
           {slide.actionDescription && (
             <p className="max-w-[233px] text-center text-xs font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">

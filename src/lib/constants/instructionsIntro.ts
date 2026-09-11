@@ -140,6 +140,22 @@ export type InstructionsSlide =
       title: string;
       description?: string;
       cta: string;
+    }
+  | {
+      // "Meet Robu" — character intro for the mascot that guides what's next
+      // (screen 09). Renders the robu.riv animation on a soft glow.
+      kind: "meet-robu";
+      highlightWord: string;
+      title: string;
+      /** The character's name, shown large under the animation. */
+      name: string;
+      /** One-line hook shown beside the name. */
+      tagline: string;
+      /** Short paragraph introducing who Robu is and why they're here. */
+      description: string;
+      /** Small trait chips (e.g. "Curious", "Loves puzzles"). */
+      traits: string[];
+      cta: string;
     };
 
 /** Per-screen slide types, so each screen component can be strictly typed to its own slide. */
@@ -152,6 +168,7 @@ export type QuestionnaireSlide = Extract<InstructionsSlide, { kind: "questionnai
 export type RewardSlide = Extract<InstructionsSlide, { kind: "reward" }>;
 export type CommandsGridSlide = Extract<InstructionsSlide, { kind: "commands-grid" }>;
 export type GameSlide = Extract<InstructionsSlide, { kind: "game" }>;
+export type MeetRobuSlide = Extract<InstructionsSlide, { kind: "meet-robu" }>;
 
 export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   {
@@ -290,5 +307,16 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     description:
       "Give Sprouty a set of commands, then run the program to reach the flag.",
     cta: "Continue",
+  },
+  {
+    kind: "meet-robu",
+    highlightWord: "Meet",
+    title: "Robu",
+    name: "Robu",
+    tagline: "Your coding buddy",
+    description:
+      "Robu is a curious little robot who learns by doing. From here on, Robu tags along to help you turn ideas into instructions — one command at a time.",
+    traits: ["Curious", "Loves puzzles", "Never gives up"],
+    cta: "Let's go",
   },
 ];

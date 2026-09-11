@@ -22,6 +22,12 @@ const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
  */
 export const REWARD_RIVE_SRC = "/animations/rewardAnimate02.riv";
 
+/**
+ * Source for the "Meet Robu" character-intro animation (screen 09). Same
+ * rationale as above — one constant shared by the renderer and the preloader.
+ */
+export const ROBU_RIVE_SRC = "/rive/robu.riv";
+
 let configured = false;
 
 /**
