@@ -104,7 +104,7 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
         {/* ── Headline — types itself out, then floats up into its slot ── */}
         <h1
           aria-label={fullHeadline}
-          className={`text-2xl md:text-3xl font-semibold tracking-tight leading-tight text-balance transition-all duration-500 ease-out md:col-span-2 md:col-start-1 md:row-start-1 md:order-1 ${
+          className={`text-2xl md:text-3xl font-semibold tracking-tight leading-tight text-balance transition-all duration-600 ease-[cubic-bezier(0.22,1,0.36,1)] md:col-span-2 md:col-start-1 md:row-start-1 md:order-1 ${
             effectivePhase === "typing"
               ? "translate-y-2 opacity-90"
               : "translate-y-0 opacity-100"
@@ -119,44 +119,57 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
 
         {/* ── Illustration — appears once the headline has settled ── */}
         {reached("image") && (
-          <div
-            className={`relative w-full h-36 md:h-80 flex items-center justify-center overflow-hidden p-3 md:col-span-3 md:col-start-3 md:row-start-1 md:row-span-3 md:order-2 ${
-              reducedMotion ? "" : "animate-pop-in"
-            }`}
-          >
-            <Image
-              src={slide.imageLight}
-              alt=""
-              width={759}
-              height={512}
-              className="h-full w-auto max-w-full object-contain dark:hidden"
+          <div className="relative w-full h-36 md:h-80 flex items-center justify-center overflow-hidden p-3 md:col-span-3 md:col-start-3 md:row-start-1 md:row-span-3 md:order-2">
+            {/* Soft ambient glow — pure polish, sits behind the illustration. */}
+            <div
+              aria-hidden="true"
+              className={`cover-image-glow ${reducedMotion ? "" : "animate-pop-in"}`}
             />
-            <Image
-              src={slide.imageDark}
-              alt=""
-              width={743}
-              height={512}
-              className="hidden h-full w-auto max-w-full object-contain dark:block"
-            />
+            <div className={`h-full ${reducedMotion ? "" : "animate-pop-in"}`}>
+              <div
+                className={`h-full ${effectivePhase === "idle" && !reducedMotion ? "animate-bounce-slow" : ""}`}
+              >
+                <Image
+                  src={slide.imageLight}
+                  alt=""
+                  width={759}
+                  height={512}
+                  className="h-full w-auto max-w-full object-contain dark:hidden"
+                />
+                <Image
+                  src={slide.imageDark}
+                  alt=""
+                  width={743}
+                  height={512}
+                  className="hidden h-full w-auto max-w-full object-contain dark:block"
+                />
+              </div>
+            </div>
           </div>
         )}
 
-        {/* ── Second paragraph — "Before we write code…" ── */}
+        {/* ── Second paragraph — "Before we write code…", each line stepping in ── */}
         {reached("para") && (
-          <div
-            className={`md:col-span-2 md:col-start-1 md:row-start-2 md:order-3 ${
-              reducedMotion ? "" : "animate-fade-in"
-            }`}
-          >
-            {slide.lines.map((line) => (
+          <div className="md:col-span-2 md:col-start-1 md:row-start-2 md:order-3">
+            {slide.lines.map((line, i) => (
               <p
                 key={line}
-                className="text-base md:text-2xl font-semibold text-foreground leading-tight"
+                className={`text-base md:text-2xl font-semibold text-foreground leading-tight ${
+                  reducedMotion ? "" : "animate-fade-in"
+                }`}
+                style={reducedMotion ? undefined : { animationDelay: `${i * 90}ms` }}
               >
                 {line}
               </p>
             ))}
-            <p className="text-base md:text-2xl font-semibold text-primary leading-tight">
+            <p
+              className={`text-base md:text-2xl font-semibold text-primary leading-tight ${
+                reducedMotion ? "" : "animate-fade-in"
+              }`}
+              style={
+                reducedMotion ? undefined : { animationDelay: `${slide.lines.length * 90}ms` }
+              }
+            >
               {slide.highlightLine}
             </p>
           </div>
@@ -172,6 +185,11 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
             }`}
             aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
           >
+            {/* Pulse ring, synced with Robu's tap, to draw the eye to the card. */}
+            {effectivePhase === "robuDemo" && !reducedMotion && (
+              <div aria-hidden="true" className="cover-card-pulse" />
+            )}
+
             <div className="w-16 h-40 shrink-0 flex items-center justify-center">
               <img
                 src="/images/box.png"
@@ -252,6 +270,36 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
         @keyframes cover-robu-tap {
           0%, 100% { transform: translateY(0) rotate(0deg); }
           50% { transform: translateY(6px) rotate(-8deg); }
+        }
+
+        .cover-image-glow {
+          position: absolute;
+          inset: 18%;
+          pointer-events: none;
+          border-radius: 9999px;
+          filter: blur(28px);
+          background: radial-gradient(circle at 50% 55%, rgba(1, 161, 127, 0.16), rgba(255, 255, 255, 0) 70%);
+          animation: cover-image-glow-pulse 3.6s ease-in-out infinite;
+        }
+        .dark .cover-image-glow {
+          background: radial-gradient(circle at 50% 55%, rgba(1, 161, 127, 0.26), rgba(9, 12, 19, 0) 70%);
+        }
+        @keyframes cover-image-glow-pulse {
+          0%, 100% { opacity: 0.7; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.05); }
+        }
+
+        .cover-card-pulse {
+          position: absolute;
+          inset: -6px;
+          border-radius: 14px;
+          border: 2px solid rgba(1, 161, 127, 0.5);
+          pointer-events: none;
+          animation: cover-card-pulse-ring 0.55s ease-out 0.55s 2;
+        }
+        @keyframes cover-card-pulse-ring {
+          0% { opacity: 0.9; transform: scale(0.98); }
+          100% { opacity: 0; transform: scale(1.04); }
         }
       `}</style>
     </>

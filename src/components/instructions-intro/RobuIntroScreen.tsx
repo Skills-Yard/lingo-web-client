@@ -119,13 +119,22 @@ export function RobuIntroScreen({ slide }: { slide: RobuIntroSlide }) {
           transitions smoothly instead of jumping. ── */}
       <div
         ref={robuRef}
-        className={`relative z-10 flex w-full items-center justify-center md:order-2 transition-transform duration-700 ease-out ${
+        className={`relative z-10 flex w-full items-center justify-center md:order-2 transition-transform duration-[800ms] ease-[cubic-bezier(0.34,1.56,0.64,1)] ${
           centerOffset === null ? "opacity-0" : "opacity-100"
         }`}
         style={{ transform: robuTransform }}
       >
-        <div className={reducedMotion ? "" : "animate-pop-in"}>
-          <RobuEyeBlink className="h-[clamp(180px,40vw,320px)] w-[clamp(180px,40vw,320px)]" />
+        {/* Soft ambient glow — pure polish, sits behind Robu. */}
+        <div
+          aria-hidden="true"
+          className={`robu-intro-glow ${reducedMotion ? "" : "animate-pop-in"}`}
+        />
+        <div className={`relative ${reducedMotion ? "" : "animate-pop-in"}`}>
+          <div className={effectivePhase === "idle" && !reducedMotion ? "animate-bounce-slow" : ""}>
+            <RobuEyeBlink className="h-[clamp(180px,40vw,320px)] w-[clamp(180px,40vw,320px)]" />
+          </div>
+          {/* Grounding shadow — stays put while Robu gently bobs above it. */}
+          <div aria-hidden="true" className="robu-intro-shadow" />
         </div>
       </div>
 
@@ -164,6 +173,38 @@ export function RobuIntroScreen({ slide }: { slide: RobuIntroSlide }) {
         }
         @keyframes robu-intro-caret-blink {
           50% { opacity: 0; }
+        }
+
+        .robu-intro-glow {
+          position: absolute;
+          inset: 19%;
+          pointer-events: none;
+          border-radius: 9999px;
+          filter: blur(28px);
+          background: radial-gradient(circle at 50% 55%, rgba(1, 161, 127, 0.22), rgba(255, 255, 255, 0) 70%);
+          animation: robu-intro-glow-pulse 3.2s ease-in-out infinite;
+        }
+        .dark .robu-intro-glow {
+          background: radial-gradient(circle at 50% 55%, rgba(1, 161, 127, 0.32), rgba(9, 12, 19, 0) 70%);
+        }
+        @keyframes robu-intro-glow-pulse {
+          0%, 100% { opacity: 0.7; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.06); }
+        }
+
+        .robu-intro-shadow {
+          position: absolute;
+          bottom: -0.35rem;
+          left: 50%;
+          height: 0.7rem;
+          width: 5.5rem;
+          transform: translateX(-50%);
+          border-radius: 9999px;
+          background: rgba(0, 0, 0, 0.12);
+          filter: blur(4px);
+        }
+        .dark .robu-intro-shadow {
+          background: rgba(0, 0, 0, 0.35);
         }
       `}</style>
     </div>
