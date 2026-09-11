@@ -186,7 +186,7 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     title: "is a problem solver.",
     imageLight: "/images/thinkingWhite.png",
     imageDark: "/images/thinkingBlack.png",
-    lines: ["Before we write code,", "let's learn how"],
+    lines: ["Before we write code, let's learn how"],
     highlightLine: "programmer think.",
     revealLabel: "Tap to reveal",
     revealSubject: "PROGRAMMER",

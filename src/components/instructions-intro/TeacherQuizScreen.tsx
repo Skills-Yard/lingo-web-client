@@ -28,11 +28,13 @@ export function TeacherQuizScreen({
         <span className="text-foreground">{slide.title}</span>
       </h1>
 
+      {/* Robu rides along inside the note bubble, as if it's the one asking the question. */}
       <TeacherIllustration
         className="h-64 md:h-80 md:col-start-1 md:row-start-2"
         fit="cover"
         imageLight="/images/answerImgWhite.png"
         imageDark="/images/answerImgBlack.png"
+        showRobu
       />
 
       <div className="flex flex-col gap-2 md:col-start-2 md:row-start-1 md:row-span-2 md:self-center">

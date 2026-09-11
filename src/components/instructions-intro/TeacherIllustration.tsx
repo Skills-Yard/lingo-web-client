@@ -1,3 +1,5 @@
+import { RobuEyeBlink } from "./RobuEyeBlink";
+
 interface TeacherIllustrationProps {
   className?: string;
   fit?: "contain" | "cover";
@@ -7,6 +9,8 @@ interface TeacherIllustrationProps {
   alt?: string;
   showNote?: boolean;
   noteClassName?: string;
+  /** Tucks Robu into the corner of the note bubble, as if it wrote the note. */
+  showRobu?: boolean;
 }
 
 /** Teacher-at-the-whiteboard illustration shared by the "Teacher Says" intro and the quiz screen. */
@@ -19,6 +23,7 @@ export function TeacherIllustration({
   alt = "Teacher explaining at the whiteboard",
   showNote = true,
   noteClassName = "",
+  showRobu = false,
 }: TeacherIllustrationProps) {
   const fitClass = fit === "cover" ? "object-cover" : "object-contain";
   const frameClass =
@@ -53,7 +58,32 @@ export function TeacherIllustration({
           <span className="relative block pt-3 text-[15px] font-semibold leading-[1.34]">
             Open Your Notebook
           </span>
+          {showRobu && (
+            <div className="teacher-note-robu" aria-hidden="true">
+              <RobuEyeBlink className="h-full w-full" />
+            </div>
+          )}
         </div>
+      )}
+
+      {showNote && showRobu && (
+        <style>{`
+          .teacher-note-robu {
+            position: absolute;
+            top: 0.4rem;
+            right: 0.4rem;
+            width: 1.75rem;
+            height: 1.75rem;
+            animation: teacher-note-robu-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+          }
+          @keyframes teacher-note-robu-in {
+            from { transform: scale(0.4); opacity: 0; }
+            to   { transform: scale(1); opacity: 1; }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .teacher-note-robu { animation: none; }
+          }
+        `}</style>
       )}
     </div>
   );

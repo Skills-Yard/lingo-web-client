@@ -5,6 +5,7 @@ import Image from "next/image";
 import type { CoverSlide } from "@/lib/constants/instructionsIntro";
 import { RevealModal } from "./RevealModal";
 import { RobuEyeBlink } from "./RobuEyeBlink";
+import { BoxLottie } from "./BoxLottie";
 
 const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
 
@@ -154,7 +155,7 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
             {slide.lines.map((line, i) => (
               <p
                 key={line}
-                className={`text-base md:text-2xl font-semibold text-foreground leading-tight ${
+                className={`text-sm md:text-xl font-semibold text-foreground leading-tight ${
                   reducedMotion ? "" : "animate-fade-in"
                 }`}
                 style={reducedMotion ? undefined : { animationDelay: `${i * 90}ms` }}
@@ -163,7 +164,7 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
               </p>
             ))}
             <p
-              className={`text-base md:text-2xl font-semibold text-primary leading-tight ${
+              className={`text-sm md:text-xl font-semibold text-primary leading-tight ${
                 reducedMotion ? "" : "animate-fade-in"
               }`}
               style={
@@ -190,12 +191,8 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
               <div aria-hidden="true" className="cover-card-pulse" />
             )}
 
-            <div className="w-16 h-40 shrink-0 flex items-center justify-center">
-              <img
-                src="/images/box.png"
-                alt=""
-                className="w-full h-[150px] object-contain transition-transform duration-200 group-hover:scale-105"
-              />
+            <div className="w-28 h-28 shrink-0 flex items-center justify-center">
+              <BoxLottie className="w-full h-full transition-transform duration-200 group-hover:scale-105" />
             </div>
             <div className="text-left">
               <p className="text-[15px] md:text-base text-white font-medium">
