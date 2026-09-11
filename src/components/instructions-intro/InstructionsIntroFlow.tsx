@@ -7,6 +7,7 @@ import {
   configureRiveRuntime,
   REWARD_RIVE_SRC,
   ROBU_EYEBLINK_RIVE_SRC,
+  ROBU_INTRO_RIVE_SRC,
 } from "@/lib/rive/runtime";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
@@ -60,6 +61,19 @@ export function InstructionsIntroFlow({
   // a time, so this always reflects the active screen's own spot for it.
   const [robuAnchorEl, setRobuAnchorEl] = useState<HTMLDivElement | null>(null);
   const robuStageRef = useRef<HTMLDivElement>(null);
+
+  // Whether Robu's one-shot `intro` Rive timeline has finished. Owned here
+  // (not inside RobuStage) so CoverScreen can hold its heading/bubble back
+  // and keep Robu at his big "entering" size until this actually flips —
+  // synced to the real animation instead of a guessed timer. The 6s
+  // fallback is only a safety net in case the Rive completion event never
+  // fires for some reason, so the rest of screen 1 is never stuck hidden.
+  const [robuIntroDone, setRobuIntroDone] = useState(false);
+  useEffect(() => {
+    if (robuIntroDone) return;
+    const t = window.setTimeout(() => setRobuIntroDone(true), 6000);
+    return () => window.clearTimeout(t);
+  }, [robuIntroDone]);
 
   const total = INSTRUCTIONS_INTRO_SLIDES.length;
   const slide = INSTRUCTIONS_INTRO_SLIDES[index];
@@ -279,6 +293,7 @@ export function InstructionsIntroFlow({
     preload("/rive/rive.wasm", { as: "fetch" });
     preload(REWARD_RIVE_SRC, { as: "fetch" });
     preload(ROBU_EYEBLINK_RIVE_SRC, { as: "fetch" });
+    preload(ROBU_INTRO_RIVE_SRC, { as: "fetch" });
   }, []);
 
   return (
@@ -305,7 +320,13 @@ export function InstructionsIntroFlow({
           className="relative flex-1 min-h-0 overflow-y-auto px-4 md:px-10 scrollbar-none"
           style={{ msOverflowStyle: "none" }}
         >
-          <RobuStage anchorEl={robuAnchorEl} shake={robuShake} containerRef={robuStageRef} />
+          <RobuStage
+            anchorEl={robuAnchorEl}
+            shake={robuShake}
+            containerRef={robuStageRef}
+            introDone={robuIntroDone}
+            onIntroComplete={() => setRobuIntroDone(true)}
+          />
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
             {(slide.kind === "cover" || slide.kind === "cover-reveal") && (
               // One call site for both steps — see CoverScreen's doc comment:
@@ -319,6 +340,7 @@ export function InstructionsIntroFlow({
                 onCloseModal={() => setModalOpen(false)}
                 instantSpeech={instantSpeech}
                 registerAnchor={setRobuAnchorEl}
+                robuIntroDone={robuIntroDone}
               />
             )}
             {slide.kind === "teacher-intro" && (

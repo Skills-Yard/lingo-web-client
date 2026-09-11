@@ -3,6 +3,7 @@
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { motion } from "framer-motion";
 import { RobuEyeBlink } from "./RobuEyeBlink";
+import { RobuIntro } from "./RobuIntro";
 
 interface Rect {
   x: number;
@@ -17,11 +18,6 @@ export const ROBU_WALK_TRANSITION = {
   duration: 0.7,
   ease: [0.22, 1, 0.36, 1] as const,
 };
-// Only used once, for the very first anchor Robu ever measures (the app's
-// opening fade), which wants a gentler curve than the glide — see
-// CoverScreen's own note on why WALK_TRANSITION's snappy easing reads as a
-// cut when reused for a fade instead of a position change.
-const ENTRY_TRANSITION = { duration: 0.9, ease: "easeInOut" as const };
 
 interface RobuStageProps {
   /** DOM node of whichever screen's `<RobuAnchor>` is currently mounted —
@@ -33,6 +29,13 @@ interface RobuStageProps {
    * `position: relative` (or similar) and contain every screen that renders
    * a `<RobuAnchor>`. */
   containerRef: RefObject<HTMLDivElement | null>;
+  /** Whether the one-shot `intro` timeline has finished. Owned by the flow
+   * (not this component) so CoverScreen's own "hold everything else back
+   * until Robu has arrived" choreography can react to the very same signal
+   * instead of guessing at a fixed timer that could fall out of sync with
+   * however long the actual animation takes. */
+  introDone: boolean;
+  onIntroComplete: () => void;
 }
 
 /**
@@ -44,15 +47,20 @@ interface RobuStageProps {
  * never unmounts between screens, Robu reads as one continuous character
  * walking the learner through the flow rather than a fresh mascot cutting in
  * on every screen.
+ *
+ * The very first time Robu appears, he plays `intro.riv`'s one-shot `intro`
+ * timeline instead of the wrapper doing a CSS/framer fade — once that
+ * finishes (`introDone`), this swaps over to the normal, looping
+ * `<RobuEyeBlink>` for the rest of the session.
  */
-export function RobuStage({ anchorEl, shake, containerRef }: RobuStageProps) {
+export function RobuStage({
+  anchorEl,
+  shake,
+  containerRef,
+  introDone,
+  onIntroComplete,
+}: RobuStageProps) {
   const [rect, setRect] = useState<Rect | null>(null);
-  // Only the very first measurement gets the gentler fade-in treatment;
-  // every rect change after that is a glide between two real screens. Kept
-  // as state (flipped inside the effect below, never read/written during
-  // render) rather than a ref, since a ref's value must never be read while
-  // rendering.
-  const [isFirstPositioning, setIsFirstPositioning] = useState(true);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -80,10 +88,6 @@ export function RobuStage({ anchorEl, shake, containerRef }: RobuStageProps) {
       };
       const key = `${next.x}|${next.y}|${next.width}|${next.height}`;
       if (key !== lastKey) {
-        // The very first measurement (lastKey still "") is the one the
-        // render below treats as "first positioning"; every measurement
-        // after that is a real glide between two anchors.
-        if (lastKey !== "") setIsFirstPositioning(false);
         lastKey = key;
         setRect(next);
       }
@@ -99,26 +103,15 @@ export function RobuStage({ anchorEl, shake, containerRef }: RobuStageProps) {
   return (
     <motion.div
       className="pointer-events-none absolute left-0 top-0 z-20"
-      initial={isFirstPositioning ? { opacity: 0, scale: 0.92 } : false}
-      animate={{
-        opacity: 1,
-        scale: 1,
-        x: rect.x,
-        y: rect.y,
-        width: rect.width,
-        height: rect.height,
-      }}
-      transition={isFirstPositioning ? ENTRY_TRANSITION : ROBU_WALK_TRANSITION}
+      animate={{ x: rect.x, y: rect.y, width: rect.width, height: rect.height }}
+      transition={ROBU_WALK_TRANSITION}
     >
-      {/* `shake`'s CSS `animation` lives on this inner element, not the
-          motion.div above — a CSS keyframe animation targeting `transform`
-          overrides framer-motion's own inline `transform` outright (it wins
-          the cascade for that property), which was silently wiping out
-          every x/y/scale value framer set and pinning Robu to (0, 0) the
-          whole time cover-reveal was prompting a tap. Nesting them on
-          separate elements lets each own its own transform layer. */}
       <div className={`h-full w-full ${shake ? "animate-shake" : ""}`}>
-        <RobuEyeBlink className="h-full w-full" />
+        {introDone ? (
+          <RobuEyeBlink className="h-full w-full" />
+        ) : (
+          <RobuIntro className="h-full w-full" onComplete={onIntroComplete} />
+        )}
       </div>
     </motion.div>
   );

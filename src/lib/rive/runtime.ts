@@ -28,6 +28,13 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
  */
 export const ROBU_EYEBLINK_RIVE_SRC = "/animations/robu_latest_day2.riv";
 
+/**
+ * Robu's one-time entrance — the `intro` timeline, played once the very
+ * first time Robu appears in the whole flow, in place of a CSS/framer
+ * opacity+scale fade. See RobuIntro / RobuStage.
+ */
+export const ROBU_INTRO_RIVE_SRC = "/animations/intro.riv";
+
 let configured = false;
 
 /**

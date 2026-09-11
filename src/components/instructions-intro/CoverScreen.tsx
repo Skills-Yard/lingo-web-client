@@ -1,21 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Lightbulb, Sparkle } from "lucide-react";
 import type { CoverSlide, CoverRevealSlide } from "@/lib/constants/instructionsIntro";
 import { RobuAnchor } from "./RobuAnchor";
 import { SpeechBubble } from "./SpeechBubble";
 import { RevealModal } from "./RevealModal";
+import { BoxLottie } from "./BoxLottie";
 
 // The whole row swapping vertical position (bubble/heading trading places)
 // as the reveal card shows up — Robu's own glide between anchors is handled
 // entirely by RobuStage now, so this is only for everything else in the row.
 const WALK_TRANSITION = { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const };
-
-// How long Robu holds, big and centered, before walking over to its actual
-// greeting spot and letting the bubble/heading appear.
-const ENTRY_HOLD_MS = 1100;
 
 interface CoverScreenProps {
   slide: CoverSlide | CoverRevealSlide;
@@ -36,6 +32,11 @@ interface CoverScreenProps {
   /** Registers where Robu (a single persistent mascot — see RobuStage) should
    * stand for whichever of screens 1/2 is active. */
   registerAnchor: (el: HTMLDivElement | null) => void;
+  /** Whether Robu's one-shot entrance (RobuStage's `intro.riv` timeline) has
+   * finished. Owned by the flow, shared with RobuStage, so this screen's own
+   * "hold the heading/bubble back and keep Robu big" choreography stays
+   * synced to the real animation instead of a guessed timer. */
+  robuIntroDone: boolean;
 }
 
 /**
@@ -55,25 +56,21 @@ export function CoverScreen({
   onCloseModal,
   instantSpeech,
   registerAnchor,
+  robuIntroDone,
 }: CoverScreenProps) {
   const isReveal = slide.kind === "cover-reveal";
 
-  // Robu's very first entrance (step 01 only): fade in big and centered,
-  // hold a beat, then walk over to its actual greeting spot — bubble and
-  // heading wait until that settles instead of all popping in at once.
-  // This never replays on "revealed" toggling or on later slides; it's tied
-  // purely to this component's own mount.
-  const [entering, setEntering] = useState(() => slide.kind === "cover");
-  useEffect(() => {
-    if (!entering) return;
-    const t = window.setTimeout(() => setEntering(false), ENTRY_HOLD_MS);
-    return () => window.clearTimeout(t);
-  }, [entering]);
+  // Robu's very first entrance (step 01 only): his `intro.riv` timeline
+  // plays big and centered, alone — heading and bubble stay held back, and
+  // Robu stays at this bigger size, until that animation actually finishes.
+  // This never re-triggers on `revealed` toggling or on later slides, since
+  // `robuIntroDone` only ever flips true once for the whole session.
+  const entering = slide.kind === "cover" && !robuIntroDone;
 
   // Robu shrinks once it's crouched next to the reveal card — and starts
   // out bigger still, centered, for the entrance above.
   const robuSize = entering
-    ? "h-32 w-32 sm:h-48 sm:w-48 md:h-64 md:w-64"
+    ? "h-99 w-99 sm:h-144 sm:w-144 md:h-180 md:w-180"
     : revealed
       ? "h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36"
       : "h-24 w-24 sm:h-40 sm:w-40 md:h-56 md:w-56";
@@ -211,16 +208,15 @@ export function CoverScreen({
             onOpenModal();
             onBoxTap();
           }}
-          className="animate-pop-in order-3 -mt-2 flex h-32 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-36 sm:gap-6 sm:p-5 md:h-40 md:gap-8 md:p-6"
+          className="animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6"
           aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
         >
-          <div className="flex h-32 w-12 shrink-0 items-center justify-center sm:h-36 sm:w-14 md:h-40 md:w-16">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/box.png"
-              alt=""
-              className="h-25 w-full object-contain sm:h-31.25 md:h-37.5"
-            />
+          <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">
+            {/* Plays once, right as this card mounts (i.e. as soon as the
+                reveal step appears) — no loop. Square and sized to fill the
+                card's own height (minus its padding) so the box reads at
+                full size instead of being squeezed down to fit a narrow slot. */}
+            <BoxLottie className="h-full w-full" />
           </div>
           <div className="text-left">
             <p className="text-sm text-white font-medium sm:text-[15px] md:text-base">{slide.revealLabel}</p>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect } from "react";
-import Image from "next/image";
 import type { CoverRevealSlide } from "@/lib/constants/instructionsIntro";
 import { RobuEyeBlink } from "./RobuEyeBlink";
+import { BoxLottie } from "./BoxLottie";
 
 interface RevealModalProps {
   slide: CoverRevealSlide;
@@ -50,16 +50,12 @@ export function RevealModal({ slide, onClose }: RevealModalProps) {
           ✕
         </button>
 
-        {/* Glowing box image — Robu followed the learner in and sits beside it */}
+        {/* Glowing box — plays its opening animation once as the popup
+            appears, instead of a static image; Robu followed the learner in
+            and sits beside it. */}
         <div className="reveal-modal-img-row">
           <div className="reveal-modal-img-wrap">
-            <Image
-              src="/images/box.png"
-              alt="Reveal box"
-              width={140}
-              height={140}
-              className="reveal-modal-img"
-            />
+            <BoxLottie className="reveal-modal-img" />
           </div>
           <div className="reveal-modal-robu-wrap">
             <RobuEyeBlink className="h-full w-full" />
@@ -211,8 +207,8 @@ export function RevealModal({ slide, onClose }: RevealModalProps) {
           gap: 0.25rem;
         }
         .reveal-modal-img-wrap {
-          width: clamp(92px, 26vw, 120px);
-          height: clamp(92px, 26vw, 120px);
+          width: clamp(130px, 34vw, 170px);
+          height: clamp(130px, 34vw, 170px);
           display: flex;
           align-items: center;
           justify-content: center;
