@@ -2,10 +2,11 @@
 
 import { useEffect } from "react";
 import Image from "next/image";
-import type { CoverSlide } from "@/lib/constants/instructionsIntro";
+import type { CoverRevealSlide } from "@/lib/constants/instructionsIntro";
+import { RobuEyeBlink } from "./RobuEyeBlink";
 
 interface RevealModalProps {
-  slide: CoverSlide;
+  slide: CoverRevealSlide;
   onClose: () => void;
 }
 
@@ -49,22 +50,27 @@ export function RevealModal({ slide, onClose }: RevealModalProps) {
           ✕
         </button>
 
-        {/* Glowing box image */}
-        <div className="reveal-modal-img-wrap">
-          <Image
-            src="/images/box.png"
-            alt="Reveal box"
-            width={140}
-            height={140}
-            className="reveal-modal-img"
-          />
+        {/* Glowing box image — Robu followed the learner in and sits beside it */}
+        <div className="reveal-modal-img-row">
+          <div className="reveal-modal-img-wrap">
+            <Image
+              src="/images/box.png"
+              alt="Reveal box"
+              width={140}
+              height={140}
+              className="reveal-modal-img"
+            />
+          </div>
+          <div className="reveal-modal-robu-wrap">
+            <RobuEyeBlink className="h-full w-full" />
+          </div>
         </div>
 
         {/* Title */}
         <h2 className="reveal-modal-title">
           <span className="reveal-modal-highlight">{slide.revealSubject}</span>
           <br />
-          <span className="reveal-modal-subtitle">{slide.title}</span>
+          <span className="reveal-modal-subtitle">{slide.modalTitle}</span>
         </h2>
 
         {/* Divider diamond */}
@@ -133,9 +139,11 @@ export function RevealModal({ slide, onClose }: RevealModalProps) {
           position: relative;
           width: 100%;
           max-width: 100%;
+          max-height: 92vh;
+          overflow-y: auto;
           background: #ffffff;
           border-radius: 20px 20px 0 0;
-          padding: 2rem 1.75rem 2.25rem;
+          padding: 1.5rem 1.25rem 2rem;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -195,10 +203,16 @@ export function RevealModal({ slide, onClose }: RevealModalProps) {
           background: #3a3f52;
         }
 
-        .reveal-modal-img-wrap {
+        .reveal-modal-img-row {
           margin-top: 0.5rem;
-          width: 120px;
-          height: 120px;
+          display: flex;
+          align-items: flex-end;
+          justify-content: center;
+          gap: 0.25rem;
+        }
+        .reveal-modal-img-wrap {
+          width: clamp(92px, 26vw, 120px);
+          height: clamp(92px, 26vw, 120px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -208,6 +222,12 @@ export function RevealModal({ slide, onClose }: RevealModalProps) {
           width: 100%;
           height: 100%;
           object-fit: contain;
+        }
+        .reveal-modal-robu-wrap {
+          width: clamp(44px, 13vw, 56px);
+          height: clamp(44px, 13vw, 56px);
+          flex-shrink: 0;
+          margin-bottom: 0.5rem;
         }
 
         .reveal-modal-title {

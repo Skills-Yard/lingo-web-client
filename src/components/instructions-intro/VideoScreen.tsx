@@ -1,14 +1,27 @@
 import { ChevronRight, List, Network, Sparkles } from "lucide-react";
 import type { VideoSlide } from "@/lib/constants/instructionsIntro";
+import { RobuSays } from "./RobuSays";
 
-export function VideoScreen({ slide }: { slide: VideoSlide }) {
+export function VideoScreen({
+  slide,
+  instantSpeech,
+  registerAnchor,
+}: {
+  slide: VideoSlide;
+  /** Skip Robu's typewriter — set once this screen has already been seen. */
+  instantSpeech?: boolean;
+  registerAnchor: (el: HTMLDivElement | null) => void;
+}) {
   return (
     <div className="flex flex-col gap-5 min-[996px]:grid min-[996px]:grid-cols-5 min-[996px]:gap-x-8 min-[996px]:items-center min-[996px]:min-h-full min-[996px]:content-center">
       <div className="flex flex-col gap-4 min-[996px]:col-span-1 min-[996px]:col-start-1 min-[996px]:row-start-1">
-        <h1 className="text-2xl min-[996px]:text-3xl font-semibold tracking-tight leading-tight text-center min-[996px]:text-left">
-          <span className="text-primary">{slide.highlightWord}</span>{" "}
-          <span className="text-foreground">{slide.title}</span>
-        </h1>
+        <RobuSays
+          text={`${slide.highlightWord} ${slide.title}`}
+          highlight={slide.highlightWord}
+          instant={instantSpeech}
+          side="left"
+          registerAnchor={registerAnchor}
+        />
         <div className="flex flex-col gap-3">
           <button
             type="button"

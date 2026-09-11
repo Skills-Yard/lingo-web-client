@@ -4,12 +4,16 @@ import { useState } from "react";
 import Image from "next/image";
 import { Check, X } from "lucide-react";
 import type { QuestionnaireSlide } from "@/lib/constants/instructionsIntro";
+import { RobuSays } from "./RobuSays";
 
 interface QuestionnaireScreenProps {
   slide: QuestionnaireSlide;
   selectedId?: string | null;
   checked?: boolean;
   onSelect?: (itemId: string) => void;
+  /** Skip Robu's typewriter — set once this screen has already been seen. */
+  instantSpeech?: boolean;
+  registerAnchor: (el: HTMLDivElement | null) => void;
 }
 
 /** Wraps any of `terms` (case-insensitive) found in `text` with the brand green. */
@@ -42,6 +46,8 @@ export function QuestionnaireScreen({
   selectedId: externalSelectedId,
   checked: externalChecked,
   onSelect,
+  instantSpeech,
+  registerAnchor,
 }: QuestionnaireScreenProps) {
   const [localSelectedId, setLocalSelectedId] = useState<string | null>(null);
   const [localChecked] = useState(false);
@@ -66,16 +72,13 @@ export function QuestionnaireScreen({
     <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-8 md:gap-y-6 md:min-h-full md:content-center md:items-start">
       {/* ── Left column — "Q." badge, heading, prompt, illustration ── */}
       <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1 md:row-span-2 md:self-stretch md:border-r border-black/10 dark:border-white/10 md:pr-8">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-[54px] w-[54px] shrink-0 items-center justify-center rounded-[6px] bg-[#E9F5F0] dark:bg-[#0F2921]">
-            <span className="text-2xl font-semibold leading-none text-primary">
-              Q.
-            </span>
-          </span>
-          <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">
-            <Highlight text={slide.title} terms={[slide.highlightWord]} />
-          </h1>
-        </div>
+        <RobuSays
+          text={slide.title}
+          highlight={slide.highlightWord}
+          instant={instantSpeech}
+          side="left"
+          registerAnchor={registerAnchor}
+        />
 
         <p className="text-sm font-medium leading-[1.5] text-[#666666] dark:text-neutral-400">
           {slide.description}

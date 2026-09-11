@@ -1,12 +1,16 @@
 import { Check, X } from "lucide-react";
 import type { TeacherQuizSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
+import { RobuSays } from "./RobuSays";
 
 interface TeacherQuizScreenProps {
   slide: TeacherQuizSlide;
   selected: number | null;
   checked: boolean;
   onSelect: (idx: number) => void;
+  /** Skip Robu's typewriter — set once this screen has already been seen. */
+  instantSpeech?: boolean;
+  registerAnchor: (el: HTMLDivElement | null) => void;
 }
 
 export function TeacherQuizScreen({
@@ -14,6 +18,8 @@ export function TeacherQuizScreen({
   selected,
   checked,
   onSelect,
+  instantSpeech,
+  registerAnchor,
 }: TeacherQuizScreenProps) {
   const selectedOption = selected !== null ? slide.options[selected] : null;
   const isCorrect = !!selectedOption?.isCorrect;
@@ -23,10 +29,14 @@ export function TeacherQuizScreen({
 
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-x-10 md:items-center md:min-h-full md:content-center">
-      <h1 className="text-xl md:text-2xl font-semibold tracking-tight leading-tight text-center md:text-left md:col-start-1 md:row-start-1">
-        <span className="text-primary">{slide.highlightWord}</span>{" "}
-        <span className="text-foreground">{slide.title}</span>
-      </h1>
+      <RobuSays
+        text={`${slide.highlightWord} ${slide.title}`}
+        highlight={slide.highlightWord}
+        instant={instantSpeech}
+        side="right"
+        className="md:col-start-1 md:row-start-1"
+        registerAnchor={registerAnchor}
+      />
 
       <TeacherIllustration
         className="h-64 md:h-80 md:col-start-1 md:row-start-2"
