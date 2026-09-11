@@ -4,13 +4,29 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { ShieldCheck, ChevronRight } from "lucide-react";
 import type { RewardSlide } from "@/lib/constants/instructionsIntro";
-import { useRive, useStateMachineInput } from "@rive-app/react-canvas";
+import {
+  useRive,
+  useViewModel,
+  useViewModelInstance,
+  useViewModelInstanceBoolean,
+  useViewModelInstanceTrigger,
+} from "@rive-app/react-canvas";
+import { EventType } from "@rive-app/canvas";
 import { configureRiveRuntime, REWARD_RIVE_SRC } from "@/lib/rive/runtime";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
-const RIVE_STATE_MACHINE = "State Machine 1";
+const RIVE_STATE_MACHINE = "State Machine";
+
+// `mera_updated_box.riv` drives its state machine through data binding rather
+// than raw inputs: the `ArtboardViewModel` view model exposes `hovering`
+// (Boolean) and `clicked` (Trigger).
+const RIVE_VIEW_MODEL = "ArtboardViewModel";
+
+// Linear timeline that plays on top of the state machine — the sprinkle burst
+// that loops continuously for as long as this screen is on screen.
+const RIVE_SPRINKLE_ANIMATION = "sprinkle";
 
 // Let the box-open animation play before the reward cards take over the screen.
 const BOX_OPEN_DELAY_MS = 500;
@@ -34,6 +50,24 @@ export function RewardScreen({
     autoplay: true,
   });
 
+  // Bind the artboard's view model instance to the runtime and read its
+  // data-bound properties instead of raw state-machine inputs.
+  const viewModel = useViewModel(rive, { name: RIVE_VIEW_MODEL });
+  const viewModelInstance = useViewModelInstance(viewModel, { rive });
+
+  const { setValue: setHovering } = useViewModelInstanceBoolean(
+    "hovering",
+    viewModelInstance,
+  );
+  const { trigger: fireClicked } = useViewModelInstanceTrigger(
+    "clicked",
+    viewModelInstance,
+  );
+
+  // True while the claim-triggered open animation is playing, so the pointer
+  // leaving the canvas mid-animation doesn't snap the box shut.
+  const isOpeningRef = useRef(false);
+
   // Once the instance is ready, match the drawing surface to the container so
   // the first paint is sharp and does not trigger a resize-driven repaint
   // partway through the animation.
@@ -41,54 +75,29 @@ export function RewardScreen({
     rive?.resizeDrawingSurfaceToCanvas();
   }, [rive]);
 
-  const clickedInput = useStateMachineInput(
-    rive,
-    RIVE_STATE_MACHINE,
-    "clicked",
-  );
-  // NB: the .riv input is named "hovering" (not "hover") — getting this wrong
-  // makes hoverInput null and openBox() silently bails.
-  const hoverInput = useStateMachineInput(
-    rive,
-    RIVE_STATE_MACHINE,
-    "hovering",
-  );
-
-  // Hold the hover input in a ref so the pointer handlers can write to it
-  // without the React compiler flagging a direct write to a hook return value.
-  const hoverInputRef = useRef<typeof hoverInput>(null);
-  const clickedInputRef = useRef<typeof clickedInput>(null);
-  const isOpeningRef = useRef(false);
-
+  // Keep the sprinkle burst running for the whole life of this screen. It plays
+  // as a linear timeline on top of the state machine, so anything that settles
+  // the state machine (or the timeline reaching its end when authored one-shot)
+  // can drop it from the animator. `ensureSprinkle` re-adds it whenever it is
+  // not in the playing set — driven both by Rive's stop event for an immediate
+  // restart and by a slow interval as a catch-all.
   useEffect(() => {
-    hoverInputRef.current = hoverInput;
-  }, [hoverInput]);
+    if (!rive) return;
 
-  useEffect(() => {
-    clickedInputRef.current = clickedInput;
-  }, [clickedInput]);
+    rive.play(RIVE_SPRINKLE_ANIMATION);
+  }, [rive]);
 
   // Play the box-open animation. Fired both by tapping the canvas and by the
-  // "Open Gift" button. The state machine only takes the "open"
-  // transition while its `hover` flag is set, so engage that first — otherwise
-  // firing `clicked` from the button (pointer nowhere near the canvas) leaves
-  // the animation stuck.
+  // "Claim Instantly" button. The state machine only takes the "open"
+  // transition while `hovering` is true, so engage that first, then on the next
+  // frame — once Rive has applied the boolean — fire the `clicked` trigger and
+  // restart `sprinkle` so its burst is in sync with the box opening. The
+  // keep-alive effect keeps it looping afterwards.
   const openBox = () => {
-    const hover = hoverInputRef.current;
-    const clicked = clickedInputRef.current;
+    setHovering(true);
 
-    if (!hover || !clicked) {
-      console.log("Rive inputs not ready");
-      return;
-    }
-
-    // The Rive state machine requires hover=true
-    hover.value = true;
-
-    // Give Rive a frame to process the hover state,
-    // then fire the click trigger.
     requestAnimationFrame(() => {
-      clicked.fire();
+      fireClicked();
     });
   };
 
@@ -107,15 +116,12 @@ export function RewardScreen({
   };
 
   const handleMouseEnter = () => {
-    // if (hoverInputRef.current) hoverInputRef.current.value = true;
+    setHovering(true);
   };
 
   const handleMouseLeave = () => {
-    // if (isOpeningRef.current) return;
-
-    // if (hoverInputRef.current) {
-    //   hoverInputRef.current.value = false;
-    // }
+    if (isOpeningRef.current) return;
+    setHovering(false);
   };
 
   return (

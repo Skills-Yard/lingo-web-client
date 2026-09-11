@@ -6,7 +6,7 @@ import { Poppins } from "next/font/google";
 import {
   configureRiveRuntime,
   REWARD_RIVE_SRC,
-  ROBU_RIVE_SRC,
+  ROBU_EYEBLINK_RIVE_SRC,
 } from "@/lib/rive/runtime";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
@@ -20,7 +20,7 @@ import { VideoScreen } from "./VideoScreen";
 import { QuestionnaireScreen } from "./QuestionnaireScreen";
 import { RewardScreen } from "./RewardScreen";
 import { GameBoardScreen } from "./GameBoardScreen";
-import { MeetRobuScreen } from "./MeetRobuScreen";
+import { RobuScreen } from "./RobuScreen";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -185,7 +185,7 @@ export function InstructionsIntroFlow({
     configureRiveRuntime();
     preload("/rive/rive.wasm", { as: "fetch" });
     preload(REWARD_RIVE_SRC, { as: "fetch" });
-    preload(ROBU_RIVE_SRC, { as: "fetch" });
+    preload(ROBU_EYEBLINK_RIVE_SRC, { as: "fetch" });
   }, []);
 
   return (
@@ -242,7 +242,7 @@ export function InstructionsIntroFlow({
             {slide.kind === "game" && (
               <GameBoardScreen slide={slide} onSolvedChange={setGameSolved} />
             )}
-            {slide.kind === "meet-robu" && <MeetRobuScreen slide={slide} />}
+            {slide.kind === "robu" && <RobuScreen slide={slide} />}
           </div>
         </div>
 

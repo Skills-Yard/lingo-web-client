@@ -20,7 +20,13 @@ const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
  * Source for the reward-screen animation. Kept here so the component that
  * renders it and the flow that preloads it can never drift apart.
  */
-export const REWARD_RIVE_SRC = "/animations/rewardAnimate02.riv";
+export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
+
+/**
+ * Robu mascot with the looping `eyeblink` timeline. Vector-only and tiny, used
+ * on the closing instructions page and on the game screen.
+ */
+export const ROBU_EYEBLINK_RIVE_SRC = "/animations/robo_new1.riv";
 
 /**
  * Source for the "Meet Robu" character-intro animation (screen 09). Same
