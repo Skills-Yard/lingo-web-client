@@ -26,7 +26,7 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
  * Robu mascot with the looping `eyeblink` timeline. Vector-only and tiny, used
  * on the closing instructions page and on the game screen.
  */
-export const ROBU_EYEBLINK_RIVE_SRC = "/animations/robu_update_day2.riv";
+export const ROBU_EYEBLINK_RIVE_SRC = "/animations/robu_latest_day2.riv";
 
 let configured = false;
 

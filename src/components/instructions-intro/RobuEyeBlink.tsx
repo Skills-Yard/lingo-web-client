@@ -30,12 +30,15 @@ const AMBIENT_WATCHDOG_MS = 500;
 
 /**
  * Keep the ambient base animations playing for the whole life of the
- * component. Rive's own render loop can go idle once nothing is actively
- * playing — and a `stop()` on an overlay animation (see `usePeriodicOverlay`
- * below) can be enough to trip that, freezing *everything* on the canvas,
- * `idle2` included. Re-adding any base animation that has dropped out of
- * `playingAnimationNames` keeps the render loop alive so overlay replays stay
- * visible too.
+ * component. If a base timeline is authored as one-shot (not looping) in the
+ * editor, it plays once, reaches its end, and its internal `playing` flag
+ * flips off — merely calling `play()` again on that same, still-instanced
+ * animation does NOT rewind it, it just holds on the final frame. `stop()`
+ * first removes the finished instance entirely, so the following `play()`
+ * creates a fresh one and explicitly resets it to frame 0 (same as the
+ * one-shot overlays below). This also guards against Rive's render loop going
+ * idle when nothing is actively playing, which would otherwise freeze
+ * everything on the canvas, `idle2` included.
  */
 function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
   useEffect(() => {
@@ -44,6 +47,7 @@ function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
     const ensurePlaying = () => {
       for (const name of animations) {
         if (!rive.playingAnimationNames.includes(name)) {
+          rive.stop(name);
           rive.play(name);
         }
       }
