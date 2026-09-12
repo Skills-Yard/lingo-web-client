@@ -113,7 +113,7 @@ export function CoverScreen({
       {isReveal && (
         <div
           aria-hidden
-          className="absolute top-4 left-20  text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
         >
           <Lightbulb
             className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
@@ -160,7 +160,7 @@ export function CoverScreen({
             flips — so it stays mounted and glides across instead of
             disappearing from one side and popping in on the other. */}
         <div
-          className={`flex-col w-full ${
+          className={`flex w-full ${
             revealed ? "items-center" : "items-start"
           } justify-center`}
         >
@@ -184,8 +184,10 @@ export function CoverScreen({
             </div>
           )}
 
+          {robu}
+
           {isReveal && (
-            <div className={`relative flex items-center justify-center mr-6 ${bubbleSideOrder}`}>
+            <div className={`relative mr-6 ${bubbleSideOrder}`}>
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
                   key={revealed ? "prompt" : "intro"}
@@ -209,8 +211,6 @@ export function CoverScreen({
               </AnimatePresence>
             </div>
           )}
-          {robu}
-
         </div>
       </div>
 
@@ -280,7 +280,7 @@ export function CoverScreen({
                 src="/images/thinkingBlack.png"
                 alt=""
                 aria-hidden="true"
-                width={revealed ? 200 : 743}
+                width={revealed ? 100 : 743}
                 height={512}
                 className="hidden h-auto object-contain dark:block sm:w-64 md:w-72"
               />
