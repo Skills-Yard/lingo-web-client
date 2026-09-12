@@ -113,7 +113,7 @@ export function CoverScreen({
       {isReveal && (
         <div
           aria-hidden
-          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+          className="absolute top-4 left-20  text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
         >
           <Lightbulb
             className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
@@ -160,7 +160,7 @@ export function CoverScreen({
             flips — so it stays mounted and glides across instead of
             disappearing from one side and popping in on the other. */}
         <div
-          className={`flex w-full ${
+          className={`flex-col w-full ${
             revealed ? "items-center" : "items-start"
           } justify-center`}
         >
@@ -184,16 +184,21 @@ export function CoverScreen({
             </div>
           )}
 
-          {robu}
-
           {isReveal && (
-            <div className={`relative mr-6 ${bubbleSideOrder}`}>
+            <div className={`relative flex items-center justify-center mr-6 ${bubbleSideOrder}`}>
               <AnimatePresence mode="popLayout" initial={false}>
                 <motion.div
                   key={revealed ? "prompt" : "intro"}
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
                 >
+                  {/* A real bubble throughout (not the big heading style —
+                      that's `robuIntro`'s job now, always visible below the
+                      illustration; see the heading slot). Thanks to the
+                      existing order-flip above, this row already sits
+                      directly above the reveal card once `revealed`, so
+                      Robu's own "Hey, Click this box" prompt reads as him
+                      talking right at the box. */}
                   <SpeechBubble
                     text={revealed ? slide.robuPrompt : slide.robuIntro}
                     highlight={revealed ? undefined : slide.robuIntroHighlight}
@@ -204,48 +209,100 @@ export function CoverScreen({
               </AnimatePresence>
             </div>
           )}
+          {robu}
+
         </div>
-        {/* Thinking image */}
       </div>
 
-      {/* ── Heading + description — same shape on both screens; fades in
-          once Robu's entrance settles rather than appearing with it ── */}
+      {/* ── This slot is either the shared title+description heading (page
+          1) or, on page 2, the "thinking" illustration — up throughout page
+          2, both before and after it's revealed. Fades in once Robu's
+          entrance settles rather than appearing with it. ── */}
       <motion.div
         layout="position"
         initial={false}
         animate={{ opacity: entering ? 0 : 1, y: entering ? 8 : 0 }}
         transition={WALK_TRANSITION}
-        className={`px-4  text-center sm:px-6 ${headingOrder}`}
+        className={`px-4 text-center sm:px-6 ${headingOrder}`}
       >
-        {isReveal && (
-          <AnimatePresence>
-            {isReveal && (
-              <motion.div
-                initial={{ opacity: 1 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                className="mx-auto flex items-center justify-center"
-              >
-                <Image
-                  src="/images/thinkingBlack.png"
-                  alt=""
-                  aria-hidden="true"
-                  width={revealed ? 120 : 200}
-                  height={revealed ? 48 : 80}
-                  className="mt-0 object-contain md:hidden"
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
-        )}
-        <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
-          <span className="text-foreground">{slide.title}</span>{" "}
-          <span className="text-primary">{slide.highlightTitle}</span>
-        </h1>
-        <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base">
-          {slide.description}
-        </p>
+        <AnimatePresence mode="wait" initial={false}>
+          {isReveal ? (
+            <motion.div
+              key="thinking-image"
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.92 }}
+              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              className="mx-auto flex flex-col items-center justify-center gap-3"
+            >
+              {/* Once revealed, Robu's own bubble above switches over to the
+                  short "Hey, Click this box" prompt — so this is where his
+                  actual intro line keeps living instead of just vanishing:
+                  same text, now presented as a normal headline (matching
+                  the reference image) rather than being hidden the moment
+                  the reveal card shows up. Sits above the illustration.
+                  Always `instant`, not tied to `instantSpeech`: this exact
+                  line was just typed out a second ago in Robu's own bubble
+                  right above, so re-running the typewriter here would read
+                  as a stutter, not a fresh line — it fades in already fully
+                  formed instead. */}
+              {revealed && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
+                >
+                  <SpeechBubble
+                    text={slide.robuIntro}
+                    highlight={slide.robuIntroHighlight}
+                    instant
+                    size="heading"
+                  />
+                </motion.div>
+              )}
+              {/* Natural size is 743x512 (~1.45:1) — `width`/`height` set
+                  that intrinsic ratio for Next/Image, `h-auto` + the `w-*`
+                  classes below are what actually size it on screen, so it
+                  scales up cleanly instead of being squeezed into a fixed
+                  box with the wrong aspect ratio. Light/dark are two actual
+                  images (not a CSS filter) swapped via `dark:` — mirrors
+                  every other theme-aware asset in this flow. Up for both of
+                  page 2's states (not just once revealed). */}
+              <Image
+                src="/images/thinkingWhite.png"
+                alt=""
+                aria-hidden="true"
+                width={743}
+                height={512}
+                className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72"
+              />
+              <Image
+                src="/images/thinkingBlack.png"
+                alt=""
+                aria-hidden="true"
+                width={revealed ? 200 : 743}
+                height={512}
+                className="hidden h-auto object-contain dark:block sm:w-64 md:w-72"
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="title"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+            >
+              <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
+                <span className="text-foreground">{slide.title}</span>{" "}
+                <span className="text-primary">{slide.highlightTitle}</span>
+              </h1>
+              <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base">
+                {slide.description}
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
 
       {/* ── Reveal card — hidden until "Next" pops it in ── */}

@@ -60,7 +60,13 @@ export function RobuSays({
         registerAnchor={registerAnchor}
         className={`shrink-0 ${robuClassName}`}
       />
-      <div className="-ml-12 shrink-0 sm:-ml-4 md:ml-0">
+      <div
+        className={` ${
+          side === "right"
+            ? "-mr-12 shrink-0 sm:-mr-4 md:mr-0"
+            : "-ml-12 shrink-0 sm:-ml-4 md:ml-0"
+        }`}
+      >
         <SpeechBubble
           text={text}
           highlight={highlight}

@@ -16,8 +16,12 @@ interface SpeechBubbleProps {
    * Robu doesn't re-type a line the learner already read. */
   instant?: boolean;
   /** "sm" (default) matches the original cover-screen bubbles; "lg" is sized
-   * for screens where the bubble carries the whole heading. */
-  size?: "sm" | "lg";
+   * for screens where the bubble carries the whole heading. "heading" drops
+   * the bubble chrome (border/background/tail) entirely and renders the
+   * same typed/highlighted text as a big bold heading instead — for a
+   * moment that wants to read as a headline, not a chat bubble, while still
+   * reusing the exact same typewriter behavior. */
+  size?: "sm" | "lg" | "heading";
   className?: string;
 }
 
@@ -61,6 +65,19 @@ export function SpeechBubble({
 
     return () => window.clearInterval(timer);
   }, [text, skipTyping]);
+
+  if (size === "heading") {
+    return (
+      <p
+        className={`animate-pop-in text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl md:text-3xl ${className ?? ""}`}
+      >
+        {renderTyped(shown, text, highlight)}
+        {stillTyping && (
+          <span className="ml-0.5 inline-block h-[0.9em] w-0.5 animate-pulse bg-primary align-middle" />
+        )}
+      </p>
+    );
+  }
 
   const bubbleSize =
     size === "lg"
