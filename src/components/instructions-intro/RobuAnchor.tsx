@@ -10,6 +10,21 @@
 // overflowing if there's ever not enough room beside him.
 export const ROBU_DEFAULT_SIZE = "h-32 w-32 sm:h-60 sm:w-60 md:h-84 md:w-84";
 
+// Robu's Rive artboard (`updated_robu.riv`'s "Anim Skill") draws the actual
+// character well inside its own bounds — measured against the real canvas
+// pixels (not a guess): at rest, the character only spans ~37%-71% of its
+// square anchor box's width, dead-centered neither left nor right. Every
+// anchor box built from `ROBU_DEFAULT_SIZE` (RobuSays' left-side placement,
+// CoverScreen's own greeting row) therefore reserves a big strip of empty
+// canvas to Robu's *right* before his neighboring bubble/heading even
+// starts — that's the "so much space"/gap every screen reads as, not
+// anything in the flex/margin layout around the anchor. Since Rive's
+// Fit.Contain scales proportionally to the box, this ~29% dead strip is the
+// same fraction at every breakpoint, so one pull-in class (sized to
+// `ROBU_DEFAULT_SIZE`'s own w-32/sm:w-60/md:w-84 track) closes it back down
+// everywhere instead of each screen guessing its own margin.
+export const ROBU_TRAILING_GAP_PULL = "-ml-7 sm:-ml-15 md:-ml-21";
+
 interface RobuAnchorProps {
   /** Registers (or, on unmount, unregisters via `null`) this element as the
    * spot where Robu currently belongs. The actual mascot lives once — see
@@ -29,5 +44,5 @@ interface RobuAnchorProps {
  * actually drawn here.
  */
 export function RobuAnchor({ registerAnchor, className }: RobuAnchorProps) {
-  return <div ref={registerAnchor} aria-hidden className={`invisible ${className ?? ""}`} />;
+  return <div ref={registerAnchor} aria-hidden className={`invisible  ${className ?? ""}`} />;
 }

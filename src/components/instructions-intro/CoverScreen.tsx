@@ -6,7 +6,11 @@ import type {
   CoverSlide,
   CoverRevealSlide,
 } from "@/lib/constants/instructionsIntro";
-import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
+import {
+  RobuAnchor,
+  ROBU_DEFAULT_SIZE,
+  ROBU_TRAILING_GAP_PULL,
+} from "./RobuAnchor";
 import { SpeechBubble } from "./SpeechBubble";
 import { RevealModal } from "./RevealModal";
 import { BoxLottie } from "./BoxLottie";
@@ -109,12 +113,15 @@ export function CoverScreen({
     // Animating both the anchor *and* the mascot chasing it would fight each
     // other. Robu stays this one persistent anchor across screens 1 and 2
     // (its `order` just flips) instead of living inside a branch that swaps.
-    <div className={`relative ${robuSideOrder}`}>
+    <div
+      className={`relative
+    left-[-12px] ${robuSideOrder}`}
+    >
       {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
       {isReveal && (
         <div
           aria-hidden
-          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+          className="absolute top-4 left-20 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
         >
           <Lightbulb
             className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
@@ -162,7 +169,7 @@ export function CoverScreen({
             disappearing from one side and popping in on the other. */}
         <div
           className={`flex w-full ${
-            revealed ? "items-center" : "items-start"
+            revealed ? "items-center" : "items-center"
           } justify-center`}
         >
           {!isReveal && !entering && (
@@ -187,25 +194,39 @@ export function CoverScreen({
             </div>
           )}
 
-<<<<<<< HEAD
-          {/* Robu's own bubble here only ever carries the short "Hey, Click
-              this box" nudge, and only once revealed — his actual intro
-              line (`robuIntro`) lives in the heading slot below instead, for
-              both of page 2's states (see that slot's own comment), so it's
-              never shown in two places at once. Thanks to the order-flip
-              above, this row already sits directly above the reveal card
-              once `revealed`, so the prompt reads as Robu talking right at
-              the box. */}
-          {isReveal && revealed && (
-            <div className={`relative flex items-center justify-center mr-6 ${bubbleSideOrder}`}>
-              <AnimatePresence initial={false}>
-=======
+          {isReveal && !revealed && (
+            // Pulled toward Robu by the same calibrated amount RobuSays
+            // uses — his Rive artwork sits well inside its own square
+            // anchor box (see ROBU_TRAILING_GAP_PULL's doc comment), so
+            // without this every screen's heading reads as oddly far from
+            // him even though the flex/CSS gap itself is tiny.
+            <div className={`relative ${ROBU_TRAILING_GAP_PULL} ${bubbleSideOrder}`}>
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.div
+                  key="prompt"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <SpeechBubble
+                    text={slide.robuIntro}
+                    highlight={slide.robuIntroHighlight}
+                    instant={instantSpeech}
+                    size="heading"
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          )}
+
           {robu}
 
-          {isReveal && (
+          {/* Hey, Click this button component */}
+
+          {isReveal && revealed && (
             <div className={`relative mr-6 ${bubbleSideOrder}`}>
               <AnimatePresence mode="popLayout" initial={false}>
->>>>>>> 09f9c7463a85a4aa6edc3110c01dfd3df915c9ef
                 <motion.div
                   key="prompt"
                   initial={{ opacity: 0, scale: 0.92 }}
@@ -252,12 +273,15 @@ export function CoverScreen({
                   (matching the reference image) rather than a chat bubble.
                   Normal typewriter (tied to `instantSpeech`): this is now
                   the only place the line is ever typed out. */}
-              <SpeechBubble
-                text={slide.robuIntro}
-                highlight={slide.robuIntroHighlight}
-                instant={instantSpeech}
-                size="heading"
-              />
+              {revealed && (
+                <SpeechBubble
+                  text={slide.robuIntro}
+                  highlight={slide.robuIntroHighlight}
+                  instant={instantSpeech}
+                  size="heading"
+                />
+              )}
+
               {/* Natural size is 743x512 (~1.45:1) — `width`/`height` set
                   that intrinsic ratio for Next/Image, `h-auto` + the `w-*`
                   classes below are what actually size it on screen, so it
@@ -271,21 +295,17 @@ export function CoverScreen({
                 src="/images/thinkingWhite.png"
                 alt=""
                 aria-hidden="true"
-                width={743}
+                width={revealed ? 100 : 743}
                 height={512}
-                className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72"
+                className="h-auto object-contain dark:hidden sm:w-64 md:w-72"
               />
               <Image
                 src="/images/thinkingBlack.png"
                 alt=""
                 aria-hidden="true"
-<<<<<<< HEAD
-                width={743}
-=======
                 width={revealed ? 100 : 743}
->>>>>>> 09f9c7463a85a4aa6edc3110c01dfd3df915c9ef
                 height={512}
-                className="hidden h-auto w-44 object-contain dark:block sm:w-64 md:w-72"
+                className="hidden h-auto object-contain dark:block sm:w-64 md:w-72"
               />
             </motion.div>
           ) : (
