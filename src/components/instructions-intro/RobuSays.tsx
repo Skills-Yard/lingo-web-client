@@ -1,4 +1,4 @@
-import { RobuAnchor } from "./RobuAnchor";
+import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 import { SpeechBubble } from "./SpeechBubble";
 
 interface RobuSaysProps {
@@ -24,8 +24,6 @@ interface RobuSaysProps {
   className?: string;
 }
 
-const DEFAULT_ROBU_SIZE = "h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20";
-
 /**
  * Robu's anchor + speech bubble, reused across every screen so each one's
  * heading reads as something Robu is actually saying (see the cover
@@ -40,14 +38,21 @@ export function RobuSays({
   side = "left",
   center = true,
   registerAnchor,
-  robuClassName = DEFAULT_ROBU_SIZE,
+  robuClassName = ROBU_DEFAULT_SIZE,
   className,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
   return (
     <div
-      className={`animate-fade-in flex items-end gap-2.5 ${
+      // `flex-wrap` (+ centered on every line): at Robu's shared default
+      // size, Robu + this bubble (its widest of any screen, `size="lg"`)
+      // don't reliably fit side by side on a narrow phone — instead of
+      // shrinking Robu just for this screen (breaking the "same size
+      // everywhere" the mascot's going for) or letting the bubble run off
+      // the edge, the bubble simply drops to its own line underneath him
+      // when there isn't room beside him.
+      className={`animate-fade-in flex flex-wrap items-end gap-1.5 ${
         side === "right" ? "flex-row-reverse" : ""
       } ${center ? "justify-center md:justify-start" : ""} ${className ?? ""}`}
     >

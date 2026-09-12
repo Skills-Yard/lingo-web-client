@@ -3,12 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { preload } from "react-dom";
 import { Poppins } from "next/font/google";
-import {
-  configureRiveRuntime,
-  REWARD_RIVE_SRC,
-  ROBU_EYEBLINK_RIVE_SRC,
-  ROBU_INTRO_RIVE_SRC,
-} from "@/lib/rive/runtime";
+import { configureRiveRuntime, REWARD_RIVE_SRC, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
 import { IntroHeader } from "./IntroHeader";
@@ -292,8 +287,7 @@ export function InstructionsIntroFlow({
     configureRiveRuntime();
     preload("/rive/rive.wasm", { as: "fetch" });
     preload(REWARD_RIVE_SRC, { as: "fetch" });
-    preload(ROBU_EYEBLINK_RIVE_SRC, { as: "fetch" });
-    preload(ROBU_INTRO_RIVE_SRC, { as: "fetch" });
+    preload(ROBU_RIVE_SRC, { as: "fetch" });
   }, []);
 
   return (
@@ -324,7 +318,6 @@ export function InstructionsIntroFlow({
             anchorEl={robuAnchorEl}
             shake={robuShake}
             containerRef={robuStageRef}
-            introDone={robuIntroDone}
             onIntroComplete={() => setRobuIntroDone(true)}
           />
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">

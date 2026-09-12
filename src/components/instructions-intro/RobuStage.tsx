@@ -2,8 +2,7 @@
 
 import { useLayoutEffect, useState, type RefObject } from "react";
 import { motion } from "framer-motion";
-import { RobuEyeBlink } from "./RobuEyeBlink";
-import { RobuIntro } from "./RobuIntro";
+import { RobuMascot } from "./RobuMascot";
 
 interface Rect {
   x: number;
@@ -29,12 +28,10 @@ interface RobuStageProps {
    * `position: relative` (or similar) and contain every screen that renders
    * a `<RobuAnchor>`. */
   containerRef: RefObject<HTMLDivElement | null>;
-  /** Whether the one-shot `intro` timeline has finished. Owned by the flow
-   * (not this component) so CoverScreen's own "hold everything else back
-   * until Robu has arrived" choreography can react to the very same signal
-   * instead of guessing at a fixed timer that could fall out of sync with
-   * however long the actual animation takes. */
-  introDone: boolean;
+  /** Fired once Robu's one-shot entrance (see RobuMascot) has fully played
+   * through. Forwarded straight from RobuMascot so the flow can sync
+   * CoverScreen's own choreography (shrinking Robu, revealing his greeting
+   * bubble) to it. */
   onIntroComplete: () => void;
 }
 
@@ -48,16 +45,20 @@ interface RobuStageProps {
  * walking the learner through the flow rather than a fresh mascot cutting in
  * on every screen.
  *
- * The very first time Robu appears, he plays `intro.riv`'s one-shot `intro`
- * timeline instead of the wrapper doing a CSS/framer fade — once that
- * finishes (`introDone`), this swaps over to the normal, looping
- * `<RobuEyeBlink>` for the rest of the session.
+ * `<RobuMascot>` itself is the *one* Rive instance for Robu's whole time on
+ * screen — it plays the one-shot entrance itself and then keeps looping
+ * ambiently, so this component never swaps it out for a different
+ * component/canvas. That used to happen here (intro component -> eyeblink
+ * component right as Robu shrank to his normal size) and was the actual
+ * source of the entrance ever reading as a size/position jump: a brand new
+ * canvas mounting (its own decode delay, a completely different first
+ * frame) at the exact instant the shrink kicked in. With a single instance,
+ * only the shrink itself (the `motion.div` below) is ever visible.
  */
 export function RobuStage({
   anchorEl,
   shake,
   containerRef,
-  introDone,
   onIntroComplete,
 }: RobuStageProps) {
   const [rect, setRect] = useState<Rect | null>(null);
@@ -106,12 +107,11 @@ export function RobuStage({
       animate={{ x: rect.x, y: rect.y, width: rect.width, height: rect.height }}
       transition={ROBU_WALK_TRANSITION}
     >
-      <div className={`h-full w-full ${shake ? "animate-shake" : ""}`}>
-        {introDone ? (
-          <RobuEyeBlink className="h-full w-full" />
-        ) : (
-          <RobuIntro className="h-full w-full" onComplete={onIntroComplete} />
-        )}
+      <div className={`h-full w-full `}>
+        <RobuMascot
+          className="h-full w-full"
+          onIntroComplete={onIntroComplete}
+        />
       </div>
     </motion.div>
   );

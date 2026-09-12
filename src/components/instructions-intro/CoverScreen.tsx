@@ -2,11 +2,15 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Lightbulb, Sparkle } from "lucide-react";
-import type { CoverSlide, CoverRevealSlide } from "@/lib/constants/instructionsIntro";
-import { RobuAnchor } from "./RobuAnchor";
+import type {
+  CoverSlide,
+  CoverRevealSlide,
+} from "@/lib/constants/instructionsIntro";
+import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 import { SpeechBubble } from "./SpeechBubble";
 import { RevealModal } from "./RevealModal";
 import { BoxLottie } from "./BoxLottie";
+import Image from "next/image";
 
 // The whole row swapping vertical position (bubble/heading trading places)
 // as the reveal card shows up — Robu's own glide between anchors is handled
@@ -68,12 +72,18 @@ export function CoverScreen({
   const entering = slide.kind === "cover" && !robuIntroDone;
 
   // Robu shrinks once it's crouched next to the reveal card — and starts
-  // out bigger still, centered, for the entrance above.
+  // out bigger still, centered, for the entrance above. The default,
+  // steady-state greeting size is the same shared `ROBU_DEFAULT_SIZE` every
+  // other screen's resting Robu uses (see RobuAnchor) — not its own bespoke
+  // value — so he reads as literally the same size everywhere, not just a
+  // similar one. `revealed` (crouched beside the reveal card) and `entering`
+  // (the one-shot entrance pose) stay their own, deliberately different
+  // sizes for those specific moments.
   const robuSize = entering
     ? "h-99 w-99 sm:h-144 sm:w-144 md:h-180 md:w-180"
     : revealed
-      ? "h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36"
-      : "h-24 w-24 sm:h-40 sm:w-40 md:h-56 md:w-56";
+      ? "h-26 w-26 sm:h-40 sm:w-40 md:h-56 md:w-56"
+      : ROBU_DEFAULT_SIZE;
 
   // Robu (with its speech bubble) and the heading swap vertical order once
   // the reveal card shows up: Robu leaves its greeting spot at the top and
@@ -98,14 +108,17 @@ export function CoverScreen({
     // Animating both the anchor *and* the mascot chasing it would fight each
     // other. Robu stays this one persistent anchor across screens 1 and 2
     // (its `order` just flips) instead of living inside a branch that swaps.
-    <div className={`relative shrink-0 ${robuSideOrder}`}>
+    <div className={`relative ${robuSideOrder}`}>
       {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
       {isReveal && (
         <div
           aria-hidden
-          className="absolute -top-6 -right-2 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
         >
-          <Lightbulb className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9" strokeWidth={1.75} />
+          <Lightbulb
+            className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
+            strokeWidth={1.75}
+          />
           <Sparkle className="absolute -left-3 top-1.5 h-2 w-2 fill-current opacity-70 sm:-left-4 sm:top-2 sm:h-2.5 sm:w-2.5" />
         </div>
       )}
@@ -114,10 +127,15 @@ export function CoverScreen({
   );
 
   return (
-    <div className="flex w-full flex-1 flex-col items-center justify-center gap-4 sm:gap-5 md:min-h-full">
+    <div className="flex w-full flex-1 flex-col items-center gap-0 sm:gap-0 md:min-h-full">
       {/* ── Robu + speech bubble — laid out as real flex siblings (not
           absolute-positioned) so on narrow screens the bubble shrinks and
           wraps to stay glued to Robu instead of running off the edge.
+          `flex-wrap` is the actual guarantee of that on the smallest phones
+          (~320-360px): Robu's own fixed size plus the bubble's own max-width
+          can still add up to more than the available width there, so rather
+          than the bubble running past the edge, it drops to its own line
+          underneath him — same fallback RobuSays uses for its wider bubble.
           Nothing here animates its own layout any more (no `layout` prop,
           no CSS `transition` on min-height/padding): Robu's own anchor lives
           inside it, and RobuStage is what glides the real mascot smoothly to
@@ -128,8 +146,10 @@ export function CoverScreen({
           content swap (below) still crossfades on its own, so the now-instant
           reorder doesn't read as a cut. ── */}
       <div
-        className={`relative z-10 flex w-full items-start justify-center gap-2 sm:gap-3 ${heroOrder} ${
-          revealed ? "min-h-0 py-2" : "min-h-[32vh] pt-8 sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
+        className={`relative top-2 z-10 flex-col w-full items-start justify-center gap-0 sm:gap-0  ${heroOrder} ${
+          revealed
+            ? "min-h-0 py-0"
+            : "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
         }`}
       >
         {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
@@ -139,47 +159,53 @@ export function CoverScreen({
             Robu itself (below) is NOT branched here — only its `order`
             flips — so it stays mounted and glides across instead of
             disappearing from one side and popping in on the other. */}
-        {!isReveal && !entering && (
-          // Bubble waits for Robu's entrance to settle instead of popping
-          // in alongside a Robu that's still arriving.
-          <div className={`relative ${bubbleSideOrder}`}>
-            <div aria-hidden className="absolute -top-3 left-3 flex gap-1 text-primary sm:-top-4">
-              <span className="h-3 w-0.5 rotate-[-14deg] rounded-full bg-current sm:h-4" />
-              <span className="h-2 w-0.5 rotate-10 rounded-full bg-current sm:h-2.5" />
-            </div>
-            <SpeechBubble
-              text={slide.robuGreeting}
-              highlight={slide.robuGreetingHighlight}
-              tailCorner="bottom-right"
-              instant={instantSpeech}
-            />
-          </div>
-        )}
-
-        {robu}
-
-        {isReveal && (
-          <div className={bubbleSideOrder}>
-            {/* AnimatePresence fades the outgoing line out instead of it
-                just vanishing when Robu's line swaps to the box prompt;
-                SpeechBubble's own pop-in (see its `animate-pop-in`) handles
-                the incoming line, so entrance isn't double-animated. */}
-            <AnimatePresence mode="popLayout" initial={false}>
-              <motion.div
-                key={revealed ? "prompt" : "intro"}
-                exit={{ opacity: 0, scale: 0.92 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
+        <div
+          className={`flex w-full ${
+            revealed ? "items-center" : "items-start"
+          } justify-center`}
+        >
+          {!isReveal && !entering && (
+            // Bubble waits for Robu's entrance to settle instead of popping
+            // in alongside a Robu that's still arriving.
+            <div className={`relative -mr-6 ${bubbleSideOrder}`}>
+              <div
+                aria-hidden
+                className="absolute  left-3 flex gap-1 text-primary "
               >
-                <SpeechBubble
-                  text={revealed ? slide.robuPrompt : slide.robuIntro}
-                  highlight={revealed ? undefined : slide.robuIntroHighlight}
-                  tailCorner="bottom-left"
-                  instant={instantSpeech}
-                />
-              </motion.div>
-            </AnimatePresence>
-          </div>
-        )}
+                <span className="h-3 w-0.5 rotate-[-14deg] rounded-full bg-current sm:h-4" />
+                <span className="h-2 w-0.5 rotate-10 rounded-full bg-current sm:h-2.5" />
+              </div>
+              <SpeechBubble
+                text={slide.robuGreeting}
+                highlight={slide.robuGreetingHighlight}
+                tailCorner="bottom-right"
+                instant={instantSpeech}
+              />
+            </div>
+          )}
+
+          {robu}
+
+          {isReveal && (
+            <div className={`relative mr-6 ${bubbleSideOrder}`}>
+              <AnimatePresence mode="popLayout" initial={false}>
+                <motion.div
+                  key={revealed ? "prompt" : "intro"}
+                  exit={{ opacity: 0, scale: 0.92 }}
+                  transition={{ duration: 0.2, ease: "easeOut" }}
+                >
+                  <SpeechBubble
+                    text={revealed ? slide.robuPrompt : slide.robuIntro}
+                    highlight={revealed ? undefined : slide.robuIntroHighlight}
+                    tailCorner="bottom-left"
+                    instant={instantSpeech}
+                  />
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          )}
+        </div>
+        {/* Thinking image */}
       </div>
 
       {/* ── Heading + description — same shape on both screens; fades in
@@ -189,8 +215,30 @@ export function CoverScreen({
         initial={false}
         animate={{ opacity: entering ? 0 : 1, y: entering ? 8 : 0 }}
         transition={WALK_TRANSITION}
-        className={`px-4 text-center sm:px-6 ${headingOrder}`}
+        className={`px-4  text-center sm:px-6 ${headingOrder}`}
       >
+        {isReveal && (
+          <AnimatePresence>
+            {isReveal && (
+              <motion.div
+                initial={{ opacity: 1 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="mx-auto flex items-center justify-center"
+              >
+                <Image
+                  src="/images/thinkingBlack.png"
+                  alt=""
+                  aria-hidden="true"
+                  width={revealed ? 120 : 200}
+                  height={revealed ? 48 : 80}
+                  className="mt-0 object-contain md:hidden"
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
         <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
           <span className="text-foreground">{slide.title}</span>{" "}
           <span className="text-primary">{slide.highlightTitle}</span>
@@ -219,8 +267,12 @@ export function CoverScreen({
             <BoxLottie className="h-full w-full" />
           </div>
           <div className="text-left">
-            <p className="text-sm text-white font-medium sm:text-[15px] md:text-base">{slide.revealLabel}</p>
-            <p className="text-sm text-[#BEBEBE] font-medium sm:text-[15px] md:text-base">about</p>
+            <p className="text-sm text-white font-medium sm:text-[15px] md:text-base">
+              {slide.revealLabel}
+            </p>
+            <p className="text-sm text-[#BEBEBE] font-medium sm:text-[15px] md:text-base">
+              about
+            </p>
             <p className="text-lg font-semibold tracking-wide text-primary sm:text-xl md:text-2xl">
               {slide.revealSubject}
             </p>

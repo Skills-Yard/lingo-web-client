@@ -3,18 +3,16 @@
 import { useEffect } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment, type Rive as RiveInstance } from "@rive-app/canvas";
-import {
-  configureRiveRuntime,
-  ROBU_EYEBLINK_RIVE_SRC,
-} from "@/lib/rive/runtime";
+import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
-// `robu_update_day2.riv` — artboard `Anim Skill`. The `robu anim` state
-// machine has no inputs, so we drive the timelines directly: the slow `idle2`
-// loop is the ambient base (it also keeps Rive's render loop alive), and
-// `ears` / `eyeblink2` are each replayed on top on their own interval.
+// `updated_robu.riv` — artboard `Anim Skill` (same file/artboard RobuMascot's
+// entrance plays on — see ROBU_RIVE_SRC). The `robu anim` state machine has
+// no inputs, so we drive the timelines directly: the slow `idle2` loop is
+// the ambient base (it also keeps Rive's render loop alive), and `ears` /
+// `eyeblink twice` are each replayed on top on their own interval.
 const ROBU_ARTBOARD = "Anim Skill";
 const ROBU_BASE_ANIMATIONS = ["idle2"];
 const ROBU_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
@@ -22,13 +20,19 @@ const ROBU_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center }
 const EAR_ANIMATION = "ears";
 const EAR_INTERVAL_MS = 3000;
 
-const EYEBLINK_ANIMATION = "eyeblink2";
+const EYEBLINK_ANIMATION = "eyeblink twice";
 const EYEBLINK_INTERVAL_MS = 5000;
 
 // How often the watchdog below checks that the base loop is still playing.
 const AMBIENT_WATCHDOG_MS = 500;
 
 /**
+ * Exported (rather than kept local to this file) so RobuMascot can drive the
+ * exact same ambient behavior on its own Rive instance once its one-shot
+ * entrance timeline finishes — see RobuMascot's doc comment for why it needs
+ * its own copy of "the ambient loop" instead of just switching over to this
+ * component.
+ *
  * Keep the ambient base animations playing for the whole life of the
  * component. If a base timeline is authored as one-shot (not looping) in the
  * editor, it plays once, reaches its end, and its internal `playing` flag
@@ -40,7 +44,7 @@ const AMBIENT_WATCHDOG_MS = 500;
  * idle when nothing is actively playing, which would otherwise freeze
  * everything on the canvas, `idle2` included.
  */
-function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
+export function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
   useEffect(() => {
     if (!rive) return;
 
@@ -64,7 +68,7 @@ function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
  * `intervalMs`. `stop` before `play` rewinds it so each replay starts from
  * frame 0 even if the previous one is still finishing.
  */
-function usePeriodicOverlay(
+export function usePeriodicOverlay(
   rive: RiveInstance | null,
   animation: string,
   intervalMs: number,
@@ -97,7 +101,7 @@ interface RobuEyeBlinkProps {
  */
 export function RobuEyeBlink({ className }: RobuEyeBlinkProps) {
   const { rive, RiveComponent } = useRive({
-    src: ROBU_EYEBLINK_RIVE_SRC,
+    src: ROBU_RIVE_SRC,
     artboard: ROBU_ARTBOARD,
     animations: ROBU_BASE_ANIMATIONS,
     autoplay: true,
@@ -111,7 +115,7 @@ export function RobuEyeBlink({ className }: RobuEyeBlinkProps) {
 
   return (
     <div className={className}>
-      <RiveComponent className="h-full w-full" />
+      <RiveComponent className="absolute top-10 right-20 h-[100px] w-[100px]" />
     </div>
   );
 }

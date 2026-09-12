@@ -23,17 +23,14 @@ const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
 export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 
 /**
- * Robu mascot with the looping `eyeblink` timeline. Vector-only and tiny, used
- * on the closing instructions page and on the game screen.
+ * The one `.riv` for every Robu instance in the app — RobuMascot (the single
+ * persistent mascot that glides between every screen's anchor in the main
+ * flow: its `intro  improve` timeline plays once, in place of a CSS/framer
+ * opacity+scale fade, before the same file settles into Robu's ambient idle
+ * loop for the rest of the session) and every standalone `<RobuEyeBlink>`
+ * (the reveal-card modal, the game screens' demo/level platforms) alike.
  */
-export const ROBU_EYEBLINK_RIVE_SRC = "/animations/robu_latest_day2.riv";
-
-/**
- * Robu's one-time entrance — the `intro` timeline, played once the very
- * first time Robu appears in the whole flow, in place of a CSS/framer
- * opacity+scale fade. See RobuIntro / RobuStage.
- */
-export const ROBU_INTRO_RIVE_SRC = "/animations/intro.riv";
+export const ROBU_RIVE_SRC = "/animations/updated_robu.riv";
 
 let configured = false;
 

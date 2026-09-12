@@ -11,7 +11,7 @@ import { GameBoard } from "./game/GameBoard";
 import { ProgramSlots } from "./game/ProgramSlots";
 import { CommandPalette } from "./game/CommandPalette";
 import { GameFooter } from "./game/GameFooter";
-import { RobuAnchor } from "./RobuAnchor";
+import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 interface GameBoardScreenProps {
   slide: GameSlide;
@@ -57,7 +57,7 @@ export function GameBoardScreen({ slide, onSolvedChange, registerAnchor }: GameB
       <div className="flex items-center justify-center gap-3 md:justify-start">
         <RobuAnchor
           registerAnchor={registerAnchor}
-          className="h-12 w-12 shrink-0 sm:h-14 sm:w-14 md:h-16 md:w-16"
+          className={`shrink-0 ${ROBU_DEFAULT_SIZE}`}
         />
         <div className="text-center md:text-left">
           <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">

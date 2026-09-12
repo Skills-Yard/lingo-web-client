@@ -26,11 +26,19 @@ export function TeacherIntroScreen({
         </div>
 
         <div className="relative hidden md:block max-w-60 rounded-[10px] bg-white px-6 py-5 text-[#2C2C2C] shadow-lg">
-          <span aria-hidden className="absolute top-3 left-4 font-serif text-4xl leading-none text-primary">
+          <span
+            aria-hidden
+            className="absolute top-3 left-4 font-serif text-4xl leading-none text-primary"
+          >
             &ldquo;
           </span>
-          <span className="text-lg font-semibold leading-snug">Open Your Notebook</span>
-          <span aria-hidden className="absolute -bottom-3 right-4 font-serif text-4xl leading-none text-primary">
+          <span className="text-lg font-semibold leading-snug">
+            Open Your Notebook
+          </span>
+          <span
+            aria-hidden
+            className="absolute -bottom-3 right-4 font-serif text-4xl leading-none text-primary"
+          >
             &rdquo;
           </span>
         </div>

@@ -1,5 +1,5 @@
 import type { RobuSlide } from "@/lib/constants/instructionsIntro";
-import { RobuAnchor } from "./RobuAnchor";
+import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 export function RobuScreen({
   slide,
@@ -24,12 +24,10 @@ export function RobuScreen({
         )}
       </div>
 
-      {/* ── Blinking Robu — scales with the viewport, never overflows ── */}
+      {/* ── Blinking Robu — same size as every other screen's resting Robu
+          (see ROBU_DEFAULT_SIZE) instead of its own bespoke clamp() ── */}
       <div className="flex w-full items-center justify-center md:order-2">
-        <RobuAnchor
-          registerAnchor={registerAnchor}
-          className="h-[clamp(180px,40vw,320px)] w-[clamp(180px,40vw,320px)]"
-        />
+        <RobuAnchor registerAnchor={registerAnchor} className={ROBU_DEFAULT_SIZE} />
       </div>
     </div>
   );
