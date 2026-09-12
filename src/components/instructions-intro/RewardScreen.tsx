@@ -130,12 +130,14 @@ export function RewardScreen({
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 py-2 md:min-h-full md:justify-center">
-      {/* ── Heading — Robu announces the claim instead of a bare title ── */}
+      {/* ── "CLAIM reward" — short enough to stay an actual bubble instead
+          of the big-headline treatment every other screen's longer heading
+          gets (see RobuSays' `size` prop). ── */}
       <RobuSays
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.title}
         instant={instantSpeech}
-        side="right"
+        size="lg"
         registerAnchor={registerAnchor}
       />
 

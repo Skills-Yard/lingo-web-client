@@ -33,7 +33,6 @@ export function TeacherQuizScreen({
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.highlightWord}
         instant={instantSpeech}
-        side="right"
         className="md:col-start-1 md:row-start-1"
         registerAnchor={registerAnchor}
       />

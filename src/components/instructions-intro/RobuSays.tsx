@@ -22,6 +22,11 @@ interface RobuSaysProps {
   registerAnchor: (el: HTMLDivElement | null) => void;
   robuClassName?: string;
   className?: string;
+  /** "heading" (default) — this is a real page heading, styled bold and
+   * plain like every other screen's, not a chat bubble. Pass "lg" for a
+   * screen whose Robu line is short enough to stay an actual bubble instead
+   * (e.g. RewardScreen's "CLAIM reward"). */
+  size?: "heading" | "lg";
 }
 
 /**
@@ -40,18 +45,12 @@ export function RobuSays({
   registerAnchor,
   robuClassName = ROBU_DEFAULT_SIZE,
   className,
+  size = "heading",
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
   return (
     <div
-      // `flex-wrap` (+ centered on every line): at Robu's shared default
-      // size, Robu + this bubble (its widest of any screen, `size="lg"`)
-      // don't reliably fit side by side on a narrow phone — instead of
-      // shrinking Robu just for this screen (breaking the "same size
-      // everywhere" the mascot's going for) or letting the bubble run off
-      // the edge, the bubble simply drops to its own line underneath him
-      // when there isn't room beside him.
       className={`animate-fade-in flex w-full pt-2 items-start justify-center gap-1 ${
         side === "right" ? "flex-row-reverse" : ""
       } ${className ?? ""}`}
@@ -61,17 +60,24 @@ export function RobuSays({
         className={`shrink-0 ${robuClassName}`}
       />
       <div
-        className={` ${
-          side === "right"
-            ? "-mr-12 shrink-0 sm:-mr-4 md:mr-0"
-            : "-ml-12 shrink-0 sm:-ml-4 md:ml-0"
-        }`}
+        className={
+          // The tight negative margin pulls a small chat bubble in close to
+          // Robu — tuned for `size="lg"`'s bounded width. A `size="heading"`
+          // line has no such cap (it just wraps within the row like any
+          // other heading), so pulling it in by the same ~48px would shove
+          // wide/multi-line text partly under Robu's own canvas instead.
+          size === "lg"
+            ? side === "right"
+              ? "-mr-12 shrink-0 sm:-mr-4 md:mr-0"
+              : "-ml-12 shrink-0 sm:-ml-4 md:ml-0"
+            : "min-w-0"
+        }
       >
         <SpeechBubble
           text={text}
           highlight={highlight}
           instant={instant}
-          size="lg"
+          size={size}
           tailCorner={tailCorner}
         />
       </div>

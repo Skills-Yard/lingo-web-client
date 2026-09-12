@@ -17,7 +17,6 @@ export function ExamplesGridScreen({
       <RobuSays
         text={slide.title}
         instant={instantSpeech}
-        side="right"
         className="md:w-56 md:shrink-0"
         registerAnchor={registerAnchor}
       />
