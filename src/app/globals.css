@@ -153,8 +153,35 @@ html {
   }
 }
 
+/* A quick wiggle, then a hold — reads as "shakes a little" every couple of
+   seconds rather than a constant jitter. Used to draw the eye to Robu when
+   it's prompting a tap. */
+@keyframes shake {
+  0%,
+  66%,
+  100% {
+    transform: rotate(0deg);
+  }
+  6%,
+  18% {
+    transform: rotate(-6deg);
+  }
+  12%,
+  24% {
+    transform: rotate(6deg);
+  }
+  30% {
+    transform: rotate(0deg);
+  }
+}
+
 .animate-bounce-slow {
   animation: bobSlow 3s infinite ease-in-out;
+}
+
+.animate-shake {
+  animation: shake 2s ease-in-out infinite;
+  transform-origin: 50% 90%;
 }
 
 .animate-pop-in {

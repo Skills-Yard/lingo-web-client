@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { preload } from "react-dom";
 import { Poppins } from "next/font/google";
 import {
   configureRiveRuntime,
   REWARD_RIVE_SRC,
   ROBU_EYEBLINK_RIVE_SRC,
+  ROBU_INTRO_RIVE_SRC,
 } from "@/lib/rive/runtime";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
@@ -22,6 +23,7 @@ import { QuestionnaireScreen } from "./QuestionnaireScreen";
 import { RewardScreen } from "./RewardScreen";
 import { GameBoardScreen } from "./GameBoardScreen";
 import { RobuScreen } from "./RobuScreen";
+import { RobuStage } from "./RobuStage";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -44,14 +46,62 @@ export function InstructionsIntroFlow({
     string | null
   >(null);
   const [rewardClaimed, setRewardClaimed] = useState(false);
+  // Bumped to force RewardScreen to remount (resetting its own internal
+  // "claimed" + box state) when Back unwinds a claim without changing slides.
+  const [rewardResetKey, setRewardResetKey] = useState(0);
   const [checked, setChecked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [gameSolved, setGameSolved] = useState(false);
+  const [coverRevealed, setCoverRevealed] = useState(false);
+  const [boxTapped, setBoxTapped] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const triggerSound = useSound(true);
+
+  // The single, persistent Robu mascot (see RobuStage) — every screen just
+  // registers where it currently belongs; only one anchor is ever mounted at
+  // a time, so this always reflects the active screen's own spot for it.
+  const [robuAnchorEl, setRobuAnchorEl] = useState<HTMLDivElement | null>(null);
+  const robuStageRef = useRef<HTMLDivElement>(null);
+
+  // Whether Robu's one-shot `intro` Rive timeline has finished. Owned here
+  // (not inside RobuStage) so CoverScreen can hold its heading/bubble back
+  // and keep Robu at his big "entering" size until this actually flips —
+  // synced to the real animation instead of a guessed timer. The 6s
+  // fallback is only a safety net in case the Rive completion event never
+  // fires for some reason, so the rest of screen 1 is never stuck hidden.
+  const [robuIntroDone, setRobuIntroDone] = useState(false);
+  useEffect(() => {
+    if (robuIntroDone) return;
+    const t = window.setTimeout(() => setRobuIntroDone(true), 6000);
+    return () => window.clearTimeout(t);
+  }, [robuIntroDone]);
 
   const total = INSTRUCTIONS_INTRO_SLIDES.length;
   const slide = INSTRUCTIONS_INTRO_SLIDES[index];
   const stepNumber = index + 1;
+
+  // Every slide's Robu line types out the first time it's seen; on a later
+  // revisit (e.g. after pressing Back) it shows fully formed instead of
+  // re-typing. `seenSlides` only ever grows, so once typed, always instant.
+  // Marked during render (React's documented pattern for reacting to a state
+  // change without an Effect) rather than in a useEffect: the slide being
+  // *left* is what gets flagged seen, so the slide just arrived at still
+  // reads as unseen for this same render and types out normally.
+  const [seenSlides, setSeenSlides] = useState<Set<number>>(() => new Set());
+  const [lastIndex, setLastIndex] = useState(index);
+  if (index !== lastIndex) {
+    setLastIndex(index);
+    setSeenSlides((prev) => (prev.has(lastIndex) ? prev : new Set(prev).add(lastIndex)));
+  }
+  const instantSpeech = seenSlides.has(index);
+
+  // Nudge Robu with a little shake while cover-reveal is prompting a tap and
+  // hasn't gotten one yet — computed here (not inside CoverScreen) since the
+  // mascot itself now lives in the single shared RobuStage, not that screen.
+  const robuShake = slide.kind === "cover-reveal" && coverRevealed && !boxTapped;
+
+  const isQuiz = slide.kind === "teacher-quiz";
+  const isQuestionnaire = slide.kind === "questionnaire";
 
   const goNext = () => {
     setSelected(null);
@@ -59,6 +109,9 @@ export function InstructionsIntroFlow({
     setRewardClaimed(false);
     setChecked(false);
     setGameSolved(false);
+    setCoverRevealed(false);
+    setBoxTapped(false);
+    setModalOpen(false);
     if (index >= total - 1) {
       onComplete?.();
       return;
@@ -66,17 +119,62 @@ export function InstructionsIntroFlow({
     setIndex((i) => i + 1);
   };
 
+  // Mirrors goNext's own staged progression (reveal card -> tap -> modal,
+  // select -> check -> retry, claim, ...) one step at a time instead of
+  // resetting every sub-step and the slide index all at once — otherwise a
+  // single Back press could unwind several visible steps at once and read as
+  // jumping straight back past screens the learner actually walked through.
   const goBack = () => {
+    if (slide.kind === "cover-reveal") {
+      if (modalOpen) {
+        setModalOpen(false);
+        return;
+      }
+      if (boxTapped) {
+        setBoxTapped(false);
+        return;
+      }
+      if (coverRevealed) {
+        setCoverRevealed(false);
+        return;
+      }
+    }
+    if (isQuiz) {
+      if (checked) {
+        setChecked(false);
+        return;
+      }
+      if (selected !== null) {
+        setSelected(null);
+        return;
+      }
+    }
+    if (isQuestionnaire) {
+      if (checked) {
+        setChecked(false);
+        return;
+      }
+      if (selectedQuestionnaireId !== null) {
+        setSelectedQuestionnaireId(null);
+        return;
+      }
+    }
+    if (slide.kind === "reward" && rewardClaimed) {
+      setRewardClaimed(false);
+      setRewardResetKey((k) => k + 1);
+      return;
+    }
+
     if (index === 0) return;
     setSelected(null);
     setSelectedQuestionnaireId(null);
     setChecked(false);
     setGameSolved(false);
+    setCoverRevealed(false);
+    setBoxTapped(false);
+    setModalOpen(false);
     setIndex((i) => i - 1);
   };
-
-  const isQuiz = slide.kind === "teacher-quiz";
-  const isQuestionnaire = slide.kind === "questionnaire";
 
   const selectedOption =
     isQuiz && selected !== null ? slide.options[selected] : null;
@@ -103,6 +201,13 @@ export function InstructionsIntroFlow({
   };
 
   const handlePrimaryAction = () => {
+    if (slide.kind === "cover-reveal" && !coverRevealed) {
+      // First press pops the reveal card in and sends Robu over to point at
+      // it. The button then goes disabled (see primaryState) until the card
+      // is actually tapped, so this branch only ever fires once.
+      setCoverRevealed(true);
+      return;
+    }
     if (isQuiz && !checked) {
       if (selected === null) return;
       setChecked(true);
@@ -145,15 +250,17 @@ export function InstructionsIntroFlow({
   const primaryState: PrimaryState =
     slide.kind === "game" && !gameSolved
       ? "disabled"
-      : isQuiz && !checked && selected === null
+      : slide.kind === "cover-reveal" && coverRevealed && !boxTapped
         ? "disabled"
-        : isQuestionnaire && !checked && selectedQuestionnaireId === null
+        : isQuiz && !checked && selected === null
           ? "disabled"
-          : isQuiz && checked && !isCorrect
-            ? "retry"
-            : isQuestionnaire && checked && !questionnaireIsCorrect
+          : isQuestionnaire && !checked && selectedQuestionnaireId === null
+            ? "disabled"
+            : isQuiz && checked && !isCorrect
               ? "retry"
-              : "go";
+              : isQuestionnaire && checked && !questionnaireIsCorrect
+                ? "retry"
+                : "go";
 
   // The questionnaire's "Claim Reward" CTA gets the dark tone + gift icon (see command9).
   const isRewardCta = isQuestionnaire && checked && questionnaireIsCorrect;
@@ -187,6 +294,7 @@ export function InstructionsIntroFlow({
     preload("/rive/rive.wasm", { as: "fetch" });
     preload(REWARD_RIVE_SRC, { as: "fetch" });
     preload(ROBU_EYEBLINK_RIVE_SRC, { as: "fetch" });
+    preload(ROBU_INTRO_RIVE_SRC, { as: "fetch" });
   }, []);
 
   return (
@@ -203,16 +311,45 @@ export function InstructionsIntroFlow({
           onToggleBookmark={() => setBookmarked((b) => !b)}
         />
 
-        {/* ── Body — the only part that scrolls, so header/footer are always fully visible ── */}
+        {/* ── Body — the only part that scrolls, so header/footer are always fully visible.
+            Also Robu's positioning root (`relative`) — RobuStage lives here as one
+            persistent, absolutely-positioned instance that glides to whichever
+            screen's anchor is currently mounted below, instead of each screen
+            mounting (and the last one unmounting) its own mascot. ── */}
         <div
-          className="flex-1 min-h-0 overflow-y-auto px-4 md:px-10 scrollbar-none"
+          ref={robuStageRef}
+          className="relative flex-1 min-h-0 overflow-y-auto px-4 md:px-10 scrollbar-none"
           style={{ msOverflowStyle: "none" }}
         >
+          <RobuStage
+            anchorEl={robuAnchorEl}
+            shake={robuShake}
+            containerRef={robuStageRef}
+            introDone={robuIntroDone}
+            onIntroComplete={() => setRobuIntroDone(true)}
+          />
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
-            {slide.kind === "robu-intro" && <RobuIntroScreen slide={slide} />}
-            {slide.kind === "cover" && <CoverScreen slide={slide} />}
+            {(slide.kind === "cover" || slide.kind === "cover-reveal") && (
+              // One call site for both steps — see CoverScreen's doc comment:
+              // this is what keeps its layout mounted (no remount) across them.
+              <CoverScreen
+                slide={slide}
+                revealed={coverRevealed}
+                onBoxTap={() => setBoxTapped(true)}
+                modalOpen={modalOpen}
+                onOpenModal={() => setModalOpen(true)}
+                onCloseModal={() => setModalOpen(false)}
+                instantSpeech={instantSpeech}
+                registerAnchor={setRobuAnchorEl}
+                robuIntroDone={robuIntroDone}
+              />
+            )}
             {slide.kind === "teacher-intro" && (
-              <TeacherIntroScreen slide={slide} />
+              <TeacherIntroScreen
+                slide={slide}
+                instantSpeech={instantSpeech}
+                registerAnchor={setRobuAnchorEl}
+              />
             )}
             {slide.kind === "teacher-quiz" && (
               <TeacherQuizScreen
@@ -220,31 +357,54 @@ export function InstructionsIntroFlow({
                 selected={selected}
                 checked={checked}
                 onSelect={handleSelect}
+                instantSpeech={instantSpeech}
+                registerAnchor={setRobuAnchorEl}
               />
             )}
             {slide.kind === "examples-grid" && (
-              <ExamplesGridScreen slide={slide} />
+              <ExamplesGridScreen
+                slide={slide}
+                instantSpeech={instantSpeech}
+                registerAnchor={setRobuAnchorEl}
+              />
             )}
-            {slide.kind === "video" && <VideoScreen slide={slide} />}
+            {slide.kind === "video" && (
+              <VideoScreen
+                slide={slide}
+                instantSpeech={instantSpeech}
+                registerAnchor={setRobuAnchorEl}
+              />
+            )}
             {slide.kind === "questionnaire" && (
               <QuestionnaireScreen
                 slide={slide}
                 selectedId={selectedQuestionnaireId}
                 checked={checked}
                 onSelect={handleQuestionnaireSelect}
+                instantSpeech={instantSpeech}
+                registerAnchor={setRobuAnchorEl}
               />
             )}
             {slide.kind === "reward" && (
               <RewardScreen
+                key={rewardResetKey}
                 slide={slide}
                 onClaim={() => console.log("Reward claimed")}
                 onClaimStateChange={setRewardClaimed}
+                instantSpeech={instantSpeech}
+                registerAnchor={setRobuAnchorEl}
               />
             )}
             {slide.kind === "game" && (
-              <GameBoardScreen slide={slide} onSolvedChange={setGameSolved} />
+              <GameBoardScreen
+                slide={slide}
+                onSolvedChange={setGameSolved}
+                registerAnchor={setRobuAnchorEl}
+              />
             )}
-            {slide.kind === "robu" && <RobuScreen slide={slide} />}
+            {slide.kind === "robu" && (
+              <RobuScreen slide={slide} registerAnchor={setRobuAnchorEl} />
+            )}
           </div>
         </div>
 

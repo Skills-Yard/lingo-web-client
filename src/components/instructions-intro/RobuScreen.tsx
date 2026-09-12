@@ -1,7 +1,15 @@
 import type { RobuSlide } from "@/lib/constants/instructionsIntro";
-import { RobuEyeBlink } from "./RobuEyeBlink";
+import { RobuAnchor } from "./RobuAnchor";
 
-export function RobuScreen({ slide }: { slide: RobuSlide }) {
+export function RobuScreen({
+  slide,
+  registerAnchor,
+}: {
+  slide: RobuSlide;
+  /** Registers where Robu (a single persistent mascot — see RobuStage) should
+   * stand for this closing screen. */
+  registerAnchor: (el: HTMLDivElement | null) => void;
+}) {
   return (
     <div className="flex flex-col items-center gap-6 text-center md:grid md:grid-cols-2 md:items-center md:gap-x-12 md:text-left md:min-h-full">
       {/* ── Copy — stacked above the mascot on mobile, left column on laptop ── */}
@@ -18,7 +26,10 @@ export function RobuScreen({ slide }: { slide: RobuSlide }) {
 
       {/* ── Blinking Robu — scales with the viewport, never overflows ── */}
       <div className="flex w-full items-center justify-center md:order-2">
-        <RobuEyeBlink className="h-[clamp(180px,40vw,320px)] w-[clamp(180px,40vw,320px)]" />
+        <RobuAnchor
+          registerAnchor={registerAnchor}
+          className="h-[clamp(180px,40vw,320px)] w-[clamp(180px,40vw,320px)]"
+        />
       </div>
     </div>
   );

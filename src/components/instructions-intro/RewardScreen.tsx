@@ -13,6 +13,7 @@ import {
 } from "@rive-app/react-canvas";
 import { EventType } from "@rive-app/canvas";
 import { configureRiveRuntime, REWARD_RIVE_SRC } from "@/lib/rive/runtime";
+import { RobuSays } from "./RobuSays";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -35,12 +36,17 @@ interface RewardScreenProps {
   slide: RewardSlide;
   onClaim?: () => void;
   onClaimStateChange?: (claimed: boolean) => void;
+  /** Skip Robu's typewriter — set once this screen has already been seen. */
+  instantSpeech?: boolean;
+  registerAnchor: (el: HTMLDivElement | null) => void;
 }
 
 export function RewardScreen({
   slide,
   onClaim,
   onClaimStateChange,
+  instantSpeech,
+  registerAnchor,
 }: RewardScreenProps) {
   const [claimed, setClaimed] = useState(false);
 
@@ -126,15 +132,14 @@ export function RewardScreen({
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 py-2 md:min-h-full md:justify-center">
-      {/* ── Heading — Frame 69: small "CLAIM" over the large green "reward" ── */}
-      <div className="flex flex-col items-center gap-2 text-center">
-        <p className="text-sm font-medium uppercase tracking-[0.08em] text-[#2C2C2C] dark:text-white">
-          {slide.highlightWord}
-        </p>
-        <h1 className="text-[44px] font-extrabold leading-none text-primary [font-family:'Abhaya_Libre_ExtraBold','Abhaya_Libre',Georgia,serif] md:text-[48px]">
-          {slide.title}
-        </h1>
-      </div>
+      {/* ── Heading — Robu announces the claim instead of a bare title ── */}
+      <RobuSays
+        text={`${slide.highlightWord} ${slide.title}`}
+        highlight={slide.title}
+        instant={instantSpeech}
+        side="right"
+        registerAnchor={registerAnchor}
+      />
 
       {/* ── Hero — mascot on a soft glow; gem burst scatters once claimed ── */}
       <div className="relative flex h-[clamp(150px,26vh,267px)] w-full items-center justify-center">

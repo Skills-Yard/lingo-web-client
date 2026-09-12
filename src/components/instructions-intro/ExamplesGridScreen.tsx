@@ -1,12 +1,26 @@
 import Image from "next/image";
 import type { ExamplesGridSlide } from "@/lib/constants/instructionsIntro";
+import { RobuSays } from "./RobuSays";
 
-export function ExamplesGridScreen({ slide }: { slide: ExamplesGridSlide }) {
+export function ExamplesGridScreen({
+  slide,
+  instantSpeech,
+  registerAnchor,
+}: {
+  slide: ExamplesGridSlide;
+  /** Skip Robu's typewriter — set once this screen has already been seen. */
+  instantSpeech?: boolean;
+  registerAnchor: (el: HTMLDivElement | null) => void;
+}) {
   return (
     <div className="flex flex-col gap-6 md:flex-row md:items-center md:gap-10 md:min-h-full">
-      <h1 className="text-2xl md:text-3xl font-semibold tracking-tight leading-tight text-center md:text-left text-foreground md:w-56 md:shrink-0">
-        {slide.title}
-      </h1>
+      <RobuSays
+        text={slide.title}
+        instant={instantSpeech}
+        side="right"
+        className="md:w-56 md:shrink-0"
+        registerAnchor={registerAnchor}
+      />
 
       <div className="flex flex-col gap-5 justify-center grow md:flex-row md:flex-wrap md:justify-center md:gap-x-4">
         {slide.pairs.map((pair) => (

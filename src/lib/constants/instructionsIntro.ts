@@ -44,28 +44,38 @@ export interface CommandItem {
 
 export type InstructionsSlide =
   | {
-      // "Hi, I'm Robu" — opening greeting screen, before the cover slide.
-      kind: "robu-intro";
-      highlightWord: string;
+      // Step 01 — Robu (top-left bubble) greets the learner, heading + short
+      // description underneath, nothing else.
+      kind: "cover";
+      /** Speech-bubble line Robu types out; wrap the highlighted word/phrase
+       * in `highlight` so it renders in primary teal once typed. */
+      robuGreeting: string;
+      robuGreetingHighlight: string;
       title: string;
-      description?: string;
+      highlightTitle: string;
+      description: string;
       cta: string;
     }
   | {
-      // "Programmer is a problem solver" — cover slide with the code/thinking
-      // illustration, the "Before we write code..." line and the reveal card.
-      kind: "cover";
-      highlightWord: string;
+      // Step 02 — the *same* Robu (rendered by the same component instance as
+      // "cover" so it never remounts) slides further right. Its bubble reads
+      // `robuIntro` until "Next" is pressed; the reveal card then pops in,
+      // Robu moves over to point at it, the bubble switches to `robuPrompt`,
+      // and the primary button stays disabled until the card is tapped.
+      kind: "cover-reveal";
+      robuIntro: string;
+      robuIntroHighlight: string;
+      robuPrompt: string;
       title: string;
-      imageLight: string;
-      imageDark: string;
-      lines: string[];
-      highlightLine: string;
+      highlightTitle: string;
+      description: string;
       revealLabel: string;
       revealSubject: string;
-      /** Modal popup: body paragraph shown after the title. */
+      /** Modal popup only: subtitle shown under revealSubject. */
+      modalTitle: string;
+      /** Modal popup only: body paragraph shown after the title. */
       revealDescription: string;
-      /** Modal popup: short callout shown in the REMEMBER box. */
+      /** Modal popup only: short callout shown in the REMEMBER box. */
       revealRemember: string;
       cta: string;
     }
@@ -161,6 +171,7 @@ export type InstructionsSlide =
 /** Per-screen slide types, so each screen component can be strictly typed to its own slide. */
 export type RobuIntroSlide = Extract<InstructionsSlide, { kind: "robu-intro" }>;
 export type CoverSlide = Extract<InstructionsSlide, { kind: "cover" }>;
+export type CoverRevealSlide = Extract<InstructionsSlide, { kind: "cover-reveal" }>;
 export type TeacherIntroSlide = Extract<InstructionsSlide, { kind: "teacher-intro" }>;
 export type TeacherQuizSlide = Extract<InstructionsSlide, { kind: "teacher-quiz" }>;
 export type ExamplesGridSlide = Extract<InstructionsSlide, { kind: "examples-grid" }>;
@@ -182,18 +193,30 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   },
   {
     kind: "cover",
-    highlightWord: "Programmer",
-    title: "is a problem solver.",
-    imageLight: "/images/thinkingWhite.png",
-    imageDark: "/images/thinkingBlack.png",
-    lines: ["Before we write code, let's learn how"],
-    highlightLine: "programmer think.",
+    robuGreeting: "Hi, I am robu!",
+    robuGreetingHighlight: "robu!",
+    title: "Nice to",
+    highlightTitle: "meet you!",
+    description:
+      "I'm Robu, your learning buddy. I'll be here to guide you step by step on this journey.",
+    cta: "Next",
+  },
+  {
+    kind: "cover-reveal",
+    robuIntro: "Before we write code, let's learn how programmer think.",
+    robuIntroHighlight: "programmer think.",
+    robuPrompt: "Hey, Click this box",
+    title: "Programmer is a",
+    highlightTitle: "problem solver.",
+    description:
+      "We'll explore how programmers break problems into smaller steps and find creative solutions.",
     revealLabel: "Tap to reveal",
     revealSubject: "PROGRAMMER",
+    modalTitle: "is a problem solver.",
     revealDescription:
       "A programmer breaks down complex problems into small steps and builds solutions using logic, patterns, and creativity.",
     revealRemember: "Great code starts with a great way of thinking.",
-    cta: "Continue",
+    cta: "Next",
   },
   {
     kind: "teacher-intro",

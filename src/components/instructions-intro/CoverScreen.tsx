@@ -1,304 +1,237 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
-import Image from "next/image";
-import type { CoverSlide } from "@/lib/constants/instructionsIntro";
+import { AnimatePresence, motion } from "framer-motion";
+import { Lightbulb, Sparkle } from "lucide-react";
+import type { CoverSlide, CoverRevealSlide } from "@/lib/constants/instructionsIntro";
+import { RobuAnchor } from "./RobuAnchor";
+import { SpeechBubble } from "./SpeechBubble";
 import { RevealModal } from "./RevealModal";
-import { RobuEyeBlink } from "./RobuEyeBlink";
 import { BoxLottie } from "./BoxLottie";
 
-const REDUCED_MOTION_QUERY = "(prefers-reduced-motion: reduce)";
+// The whole row swapping vertical position (bubble/heading trading places)
+// as the reveal card shows up — Robu's own glide between anchors is handled
+// entirely by RobuStage now, so this is only for everything else in the row.
+const WALK_TRANSITION = { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const };
 
-/** Subscribes to the reduced-motion preference without a setState-in-effect. */
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(
-    (onChange) => {
-      const mql = window.matchMedia(REDUCED_MOTION_QUERY);
-      mql.addEventListener("change", onChange);
-      return () => mql.removeEventListener("change", onChange);
-    },
-    () => window.matchMedia(REDUCED_MOTION_QUERY).matches,
-    () => false, // server snapshot — matches the un-animated initial phase
-  );
+interface CoverScreenProps {
+  slide: CoverSlide | CoverRevealSlide;
+  /** True once "Next" has been pressed on the "cover-reveal" step. */
+  revealed: boolean;
+  /** Fired the first time the reveal card is tapped, so the flow can unlock
+   * the footer's primary button. */
+  onBoxTap: () => void;
+  /** Whether the reveal card's modal is open. Lifted up to the flow (rather
+   * than local state) so its Back button can close it as its own step
+   * instead of only being reachable through the modal's own X/Escape. */
+  modalOpen: boolean;
+  onOpenModal: () => void;
+  onCloseModal: () => void;
+  /** Skip Robu's typewriter for whichever line is showing — set once this
+   * component's slide has already been seen. */
+  instantSpeech?: boolean;
+  /** Registers where Robu (a single persistent mascot — see RobuStage) should
+   * stand for whichever of screens 1/2 is active. */
+  registerAnchor: (el: HTMLDivElement | null) => void;
+  /** Whether Robu's one-shot entrance (RobuStage's `intro.riv` timeline) has
+   * finished. Owned by the flow, shared with RobuStage, so this screen's own
+   * "hold the heading/bubble back and keep Robu big" choreography stays
+   * synced to the real animation instead of a guessed timer. */
+  robuIntroDone: boolean;
 }
 
-// Choreography for this screen: type the headline out one letter at a
-// time → float it up into its settled slot → reveal the illustration →
-// reveal the "before we write code" paragraph → reveal the tap-to-reveal
-// card → Robu hops in and demo-taps it, then stays put beside it until the
-// learner taps it for real.
-type Phase =
-  | "typing"
-  | "float"
-  | "image"
-  | "para"
-  | "reveal"
-  | "robuDemo"
-  | "idle";
+/**
+ * Steps 01–02 share this single component instance (see
+ * InstructionsIntroFlow — both slide kinds render the same `<CoverScreen>`
+ * call site) so this screen's own layout never remounts between them: only
+ * its size/offset and the speech bubble change as `slide.kind` / `revealed`
+ * change. Robu himself is a separate, single persistent instance (RobuStage)
+ * that glides to wherever this component's anchor currently sits.
+ */
+export function CoverScreen({
+  slide,
+  revealed,
+  onBoxTap,
+  modalOpen,
+  onOpenModal,
+  onCloseModal,
+  instantSpeech,
+  registerAnchor,
+  robuIntroDone,
+}: CoverScreenProps) {
+  const isReveal = slide.kind === "cover-reveal";
 
-const PHASE_ORDER: Phase[] = [
-  "typing",
-  "float",
-  "image",
-  "para",
-  "reveal",
-  "robuDemo",
-  "idle",
-];
+  // Robu's very first entrance (step 01 only): his `intro.riv` timeline
+  // plays big and centered, alone — heading and bubble stay held back, and
+  // Robu stays at this bigger size, until that animation actually finishes.
+  // This never re-triggers on `revealed` toggling or on later slides, since
+  // `robuIntroDone` only ever flips true once for the whole session.
+  const entering = slide.kind === "cover" && !robuIntroDone;
 
-const NEXT_PHASE: Partial<Record<Phase, Phase>> = {
-  float: "image",
-  image: "para",
-  para: "reveal",
-  reveal: "robuDemo",
-  robuDemo: "idle",
-};
+  // Robu shrinks once it's crouched next to the reveal card — and starts
+  // out bigger still, centered, for the entrance above.
+  const robuSize = entering
+    ? "h-99 w-99 sm:h-144 sm:w-144 md:h-180 md:w-180"
+    : revealed
+      ? "h-20 w-20 sm:h-28 sm:w-28 md:h-36 md:w-36"
+      : "h-24 w-24 sm:h-40 sm:w-40 md:h-56 md:w-56";
 
-const TYPE_SPEED_MS = 45;
-const STEP_PAUSE_MS = 550;
+  // Robu (with its speech bubble) and the heading swap vertical order once
+  // the reveal card shows up: Robu leaves its greeting spot at the top and
+  // "walks" down to sit right above the card it wants tapped, bubble and all
+  // — so the two are always right next to each other, never split across the
+  // screen. Both blocks stay put in the tree the whole time (same parent,
+  // same slot); only their flex `order` changes, so Robu's Rive canvas never
+  // remounts.
+  const heroOrder = revealed ? "order-2" : "order-1";
+  const headingOrder = revealed ? "order-1" : "order-2";
 
-export function CoverScreen({ slide }: { slide: CoverSlide }) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [phase, setPhase] = useState<Phase>("typing");
-  const [typedLength, setTypedLength] = useState(0);
-  const reducedMotion = usePrefersReducedMotion();
+  // Screen 1 has the bubble on Robu's left (Robu on the right); screen 2
+  // flips that (Robu moves to the left, bubble to the right).
+  const robuSideOrder = !isReveal ? "order-2" : "order-1";
+  const bubbleSideOrder = !isReveal ? "order-1" : "order-2";
 
-  const fullHeadline = `${slide.highlightWord} ${slide.title}`;
-  const highlightLen = slide.highlightWord.length;
-
-  // Reduced-motion viewers get the settled screen immediately — no typing,
-  // no floating, no demo-tap.
-  const effectivePhase: Phase = reducedMotion ? "idle" : phase;
-  const effectiveTypedLength = reducedMotion ? fullHeadline.length : typedLength;
-
-  const reached = (target: Phase) =>
-    PHASE_ORDER.indexOf(effectivePhase) >= PHASE_ORDER.indexOf(target);
-
-  // Typewriter: reveal the headline one character at a time, then hand off
-  // to the rest of the phase sequence once it's fully typed.
-  useEffect(() => {
-    if (reducedMotion || phase !== "typing") return;
-    if (typedLength >= fullHeadline.length) {
-      const t = setTimeout(() => setPhase("float"), STEP_PAUSE_MS);
-      return () => clearTimeout(t);
-    }
-    const t = setTimeout(() => setTypedLength((n) => n + 1), TYPE_SPEED_MS);
-    return () => clearTimeout(t);
-  }, [reducedMotion, phase, typedLength, fullHeadline.length]);
-
-  // Step through the rest of the choreography, one beat at a time.
-  useEffect(() => {
-    if (reducedMotion) return;
-    const upcoming = NEXT_PHASE[phase];
-    if (!upcoming) return;
-    const t = setTimeout(() => setPhase(upcoming), STEP_PAUSE_MS);
-    return () => clearTimeout(t);
-  }, [reducedMotion, phase]);
-
-  const typedText = fullHeadline.slice(0, effectiveTypedLength);
-  const typedHighlight = typedText.slice(0, highlightLen);
-  const typedRest = typedText.slice(highlightLen);
+  const robu = (
+    // A plain (non-motion) wrapper on purpose: this only reserves Robu's
+    // spot now (see RobuAnchor's doc comment) — position/size changes here
+    // should land instantly, not animate, since RobuStage is what glides the
+    // real mascot smoothly from wherever it last stood to this new rect.
+    // Animating both the anchor *and* the mascot chasing it would fight each
+    // other. Robu stays this one persistent anchor across screens 1 and 2
+    // (its `order` just flips) instead of living inside a branch that swaps.
+    <div className={`relative shrink-0 ${robuSideOrder}`}>
+      {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
+      {isReveal && (
+        <div
+          aria-hidden
+          className="absolute -top-6 -right-2 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+        >
+          <Lightbulb className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9" strokeWidth={1.75} />
+          <Sparkle className="absolute -left-3 top-1.5 h-2 w-2 fill-current opacity-70 sm:-left-4 sm:top-2 sm:h-2.5 sm:w-2.5" />
+        </div>
+      )}
+      <RobuAnchor registerAnchor={registerAnchor} className={robuSize} />
+    </div>
+  );
 
   return (
-    <>
-      <div className="flex flex-col gap-3 text-center md:grid md:grid-cols-5 md:gap-x-12 md:items-center md:text-left md:min-h-full">
-        {/* ── Headline — types itself out, then floats up into its slot ── */}
-        <h1
-          aria-label={fullHeadline}
-          className={`text-2xl md:text-3xl font-semibold tracking-tight leading-tight text-balance transition-all duration-600 ease-[cubic-bezier(0.22,1,0.36,1)] md:col-span-2 md:col-start-1 md:row-start-1 md:order-1 ${
-            effectivePhase === "typing"
-              ? "translate-y-2 opacity-90"
-              : "translate-y-0 opacity-100"
-          }`}
-        >
-          <span aria-hidden="true">
-            <span className="text-primary">{typedHighlight}</span>
-            <span className="text-foreground">{typedRest}</span>
-            {effectivePhase === "typing" && <span className="cover-caret" />}
-          </span>
-        </h1>
-
-        {/* ── Illustration — appears once the headline has settled ── */}
-        {reached("image") && (
-          <div className="relative w-full h-36 md:h-80 flex items-center justify-center overflow-hidden p-3 md:col-span-3 md:col-start-3 md:row-start-1 md:row-span-3 md:order-2">
-            {/* Soft ambient glow — pure polish, sits behind the illustration. */}
-            <div
-              aria-hidden="true"
-              className={`cover-image-glow ${reducedMotion ? "" : "animate-pop-in"}`}
+    <div className="flex w-full flex-1 flex-col items-center justify-center gap-4 sm:gap-5 md:min-h-full">
+      {/* ── Robu + speech bubble — laid out as real flex siblings (not
+          absolute-positioned) so on narrow screens the bubble shrinks and
+          wraps to stay glued to Robu instead of running off the edge.
+          Nothing here animates its own layout any more (no `layout` prop,
+          no CSS `transition` on min-height/padding): Robu's own anchor lives
+          inside it, and RobuStage is what glides the real mascot smoothly to
+          wherever this row's *final* position ends up. Letting this row's
+          own height/order also animate meant RobuStage was chasing a target
+          that kept moving for the whole 700ms of that transition too,
+          roughly doubling how long Robu took to settle. The bubble's own
+          content swap (below) still crossfades on its own, so the now-instant
+          reorder doesn't read as a cut. ── */}
+      <div
+        className={`relative z-10 flex w-full items-start justify-center gap-2 sm:gap-3 ${heroOrder} ${
+          revealed ? "min-h-0 py-2" : "min-h-[32vh] pt-8 sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
+        }`}
+      >
+        {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
+            down-right into it; two little accent ticks above echo the
+            reference design's "speaking" marks. Screen 2 — bubble sits to
+            Robu's right instead, tail pointing back down-left into it.
+            Robu itself (below) is NOT branched here — only its `order`
+            flips — so it stays mounted and glides across instead of
+            disappearing from one side and popping in on the other. */}
+        {!isReveal && !entering && (
+          // Bubble waits for Robu's entrance to settle instead of popping
+          // in alongside a Robu that's still arriving.
+          <div className={`relative ${bubbleSideOrder}`}>
+            <div aria-hidden className="absolute -top-3 left-3 flex gap-1 text-primary sm:-top-4">
+              <span className="h-3 w-0.5 rotate-[-14deg] rounded-full bg-current sm:h-4" />
+              <span className="h-2 w-0.5 rotate-10 rounded-full bg-current sm:h-2.5" />
+            </div>
+            <SpeechBubble
+              text={slide.robuGreeting}
+              highlight={slide.robuGreetingHighlight}
+              tailCorner="bottom-right"
+              instant={instantSpeech}
             />
-            <div className={`h-full ${reducedMotion ? "" : "animate-pop-in"}`}>
-              <div
-                className={`h-full ${effectivePhase === "idle" && !reducedMotion ? "animate-bounce-slow" : ""}`}
-              >
-                <Image
-                  src={slide.imageLight}
-                  alt=""
-                  width={759}
-                  height={512}
-                  className="h-full w-auto max-w-full object-contain dark:hidden"
-                />
-                <Image
-                  src={slide.imageDark}
-                  alt=""
-                  width={743}
-                  height={512}
-                  className="hidden h-full w-auto max-w-full object-contain dark:block"
-                />
-              </div>
-            </div>
           </div>
         )}
 
-        {/* ── Second paragraph — "Before we write code…", each line stepping in ── */}
-        {reached("para") && (
-          <div className="md:col-span-2 md:col-start-1 md:row-start-2 md:order-3">
-            {slide.lines.map((line, i) => (
-              <p
-                key={line}
-                className={`text-sm md:text-xl font-semibold text-foreground leading-tight ${
-                  reducedMotion ? "" : "animate-fade-in"
-                }`}
-                style={reducedMotion ? undefined : { animationDelay: `${i * 90}ms` }}
+        {robu}
+
+        {isReveal && (
+          <div className={bubbleSideOrder}>
+            {/* AnimatePresence fades the outgoing line out instead of it
+                just vanishing when Robu's line swaps to the box prompt;
+                SpeechBubble's own pop-in (see its `animate-pop-in`) handles
+                the incoming line, so entrance isn't double-animated. */}
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={revealed ? "prompt" : "intro"}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
               >
-                {line}    
-              </p>
-            ))}
-            <p
-              className={`text-sm md:text-xl font-semibold text-primary leading-tight ${
-                reducedMotion ? "" : "animate-fade-in"
-              }`}
-              style={
-                reducedMotion ? undefined : { animationDelay: `${slide.lines.length * 90}ms` }
-              }
-            >
-              {slide.highlightLine}
-            </p>
+                <SpeechBubble
+                  text={revealed ? slide.robuPrompt : slide.robuIntro}
+                  highlight={revealed ? undefined : slide.robuIntroHighlight}
+                  tailCorner="bottom-left"
+                  instant={instantSpeech}
+                />
+              </motion.div>
+            </AnimatePresence>
           </div>
-        )}
-
-        {/* ── Reveal card — Robu demo-taps it, then the learner taps for real ── */}
-        {reached("reveal") && (
-          <button
-            type="button"
-            onClick={() => setModalOpen(true)}
-            className={`relative w-full h-40 rounded-[8px] bg-[#1A1C22] p-6 flex items-center gap-8 shadow-lg mt-1 md:mt-0 md:col-span-2 md:col-start-1 md:row-start-3 md:order-4 text-left cursor-pointer hover:bg-[#22252e] active:scale-[0.98] transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-              reducedMotion ? "" : "animate-pop-in"
-            }`}
-            aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
-          >
-            {/* Pulse ring, synced with Robu's tap, to draw the eye to the card. */}
-            {effectivePhase === "robuDemo" && !reducedMotion && (
-              <div aria-hidden="true" className="cover-card-pulse" />
-            )}
-
-            <div className="w-28 h-28 shrink-0 flex items-center justify-center">
-              <BoxLottie className="w-full h-full transition-transform duration-200 group-hover:scale-105" />
-            </div>
-            <div className="text-left">
-              <p className="text-[15px] md:text-base text-white font-medium">
-                {slide.revealLabel}
-              </p>
-              <p className="text-[15px] md:text-base text-[#BEBEBE] font-medium">
-                about
-              </p>
-              <p className="text-xl md:text-2xl font-semibold tracking-wide text-primary">
-                {slide.revealSubject}
-              </p>
-            </div>
-
-            {/* Robu hops in and demo-taps the card, then sits beside it. */}
-            {reached("robuDemo") && !modalOpen && (
-              <div
-                className={`cover-robu-demo ${reducedMotion ? "cover-robu-demo--static" : ""}`}
-                aria-hidden="true"
-              >
-                <RobuEyeBlink className="h-full w-full" />
-              </div>
-            )}
-          </button>
         )}
       </div>
 
-      {/* ── Modal portal ─────────────────────────────────────────── */}
-      {modalOpen && (
-        <RevealModal slide={slide} onClose={() => setModalOpen(false)} />
+      {/* ── Heading + description — same shape on both screens; fades in
+          once Robu's entrance settles rather than appearing with it ── */}
+      <motion.div
+        layout="position"
+        initial={false}
+        animate={{ opacity: entering ? 0 : 1, y: entering ? 8 : 0 }}
+        transition={WALK_TRANSITION}
+        className={`px-4 text-center sm:px-6 ${headingOrder}`}
+      >
+        <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
+          <span className="text-foreground">{slide.title}</span>{" "}
+          <span className="text-primary">{slide.highlightTitle}</span>
+        </h1>
+        <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base">
+          {slide.description}
+        </p>
+      </motion.div>
+
+      {/* ── Reveal card — hidden until "Next" pops it in ── */}
+      {isReveal && revealed && (
+        <button
+          type="button"
+          onClick={() => {
+            onOpenModal();
+            onBoxTap();
+          }}
+          className="animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6"
+          aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
+        >
+          <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">
+            {/* Plays once, right as this card mounts (i.e. as soon as the
+                reveal step appears) — no loop. Square and sized to fill the
+                card's own height (minus its padding) so the box reads at
+                full size instead of being squeezed down to fit a narrow slot. */}
+            <BoxLottie className="h-full w-full" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm text-white font-medium sm:text-[15px] md:text-base">{slide.revealLabel}</p>
+            <p className="text-sm text-[#BEBEBE] font-medium sm:text-[15px] md:text-base">about</p>
+            <p className="text-lg font-semibold tracking-wide text-primary sm:text-xl md:text-2xl">
+              {slide.revealSubject}
+            </p>
+          </div>
+        </button>
       )}
 
-      <style>{`
-        .cover-caret {
-          display: inline-block;
-          width: 2px;
-          height: 0.9em;
-          margin-left: 2px;
-          background: currentColor;
-          vertical-align: -0.1em;
-          animation: cover-caret-blink 0.8s steps(1) infinite;
-        }
-        @keyframes cover-caret-blink {
-          50% { opacity: 0; }
-        }
-
-        .cover-robu-demo {
-          position: absolute;
-          top: -1.75rem;
-          right: -0.5rem;
-          width: 3.5rem;
-          height: 3.5rem;
-          pointer-events: none;
-          animation:
-            cover-robu-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) both,
-            cover-robu-tap 0.55s ease-in-out 0.55s 2;
-        }
-        @media (min-width: 768px) {
-          .cover-robu-demo {
-            width: 4.5rem;
-            height: 4.5rem;
-            top: -2rem;
-            right: -0.75rem;
-          }
-        }
-        .cover-robu-demo--static {
-          animation: none;
-        }
-        @keyframes cover-robu-in {
-          from { transform: translate(24px, 12px) scale(0.5); opacity: 0; }
-          to   { transform: translate(0, 0) scale(1); opacity: 1; }
-        }
-        @keyframes cover-robu-tap {
-          0%, 100% { transform: translateY(0) rotate(0deg); }
-          50% { transform: translateY(6px) rotate(-8deg); }
-        }
-
-        .cover-image-glow {
-          position: absolute;
-          inset: 18%;
-          pointer-events: none;
-          border-radius: 9999px;
-          filter: blur(28px);
-          background: radial-gradient(circle at 50% 55%, rgba(1, 161, 127, 0.16), rgba(255, 255, 255, 0) 70%);
-          animation: cover-image-glow-pulse 3.6s ease-in-out infinite;
-        }
-        .dark .cover-image-glow {
-          background: radial-gradient(circle at 50% 55%, rgba(1, 161, 127, 0.26), rgba(9, 12, 19, 0) 70%);
-        }
-        @keyframes cover-image-glow-pulse {
-          0%, 100% { opacity: 0.7; transform: scale(1); }
-          50% { opacity: 1; transform: scale(1.05); }
-        }
-
-        .cover-card-pulse {
-          position: absolute;
-          inset: -6px;
-          border-radius: 14px;
-          border: 2px solid rgba(1, 161, 127, 0.5);
-          pointer-events: none;
-          animation: cover-card-pulse-ring 0.55s ease-out 0.55s 2;
-        }
-        @keyframes cover-card-pulse-ring {
-          0% { opacity: 0.9; transform: scale(0.98); }
-          100% { opacity: 0; transform: scale(1.04); }
-        }
-      `}</style>
-    </>
+      {/* ── Modal portal — Robu followed the learner in ── */}
+      {isReveal && modalOpen && (
+        <RevealModal slide={slide} onClose={onCloseModal} />
+      )}
+    </div>
   );
 }

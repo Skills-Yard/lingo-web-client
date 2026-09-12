@@ -29,18 +29,11 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 export const ROBU_EYEBLINK_RIVE_SRC = "/animations/robu_latest_day2.riv";
 
 /**
- * Source for the "Meet Robu" character-intro animation (screen 09). Same
- * rationale as above — one constant shared by the renderer and the preloader.
+ * Robu's one-time entrance — the `intro` timeline, played once the very
+ * first time Robu appears in the whole flow, in place of a CSS/framer
+ * opacity+scale fade. See RobuIntro / RobuStage.
  */
-export const ROBU_RIVE_SRC = "/rive/robu.riv";
-
-/**
- * Robu mascot for the opening "Hi, I'm Robu!" greeting (screen 01). Same
- * base rig/timelines as `ROBU_EYEBLINK_RIVE_SRC` (`idle2` / `ears` /
- * `eyeblink2`), plus a dedicated `Intro state machine` and greeting clips
- * (`hii`, `intro`) authored for this screen specifically.
- */
-export const ROBU_INTRO_RIVE_SRC = "/rive/robu-intro.riv";
+export const ROBU_INTRO_RIVE_SRC = "/animations/intro.riv";
 
 let configured = false;
 
