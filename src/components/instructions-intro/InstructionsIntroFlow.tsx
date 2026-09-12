@@ -391,6 +391,7 @@ export function InstructionsIntroFlow({
               <GameBoardScreen
                 slide={slide}
                 onSolvedChange={setGameSolved}
+                instantSpeech={instantSpeech}
                 registerAnchor={setRobuAnchorEl}
               />
             )}

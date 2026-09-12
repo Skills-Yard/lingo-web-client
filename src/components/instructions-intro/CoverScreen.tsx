@@ -114,7 +114,7 @@ export function CoverScreen({
       {isReveal && (
         <div
           aria-hidden
-          className="absolute top-4 left-20  text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
         >
           <Lightbulb
             className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
@@ -187,6 +187,7 @@ export function CoverScreen({
             </div>
           )}
 
+<<<<<<< HEAD
           {/* Robu's own bubble here only ever carries the short "Hey, Click
               this box" nudge, and only once revealed — his actual intro
               line (`robuIntro`) lives in the heading slot below instead, for
@@ -198,6 +199,13 @@ export function CoverScreen({
           {isReveal && revealed && (
             <div className={`relative flex items-center justify-center mr-6 ${bubbleSideOrder}`}>
               <AnimatePresence initial={false}>
+=======
+          {robu}
+
+          {isReveal && (
+            <div className={`relative mr-6 ${bubbleSideOrder}`}>
+              <AnimatePresence mode="popLayout" initial={false}>
+>>>>>>> 09f9c7463a85a4aa6edc3110c01dfd3df915c9ef
                 <motion.div
                   key="prompt"
                   initial={{ opacity: 0, scale: 0.92 }}
@@ -214,8 +222,6 @@ export function CoverScreen({
               </AnimatePresence>
             </div>
           )}
-          {robu}
-
         </div>
       </div>
 
@@ -273,7 +279,11 @@ export function CoverScreen({
                 src="/images/thinkingBlack.png"
                 alt=""
                 aria-hidden="true"
+<<<<<<< HEAD
                 width={743}
+=======
+                width={revealed ? 100 : 743}
+>>>>>>> 09f9c7463a85a4aa6edc3110c01dfd3df915c9ef
                 height={512}
                 className="hidden h-auto w-44 object-contain dark:block sm:w-64 md:w-72"
               />

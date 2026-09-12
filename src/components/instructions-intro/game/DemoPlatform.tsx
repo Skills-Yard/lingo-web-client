@@ -1,7 +1,7 @@
 import React from "react";
 import { Position, Direction } from "../../../utils/types";
 import { demoLevel } from "../../../utils/data/levels";
-import { RobuEyeBlink } from "../RobuEyeBlink";
+import { RobuAnchor } from "../RobuAnchor";
 
 // Ported from lingo-website-client/src/components/programming-basic/demo.tsx
 
@@ -10,6 +10,16 @@ interface DemoPlatformProps {
   playerDir: Direction;
   isPlaying: boolean;
   executingStep: number | null;
+  /** Registers the player tile itself as Robu's anchor (see RobuStage) — he
+   * *is* the player piece here, not a second mascot alongside the shared
+   * one, so this glides the one real Robu to whichever tile `playerPos`
+   * currently is, same as every other screen's own anchor. */
+  registerAnchor: (el: HTMLDivElement | null) => void;
+  /** True once Robu has actually left the header and joined the game — the
+   * tile only registers itself as his anchor once this is true, so he isn't
+   * pulled off the header (and doesn't briefly render at the tile's
+   * un-joined size) before that arrival beat has actually played out. */
+  robuJoinedGame: boolean;
 }
 
 const TILE_COORDS: Record<string, { x: number; y: number; width?: string; height?: string }> = {
@@ -24,6 +34,8 @@ export const DemoPlatform: React.FC<DemoPlatformProps> = ({
   playerDir,
   isPlaying: _isPlaying,
   executingStep: _executingStep,
+  registerAnchor,
+  robuJoinedGame,
 }) => {
   const dims = demoLevel.dimensions;
 
@@ -106,7 +118,14 @@ export const DemoPlatform: React.FC<DemoPlatformProps> = ({
           const tile = getTileConfig(playerPos.r, playerPos.c);
           return (
             <div
-              className="absolute z-30 transition-all duration-500 ease-out flex flex-col items-center overflow-visible"
+              // 700ms, matching RobuStage's own glide duration (see
+              // ROBU_WALK_TRANSITION) — this tile's position and the real
+              // Robu chasing it (RobuStage re-samples this anchor's rect
+              // every frame and animates toward it) used to run on
+              // different durations (this was 500ms), so Robu was always
+              // arriving late, visibly trailing a faster-moving target
+              // instead of moving with it.
+              className="absolute z-30 transition-all duration-700 ease-out flex flex-col items-center overflow-visible"
               style={{
                 left: `${tile.x}%`,
                 top: `${tile.y}%`,
@@ -126,8 +145,19 @@ export const DemoPlatform: React.FC<DemoPlatformProps> = ({
                 <span className="text-white text-[12px] font-black leading-none">➔</span>
               </div>
 
-              {/* Player character — the Robu mascot (Rive) */}
-              <RobuEyeBlink className="w-full aspect-square z-10 drop-shadow-[0_5px_6px_rgba(0,0,0,0.3)]" />
+              {/* Player character — the one shared Robu (see RobuStage),
+                  registering this tile as his anchor once he's actually
+                  joined the game, not a second mascot rendered here on top
+                  of him. Sized to 130% of the tile (not `w-full`, i.e. a
+                  literal 100%) — the parent's `items-center` keeps him
+                  centered as he overflows it evenly, so he reads as sitting
+                  on the tile rather than being cropped to fit inside it. */}
+              {robuJoinedGame && (
+                <RobuAnchor
+                  registerAnchor={registerAnchor}
+                  className="w-[175%] aspect-square z-10 drop-shadow-[0_5px_6px_rgba(0,0,0,0.3)]"
+                />
+              )}
             </div>
           );
         })()}

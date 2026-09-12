@@ -17,6 +17,14 @@ interface GameBoardProps {
   fillHint: () => void;
   setSoundEnabled: (enabled: boolean) => void;
   triggerSound: (type: "tap" | "step" | "pickup" | "win" | "lose" | "hint") => void;
+  /** Registers where Robu (a single persistent mascot — see RobuStage)
+   * should stand — forwarded straight to the platform so it can register
+   * the player tile itself as his anchor. */
+  registerAnchor: (el: HTMLDivElement | null) => void;
+  /** True once Robu has left the header and joined the game — before that,
+   * the platform doesn't register the player tile as his anchor at all
+   * (GameBoardScreen still owns it, up in the header). */
+  robuJoinedGame: boolean;
 }
 
 export function GameBoard({
@@ -31,6 +39,8 @@ export function GameBoard({
   fillHint,
   setSoundEnabled,
   triggerSound,
+  registerAnchor,
+  robuJoinedGame,
 }: GameBoardProps) {
   const stepsLeft = commands.filter((c) => c === null).length;
 
@@ -72,7 +82,14 @@ export function GameBoard({
 
       <div className="w-full flex items-center justify-center py-4 overflow-visible relative">
         {level.isDemo ? (
-          <DemoPlatform playerPos={playerPos} playerDir={playerDir} isPlaying={isPlaying} executingStep={executingStep} />
+          <DemoPlatform
+            playerPos={playerPos}
+            playerDir={playerDir}
+            isPlaying={isPlaying}
+            executingStep={executingStep}
+            registerAnchor={registerAnchor}
+            robuJoinedGame={robuJoinedGame}
+          />
         ) : (
           <Level1Platform
             playerPos={playerPos}
@@ -80,6 +97,8 @@ export function GameBoard({
             isPlaying={isPlaying}
             executingStep={executingStep}
             collectedStar={collectedStar}
+            registerAnchor={registerAnchor}
+            robuJoinedGame={robuJoinedGame}
           />
         )}
       </div>
