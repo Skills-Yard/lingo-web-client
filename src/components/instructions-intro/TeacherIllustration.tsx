@@ -22,12 +22,12 @@ export function TeacherIllustration({
 }: TeacherIllustrationProps) {
   const fitClass = fit === "cover" ? "object-cover" : "object-contain";
   const frameClass =
-    variant === "bleed"
-      ? "rounded-[12px]"
-      : "border rounded-[12px] shadow-sm";
+    variant === "bleed" ? "rounded-[12px]" : "border rounded-[12px] shadow-sm";
 
   return (
-    <div className={`relative w-full overflow-hidden ${frameClass} ${className}`}>
+    <div
+      className={`relative w-full overflow-hidden ${frameClass} ${className}`}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={imageLight}
@@ -50,8 +50,16 @@ export function TeacherIllustration({
           >
             &ldquo;
           </span>
+
           <span className="relative block pt-3 text-[15px] font-semibold leading-[1.34]">
             Open Your Notebook
+          </span>
+
+          <span
+            aria-hidden
+            className="absolute bottom-0.5 right-2.5 font-serif text-4xl leading-none text-primary"
+          >
+            &rdquo;
           </span>
         </div>
       )}

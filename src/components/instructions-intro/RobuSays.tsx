@@ -52,18 +52,23 @@ export function RobuSays({
       // everywhere" the mascot's going for) or letting the bubble run off
       // the edge, the bubble simply drops to its own line underneath him
       // when there isn't room beside him.
-      className={`animate-fade-in flex flex-wrap items-end gap-1.5 ${
+      className={`animate-fade-in flex w-full pt-2 items-start justify-center gap-1 ${
         side === "right" ? "flex-row-reverse" : ""
-      } ${center ? "justify-center md:justify-start" : ""} ${className ?? ""}`}
+      } ${className ?? ""}`}
     >
-      <RobuAnchor registerAnchor={registerAnchor} className={`shrink-0 ${robuClassName}`} />
-      <SpeechBubble
-        text={text}
-        highlight={highlight}
-        instant={instant}
-        size="lg"
-        tailCorner={tailCorner}
+      <RobuAnchor
+        registerAnchor={registerAnchor}
+        className={`shrink-0 ${robuClassName}`}
       />
+      <div className="-ml-12 shrink-0 sm:-ml-4 md:ml-0">
+        <SpeechBubble
+          text={text}
+          highlight={highlight}
+          instant={instant}
+          size="lg"
+          tailCorner={tailCorner}
+        />
+      </div>
     </div>
   );
 }
