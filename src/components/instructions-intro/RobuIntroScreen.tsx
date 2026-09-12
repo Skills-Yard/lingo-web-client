@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { RobuIntroSlide } from "@/lib/constants/instructionsIntro";
-import { RobuEyeBlink } from "./RobuEyeBlink";
+import { RobuIntroMascot } from "./RobuIntroMascot";
 
 // "Hi, I'm Robu" — the very first screen of the flow.
 // 1. Robu appears mid-screen (on every device) and introduces itself.
@@ -131,7 +131,7 @@ export function RobuIntroScreen({ slide }: { slide: RobuIntroSlide }) {
         />
         <div className={`relative ${reducedMotion ? "" : "animate-pop-in"}`}>
           <div className={effectivePhase === "idle" && !reducedMotion ? "animate-bounce-slow" : ""}>
-            <RobuEyeBlink className="h-[clamp(180px,40vw,320px)] w-[clamp(180px,40vw,320px)]" />
+            <RobuIntroMascot className="h-[clamp(180px,40vw,320px)] w-[clamp(180px,40vw,320px)]" />
           </div>
           {/* Grounding shadow — stays put while Robu gently bobs above it. */}
           <div aria-hidden="true" className="robu-intro-shadow" />

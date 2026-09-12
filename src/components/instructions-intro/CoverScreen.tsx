@@ -160,7 +160,7 @@ export function CoverScreen({ slide }: { slide: CoverSlide }) {
                 }`}
                 style={reducedMotion ? undefined : { animationDelay: `${i * 90}ms` }}
               >
-                {line}
+                {line}    
               </p>
             ))}
             <p

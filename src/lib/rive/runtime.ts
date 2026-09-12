@@ -34,6 +34,14 @@ export const ROBU_EYEBLINK_RIVE_SRC = "/animations/robu_latest_day2.riv";
  */
 export const ROBU_RIVE_SRC = "/rive/robu.riv";
 
+/**
+ * Robu mascot for the opening "Hi, I'm Robu!" greeting (screen 01). Same
+ * base rig/timelines as `ROBU_EYEBLINK_RIVE_SRC` (`idle2` / `ears` /
+ * `eyeblink2`), plus a dedicated `Intro state machine` and greeting clips
+ * (`hii`, `intro`) authored for this screen specifically.
+ */
+export const ROBU_INTRO_RIVE_SRC = "/rive/robu-intro.riv";
+
 let configured = false;
 
 /**
