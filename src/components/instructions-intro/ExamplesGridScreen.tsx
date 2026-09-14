@@ -18,6 +18,7 @@ export function ExamplesGridScreen({
         text={slide.title}
         instant={instantSpeech}
         side="right"
+        sideLg="above"
         className="md:w-56 md:shrink-0"
         registerAnchor={registerAnchor}
       />

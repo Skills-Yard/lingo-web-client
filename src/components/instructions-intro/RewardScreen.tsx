@@ -14,6 +14,7 @@ import {
 import { EventType } from "@rive-app/canvas";
 import { configureRiveRuntime, REWARD_RIVE_SRC } from "@/lib/rive/runtime";
 import { RobuSays } from "./RobuSays";
+import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -129,13 +130,15 @@ export function RewardScreen({
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 py-2 md:min-h-full md:justify-center">
+    <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 py-2 md:min-h-full md:justify-center lg:gap-2 lg:py-1">
       {/* ── Heading — Robu announces the claim instead of a bare title ── */}
       <RobuSays
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.title}
         instant={instantSpeech}
         side="right"
+        sideLg="above"
+        robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-32 lg:w-32`}
         registerAnchor={registerAnchor}
       />
 
@@ -143,7 +146,7 @@ export function RewardScreen({
           `overflow-hidden`: the glow below is a fixed 300px circle, centered
           — on the very narrowest phones (<352px) it's wider than this row,
           so without a clip it would peek past the edge on both sides. ── */}
-      <div className="relative flex h-[clamp(150px,26vh,267px)] w-full items-center justify-center overflow-hidden">
+      <div className="relative flex h-[clamp(150px,26vh,267px)] w-full items-center justify-center overflow-hidden lg:h-40">
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl [background:radial-gradient(circle_at_50%_60%,rgba(1,161,127,0.20),rgba(255,255,255,0)_70%)] dark:[background:radial-gradient(circle_at_50%_60%,rgba(1,161,127,0.30),rgba(9,12,19,0)_70%)]"

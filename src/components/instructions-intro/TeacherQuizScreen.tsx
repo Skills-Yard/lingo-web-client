@@ -2,6 +2,7 @@ import { Check, X } from "lucide-react";
 import type { TeacherQuizSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
+import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 interface TeacherQuizScreenProps {
   slide: TeacherQuizSlide;
@@ -34,6 +35,8 @@ export function TeacherQuizScreen({
         highlight={slide.highlightWord}
         instant={instantSpeech}
         side="right"
+        sideLg="left"
+        robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-40 lg:w-40`}
         className="md:col-start-1 md:row-start-1"
         registerAnchor={registerAnchor}
       />

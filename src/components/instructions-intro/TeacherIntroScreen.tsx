@@ -1,6 +1,7 @@
 import type { TeacherIntroSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
+import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 export function TeacherIntroScreen({
   slide,
@@ -21,6 +22,7 @@ export function TeacherIntroScreen({
             highlight={slide.eyebrow}
             instant={instantSpeech}
             side="left"
+            robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-40 lg:w-40`}
             registerAnchor={registerAnchor}
           />
         </div>

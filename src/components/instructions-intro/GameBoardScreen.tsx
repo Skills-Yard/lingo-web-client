@@ -105,10 +105,24 @@ export function GameBoardScreen({
           className="flex w-full flex-wrap items-start justify-center"
           transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
         >
-          {!robuJoinedGame && (
+          {!robuJoinedGame ? (
             <RobuAnchor
               registerAnchor={registerAnchor}
-              className={`shrink-0 ${ROBU_DEFAULT_SIZE}`}
+              className={`shrink-0 ${ROBU_DEFAULT_SIZE} lg:h-32 lg:w-32`}
+            />
+          ) : (
+            // `lg:` only — reserves the exact same box Robu just vacated so
+            // the header's own height never changes and the board/controls
+            // below it don't reflow into a new centered position a beat
+            // after this screen first mounts (the header briefly being this
+            // screen's tallest element while Robu's still here, then
+            // shrinking once he leaves, was what read as everything
+            // "settling" into center instead of already sitting there).
+            // Skipped below `lg:`, where the bubble is meant to expand into
+            // this space once he goes, same as before.
+            <div
+              aria-hidden
+              className="invisible hidden shrink-0 lg:block lg:h-32 lg:w-32"
             />
           )}
 

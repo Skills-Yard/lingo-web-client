@@ -1,6 +1,7 @@
 import { ChevronRight, List, Network, Sparkles } from "lucide-react";
 import type { VideoSlide } from "@/lib/constants/instructionsIntro";
 import { RobuSays } from "./RobuSays";
+import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 export function VideoScreen({
   slide,
@@ -20,6 +21,8 @@ export function VideoScreen({
           highlight={slide.highlightWord}
           instant={instantSpeech}
           side="left"
+          sideLg="above"
+          robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-32 lg:w-32`}
           registerAnchor={registerAnchor}
         />
         <div className="flex flex-col gap-3">

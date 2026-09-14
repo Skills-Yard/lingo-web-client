@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Check, X } from "lucide-react";
 import type { QuestionnaireSlide } from "@/lib/constants/instructionsIntro";
 import { RobuSays } from "./RobuSays";
+import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 interface QuestionnaireScreenProps {
   slide: QuestionnaireSlide;
@@ -69,7 +70,7 @@ export function QuestionnaireScreen({
   };
 
   return (
-    <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-8 md:gap-y-6 md:min-h-full md:content-center md:items-start">
+    <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-8 md:gap-y-6 md:items-start">
       {/* ── Left column — "Q." badge, heading, prompt, illustration ── */}
       <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1 md:row-span-2 md:self-stretch md:border-r border-black/10 dark:border-white/10 md:pr-8">
         <RobuSays
@@ -77,6 +78,8 @@ export function QuestionnaireScreen({
           highlight={slide.highlightWord}
           instant={instantSpeech}
           side="left"
+          sideLg="right"
+          robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-32 lg:w-32`}
           registerAnchor={registerAnchor}
         />
 
@@ -91,7 +94,7 @@ export function QuestionnaireScreen({
             alt=""
             width={480}
             height={360}
-            className="h-auto w-full max-w-[360px] object-contain"
+            className="h-auto w-full max-w-[360px] object-contain lg:max-w-[220px]"
             priority
           />
         </div>
@@ -157,58 +160,72 @@ export function QuestionnaireScreen({
       </div>
 
       {/* ── Feedback — command9 Frame 13 + Frame 23/24, spans both columns ──
-          Desktop shows this inline panel; mobile keeps it in the footer (see IntroFooter). */}
-      {checked && selectedItem && (
-        <div
-          className={`hidden md:block relative overflow-hidden rounded-[12px] p-4 pr-28 md:col-span-2 md:row-start-3 md:pr-44 animate-pop-in ${
-            isCorrect
-              ? "[background:linear-gradient(180deg,rgba(223,255,248,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(1,161,127,0.20)_0%,rgba(255,255,255,0)_98.7%)]"
-              : "[background:linear-gradient(180deg,rgba(255,226,226,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(220,38,38,0.20)_0%,rgba(255,255,255,0)_98.7%)]"
-          }`}
-        >
-          <div className="flex items-center gap-3.5">
-            <span
-              className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full ${
-                isCorrect ? "bg-primary" : "bg-destructive"
-              }`}
-            >
-              {isCorrect ? (
-                <Check className="h-5 w-5 text-white" strokeWidth={3} />
-              ) : (
-                <X className="h-5 w-5 text-white" strokeWidth={3} />
-              )}
-            </span>
-            <p
-              className={`text-[18px] font-semibold ${
-                isCorrect ? "text-primary" : "text-destructive"
-              }`}
-            >
-              {isCorrect ? "Correct, you got it!" : "Oops! Not quite."}
-            </p>
-          </div>
+          Desktop shows this inline panel; mobile keeps it in the footer (see
+          IntroFooter). Always occupies this grid row (`invisible`, not a
+          conditional unmount) once `checked` fires the min-height, even
+          before that: mounting it only once the answer's checked used to
+          grow this screen's total height at that exact moment, and since
+          the whole slide sits in a vertically-centered flex column (see
+          InstructionsIntroFlow), that growth pulled everything — the
+          question, the options, all of it — upward to stay centered around
+          the new, taller midpoint. Reserving the row from the start means
+          the screen's height (and hence its centered position) never
+          changes when the feedback actually appears. */}
+      <div
+        className={`hidden md:block relative overflow-hidden rounded-[12px] p-4 pr-28 md:col-span-2 md:row-start-3 md:pr-44 md:min-h-[110px] ${
+          checked && selectedItem ? "animate-pop-in" : "invisible"
+        } ${
+          isCorrect
+            ? "[background:linear-gradient(180deg,rgba(223,255,248,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(1,161,127,0.20)_0%,rgba(255,255,255,0)_98.7%)]"
+            : "[background:linear-gradient(180deg,rgba(255,226,226,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(220,38,38,0.20)_0%,rgba(255,255,255,0)_98.7%)]"
+        }`}
+      >
+        {selectedItem && (
+          <>
+            <div className="flex items-center gap-3.5">
+              <span
+                className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full ${
+                  isCorrect ? "bg-primary" : "bg-destructive"
+                }`}
+              >
+                {isCorrect ? (
+                  <Check className="h-5 w-5 text-white" strokeWidth={3} />
+                ) : (
+                  <X className="h-5 w-5 text-white" strokeWidth={3} />
+                )}
+              </span>
+              <p
+                className={`text-[18px] font-semibold ${
+                  isCorrect ? "text-primary" : "text-destructive"
+                }`}
+              >
+                {isCorrect ? "Correct, you got it!" : "Oops! Not quite."}
+              </p>
+            </div>
 
-          {selectedItem.feedback && (
-            <p className="mt-2 max-w-[260px] text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400 md:max-w-md">
-              {isCorrect ? (
-                <Highlight
-                  text={selectedItem.feedback}
-                  terms={[`${selectedItem.label}s`, selectedItem.label]}
-                />
-              ) : (
-                selectedItem.feedback
-              )}
-            </p>
-          )}
+            {selectedItem.feedback && (
+              <p className="mt-2 max-w-[260px] text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400 md:max-w-md">
+                {isCorrect ? (
+                  <Highlight
+                    text={selectedItem.feedback}
+                    terms={[`${selectedItem.label}s`, selectedItem.label]}
+                  />
+                ) : (
+                  selectedItem.feedback
+                )}
+              </p>
+            )}
 
-          <Image
-            src={isCorrect ? "/images/sprouty.png" : "/images/sprouty-worng-ans.png"}
-            alt=""
-            width={140}
-            height={130}
-            className="pointer-events-none absolute -bottom-1 right-1 h-[92px] w-auto object-contain md:bottom-1/2 md:right-6 md:h-[130px] md:translate-y-1/2"
-          />
-        </div>
-      )}
+            <Image
+              src={isCorrect ? "/images/sprouty.png" : "/images/sprouty-worng-ans.png"}
+              alt=""
+              width={140}
+              height={130}
+              className="pointer-events-none absolute -bottom-1 right-1 h-[92px] w-auto object-contain md:bottom-1/2 md:right-6 md:h-[130px] md:translate-y-1/2"
+            />
+          </>
+        )}
+      </div>
     </div>
   );
 }
