@@ -3,13 +3,14 @@
 import { useEffect } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment, type Rive as RiveInstance } from "@rive-app/canvas";
-import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
+import { configureRiveRuntime, getRobuRiveSrc } from "@/lib/rive/runtime";
+import { useTheme } from "@/context/ThemeContext";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
 // `updated_robu.riv` — artboard `Anim Skill` (same file/artboard RobuMascot's
-// entrance plays on — see ROBU_RIVE_SRC). The `robu anim` state machine has
+// entrance plays on — see getRobuRiveSrc). The `robu anim` state machine has
 // no inputs, so we drive the timelines directly: the slow `idle2` loop is
 // the ambient base (it also keeps Rive's render loop alive), and `ears` /
 // `eyeblink twice` are each replayed on top on their own interval.
@@ -98,10 +99,19 @@ interface RobuEyeBlinkProps {
  * Robu mascot. The `.riv` is vector-only, so it is cheap to drop onto any
  * screen. Give it a sized wrapper via `className` — the canvas fills it and
  * `Fit.Contain` keeps the whole mascot visible as it scales.
+ *
+ * `useRive`'s `src` option only loads once at mount, so swapping Robu's
+ * `.riv` when the theme toggles needs a remount — `key={theme}` on the inner
+ * component forces exactly that (see RobuMascot's identical trick).
  */
 export function RobuEyeBlink({ className }: RobuEyeBlinkProps) {
+  const { theme } = useTheme();
+  return <RobuEyeBlinkCanvas key={theme} className={className} src={getRobuRiveSrc(theme)} />;
+}
+
+function RobuEyeBlinkCanvas({ className, src }: RobuEyeBlinkProps & { src: string }) {
   const { rive, RiveComponent } = useRive({
-    src: ROBU_RIVE_SRC,
+    src,
     artboard: ROBU_ARTBOARD,
     animations: ROBU_BASE_ANIMATIONS,
     autoplay: true,

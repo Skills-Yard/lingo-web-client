@@ -23,14 +23,24 @@ const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
 export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 
 /**
- * The one `.riv` for every Robu instance in the app — RobuMascot (the single
+ * The `.riv` for every Robu instance in the app — RobuMascot (the single
  * persistent mascot that glides between every screen's anchor in the main
  * flow: its `intro  improve` timeline plays once, in place of a CSS/framer
  * opacity+scale fade, before the same file settles into Robu's ambient idle
  * loop for the rest of the session) and every standalone `<RobuEyeBlink>`
  * (the reveal-card modal, the game screens' demo/level platforms) alike.
+ *
+ * Same artboard/timeline/animation names in both files — only the art
+ * itself differs — so callers just need to pick the right one for the
+ * active theme via `getRobuRiveSrc` (or `useTheme()` directly).
  */
-export const ROBU_RIVE_SRC = "/animations/updated_robu.riv";
+export const ROBU_RIVE_SRC_LIGHT = "/animations/robu_dark.riv";
+export const ROBU_RIVE_SRC_DARK = "/animations/updated_robu.riv";
+
+/** Pick Robu's `.riv` for the given theme. */
+export function getRobuRiveSrc(theme: "light" | "dark"): string {
+  return theme === "dark" ? ROBU_RIVE_SRC_DARK : ROBU_RIVE_SRC_LIGHT;
+}
 
 let configured = false;
 
