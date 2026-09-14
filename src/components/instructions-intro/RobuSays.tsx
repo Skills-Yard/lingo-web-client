@@ -93,8 +93,8 @@ export function RobuSays({
       <div
         className={`${
           side === "right"
-            ? "-mr-12 shrink-0 sm:-mr-4 md:mr-0"
-            : "-ml-12 shrink-0 sm:-ml-4 md:ml-0"
+            ? "-mr-8 shrink-0 sm:-mr-12 sm:-mr-4 md:mr-0"
+            : "-ml-8 shrink-0 sm:-ml-12 sm:-ml-4 md:ml-0"
         } ${bubbleMarginLg}`}
       >
         <SpeechBubble

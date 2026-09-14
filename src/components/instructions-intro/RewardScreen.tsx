@@ -145,7 +145,7 @@ export function RewardScreen({
           `overflow-hidden`: the glow below is a fixed 300px circle, centered
           — on the very narrowest phones (<352px) it's wider than this row,
           so without a clip it would peek past the edge on both sides. ── */}
-      <div className="relative flex h-[clamp(150px,26vh,267px)] w-full items-center justify-center overflow-hidden lg:h-40">
+      <div className="relative flex h-[clamp(130px,22vh,267px)] sm:h-[clamp(150px,26vh,267px)] w-full items-center justify-center overflow-hidden lg:h-40">
         <div
           aria-hidden
           className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl [background:radial-gradient(circle_at_50%_60%,rgba(1,161,127,0.20),rgba(255,255,255,0)_70%)] dark:[background:radial-gradient(circle_at_50%_60%,rgba(1,161,127,0.30),rgba(9,12,19,0)_70%)]"
@@ -177,7 +177,7 @@ export function RewardScreen({
           className="relative z-10 h-full w-auto max-w-full object-contain animate-pop-in"
         /> */}
         <div
-          className="relative h-[220px] w-[220px]"
+          className="relative h-[180px] w-[180px] sm:h-[220px] sm:w-[220px]"
           onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onClick={openBox}

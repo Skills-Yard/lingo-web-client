@@ -93,7 +93,7 @@ export function GameBoardScreen({
   }, [success, onSolvedChange]);
 
   return (
-    <div className="flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center">
+    <div className="flex flex-col gap-2 sm:gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center">
       {/* ── Header — Robu stands here for the first beat (same arrival every
           other screen gets), then leaves for the board once he joins the
           game; his icon un-reserves that space the instant he does, so the

@@ -118,32 +118,32 @@ export function QuestionnaireScreen({
               type="button"
               onClick={() => handleSelect(item.id)}
               disabled={checked}
-              className={`flex min-h-[92px] w-full items-center gap-4 rounded-[12px] px-5 py-4 text-left transition-all active:scale-[0.99] disabled:cursor-not-allowed ${
+              className={`flex min-h-[76px] sm:min-h-[92px] w-full items-center gap-3 sm:gap-4 rounded-[12px] px-4 py-3 sm:px-5 sm:py-4 text-left transition-all active:scale-[0.99] disabled:cursor-not-allowed ${
                 isSelected
                   ? "border border-primary [background:linear-gradient(180deg,#FFFFFF_1.3%,#EEFAF6_67.42%)] dark:[background:linear-gradient(180deg,#15181E_1.3%,#0F2921_67.42%)]"
                   : "cursor-pointer border border-black/[0.04] bg-white shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] hover:border-primary/40 dark:border-white/[0.06] dark:bg-[#15181E]"
               } ${checked && !isSelected ? "opacity-50" : ""}`}
             >
               {/* Frame 23 — icon tile */}
-              <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[12px] bg-[#E9F5F0] dark:bg-[#0F2921]">
+              <span className="flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-[12px] bg-[#E9F5F0] dark:bg-[#0F2921]">
                 {item.icon && (
                   <Image
                     src={item.icon}
                     alt=""
                     width={28}
                     height={28}
-                    className="h-7 w-7 object-contain"
+                    className="h-6 w-6 sm:h-7 sm:w-7 object-contain"
                   />
                 )}
               </span>
 
               {/* label + description */}
               <span className="flex min-w-0 flex-1 flex-col gap-0.5">
-                <span className="text-base font-semibold text-[#2C2C2C] dark:text-white">
+                <span className="text-sm sm:text-base font-semibold text-[#2C2C2C] dark:text-white">
                   {item.label}
                 </span>
                 {item.description && (
-                  <span className="text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
+                  <span className="text-xs sm:text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
                     {item.description}
                   </span>
                 )}
@@ -151,14 +151,14 @@ export function QuestionnaireScreen({
 
               {/* Ellipse 2 — radio (Ellipse 6 fill when selected) */}
               <span
-                className={`flex h-6.5 w-6.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
+                className={`flex h-6 w-6 sm:h-6.5 sm:w-6.5 shrink-0 items-center justify-center rounded-full border-2 transition-colors ${
                   isSelected
                     ? "border-primary"
                     : "border-black/12 dark:border-white/20"
                 }`}
               >
                 {isSelected && (
-                  <span className="h-3.5 w-3.5 rounded-full bg-primary" />
+                  <span className="h-3 w-3 sm:h-3.5 sm:w-3.5 rounded-full bg-primary" />
                 )}
               </span>
             </button>

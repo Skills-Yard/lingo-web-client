@@ -147,7 +147,7 @@ export function CoverScreen({
           shows that same line beside Robu there instead. ── */}
       <div
         className={`flex w-full flex-col items-center ${
-          isReveal ? "lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-x-12" : ""
+          isReveal ? "md:grid md:grid-cols-2 md:items-stretch md:gap-x-12" : ""
         }`}
       >
         {/* ── Robu + speech bubble — laid out as real flex siblings (not
@@ -173,8 +173,10 @@ export function CoverScreen({
           className={`relative top-2 z-10 flex-col w-full items-start justify-center gap-0 sm:gap-0  ${heroOrder} ${
             revealed
               ? "min-h-0 py-0"
-              : "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
-          } ${isReveal ? "lg:col-start-1 lg:row-start-1" : ""}`}
+              : isReveal
+                ? "min-h-[15vh] sm:min-h-[30vh] sm:pt-6"
+                : "min-h-[15vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
+          } ${isReveal ? "md:col-start-1 md:row-start-1" : ""}`}
         >
           {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
               down-right into it; two little accent ticks above echo the
@@ -187,7 +189,7 @@ export function CoverScreen({
             className={`flex w-full flex-wrap ${
               revealed ? "items-center" : "items-start"
             } justify-center ${
-              isReveal ? "lg:flex-nowrap lg:justify-start" : ""
+              isReveal ? "md:flex-nowrap md:justify-start" : ""
             }`}
           >
             {!isReveal && !entering && (
@@ -215,7 +217,7 @@ export function CoverScreen({
             {isReveal && (
               <div
                 className={`relative mr-6 ${bubbleSideOrder} ${
-                  revealed ? "lg:min-w-0 lg:flex-1" : ""
+                  revealed ? "md:min-w-0 md:flex-1" : ""
                 }`}
               >
                 <AnimatePresence mode="popLayout" initial={false}>
@@ -227,7 +229,7 @@ export function CoverScreen({
                     {revealed ? (
                       <>
                         {/* Mobile/tablet — short prompt bubble, unchanged. */}
-                        <div className="lg:hidden">
+                        <div className="md:hidden">
                           <SpeechBubble
                             text={slide.robuPrompt}
                             tailCorner="bottom-left"
@@ -236,9 +238,9 @@ export function CoverScreen({
                         </div>
                         {/* Desktop — the full line, right beside Robu
                             instead of the short prompt, since the standalone
-                            headline above the illustration hides at `lg:`
+                            headline above the illustration hides at `md:`
                             (see the heading slot) in favor of living here. */}
-                        <div className="hidden lg:block">
+                        <div className="hidden md:block">
                           <SpeechBubble
                             text={slide.robuIntro}
                             highlight={slide.robuIntroHighlight}
@@ -279,7 +281,7 @@ export function CoverScreen({
           transition={WALK_TRANSITION}
           className={`px-4 text-center sm:px-6 ${headingOrder} ${
             isReveal
-              ? "lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:px-0"
+              ? "md:col-start-2 md:row-start-1 md:row-span-2 md:px-0"
               : ""
           }`}
         >
@@ -308,7 +310,7 @@ export function CoverScreen({
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
-                    className="lg:hidden"
+                    className="md:hidden"
                   >
                     <SpeechBubble
                       text={slide.robuIntro}
@@ -333,7 +335,7 @@ export function CoverScreen({
                   aria-hidden="true"
                   width={743}
                   height={512}
-                  className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72 lg:w-full lg:max-w-md"
+                  className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72 md:w-full md:max-w-md"
                 />
                 <Image
                   src="/images/thinkingBlack.png"
@@ -341,7 +343,7 @@ export function CoverScreen({
                   aria-hidden="true"
                   width={743}
                   height={512}
-                  className="hidden h-auto object-contain dark:block sm:w-64 md:w-72 lg:w-full lg:max-w-md"
+                  className="hidden h-auto object-contain dark:block sm:w-64 md:w-72 md:w-full md:max-w-md"
                 />
               </motion.div>
             ) : (
@@ -352,11 +354,11 @@ export function CoverScreen({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
-                <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
+                <h1 className="text-lg font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
                   <span className="text-foreground">{slide.title}</span>{" "}
                   <span className="text-primary">{slide.highlightTitle}</span>
                 </h1>
-                <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base">
+                <p className="mx-auto mt-2 max-w-xs text-xs font-medium leading-relaxed text-muted-foreground sm:text-sm md:max-w-sm md:text-base">
                   {slide.description}
                 </p>
               </motion.div>
@@ -373,10 +375,10 @@ export function CoverScreen({
               onOpenModal();
               onBoxTap();
             }}
-            className="animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:col-start-1 lg:row-start-2 lg:mt-4"
+            className="animate-pop-in order-3 -mt-2 flex h-32 w-full max-w-md items-center gap-3 rounded-[8px] bg-[#1A1C22] p-3 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 md:col-start-1 md:row-start-2 md:mt-4"
             aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
           >
-            <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">
+            <div className="flex h-24 w-24 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">
               {/* Plays once, right as this card mounts (i.e. as soon as the
                   reveal step appears) — no loop. Square and sized to fill the
                   card's own height (minus its padding) so the box reads at
@@ -405,3 +407,4 @@ export function CoverScreen({
     </div>
   );
 }
+

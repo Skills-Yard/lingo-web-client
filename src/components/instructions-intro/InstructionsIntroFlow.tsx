@@ -292,9 +292,9 @@ export function InstructionsIntroFlow({
 
   return (
     <main
-      className={`${poppins.className} h-screen w-full max-w-full overflow-hidden bg-background dark:bg-[#0D1016] text-foreground flex flex-col items-center transition-colors duration-200`}
+      className={`${poppins.className} h-[100dvh] h-screen w-full max-w-full overflow-hidden bg-background dark:bg-[#0D1016] text-foreground flex flex-col items-center transition-colors duration-200`}
     >
-      <div className="w-full max-w-md md:max-w-7xl flex flex-col h-full">
+      <div className="w-full max-w-lg sm:max-w-xl md:max-w-7xl flex flex-col h-full">
         {/* ── Header (same on every slide) — fixed height, never scrolls or gets covered ── */}
         <IntroHeader
           stepNumber={stepNumber}
@@ -311,7 +311,7 @@ export function InstructionsIntroFlow({
             mounting (and the last one unmounting) its own mascot. ── */}
         <div
           ref={robuStageRef}
-          className="relative flex-1 min-h-0 overflow-y-auto px-4 md:px-10 scrollbar-none"
+          className="relative flex-1 min-h-0 overflow-y-auto px-3 sm:px-4 md:px-10 scrollbar-none"
           style={{ msOverflowStyle: "none" }}
         >
           <RobuStage
@@ -320,7 +320,7 @@ export function InstructionsIntroFlow({
             containerRef={robuStageRef}
             onIntroComplete={() => setRobuIntroDone(true)}
           />
-          <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
+          <div className="flex flex-col gap-2 sm:gap-3 select-none min-h-full pb-4 md:pb-0 md:justify-center">
             {(slide.kind === "cover" || slide.kind === "cover-reveal") && (
               // One call site for both steps — see CoverScreen's doc comment:
               // this is what keeps its layout mounted (no remount) across them.

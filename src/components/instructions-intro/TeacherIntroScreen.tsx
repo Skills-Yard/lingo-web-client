@@ -12,10 +12,10 @@ export function TeacherIntroScreen({
   /** Skip Robu's typewriter — set once this screen has already been seen. */
   instantSpeech?: boolean;
   registerAnchor: (el: HTMLDivElement | null) => void;
-}) {
+  }) {
   return (
-    <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-x-12 md:items-center md:min-h-full">
-      <div className="flex flex-col items-center gap-3 text-center md:col-span-2 md:items-start md:text-left md:gap-8">
+    <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-x-8 md:items-center md:min-h-full md:content-center">
+      <div className="relative z-10 flex flex-col items-center gap-3 text-center md:col-span-2 md:items-start md:text-left md:gap-6">
         <div className="flex flex-col items-center gap-3 md:items-start">
           <RobuSays
             text={`${slide.eyebrow} ${slide.title}`}
@@ -23,7 +23,7 @@ export function TeacherIntroScreen({
             instant={instantSpeech}
             side="left"
             sideLg="left"
-            robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-48 lg:w-48`}
+            robuClassName={`${ROBU_DEFAULT_SIZE} md:h-36 md:w-36 lg:h-48 lg:w-48`}
             registerAnchor={registerAnchor}
           />
         </div>
@@ -68,7 +68,7 @@ export function TeacherIntroScreen({
         imageDark="/images/teacherBlack.png"
       />
       <TeacherIllustration
-        className="hidden md:block md:h-105 md:col-span-3"
+        className="relative z-0 hidden md:block md:h-96 md:col-span-3"
         fit="contain"
         variant="bleed"
         imageLight="/images/answerImgWhite.png"
