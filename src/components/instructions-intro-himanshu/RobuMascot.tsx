@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import { EventType, Layout, Fit, Alignment } from "@rive-app/canvas";
-import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
+import { configureRiveRuntime, getRobuRiveSrc } from "@/lib/rive/runtime";
+import { useTheme } from "@/context/ThemeContext";
 import { useAmbientLoop, usePeriodicOverlay } from "./RobuEyeBlink";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
@@ -11,7 +12,7 @@ configureRiveRuntime();
 
 // `updated_robu.riv`'s "Anim Skill" artboard carries both a one-shot
 // entrance timeline AND the same ambient idle/ear/eyeblink set
-// `<RobuEyeBlink>` drives elsewhere (see ROBU_RIVE_SRC — it's the one `.riv`
+// `<RobuEyeBlink>` drives elsewhere (see getRobuRiveSrc — it's the one `.riv`
 // for every Robu instance in the app), so this one file/instance can carry
 // Robu's *entire* time on screen: entrance, then the ambient loop. RobuStage
 // renders only this component for its one persistent mascot, for the whole
@@ -62,8 +63,25 @@ interface RobuMascotProps {
  * that lives for as long as Robu is on screen. `onIntroComplete` lets
  * CoverScreen sync its own choreography (shrinking Robu, revealing his "Hi,
  * I am robu!" bubble) to the moment the entrance actually finishes.
+ *
+ * `useRive`'s own `src` option isn't reactive — it only loads once, the
+ * first time the hook mounts — so swapping Robu's `.riv` when the theme
+ * toggles needs an actual remount, not just a re-render. `key={theme}` below
+ * forces exactly that: React tears down and recreates `RobuMascotCanvas`
+ * (and its `useRive` instance) whenever `theme` flips, same as any other
+ * caller that wants Robu's entrance to play again on a fresh canvas.
  */
-export function RobuMascot({ className, onIntroComplete, skipIntro = false }: RobuMascotProps) {
+export function RobuMascot(props: RobuMascotProps) {
+  const { theme } = useTheme();
+  return <RobuMascotCanvas key={theme} {...props} src={getRobuRiveSrc(theme)} />;
+}
+
+function RobuMascotCanvas({
+  className,
+  onIntroComplete,
+  skipIntro = false,
+  src,
+}: RobuMascotProps & { src: string }) {
   // Gates the ambient hooks below so they only start driving `rive` once the
   // entrance is done — before that, `useAmbientLoop`/`usePeriodicOverlay`
   // just see `null` and do nothing (both bail out immediately on a null rive).
@@ -72,7 +90,7 @@ export function RobuMascot({ className, onIntroComplete, skipIntro = false }: Ro
   const [ambientReady, setAmbientReady] = useState(skipIntro);
 
   const { rive, RiveComponent } = useRive({
-    src: ROBU_RIVE_SRC,
+    src,
     artboard: ARTBOARD,
     animations: skipIntro ? BASE_ANIMATIONS : INTRO_ANIMATION,
     autoplay: true,
