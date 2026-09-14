@@ -166,18 +166,30 @@ export function CoverScreen({
           roughly doubling how long Robu took to settle. The bubble's own
           content swap (below) still crossfades on its own, so the now-instant
           reorder doesn't read as a cut. ── */}
-      <div
+      <motion.div
+        layout
+        transition={WALK_TRANSITION}
         className={`relative top-2 z-10 flex-col w-full items-start justify-center gap-0 sm:gap-0  ${heroOrder} ${
           !isReveal
             ? // Screen 1: no fixed vh spacer — the root's justify-center
               // above now centers this row + the heading below it together.
               ""
-            : // Screen 2: this exact spacer holds constant for the whole
-              // screen — not just the "before reveal" moment — because this
-              // slot's height is what keeps the heading below it from ever
-              // moving. Robu leaving it once revealed (see below) must not
-              // shrink it back down, or the heading would get pulled up.
-              "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
+            : revealed
+              ? // Screen 2, revealed: Robu already left this slot for his
+                // second anchor above the reveal card (below), so holding it
+                // at its pre-reveal height would just leave a dead gap up
+                // top. Collapsing it — animated, via the `layout` prop above
+                // — reclaims that space and lets the header bubble + every
+                // sibling below ride up to fill the screen instead. Safe to
+                // animate now (this used to stay fixed always, see the
+                // sibling branch below): RobuStage measures its anchor every
+                // frame (see its own doc comment) specifically so it can
+                // keep pace with an ancestor's own layout animation like
+                // this one, instead of only snapping once it settles.
+                "min-h-0 pt-1 sm:pt-2"
+              : // Screen 2, before reveal: reserves exactly Robu's entrance
+                // height so the heading below him never jumps as he arrives.
+                "min-h-0"
         }`}
       >
         {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
@@ -207,12 +219,12 @@ export function CoverScreen({
           {/* Robu himself only stands in this top slot while screen 2 hasn't
               revealed yet (or on screen 1, always — `revealed` never flips
               there). Once revealed he moves to his own second anchor further
-              down, right above the card; this slot stays exactly this tall
-              either way, so it's left visibly empty rather than collapsing
-              and dragging the heading up with it. */}
+              down, right above the card, and this slot collapses (see its
+              own `layout` animation above) instead of staying reserved and
+              empty. */}
           {(!isReveal || !revealed) && robu}
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Robu's second anchor — only once revealed, sitting right above
           the reveal card instead of stranded up top next to a heading he's
@@ -221,6 +233,16 @@ export function CoverScreen({
           invisible measurement box (see its own doc comment) — the actual
           Rive mascot lives once, in RobuStage, and just glides over to
           whichever anchor is currently registered. ── */}
+      {isReveal && (
+        <SpeechBubble
+          text={slide.robuIntro}
+          highlight={slide.robuIntroHighlight}
+          instant={instantSpeech}
+          size="lg"
+          onTypingComplete={onIntroTypingComplete}
+        />
+      )}
+
       {isReveal && revealed && (
         <div className="relative z-10 order-3 flex w-full items-center justify-center gap-0">
           {robu}
@@ -283,13 +305,7 @@ export function CoverScreen({
                   `onIntroTypingComplete`), so nothing about this bubble's own
                   position or the image below it ever needs to move when that
                   happens. */}
-              <SpeechBubble
-                text={slide.robuIntro}
-                highlight={slide.robuIntroHighlight}
-                instant={instantSpeech}
-                size="lg"
-                onTypingComplete={!revealed ? onIntroTypingComplete : undefined}
-              />
+
               {/* Natural size is 743x512 (~1.45:1) — `width`/`height` set
                   that intrinsic ratio for Next/Image, `h-auto` + the fixed
                   `w-*` classes below are what actually size it on screen at
