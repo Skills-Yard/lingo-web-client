@@ -207,7 +207,9 @@ export function CoverScreen({
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
             // in alongside a Robu that's still arriving.
-            <div className={`relative min-w-0 ${ROBU_TRAILING_GAP_PULL} ${bubbleSideOrder}`}>
+            <div
+              className={`relative min-w-0 ${ROBU_TRAILING_GAP_PULL} ${bubbleSideOrder}`}
+            >
               <SpeechBubble
                 text={slide.robuGreeting}
                 highlight={slide.robuGreetingHighlight}
@@ -234,6 +236,15 @@ export function CoverScreen({
           invisible measurement box (see its own doc comment) — the actual
           Rive mascot lives once, in RobuStage, and just glides over to
           whichever anchor is currently registered. ── */}
+      {isReveal && (
+        <SpeechBubble
+          text={slide.robuIntro}
+          highlight={slide.robuIntroHighlight}
+          instant={instantSpeech}
+          size="heading"
+          onTypingComplete={!revealed ? onIntroTypingComplete : undefined}
+        />
+      )}
       {isReveal && revealed && (
         <div className="relative z-10 order-3 flex w-full items-center justify-center gap-0">
           {robu}
@@ -286,13 +297,6 @@ export function CoverScreen({
                   the auto-reveal (see `onIntroTypingComplete`), so nothing
                   about this heading's own position or the image below it
                   ever needs to move when that happens. */}
-              <SpeechBubble
-                text={slide.robuIntro}
-                highlight={slide.robuIntroHighlight}
-                instant={instantSpeech}
-                size="heading"
-                onTypingComplete={!revealed ? onIntroTypingComplete : undefined}
-              />
 
               {/* Natural size is 743x512 (~1.45:1) — `width`/`height` set
                   that intrinsic ratio for Next/Image, `h-auto` + the fixed
