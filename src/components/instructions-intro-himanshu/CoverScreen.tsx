@@ -160,7 +160,7 @@ export function CoverScreen({
             flips — so it stays mounted and glides across instead of
             disappearing from one side and popping in on the other. */}
         <div
-          className={`flex w-full flex-wrap ${
+          className={`flex w-full ${
             revealed ? "items-center" : "items-start"
           } justify-center`}
         >
