@@ -33,6 +33,8 @@ interface RobuStageProps {
    * CoverScreen's own choreography (shrinking Robu, revealing his greeting
    * bubble) to it. */
   onIntroComplete: () => void;
+  /** Forwarded straight to RobuMascot — see its own doc comment. */
+  skipIntro?: boolean;
 }
 
 /**
@@ -60,6 +62,7 @@ export function RobuStage({
   shake,
   containerRef,
   onIntroComplete,
+  skipIntro,
 }: RobuStageProps) {
   const [rect, setRect] = useState<Rect | null>(null);
 
@@ -111,6 +114,7 @@ export function RobuStage({
         <RobuMascot
           className="h-full w-full"
           onIntroComplete={onIntroComplete}
+          skipIntro={skipIntro}
         />
       </div>
     </motion.div>

@@ -43,10 +43,17 @@ const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 interface RobuMascotProps {
   className?: string;
-  /** Fired once the one-shot entrance timeline has played through. This is
-   * also the exact moment the ambient idle/ear/eyeblink loop below takes
-   * over. */
+  /** Fired once the one-shot entrance timeline has played through (or
+   * immediately, if `skipIntro` is set). This is also the exact moment the
+   * ambient idle/ear/eyeblink loop below takes over. */
   onIntroComplete: () => void;
+  /** Skip the one-shot entrance and start straight in the ambient loop —
+   * for a caller that's already shown Robu's entrance once and is mounting
+   * a fresh canvas instance anyway (a full remount elsewhere in the tree),
+   * where replaying the entrance would read as Robu re-entering from
+   * scratch instead of picking back up. Default (false) is every normal
+   * appearance of Robu, which still gets the entrance. */
+  skipIntro?: boolean;
 }
 
 /**
@@ -56,22 +63,30 @@ interface RobuMascotProps {
  * CoverScreen sync its own choreography (shrinking Robu, revealing his "Hi,
  * I am robu!" bubble) to the moment the entrance actually finishes.
  */
-export function RobuMascot({ className, onIntroComplete }: RobuMascotProps) {
+export function RobuMascot({ className, onIntroComplete, skipIntro = false }: RobuMascotProps) {
   // Gates the ambient hooks below so they only start driving `rive` once the
   // entrance is done — before that, `useAmbientLoop`/`usePeriodicOverlay`
   // just see `null` and do nothing (both bail out immediately on a null rive).
-  const [ambientReady, setAmbientReady] = useState(false);
+  // Starts already-true when skipping the entrance, since there's no `Stop`
+  // event coming to flip it.
+  const [ambientReady, setAmbientReady] = useState(skipIntro);
 
   const { rive, RiveComponent } = useRive({
     src: ROBU_RIVE_SRC,
     artboard: ARTBOARD,
-    animations: INTRO_ANIMATION,
+    animations: skipIntro ? BASE_ANIMATIONS : INTRO_ANIMATION,
     autoplay: true,
     layout: LAYOUT,
   });
 
   useEffect(() => {
     if (!rive) return;
+
+    if (skipIntro) {
+      // Nothing one-shot is playing to wait on — go straight to "entrance done".
+      onIntroComplete();
+      return;
+    }
 
     // The entrance is one-shot, so it fires its own `Stop` once it reaches
     // its last frame — nothing here ever calls stop() itself. That's the
@@ -86,7 +101,7 @@ export function RobuMascot({ className, onIntroComplete }: RobuMascotProps) {
     };
     rive.on(EventType.Stop, handleStop);
     return () => rive.off(EventType.Stop, handleStop);
-  }, [rive, onIntroComplete]);
+  }, [rive, onIntroComplete, skipIntro]);
 
   useAmbientLoop(ambientReady ? rive : null, BASE_ANIMATIONS);
   usePeriodicOverlay(ambientReady ? rive : null, EAR_ANIMATION, EAR_INTERVAL_MS);

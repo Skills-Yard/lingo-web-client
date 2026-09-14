@@ -28,11 +28,18 @@ const poppins = Poppins({
 interface InstructionsIntroFlowProps {
   onComplete?: () => void;
   initialIndex?: number;
+  /** Mount Robu already past his one-shot entrance — for a caller that
+   * remounts this whole flow (a fresh `InstructionsIntroFlow` instance) after
+   * Robu's already made his entrance once elsewhere, where replaying it would
+   * read as him re-entering from scratch rather than picking back up. Default
+   * (false) is every normal mount of this flow, which still gets the entrance. */
+  skipRobuIntro?: boolean;
 }
 
 export function InstructionsIntroFlow({
   onComplete,
   initialIndex = 0,
+  skipRobuIntro = false,
 }: InstructionsIntroFlowProps) {
   const [index, setIndex] = useState(initialIndex);
   const [selected, setSelected] = useState<number | null>(null);
@@ -63,7 +70,7 @@ export function InstructionsIntroFlow({
   // synced to the real animation instead of a guessed timer. The 6s
   // fallback is only a safety net in case the Rive completion event never
   // fires for some reason, so the rest of screen 1 is never stuck hidden.
-  const [robuIntroDone, setRobuIntroDone] = useState(false);
+  const [robuIntroDone, setRobuIntroDone] = useState(skipRobuIntro);
   useEffect(() => {
     if (robuIntroDone) return;
     const t = window.setTimeout(() => setRobuIntroDone(true), 6000);
@@ -319,6 +326,7 @@ export function InstructionsIntroFlow({
             shake={robuShake}
             containerRef={robuStageRef}
             onIntroComplete={() => setRobuIntroDone(true)}
+            skipIntro={skipRobuIntro}
           />
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
             {(slide.kind === "cover" || slide.kind === "cover-reveal") && (
