@@ -108,7 +108,7 @@ export function GameBoardScreen({
           {!robuJoinedGame ? (
             <RobuAnchor
               registerAnchor={registerAnchor}
-              className={`shrink-0 ${ROBU_DEFAULT_SIZE} lg:h-32 lg:w-32`}
+              className={`shrink-0 ${ROBU_DEFAULT_SIZE} lg:h-40 lg:w-40`}
             />
           ) : (
             // `lg:` only — reserves the exact same box Robu just vacated so
@@ -137,6 +137,7 @@ export function GameBoardScreen({
               instant={instantSpeech}
               size="lg"
               tailCorner="bottom-left"
+              bubbleClassName="sm:max-w-md"
             />
           </motion.div>
         </motion.div>
@@ -147,7 +148,7 @@ export function GameBoardScreen({
               him actually saying it rather than a page title. */}
 
           {slide.description && (
-            <p className="mt-2 text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
+            <p className="mt-2 text-base font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
               {slide.description}
             </p>
           )}

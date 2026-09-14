@@ -43,7 +43,7 @@ export function TeacherQuizScreen({
 
       <TeacherIllustration
         className="h-64 md:h-80 md:col-start-1 md:row-start-2"
-        fit="cover"
+        fit="contain"
         imageLight="/images/answerImgWhite.png"
         imageDark="/images/answerImgBlack.png"
       />
@@ -82,7 +82,7 @@ export function TeacherQuizScreen({
               type="button"
               disabled={checked}
               onClick={() => onSelect(idx)}
-              className={`w-full flex items-center justify-between p-3 rounded-[12px] border transition-all duration-200 text-left shadow-xs cursor-pointer active:scale-99 ${cardBorder}`}
+              className={`min-h-17 w-full flex items-center justify-between p-3 rounded-[12px] border transition-all duration-200 text-left shadow-xs cursor-pointer active:scale-99 ${cardBorder}`}
             >
               <div className="flex items-center gap-3 min-w-0 grow">
                 <div
@@ -94,11 +94,13 @@ export function TeacherQuizScreen({
                   <span className="font-medium text-sm leading-tight text-foreground">
                     {opt.text}
                   </span>
-                  {!(checked && isSelected) && (
-                    <span className="text-xs text-muted-foreground font-normal mt-0.5 line-clamp-1">
-                      {opt.subtitle}
-                    </span>
-                  )}
+                  <span
+                    className={`text-xs text-muted-foreground font-normal mt-0.5 line-clamp-1 ${
+                      checked && isSelected ? "invisible" : ""
+                    }`}
+                  >
+                    {opt.subtitle}
+                  </span>
                 </div>
               </div>
               <div className="shrink-0 pl-2">
@@ -157,7 +159,7 @@ export function TeacherQuizScreen({
             <img
               src="/images/sliceAnswer.png"
               alt=""
-              className="w-16 h-16 object-contain shrink-0 -scale-x-100 animate-bounce-slow"
+              className="w-16 h-16 object-contain shrink-0 -scale-x-100 animate-bounce-slow md:max-h-[100px]"
             />
           </div>
         )}

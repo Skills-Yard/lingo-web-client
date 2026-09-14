@@ -22,6 +22,8 @@ interface SpeechBubbleProps {
    * moment that wants to read as a headline, not a chat bubble, while still
    * reusing the exact same typewriter behavior. */
   size?: "sm" | "lg" | "heading";
+  /** Extra classes for the bubble itself, such as a wider max-width. */
+  bubbleClassName?: string;
   className?: string;
 }
 
@@ -39,6 +41,7 @@ export function SpeechBubble({
   tailCorner = "bottom-right",
   instant = false,
   size = "sm",
+  bubbleClassName,
   className,
 }: SpeechBubbleProps) {
   // Frozen at mount on purpose (see `instant` doc above) — this bubble either
@@ -81,15 +84,15 @@ export function SpeechBubble({
 
   const bubbleSize =
     size === "lg"
-      ? "max-w-[72vw] px-4 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
-      : "max-w-[58vw] px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
-  const textSize = size === "lg" ? "text-sm sm:text-base" : "text-[13px] sm:text-sm";
+      ? "max-w-[calc(100vw-2rem)] px-4 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
+      : "max-w-[calc(100vw-2rem)] px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
+  const textSize = size === "lg" ? "text-lg sm:text-xl md:text-2xl" : "text-base sm:text-lg";
 
   return (
     <div
-      className={`animate-pop-in relative w-max rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${className ?? ""}`}
+      className={`animate-pop-in relative w-max max-w-full rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${bubbleClassName ?? ""} ${className ?? ""}`}
     >
-      <p className={`font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}>
+      <p className={`whitespace-normal break-words font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}>
         {renderTyped(shown, text, highlight)}
         {stillTyping && (
           <span className="ml-0.5 inline-block h-[1em] w-0.5 animate-pulse bg-primary align-middle" />

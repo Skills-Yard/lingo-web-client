@@ -242,7 +242,7 @@ export function CoverScreen({
                           <SpeechBubble
                             text={slide.robuIntro}
                             highlight={slide.robuIntroHighlight}
-                            instant
+                            instant={instantSpeech}
                             size="heading"
                           />
                         </div>

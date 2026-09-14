@@ -22,7 +22,8 @@ export function TeacherIntroScreen({
             highlight={slide.eyebrow}
             instant={instantSpeech}
             side="left"
-            robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-40 lg:w-40`}
+            sideLg="left"
+            robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-48 lg:w-48`}
             registerAnchor={registerAnchor}
           />
         </div>

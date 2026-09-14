@@ -4,8 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { Check, X } from "lucide-react";
 import type { QuestionnaireSlide } from "@/lib/constants/instructionsIntro";
-import { RobuSays } from "./RobuSays";
-import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
+import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
+import { SpeechBubble } from "./SpeechBubble";
 
 interface QuestionnaireScreenProps {
   slide: QuestionnaireSlide;
@@ -73,17 +73,14 @@ export function QuestionnaireScreen({
     <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-8 md:gap-y-6 md:items-start">
       {/* ── Left column — "Q." badge, heading, prompt, illustration ── */}
       <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1 md:row-span-2 md:self-stretch md:border-r border-black/10 dark:border-white/10 md:pr-8">
-        <RobuSays
-          text={slide.title}
-          highlight={slide.highlightWord}
-          instant={instantSpeech}
-          side="left"
-          sideLg="right"
-          robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-32 lg:w-32`}
-          registerAnchor={registerAnchor}
-        />
+        <div className="flex items-start justify-start">
+          <RobuAnchor
+            registerAnchor={registerAnchor}
+            className={`${ROBU_DEFAULT_SIZE} lg:h-40 lg:w-40`}
+          />
+        </div>
 
-        <p className="text-sm font-medium leading-[1.5] text-[#666666] dark:text-neutral-400">
+        <p className="text-base font-medium leading-[1.5] text-[#666666] dark:text-neutral-400">
           {slide.description}
         </p>
 
@@ -102,6 +99,16 @@ export function QuestionnaireScreen({
 
       {/* ── Option cards — Frame 12 / 61 / 62 (idle) & Frame 11 (selected) ── */}
       <div className="flex flex-col gap-[18px] md:col-start-2 md:row-start-1 md:row-span-2 md:self-center">
+        <div className="flex justify-start">
+          <SpeechBubble
+            text={slide.title}
+            highlight={slide.highlightWord}
+            instant={instantSpeech}
+            size="lg"
+            tailCorner="bottom-left"
+            bubbleClassName="sm:max-w-md"
+          />
+        </div>
         {slide.items.map((item) => {
           const isSelected = selectedId === item.id;
 

@@ -28,6 +28,7 @@ interface RobuSaysProps {
    * stand for this screen. */
   registerAnchor: (el: HTMLDivElement | null) => void;
   robuClassName?: string;
+  bubbleClassName?: string;
   className?: string;
 }
 
@@ -47,6 +48,7 @@ export function RobuSays({
   center = true,
   registerAnchor,
   robuClassName = ROBU_DEFAULT_SIZE,
+  bubbleClassName,
   className,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
@@ -101,6 +103,7 @@ export function RobuSays({
           instant={instant}
           size="lg"
           tailCorner={tailCorner}
+          bubbleClassName={bubbleClassName}
         />
       </div>
     </div>

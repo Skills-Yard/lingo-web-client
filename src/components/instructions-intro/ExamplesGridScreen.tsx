@@ -23,11 +23,11 @@ export function ExamplesGridScreen({
         registerAnchor={registerAnchor}
       />
 
-      <div className="flex flex-col gap-5 justify-center grow md:flex-row md:flex-wrap md:justify-center md:gap-x-4">
+      <div className="grid grow grid-cols-1 justify-center gap-4">
         {slide.pairs.map((pair) => (
           <div
             key={pair.leftLabel}
-            className="flex items-center justify-center gap-4 md:gap-3"
+            className="flex items-center justify-center gap-2 md:gap-2"
           >
             <ExampleTile image={pair.leftImage} label={pair.leftLabel} />
 
@@ -49,8 +49,8 @@ export function ExamplesGridScreen({
 
 function ExampleTile({ image, label }: { image: string; label: string }) {
   return (
-    <div className="flex flex-col items-center gap-1.5 w-[30vw] max-w-30 min-w-20 md:w-28 md:max-w-none">
-      <div className="relative w-full aspect-5/6 md:w-28 md:h-28 md:aspect-auto rounded-[18px] bg-[#EFF4F1] dark:bg-[#15181E] overflow-hidden flex items-center justify-center p-2">
+    <div className="flex w-[25vw] min-w-16 max-w-20 flex-col items-center gap-1 md:w-20 md:max-w-none">
+      <div className="relative aspect-square w-full overflow-hidden rounded-[14px] bg-[#EFF4F1] p-1.5 dark:bg-[#15181E] md:h-20 md:w-20">
         <Image src={image} alt={label} fill sizes="132px" className="object-contain" />
       </div>
       <span className="text-xs font-medium text-foreground text-center leading-tight">

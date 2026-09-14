@@ -136,9 +136,8 @@ export function RewardScreen({
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.title}
         instant={instantSpeech}
-        side="right"
-        sideLg="above"
-        robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-32 lg:w-32`}
+        side="left"
+        robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-56 lg:w-56`}
         registerAnchor={registerAnchor}
       />
 
@@ -244,7 +243,7 @@ export function RewardScreen({
               key={button.id}
               type="button"
               onClick={() => button.id === "claim" && handleClaim()}
-              className="h-[63px] w-full max-w-[280px] rounded-[6px] text-base font-semibold text-[#2C2C2C] shadow-[1px_1px_16px_3px_rgba(0,0,0,0.29)] transition-all hover:opacity-90 active:scale-95 [background:linear-gradient(90deg,#59EBCE_0%,#CCF772_100%)]"
+              className="h-[72px] w-full max-w-[320px] rounded-[6px] px-5 text-2xl font-semibold text-[#2C2C2C] shadow-[1px_1px_16px_3px_rgba(0,0,0,0.29)] transition-all hover:opacity-90 active:scale-95 [background:linear-gradient(90deg,#59EBCE_0%,#CCF772_100%)]"
             >
               {button.label}
             </button>
