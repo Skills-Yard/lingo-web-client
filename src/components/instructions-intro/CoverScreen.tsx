@@ -160,10 +160,9 @@ export function CoverScreen({
             : "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
         }`}
       >
-        {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
-            down-right into it; two little accent ticks above echo the
-            reference design's "speaking" marks. Screen 2 — bubble sits to
-            Robu's right instead, tail pointing back down-left into it.
+        {/* Screen 1 — greeting reads as a plain heading beside Robu (no
+            bubble chrome), matching every other current-branch screen's
+            RobuSays default. Screen 2 keeps its own bubble treatment below.
             Robu itself (below) is NOT branched here — only its `order`
             flips — so it stays mounted and glides across instead of
             disappearing from one side and popping in on the other. */}
@@ -174,22 +173,13 @@ export function CoverScreen({
         >
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
-            // in alongside a Robu that's still arriving. Robu now sits on
-            // its left (see `robuSideOrder`), so the tail points back
-            // left toward him instead of right.
-            <div className={`relative -ml-6 ${bubbleSideOrder}`}>
-              <div
-                aria-hidden
-                className="absolute  left-3 flex gap-1 text-primary "
-              >
-                <span className="h-3 w-0.5 rotate-[-14deg] rounded-full bg-current sm:h-4" />
-                <span className="h-2 w-0.5 rotate-10 rounded-full bg-current sm:h-2.5" />
-              </div>
+            // in alongside a Robu that's still arriving.
+            <div className={`relative min-w-0 ${ROBU_TRAILING_GAP_PULL} ${bubbleSideOrder}`}>
               <SpeechBubble
                 text={slide.robuGreeting}
                 highlight={slide.robuGreetingHighlight}
-                tailCorner="bottom-left"
                 instant={instantSpeech}
+                size="heading"
               />
             </div>
           )}
