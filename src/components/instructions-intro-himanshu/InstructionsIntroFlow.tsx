@@ -140,10 +140,11 @@ export function InstructionsIntroFlow({
         setBoxTapped(false);
         return;
       }
-      if (coverRevealed) {
-        setCoverRevealed(false);
-        return;
-      }
+      // No separate "undo the reveal" stop any more: the reveal itself is no
+      // longer a manual step (see `onIntroTypingComplete`) — it fires on its
+      // own the instant Robu's line finishes typing, so there's nothing
+      // stable to rewind back to between screen 1 and the box being tapped.
+      // Back here falls straight through to leaving the screen entirely.
     }
     if (isQuiz) {
       if (checked) {
@@ -347,6 +348,11 @@ export function InstructionsIntroFlow({
                 modalOpen={modalOpen}
                 onOpenModal={() => setModalOpen(true)}
                 onCloseModal={() => setModalOpen(false)}
+                // Collapses screen 2's old two-Next-press flow into one: the
+                // reveal card pops in on its own the moment Robu's intro line
+                // finishes typing, instead of waiting on a manual press that
+                // would only ever do the same thing.
+                onIntroTypingComplete={() => setCoverRevealed(true)}
                 instantSpeech={instantSpeech}
                 registerAnchor={setRobuAnchorEl}
                 robuIntroDone={robuIntroDone}

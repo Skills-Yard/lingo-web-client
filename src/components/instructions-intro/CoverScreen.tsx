@@ -34,6 +34,12 @@ interface CoverScreenProps {
   modalOpen: boolean;
   onOpenModal: () => void;
   onCloseModal: () => void;
+  /** Fired the instant Robu finishes "saying" the reveal-step intro line
+   * (step 02, before the box is revealed) — collapses what used to be two
+   * separate manual Next-presses on this screen into one: the reveal now
+   * happens on its own as soon as that line finishes typing, instead of
+   * waiting on a press the learner would have to make anyway. */
+  onIntroTypingComplete?: () => void;
   /** Skip Robu's typewriter for whichever line is showing — set once this
    * component's slide has already been seen. */
   instantSpeech?: boolean;
@@ -62,6 +68,7 @@ export function CoverScreen({
   modalOpen,
   onOpenModal,
   onCloseModal,
+  onIntroTypingComplete,
   instantSpeech,
   registerAnchor,
   robuIntroDone,
@@ -89,15 +96,16 @@ export function CoverScreen({
       ? "h-26 w-26 sm:h-40 sm:w-40 md:h-56 md:w-56"
       : ROBU_DEFAULT_SIZE;
 
-  // Robu (with its speech bubble) and the heading swap vertical order once
-  // the reveal card shows up: Robu leaves its greeting spot at the top and
-  // "walks" down to sit right above the card it wants tapped, bubble and all
-  // — so the two are always right next to each other, never split across the
-  // screen. Both blocks stay put in the tree the whole time (same parent,
-  // same slot); only their flex `order` changes, so Robu's Rive canvas never
-  // remounts.
-  const heroOrder = revealed ? "order-2" : "order-1";
-  const headingOrder = revealed ? "order-1" : "order-2";
+  // Both fixed, always — this is what actually pins the heading in place.
+  // Screen 2's top slot (`heroOrder`) reserves the exact same height whether
+  // or not Robu is currently the one standing in it (see its own className
+  // below), so the heading right after it (`headingOrder`) never has reason
+  // to move: nothing above it ever changes size. Robu himself still moves —
+  // once revealed he leaves this top slot for a second anchor of his own
+  // further down, right above the reveal card — but that's a second,
+  // separate slot appearing later in the tree, not a reorder of these two.
+  const heroOrder = "order-1";
+  const headingOrder = "order-2";
 
   // Robu stays on the same side on every screen — the left, matching every
   // other screen's RobuSays default (see RobuAnchor/RobuSays) — instead of
@@ -111,8 +119,12 @@ export function CoverScreen({
     // should land instantly, not animate, since RobuStage is what glides the
     // real mascot smoothly from wherever it last stood to this new rect.
     // Animating both the anchor *and* the mascot chasing it would fight each
-    // other. Robu stays this one persistent anchor across screens 1 and 2
-    // (its `order` just flips) instead of living inside a branch that swaps.
+    // other. Reused at two different call sites below (screen 2's top slot
+    // and its second, post-reveal anchor) rather than one that just flips
+    // `order` — RobuAnchor is cheap to mount twice (see its own doc
+    // comment: it's never more than an invisible measurement box), and the
+    // real Rive canvas living once in RobuStage is what actually makes the
+    // move between them read as a glide instead of a cut.
     <div
       className={`relative
     left-[-12px] ${robuSideOrder}`}
@@ -135,7 +147,16 @@ export function CoverScreen({
   );
 
   return (
-    <div className="flex w-full flex-1 flex-col items-center gap-0 sm:gap-0 md:min-h-full">
+    <div
+      className={`flex w-full flex-1 flex-col items-center gap-0 sm:gap-0 md:min-h-full ${
+        // Screen 1 (not the reveal step) centers its whole block — Robu row
+        // + heading — at true vertical middle of the available height,
+        // instead of relying on the fixed vh spacer below to fake it. That
+        // spacer only ever approximated centering for one assumed viewport
+        // height; flex centering here holds at any height.
+        !isReveal ? "justify-center" : ""
+      }`}
+    >
       {/* ── Robu + speech bubble — laid out as real flex siblings (not
           absolute-positioned) so on narrow screens the bubble shrinks and
           wraps to stay glued to Robu instead of running off the edge.
@@ -155,22 +176,22 @@ export function CoverScreen({
           reorder doesn't read as a cut. ── */}
       <div
         className={`relative top-2 z-10 flex-col w-full items-start justify-center gap-0 sm:gap-0  ${heroOrder} ${
-          revealed
-            ? "min-h-0 py-0"
-            : "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
+          !isReveal
+            ? // Screen 1: no fixed vh spacer — the root's justify-center
+              // above now centers this row + the heading below it together.
+              ""
+            : // Screen 2: this exact spacer holds constant for the whole
+              // screen — not just the "before reveal" moment — because this
+              // slot's height is what keeps the heading below it from ever
+              // moving. Robu leaving it once revealed (see below) must not
+              // shrink it back down, or the heading would get pulled up.
+              "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
         }`}
       >
         {/* Screen 1 — greeting reads as a plain heading beside Robu (no
             bubble chrome), matching every other current-branch screen's
-            RobuSays default. Screen 2 keeps its own bubble treatment below.
-            Robu itself (below) is NOT branched here — only its `order`
-            flips — so it stays mounted and glides across instead of
-            disappearing from one side and popping in on the other. */}
-        <div
-          className={`flex w-full ${
-            revealed ? "items-center" : "items-center"
-          } justify-center`}
-        >
+            RobuSays default. Screen 2 keeps its own bubble treatment below. */}
+        <div className="flex w-full items-center justify-center">
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
             // in alongside a Robu that's still arriving.
@@ -184,57 +205,45 @@ export function CoverScreen({
             </div>
           )}
 
-          {isReveal && !revealed && (
-            // Pulled toward Robu by the same calibrated amount RobuSays
-            // uses — his Rive artwork sits well inside its own square
-            // anchor box (see ROBU_TRAILING_GAP_PULL's doc comment), so
-            // without this every screen's heading reads as oddly far from
-            // him even though the flex/CSS gap itself is tiny.
-            <div className={`relative ${ROBU_TRAILING_GAP_PULL} ${bubbleSideOrder}`}>
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.div
-                  key="prompt"
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                >
-                  <SpeechBubble
-                    text={slide.robuIntro}
-                    highlight={slide.robuIntroHighlight}
-                    instant={instantSpeech}
-                    size="heading"
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          )}
-
-          {robu}
-
-          {/* Hey, Click this button component */}
-
-          {isReveal && revealed && (
-            <div className={`relative mr-6 ${bubbleSideOrder}`}>
-              <AnimatePresence mode="popLayout" initial={false}>
-                <motion.div
-                  key="prompt"
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ duration: 0.2, ease: "easeOut" }}
-                >
-                  <SpeechBubble
-                    text={slide.robuPrompt}
-                    tailCorner="bottom-left"
-                    instant={instantSpeech}
-                  />
-                </motion.div>
-              </AnimatePresence>
-            </div>
-          )}
+          {/* Robu himself only stands in this top slot while screen 2 hasn't
+              revealed yet (or on screen 1, always — `revealed` never flips
+              there). Once revealed he moves to his own second anchor further
+              down, right above the card; this slot stays exactly this tall
+              either way, so it's left visibly empty rather than collapsing
+              and dragging the heading up with it. */}
+          {(!isReveal || !revealed) && robu}
         </div>
       </div>
+
+      {/* ── Robu's second anchor — only once revealed, sitting right above
+          the reveal card instead of stranded up top next to a heading he's
+          no longer talking about. A real second `<RobuAnchor>` mount (not a
+          reorder of the one above): cheap, since RobuAnchor is only ever an
+          invisible measurement box (see its own doc comment) — the actual
+          Rive mascot lives once, in RobuStage, and just glides over to
+          whichever anchor is currently registered. ── */}
+      {isReveal && revealed && (
+        <div className="relative z-10 order-3 flex w-full items-center justify-center gap-0">
+          {robu}
+          <div className={`relative mr-6 ${bubbleSideOrder}`}>
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key="prompt"
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <SpeechBubble
+                  text={slide.robuPrompt}
+                  tailCorner="bottom-left"
+                  instant={instantSpeech}
+                />
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </div>
+      )}
 
       {/* ── This slot is either the shared title+description heading (page
           1) or, on page 2, the "thinking" illustration — up throughout page
@@ -257,45 +266,48 @@ export function CoverScreen({
               transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
               className="mx-auto flex flex-col items-center justify-center gap-3"
             >
-              {/* Robu's own bubble no longer carries this line at all (see
-                  that block's own comment) — it lives here instead, for
-                  both of page 2's states, styled as a normal headline
-                  (matching the reference image) rather than a chat bubble.
-                  Normal typewriter (tied to `instantSpeech`): this is now
-                  the only place the line is ever typed out. */}
-              {revealed && (
-                <SpeechBubble
-                  text={slide.robuIntro}
-                  highlight={slide.robuIntroHighlight}
-                  instant={instantSpeech}
-                  size="heading"
-                />
-              )}
+              {/* Robu's own bubble never carries this line — it lives here
+                  instead, for the whole of page 2 (typed once as soon as the
+                  reveal step is reached, not just once revealed), styled as
+                  a normal headline rather than a chat bubble, at a fixed
+                  spot above the illustration. Its completion is what fires
+                  the auto-reveal (see `onIntroTypingComplete`), so nothing
+                  about this heading's own position or the image below it
+                  ever needs to move when that happens. */}
+              <SpeechBubble
+                text={slide.robuIntro}
+                highlight={slide.robuIntroHighlight}
+                instant={instantSpeech}
+                size="heading"
+                onTypingComplete={!revealed ? onIntroTypingComplete : undefined}
+              />
 
               {/* Natural size is 743x512 (~1.45:1) — `width`/`height` set
-                  that intrinsic ratio for Next/Image, `h-auto` + the `w-*`
-                  classes below are what actually size it on screen, so it
-                  scales up cleanly instead of being squeezed into a fixed
-                  box with the wrong aspect ratio. Light/dark are two actual
-                  images (not a CSS filter) swapped via `dark:` — mirrors
-                  every other theme-aware asset in this flow. Both images
-                  share identical sizing so only which one is visible ever
-                  differs. Up for both of page 2's states. */}
+                  that intrinsic ratio for Next/Image, `h-auto` + the fixed
+                  `w-*` classes below are what actually size it on screen at
+                  every breakpoint (including the base one), so it never
+                  depends on the `width` attribute for its rendered size —
+                  that's also why `width` itself stays constant instead of
+                  varying with `revealed`: this image must render at the
+                  exact same size and position whether or not the reveal has
+                  fired yet. Light/dark are two actual images (not a CSS
+                  filter) swapped via `dark:` — mirrors every other
+                  theme-aware asset in this flow. */}
               <Image
                 src="/images/thinkingWhite.png"
                 alt=""
                 aria-hidden="true"
-                width={revealed ? 100 : 743}
+                width={743}
                 height={512}
-                className="h-auto object-contain dark:hidden sm:w-64 md:w-72"
+                className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72"
               />
               <Image
                 src="/images/thinkingBlack.png"
                 alt=""
                 aria-hidden="true"
-                width={revealed ? 100 : 743}
+                width={743}
                 height={512}
-                className="hidden h-auto object-contain dark:block sm:w-64 md:w-72"
+                className="hidden h-auto w-44 object-contain dark:block sm:w-64 md:w-72"
               />
             </motion.div>
           ) : (
