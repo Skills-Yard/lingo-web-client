@@ -1,7 +1,6 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
-import { Lightbulb, Sparkle } from "lucide-react";
 import type {
   CoverSlide,
   CoverRevealSlide,
@@ -109,25 +108,19 @@ export function CoverScreen({
     // other. Robu stays this one persistent anchor across screens 1 and 2
     // (its `order` just flips) instead of living inside a branch that swaps.
     <div className={`relative ${robuSideOrder}`}>
-      {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
-      {isReveal && (
-        <div
-          aria-hidden
-          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
-        >
-          <Lightbulb
-            className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
-            strokeWidth={1.75}
-          />
-          <Sparkle className="absolute -left-3 top-1.5 h-2 w-2 fill-current opacity-70 sm:-left-4 sm:top-2 sm:h-2.5 sm:w-2.5" />
-        </div>
-      )}
       <RobuAnchor registerAnchor={registerAnchor} className={robuSize} />
     </div>
   );
 
   return (
-    <div className="flex w-full flex-1 flex-col items-center gap-0 sm:gap-0 md:min-h-full">
+    <div
+      className={`flex w-full flex-1 flex-col items-center gap-0 sm:gap-0 md:min-h-full ${
+        // Screen 2 only: center the whole hero+heading+card block vertically
+        // in the available area instead of it hugging the top with a big
+        // empty gap below (screen 1 keeps its own bespoke entrance spacing).
+        isReveal ? "justify-center" : ""
+      }`}
+    >
       {/* ── Screen 2 only, and only once there's room for two columns
           (`lg:` — same split point GameBoardScreen uses for board/controls):
           switches from the flex-col stack (used everywhere below `lg`, and
@@ -147,7 +140,14 @@ export function CoverScreen({
           shows that same line beside Robu there instead. ── */}
       <div
         className={`flex w-full flex-col items-center ${
-          isReveal ? "md:grid md:grid-cols-2 md:items-stretch md:gap-x-12" : ""
+          // Gated on `lg:` (1024), not `md:` (768): Robu's own box (sized to
+          // match every other screen's resting Robu — see ROBU_DEFAULT_SIZE)
+          // is nearly as wide as a two-column split leaves room for between
+          // 768-1023px, which used to run the bubble straight into the
+          // illustration there. Staying single-column (image below, like
+          // mobile) until `lg:` gives both siblings the whole row's width
+          // instead of a too-narrow column.
+          isReveal ? "lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-x-12" : ""
         }`}
       >
         {/* ── Robu + speech bubble — laid out as real flex siblings (not
@@ -176,7 +176,7 @@ export function CoverScreen({
               : isReveal
                 ? "min-h-[15vh] sm:min-h-[30vh] sm:pt-6"
                 : "min-h-[15vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
-          } ${isReveal ? "md:col-start-1 md:row-start-1" : ""}`}
+          } ${isReveal ? "lg:col-start-1 lg:row-start-1" : ""}`}
         >
           {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
               down-right into it; two little accent ticks above echo the
@@ -187,10 +187,12 @@ export function CoverScreen({
               disappearing from one side and popping in on the other. */}
           <div
             className={`flex w-full flex-wrap ${
-              revealed ? "items-center" : "items-start"
-            } justify-center ${
-              isReveal ? "md:flex-nowrap md:justify-start" : ""
-            }`}
+              // Screen 2 (both before and after the card reveals) centers the
+              // bubble on Robu's own vertical center instead of pinning it to
+              // the top of his (much taller than his art) box — screen 1's
+              // greeting keeps its original top alignment.
+              isReveal ? "items-center" : "items-start"
+            } justify-center ${isReveal ? "lg:flex-nowrap lg:justify-start" : ""}`}
           >
             {!isReveal && !entering && (
               // Bubble waits for Robu's entrance to settle instead of popping
@@ -215,10 +217,13 @@ export function CoverScreen({
             {robu}
 
             {isReveal && (
+              // `md:min-w-0 md:flex-1` unconditionally (not just once
+              // `revealed`): without it the bubble's own max-width utility
+              // sizes it to its content regardless of how much room Robu's
+              // (much wider than his art) box actually leaves in the row,
+              // which let it run into the illustration column on the right.
               <div
-                className={`relative mr-6 ${bubbleSideOrder} ${
-                  revealed ? "md:min-w-0 md:flex-1" : ""
-                }`}
+                className={`relative lg:-ml-6 lg:min-w-0 lg:flex-1 ${bubbleSideOrder}`}
               >
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div
@@ -229,7 +234,7 @@ export function CoverScreen({
                     {revealed ? (
                       <>
                         {/* Mobile/tablet — short prompt bubble, unchanged. */}
-                        <div className="md:hidden">
+                        <div className="lg:hidden">
                           <SpeechBubble
                             text={slide.robuPrompt}
                             tailCorner="bottom-left"
@@ -238,9 +243,9 @@ export function CoverScreen({
                         </div>
                         {/* Desktop — the full line, right beside Robu
                             instead of the short prompt, since the standalone
-                            headline above the illustration hides at `md:`
+                            headline above the illustration hides at `lg:`
                             (see the heading slot) in favor of living here. */}
-                        <div className="hidden md:block">
+                        <div className="hidden lg:block">
                           <SpeechBubble
                             text={slide.robuIntro}
                             highlight={slide.robuIntroHighlight}
@@ -250,14 +255,31 @@ export function CoverScreen({
                         </div>
                       </>
                     ) : (
-                      // Pre-reveal: one bubble, same at every width — Robu's
-                      // own intro line typing out, nothing to switch yet.
-                      <SpeechBubble
-                        text={slide.robuIntro}
-                        highlight={slide.robuIntroHighlight}
-                        tailCorner="bottom-left"
-                        instant={instantSpeech}
-                      />
+                      <>
+                        {/* Mobile/tablet — this line is long enough that the
+                            row wraps: Robu ends up on the line above instead
+                            of beside the bubble, so the tail points up into
+                            him instead of the desktop "beside him" corner —
+                            otherwise it reads as talking to empty space. */}
+                        <div className="lg:hidden">
+                          <SpeechBubble
+                            text={slide.robuIntro}
+                            highlight={slide.robuIntroHighlight}
+                            tailCorner="top-right"
+                            instant={instantSpeech}
+                          />
+                        </div>
+                        {/* Desktop — row stays one line (Robu to the left),
+                            tail points back down-left into him as before. */}
+                        <div className="hidden lg:block">
+                          <SpeechBubble
+                            text={slide.robuIntro}
+                            highlight={slide.robuIntroHighlight}
+                            tailCorner="bottom-left"
+                            instant={instantSpeech}
+                          />
+                        </div>
+                      </>
                     )}
                   </motion.div>
                 </AnimatePresence>
@@ -281,7 +303,7 @@ export function CoverScreen({
           transition={WALK_TRANSITION}
           className={`px-4 text-center sm:px-6 ${headingOrder} ${
             isReveal
-              ? "md:col-start-2 md:row-start-1 md:row-span-2 md:px-0"
+              ? "lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:px-0"
               : ""
           }`}
         >
@@ -310,7 +332,7 @@ export function CoverScreen({
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
-                    className="md:hidden"
+                    className="lg:hidden"
                   >
                     <SpeechBubble
                       text={slide.robuIntro}
@@ -335,7 +357,7 @@ export function CoverScreen({
                   aria-hidden="true"
                   width={743}
                   height={512}
-                  className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72 md:w-full md:max-w-md"
+                  className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72 lg:w-full lg:max-w-md"
                 />
                 <Image
                   src="/images/thinkingBlack.png"
@@ -343,7 +365,7 @@ export function CoverScreen({
                   aria-hidden="true"
                   width={743}
                   height={512}
-                  className="hidden h-auto object-contain dark:block sm:w-64 md:w-72 md:w-full md:max-w-md"
+                  className="hidden h-auto object-contain dark:block sm:w-64 md:w-72 lg:w-full lg:max-w-md"
                 />
               </motion.div>
             ) : (
@@ -375,7 +397,7 @@ export function CoverScreen({
               onOpenModal();
               onBoxTap();
             }}
-            className="animate-pop-in order-3 -mt-2 flex h-32 w-full max-w-md items-center gap-3 rounded-[8px] bg-[#1A1C22] p-3 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 md:col-start-1 md:row-start-2 md:mt-4"
+            className="animate-pop-in order-3 -mt-2 flex h-32 w-full max-w-md items-center gap-3 rounded-[8px] bg-[#1A1C22] p-3 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:col-start-1 lg:row-start-2 lg:mt-4"
             aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
           >
             <div className="flex h-24 w-24 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">

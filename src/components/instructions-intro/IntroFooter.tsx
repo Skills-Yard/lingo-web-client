@@ -39,7 +39,10 @@ export function IntroFooter({
       <div className="w-full flex flex-col gap-2.5 sm:gap-3">
         {feedback && (
           <div
-            className="w-full rounded-[6px] p-3.5 flex items-center justify-between gap-2 animate-pop-in overflow-hidden md:hidden"
+            // Matches the `lg:` split TeacherQuizScreen/QuestionnaireScreen's
+            // own inline feedback panels switch on — below that they're the
+            // only place feedback shows, so keep this one up through `lg:`.
+            className="w-full rounded-[6px] p-3.5 flex items-center justify-between gap-2 animate-pop-in overflow-hidden lg:hidden"
             style={{
               background: feedback.isCorrect
                 ? "linear-gradient(180deg, rgba(1,161,127,0.16) 0%, rgba(255,255,255,0) 98.7%)"

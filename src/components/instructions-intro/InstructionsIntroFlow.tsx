@@ -292,7 +292,11 @@ export function InstructionsIntroFlow({
 
   return (
     <main
-      className={`${poppins.className} h-[100dvh] h-screen w-full max-w-full overflow-hidden bg-background dark:bg-[#0D1016] text-foreground flex flex-col items-center transition-colors duration-200`}
+      // `py-*` gives the header/footer real breathing room from the actual
+      // viewport edges instead of sitting flush against them — the flex
+      // column's scrollable body (flex-1) absorbs the height this takes,
+      // so it's never at the cost of content the learner is trying to read.
+      className={`${poppins.className} h-[100dvh] h-screen w-full max-w-full overflow-hidden bg-background dark:bg-[#0D1016] text-foreground flex flex-col items-center py-3 sm:py-4 md:py-5 transition-colors duration-200`}
     >
       <div className="w-full max-w-lg sm:max-w-xl md:max-w-7xl flex flex-col h-full">
         {/* ── Header (same on every slide) — fixed height, never scrolls or gets covered ── */}

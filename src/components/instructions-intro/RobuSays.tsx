@@ -91,10 +91,24 @@ export function RobuSays({
         className={`shrink-0 ${robuClassName}`}
       />
       <div
-        className={`${
+        // `min-w-0 flex-auto` (not `shrink-0`): a bubble that refuses to
+        // shrink below its own max-width overflows whenever its row sits
+        // inside a column narrower than that (TeacherIntroScreen's left
+        // column, ExamplesGridScreen's `md:w-56` row) — letting it shrink
+        // instead keeps it inside whatever room it's actually given. `-auto`
+        // rather than `flex-1` (basis `0%`) matters here specifically: a
+        // `0%` basis tells the *wrap* algorithm this item always fits on
+        // the current line (so it never actually wraps below Robu, just
+        // gets squeezed to whatever's left over — sometimes only a handful
+        // of px) — `auto` sizes that decision on its real content first, so
+        // it only stays beside Robu when there's genuinely room for it, and
+        // drops to its own full-width line otherwise. Its own `w-max`
+        // sizing (see SpeechBubble) still keeps it tight to its text rather
+        // than stretching to fill the line when there's room to spare.
+        className={`min-w-0 flex-auto ${
           side === "right"
-            ? "-mr-8 shrink-0 sm:-mr-12 sm:-mr-4 md:mr-0"
-            : "-ml-8 shrink-0 sm:-ml-12 sm:-ml-4 md:ml-0"
+            ? "-mr-8 sm:-mr-12 sm:-mr-4 md:mr-0"
+            : "-ml-8 sm:-ml-12 sm:-ml-4 md:ml-0"
         } ${bubbleMarginLg}`}
       >
         <SpeechBubble

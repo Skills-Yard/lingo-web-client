@@ -1,7 +1,6 @@
 import type { TeacherIntroSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
-import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 export function TeacherIntroScreen({
   slide,
@@ -14,8 +13,13 @@ export function TeacherIntroScreen({
   registerAnchor: (el: HTMLDivElement | null) => void;
   }) {
   return (
-    <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-x-8 md:items-center md:min-h-full md:content-center">
-      <div className="relative z-10 flex flex-col items-center gap-3 text-center md:col-span-2 md:items-start md:text-left md:gap-6">
+    // Grid split gated on `lg:` (1024), not `md:` (768): between those two
+    // widths the note-card + desktop illustration content already switches
+    // on (still at `md:`, kept as-is below), but staying single-column a
+    // breakpoint longer gives that content the room it needs instead of
+    // squeezing it into a too-narrow `md:col-span-2` column.
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-5 lg:gap-x-8 lg:items-center lg:min-h-full lg:content-center">
+      <div className="relative z-10 flex flex-col items-center gap-3 text-center lg:col-span-2 md:items-start md:text-left md:gap-6">
         <div className="flex flex-col items-center gap-3 md:items-start">
           <RobuSays
             text={`${slide.eyebrow} ${slide.title}`}
@@ -23,7 +27,12 @@ export function TeacherIntroScreen({
             instant={instantSpeech}
             side="left"
             sideLg="left"
-            robuClassName={`${ROBU_DEFAULT_SIZE} md:h-36 md:w-36 lg:h-48 lg:w-48`}
+            // Spelled out in full rather than `${ROBU_DEFAULT_SIZE} md:h-36
+            // ...`: appending an `md:` override after ROBU_DEFAULT_SIZE's
+            // own `md:h-84` doesn't reliably win (same breakpoint tier, so
+            // it comes down to Tailwind's own generation order, not source
+            // order) — it was rendering at the full 336px despite this.
+            robuClassName="h-32 w-32 sm:h-60 sm:w-60 md:h-36 md:w-36 lg:h-48 lg:w-48"
             registerAnchor={registerAnchor}
           />
         </div>
@@ -68,7 +77,7 @@ export function TeacherIntroScreen({
         imageDark="/images/teacherBlack.png"
       />
       <TeacherIllustration
-        className="relative z-0 hidden md:block md:h-96 md:col-span-3"
+        className="relative z-0 hidden md:block md:h-96 lg:col-span-3"
         fit="contain"
         variant="bleed"
         imageLight="/images/answerImgWhite.png"

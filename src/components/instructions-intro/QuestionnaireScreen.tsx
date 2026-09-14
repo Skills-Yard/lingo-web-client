@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { Check, X } from "lucide-react";
 import type { QuestionnaireSlide } from "@/lib/constants/instructionsIntro";
-import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
+import { RobuAnchor } from "./RobuAnchor";
 import { SpeechBubble } from "./SpeechBubble";
 
 interface QuestionnaireScreenProps {
@@ -70,22 +70,44 @@ export function QuestionnaireScreen({
   };
 
   return (
-    <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-8 md:gap-y-6 md:items-start">
-      {/* ── Left column — "Q." badge, heading, prompt, illustration ── */}
-      <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1 md:row-span-2 md:self-stretch md:border-r border-black/10 dark:border-white/10 md:pr-8">
-        <div className="flex items-start justify-start">
+    // Split gated on `lg:` (1024), not `md:` (768) — matches the same
+    // Robu-vs-column-width mismatch fixed on the other screens, and keeps
+    // Robu paired with his own speech bubble instead of the bubble sitting
+    // alone atop the far-off options column between 768-1023px.
+    <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_1.9fr] lg:gap-x-8 lg:gap-y-6 lg:items-start">
+      {/* ── Left column — Robu (+ his bubble below `lg:`), prompt, illustration ── */}
+      <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:self-stretch lg:border-r border-black/10 dark:border-white/10 lg:pr-8">
+        <div className="flex flex-row items-center gap-2 sm:gap-3">
           <RobuAnchor
             registerAnchor={registerAnchor}
-            className={`${ROBU_DEFAULT_SIZE} lg:h-40 lg:w-40`}
+            // Robu's default box (up to 336px at `md:`) is centered on his
+            // own (much smaller) art, but was still tall enough to leave a
+            // lot of dead space in this row and dwarf the bubble beside him
+            // — shrunk here (below `lg:`, where he's alone again in his own
+            // column at the original size) to actually sit tidily beside it.
+            className="shrink-0 h-20 w-20 sm:h-28 sm:w-28 md:h-32 md:w-32 lg:h-40 lg:w-40"
           />
+          {/* Paired beside Robu below `lg:`; at `lg:`+ the original copy
+              (further down, atop the options column) takes over instead so
+              this one hides rather than showing the line twice. */}
+          <div className="min-w-0 flex-1 lg:hidden">
+            <SpeechBubble
+              text={slide.title}
+              highlight={slide.highlightWord}
+              instant={instantSpeech}
+              size="lg"
+              tailCorner="bottom-left"
+              bubbleClassName="sm:max-w-md"
+            />
+          </div>
         </div>
 
         <p className="text-base font-medium leading-[1.5] text-[#666666] dark:text-neutral-400">
           {slide.description}
         </p>
 
-        {/* Supporting illustration — desktop only (mobile keeps the compact spec) */}
-        <div className="hidden md:mt-2 md:flex md:items-center md:justify-center">
+        {/* Supporting illustration — desktop only (mobile/tablet keep the compact spec) */}
+        <div className="hidden lg:mt-2 lg:flex lg:items-center lg:justify-center">
           <Image
             src="/images/computer.png"
             alt=""
@@ -98,8 +120,10 @@ export function QuestionnaireScreen({
       </div>
 
       {/* ── Option cards — Frame 12 / 61 / 62 (idle) & Frame 11 (selected) ── */}
-      <div className="flex flex-col gap-[18px] md:col-start-2 md:row-start-1 md:row-span-2 md:self-center">
-        <div className="flex justify-start">
+      <div className="flex flex-col gap-[18px] lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center">
+        {/* Desktop-only copy — below `lg:` the copy beside Robu above
+            handles this line instead. */}
+        <div className="hidden lg:flex justify-start">
           <SpeechBubble
             text={slide.title}
             highlight={slide.highlightWord}
@@ -179,7 +203,7 @@ export function QuestionnaireScreen({
           the screen's height (and hence its centered position) never
           changes when the feedback actually appears. */}
       <div
-        className={`hidden md:block relative overflow-hidden rounded-[12px] p-4 pr-28 md:col-span-2 md:row-start-3 md:pr-44 md:min-h-[110px] ${
+        className={`hidden lg:block relative overflow-hidden rounded-[12px] p-4 pr-28 lg:col-span-2 lg:row-start-3 lg:pr-44 lg:min-h-[110px] ${
           checked && selectedItem ? "animate-pop-in" : "invisible"
         } ${
           isCorrect
@@ -211,7 +235,7 @@ export function QuestionnaireScreen({
             </div>
 
             {selectedItem.feedback && (
-              <p className="mt-2 max-w-[260px] text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400 md:max-w-md">
+              <p className="mt-2 max-w-[260px] text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400 lg:max-w-md">
                 {isCorrect ? (
                   <Highlight
                     text={selectedItem.feedback}
@@ -228,7 +252,7 @@ export function QuestionnaireScreen({
               alt=""
               width={140}
               height={130}
-              className="pointer-events-none absolute -bottom-1 right-1 h-[92px] w-auto object-contain md:bottom-1/2 md:right-6 md:h-[130px] md:translate-y-1/2"
+              className="pointer-events-none absolute -bottom-1 right-1 h-[92px] w-auto object-contain lg:bottom-1/2 lg:right-6 lg:h-[130px] lg:translate-y-1/2"
             />
           </>
         )}

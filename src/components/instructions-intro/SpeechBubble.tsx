@@ -85,7 +85,13 @@ export function SpeechBubble({
   const bubbleSize =
     size === "lg"
       ? "max-w-[calc(100vw-2rem)] px-3 py-2 sm:px-4 sm:py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
-      : "max-w-[calc(100vw-2rem)] px-3 py-1.5 sm:px-3.5 sm:py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
+      : // Capped at 19rem, not just "viewport minus a fixed margin": the
+        // default (sm) bubble sits inside a container that already has its
+        // own horizontal padding, so `calc(100vw-2rem)` alone left it
+        // reaching almost edge-to-edge (only ~8px of breathing room) around
+        // ~400-430px wide phones. `min(...)` keeps a real margin at every
+        // width instead of just the very smallest ones.
+        "max-w-[min(19rem,calc(100vw-4rem))] px-3 py-1.5 sm:px-3.5 sm:py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
   const textSize = size === "lg" ? "text-base sm:text-lg md:text-xl lg:text-2xl" : "text-sm sm:text-base sm:text-lg";
 
   return (

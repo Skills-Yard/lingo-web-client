@@ -2,7 +2,6 @@ import { Check, X } from "lucide-react";
 import type { TeacherQuizSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
-import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 interface TeacherQuizScreenProps {
   slide: TeacherQuizSlide;
@@ -29,26 +28,38 @@ export function TeacherQuizScreen({
   const feedbackBody = isCorrect ? slide.correctText : slide.incorrectText;
 
   return (
-    <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-x-10 md:items-center md:min-h-full md:content-center">
+    // The 2-column split is gated on `lg:` (1024), not `md:` (768): Robu's
+    // own box (ROBU_DEFAULT_SIZE, sized to match every other screen's
+    // resting Robu) is wider than a `md:grid-cols-2` column leaves room for
+    // between 768-1023px, which split him away from his own speech bubble.
+    // RobuSays' side-switch (`sideLg`) already only kicks in at `lg:`, so
+    // this now stays consistent with it instead of flipping to a 2-col grid
+    // a breakpoint early. Below `lg:`, this renders exactly like it already
+    // did below `md:` (single-column stack).
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:items-center lg:min-h-full lg:content-center">
       <RobuSays
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.highlightWord}
         instant={instantSpeech}
         side="right"
         sideLg="left"
-        robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-40 lg:w-40`}
-        className="md:col-start-1 md:row-start-1"
+        // Shrunk below `lg:` (not the shared ROBU_DEFAULT_SIZE, which
+        // reaches 336px by `md:`) — that box's own mostly-empty padding was
+        // leaving a big blank gap between the bubble and the illustration
+        // below it once the row stays single-column through `lg:`.
+        robuClassName="h-20 w-20 sm:h-28 sm:w-28 md:h-32 md:w-32 lg:h-40 lg:w-40"
+        className="lg:col-start-1 lg:row-start-1"
         registerAnchor={registerAnchor}
       />
 
       <TeacherIllustration
-        className="h-64 md:h-80 md:col-start-1 md:row-start-2"
+        className="h-64 lg:h-80 lg:col-start-1 lg:row-start-2"
         fit="contain"
         imageLight="/images/answerImgWhite.png"
         imageDark="/images/answerImgBlack.png"
       />
 
-      <div className="flex flex-col gap-2 md:col-start-2 md:row-start-1 md:row-span-2 md:self-center">
+      <div className="flex flex-col gap-2 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center">
         {slide.options.map((opt, idx) => {
           const isSelected = selected === idx;
           const Icon = opt.icon;
@@ -120,10 +131,12 @@ export function TeacherQuizScreen({
           );
         })}
 
-        {/* Desktop shows the result inline with the options; mobile keeps it in the footer. */}
+        {/* Desktop shows the result inline with the options; mobile (now
+            including tablet, up through the same `lg:` the grid above
+            switches at) keeps it in the footer. */}
         {showFeedback && (
           <div
-            className={`hidden md:flex items-center justify-between gap-3 rounded-[12px] p-4 overflow-hidden animate-pop-in ${
+            className={`hidden lg:flex items-center justify-between gap-3 rounded-[12px] p-4 overflow-hidden animate-pop-in ${
               isCorrect ? "bg-primary/10" : "bg-rose-500/10"
             }`}
           >
