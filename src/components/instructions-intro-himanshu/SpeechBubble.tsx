@@ -101,9 +101,9 @@ export function SpeechBubble({
 
   const bubbleSize =
     size === "lg"
-      ? "max-w-[72vw] px-4 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
-      : "max-w-[58vw] px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
-  const textSize = size === "lg" ? "text-sm sm:text-base" : "text-[13px] sm:text-sm";
+      ? "max-w-full px-3 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
+      : "max-w-full px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
+  const textSize = size === "lg" ? "text-xl sm:text-base" : "text-[13px] sm:text-sm";
 
   return (
     <div

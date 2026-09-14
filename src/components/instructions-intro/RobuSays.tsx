@@ -66,7 +66,7 @@ export function RobuSays({
       // that branch below) — so forcing the same flex-wrap here would drop
       // the *whole row* (Robu included) onto its own centered line instead
       // of just letting the heading wrap in place beside him.
-      className={`animate-fade-in flex w-full pt-2 items-start justify-center gap-1 ${
+      className={`animate-fade-in flex w-full pt-0 items-center justify-center gap-2 ${
         size === "lg" ? "flex-wrap" : ""
       } ${side === "right" ? "flex-row-reverse" : ""} ${className ?? ""}`}
     >
@@ -75,25 +75,27 @@ export function RobuSays({
         className={`shrink-0 ${robuClassName}`}
       />
       <div
-        className={
-          size === "lg"
-            ? // The tight negative margin pulls a small chat bubble in close
-              // to Robu — tuned for `size="lg"`'s bounded width.
-              side === "right"
-              ? "-mr-12 shrink-0 sm:-mr-4 md:mr-0"
-              : "-ml-12 shrink-0 sm:-ml-4 md:ml-0"
-            : side === "right"
-              ? // Untuned for `side="right"` (no screen uses it today) —
-                // kept as the pre-existing no-pull fallback rather than
-                // guessing a mirrored offset against unverified layout.
-                "min-w-0"
-              : // `size="heading"` has no bounded width (it just wraps its
-                // own text within the row, see below), but Robu's own
-                // Rive artwork sits well inside its square anchor box —
-                // see ROBU_TRAILING_GAP_PULL's own comment — leaving a big
-                // dead strip between him and this text unless pulled in.
-                `min-w-0 ${ROBU_TRAILING_GAP_PULL}`
-        }
+        className={`pb-6
+          ${
+            size === "lg"
+              ? // The tight negative margin pulls a small chat bubble in close
+                // to Robu — tuned for `size="lg"`'s bounded width.
+                side === "right"
+                ? "-mr-12 shrink-0 sm:-mr-4 md:mr-0"
+                : "-ml-12 shrink-0 sm:-ml-4 md:ml-0"
+              : side === "right"
+                ? // Untuned for `side="right"` (no screen uses it today) —
+                  // kept as the pre-existing no-pull fallback rather than
+                  // guessing a mirrored offset against unverified layout.
+                  "min-w-0"
+                : // `size="heading"` has no bounded width (it just wraps its
+                  // own text within the row, see below), but Robu's own
+                  // Rive artwork sits well inside its square anchor box —
+                  // see ROBU_TRAILING_GAP_PULL's own comment — leaving a big
+                  // dead strip between him and this text unless pulled in.
+                  `min-w-0 ${ROBU_TRAILING_GAP_PULL}`
+          }
+        `}
       >
         <SpeechBubble
           text={text}
