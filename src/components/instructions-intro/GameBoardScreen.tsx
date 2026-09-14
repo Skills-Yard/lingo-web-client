@@ -102,7 +102,7 @@ export function GameBoardScreen({
       <div className="flex-col items-center justify-center gap-3 md:justify-start">
         <motion.div
           layout
-          className="flex w-full items-start justify-center"
+          className="flex w-full flex-wrap items-start justify-center"
           transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
         >
           {!robuJoinedGame && (
