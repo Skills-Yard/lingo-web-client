@@ -1,0 +1,284 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
+import { ShieldCheck, ChevronRight } from "lucide-react";
+import type { RewardSlide } from "@/lib/constants/instructionsIntro";
+import {
+  useRive,
+  useViewModel,
+  useViewModelInstance,
+  useViewModelInstanceBoolean,
+  useViewModelInstanceTrigger,
+} from "@rive-app/react-canvas";
+import { EventType } from "@rive-app/canvas";
+import { configureRiveRuntime, REWARD_RIVE_SRC } from "@/lib/rive/runtime";
+import { RobuSays } from "./RobuSays";
+
+// Register the same-origin WASM URLs before the first canvas mounts.
+configureRiveRuntime();
+
+const RIVE_STATE_MACHINE = "State Machine";
+
+// `mera_updated_box.riv` drives its state machine through data binding rather
+// than raw inputs: the `ArtboardViewModel` view model exposes `hovering`
+// (Boolean) and `clicked` (Trigger).
+const RIVE_VIEW_MODEL = "ArtboardViewModel";
+
+// Linear timeline that plays on top of the state machine — the sprinkle burst
+// that loops continuously for as long as this screen is on screen.
+const RIVE_SPRINKLE_ANIMATION = "sprinkle";
+
+// Let the box-open animation play before the reward cards take over the screen.
+const BOX_OPEN_DELAY_MS = 500;
+
+interface RewardScreenProps {
+  slide: RewardSlide;
+  onClaim?: () => void;
+  onClaimStateChange?: (claimed: boolean) => void;
+  /** Skip Robu's typewriter — set once this screen has already been seen. */
+  instantSpeech?: boolean;
+  registerAnchor: (el: HTMLDivElement | null) => void;
+}
+
+export function RewardScreen({
+  slide,
+  onClaim,
+  onClaimStateChange,
+  instantSpeech,
+  registerAnchor,
+}: RewardScreenProps) {
+  const [claimed, setClaimed] = useState(false);
+
+  const { rive, RiveComponent } = useRive({
+    src: REWARD_RIVE_SRC,
+    stateMachine: RIVE_STATE_MACHINE,
+    autoplay: true,
+  });
+
+  // Bind the artboard's view model instance to the runtime and read its
+  // data-bound properties instead of raw state-machine inputs.
+  const viewModel = useViewModel(rive, { name: RIVE_VIEW_MODEL });
+  const viewModelInstance = useViewModelInstance(viewModel, { rive });
+
+  const { setValue: setHovering } = useViewModelInstanceBoolean(
+    "hovering",
+    viewModelInstance,
+  );
+  const { trigger: fireClicked } = useViewModelInstanceTrigger(
+    "clicked",
+    viewModelInstance,
+  );
+
+  // True while the claim-triggered open animation is playing, so the pointer
+  // leaving the canvas mid-animation doesn't snap the box shut.
+  const isOpeningRef = useRef(false);
+
+  // Once the instance is ready, match the drawing surface to the container so
+  // the first paint is sharp and does not trigger a resize-driven repaint
+  // partway through the animation.
+  useEffect(() => {
+    rive?.resizeDrawingSurfaceToCanvas();
+  }, [rive]);
+
+  // Keep the sprinkle burst running for the whole life of this screen. It plays
+  // as a linear timeline on top of the state machine, so anything that settles
+  // the state machine (or the timeline reaching its end when authored one-shot)
+  // can drop it from the animator. `ensureSprinkle` re-adds it whenever it is
+  // not in the playing set — driven both by Rive's stop event for an immediate
+  // restart and by a slow interval as a catch-all.
+  useEffect(() => {
+    if (!rive) return;
+
+    rive.play(RIVE_SPRINKLE_ANIMATION);
+  }, [rive]);
+
+  // Play the box-open animation. Fired both by tapping the canvas and by the
+  // "Claim Instantly" button. The state machine only takes the "open"
+  // transition while `hovering` is true, so engage that first, then on the next
+  // frame — once Rive has applied the boolean — fire the `clicked` trigger and
+  // restart `sprinkle` so its burst is in sync with the box opening. The
+  // keep-alive effect keeps it looping afterwards.
+  const openBox = () => {
+    setHovering(true);
+
+    requestAnimationFrame(() => {
+      fireClicked();
+    });
+  };
+
+  const handleClaim = () => {
+    isOpeningRef.current = true;
+
+    openBox();
+
+    window.setTimeout(() => {
+      setClaimed(true);
+      onClaimStateChange?.(true);
+      onClaim?.();
+    }, BOX_OPEN_DELAY_MS);
+  };
+
+  const handleMouseEnter = () => {
+    setHovering(true);
+  };
+
+  const handleMouseLeave = () => {
+    if (isOpeningRef.current) return;
+    setHovering(false);
+  };
+
+  return (
+    <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 py-2 md:min-h-full md:justify-center">
+      {/* ── "CLAIM reward" — short enough to stay an actual bubble instead
+          of the big-headline treatment every other screen's longer heading
+          gets (see RobuSays' `size` prop). ── */}
+      <RobuSays
+        text={`${slide.highlightWord} ${slide.title}`}
+        highlight={slide.title}
+        instant={instantSpeech}
+        size="lg"
+        registerAnchor={registerAnchor}
+      />
+
+      {/* ── Hero — mascot on a soft glow; gem burst scatters once claimed ──
+          `overflow-hidden`: the glow below is a fixed 300px circle, centered
+          — on the very narrowest phones (<352px) it's wider than this row,
+          so without a clip it would peek past the edge on both sides. ── */}
+      <div className="relative flex h-[clamp(150px,26vh,267px)] w-full items-center justify-center overflow-hidden">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute left-1/2 top-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl [background:radial-gradient(circle_at_50%_60%,rgba(1,161,127,0.20),rgba(255,255,255,0)_70%)] dark:[background:radial-gradient(circle_at_50%_60%,rgba(1,161,127,0.30),rgba(9,12,19,0)_70%)]"
+        />
+        {claimed && (
+          <>
+            <Image
+              src="/images/left-gems.png"
+              alt=""
+              width={171}
+              height={178}
+              className="pointer-events-none absolute left-0 top-1/2 w-20 -translate-y-1/2 select-none sm:w-24 md:w-28"
+            />
+            <Image
+              src="/images/right-gems.png"
+              alt=""
+              width={171}
+              height={178}
+              className="pointer-events-none absolute right-0 top-1/2 w-20 -translate-y-1/2 select-none sm:w-24 md:w-28"
+            />
+          </>
+        )}
+        {/* <Image
+          src={slide.imageLight}
+          alt="Reward"
+          width={208}
+          height={267}
+          priority
+          className="relative z-10 h-full w-auto max-w-full object-contain animate-pop-in"
+        /> */}
+        <div
+          className="relative h-[220px] w-[220px]"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={openBox}
+        >
+          <RiveComponent />
+        </div>
+      </div>
+
+      {claimed ? (
+        <>
+          {/* YOU GOT — Line 21 / Line 22 dividers around the label */}
+          {slide.subtitle && (
+            <div className="flex w-full items-center gap-3 animate-pop-in">
+              <span className="h-px flex-1 bg-black/[0.08] dark:bg-white/10" />
+              <span className="text-xs font-medium uppercase tracking-[0.12em] text-primary">
+                {slide.subtitle}
+              </span>
+              <span className="h-px flex-1 bg-black/[0.08] dark:bg-white/10" />
+            </div>
+          )}
+
+          {/* Reward cards — Frame 74 */}
+          {slide.rewards && slide.rewards.length > 0 && (
+            <div className="grid w-full grid-cols-2 gap-[18px] animate-pop-in">
+              {slide.rewards.map((reward) => (
+                <div
+                  key={reward.id}
+                  className="flex h-[76px] items-center justify-center gap-[11px] rounded-[6px] bg-[#1A1C22] shadow-[1px_1px_16px_3px_rgba(0,0,0,0.29)]"
+                >
+                  <Image
+                    src={reward.icon}
+                    alt=""
+                    width={51}
+                    height={50}
+                    className="h-[50px] w-[50px] shrink-0 object-contain"
+                  />
+                  <div className="flex flex-col gap-1">
+                    <span className="text-xl font-semibold leading-none text-white">
+                      {reward.value}
+                    </span>
+                    <span className="text-xs font-medium text-primary">
+                      {reward.label}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {slide.actionDescription && (
+            <p className="max-w-[233px] text-center text-xs font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
+              {slide.actionDescription}
+            </p>
+          )}
+
+          {slide.securityInfo && <SecurityCard slide={slide} />}
+        </>
+      ) : (
+        <>
+          {/* Claim Instantly — Frame 22 */}
+          {slide.actionButtons?.map((button) => (
+            <button
+              key={button.id}
+              type="button"
+              onClick={() => button.id === "claim" && handleClaim()}
+              className="h-[63px] w-full max-w-[280px] rounded-[6px] text-base font-semibold text-[#2C2C2C] shadow-[1px_1px_16px_3px_rgba(0,0,0,0.29)] transition-all hover:opacity-90 active:scale-95 [background:linear-gradient(90deg,#59EBCE_0%,#CCF772_100%)]"
+            >
+              {button.label}
+            </button>
+          ))}
+
+          {slide.actionDescription && (
+            <p className="max-w-[233px] text-center text-xs font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
+              {slide.actionDescription}
+            </p>
+          )}
+
+          {slide.securityInfo && <SecurityCard slide={slide} />}
+        </>
+      )}
+    </div>
+  );
+}
+
+function SecurityCard({ slide }: { slide: RewardSlide }) {
+  return (
+    <div className="flex h-[76px] w-full items-center rounded-[6px] bg-[#1A1C22] px-4 shadow-[1px_1px_16px_3px_rgba(0,0,0,0.29)]">
+      <div className="mx-auto flex w-full max-w-[310px] items-center gap-3">
+        <ShieldCheck className="h-[34px] w-[34px] shrink-0 text-[#7EEBC1]" />
+        <div className="min-w-0 flex-1">
+          <p className="text-base font-medium text-white">
+            {slide.securityInfo}
+          </p>
+          {slide.securitySubInfo && (
+            <p className="mt-1 text-xs font-medium text-[#818185]">
+              {slide.securitySubInfo}
+            </p>
+          )}
+        </div>
+        <ChevronRight className="h-4 w-4 shrink-0 text-[#818185]" />
+      </div>
+    </div>
+  );
+}
