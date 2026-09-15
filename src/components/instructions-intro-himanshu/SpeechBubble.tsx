@@ -69,7 +69,7 @@ interface SpeechBubbleProps {
  * pass its own `speedMs`. To slow down or speed up *every* bubble at once,
  * change this default; for one screen only, pass `speedMs` instead (see its
  * doc above) rather than editing this constant. */
-const TYPE_SPEED_MS = 30;
+const TYPE_SPEED_MS = 50;
 
 /**
  * A small talk bubble that types `text` out character by character, cursor and
