@@ -345,6 +345,7 @@ export function InstructionsIntroFlow({
                 slide={slide}
                 revealed={coverRevealed}
                 onBoxTap={() => setBoxTapped(true)}
+                boxTapped={boxTapped}
                 modalOpen={modalOpen}
                 onOpenModal={() => setModalOpen(true)}
                 onCloseModal={() => setModalOpen(false)}

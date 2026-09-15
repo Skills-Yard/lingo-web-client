@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { TeacherIntroSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
@@ -12,6 +15,13 @@ export function TeacherIntroScreen({
   instantSpeech?: boolean;
   registerAnchor: (el: HTMLDivElement | null) => void;
 }) {
+  // Sequences the "Open Your Notebook" note after Robu's own line: it holds
+  // its text back until Robu finishes talking, types it out the same way his
+  // line does, then glows once that's done — instead of every text on this
+  // screen typing at once.
+  const [robuDone, setRobuDone] = useState(false);
+  const [noteDone, setNoteDone] = useState(false);
+
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-x-12 md:items-center md:min-h-full">
       <div className="flex flex-col items-center gap-3 text-center md:col-span-2 md:items-start md:text-left md:gap-8">
@@ -23,6 +33,7 @@ export function TeacherIntroScreen({
             side="left"
             registerAnchor={registerAnchor}
             audioSrc="/audios/screen_3_audio.mpeg"
+            onTextTyped={() => setRobuDone(true)}
           />
         </div>
 
@@ -64,6 +75,10 @@ export function TeacherIntroScreen({
         variant="bleed"
         imageLight="/images/teacherWhite.png"
         imageDark="/images/teacherBlack.png"
+        noteStartTyping={robuDone}
+        noteInstant={instantSpeech}
+        onNoteTypingComplete={() => setNoteDone(true)}
+        noteHighlighted={noteDone}
       />
       <TeacherIllustration
         className="hidden md:block md:h-105 md:col-span-3"
@@ -71,6 +86,10 @@ export function TeacherIntroScreen({
         variant="bleed"
         imageLight="/images/answerImgWhite.png"
         imageDark="/images/answerImgBlack.png"
+        noteStartTyping={robuDone}
+        noteInstant={instantSpeech}
+        onNoteTypingComplete={() => setNoteDone(true)}
+        noteHighlighted={noteDone}
       />
     </div>
   );

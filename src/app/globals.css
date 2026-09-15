@@ -26,6 +26,16 @@
   --input: #e0e0e0;
   --ring: #01a17f;
   --radius: 1rem;
+  /* Screen 2's reveal-card glow (see `.animate-card-glow`). The card itself
+     stays a fixed dark `#1A1C22` in both themes, but it sits on this theme's
+     own page background — the same low-alpha teal that pops against dark
+     mode's near-black background nearly disappears blended into a white one,
+     so light mode gets a more saturated, more opaque ring plus a touch of
+     dark shadow to ground it against the page instead of just the dark-mode
+     values turned up. */
+  --card-glow-ring: rgba(1, 129, 95, 0.65);
+  --card-glow-bloom: rgba(1, 161, 127, 0.55);
+  --card-glow-shadow: rgba(0, 0, 0, 0.18);
 }
 
 .dark,
@@ -52,6 +62,9 @@
   --border: #262626;
   --input: #262626;
   --ring: #01a17f;
+  --card-glow-ring: rgba(1, 161, 127, 0.4);
+  --card-glow-bloom: rgba(1, 161, 127, 0.35);
+  --card-glow-shadow: rgba(0, 0, 0, 0);
 }
 
 @theme inline {
@@ -133,6 +146,25 @@ html {
   }
 }
 
+/* Pulsing ring around screen 2's reveal card, drawing the eye to it the
+   moment it pops in — same trigger/lifetime as Robu's own `shake` nudge
+   above, just expressed on the card itself. */
+@keyframes cardGlow {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 var(--card-glow-ring),
+      0 0 0 0 var(--card-glow-bloom),
+      0 2px 10px 0 var(--card-glow-shadow);
+  }
+  50% {
+    box-shadow:
+      0 0 0 3px var(--card-glow-ring),
+      0 0 24px 8px var(--card-glow-bloom),
+      0 4px 16px 0 var(--card-glow-shadow);
+  }
+}
+
 @keyframes fadeIn {
   0% {
     opacity: 0;
@@ -186,6 +218,10 @@ html {
 
 .animate-pop-in {
   animation: popIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-card-glow {
+  animation: cardGlow 2s ease-in-out infinite;
 }
 
 /* Used by the screen 08 mini-game platform art (ported from lingo-website-client). */

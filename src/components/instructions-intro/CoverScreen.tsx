@@ -28,6 +28,11 @@ interface CoverScreenProps {
   /** Fired the first time the reveal card is tapped, so the flow can unlock
    * the footer's primary button. */
   onBoxTap: () => void;
+  /** True once the reveal card has been tapped. Drives the card's own
+   * attention-grabbing glow (see `cardHighlight` below) — it should stop
+   * calling attention to itself the instant it's been tapped, same moment
+   * Robu's own nudge (`robuShake` in the flow) stops. */
+  boxTapped: boolean;
   /** Whether the reveal card's modal is open. Lifted up to the flow (rather
    * than local state) so its Back button can close it as its own step
    * instead of only being reachable through the modal's own X/Escape. */
@@ -65,6 +70,7 @@ export function CoverScreen({
   slide,
   revealed,
   onBoxTap,
+  boxTapped,
   modalOpen,
   onOpenModal,
   onCloseModal,
@@ -74,6 +80,12 @@ export function CoverScreen({
   robuIntroDone,
 }: CoverScreenProps) {
   const isReveal = slide.kind === "cover-reveal";
+
+  // The instant the reveal card pops in (right after screen 2's audio +
+  // heading finish and `revealed` flips true), give it its own glow so it
+  // reads as the thing to tap next — same trigger/lifetime as Robu's own
+  // `robuShake` nudge in the flow, just expressed on the card itself.
+  const cardHighlight = isReveal && revealed && !boxTapped;
 
   // Robu's very first entrance (step 01 only): his `intro.riv` timeline
   // plays big and centered, alone — heading and bubble stay held back, and
@@ -359,7 +371,9 @@ export function CoverScreen({
             onOpenModal();
             onBoxTap();
           }}
-          className="animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6"
+          className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 ${
+            cardHighlight ? "animate-card-glow" : ""
+          }`}
           aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
         >
           <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">

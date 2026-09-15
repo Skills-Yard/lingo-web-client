@@ -20,14 +20,26 @@ interface SpeechBubbleProps {
    * the bubble chrome (border/background/tail) entirely and renders the
    * same typed/highlighted text as a big bold heading instead — for a
    * moment that wants to read as a headline, not a chat bubble, while still
-   * reusing the exact same typewriter behavior. */
-  size?: "sm" | "lg" | "heading";
+   * reusing the exact same typewriter behavior. "plain" drops the chrome
+   * *and* the heading's own font sizing — just the typed characters and
+   * cursor, inline, so a caller can drop this into a slot that already has
+   * its own text styling (e.g. a note card's own heading) and still get the
+   * same typewriter behavior. */
+  size?: "sm" | "lg" | "heading" | "plain";
   className?: string;
   /** Fired once the full line is showing — right away for `instant`, or the
    * moment the typewriter reaches the last character otherwise. Lets a
    * caller auto-advance the instant Robu "finishes talking" instead of
    * gating that on a separate manual step. */
   onTypingComplete?: () => void;
+  /** Fired the moment the typed characters themselves reach the end of the
+   * line — for a voiced (`audioSrc`) bubble this fires well before
+   * `onTypingComplete` (which waits for the audio's "ended" event), so a
+   * caller that wants to react to "the text is done appearing" rather than
+   * "the voice line is done playing" should use this instead. For a
+   * non-voiced or `instant` bubble it fires at the same moment as
+   * `onTypingComplete`. */
+  onTextTyped?: () => void;
   /** When set, this line is voiced: the audio starts playing the moment this
    * bubble mounts, the typewriter is re-paced to land its last character
    * exactly when the audio ends (instead of the fixed `TYPE_SPEED_MS`), and
@@ -60,6 +72,7 @@ export function SpeechBubble({
   size = "sm",
   className,
   onTypingComplete,
+  onTextTyped,
   audioSrc,
 }: SpeechBubbleProps) {
   // Frozen at mount on purpose (see `instant` doc above) — this bubble either
@@ -80,6 +93,7 @@ export function SpeechBubble({
       // Already showing the full line as of mount — still notify a caller
       // waiting on "Robu's done talking" instead of leaving it to fire only
       // for the animated case.
+      onTextTyped?.();
       onTypingComplete?.();
       return;
     }
@@ -119,7 +133,10 @@ export function SpeechBubble({
           Number.isFinite(audio.duration) && audio.duration > 0
             ? audio.duration * 1000
             : text.length * TYPE_SPEED_MS;
-        typeOver(durationMs, () => {});
+        // `onTextTyped` fires here, as soon as the characters themselves
+        // catch up — independent of `onTypingComplete` below, which still
+        // waits for the audio's own "ended" event.
+        typeOver(durationMs, () => onTextTyped?.());
         // Safety net, mirroring the flow's own Robu-intro fallback: if the
         // audio stalls and its "ended" event never fires, don't strand the
         // caller waiting on it forever.
@@ -143,7 +160,10 @@ export function SpeechBubble({
       const onUnplayable = () => {
         if (started || cancelled) return;
         started = true;
-        typeOver(text.length * TYPE_SPEED_MS, () => onTypingComplete?.());
+        typeOver(text.length * TYPE_SPEED_MS, () => {
+          onTextTyped?.();
+          onTypingComplete?.();
+        });
       };
 
       audio.addEventListener("loadedmetadata", begin);
@@ -162,17 +182,31 @@ export function SpeechBubble({
       };
     }
 
-    typeOver(text.length * TYPE_SPEED_MS, () => onTypingComplete?.());
+    typeOver(text.length * TYPE_SPEED_MS, () => {
+      onTextTyped?.();
+      onTypingComplete?.();
+    });
     return () => {
       cancelled = true;
       window.clearInterval(charTimer);
     };
-    // onTypingComplete intentionally excluded — callers pass a fresh inline
-    // function each render, and this typewriter should only ever run once
-    // per (text, skipTyping, audioSrc) pair, not restart because that
-    // identity changed.
+    // onTypingComplete/onTextTyped intentionally excluded — callers pass a
+    // fresh inline function each render, and this typewriter should only
+    // ever run once per (text, skipTyping, audioSrc) pair, not restart
+    // because that identity changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, skipTyping, audioSrc]);
+
+  if (size === "plain") {
+    return (
+      <>
+        {renderTyped(shown, text, highlight)}
+        {stillTyping && (
+          <span className="ml-0.5 inline-block h-[0.9em] w-0.5 animate-pulse bg-primary align-middle" />
+        )}
+      </>
+    );
+  }
 
   if (size === "heading") {
     return (

@@ -26,6 +26,16 @@ interface RobuSaysProps {
   registerAnchor: (el: HTMLDivElement | null) => void;
   robuClassName?: string;
   className?: string;
+  /** Forwarded straight to SpeechBubble — fires once Robu's line is fully
+   * shown (immediately for `instant`, otherwise on the typewriter's/audio's
+   * own completion). Lets a caller react to "Robu's done talking", e.g.
+   * highlighting something else on screen only once he's finished saying it. */
+  onTypingComplete?: () => void;
+  /** Forwarded straight to SpeechBubble — fires as soon as Robu's line
+   * finishes *appearing*, even for a voiced line whose audio is still
+   * playing. Use this (not `onTypingComplete`) for a caller that should
+   * react to the text animation alone, not the voice line. */
+  onTextTyped?: () => void;
   /** "heading" (default) — this is a real page heading, styled bold and
    * plain like every other screen's, not a chat bubble. Pass "lg" for a
    * screen whose Robu line is short enough to stay an actual bubble instead
@@ -57,6 +67,8 @@ export function RobuSays({
   className,
   size = "heading",
   audioSrc,
+  onTypingComplete,
+  onTextTyped,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -111,6 +123,8 @@ export function RobuSays({
           size={size}
           tailCorner={tailCorner}
           audioSrc={audioSrc}
+          onTypingComplete={onTypingComplete}
+          onTextTyped={onTextTyped}
         />
       </div>
     </div>
