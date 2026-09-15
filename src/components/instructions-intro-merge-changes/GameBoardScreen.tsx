@@ -97,7 +97,7 @@ export function GameBoardScreen({
   }, [success, onSolvedChange]);
 
   return (
-    <div className="flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center">
+    <div className="flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center-safe">
       {/* ── Header — Robu stands here for the first beat (same arrival every
           other screen gets), then leaves for the board once he joins the
           game; his icon un-reserves that space the instant he does, so the
@@ -129,7 +129,11 @@ export function GameBoardScreen({
           <motion.div
             layout
             transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
-            className={`min-w-0 ${ROBU_TRAILING_GAP_PULL}`}
+            // `lg:` re-tuned for this row's own box, which *shrinks* at
+            // `lg:` (160px, down from 336px at `md:`) instead of growing —
+            // the shared pull's `md:` value would way over-pull a box that
+            // much smaller and drag the bubble into Robu himself.
+            className={`min-w-0 ${ROBU_TRAILING_GAP_PULL} lg:-ml-10`}
           >
             <SpeechBubble
               text={`${slide.highlightWord} ${slide.title}`}

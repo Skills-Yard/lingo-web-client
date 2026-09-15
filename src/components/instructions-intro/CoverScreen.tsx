@@ -217,13 +217,18 @@ export function CoverScreen({
             {robu}
 
             {isReveal && (
-              // `md:min-w-0 md:flex-1` unconditionally (not just once
-              // `revealed`): without it the bubble's own max-width utility
-              // sizes it to its content regardless of how much room Robu's
-              // (much wider than his art) box actually leaves in the row,
-              // which let it run into the illustration column on the right.
+              // `min-w-0` unconditionally (not just at `lg:`): a flex item's
+              // default `min-width: auto` refuses to shrink below its
+              // content's own unwrapped width, which — now that the bubble
+              // text scales up to `text-4xl` — is wide enough to overflow
+              // the viewport below `lg:` instead of wrapping inside the
+              // bubble's own max-width. `lg:flex-1` (only at `lg:`, where
+              // the row goes single-line/nowrap) additionally sizes this to
+              // fill whatever room Robu's (much wider than his art) box
+              // actually leaves, so it doesn't run into the illustration
+              // column on the right.
               <div
-                className={`relative lg:-ml-6 lg:min-w-0 lg:flex-1 ${bubbleSideOrder}`}
+                className={`relative min-w-0 lg:-ml-6 lg:flex-1 ${bubbleSideOrder}`}
               >
                 <AnimatePresence mode="popLayout" initial={false}>
                   <motion.div

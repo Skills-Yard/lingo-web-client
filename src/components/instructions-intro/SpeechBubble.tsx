@@ -72,7 +72,7 @@ export function SpeechBubble({
   if (size === "heading") {
     return (
       <p
-        className={`animate-pop-in text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl md:text-3xl ${className ?? ""}`}
+        className={`animate-pop-in font-semibold leading-tight tracking-tight text-foreground text-sm sm:text-base md:text-xl lg:text-2xl ${className ?? ""}`}
       >
         {renderTyped(shown, text, highlight)}
         {stillTyping && (
@@ -86,7 +86,7 @@ export function SpeechBubble({
     size === "lg"
       ? "max-w-[72vw] px-4 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
       : "max-w-[58vw] px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
-  const textSize = size === "lg" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-[13px] sm:text-sm";
+  const textSize = "text-sm sm:text-base md:text-xl lg:text-2xl";
 
   return (
     <div

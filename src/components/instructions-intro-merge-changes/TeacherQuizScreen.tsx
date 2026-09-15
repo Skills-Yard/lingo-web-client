@@ -32,7 +32,7 @@ export function TeacherQuizScreen({
     // own box (up to 336px at `md:`, via RobuSays' shared default) is wider
     // than a `md:grid-cols-2` column leaves room for between 768-1023px —
     // staying single-column that much longer avoids the overlap.
-    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:items-center lg:min-h-full lg:content-center">
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:items-center-safe lg:min-h-full lg:content-center-safe">
       <RobuSays
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.highlightWord}
@@ -40,13 +40,16 @@ export function TeacherQuizScreen({
         // Shrunk below `lg:` (not the shared default, which reaches 336px by
         // `md:`) — see the grid comment above.
         robuClassName="h-20 w-20 sm:h-28 sm:w-28 md:h-32 md:w-32 lg:h-40 lg:w-40"
+        // Re-tuned for this screen's own (smaller than default) box — see
+        // RobuSays' own doc comment on `robuGapPull`.
+        robuGapPull="-ml-5 sm:-ml-7 md:-ml-8 lg:-ml-10"
         className="lg:col-start-1 lg:row-start-1"
         registerAnchor={registerAnchor}
       />
 
       <TeacherIllustration
         className="h-64 lg:h-80 lg:col-start-1 lg:row-start-2"
-        fit="cover"
+        fit="contain"
         imageLight="/images/answerImgWhite.png"
         imageDark="/images/answerImgBlack.png"
       />

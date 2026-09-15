@@ -16,11 +16,13 @@ interface RobuSaysProps {
   side?: "left" | "right";
   /** Overrides `side` from `lg:` up only — phones/tablets keep whatever
    * `side` says. "left"/"right" just flips which side Robu stands on once
-   * there's more room; "above" stacks him *below* the text instead of
-   * beside it (text first, Robu under it) for screens where that reads
-   * better/takes less width at that size. Leave unset to keep the same
-   * `side` arrangement at every width. */
-  sideLg?: "left" | "right" | "above";
+   * there's more room. Leave unset to keep the same `side` arrangement at
+   * every width. (Doesn't accept "above" — see `stacked` for that.) */
+  sideLg?: "left" | "right";
+  /** Stacks Robu *below* the text instead of beside it (text first, Robu
+   * under it) at every width, not just once there's more room — for screens
+   * whose heading reads better as a stand-alone line above him everywhere. */
+  stacked?: boolean;
   /** Center the row instead of letting it hug the text width — for screens
    * whose heading is centered on mobile. */
   center?: boolean;
@@ -45,6 +47,7 @@ export function RobuSays({
   instant,
   side = "left",
   sideLg,
+  stacked = false,
   center = true,
   registerAnchor,
   robuClassName = ROBU_DEFAULT_SIZE,
@@ -53,65 +56,48 @@ export function RobuSays({
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
-  // `lg:` override of the row's own direction — "above" reverses to a
-  // column so the bubble (first in the DOM) ends up on top and Robu (second)
-  // underneath it; "left"/"right" just flips the row instead. Unset (no
-  // `sideLg`) leaves `side`'s own direction alone all the way up.
-  const rowDirectionLg =
-    sideLg === "above"
-      ? "lg:flex-col-reverse lg:flex-nowrap lg:items-center"
-      : sideLg === "left"
-        ? "lg:flex-row lg:flex-nowrap"
-        : sideLg === "right"
-          ? "lg:flex-row-reverse lg:flex-nowrap"
-          : "";
+  // `stacked` reverses to a column at every width, so the bubble (first in
+  // the DOM) ends up on top and Robu (second) underneath it — unlike
+  // `sideLg`, it isn't gated to `lg:`: a stacked heading reads fine at any
+  // size for the screens that ask for it.
+  const rowDirection = stacked
+    ? "flex-col-reverse flex-nowrap items-center"
+    : `flex-wrap items-center md:items-start ${side === "right" ? "flex-row-reverse" : ""}`;
 
-  // The side-by-side arrangement pulls the bubble in with a negative margin
-  // to sit closer to Robu's own (mostly empty) anchor box — moot once
-  // `sideLg` takes over at `lg:` (stacked, or Robu himself usually shrinks
-  // there too), so it's zeroed out there instead of carrying over a pull
-  // meant for the mobile arrangement.
-  const bubbleMarginLg = sideLg ? "lg:ml-0 lg:mr-0" : "";
+  // `lg:` override of the row's own direction — moot once `stacked` already
+  // applies the column layout at every width.
+  const rowDirectionLg =
+    !stacked && sideLg === "left"
+      ? "lg:flex-row lg:flex-nowrap"
+      : !stacked && sideLg === "right"
+        ? "lg:flex-row-reverse lg:flex-nowrap"
+        : "";
 
   return (
     <div
-      // `flex-wrap` (+ centered on every line): at Robu's shared default
-      // size, Robu + this bubble (its widest of any screen, `size="lg"`)
-      // don't reliably fit side by side on a narrow phone — instead of
-      // shrinking Robu just for this screen (breaking the "same size
-      // everywhere" the mascot's going for) or letting the bubble run off
-      // the edge, the bubble simply drops to its own line underneath him
-      // when there isn't room beside him. `pt`/`items`/`gap` below `md:`
-      // are tighter (phones get less breathing room here) than from `md:`
-      // up, where the row reverts to its original, more spaced-out values.
-      className={`animate-fade-in flex w-full flex-wrap pt-0 items-center justify-center gap-2 md:pt-2 md:items-start md:gap-1 ${
-        side === "right" ? "flex-row-reverse" : ""
-      } ${rowDirectionLg} ${className ?? ""}`}
+      // `pt`/`gap` below `md:` are tighter (phones get less breathing room
+      // here) than from `md:` up, where the row reverts to its original,
+      // more spaced-out values.
+      className={`animate-fade-in flex w-full pt-0 justify-center gap-2 md:pt-2 md:gap-1 ${rowDirection} ${rowDirectionLg} ${className ?? ""}`}
     >
       <RobuAnchor
         registerAnchor={registerAnchor}
         className={`shrink-0 ${robuClassName}`}
       />
       <div
-        // `min-w-0 flex-auto` (not `shrink-0`): a bubble that refuses to
-        // shrink below its own max-width overflows whenever its row sits
-        // inside a column narrower than that (TeacherIntroScreen's left
-        // column, ExamplesGridScreen's `md:w-56` row) — letting it shrink
-        // instead keeps it inside whatever room it's actually given. `-auto`
-        // rather than `flex-1` (basis `0%`) matters here specifically: a
-        // `0%` basis tells the *wrap* algorithm this item always fits on
-        // the current line (so it never actually wraps below Robu, just
-        // gets squeezed to whatever's left over — sometimes only a handful
-        // of px) — `auto` sizes that decision on its real content first, so
-        // it only stays beside Robu when there's genuinely room for it, and
-        // drops to its own full-width line otherwise. Its own `w-max`
-        // sizing (see SpeechBubble) still keeps it tight to its text rather
-        // than stretching to fill the line when there's room to spare.
-        className={`min-w-0 flex-auto ${
-          side === "right"
-            ? "-mr-12 sm:-mr-4 md:mr-0"
-            : "-ml-12 sm:-ml-4 md:ml-0"
-        } ${bubbleMarginLg}`}
+        // `min-w-0`, no grow (default `flex: 0 1 auto`, not `flex-auto`'s
+        // `1 1 auto`): the bubble only needs to *shrink* below its own
+        // max-width when the row sits inside a column narrower than that
+        // (TeacherIntroScreen's left column, ExamplesGridScreen's `md:w-56`
+        // row) — letting it grow too used to stretch this wrapper across
+        // whatever space was left over on the line, stranding the actual
+        // (`w-max`) bubble at its far edge, away from Robu (or, combined
+        // with the pull-margin that used to compensate for that gap,
+        // dragging it back the *other* way into overlapping him whenever
+        // the row had little or no leftover space to begin with). The row's
+        // own `gap-2`/`gap-1` is enough spacing now that this wrapper never
+        // over-grows, so no pull-margin is needed either.
+        className="min-w-0"
       >
         <SpeechBubble
           text={text}

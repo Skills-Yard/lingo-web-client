@@ -32,17 +32,15 @@ export function TeacherQuizScreen({
     // own box (ROBU_DEFAULT_SIZE, sized to match every other screen's
     // resting Robu) is wider than a `md:grid-cols-2` column leaves room for
     // between 768-1023px, which split him away from his own speech bubble.
-    // RobuSays' side-switch (`sideLg`) already only kicks in at `lg:`, so
-    // this now stays consistent with it instead of flipping to a 2-col grid
-    // a breakpoint early. Below `lg:`, this renders exactly like it already
-    // did below `md:` (single-column stack).
+    // Below `lg:`, this renders exactly like it already did below `md:`
+    // (single-column stack, Robu on the left of his own bubble the whole
+    // way through).
     <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-x-10 lg:items-center lg:min-h-full lg:content-center">
       <RobuSays
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.highlightWord}
         instant={instantSpeech}
-        side="right"
-        sideLg="left"
+        side="left"
         // Shrunk below `lg:` (not the shared ROBU_DEFAULT_SIZE, which
         // reaches 336px by `md:`) — that box's own mostly-empty padding was
         // leaving a big blank gap between the bubble and the illustration

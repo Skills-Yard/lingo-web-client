@@ -140,11 +140,10 @@ export function InstructionsIntroFlow({
         setBoxTapped(false);
         return;
       }
-      // No separate "undo the reveal" stop any more: the reveal itself is no
-      // longer a manual step (see `onIntroTypingComplete`) — it fires on its
-      // own the instant Robu's line finishes typing, so there's nothing
-      // stable to rewind back to between screen 1 and the box being tapped.
-      // Back here falls straight through to leaving the screen entirely.
+      if (coverRevealed) {
+        setCoverRevealed(false);
+        return;
+      }
     }
     if (isQuiz) {
       if (checked) {
@@ -343,7 +342,16 @@ export function InstructionsIntroFlow({
             onIntroComplete={() => setRobuIntroDone(true)}
             skipIntro={skipRobuIntro}
           />
-          <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
+          {/* `justify-center-safe`, not plain `justify-center`: on a short
+              enough viewport a slide's content can end up taller than this
+              scrollable area. Plain `center` splits that overflow evenly
+              above *and* below — and the half above is genuinely
+              unreachable by scrolling (browsers don't let you scroll "past"
+              a centered block's start edge) — hiding Robu/the heading while
+              only the middle of the slide is visible. `-safe` falls back to
+              top alignment the moment it doesn't fit, so any overflow lands
+              at the bottom where scrolling can actually reach it. */}
+          <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center-safe">
             {(slide.kind === "cover" || slide.kind === "cover-reveal") && (
               // One call site for both steps — see CoverScreen's doc comment:
               // this is what keeps its layout mounted (no remount) across them.
@@ -361,11 +369,6 @@ export function InstructionsIntroFlow({
                 // own transition. The header's own Back button is unaffected
                 // — it still just closes the modal in place (see goBack).
                 onCloseModal={goNext}
-                // Collapses screen 2's old two-Next-press flow into one: the
-                // reveal card pops in on its own the moment Robu's intro line
-                // finishes typing, instead of waiting on a manual press that
-                // would only ever do the same thing.
-                onIntroTypingComplete={() => setCoverRevealed(true)}
                 instantSpeech={instantSpeech}
                 registerAnchor={setRobuAnchorEl}
                 robuIntroDone={robuIntroDone}

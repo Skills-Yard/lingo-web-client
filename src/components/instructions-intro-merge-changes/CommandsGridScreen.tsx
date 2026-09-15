@@ -33,7 +33,7 @@ export function CommandsGridScreen({ slide, onCommand }: CommandsGridScreenProps
           : "grid-cols-2 md:grid-cols-4";
 
   return (
-    <div className="flex flex-col gap-5 md:mx-auto md:max-w-2xl md:min-h-full md:justify-center">
+    <div className="flex flex-col gap-5 md:mx-auto md:max-w-2xl md:min-h-full md:justify-center-safe">
       {/* ── Header — Frame 60 style: "Let's" accent + rest in ink ── */}
       <div className="text-center md:text-left">
         <h1 className="text-2xl font-semibold leading-[1.34] tracking-tight text-[#2C2C2C] dark:text-white">

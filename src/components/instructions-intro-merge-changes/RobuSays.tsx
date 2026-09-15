@@ -21,6 +21,10 @@ interface RobuSaysProps {
   /** Center the row instead of letting it hug the text width — for screens
    * whose heading is centered on mobile. */
   center?: boolean;
+  /** Stacks Robu *below* the text instead of beside it (text first, Robu
+   * under it), at every width — for screens whose heading reads better as a
+   * stand-alone line above him rather than sharing a row with him. */
+  stacked?: boolean;
   /** Registers where Robu (a single persistent mascot — see RobuStage) should
    * stand for this screen. */
   registerAnchor: (el: HTMLDivElement | null) => void;
@@ -31,6 +35,17 @@ interface RobuSaysProps {
    * screen whose Robu line is short enough to stay an actual bubble instead
    * (e.g. RewardScreen's "CLAIM reward"). */
   size?: "heading" | "lg";
+  /** Overrides `size="heading"`'s own text-size classes — see
+   * `SpeechBubble`'s own doc comment on the same prop. */
+  headingTextClassName?: string;
+  /** Overrides `ROBU_TRAILING_GAP_PULL` for a screen that also overrides
+   * `robuClassName` to something smaller than the shared default — the
+   * default pull is sized (as a % of Robu's own box) for `ROBU_DEFAULT_SIZE`
+   * specifically, so a smaller custom box needs its own, smaller pull or the
+   * heading gets dragged in far enough to overlap him instead of just
+   * closing his own box's dead space. Only matters for `size="heading"` with
+   * `side="left"` — the only branch that reads it. */
+  robuGapPull?: string;
 }
 
 /**
@@ -46,29 +61,35 @@ export function RobuSays({
   instant,
   side = "left",
   center = true,
+  stacked = false,
   registerAnchor,
   robuClassName = ROBU_DEFAULT_SIZE,
   className,
   size = "heading",
+  headingTextClassName,
+  robuGapPull = ROBU_TRAILING_GAP_PULL,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
+  // `stacked` reverses to a column at every width, so the bubble (first in
+  // the DOM) ends up on top and Robu (second) underneath it. Otherwise:
+  // `flex-wrap` only for `size="lg"` (+ centered on every line) — at Robu's
+  // shared default size, Robu + a bounded `size="lg"` bubble don't reliably
+  // fit side by side on a narrow phone — instead of shrinking Robu just for
+  // this screen (breaking the "same size everywhere" the mascot's going
+  // for) or letting the bubble run off the edge, the bubble simply drops to
+  // its own line underneath him when there isn't room beside him. A
+  // `size="heading"` line has no such bound — it already wraps its own text
+  // within the row (see that branch below) — so forcing the same flex-wrap
+  // here would drop the *whole row* (Robu included) onto its own centered
+  // line instead of just letting the heading wrap in place beside him.
+  const rowDirection = stacked
+    ? "flex-col-reverse flex-nowrap"
+    : `${size === "lg" ? "flex-wrap" : ""} ${side === "right" ? "flex-row-reverse" : ""}`;
+
   return (
     <div
-      // `flex-wrap` only for `size="lg"` (+ centered on every line): at
-      // Robu's shared default size, Robu + a bounded `size="lg"` bubble
-      // don't reliably fit side by side on a narrow phone — instead of
-      // shrinking Robu just for this screen (breaking the "same size
-      // everywhere" the mascot's going for) or letting the bubble run off
-      // the edge, the bubble simply drops to its own line underneath him
-      // when there isn't room beside him. A `size="heading"` line has no
-      // such bound — it already wraps its own text within the row (see
-      // that branch below) — so forcing the same flex-wrap here would drop
-      // the *whole row* (Robu included) onto its own centered line instead
-      // of just letting the heading wrap in place beside him.
-      className={`animate-fade-in flex w-full pt-0 items-center justify-center gap-2 ${
-        size === "lg" ? "flex-wrap" : ""
-      } ${side === "right" ? "flex-row-reverse" : ""} ${className ?? ""}`}
+      className={`animate-fade-in flex w-full pt-0 items-center justify-center gap-2 ${rowDirection} ${className ?? ""}`}
     >
       <RobuAnchor
         registerAnchor={registerAnchor}
@@ -77,23 +98,29 @@ export function RobuSays({
       <div
         className={`pb-6
           ${
-            size === "lg"
-              ? // The tight negative margin pulls a small chat bubble in close
-                // to Robu — tuned for `size="lg"`'s bounded width.
-                side === "right"
-                ? "-mr-12 shrink-0 sm:-mr-4 md:mr-0"
-                : "-ml-12 shrink-0 sm:-ml-4 md:ml-0"
-              : side === "right"
-                ? // Untuned for `side="right"` (no screen uses it today) —
-                  // kept as the pre-existing no-pull fallback rather than
-                  // guessing a mirrored offset against unverified layout.
-                  "min-w-0"
-                : // `size="heading"` has no bounded width (it just wraps its
-                  // own text within the row, see below), but Robu's own
-                  // Rive artwork sits well inside its square anchor box —
-                  // see ROBU_TRAILING_GAP_PULL's own comment — leaving a big
-                  // dead strip between him and this text unless pulled in.
-                  `min-w-0 ${ROBU_TRAILING_GAP_PULL}`
+            stacked
+              ? // No horizontal pull needed once stacked — the row's own
+                // `gap-2` already spaces the bubble from Robu below it.
+                "min-w-0"
+              : size === "lg"
+                ? // The tight negative margin pulls a small chat bubble in close
+                  // to Robu — tuned for `size="lg"`'s bounded width.
+                  side === "right"
+                  ? "-mr-12 shrink-0 sm:-mr-4 md:mr-0"
+                  : "-ml-12 shrink-0 sm:-ml-4 md:ml-0"
+                : side === "right"
+                  ? // Untuned for `side="right"` (no screen uses it today) —
+                    // kept as the pre-existing no-pull fallback rather than
+                    // guessing a mirrored offset against unverified layout.
+                    "min-w-0"
+                  : // `size="heading"` has no bounded width (it just wraps its
+                    // own text within the row, see below), but Robu's own
+                    // Rive artwork sits well inside its square anchor box —
+                    // see ROBU_TRAILING_GAP_PULL's own comment — leaving a big
+                    // dead strip between him and this text unless pulled in.
+                    // `robuGapPull` lets a caller with a smaller custom
+                    // `robuClassName` swap in a pull sized for its own box.
+                    `min-w-0 ${robuGapPull}`
           }
         `}
       >
@@ -102,6 +129,7 @@ export function RobuSays({
           highlight={highlight}
           instant={instant}
           size={size}
+          headingTextClassName={headingTextClassName}
           tailCorner={tailCorner}
         />
       </div>

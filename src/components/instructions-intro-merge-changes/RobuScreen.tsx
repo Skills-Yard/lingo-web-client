@@ -11,7 +11,7 @@ export function RobuScreen({
   registerAnchor: (el: HTMLDivElement | null) => void;
 }) {
   return (
-    <div className="flex flex-col items-center gap-6 text-center md:grid md:grid-cols-2 md:items-center md:gap-x-12 md:text-left md:min-h-full">
+    <div className="flex flex-col items-center gap-6 text-center md:grid md:grid-cols-2 md:items-center-safe md:gap-x-12 md:text-left md:min-h-full">
       {/* ── Copy — stays first in the DOM (still stacked above the mascot on
           mobile, unchanged there), but `md:order-2` now puts it in the
           *right* column on desktop — Robu moves to the left column

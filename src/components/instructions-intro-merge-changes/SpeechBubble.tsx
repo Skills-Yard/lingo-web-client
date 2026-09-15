@@ -22,6 +22,10 @@ interface SpeechBubbleProps {
    * moment that wants to read as a headline, not a chat bubble, while still
    * reusing the exact same typewriter behavior. */
   size?: "sm" | "lg" | "heading";
+  /** Overrides `size="heading"`'s own responsive text-size classes — for a
+   * screen that needs its heading to match another layout's own type scale
+   * instead of the shared big-headline default. */
+  headingTextClassName?: string;
   className?: string;
   /** Fired once the full line is showing — right away for `instant`, or the
    * moment the typewriter reaches the last character otherwise. Lets a
@@ -44,6 +48,7 @@ export function SpeechBubble({
   tailCorner = "bottom-right",
   instant = false,
   size = "sm",
+  headingTextClassName,
   className,
   onTypingComplete,
 }: SpeechBubbleProps) {
@@ -89,7 +94,7 @@ export function SpeechBubble({
   if (size === "heading") {
     return (
       <p
-        className={`animate-pop-in text-xl font-semibold leading-tight tracking-tight text-foreground sm:text-2xl md:text-3xl ${className ?? ""}`}
+        className={`animate-pop-in font-semibold leading-tight tracking-tight text-foreground ${headingTextClassName ?? "text-xl sm:text-2xl md:text-3xl lg:text-4xl"} ${className ?? ""}`}
       >
         {renderTyped(shown, text, highlight)}
         {stillTyping && (
@@ -103,7 +108,7 @@ export function SpeechBubble({
     size === "lg"
       ? "max-w-[72vw] px-4 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
       : "max-w-[58vw] px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
-  const textSize = size === "lg" ? "text-sm sm:text-base" : "text-[13px] sm:text-sm";
+  const textSize = "text-xl sm:text-2xl md:text-3xl lg:text-4xl";
 
   return (
     <div
