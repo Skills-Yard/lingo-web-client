@@ -215,7 +215,20 @@ export function CoverScreen({
         {/* Screen 1 — greeting reads as a plain heading beside Robu (no
             bubble chrome), matching every other current-branch screen's
             RobuSays default. Screen 2 keeps its own bubble treatment below. */}
-        <div className="flex w-full items-center justify-center">
+        <div
+          className={`flex w-full items-center ${
+            // Centered while it's Robu alone (his one-shot entrance, or
+            // screen 2 before the greeting text ever joins him here) — but
+            // once the greeting is actually typing out beside him,
+            // `justify-center` would recompute the row's center on every
+            // keystroke (the typewriter grows `text` one character at a
+            // time) and visibly slide both Robu and the text sideways.
+            // `justify-start` anchors them to a fixed left edge instead, so
+            // the row only ever grows to the right as more of the line
+            // appears.
+            !isReveal && !entering ? "justify-start" : "justify-center"
+          }`}
+        >
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
             // in alongside a Robu that's still arriving.
@@ -260,10 +273,24 @@ export function CoverScreen({
           // `onIntroTypingComplete` above) now waits for the audio to
           // actually finish instead of just the text catching up to it.
           audioSrc="/audios/screen_2_audio.mpeg"
+          // `self-start` (overriding the outer column's own `items-center`)
+          // + a fixed left padding matching the title/description block
+          // right below it: left as a plain flex child here, this heading
+          // would recenter itself against the column on every keystroke
+          // (its own shrink-to-fit width growing as the typewriter adds
+          // characters), sliding sideways instead of holding still. Pinning
+          // it to a fixed left edge means it only ever grows rightward.
+          className="self-start px-4 sm:px-6"
         />
       )}
       {isReveal && revealed && (
-        <div className="relative z-10 order-3 flex w-full items-center justify-center gap-0">
+        <div
+          // `justify-start` (not `-center`): this bubble types out
+          // `slide.robuPrompt` too, so a centered row would recompute its
+          // center — and slide Robu + the bubble sideways — on every
+          // keystroke, same as the rows above.
+          className="relative z-10 order-3 flex w-full items-center justify-start gap-0"
+        >
           {robu}
           <div className={`relative mr-6 ${bubbleSideOrder}`}>
             <AnimatePresence mode="popLayout" initial={false}>
