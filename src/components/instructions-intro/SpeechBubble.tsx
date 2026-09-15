@@ -130,11 +130,11 @@ export function SpeechBubble({
       stopTalking();
     };
 
-    // Runs the typewriter to completion over `durationMs`, then calls
-    // `onDone` — shared by both the plain and audio-synced paths below so
-    // there's exactly one place pacing `shown`.
-    const typeOver = (durationMs: number, onDone: () => void) => {
-      const perCharMs = Math.max(durationMs / text.length, 10);
+    // Runs the typewriter to completion at `speedMs`/char, then calls
+    // `onDone` — shared by both the plain and voiced paths below so there's
+    // exactly one place pacing `shown`.
+    const typeOver = (onDone: () => void) => {
+      const perCharMs = Math.max(speedMs, 10);
       let i = 0;
       charTimer = window.setInterval(() => {
         if (cancelled) return;
@@ -168,11 +168,7 @@ export function SpeechBubble({
         const durationMs =
           Number.isFinite(audio.duration) && audio.duration > 0
             ? audio.duration * 1000
-            : text.length * TYPE_SPEED_MS;
-        typeOver(durationMs, () => {});
-        // Safety net, mirroring the flow's own Robu-intro fallback: if the
-        // audio stalls and its "ended" event never fires, don't strand the
-        // caller waiting on it forever.
+            : 15000;
         fallbackTimer = window.setTimeout(() => {
           if (!cancelled) onTypingComplete?.();
         }, durationMs + 3000);
@@ -194,7 +190,7 @@ export function SpeechBubble({
       const onUnplayable = () => {
         if (started || cancelled) return;
         started = true;
-        typeOver(text.length * TYPE_SPEED_MS, () => onTypingComplete?.());
+        typeOver(() => onTypingComplete?.());
       };
 
       audio.addEventListener("loadedmetadata", begin);
@@ -214,7 +210,7 @@ export function SpeechBubble({
       };
     }
 
-    typeOver(text.length * TYPE_SPEED_MS, () => onTypingComplete?.());
+    typeOver(() => onTypingComplete?.());
     return () => {
       cancelled = true;
       window.clearInterval(charTimer);
@@ -222,10 +218,10 @@ export function SpeechBubble({
     };
     // onTypingComplete intentionally excluded — callers pass a fresh inline
     // function each render, and this typewriter should only ever run once
-    // per (text, skipTyping, audioSrc) pair, not restart because that
-    // identity changed.
+    // per (text, skipTyping, audioSrc, speedMs) pair, not restart because
+    // that identity changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, skipTyping, audioSrc]);
+  }, [text, skipTyping, audioSrc, speedMs]);
 
   if (size === "heading") {
     return (

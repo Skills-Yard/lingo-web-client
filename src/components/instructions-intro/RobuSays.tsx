@@ -79,6 +79,8 @@ export function RobuSays({
   className,
   size = "heading",
   audioSrc,
+  speedMs,
+  onTypingComplete,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -133,6 +135,8 @@ export function RobuSays({
           size={size}
           tailCorner={tailCorner}
           audioSrc={audioSrc}
+          speedMs={speedMs}
+          onTypingComplete={onTypingComplete}
         />
       </div>
     </div>
