@@ -1,6 +1,13 @@
-import { InstructionsIntroFlow } from "@/components/instructions-intro/InstructionsIntroFlow";
+import { CombinedClient } from "@/components/combined/CombinedClient";
 
-export default async function InstructionsIntroPage({
+/**
+ * Interleaved review of both branches' designs for the instructions-intro
+ * flow: each screen shows feat/himanshu's design immediately followed by
+ * the current branch's design, before moving to the next screen — see
+ * `CombinedClient`'s doc comment. `/review` still exists separately for
+ * comparing the two as full, manually-switchable flows.
+ */
+export default async function HomePage({
   searchParams,
 }: {
   searchParams: Promise<{ step?: string }>;
@@ -9,8 +16,8 @@ export default async function InstructionsIntroPage({
   const initialIndex = Number(step);
 
   return (
-    <InstructionsIntroFlow
-      initialIndex={Number.isInteger(initialIndex) && initialIndex >= 0 ? initialIndex : 0}
+    <CombinedClient
+      initialScreenIndex={Number.isInteger(initialIndex) && initialIndex >= 0 ? initialIndex : 0}
     />
   );
 }
