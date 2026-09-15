@@ -28,6 +28,11 @@ interface RobuSaysProps {
    * since playing another screen's line would be wrong for every screen but
    * one. */
   audioSrc?: string;
+  /** Forwarded straight to SpeechBubble's own `speedMs` — pass a smaller
+   * number to type this screen's line faster, or a larger one to slow it
+   * down. Independent of `audioSrc`: it never stretches to match a voice
+   * line's length (see SpeechBubble's doc for why). */
+  speedMs?: number;
 }
 
 /**
@@ -47,6 +52,7 @@ export function RobuSays({
   robuClassName = ROBU_DEFAULT_SIZE,
   className,
   audioSrc,
+  speedMs,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -85,6 +91,7 @@ export function RobuSays({
           size="lg"
           tailCorner={tailCorner}
           audioSrc={audioSrc}
+          speedMs={speedMs}
         />
       </div>
     </div>

@@ -26,8 +26,9 @@ interface SpeechBubbleProps {
 }
 
 /** How long each character takes to appear, in ms. */
-const TYPE_SPEED_MS = 20;
+const TYPE_SPEED_MS = 40;
 const CHARS_PER_TICK = 3;
+
 
 /**
  * A small talk bubble that types `text` out character by character, cursor and

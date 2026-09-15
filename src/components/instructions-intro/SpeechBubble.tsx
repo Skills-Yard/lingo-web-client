@@ -29,22 +29,33 @@ interface SpeechBubbleProps {
    * gating that on a separate manual step. */
   onTypingComplete?: () => void;
   /** When set, this line is voiced: the audio starts playing the moment this
-   * bubble mounts, the typewriter is re-paced to land its last character
-   * exactly when the audio ends (instead of the fixed `TYPE_SPEED_MS`), and
-   * `onTypingComplete` fires on the audio's own "ended" event rather than on
-   * the last character — so a caller gating an auto-advance on it (see
-   * CoverScreen's screen 2) holds until the voice line has actually finished
-   * playing, not just once the text has finished appearing. Ignored for
-   * `instant` bubbles (a revisit never replays the line). Falls back to the
-   * plain character-paced typewriter — completing on the last character, no
-   * audio — if the asset fails to load or autoplay is blocked, so this never
-   * strands the caller waiting on an "ended" event that'll never fire. */
+   * bubble mounts, and `onTypingComplete` fires on the audio's own "ended"
+   * event rather than on the last character — so a caller gating an
+   * auto-advance on it (see CoverScreen's screen 2) holds until the voice
+   * line has actually finished playing, not just once the text has finished
+   * appearing. The typewriter itself still runs at its own pace (`speedMs`)
+   * — it's deliberately *not* stretched to match the audio's length, since a
+   * short line under a long line of audio would otherwise crawl at a few
+   * characters a second; typing simply finishes early and the full line
+   * sits there for the rest of the clip. Ignored for `instant` bubbles (a
+   * revisit never replays the line). Falls back to the plain typewriter —
+   * completing on the last character, no audio — if the asset fails to load
+   * or autoplay is blocked, so this never strands the caller waiting on an
+   * "ended" event that'll never fire. */
   audioSrc?: string;
+  /** Milliseconds per character. Defaults to `TYPE_SPEED_MS` below — pass a
+   * smaller number for a faster typewriter (e.g. `20`) or a larger one to
+   * slow it down, per instance. Applies the same whether or not `audioSrc`
+   * is set (see that prop's doc — the two are independent: this paces how
+   * fast the letters appear, `audioSrc`'s own "ended" event decides when
+   * `onTypingComplete` fires). */
+  speedMs?: number;
 }
 
-/** How long each character takes to appear, in ms — the default pace, and
- * also the fallback pace for a voiced (`audioSrc`) bubble whose audio can't
- * play. */
+/** How long each character takes to appear, in ms, when a call site doesn't
+ * pass its own `speedMs`. To slow down or speed up *every* bubble at once,
+ * change this default; for one screen only, pass `speedMs` instead (see its
+ * doc above) rather than editing this constant. */
 const TYPE_SPEED_MS = 50;
 
 /**
@@ -61,6 +72,7 @@ export function SpeechBubble({
   className,
   onTypingComplete,
   audioSrc,
+  speedMs = TYPE_SPEED_MS,
 }: SpeechBubbleProps) {
   // Frozen at mount on purpose (see `instant` doc above) — this bubble either
   // types or doesn't for its whole life, never switching mid-animation.
@@ -87,11 +99,11 @@ export function SpeechBubble({
     let cancelled = false;
     let charTimer: number | undefined;
 
-    // Runs the typewriter to completion over `durationMs`, then calls
-    // `onDone` — shared by both the plain and audio-synced paths below so
-    // there's exactly one place pacing `shown`.
-    const typeOver = (durationMs: number, onDone: () => void) => {
-      const perCharMs = Math.max(durationMs / text.length, 10);
+    // Runs the typewriter to completion at `speedMs`/char, then calls
+    // `onDone` — shared by both the plain and voiced paths below so there's
+    // exactly one place pacing `shown`.
+    const typeOver = (onDone: () => void) => {
+      const perCharMs = Math.max(speedMs, 10);
       let i = 0;
       charTimer = window.setInterval(() => {
         if (cancelled) return;
@@ -110,19 +122,21 @@ export function SpeechBubble({
       let started = false;
       let fallbackTimer: number | undefined;
 
-      // Paces the typewriter to the audio's real duration once it's known,
-      // so the last character lands right as the line finishes playing.
+      // Starts the (independently-paced) typewriter the moment the audio's
+      // real duration is known — the two run side by side, not one stretched
+      // to fit the other.
       const begin = () => {
         if (started || cancelled) return;
         started = true;
+        typeOver(() => {});
+        // Safety net, mirroring the flow's own Robu-intro fallback: if the
+        // audio stalls and its "ended" event never fires, don't strand the
+        // caller waiting on it forever. Falls back to a generous flat delay
+        // when the duration itself never came through.
         const durationMs =
           Number.isFinite(audio.duration) && audio.duration > 0
             ? audio.duration * 1000
-            : text.length * TYPE_SPEED_MS;
-        typeOver(durationMs, () => {});
-        // Safety net, mirroring the flow's own Robu-intro fallback: if the
-        // audio stalls and its "ended" event never fires, don't strand the
-        // caller waiting on it forever.
+            : 15000;
         fallbackTimer = window.setTimeout(() => {
           if (!cancelled) onTypingComplete?.();
         }, durationMs + 3000);
@@ -143,7 +157,7 @@ export function SpeechBubble({
       const onUnplayable = () => {
         if (started || cancelled) return;
         started = true;
-        typeOver(text.length * TYPE_SPEED_MS, () => onTypingComplete?.());
+        typeOver(() => onTypingComplete?.());
       };
 
       audio.addEventListener("loadedmetadata", begin);
@@ -162,17 +176,17 @@ export function SpeechBubble({
       };
     }
 
-    typeOver(text.length * TYPE_SPEED_MS, () => onTypingComplete?.());
+    typeOver(() => onTypingComplete?.());
     return () => {
       cancelled = true;
       window.clearInterval(charTimer);
     };
     // onTypingComplete intentionally excluded — callers pass a fresh inline
     // function each render, and this typewriter should only ever run once
-    // per (text, skipTyping, audioSrc) pair, not restart because that
-    // identity changed.
+    // per (text, skipTyping, audioSrc, speedMs) pair, not restart because
+    // that identity changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, skipTyping, audioSrc]);
+  }, [text, skipTyping, audioSrc, speedMs]);
 
   if (size === "heading") {
     return (
