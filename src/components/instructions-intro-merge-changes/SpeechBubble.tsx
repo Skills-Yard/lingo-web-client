@@ -22,9 +22,12 @@ interface SpeechBubbleProps {
    * moment that wants to read as a headline, not a chat bubble, while still
    * reusing the exact same typewriter behavior. */
   size?: "sm" | "lg" | "heading";
-  /** Extra classes for the bubble itself, such as a wider max-width. */
-  bubbleClassName?: string;
   className?: string;
+  /** Fired once the full line is showing — right away for `instant`, or the
+   * moment the typewriter reaches the last character otherwise. Lets a
+   * caller auto-advance the instant Robu "finishes talking" instead of
+   * gating that on a separate manual step. */
+  onTypingComplete?: () => void;
 }
 
 /** How long each character takes to appear, in ms. */
@@ -41,8 +44,8 @@ export function SpeechBubble({
   tailCorner = "bottom-right",
   instant = false,
   size = "sm",
-  bubbleClassName,
   className,
+  onTypingComplete,
 }: SpeechBubbleProps) {
   // Frozen at mount on purpose (see `instant` doc above) — this bubble either
   // types or doesn't for its whole life, never switching mid-animation.
@@ -57,16 +60,30 @@ export function SpeechBubble({
   const stillTyping = shown.length < text.length;
 
   useEffect(() => {
-    if (!text || skipTyping) return;
+    if (!text) return;
+    if (skipTyping) {
+      // Already showing the full line as of mount — still notify a caller
+      // waiting on "Robu's done talking" instead of leaving it to fire only
+      // for the animated case.
+      onTypingComplete?.();
+      return;
+    }
 
     let i = 0;
     const timer = window.setInterval(() => {
       i += 1;
       setShown(text.slice(0, i));
-      if (i >= text.length) window.clearInterval(timer);
+      if (i >= text.length) {
+        window.clearInterval(timer);
+        onTypingComplete?.();
+      }
     }, TYPE_SPEED_MS);
 
     return () => window.clearInterval(timer);
+    // onTypingComplete intentionally excluded — callers pass a fresh inline
+    // function each render, and this typewriter should only ever run once
+    // per (text, skipTyping) pair, not restart because that identity changed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, skipTyping]);
 
   if (size === "heading") {
@@ -86,13 +103,13 @@ export function SpeechBubble({
     size === "lg"
       ? "max-w-[72vw] px-4 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
       : "max-w-[58vw] px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
-  const textSize = size === "lg" ? "text-sm sm:text-base md:text-xl lg:text-2xl" : "text-[13px] sm:text-sm";
+  const textSize = size === "lg" ? "text-sm sm:text-base" : "text-[13px] sm:text-sm";
 
   return (
     <div
-      className={`animate-pop-in relative w-max max-w-full rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${bubbleClassName ?? ""} ${className ?? ""}`}
+      className={`animate-pop-in relative w-max rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${className ?? ""}`}
     >
-      <p className={`whitespace-normal break-words font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}>
+      <p className={`font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}>
         {renderTyped(shown, text, highlight)}
         {stillTyping && (
           <span className="ml-0.5 inline-block h-[1em] w-0.5 animate-pulse bg-primary align-middle" />

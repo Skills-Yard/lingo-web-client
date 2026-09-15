@@ -172,9 +172,9 @@ export function CoverScreen({
         <div
           className={`relative top-2 z-10 flex-col w-full items-start justify-center gap-0 sm:gap-0  ${heroOrder} ${
             revealed
-              ? "min-h-0 py-0"
+              ? "min-h-0 pt-1 sm:pt-2 md:pt-0"
               : isReveal
-                ? "min-h-[15vh] sm:min-h-[30vh] sm:pt-6"
+                ? "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[30vh] md:pt-6"
                 : "min-h-[15vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
           } ${isReveal ? "lg:col-start-1 lg:row-start-1" : ""}`}
         >
@@ -365,7 +365,7 @@ export function CoverScreen({
                   aria-hidden="true"
                   width={743}
                   height={512}
-                  className="hidden h-auto object-contain dark:block sm:w-64 md:w-72 lg:w-full lg:max-w-md"
+                  className="hidden h-auto w-44 object-contain dark:block sm:w-64 md:w-72 lg:w-full lg:max-w-md"
                 />
               </motion.div>
             ) : (
@@ -376,11 +376,11 @@ export function CoverScreen({
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2, ease: "easeOut" }}
               >
-                <h1 className="text-lg font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
+                <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
                   <span className="text-foreground">{slide.title}</span>{" "}
                   <span className="text-primary">{slide.highlightTitle}</span>
                 </h1>
-                <p className="mx-auto mt-2 max-w-xs text-xs font-medium leading-relaxed text-muted-foreground sm:text-sm md:max-w-sm md:text-base">
+                <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base">
                   {slide.description}
                 </p>
               </motion.div>
@@ -397,10 +397,10 @@ export function CoverScreen({
               onOpenModal();
               onBoxTap();
             }}
-            className="animate-pop-in order-3 -mt-2 flex h-32 w-full max-w-md items-center gap-3 rounded-[8px] bg-[#1A1C22] p-3 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:col-start-1 lg:row-start-2 lg:mt-4"
+            className="animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:col-start-1 lg:row-start-2 lg:mt-4"
             aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
           >
-            <div className="flex h-24 w-24 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">
+            <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">
               {/* Plays once, right as this card mounts (i.e. as soon as the
                   reveal step appears) — no loop. Square and sized to fill the
                   card's own height (minus its padding) so the box reads at

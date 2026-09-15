@@ -14,7 +14,6 @@ import {
 import { EventType } from "@rive-app/canvas";
 import { configureRiveRuntime, REWARD_RIVE_SRC } from "@/lib/rive/runtime";
 import { RobuSays } from "./RobuSays";
-import { ROBU_DEFAULT_SIZE } from "./RobuAnchor";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -131,13 +130,12 @@ export function RewardScreen({
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 py-2 md:min-h-full md:justify-center lg:gap-2 lg:py-1">
-      {/* ── Heading — Robu announces the claim instead of a bare title ── */}
+      {/* ── "CLAIM reward" — RobuSays' default heading treatment, same as
+          every other current-branch screen (no bubble chrome). ── */}
       <RobuSays
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.title}
         instant={instantSpeech}
-        side="left"
-        robuClassName={`${ROBU_DEFAULT_SIZE} lg:h-56 lg:w-56`}
         registerAnchor={registerAnchor}
       />
 

@@ -81,8 +81,10 @@ export function RobuSays({
       // shrinking Robu just for this screen (breaking the "same size
       // everywhere" the mascot's going for) or letting the bubble run off
       // the edge, the bubble simply drops to its own line underneath him
-      // when there isn't room beside him.
-      className={`animate-fade-in flex w-full flex-wrap pt-2 items-start justify-center gap-1 ${
+      // when there isn't room beside him. `pt`/`items`/`gap` below `md:`
+      // are tighter (phones get less breathing room here) than from `md:`
+      // up, where the row reverts to its original, more spaced-out values.
+      className={`animate-fade-in flex w-full flex-wrap pt-0 items-center justify-center gap-2 md:pt-2 md:items-start md:gap-1 ${
         side === "right" ? "flex-row-reverse" : ""
       } ${rowDirectionLg} ${className ?? ""}`}
     >
@@ -107,8 +109,8 @@ export function RobuSays({
         // than stretching to fill the line when there's room to spare.
         className={`min-w-0 flex-auto ${
           side === "right"
-            ? "-mr-8 sm:-mr-12 sm:-mr-4 md:mr-0"
-            : "-ml-8 sm:-ml-12 sm:-ml-4 md:ml-0"
+            ? "-mr-12 sm:-mr-4 md:mr-0"
+            : "-ml-12 sm:-ml-4 md:ml-0"
         } ${bubbleMarginLg}`}
       >
         <SpeechBubble

@@ -140,10 +140,11 @@ export function InstructionsIntroFlow({
         setBoxTapped(false);
         return;
       }
-      if (coverRevealed) {
-        setCoverRevealed(false);
-        return;
-      }
+      // No separate "undo the reveal" stop any more: the reveal itself is no
+      // longer a manual step (see `onIntroTypingComplete`) — it fires on its
+      // own the instant Robu's line finishes typing, so there's nothing
+      // stable to rewind back to between screen 1 and the box being tapped.
+      // Back here falls straight through to leaving the screen entirely.
     }
     if (isQuiz) {
       if (checked) {
@@ -307,11 +308,12 @@ export function InstructionsIntroFlow({
 
   return (
     <main
-      // Flush against the viewport edges on phones/tablets (no `py-*` below
-      // `md:`); from `md:` up, `py-5` gives the header/footer real breathing
-      // room instead — the flex column's scrollable body (flex-1) absorbs
-      // the height that takes, so it's never at the cost of content the
-      // learner is trying to read.
+      // Flush against the viewport edges on phones/tablets; from `md:` up,
+      // `py-5` gives the header/footer real breathing room instead — matches
+      // `instructions-intro`'s own main wrapper. `h-[100dvh]` (with `h-screen`
+      // as the fallback for browsers without dvh support) keeps this sized to
+      // the actual visible viewport instead of the old 100vh, which iOS
+      // Safari measures with the address bar included.
       className={`${poppins.className} h-[100dvh] h-screen w-full max-w-full overflow-hidden bg-background dark:bg-[#0D1016] text-foreground flex flex-col items-center md:py-5 transition-colors duration-200`}
     >
       <div className="w-full max-w-md md:max-w-7xl flex flex-col h-full">
@@ -351,7 +353,19 @@ export function InstructionsIntroFlow({
                 onBoxTap={() => setBoxTapped(true)}
                 modalOpen={modalOpen}
                 onOpenModal={() => setModalOpen(true)}
-                onCloseModal={() => setModalOpen(false)}
+                // Dismissing the reveal modal (X / backdrop / Escape) is the
+                // learner finishing screen 2's interaction — advance straight
+                // to the next screen instead of leaving them to press the
+                // footer's "Next" a second time. goNext() already resets
+                // `modalOpen` (and everything else per-slide) as part of its
+                // own transition. The header's own Back button is unaffected
+                // — it still just closes the modal in place (see goBack).
+                onCloseModal={goNext}
+                // Collapses screen 2's old two-Next-press flow into one: the
+                // reveal card pops in on its own the moment Robu's intro line
+                // finishes typing, instead of waiting on a manual press that
+                // would only ever do the same thing.
+                onIntroTypingComplete={() => setCoverRevealed(true)}
                 instantSpeech={instantSpeech}
                 registerAnchor={setRobuAnchorEl}
                 robuIntroDone={robuIntroDone}

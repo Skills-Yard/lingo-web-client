@@ -12,7 +12,11 @@ import { ProgramSlots } from "./game/ProgramSlots";
 import { CommandPalette } from "./game/CommandPalette";
 import { GameFooter } from "./game/GameFooter";
 import { SpeechBubble } from "./SpeechBubble";
-import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
+import {
+  RobuAnchor,
+  ROBU_DEFAULT_SIZE,
+  ROBU_TRAILING_GAP_PULL,
+} from "./RobuAnchor";
 import { motion } from "framer-motion";
 
 interface GameBoardScreenProps {
@@ -102,7 +106,7 @@ export function GameBoardScreen({
       <div className="flex-col items-center justify-center gap-3 md:justify-start">
         <motion.div
           layout
-          className="flex w-full flex-wrap items-start justify-center"
+          className="flex w-full items-start justify-center"
           transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
         >
           {!robuJoinedGame ? (
@@ -114,12 +118,8 @@ export function GameBoardScreen({
             // `lg:` only — reserves the exact same box Robu just vacated so
             // the header's own height never changes and the board/controls
             // below it don't reflow into a new centered position a beat
-            // after this screen first mounts (the header briefly being this
-            // screen's tallest element while Robu's still here, then
-            // shrinking once he leaves, was what read as everything
-            // "settling" into center instead of already sitting there).
-            // Skipped below `lg:`, where the bubble is meant to expand into
-            // this space once he goes, same as before.
+            // after this screen first mounts. Skipped below `lg:`, where the
+            // bubble is meant to expand into this space once he goes.
             <div
               aria-hidden
               className="invisible hidden shrink-0 lg:block lg:h-32 lg:w-32"
@@ -129,26 +129,24 @@ export function GameBoardScreen({
           <motion.div
             layout
             transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
-            className="-ml-12 shrink-0 sm:-ml-4 md:ml-0"
+            className={`min-w-0 ${ROBU_TRAILING_GAP_PULL}`}
           >
             <SpeechBubble
               text={`${slide.highlightWord} ${slide.title}`}
               highlight={slide.highlightWord}
               instant={instantSpeech}
-              size="lg"
-              tailCorner="bottom-left"
-              bubbleClassName="sm:max-w-md"
+              size="heading"
             />
           </motion.div>
         </motion.div>
         <div className="text-center md:text-left">
-          {/* A real bubble here (not the "heading" style every other
-              screen's title uses) — this one's paired with Robu's own icon
-              for a moment before he leaves for the board, so it reads as
-              him actually saying it rather than a page title. */}
+          {/* Same "heading" treatment (no bubble chrome) every other
+              current-branch screen's title uses — paired with Robu's own
+              icon for a moment before he leaves for the board, so it still
+              reads as him saying it rather than a bare page title. */}
 
           {slide.description && (
-            <p className="mt-2 text-base font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
+            <p className="mt-2 text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
               {slide.description}
             </p>
           )}
