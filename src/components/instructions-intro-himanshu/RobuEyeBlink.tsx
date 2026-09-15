@@ -45,6 +45,38 @@ const MOUTH_TALK_WATCHDOG_MS = 500;
 // How often the watchdog below checks that the base loop is still playing.
 const AMBIENT_WATCHDOG_MS = 500;
 
+export type Mood = "happy" | "sad";
+
+// Same artboard's eyes/mouth happy+sad trios the mouth-talking comment above
+// points at — confirmed byte-for-byte against the `.riv`'s string table
+// (same technique used to confirm `INTRO_ANIMATION` in RobuMascot). Eyes get
+// a full start/loop/end trio for both moods; mouth only has a loop for
+// "happy" — "sad" is just a start/end pair, so `mouthLoop` is left unset and
+// the mouth simply holds on "mouth sad start"'s last frame once it finishes,
+// same as MOUTH_TALK_END already does after a line stops.
+const MOOD_TIMELINES: Record<
+  Mood,
+  { eyesStart: string; eyesLoop: string; eyesEnd: string; mouthStart: string; mouthLoop?: string; mouthEnd: string }
+> = {
+  happy: {
+    eyesStart: "Eyes happy start",
+    eyesLoop: "eyes happy loop",
+    eyesEnd: "Eyes happy end",
+    mouthStart: "mouth happy start",
+    mouthLoop: "mouth happy idle",
+    mouthEnd: "mouth happy end",
+  },
+  sad: {
+    eyesStart: "Eyes sad start",
+    eyesLoop: "eyes sad  loop", // two spaces — that's the timeline's actual name.
+    eyesEnd: "Eyes sad end",
+    mouthStart: "mouth sad start",
+    mouthEnd: "mouth sad end",
+  },
+};
+// Safety net for each mood's start->loop handoff, same shape as the mouth-talking watchdog.
+const MOOD_WATCHDOG_MS = 500;
+
 /**
  * Exported (rather than kept local to this file) so RobuMascot can drive the
  * exact same ambient behavior on its own Rive instance once its one-shot
@@ -210,6 +242,79 @@ export function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
       window.clearInterval(watchdog);
     };
   }, [rive, talking]);
+}
+
+/**
+ * Plays the artboard's happy or sad eyes+mouth trio on top of the ambient
+ * base loop, same shape as `useTalkingMouth`: the mood's "start" timelines
+ * play once, then hand off to the (eyes-only, for "sad") looping idle once
+ * they finish. Switching moods while still mounted (e.g. a fast re-check)
+ * stops whatever the other mood left running, right at the top of the
+ * effect, before starting the new one — so the two trios never layer on
+ * each other.
+ *
+ * Deliberately does NOT call `rive.stop`/`play` in this effect's own
+ * cleanup (unlike the mood-switch handling above) — cleanup also runs on
+ * unmount, and by then Rive's own teardown may have already deleted the
+ * underlying WASM artboard, throwing "Cannot pass deleted object as a
+ * pointer of type Artboard". `RobuReaction`'s only caller unmounts it
+ * outright once the mood is no longer relevant (the feedback panel goes
+ * away), so there's nothing to settle back to neutral anyway. Same
+ * listeners/timers-only cleanup shape `useTalkingMouth`/`useGreetingOverlay`
+ * already use above.
+ */
+export function useMoodOverlay(rive: RiveInstance | null, mood: Mood | null) {
+  useEffect(() => {
+    if (!rive || !mood) return;
+
+    const cfg = MOOD_TIMELINES[mood];
+    const other = MOOD_TIMELINES[mood === "happy" ? "sad" : "happy"];
+    rive.stop(other.eyesStart);
+    rive.stop(other.eyesLoop);
+    rive.stop(other.eyesEnd);
+    rive.stop(other.mouthStart);
+    if (other.mouthLoop) rive.stop(other.mouthLoop);
+    rive.stop(other.mouthEnd);
+
+    rive.stop(cfg.eyesEnd);
+    rive.stop(cfg.mouthEnd);
+    rive.play(cfg.eyesStart);
+    rive.play(cfg.mouthStart);
+
+    let loopStarted = false;
+    const startLoop = () => {
+      if (loopStarted) return;
+      loopStarted = true;
+      rive.play(cfg.eyesLoop);
+      if (cfg.mouthLoop) rive.play(cfg.mouthLoop);
+    };
+
+    const handleStop = (event: RiveEvent) => {
+      const stopped = event.data;
+      const names = Array.isArray(stopped)
+        ? stopped
+        : typeof stopped === "string"
+          ? [stopped]
+          : [];
+      if (names.includes(cfg.eyesStart) || names.includes(cfg.mouthStart)) startLoop();
+    };
+    rive.on(EventType.Stop, handleStop);
+
+    const fallback = window.setTimeout(startLoop, 600);
+    const watchdog = window.setInterval(() => {
+      if (!loopStarted) return;
+      if (!rive.playingAnimationNames.includes(cfg.eyesLoop)) rive.play(cfg.eyesLoop);
+      if (cfg.mouthLoop && !rive.playingAnimationNames.includes(cfg.mouthLoop)) {
+        rive.play(cfg.mouthLoop);
+      }
+    }, MOOD_WATCHDOG_MS);
+
+    return () => {
+      rive.off(EventType.Stop, handleStop);
+      window.clearTimeout(fallback);
+      window.clearInterval(watchdog);
+    };
+  }, [rive, mood]);
 }
 
 interface RobuEyeBlinkProps {

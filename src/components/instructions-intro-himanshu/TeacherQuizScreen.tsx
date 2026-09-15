@@ -3,6 +3,7 @@ import { Check, X } from "lucide-react";
 import type { TeacherQuizSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
+import { RobuReaction } from "./RobuReaction";
 import { useRobuTalking } from "./RobuTalkingContext";
 
 interface TeacherQuizScreenProps {
@@ -246,10 +247,9 @@ export function TeacherQuizScreen({
                 {feedbackBody}
               </p>
             </div>
-            <img
-              src="/images/sliceAnswer.png"
-              alt=""
-              className="w-16 h-16 object-contain shrink-0 -scale-x-100 animate-bounce-slow"
+            <RobuReaction
+              mood={isCorrect ? "happy" : "sad"}
+              className="w-16 h-16 shrink-0"
             />
           </div>
         )}

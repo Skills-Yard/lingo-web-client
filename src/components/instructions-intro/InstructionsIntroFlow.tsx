@@ -311,10 +311,6 @@ export function InstructionsIntroFlow({
               ? "Correct, you got it!"
               : "Oops! Not quite.",
             body: selectedQuestionnaireItem.feedback ?? "",
-            image: questionnaireIsCorrect
-              ? "/images/sprouty.png"
-              : "/images/sprouty-worng-ans.png",
-            flipImage: false,
           }
         : null;
 
