@@ -42,6 +42,13 @@ interface RobuSaysProps {
    * down. Independent of `audioSrc`: it never stretches to match a voice
    * line's length (see SpeechBubble's doc for why). */
   speedMs?: number;
+  /** Forwarded straight to SpeechBubble's own `onTypingComplete` — fires
+   * once this line is fully "said": right away for a revisit (`instant`),
+   * on the last typed character for a plain line, or on the voice line's
+   * own "ended" event when `audioSrc` is set. Lets a caller chain something
+   * onto "Robu just finished saying this" (e.g. TeacherQuizScreen narrating
+   * its options right after the heading is voiced). */
+  onTypingComplete?: () => void;
 }
 
 /**
@@ -63,6 +70,7 @@ export function RobuSays({
   size = "heading",
   audioSrc,
   speedMs,
+  onTypingComplete,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -118,6 +126,7 @@ export function RobuSays({
           tailCorner={tailCorner}
           audioSrc={audioSrc}
           speedMs={speedMs}
+          onTypingComplete={onTypingComplete}
         />
       </div>
     </div>
