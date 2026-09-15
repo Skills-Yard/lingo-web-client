@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { preload } from "react-dom";
 import { Poppins } from "next/font/google";
 import {
@@ -23,6 +23,7 @@ import { RewardScreen } from "./RewardScreen";
 import { GameBoardScreen } from "./GameBoardScreen";
 import { RobuScreen } from "./RobuScreen";
 import { RobuStage } from "./RobuStage";
+import { RobuTalkingContext } from "./RobuTalkingContext";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -68,6 +69,24 @@ export function InstructionsIntroFlow({
   // a time, so this always reflects the active screen's own spot for it.
   const [robuAnchorEl, setRobuAnchorEl] = useState<HTMLDivElement | null>(null);
   const robuStageRef = useRef<HTMLDivElement>(null);
+
+  // Whether Robu's mouth-talking overlay should be playing right now — true
+  // for as long as *any* heading/bubble text anywhere in the flow is
+  // actively typing (see RobuTalkingContext/SpeechBubble). Ref-counted
+  // rather than a plain boolean so two overlapping typewriters (e.g. Robu's
+  // own line finishing right as a note card's own line starts) can't have
+  // the first one's completion turn Robu's mouth off while the second is
+  // still going.
+  const talkingCountRef = useRef(0);
+  const [robuTalking, setRobuTalking] = useState(false);
+  const startTalking = useCallback(() => {
+    talkingCountRef.current += 1;
+    setRobuTalking(true);
+  }, []);
+  const stopTalking = useCallback(() => {
+    talkingCountRef.current = Math.max(0, talkingCountRef.current - 1);
+    if (talkingCountRef.current === 0) setRobuTalking(false);
+  }, []);
 
   // Whether Robu's one-shot `intro` Rive timeline has finished. Owned here
   // (not inside RobuStage) so CoverScreen can hold its heading/bubble back
@@ -307,6 +326,7 @@ export function InstructionsIntroFlow({
   }, []);
 
   return (
+    <RobuTalkingContext.Provider value={{ startTalking, stopTalking }}>
     <main
       className={`${poppins.className} h-screen w-full max-w-full overflow-hidden bg-background dark:bg-[#0D1016] text-foreground flex flex-col items-center transition-colors duration-200`}
     >
@@ -336,6 +356,7 @@ export function InstructionsIntroFlow({
             containerRef={robuStageRef}
             onIntroComplete={() => setRobuIntroDone(true)}
             skipIntro={skipRobuIntro}
+            talking={robuTalking}
           />
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
             {(slide.kind === "cover" || slide.kind === "cover-reveal") && (
@@ -447,5 +468,6 @@ export function InstructionsIntroFlow({
         )}
       </div>
     </main>
+    </RobuTalkingContext.Provider>
   );
 }

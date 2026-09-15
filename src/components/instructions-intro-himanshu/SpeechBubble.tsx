@@ -134,6 +134,7 @@ export function SpeechBubble({
     // `onDone` — shared by both the plain and voiced paths below so there's
     // exactly one place pacing `shown`.
     const typeOver = (onDone: () => void) => {
+      beginTalking();
       const perCharMs = Math.max(speedMs, 10);
       let i = 0;
       charTimer = window.setInterval(() => {
@@ -160,7 +161,7 @@ export function SpeechBubble({
       const begin = () => {
         if (started || cancelled) return;
         started = true;
-        typeOver(() => {});
+        typeOver(() => onTextTyped?.());
         // Safety net, mirroring the flow's own Robu-intro fallback: if the
         // audio stalls and its "ended" event never fires, don't strand the
         // caller waiting on it forever. Falls back to a generous flat delay
@@ -190,7 +191,10 @@ export function SpeechBubble({
       const onUnplayable = () => {
         if (started || cancelled) return;
         started = true;
-        typeOver(() => onTypingComplete?.());
+        typeOver(() => {
+          onTextTyped?.();
+          onTypingComplete?.();
+        });
       };
 
       audio.addEventListener("loadedmetadata", begin);
@@ -202,6 +206,7 @@ export function SpeechBubble({
         cancelled = true;
         window.clearInterval(charTimer);
         window.clearTimeout(fallbackTimer);
+        endTalking();
         audio.pause();
         audio.removeEventListener("loadedmetadata", begin);
         audio.removeEventListener("ended", onEnded);
@@ -209,10 +214,14 @@ export function SpeechBubble({
       };
     }
 
-    typeOver(() => onTypingComplete?.());
+    typeOver(() => {
+      onTextTyped?.();
+      onTypingComplete?.();
+    });
     return () => {
       cancelled = true;
       window.clearInterval(charTimer);
+      endTalking();
     };
     // onTypingComplete intentionally excluded — callers pass a fresh inline
     // function each render, and this typewriter should only ever run once

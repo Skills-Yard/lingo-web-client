@@ -8,6 +8,7 @@ import {
   Fit,
   Alignment,
   type Rive as RiveInstance,
+  type Event as RiveEvent,
 } from "@rive-app/canvas";
 import { configureRiveRuntime, getRobuRiveSrc } from "@/lib/rive/runtime";
 import { useTheme } from "@/context/ThemeContext";
@@ -139,9 +140,13 @@ export function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
       rive.play(MOUTH_TALK_LOOP);
     };
 
-    const handleStop = (event: { data?: string | string[] }) => {
+    const handleStop = (event: RiveEvent) => {
       const stopped = event.data;
-      const names = Array.isArray(stopped) ? stopped : stopped ? [stopped] : [];
+      const names = Array.isArray(stopped)
+        ? stopped
+        : typeof stopped === "string"
+          ? [stopped]
+          : [];
       if (names.includes(MOUTH_TALK_START)) startLoop();
     };
     rive.on(EventType.Stop, handleStop);
