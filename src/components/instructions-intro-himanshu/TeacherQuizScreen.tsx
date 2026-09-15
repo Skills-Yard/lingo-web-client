@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
 import type { TeacherQuizSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
@@ -13,6 +14,21 @@ interface TeacherQuizScreenProps {
   registerAnchor: (el: HTMLDivElement | null) => void;
 }
 
+// Screen 4's heading line and its two-option quiz were recorded as four
+// separate clips (heading, option 1, "OR", option 2) rather than one long
+// line — so, unlike every other screen's single `audioSrc`, this one plays
+// as a short sequence: the heading first (via RobuSays as usual), then once
+// that finishes, option 1 → "OR" → option 2 read back-to-back, with
+// `optionIndex` driving which card gets a "Robu's talking about this one"
+// highlight (see `narratingIdx` below). `optionIndex: null` (the "OR" clip)
+// highlights nothing.
+const HEADING_AUDIO_SRC = "/audios/screen_4/screen_4_audio_trim.m4a";
+const OPTION_NARRATION: { src: string; optionIndex: number | null }[] = [
+  { src: "/audios/screen_4/screen_4_audio_opt1.m4a", optionIndex: 0 },
+  { src: "/audios/screen_4/screen_4_audio_OR.m4a", optionIndex: null },
+  { src: "/audios/screen_4/screen_4_audio_opt2.m4a", optionIndex: 1 },
+];
+
 export function TeacherQuizScreen({
   slide,
   selected,
@@ -27,6 +43,53 @@ export function TeacherQuizScreen({
   const feedbackTitle = isCorrect ? slide.correctTitle : slide.incorrectTitle;
   const feedbackBody = isCorrect ? slide.correctText : slide.incorrectText;
 
+  // Flips once the heading's own voice line finishes (its "ended" event, via
+  // RobuSays -> SpeechBubble's onTypingComplete) — that's what kicks off the
+  // option narration below, so the two clips never overlap.
+  const [headingVoiced, setHeadingVoiced] = useState(false);
+  // Which option (if any) Robu is currently reading aloud — null while the
+  // "OR" clip plays, or once the whole sequence has finished.
+  const [narratingIdx, setNarratingIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    // A revisit (`instantSpeech`) never replays any of this screen's audio —
+    // matches every other voiced screen's behavior.
+    if (!headingVoiced || instantSpeech) return;
+
+    let cancelled = false;
+    let audio: HTMLAudioElement | null = null;
+    let i = 0;
+
+    const playNext = () => {
+      if (cancelled) return;
+      if (i >= OPTION_NARRATION.length) {
+        setNarratingIdx(null);
+        return;
+      }
+      const step = OPTION_NARRATION[i];
+      setNarratingIdx(step.optionIndex);
+      audio = new Audio(step.src);
+      const advance = () => {
+        if (cancelled) return;
+        i += 1;
+        playNext();
+      };
+      audio.addEventListener("ended", advance);
+      // A missing/unsupported clip skips ahead rather than stalling the
+      // whole sequence on one bad file.
+      audio.addEventListener("error", advance);
+      audio.play().catch(advance);
+    };
+
+    playNext();
+
+    return () => {
+      cancelled = true;
+      audio?.pause();
+      setNarratingIdx(null);
+    };
+  }, [headingVoiced, instantSpeech]);
+
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-x-10 md:items-center md:min-h-full md:content-center">
       <RobuSays
@@ -36,7 +99,8 @@ export function TeacherQuizScreen({
         side="right"
         className="md:col-start-1 md:row-start-1"
         registerAnchor={registerAnchor}
-        audioSrc="/audios/screen_4_audio.mpeg"
+        audioSrc={HEADING_AUDIO_SRC}
+        onTypingComplete={() => setHeadingVoiced(true)}
       />
 
       <TeacherIllustration
@@ -57,6 +121,14 @@ export function TeacherQuizScreen({
             idx === 0
               ? "bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-300"
               : "bg-secondary text-primary";
+
+          // Robu is currently reading this option aloud — a soft pulse, not
+          // the "picked" ring below, so it never reads as an actual
+          // selection. Only while nothing's been picked yet: a real
+          // selection always wins over this passive narration highlight.
+          if (narratingIdx === idx && selected === null) {
+            cardBorder = "border-primary/50 bg-secondary/40 ring-1 ring-primary/20 animate-pulse";
+          }
 
           if (isSelected && !checked) {
             cardBorder = "border-primary bg-secondary ring-1 ring-primary/30";

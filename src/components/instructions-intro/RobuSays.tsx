@@ -47,6 +47,18 @@ interface RobuSaysProps {
    * since playing another screen's line would be wrong for every screen but
    * one. */
   audioSrc?: string;
+  /** Forwarded straight to SpeechBubble's own `speedMs` — pass a smaller
+   * number to type this screen's line faster, or a larger one to slow it
+   * down. Independent of `audioSrc`: it never stretches to match a voice
+   * line's length (see SpeechBubble's doc for why). */
+  speedMs?: number;
+  /** Forwarded straight to SpeechBubble's own `onTypingComplete` — fires
+   * once this line is fully "said": right away for a revisit (`instant`),
+   * on the last typed character for a plain line, or on the voice line's
+   * own "ended" event when `audioSrc` is set. Lets a caller chain something
+   * onto "Robu just finished saying this" (e.g. TeacherQuizScreen narrating
+   * its options right after the heading is voiced). */
+  onTypingComplete?: () => void;
 }
 
 /**
@@ -67,8 +79,6 @@ export function RobuSays({
   className,
   size = "heading",
   audioSrc,
-  onTypingComplete,
-  onTextTyped,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -123,8 +133,6 @@ export function RobuSays({
           size={size}
           tailCorner={tailCorner}
           audioSrc={audioSrc}
-          onTypingComplete={onTypingComplete}
-          onTextTyped={onTextTyped}
         />
       </div>
     </div>
