@@ -109,6 +109,48 @@ export function usePeriodicOverlay(
 }
 
 /**
+ * Robu's one-shot greeting wave — screen 1 plays this right after the
+ * entrance finishes (see `trigger`). The two theme `.riv` files turn out to
+ * name this differently: the dark-theme file has one complete "hii" timeline,
+ * while the light-theme file only has a "hii start"/"hii end" bookend pair
+ * (no plain "hii", confirmed by loading both files through the actual Rive
+ * runtime — everything else on this artboard *is* named identically across
+ * themes, this is the one exception). Reading `rive.animationNames` at
+ * trigger time picks whichever shape the loaded file actually has instead of
+ * hardcoding one name that would silently no-op on the other theme.
+ */
+export function useGreetingOverlay(rive: RiveInstance | null, trigger: boolean) {
+  useEffect(() => {
+    if (!rive || !trigger) return;
+
+    const names = rive.animationNames;
+    if (names.includes("hii")) {
+      rive.stop("hii");
+      rive.play("hii");
+      return;
+    }
+
+    if (!names.includes("hii start")) return;
+    rive.stop("hii end");
+    rive.play("hii start");
+
+    const handleStop = (event: RiveEvent) => {
+      const stopped = event.data;
+      const stoppedNames = Array.isArray(stopped)
+        ? stopped
+        : typeof stopped === "string"
+          ? [stopped]
+          : [];
+      if (stoppedNames.includes("hii start") && names.includes("hii end")) {
+        rive.play("hii end");
+      }
+    };
+    rive.on(EventType.Stop, handleStop);
+    return () => rive.off(EventType.Stop, handleStop);
+  }, [rive, trigger]);
+}
+
+/**
  * Drives Robu's mouth-talking overlay on top of the ambient base loop, same
  * artboard as `useAmbientLoop`/`usePeriodicOverlay` above. `talking` flipping
  * true plays the one-shot "start" timeline, then — once that timeline

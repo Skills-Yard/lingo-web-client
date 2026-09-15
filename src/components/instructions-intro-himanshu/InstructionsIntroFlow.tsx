@@ -125,6 +125,12 @@ export function InstructionsIntroFlow({
   // mascot itself now lives in the single shared RobuStage, not that screen.
   const robuShake = slide.kind === "cover-reveal" && coverRevealed && !boxTapped;
 
+  // Robu's one-shot "hii" wave: only on screen 1 itself, and only once his
+  // entrance has actually finished (see `robuIntroDone` above) — going
+  // false->true again (e.g. Back to screen 1 from screen 2) replays it, same
+  // as arriving fresh.
+  const robuGreeting = slide.kind === "cover" && robuIntroDone;
+
   const isQuiz = slide.kind === "teacher-quiz";
   const isQuestionnaire = slide.kind === "questionnaire";
 
@@ -357,6 +363,7 @@ export function InstructionsIntroFlow({
             onIntroComplete={() => setRobuIntroDone(true)}
             skipIntro={skipRobuIntro}
             talking={robuTalking}
+            greet={robuGreeting}
           />
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
             {(slide.kind === "cover" || slide.kind === "cover-reveal") && (

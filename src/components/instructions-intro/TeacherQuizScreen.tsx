@@ -3,6 +3,7 @@ import { Check, X } from "lucide-react";
 import type { TeacherQuizSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
+import { useRobuTalking } from "./RobuTalkingContext";
 
 interface TeacherQuizScreenProps {
   slide: TeacherQuizSlide;
@@ -37,6 +38,7 @@ export function TeacherQuizScreen({
   instantSpeech,
   registerAnchor,
 }: TeacherQuizScreenProps) {
+  const { startTalking, stopTalking } = useRobuTalking();
   const selectedOption = selected !== null ? slide.options[selected] : null;
   const isCorrect = !!selectedOption?.isCorrect;
   const showFeedback = checked && selectedOption;
@@ -58,7 +60,18 @@ export function TeacherQuizScreen({
 
     let cancelled = false;
     let audio: HTMLAudioElement | null = null;
+    let talkingActive = false;
     let i = 0;
+
+    // Each clip's own start/stop pair, mirroring SpeechBubble's audio-driven
+    // talking so Robu's mouth animation only runs while a clip is actually
+    // playing and always hands back to idle the moment it ends/errors/the
+    // screen is left mid-sequence — see RobuTalkingContext.
+    const stopClipTalking = () => {
+      if (!talkingActive) return;
+      talkingActive = false;
+      stopTalking();
+    };
 
     const playNext = () => {
       if (cancelled) return;
@@ -71,6 +84,7 @@ export function TeacherQuizScreen({
       audio = new Audio(step.src);
       const advance = () => {
         if (cancelled) return;
+        stopClipTalking();
         i += 1;
         playNext();
       };
@@ -78,6 +92,8 @@ export function TeacherQuizScreen({
       // A missing/unsupported clip skips ahead rather than stalling the
       // whole sequence on one bad file.
       audio.addEventListener("error", advance);
+      talkingActive = true;
+      startTalking();
       audio.play().catch(advance);
     };
 
@@ -85,10 +101,11 @@ export function TeacherQuizScreen({
 
     return () => {
       cancelled = true;
+      stopClipTalking();
       audio?.pause();
       setNarratingIdx(null);
     };
-  }, [headingVoiced, instantSpeech]);
+  }, [headingVoiced, instantSpeech, startTalking, stopTalking]);
 
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-x-10 md:items-center md:min-h-full md:content-center">
