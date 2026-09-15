@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRobuTalking } from "./RobuTalkingContext";
 
 interface SpeechBubbleProps {
   /** Line Robu "types" out, one character at a time. */
@@ -86,13 +87,15 @@ export function SpeechBubble({
   // "haven't caught up to the full line yet", true for skipTyping too since
   // `shown` already starts out equal to `text` in that case.
   const stillTyping = shown.length < text.length;
+  const { startTalking, stopTalking } = useRobuTalking();
 
   useEffect(() => {
     if (!text) return;
     if (skipTyping) {
       // Already showing the full line as of mount — still notify a caller
       // waiting on "Robu's done talking" instead of leaving it to fire only
-      // for the animated case.
+      // for the animated case. Nothing is actually animating here, so Robu's
+      // mouth is never cued for this instance (see `talkingStarted` below).
       onTextTyped?.();
       onTypingComplete?.();
       return;
@@ -100,11 +103,27 @@ export function SpeechBubble({
 
     let cancelled = false;
     let charTimer: number | undefined;
+    // Tracks whether *this* effect run is the one currently holding Robu's
+    // mouth open, so cleanup only ever closes it once and never double-counts
+    // against `RobuTalkingContext`'s ref count.
+    let talkingStarted = false;
+    const beginTalking = () => {
+      if (talkingStarted) return;
+      talkingStarted = true;
+      startTalking();
+    };
+    const endTalking = () => {
+      if (!talkingStarted) return;
+      talkingStarted = false;
+      stopTalking();
+    };
 
     // Runs the typewriter to completion over `durationMs`, then calls
     // `onDone` — shared by both the plain and audio-synced paths below so
-    // there's exactly one place pacing `shown`.
+    // there's exactly one place pacing `shown`. Cues Robu's talking-mouth
+    // overlay for exactly the span this line is actually animating.
     const typeOver = (durationMs: number, onDone: () => void) => {
+      beginTalking();
       const perCharMs = 60; //Math.max(durationMs / text.length, 10);
       let i = 0;
       charTimer = window.setInterval(() => {
@@ -113,6 +132,7 @@ export function SpeechBubble({
         setShown(text.slice(0, i));
         if (i >= text.length) {
           window.clearInterval(charTimer);
+          endTalking();
           onDone();
         }
       }, perCharMs);
@@ -153,6 +173,7 @@ export function SpeechBubble({
         window.clearInterval(charTimer);
         window.clearTimeout(fallbackTimer);
         setShown(text);
+        endTalking();
         onTypingComplete?.();
       };
       // Asset missing/unsupported, or autoplay blocked — fall back to the

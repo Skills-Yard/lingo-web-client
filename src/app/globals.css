@@ -165,6 +165,31 @@ html {
   }
 }
 
+/* A single, gentle settle — not a loop — for the "Open Your Notebook" note
+   once its own text has finished typing: a light ring/glow eases in and
+   stays, rather than the reveal card's repeating `cardGlow` pulse (which
+   read as "blinking" for a note that isn't asking to be tapped). */
+@keyframes noteHighlight {
+  0% {
+    box-shadow:
+      0 0 0 0 var(--card-glow-ring),
+      0 0 0 0 var(--card-glow-bloom);
+    transform: scale(1);
+  }
+  45% {
+    box-shadow:
+      0 0 0 2px var(--card-glow-ring),
+      0 0 14px 3px var(--card-glow-bloom);
+    transform: scale(1.015);
+  }
+  100% {
+    box-shadow:
+      0 0 0 1.5px var(--card-glow-ring),
+      0 0 8px 1px var(--card-glow-bloom);
+    transform: scale(1);
+  }
+}
+
 @keyframes fadeIn {
   0% {
     opacity: 0;
@@ -222,6 +247,10 @@ html {
 
 .animate-card-glow {
   animation: cardGlow 2s ease-in-out infinite;
+}
+
+.animate-note-highlight {
+  animation: noteHighlight 0.7s ease-out forwards;
 }
 
 /* Used by the screen 08 mini-game platform art (ported from lingo-website-client). */

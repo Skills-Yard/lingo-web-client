@@ -2,7 +2,13 @@
 
 import { useEffect } from "react";
 import { useRive } from "@rive-app/react-canvas";
-import { Layout, Fit, Alignment, type Rive as RiveInstance } from "@rive-app/canvas";
+import {
+  EventType,
+  Layout,
+  Fit,
+  Alignment,
+  type Rive as RiveInstance,
+} from "@rive-app/canvas";
 import { configureRiveRuntime, getRobuRiveSrc } from "@/lib/rive/runtime";
 import { useTheme } from "@/context/ThemeContext";
 
@@ -23,6 +29,17 @@ const EAR_INTERVAL_MS = 3000;
 
 const EYEBLINK_ANIMATION = "eyeblink twice";
 const EYEBLINK_INTERVAL_MS = 5000;
+
+// Same artboard's mouth-talking trio — a one-shot open ("start"), a looping
+// chatter cycle ("idle"), and a one-shot close ("end"). Same naming shape as
+// the eyes' own happy/sad trios on this artboard, just driven by "is Robu
+// currently talking" instead of a fixed interval.
+const MOUTH_TALK_START = "mouth talking start";
+const MOUTH_TALK_LOOP = "mouth talking idle";
+const MOUTH_TALK_END = "mouth talking end";
+// Safety net for the start->loop handoff below, mirroring the watchdog
+// pattern already used for the ambient base loop.
+const MOUTH_TALK_WATCHDOG_MS = 500;
 
 // How often the watchdog below checks that the base loop is still playing.
 const AMBIENT_WATCHDOG_MS = 500;
@@ -88,6 +105,64 @@ export function usePeriodicOverlay(
       rive.stop(animation);
     };
   }, [rive, animation, intervalMs]);
+}
+
+/**
+ * Drives Robu's mouth-talking overlay on top of the ambient base loop, same
+ * artboard as `useAmbientLoop`/`usePeriodicOverlay` above. `talking` flipping
+ * true plays the one-shot "start" timeline, then — once that timeline
+ * actually finishes, not immediately — hands off to the looping "idle"
+ * chatter cycle; layering both from frame 0 instead would let the loop's own
+ * frames immediately fight the opening transition. Flipping back to false
+ * stops the loop and plays the one-shot "end" timeline to close the mouth
+ * back up. Exported (like the two hooks above) so RobuMascot can drive the
+ * exact same overlay on its own Rive instance.
+ */
+export function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
+  useEffect(() => {
+    if (!rive) return;
+
+    if (!talking) {
+      rive.stop(MOUTH_TALK_LOOP);
+      rive.stop(MOUTH_TALK_START);
+      rive.play(MOUTH_TALK_END);
+      return;
+    }
+
+    rive.stop(MOUTH_TALK_END);
+    rive.play(MOUTH_TALK_START);
+
+    let loopStarted = false;
+    const startLoop = () => {
+      if (loopStarted) return;
+      loopStarted = true;
+      rive.play(MOUTH_TALK_LOOP);
+    };
+
+    const handleStop = (event: { data?: string | string[] }) => {
+      const stopped = event.data;
+      const names = Array.isArray(stopped) ? stopped : stopped ? [stopped] : [];
+      if (names.includes(MOUTH_TALK_START)) startLoop();
+    };
+    rive.on(EventType.Stop, handleStop);
+
+    // In case the Stop event is ever missed (e.g. autoplay hiccups), don't
+    // strand Robu mid-transition with a closed mouth for the rest of a long
+    // line — same fallback shape as RobuMascot's own intro-timeline handoff.
+    const fallback = window.setTimeout(startLoop, 600);
+
+    const watchdog = window.setInterval(() => {
+      if (loopStarted && !rive.playingAnimationNames.includes(MOUTH_TALK_LOOP)) {
+        rive.play(MOUTH_TALK_LOOP);
+      }
+    }, MOUTH_TALK_WATCHDOG_MS);
+
+    return () => {
+      rive.off(EventType.Stop, handleStop);
+      window.clearTimeout(fallback);
+      window.clearInterval(watchdog);
+    };
+  }, [rive, talking]);
 }
 
 interface RobuEyeBlinkProps {

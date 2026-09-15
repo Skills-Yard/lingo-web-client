@@ -40,7 +40,7 @@ export function TeacherIntroScreen({
 
         <div
           className={`relative hidden md:block max-w-60 rounded-[10px] bg-white px-6 py-5 text-[#2C2C2C] shadow-lg transition-shadow ${
-            noteDone ? "animate-card-glow" : ""
+            noteDone ? "animate-note-highlight" : ""
           }`}
         >
           <span
