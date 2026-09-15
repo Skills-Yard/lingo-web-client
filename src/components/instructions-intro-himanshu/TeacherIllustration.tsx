@@ -61,7 +61,14 @@ export function TeacherIllustration({
       />
       {showNote && (
         <div
-          className={`absolute right-5 top-5 max-w-36 rounded-[12px] rounded-bl-sm bg-white px-4 py-3.5 text-[#2C2C2C] drop-shadow-[1px_1px_12.8px_rgba(0,0,0,0.12)] transition-shadow ${
+          // `w-36` (not `max-w-36`): this note's own text types out too, and
+          // it's positioned by its *right* edge (`right-5`) — a `max-w` box
+          // grows as the typewriter adds characters, so with the right edge
+          // pinned, its left edge visibly slides leftward while it types. A
+          // fixed width means the box is its final size from the first
+          // character; the text just wraps inside it as it types instead of
+          // resizing the box around it.
+          className={`absolute right-5 top-5 w-36 rounded-[12px] rounded-bl-sm bg-white px-4 py-3.5 text-[#2C2C2C] drop-shadow-[1px_1px_12.8px_rgba(0,0,0,0.12)] transition-shadow ${
             noteHighlighted ? "animate-note-highlight" : ""
           } ${noteClassName}`}
         >
