@@ -25,8 +25,16 @@ export function TeacherIntroScreen({
 
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-x-12 md:items-center md:min-h-full">
-      <div className="flex flex-col items-center gap-3 text-center md:col-span-2 md:items-start md:text-left md:gap-8">
-        <div className="flex flex-col items-center gap-3 md:items-start">
+      <div className="flex w-full flex-col items-center gap-3 text-center md:col-span-2 md:items-start md:text-left md:gap-8">
+        {/* `w-full` on both this row and the one below (not just `items-center`
+            on the mobile-centered ones): without it, a flex column's
+            `items-center` cross-axis alignment leaves each child at its own
+            shrink-to-fit width instead of stretching it — so RobuSays' own
+            `w-full` row inside had nothing to actually span, and the whole
+            chain shrink-wrapped to the growing heading text, recentering
+            (and visibly sliding sideways) on every keystroke of the
+            typewriter, same as the bug fixed elsewhere in RobuSays/CoverScreen. */}
+        <div className="flex w-full flex-col items-center gap-3 md:items-start">
           <RobuSays
             text={`${slide.eyebrow} ${slide.title}`}
             highlight={slide.eyebrow}
