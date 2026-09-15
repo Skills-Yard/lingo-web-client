@@ -21,6 +21,7 @@ export function VideoScreen({
           instant={instantSpeech}
           side="left"
           registerAnchor={registerAnchor}
+          audioSrc="/audios/screen_6_audio.mpeg"
         />
         <div className="flex flex-col gap-3">
           <button

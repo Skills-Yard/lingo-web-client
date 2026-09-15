@@ -20,6 +20,7 @@ export function ExamplesGridScreen({
         side="right"
         className="md:w-56 md:shrink-0"
         registerAnchor={registerAnchor}
+        audioSrc="/audios/screen_5_audio.mpeg"
       />
 
       <div className="flex flex-col gap-5 justify-center grow md:flex-row md:flex-wrap md:justify-center md:gap-x-4">

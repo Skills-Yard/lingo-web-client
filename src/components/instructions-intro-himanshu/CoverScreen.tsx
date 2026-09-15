@@ -240,6 +240,11 @@ export function CoverScreen({
           instant={instantSpeech}
           size="lg"
           onTypingComplete={onIntroTypingComplete}
+          // Voices screen 2's title line: the typewriter is re-paced to this
+          // audio's own duration, and the reveal card (gated on
+          // `onIntroTypingComplete` above) now waits for the audio to
+          // actually finish instead of just the text catching up to it.
+          audioSrc="/audios/screen_2_audio.mpeg"
         />
       )}
 

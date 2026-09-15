@@ -22,6 +22,12 @@ interface RobuSaysProps {
   registerAnchor: (el: HTMLDivElement | null) => void;
   robuClassName?: string;
   className?: string;
+  /** This screen's own voice line for this text, forwarded straight to
+   * SpeechBubble — see its own `audioSrc` doc for the sync behavior. Each
+   * call site passes its own screen's file; there's no shared default here
+   * since playing another screen's line would be wrong for every screen but
+   * one. */
+  audioSrc?: string;
 }
 
 /**
@@ -40,6 +46,7 @@ export function RobuSays({
   registerAnchor,
   robuClassName = ROBU_DEFAULT_SIZE,
   className,
+  audioSrc,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -77,6 +84,7 @@ export function RobuSays({
           instant={instant}
           size="lg"
           tailCorner={tailCorner}
+          audioSrc={audioSrc}
         />
       </div>
     </div>

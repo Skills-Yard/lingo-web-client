@@ -17,6 +17,7 @@ export function ExamplesGridScreen({
       <RobuSays
         text={slide.title}
         instant={instantSpeech}
+        audioSrc="/audios/screen_5_audio.mpeg"
         // No fixed `md:w-56` here any more: Robu's own anchor is already
         // ROBU_DEFAULT_SIZE's fixed 336px at `md`, wider than that column
         // ever was, so the column never actually constrained him — it only

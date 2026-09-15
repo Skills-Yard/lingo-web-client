@@ -28,10 +28,24 @@ interface SpeechBubbleProps {
    * caller auto-advance the instant Robu "finishes talking" instead of
    * gating that on a separate manual step. */
   onTypingComplete?: () => void;
+  /** When set, this line is voiced: the audio starts playing the moment this
+   * bubble mounts, the typewriter is re-paced to land its last character
+   * exactly when the audio ends (instead of the fixed `TYPE_SPEED_MS`), and
+   * `onTypingComplete` fires on the audio's own "ended" event rather than on
+   * the last character — so a caller gating an auto-advance on it (see
+   * CoverScreen's screen 2) holds until the voice line has actually finished
+   * playing, not just once the text has finished appearing. Ignored for
+   * `instant` bubbles (a revisit never replays the line). Falls back to the
+   * plain character-paced typewriter — completing on the last character, no
+   * audio — if the asset fails to load or autoplay is blocked, so this never
+   * strands the caller waiting on an "ended" event that'll never fire. */
+  audioSrc?: string;
 }
 
-/** How long each character takes to appear, in ms. */
-const TYPE_SPEED_MS = 40;
+/** How long each character takes to appear, in ms — the default pace, and
+ * also the fallback pace for a voiced (`audioSrc`) bubble whose audio can't
+ * play. */
+const TYPE_SPEED_MS = 50;
 
 /**
  * A small talk bubble that types `text` out character by character, cursor and
@@ -46,6 +60,7 @@ export function SpeechBubble({
   size = "sm",
   className,
   onTypingComplete,
+  audioSrc,
 }: SpeechBubbleProps) {
   // Frozen at mount on purpose (see `instant` doc above) — this bubble either
   // types or doesn't for its whole life, never switching mid-animation.
@@ -69,22 +84,95 @@ export function SpeechBubble({
       return;
     }
 
-    let i = 0;
-    const timer = window.setInterval(() => {
-      i += 1;
-      setShown(text.slice(0, i));
-      if (i >= text.length) {
-        window.clearInterval(timer);
-        onTypingComplete?.();
-      }
-    }, TYPE_SPEED_MS);
+    let cancelled = false;
+    let charTimer: number | undefined;
 
-    return () => window.clearInterval(timer);
+    // Runs the typewriter to completion over `durationMs`, then calls
+    // `onDone` — shared by both the plain and audio-synced paths below so
+    // there's exactly one place pacing `shown`.
+    const typeOver = (durationMs: number, onDone: () => void) => {
+      const perCharMs = Math.max(durationMs / text.length, 10);
+      let i = 0;
+      charTimer = window.setInterval(() => {
+        if (cancelled) return;
+        i += 1;
+        setShown(text.slice(0, i));
+        if (i >= text.length) {
+          window.clearInterval(charTimer);
+          onDone();
+        }
+      }, perCharMs);
+    };
+
+    if (audioSrc) {
+      const audio = new Audio(audioSrc);
+      audio.preload = "auto";
+      let started = false;
+      let fallbackTimer: number | undefined;
+
+      // Paces the typewriter to the audio's real duration once it's known,
+      // so the last character lands right as the line finishes playing.
+      const begin = () => {
+        if (started || cancelled) return;
+        started = true;
+        const durationMs =
+          Number.isFinite(audio.duration) && audio.duration > 0
+            ? audio.duration * 1000
+            : text.length * TYPE_SPEED_MS;
+        typeOver(durationMs, () => {});
+        // Safety net, mirroring the flow's own Robu-intro fallback: if the
+        // audio stalls and its "ended" event never fires, don't strand the
+        // caller waiting on it forever.
+        fallbackTimer = window.setTimeout(() => {
+          if (!cancelled) onTypingComplete?.();
+        }, durationMs + 3000);
+      };
+      // The typewriter's own completion is *not* what signals "done talking"
+      // here — the audio's "ended" event is, so a caller gating an
+      // auto-advance on this (see CoverScreen's screen 2) holds for the
+      // whole voice line, not just until the text catches up to it.
+      const onEnded = () => {
+        if (cancelled) return;
+        window.clearInterval(charTimer);
+        window.clearTimeout(fallbackTimer);
+        setShown(text);
+        onTypingComplete?.();
+      };
+      // Asset missing/unsupported, or autoplay blocked — fall back to the
+      // plain, silent typewriter instead of never calling onTypingComplete.
+      const onUnplayable = () => {
+        if (started || cancelled) return;
+        started = true;
+        typeOver(text.length * TYPE_SPEED_MS, () => onTypingComplete?.());
+      };
+
+      audio.addEventListener("loadedmetadata", begin);
+      audio.addEventListener("ended", onEnded);
+      audio.addEventListener("error", onUnplayable);
+      audio.play().then(begin).catch(onUnplayable);
+
+      return () => {
+        cancelled = true;
+        window.clearInterval(charTimer);
+        window.clearTimeout(fallbackTimer);
+        audio.pause();
+        audio.removeEventListener("loadedmetadata", begin);
+        audio.removeEventListener("ended", onEnded);
+        audio.removeEventListener("error", onUnplayable);
+      };
+    }
+
+    typeOver(text.length * TYPE_SPEED_MS, () => onTypingComplete?.());
+    return () => {
+      cancelled = true;
+      window.clearInterval(charTimer);
+    };
     // onTypingComplete intentionally excluded — callers pass a fresh inline
     // function each render, and this typewriter should only ever run once
-    // per (text, skipTyping) pair, not restart because that identity changed.
+    // per (text, skipTyping, audioSrc) pair, not restart because that
+    // identity changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [text, skipTyping]);
+  }, [text, skipTyping, audioSrc]);
 
   if (size === "heading") {
     return (

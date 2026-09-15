@@ -26,7 +26,8 @@ interface SpeechBubbleProps {
 }
 
 /** How long each character takes to appear, in ms. */
-const TYPE_SPEED_MS = 40;
+const TYPE_SPEED_MS = 20;
+const CHARS_PER_TICK = 3;
 
 /**
  * A small talk bubble that types `text` out character by character, cursor and
@@ -57,10 +58,14 @@ export function SpeechBubble({
     if (!text || skipTyping) return;
 
     let i = 0;
+
     const timer = window.setInterval(() => {
-      i += 1;
+      i += CHARS_PER_TICK;
       setShown(text.slice(0, i));
-      if (i >= text.length) window.clearInterval(timer);
+
+      if (i >= text.length) {
+        window.clearInterval(timer);
+      }
     }, TYPE_SPEED_MS);
 
     return () => window.clearInterval(timer);
@@ -83,13 +88,16 @@ export function SpeechBubble({
     size === "lg"
       ? "max-w-[72vw] px-4 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
       : "max-w-[58vw] px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
-  const textSize = size === "lg" ? "text-sm sm:text-base" : "text-[13px] sm:text-sm";
+  const textSize =
+    size === "lg" ? "text-sm sm:text-base" : "text-[13px] sm:text-sm";
 
   return (
     <div
       className={`animate-pop-in relative w-max rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${className ?? ""}`}
     >
-      <p className={`font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}>
+      <p
+        className={`font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}
+      >
         {renderTyped(shown, text, highlight)}
         {stillTyping && (
           <span className="ml-0.5 inline-block h-[1em] w-0.5 animate-pulse bg-primary align-middle" />

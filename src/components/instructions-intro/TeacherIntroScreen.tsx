@@ -22,6 +22,7 @@ export function TeacherIntroScreen({
             instant={instantSpeech}
             side="left"
             registerAnchor={registerAnchor}
+            audioSrc="/audios/screen_3_audio.mpeg"
           />
         </div>
 

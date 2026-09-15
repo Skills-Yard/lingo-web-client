@@ -36,6 +36,7 @@ export function TeacherQuizScreen({
         side="right"
         className="md:col-start-1 md:row-start-1"
         registerAnchor={registerAnchor}
+        audioSrc="/audios/screen_4_audio.mpeg"
       />
 
       <TeacherIllustration
