@@ -1,5 +1,5 @@
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ExamplesGridSlide } from "@/lib/constants/instructionsIntro";
 import { RobuSays } from "./RobuSays";
 import { useRobuTalking } from "./RobuTalkingContext";
@@ -9,6 +9,15 @@ import { useRobuTalking } from "./RobuTalkingContext";
 // in and named after.
 const HEADING_AUDIO_SRC = "/audios/screen_5/screen5_heading_audio.m4a";
 const PAIR_AUDIO_PREFIXES = ["parent", "coach", "traffic"] as const;
+
+// Robu's own size while he's standing beside whichever tile is currently
+// narrated — smaller than ROBU_DEFAULT_SIZE (his heading-side resting size)
+// so he reads as popping in next to a ~112px tile to point at it, instead of
+// swallowing it. RobuStage sizes him to whatever anchor box is currently
+// registered (see its own doc comment), so this is just this anchor's own
+// className, same technique CoverScreen's reveal state already uses for its
+// own smaller, crouched Robu.
+const ROBU_TILE_SIZE = "h-14 w-14 sm:h-16 sm:w-16 md:h-20 md:w-20";
 
 interface NarrationStep {
   /** Index into the flattened tile list: pair i's left tile is step 2*i,
@@ -44,6 +53,28 @@ export function ExamplesGridScreen({
   // Which tile (see buildNarrationSteps) is currently being narrated — null
   // before the sequence starts and once it's finished.
   const [activeStep, setActiveStep] = useState<number | null>(null);
+  // Robu's own resting spot beside the heading — captured separately from
+  // the flow's shared `registerAnchor` so the effect below can send him back
+  // here once the narration sequence ends (see that effect).
+  const [headingAnchorEl, setHeadingAnchorEl] = useState<HTMLDivElement | null>(null);
+  // One invisible marker per flattened tile step (see buildNarrationSteps),
+  // positioned over each tile itself — measured the same way RobuAnchor
+  // measures its own anchor, just swapped in only while that tile is active.
+  const tileAnchorRefs = useRef<Array<HTMLDivElement | null>>([]);
+
+  // Moves the single shared Robu (see RobuStage) to whichever tile is
+  // currently narrating, and back to his usual spot beside the heading once
+  // the sequence finishes — so he reads as walking over to point at each
+  // example as he explains it, not just talking from beside the heading the
+  // whole time.
+  useEffect(() => {
+    if (activeStep !== null) {
+      const el = tileAnchorRefs.current[activeStep];
+      if (el) registerAnchor(el);
+      return;
+    }
+    if (headingAnchorEl) registerAnchor(headingAnchorEl);
+  }, [activeStep, headingAnchorEl, registerAnchor]);
 
   useEffect(() => {
     // Heading clip first, then each pair's left/right clip back-to-back —
@@ -126,7 +157,7 @@ export function ExamplesGridScreen({
         // instead of claiming the whole flex row and squeezing the grid
         // sibling down to nothing.
         className="md:w-auto md:max-w-105 md:shrink-0"
-        registerAnchor={registerAnchor}
+        registerAnchor={setHeadingAnchorEl}
       />
 
       <div className="flex flex-col gap-5 justify-center grow md:flex-row md:flex-wrap md:justify-center md:gap-x-4">
@@ -139,6 +170,9 @@ export function ExamplesGridScreen({
               image={pair.leftImage}
               label={pair.leftLabel}
               highlighted={activeStep === index * 2}
+              anchorRef={(el) => {
+                tileAnchorRefs.current[index * 2] = el;
+              }}
             />
 
             <Image
@@ -153,6 +187,9 @@ export function ExamplesGridScreen({
               image={pair.rightImage}
               label={pair.rightLabel}
               highlighted={activeStep === index * 2 + 1}
+              anchorRef={(el) => {
+                tileAnchorRefs.current[index * 2 + 1] = el;
+              }}
             />
           </div>
         ))}
@@ -165,14 +202,16 @@ function ExampleTile({
   image,
   label,
   highlighted,
+  anchorRef,
 }: {
   image: string;
   label: string;
   highlighted?: boolean;
+  anchorRef: (el: HTMLDivElement | null) => void;
 }) {
   return (
     <div
-      className={`flex flex-col items-center gap-1.5 w-[30vw] max-w-30 min-w-20 md:w-28 md:max-w-none transition-transform duration-300 ${
+      className={`relative flex flex-col items-center gap-1.5 w-[30vw] max-w-30 min-w-20 md:w-28 md:max-w-none transition-transform duration-300 ${
         highlighted ? "scale-110" : "scale-100"
       }`}
     >
@@ -190,6 +229,15 @@ function ExampleTile({
       >
         {label}
       </span>
+
+      {/* Marks where Robu should stand while this tile is the one being
+          narrated (see the anchor-swap effect above) — never rendered, just
+          measured, same as every other screen's own RobuAnchor. */}
+      <div
+        ref={anchorRef}
+        aria-hidden
+        className={`invisible pointer-events-none absolute -bottom-2 -right-2 ${ROBU_TILE_SIZE}`}
+      />
     </div>
   );
 }
