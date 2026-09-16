@@ -207,20 +207,7 @@ export function CoverScreen({
         {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
             down-right into it; two little accent ticks above echo the
             reference design's "speaking" marks. */}
-        <div
-          className={`flex w-full items-start ${
-            // Centered while it's Robu alone (his one-shot entrance, or
-            // screen 2 before the greeting bubble ever joins him here) —
-            // but once the bubble is actually typing out beside him,
-            // `justify-center` would recompute the row's center on every
-            // keystroke (the bubble's own `w-max` width growing with the
-            // typewriter) and visibly slide both Robu and the bubble
-            // sideways. `justify-start` anchors them to a fixed left edge
-            // instead, so the row only ever grows as more of the line
-            // appears.
-            !isReveal && !entering ? "justify-start" : "justify-center"
-          }`}
-        >
+        <div className="flex w-full items-start justify-center">
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
             // in alongside a Robu that's still arriving.
@@ -232,12 +219,28 @@ export function CoverScreen({
                 <span className="h-3 w-0.5 rotate-[-14deg] rounded-full bg-current sm:h-4" />
                 <span className="h-2 w-0.5 rotate-10 rounded-full bg-current sm:h-2.5" />
               </div>
+              {/* Invisible, already-complete copy of the line — reserves
+                  this bubble's final `w-max` width up front so the row above
+                  (now `justify-center`) can center Robu + the bubble as a
+                  pair without recomputing — and visibly sliding them
+                  sideways — on every keystroke of the real typewriter below.
+                  Same "invisible placeholder reserves the box" idiom
+                  RobuAnchor itself uses. */}
               <SpeechBubble
                 text={slide.robuGreeting}
                 highlight={slide.robuGreetingHighlight}
                 tailCorner="bottom-right"
-                instant={instantSpeech}
+                instant
+                className="invisible"
               />
+              <div className="absolute inset-0">
+                <SpeechBubble
+                  text={slide.robuGreeting}
+                  highlight={slide.robuGreetingHighlight}
+                  tailCorner="bottom-right"
+                  instant={instantSpeech}
+                />
+              </div>
             </div>
           )}
 

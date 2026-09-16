@@ -215,31 +215,33 @@ export function CoverScreen({
         {/* Screen 1 — greeting reads as a plain heading beside Robu (no
             bubble chrome), matching every other current-branch screen's
             RobuSays default. Screen 2 keeps its own bubble treatment below. */}
-        <div
-          className={`flex w-full items-center ${
-            // Centered while it's Robu alone (his one-shot entrance, or
-            // screen 2 before the greeting text ever joins him here) — but
-            // once the greeting is actually typing out beside him,
-            // `justify-center` would recompute the row's center on every
-            // keystroke (the typewriter grows `text` one character at a
-            // time) and visibly slide both Robu and the text sideways.
-            // `justify-start` anchors them to a fixed left edge instead, so
-            // the row only ever grows to the right as more of the line
-            // appears.
-            !isReveal && !entering ? "justify-start" : "justify-center"
-          }`}
-        >
+        <div className="flex w-full items-center justify-center">
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
             // in alongside a Robu that's still arriving.
             <div
               className={`relative min-w-0 ${ROBU_TRAILING_GAP_PULL} ${bubbleSideOrder}`}
             >
+              {/* Invisible, already-complete copy of the line — reserves
+                  this block's final width up front so the row above (now
+                  `justify-center`) can center Robu + the greeting as a pair
+                  without recomputing — and visibly sliding them sideways —
+                  on every keystroke of the real typewriter underneath. Same
+                  "invisible placeholder reserves the box" idiom RobuAnchor
+                  itself uses. */}
+              <SpeechBubble
+                text={slide.robuGreeting}
+                highlight={slide.robuGreetingHighlight}
+                instant
+                size="heading"
+                className="invisible"
+              />
               <SpeechBubble
                 text={slide.robuGreeting}
                 highlight={slide.robuGreetingHighlight}
                 instant={instantSpeech}
                 size="heading"
+                className="absolute inset-0"
               />
             </div>
           )}
