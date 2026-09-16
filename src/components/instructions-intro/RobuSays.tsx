@@ -32,6 +32,27 @@ interface RobuSaysProps {
   robuClassName?: string;
   bubbleClassName?: string;
   className?: string;
+  /** Forwarded straight to SpeechBubble — fires once Robu's line is fully
+   * shown (immediately for `instant`, otherwise on the typewriter's/audio's
+   * own completion). Lets a caller react to "Robu's done talking", e.g.
+   * highlighting something else on screen only once he's finished saying it. */
+  onTypingComplete?: () => void;
+  /** Forwarded straight to SpeechBubble — fires as soon as Robu's line
+   * finishes *appearing*, even for a voiced line whose audio is still
+   * playing. Use this (not `onTypingComplete`) for a caller that should
+   * react to the text animation alone, not the voice line. */
+  onTextTyped?: () => void;
+  /** This screen's own voice line for this text, forwarded straight to
+   * SpeechBubble — see its own `audioSrc` doc for the sync behavior. Each
+   * call site passes its own screen's file; there's no shared default here
+   * since playing another screen's line would be wrong for every screen but
+   * one. */
+  audioSrc?: string;
+  /** Forwarded straight to SpeechBubble's own `speedMs` — pass a smaller
+   * number to type this screen's line faster, or a larger one to slow it
+   * down. Independent of `audioSrc`: it never stretches to match a voice
+   * line's length (see SpeechBubble's doc for why). */
+  speedMs?: number;
 }
 
 /**
@@ -53,6 +74,10 @@ export function RobuSays({
   robuClassName = ROBU_DEFAULT_SIZE,
   bubbleClassName,
   className,
+  onTypingComplete,
+  onTextTyped,
+  audioSrc,
+  speedMs,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -106,6 +131,10 @@ export function RobuSays({
           size="lg"
           tailCorner={tailCorner}
           bubbleClassName={bubbleClassName}
+          onTypingComplete={onTypingComplete}
+          onTextTyped={onTextTyped}
+          audioSrc={audioSrc}
+          speedMs={speedMs}
         />
       </div>
     </div>

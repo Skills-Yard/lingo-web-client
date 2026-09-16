@@ -272,6 +272,14 @@ export function CoverScreen({
                             highlight={slide.robuIntroHighlight}
                             tailCorner="top-right"
                             instant={instantSpeech}
+                            // Voices screen 2's title line. Only this (always-
+                            // mounted, just CSS-hidden past `lg:`) copy carries
+                            // the audio — the `hidden lg:block` copy right
+                            // below renders the exact same text, and mounting
+                            // the clip on both would double-play it. Sound has
+                            // no notion of "hidden", so it plays either way
+                            // regardless of which copy is actually visible.
+                            audioSrc="/audios/screen_2_audio.mpeg"
                           />
                         </div>
                         {/* Desktop — row stays one line (Robu to the left),

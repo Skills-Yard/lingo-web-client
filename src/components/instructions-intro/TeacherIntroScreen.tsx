@@ -27,6 +27,7 @@ export function TeacherIntroScreen({
             instant={instantSpeech}
             side="left"
             sideLg="left"
+            audioSrc="/audios/screen_3_audio.mpeg"
             // Spelled out in full rather than `${ROBU_DEFAULT_SIZE} md:h-36
             // ...`: appending an `md:` override after ROBU_DEFAULT_SIZE's
             // own `md:h-84` doesn't reliably win (same breakpoint tier, so

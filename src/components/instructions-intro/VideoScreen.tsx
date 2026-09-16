@@ -54,6 +54,7 @@ export function VideoScreen({
             size="lg"
             tailCorner="bottom-left"
             bubbleClassName="sm:max-w-md"
+            audioSrc="/audios/screen_6_audio.mpeg"
           />
         </div>
       </div>
