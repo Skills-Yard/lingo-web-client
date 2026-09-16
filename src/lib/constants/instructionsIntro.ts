@@ -236,7 +236,7 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   {
     kind: "teacher-quiz",
     highlightWord: "What",
-    title: "teacher is doing?",
+    title: "is the teacher doing?",
     options: [
       {
         text: "Asking Question",
