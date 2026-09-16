@@ -19,6 +19,7 @@ export function ExamplesGridScreen({
         instant={instantSpeech}
         side="left"
         stacked
+        audioSrc="/audios/screen_5_audio.mpeg"
         // This row is capped to `md:w-56` (224px) once it's beside the image
         // grid, and that column width doesn't grow again past `md:` — so
         // however big Robu gets has to stay under that at every breakpoint

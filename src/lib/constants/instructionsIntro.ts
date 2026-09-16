@@ -194,9 +194,9 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   },
   {
     kind: "cover-reveal",
-    robuIntro: "Before we write code, let's learn how programmer think.",
-    robuIntroHighlight: "programmer think.",
-    robuPrompt: "Hey, Click this box",
+    robuIntro: "Before code, let's learn how a programmer thinks.",
+    robuIntroHighlight: "programmer thinks.",
+    robuPrompt: "Click this box",
     title: "Programmer is a",
     highlightTitle: "problem solver.",
     description:

@@ -1,5 +1,6 @@
 import { ArrowRight, Check, X, Sparkle } from "lucide-react";
 import type { ReactNode } from "react";
+import { RobuReaction } from "./RobuReaction";
 
 export interface QuizFeedback {
   isCorrect: boolean;
@@ -98,15 +99,23 @@ export function IntroFooter({
                 className="absolute w-1.5 h-1.5 rounded-full bg-[#FF8585]"
                 style={{ left: 106, top: 58 }}
               />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={feedback.image ?? "/images/sliceAnswer.png"}
-                alt=""
-                className={`absolute w-20.5 h-19.75 object-contain animate-bounce-slow ${
-                  (feedback.flipImage ?? true) ? "-scale-x-100" : ""
-                }`}
-                style={{ left: 20, top: 5 }}
-              />
+              {feedback.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={feedback.image}
+                  alt=""
+                  className={`absolute w-20.5 h-19.75 object-contain ${
+                    feedback.isCorrect ? "animate-happy-bounce" : "animate-sad-droop"
+                  } ${(feedback.flipImage ?? true) ? "-scale-x-100" : ""}`}
+                  style={{ left: 20, top: 5 }}
+                />
+              ) : (
+                <RobuReaction
+                  mood={feedback.isCorrect ? "happy" : "sad"}
+                  className="absolute w-44 h-43"
+                  style={{ left: -10, top: -32 }}
+                />
+              )}
             </div>
           </div>
         )}

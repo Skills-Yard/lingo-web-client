@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
 import type { TeacherQuizSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
+import { RobuReaction } from "./RobuReaction";
+import { useRobuTalking } from "./RobuTalkingContext";
 
 interface TeacherQuizScreenProps {
   slide: TeacherQuizSlide;
@@ -13,6 +16,21 @@ interface TeacherQuizScreenProps {
   registerAnchor: (el: HTMLDivElement | null) => void;
 }
 
+// Screen 4's heading line and its two-option quiz were recorded as four
+// separate clips (heading, option 1, "OR", option 2) rather than one long
+// line — so, unlike every other screen's single `audioSrc`, this one plays
+// as a short sequence: the heading first (via RobuSays as usual), then once
+// that finishes, option 1 → "OR" → option 2 read back-to-back, with
+// `optionIndex` driving which card gets a "Robu's talking about this one"
+// highlight (see `narratingIdx` below). `optionIndex: null` (the "OR" clip)
+// highlights nothing.
+const HEADING_AUDIO_SRC = "/audios/screen_4/screen_4_audio_trim.m4a";
+const OPTION_NARRATION: { src: string; optionIndex: number | null }[] = [
+  { src: "/audios/screen_4/screen_4_audio_opt1.m4a", optionIndex: 0 },
+  { src: "/audios/screen_4/screen_4_audio_OR.m4a", optionIndex: null },
+  { src: "/audios/screen_4/screen_4_audio_opt2.m4a", optionIndex: 1 },
+];
+
 export function TeacherQuizScreen({
   slide,
   selected,
@@ -21,11 +39,74 @@ export function TeacherQuizScreen({
   instantSpeech,
   registerAnchor,
 }: TeacherQuizScreenProps) {
+  const { startTalking, stopTalking } = useRobuTalking();
   const selectedOption = selected !== null ? slide.options[selected] : null;
   const isCorrect = !!selectedOption?.isCorrect;
   const showFeedback = checked && selectedOption;
   const feedbackTitle = isCorrect ? slide.correctTitle : slide.incorrectTitle;
   const feedbackBody = isCorrect ? slide.correctText : slide.incorrectText;
+
+  // Flips once the heading's own voice line finishes (its "ended" event, via
+  // RobuSays -> SpeechBubble's onTypingComplete) — that's what kicks off the
+  // option narration below, so the two clips never overlap.
+  const [headingVoiced, setHeadingVoiced] = useState(false);
+  // Which option (if any) Robu is currently reading aloud — null while the
+  // "OR" clip plays, or once the whole sequence has finished.
+  const [narratingIdx, setNarratingIdx] = useState<number | null>(null);
+
+  useEffect(() => {
+    // A revisit (`instantSpeech`) never replays any of this screen's audio —
+    // matches every other voiced screen's behavior.
+    if (!headingVoiced || instantSpeech) return;
+
+    let cancelled = false;
+    let audio: HTMLAudioElement | null = null;
+    let talkingActive = false;
+    let i = 0;
+
+    // Each clip's own start/stop pair, mirroring SpeechBubble's audio-driven
+    // talking so Robu's mouth animation only runs while a clip is actually
+    // playing and always hands back to idle the moment it ends/errors/the
+    // screen is left mid-sequence — see RobuTalkingContext.
+    const stopClipTalking = () => {
+      if (!talkingActive) return;
+      talkingActive = false;
+      stopTalking();
+    };
+
+    const playNext = () => {
+      if (cancelled) return;
+      if (i >= OPTION_NARRATION.length) {
+        setNarratingIdx(null);
+        return;
+      }
+      const step = OPTION_NARRATION[i];
+      setNarratingIdx(step.optionIndex);
+      audio = new Audio(step.src);
+      const advance = () => {
+        if (cancelled) return;
+        stopClipTalking();
+        i += 1;
+        playNext();
+      };
+      audio.addEventListener("ended", advance);
+      // A missing/unsupported clip skips ahead rather than stalling the
+      // whole sequence on one bad file.
+      audio.addEventListener("error", advance);
+      talkingActive = true;
+      startTalking();
+      audio.play().catch(advance);
+    };
+
+    playNext();
+
+    return () => {
+      cancelled = true;
+      stopClipTalking();
+      audio?.pause();
+      setNarratingIdx(null);
+    };
+  }, [headingVoiced, instantSpeech, startTalking, stopTalking]);
 
   return (
     // The 2-column split is gated on `lg:` (1024), not `md:` (768): Robu's
@@ -48,6 +129,8 @@ export function TeacherQuizScreen({
         robuClassName="h-20 w-20 sm:h-28 sm:w-28 md:h-32 md:w-32 lg:h-40 lg:w-40"
         className="lg:col-start-1 lg:row-start-1"
         registerAnchor={registerAnchor}
+        audioSrc={HEADING_AUDIO_SRC}
+        onTypingComplete={() => setHeadingVoiced(true)}
       />
 
       <TeacherIllustration
@@ -68,6 +151,14 @@ export function TeacherQuizScreen({
             idx === 0
               ? "bg-violet-100 dark:bg-violet-950/40 text-violet-600 dark:text-violet-300"
               : "bg-secondary text-primary";
+
+          // Robu is currently reading this option aloud — a soft pulse, not
+          // the "picked" ring below, so it never reads as an actual
+          // selection. Only while nothing's been picked yet: a real
+          // selection always wins over this passive narration highlight.
+          if (narratingIdx === idx && selected === null) {
+            cardBorder = "border-primary/50 bg-secondary/40 ring-1 ring-primary/20 animate-pulse";
+          }
 
           if (isSelected && !checked) {
             cardBorder = "border-primary bg-secondary ring-1 ring-primary/30";
@@ -167,10 +258,9 @@ export function TeacherQuizScreen({
                 {feedbackBody}
               </p>
             </div>
-            <img
-              src="/images/sliceAnswer.png"
-              alt=""
-              className="w-16 h-16 object-contain shrink-0 -scale-x-100 animate-bounce-slow md:max-h-[100px]"
+            <RobuReaction
+              mood={isCorrect ? "happy" : "sad"}
+              className="w-16 h-16 shrink-0 md:max-h-[100px]"
             />
           </div>
         )}
