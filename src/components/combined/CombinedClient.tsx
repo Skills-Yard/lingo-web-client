@@ -143,7 +143,7 @@ export function CombinedClient({ initialScreenIndex }: { initialScreenIndex: num
         <p className="text-lg font-semibold">
           That&apos;s every screen, in both designs.
         </p>
-        <a href="/combined" className="text-sm text-primary underline">
+        <a href="/" className="text-sm text-primary underline">
           Start over
         </a>
       </div>

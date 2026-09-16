@@ -263,7 +263,7 @@ export function SpeechBubble({
 
   return (
     <div
-      className={`animate-pop-in relative w-max rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${className ?? ""}`}
+      className={`animate-pop-in relative rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${className ?? ""}`}
     >
       <p
         className={`font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}

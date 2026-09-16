@@ -137,9 +137,7 @@ export function CoverScreen({
     // comment: it's never more than an invisible measurement box), and the
     // real Rive canvas living once in RobuStage is what actually makes the
     // move between them read as a glide instead of a cut.
-    <div
-      className={`relative
-    left-[-12px] ${robuSideOrder}`}
+    <div className={`relative left-[-12px] ${robuSideOrder}`}
     >
       {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
       {isReveal && (
