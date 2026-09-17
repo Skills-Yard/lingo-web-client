@@ -14,7 +14,7 @@ export function VideoScreen({
 }) {
   return (
     <div className="flex flex-col gap-5 min-[996px]:grid min-[996px]:grid-cols-5 min-[996px]:gap-x-8 min-[996px]:items-center min-[996px]:min-h-full min-[996px]:content-center">
-      <div className="flex flex-col gap-4 min-[996px]:col-span-1 min-[996px]:col-start-1 min-[996px]:row-start-1">
+      <div className="min-[996px]:col-span-5 min-[996px]:col-start-1 min-[996px]:row-start-1">
         <RobuSays
           text={`${slide.highlightWord} ${slide.title}`}
           highlight={slide.highlightWord}
@@ -22,7 +22,25 @@ export function VideoScreen({
           side="left"
           registerAnchor={registerAnchor}
           audioSrc="/audios/screen_6_audio.mpeg"
+          // Stays at its smallest (base) size all the way through `sm:`,
+          // instead of ROBU_DEFAULT_SIZE's own `sm:h-60 sm:w-60` — this
+          // screen's own container is still capped at `max-w-md` (448px,
+          // see InstructionsIntroFlow) for that whole 640-767px range, not
+          // actually as wide as the viewport suggests, so the bigger `sm:`
+          // box left no room beside the bubble and forced it onto its own
+          // line. Only grows again once `md:` also lifts that cap to
+          // `max-w-7xl`, where there's genuinely more room to grow into.
+          robuClassName="h-32 w-32 md:h-60 md:w-60 min-[996px]:h-84 min-[996px]:w-84"
+          // `justify-center!`: RobuSays' own row hardcodes `justify-start`
+          // (every other screen that uses it wants Robu left-aligned), which
+          // wins over a plain `justify-center` passed here regardless of
+          // class order — the trailing `!` forces this one call site's
+          // override to actually stick instead of silently losing to it.
+          className="justify-center! gap-4"
         />
+      </div>
+
+      <div className="flex flex-col gap-4 min-[996px]:col-span-1 min-[996px]:col-start-1 min-[996px]:row-start-2">
         <div className="flex flex-col gap-3">
           <button
             type="button"
@@ -49,7 +67,7 @@ export function VideoScreen({
         </div>
       </div>
 
-      <div className="relative w-full aspect-video max-h-100 min-[996px]:aspect-auto min-[996px]:max-h-none min-[996px]:h-105 overflow-hidden rounded-[8px] bg-[#1A1C22] shadow-lg min-[996px]:col-span-3 min-[996px]:col-start-2 min-[996px]:row-start-1">
+      <div className="relative w-full aspect-video max-h-100 min-[996px]:aspect-auto min-[996px]:max-h-none min-[996px]:h-105 overflow-hidden rounded-[8px] bg-[#1A1C22] shadow-lg min-[996px]:col-span-3 min-[996px]:col-start-2 min-[996px]:row-start-2">
         <video
           src="/vedio/lumi.mp4"
           controls
@@ -59,7 +77,7 @@ export function VideoScreen({
         />
       </div>
 
-      <div className="w-full rounded-[8px] p-4 mt-4 min-[996px]:mt-0 flex items-center gap-3 min-[996px]:col-span-1 min-[996px]:col-start-5 min-[996px]:row-start-1 min-[996px]:self-stretch min-[996px]:flex-col min-[996px]:items-start min-[996px]:justify-center min-[996px]:text-left [background:linear-gradient(180deg,#EFF4F1_1.3%,rgba(1,161,127,0.12)_67.42%)] dark:[background:linear-gradient(180deg,rgba(255,255,255,0)_1.3%,rgba(1,161,127,0.12)_67.42%)]">
+      <div className="w-full rounded-[8px] p-4 mt-4 min-[996px]:mt-0 flex items-center gap-3 min-[996px]:col-span-1 min-[996px]:col-start-5 min-[996px]:row-start-2 min-[996px]:self-stretch min-[996px]:flex-col min-[996px]:items-start min-[996px]:justify-center min-[996px]:text-left [background:linear-gradient(180deg,#EFF4F1_1.3%,rgba(1,161,127,0.12)_67.42%)] dark:[background:linear-gradient(180deg,rgba(1,161,127,0.12)_1.3%,rgba(1,161,127,0.12)_67.42%)]">
         <Sparkles className="w-6 h-6 text-primary shrink-0" />
         <p className="text-xs min-[996px]:text-sm text-secondary-foreground font-medium leading-snug">
           {slide.caption}

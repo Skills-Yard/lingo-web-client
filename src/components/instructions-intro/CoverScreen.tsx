@@ -137,13 +137,13 @@ export function CoverScreen({
     // comment: it's never more than an invisible measurement box), and the
     // real Rive canvas living once in RobuStage is what actually makes the
     // move between them read as a glide instead of a cut.
-    <div className={`relative left-[-12px] ${robuSideOrder}`}
+    <div className={`relative -left-3 max-[1179px]:left-0 ${robuSideOrder}`}
     >
       {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
       {isReveal && (
         <div
           aria-hidden
-          className="absolute top-4 left-20 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+          className="absolute top-4 left-20 text-primary sm:-top-7 sm:-right-3 md:-top-4 md:-right-1"
         >
           <Lightbulb
             className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
@@ -165,6 +165,27 @@ export function CoverScreen({
         // spacer only ever approximated centering for one assumed viewport
         // height; flex centering here holds at any height.
         !isReveal ? "justify-center" : ""
+      } ${
+        // Screen 2 only, ≥1180px (matches the `max-[1179px]:` mobile
+        // overrides scattered through this screen — same split point,
+        // just the "≥" side of it): switches from the flex-col stack to a
+        // 2-col grid — heading, reveal prompt and card stacked in the left
+        // column (same DOM order/`order-*` values the mobile stack already
+        // uses, untouched), the "thinking" illustration alone in the right
+        // column, spanning enough rows to center against their combined
+        // height.
+        isReveal
+          ? // `content-start`: without it, grid's default `align-content:
+            // stretch` spreads this column's whole leftover container
+            // height (it's a tall `flex-1` block, not a tightly-fit one)
+            // across the 4 auto row tracks — including rows 3/4, which
+            // exist purely because the image's `row-span-4` forces them
+            // into being, holding no content of their own pre-reveal. That
+            // stretched Robu's own row (1) and the heading's (2) well past
+            // their actual content height, opening a dead gap between them
+            // instead of packing the heading right under Robu at the top.
+            "min-[1180px]:grid min-[1180px]:grid-cols-2 min-[1180px]:content-start min-[1180px]:items-start min-[1180px]:gap-x-12"
+          : ""
       }`}
     >
       {/* ── Robu + speech bubble — laid out as real flex siblings (not
@@ -207,18 +228,33 @@ export function CoverScreen({
                 "min-h-0 pt-1 sm:pt-2"
               : // Screen 2, before reveal: reserves exactly Robu's entrance
                 // height so the heading below him never jumps as he arrives.
-                "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
-        }`}
+                // That vh-based reserve is only meant for the mobile/md
+                // flex-col stack, though — at `min-[1180px]:` this row is a
+                // grid cell of its own (see below) with the heading directly
+                // beneath it as a *separate* row, so the same reservation
+                // just reads as a dead gap between Robu and his own text
+                // instead of centering anything. Scoped with `max-[1179px]:`
+                // (rather than adding a `min-[1180px]:min-h-0` override,
+                // which lost the cascade to `md:min-h-[45vh]` — same value,
+                // same specificity, and Tailwind's generated order put the
+                // arbitrary breakpoint before `md:`) so above that split
+                // point no rule reserves any height at all.
+                "max-[1179px]:min-h-[20vh] max-[1179px]:sm:min-h-[40vh] max-[1179px]:sm:pt-10 max-[1179px]:md:min-h-[45vh] max-[1179px]:md:pt-14"
+        } ${isReveal ? "min-[1180px]:col-start-1 min-[1180px]:row-start-2" : ""}`}
       >
         {/* Screen 1 — greeting reads as a plain heading beside Robu (no
             bubble chrome), matching every other current-branch screen's
             RobuSays default. Screen 2 keeps its own bubble treatment below. */}
-        <div className="flex w-full items-center justify-center">
+        <div
+          className={`flex w-full items-center justify-center max-[1179px]:flex-col max-[1179px]:gap-0 min-[1180px]:gap-4 ${
+            isReveal ? "min-[1180px]:justify-start" : "min-[1180px]:justify-center"
+          }`}
+        >
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
             // in alongside a Robu that's still arriving.
             <div
-              className={`relative min-w-0 ${ROBU_TRAILING_GAP_PULL} ${bubbleSideOrder}`}
+              className={`relative min-w-0 ${ROBU_TRAILING_GAP_PULL} max-[1179px]:ml-0 ${bubbleSideOrder}`}
             >
               {/* Invisible, already-complete copy of the line — reserves
                   this block's final width up front so the row above (now
@@ -280,7 +316,7 @@ export function CoverScreen({
           // (its own shrink-to-fit width growing as the typewriter adds
           // characters), sliding sideways instead of holding still. Pinning
           // it to a fixed left edge means it only ever grows rightward.
-          className="self-start px-4 sm:px-6"
+          className="self-start px-4 sm:px-6 min-[1180px]:col-start-1 min-[1180px]:row-start-1"
         />
       )}
       {isReveal && revealed && (
@@ -289,10 +325,10 @@ export function CoverScreen({
           // `slide.robuPrompt` too, so a centered row would recompute its
           // center — and slide Robu + the bubble sideways — on every
           // keystroke, same as the rows above.
-          className="relative z-10 order-3 flex w-full items-center justify-start gap-0"
+          className="relative z-10 order-3 flex w-full items-center justify-start gap-0 max-[1179px]:flex-col-reverse max-[1179px]:items-center min-[1180px]:col-start-1 min-[1180px]:row-start-3"
         >
           {robu}
-          <div className={`relative mr-6 ${bubbleSideOrder}`}>
+          <div className={`relative mr-6 max-[1179px]:mr-0 ${bubbleSideOrder}`}>
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
                 key="prompt"
@@ -321,7 +357,11 @@ export function CoverScreen({
         initial={false}
         animate={{ opacity: entering ? 0 : 1, y: entering ? 8 : 0 }}
         transition={WALK_TRANSITION}
-        className={`px-4 text-center sm:px-6 ${headingOrder}`}
+        className={`px-4 text-center sm:px-6 ${headingOrder} ${
+          isReveal
+            ? "min-[1180px]:col-start-2 min-[1180px]:row-start-1 min-[1180px]:row-span-4 min-[1180px]:self-center min-[1180px]:px-0"
+            : ""
+        }`}
       >
         <AnimatePresence mode="wait" initial={false}>
           {isReveal ? (
@@ -398,7 +438,7 @@ export function CoverScreen({
             onOpenModal();
             onBoxTap();
           }}
-          className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 ${
+          className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 min-[1180px]:col-start-1 min-[1180px]:row-start-4 min-[1180px]:mt-4 ${
             cardHighlight ? "animate-card-glow" : ""
           }`}
           aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}

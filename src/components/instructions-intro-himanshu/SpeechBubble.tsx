@@ -28,6 +28,12 @@ interface SpeechBubbleProps {
    * same typewriter behavior. */
   size?: "sm" | "lg" | "heading" | "plain";
   className?: string;
+  /** Extra classes for the typed text itself (e.g. a bigger font size for
+   * one specific call site) — `className` above only reaches the bubble's
+   * outer chrome, not this inner `<p>`, which already carries its own
+   * `size`-driven font-size class that a plain `className` override can't
+   * beat via inheritance. */
+  textClassName?: string;
   /** Fired once the full line is showing — right away for `instant`, or the
    * moment the typewriter reaches the last character otherwise. Lets a
    * caller auto-advance the instant Robu "finishes talking" instead of
@@ -83,6 +89,7 @@ export function SpeechBubble({
   instant = false,
   size = "sm",
   className,
+  textClassName,
   onTypingComplete,
   onTextTyped,
   audioSrc,
@@ -266,7 +273,7 @@ export function SpeechBubble({
       className={`animate-pop-in relative rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${className ?? ""}`}
     >
       <p
-        className={`font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}
+        className={`font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize} ${textClassName ?? ""}`}
       >
         {renderTyped(shown, text, highlight)}
         {stillTyping && (

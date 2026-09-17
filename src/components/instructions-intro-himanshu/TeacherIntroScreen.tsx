@@ -23,7 +23,7 @@ export function TeacherIntroScreen({
   const [noteDone, setNoteDone] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-x-12 md:items-center md:min-h-full">
+    <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-x-6 lg:gap-x-8 min-[1180px]:gap-x-12 md:items-center md:min-h-full">
       <div className="flex w-full flex-col items-center gap-3 text-center md:col-span-2 md:items-start md:text-left md:gap-8">
         {/* `w-full` on both this row and the one below (not just
             `items-center` on the mobile-centered ones): without it, a flex
@@ -40,7 +40,18 @@ export function TeacherIntroScreen({
             instant={instantSpeech}
             side="left"
             registerAnchor={registerAnchor}
+            // Without a base size, this had *only* the `min-[1180px]:`
+            // override — below that breakpoint the anchor had no
+            // height/width at all, collapsing to a 0×0 box RobuStage then
+            // had nothing real to glide the actual mascot to, so he could
+            // end up rendered off in a corner past the visible screen
+            // instead of sitting in this row. Same base scale
+            // `ROBU_DEFAULT_SIZE` uses, just inlined (this screen already
+            // shrinks him back down at `min-[1180px]:` to leave the bubble
+            // beside him room, so it can't just reuse that constant as-is).
+            robuClassName="h-32 w-32 sm:h-60 sm:w-60 md:h-84 md:w-84 min-[1180px]:h-52 min-[1180px]:w-52"
             audioSrc="/audios/screen_3_audio.mpeg"
+            className="min-[1180px]:flex-nowrap min-[1180px]:gap-4 min-[1180px]:[&>div:nth-child(2)]:ml-0"
             onTextTyped={() => setRobuDone(true)}
           />
         </div>

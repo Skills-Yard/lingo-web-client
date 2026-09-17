@@ -109,13 +109,13 @@ export function TeacherQuizScreen({
   }, [headingVoiced, instantSpeech, startTalking, stopTalking]);
 
   return (
-    <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-x-10 md:items-center md:min-h-full md:content-center">
+    <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-x-10 md:items-center md:min-h-full md:content-start md:gap-y-0">
       <RobuSays
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.highlightWord}
         instant={instantSpeech}
         side="right"
-        className="md:col-start-1 md:row-start-1"
+        className="md:col-start-1 md:row-start-1 [&>div:nth-child(2)]:pb-0"
         registerAnchor={registerAnchor}
         audioSrc={HEADING_AUDIO_SRC}
         onTypingComplete={() => setHeadingVoiced(true)}
@@ -133,7 +133,7 @@ export function TeacherQuizScreen({
         noteInstant
       />
 
-      <div className="flex flex-col gap-2 md:col-start-2 md:row-start-1 md:row-span-2 md:self-center">
+      <div className="flex flex-col gap-2 md:col-start-2 md:row-start-2 md:self-center">
         {slide.options.map((opt, idx) => {
           const isSelected = selected === idx;
           const Icon = opt.icon;

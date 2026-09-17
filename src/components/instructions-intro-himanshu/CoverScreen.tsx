@@ -137,7 +137,7 @@ export function CoverScreen({
       {isReveal && (
         <div
           aria-hidden
-          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-4 md:-right-1"
         >
           <Lightbulb
             className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
@@ -159,6 +159,16 @@ export function CoverScreen({
         // spacer only ever approximated centering for one assumed viewport
         // height; flex centering here holds at any height.
         !isReveal ? "justify-center" : ""
+      } ${
+        // Screen 2 only, ≥1180px: switches from the flex-col stack to a
+        // 2-col grid — heading, reveal prompt and card stacked in the left
+        // column (same DOM order/`order-*` values the mobile stack already
+        // uses, untouched), the "thinking" illustration alone in the right
+        // column, spanning enough rows to center against their combined
+        // height. Same split point current-branch's own CoverScreen uses.
+        isReveal
+          ? "min-[1180px]:grid min-[1180px]:grid-cols-2 min-[1180px]:content-start min-[1180px]:items-start min-[1180px]:gap-x-12"
+          : ""
       }`}
     >
       {/* ── Robu + speech bubble — laid out as real flex siblings (not
@@ -202,12 +212,16 @@ export function CoverScreen({
               : // Screen 2, before reveal: reserves exactly Robu's entrance
                 // height so the heading below him never jumps as he arrives.
                 "min-h-0"
-        }`}
+        } ${isReveal ? "min-[1180px]:col-start-1 min-[1180px]:row-start-2" : ""}`}
       >
         {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
             down-right into it; two little accent ticks above echo the
             reference design's "speaking" marks. */}
-        <div className="flex w-full items-start justify-center">
+        <div
+          className={`flex w-full items-start justify-center min-[1180px]:items-center min-[1180px]:gap-4 ${
+            isReveal ? "min-[1180px]:justify-start" : "min-[1180px]:justify-center"
+          }`}
+        >
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
             // in alongside a Robu that's still arriving.
@@ -278,7 +292,7 @@ export function CoverScreen({
           // as a plain flex child here, this bubble's `w-max` box would grow
           // and recenter itself against the column on every keystroke of
           // the typewriter, sliding sideways instead of holding still.
-          className="self-start ml-4 sm:ml-6"
+          className="self-start ml-4 sm:ml-6 min-[1180px]:col-start-1 min-[1180px]:row-start-1"
         />
       )}
 
@@ -288,7 +302,7 @@ export function CoverScreen({
           // `slide.robuPrompt` too, so a centered row would recompute its
           // center — and slide Robu + the bubble sideways — on every
           // keystroke, same as the row above.
-          className="relative z-10 order-3 flex w-full items-center justify-start gap-0"
+          className="relative z-10 order-3 flex w-full items-center justify-start gap-0 min-[1180px]:col-start-1 min-[1180px]:row-start-3"
         >
           {robu}
           <div className={`relative mr-6 ${bubbleSideOrder}`}>
@@ -327,7 +341,11 @@ export function CoverScreen({
         initial={false}
         animate={{ opacity: entering ? 0 : 1, y: entering ? 8 : 0 }}
         transition={WALK_TRANSITION}
-        className={`px-4 text-center sm:px-6 ${headingOrder}`}
+        className={`px-4 text-center sm:px-6 ${headingOrder} ${
+          isReveal
+            ? "min-[1180px]:col-start-2 min-[1180px]:row-start-1 min-[1180px]:row-span-4 min-[1180px]:self-center min-[1180px]:px-0"
+            : ""
+        }`}
       >
         <AnimatePresence mode="wait" initial={false}>
           {isReveal ? (
@@ -407,7 +425,7 @@ export function CoverScreen({
             onOpenModal();
             onBoxTap();
           }}
-          className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 ${
+          className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 min-[1180px]:col-start-1 min-[1180px]:row-start-4 min-[1180px]:mt-4 ${
             cardHighlight ? "animate-card-glow" : ""
           }`}
           aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}

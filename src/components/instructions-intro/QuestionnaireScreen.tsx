@@ -4,7 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import { Check, X } from "lucide-react";
 import type { QuestionnaireSlide } from "@/lib/constants/instructionsIntro";
-import { RobuSays } from "./RobuSays";
+import { RobuAnchor } from "./RobuAnchor";
+import { SpeechBubble } from "./SpeechBubble";
 import { RobuReaction } from "./RobuReaction";
 
 interface QuestionnaireScreenProps {
@@ -71,16 +72,38 @@ export function QuestionnaireScreen({
 
   return (
     <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-8 md:gap-y-6 md:min-h-full md:content-center md:items-start">
-      {/* ── Left column — "Q." badge, heading, prompt, illustration ── */}
-      <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1 md:row-span-2 md:self-stretch md:border-r border-black/10 dark:border-white/10 md:pr-8">
-        <RobuSays
+      {/* ── Robu + heading, paired side by side below `md:` (a plain flex
+          row) — `md:contents` then drops this wrapper out of the box model
+          entirely once the grid kicks in, promoting Robu and the heading to
+          direct grid children so they can each take their own explicit cell
+          (row 1: Robu in column 1, heading in column 2) instead of staying
+          forced together. ── */}
+      <div className="flex items-center gap-3 md:contents">
+        <RobuAnchor
+          registerAnchor={registerAnchor}
+          className="shrink-0 h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 xl:h-36 xl:w-36 md:col-start-1 md:row-start-1"
+        />
+        {/* "heading" — plain bold text, no bubble chrome, matching every
+            other current-branch screen's title treatment. `whitespace-nowrap`
+            + a smaller base font (the `!` beats the unprefixed `text-xl`
+            SpeechBubble's own "heading" size sets — same equal-specificity
+            fight `justify-center!` fixed elsewhere): unbounded, this line
+            wrapped across 4 short lines beside Robu on a narrow phone instead
+            of reading as one title. */}
+        <SpeechBubble
           text={slide.title}
           highlight={slide.highlightWord}
           instant={instantSpeech}
-          side="left"
-          registerAnchor={registerAnchor}
+          size="heading"
+          className="md:col-start-2 md:row-start-1 whitespace-nowrap max-sm:text-base!"
         />
+      </div>
 
+      {/* ── Description + illustration — row 2 of the left column, directly
+          under Robu. Reads right after the heading at every width: still the
+          very next block below `md:contents`'s flex row on mobile, and
+          `row-start-2` under Robu once the grid splits them apart. ── */}
+      <div className="flex flex-col gap-4 md:col-start-1 md:row-start-2 md:self-stretch md:border-r border-black/10 dark:border-white/10 md:pr-8">
         <p className="text-sm font-medium leading-[1.5] text-[#666666] dark:text-neutral-400">
           {slide.description}
         </p>
@@ -98,8 +121,9 @@ export function QuestionnaireScreen({
         </div>
       </div>
 
-      {/* ── Option cards — Frame 12 / 61 / 62 (idle) & Frame 11 (selected) ── */}
-      <div className="flex flex-col gap-[18px] md:col-start-2 md:row-start-1 md:row-span-2 md:self-center">
+      {/* ── Option cards — row 2 of the right column, beside the description
+          (Frame 12 / 61 / 62 idle, Frame 11 selected). ── */}
+      <div className="flex flex-col gap-[18px] md:col-start-2 md:row-start-2 md:self-start">
         {slide.items.map((item) => {
           const isSelected = selectedId === item.id;
 

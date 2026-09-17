@@ -148,15 +148,15 @@ export function ExamplesGridScreen({
         text={slide.title}
         instant={instantSpeech}
         side="right"
-        className="md:w-56 md:shrink-0"
+        className="md:w-auto md:max-w-105 md:shrink-0 min-[1024px]:flex-col-reverse min-[1024px]:items-center min-[1024px]:justify-center"
         registerAnchor={setHeadingAnchorEl}
       />
 
-      <div className="flex flex-col gap-5 justify-center grow md:flex-row md:flex-wrap md:justify-center md:gap-x-4">
+      <div className="flex grow flex-col justify-center gap-5">
         {slide.pairs.map((pair, index) => (
           <div
             key={pair.leftLabel}
-            className="flex items-center justify-center gap-4 md:gap-3"
+            className="flex flex-row items-center justify-center gap-2 sm:gap-4 md:gap-3"
           >
             <ExampleTile
               image={pair.leftImage}
@@ -172,7 +172,7 @@ export function ExamplesGridScreen({
               alt=""
               width={24}
               height={16}
-              className="object-contain shrink-0"
+              className="shrink-0 object-contain"
             />
 
             <ExampleTile
@@ -203,7 +203,7 @@ function ExampleTile({
 }) {
   return (
     <div
-      className={`relative flex flex-col items-center gap-1.5 w-[30vw] max-w-30 min-w-20 md:w-28 md:max-w-none transition-transform duration-300 ${
+      className={`relative flex w-full min-w-0 max-w-30 flex-col items-center gap-1.5 transition-transform duration-300 ${
         highlighted ? "scale-110" : "scale-100"
       }`}
     >

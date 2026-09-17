@@ -160,7 +160,7 @@ export function ExamplesGridScreen({
         registerAnchor={setHeadingAnchorEl}
       />
 
-      <div className="flex flex-col gap-5 justify-center grow md:flex-row md:flex-wrap md:justify-center md:gap-x-4">
+      <div className="flex grow flex-col justify-center gap-5">
         {slide.pairs.map((pair, index) => (
           <div
             key={pair.leftLabel}
