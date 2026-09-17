@@ -114,7 +114,7 @@ export function TeacherQuizScreen({
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.highlightWord}
         instant={instantSpeech}
-        className="md:col-start-1 md:row-start-1 [&>div:nth-child(2)]:pb-0 "
+        className="md:col-start-1 md:row-start-1 md:[&>div:nth-child(2)]:pb-0"
         registerAnchor={registerAnchor}
         audioSrc={HEADING_AUDIO_SRC}
         onTypingComplete={() => setHeadingVoiced(true)}

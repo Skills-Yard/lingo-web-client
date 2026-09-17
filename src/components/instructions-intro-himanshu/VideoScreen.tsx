@@ -31,12 +31,15 @@ export function VideoScreen({
           // line. Only grows again once `md:` also lifts that cap to
           // `max-w-7xl`, where there's genuinely more room to grow into.
           robuClassName="h-32 w-32 md:h-60 md:w-60 min-[996px]:h-84 min-[996px]:w-84"
-          // `justify-center!`: RobuSays' own row hardcodes `justify-start`
-          // (every other screen that uses it wants Robu left-aligned), which
-          // wins over a plain `justify-center` passed here regardless of
-          // class order — the trailing `!` forces this one call site's
-          // override to actually stick instead of silently losing to it.
-          className="justify-center! gap-4"
+          // `min-[996px]:justify-center!`: RobuSays' own row hardcodes
+          // `justify-start` (every other screen that uses it wants Robu
+          // left-aligned), which wins over a plain `justify-center` passed
+          // here regardless of class order — the trailing `!` forces this
+          // one call site's override to actually stick instead of silently
+          // losing to it. Scoped to `min-[996px]:` (this was unconditional
+          // before, along with `gap-4` below) so mobile/md keep RobuSays'
+          // own default left-aligned `gap-2` row, matching main.
+          className="min-[996px]:justify-center! min-[996px]:gap-4"
         />
       </div>
 

@@ -83,13 +83,15 @@ export function RobuSays({
         side === "right" ? "flex-row-reverse" : ""
       } ${className ?? ""}`}
     >
-      <div className={`${
-        side === "right" ? "relative -mr-10 ml-2 " : "relative -ml-4 mr-0"}`} >
-
-      <RobuAnchor
-        registerAnchor={registerAnchor}
-        className={`shrink-0 ${robuClassName}`}
-      />
+      <div
+        className={
+          side === "right" ? "relative -mr-10 ml-2 " : "relative -ml-4 mr-0"
+        }
+      >
+        <RobuAnchor
+          registerAnchor={registerAnchor}
+          className={`shrink-0 ${robuClassName}`}
+        />
       </div>
       <div
         // `min-w-0` (not a fixed `w-[70%]`, which didn't shrink below that

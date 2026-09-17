@@ -78,14 +78,16 @@ export function QuestionnaireScreen({
           direct grid children so they can each take their own explicit cell
           (row 1: Robu in column 1, bubble in column 2) instead of staying
           forced together. ── */}
-      <div className="flex items-center gap-3 md:contents">
+      <div className="animate-fade-in flex w-full flex-wrap items-center justify-start gap-2 pt-2 md:contents">
         <RobuAnchor
           registerAnchor={registerAnchor}
-          // Smaller below `md:`, where he shares this row with a
-          // single-line bubble at full width instead of standing alone —
-          // grows to his real desktop size once that's no longer a
-          // constraint and he has column 1 to himself.
-          className="shrink-0 h-12 w-12 sm:h-14 sm:w-14 md:h-28 md:w-28 lg:h-40 lg:w-40 xl:h-48 xl:w-48 md:col-start-1 md:row-start-1"
+          // Below `md:` this is `main`'s own RobuSays sizing
+          // (`ROBU_DEFAULT_SIZE`'s base/`sm:` steps) + its own `side="left"`
+          // pull (`-ml-4`, cancelled at `md:`) — bigger than this screen's
+          // own tighter `md:`+ scale below, which only takes over once
+          // `md:col-start-1` places him in his own grid cell with room to
+          // match.
+          className="shrink-0 -ml-4 md:ml-0 h-32 w-32 sm:h-60 sm:w-60 md:h-28 md:w-28 lg:h-40 lg:w-40 xl:h-48 xl:w-48 md:col-start-1 md:row-start-1"
         />
         <SpeechBubble
           text={slide.title}
@@ -98,10 +100,12 @@ export function QuestionnaireScreen({
           // column — leaving a big empty strip of bubble chrome past the
           // actual text instead of hugging it. `min-w-0` alongside it so it
           // can still shrink below that fitted width when squeezed beside
-          // Robu on a narrow phone (the row above has no `flex-wrap`,
-          // without it the bubble would push Robu's own box past the edge
-          // instead of yielding to it).
-          className="w-fit min-w-0 md:max-w-none md:whitespace-nowrap md:col-start-2 md:row-start-1"
+          // Robu on a narrow phone. Below `md:` the rest (`pb-6`, the
+          // negative margin) is `main`'s own RobuSays pull, inlined since
+          // there's no wrapper div to hang it on here — both cancelled at
+          // `md:` so this screen's own grid-cell positioning there is
+          // untouched.
+          className="w-fit min-w-0 pb-6 -ml-12 sm:-ml-4 md:pb-0 md:ml-0 md:max-w-none md:whitespace-nowrap md:col-start-2 md:row-start-1"
           textClassName="text-2xl lg:text-3xl xl:text-4xl"
         />
       </div>

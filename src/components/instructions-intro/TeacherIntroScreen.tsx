@@ -48,7 +48,15 @@ export function TeacherIntroScreen({
             // end up rendered off in a corner past the visible screen
             // instead of sitting in this row.
             robuClassName="h-32 w-32 sm:h-60 sm:w-60 md:h-84 md:w-84 min-[1180px]:h-52 min-[1180px]:w-52"
-            className="max-[1179px]:flex-col-reverse max-[1179px]:items-center max-[1179px]:gap-0 max-[1179px]:[&>div:nth-child(2)]:ml-0 min-[1180px]:gap-4 min-[1180px]:[&>div:nth-child(2)]:ml-0"
+            // The column-reverse stack was `max-[1179px]:`-scoped — i.e. it
+            // covered *everything* below 1180px, `md`/`lg` included, not
+            // just true mobile. Below `md` that stacked Robu below his own
+            // heading instead of RobuSays' own plain side-by-side row (what
+            // `main` renders there); re-scoped to `md:max-[1179px]:` so the
+            // md–1179 window (left alone per instructions) keeps exactly
+            // what it had, while sub-`md` now falls through to that same
+            // untouched default, matching `main`.
+            className="md:max-[1179px]:flex-col-reverse md:max-[1179px]:items-center md:max-[1179px]:gap-0 md:max-[1179px]:[&>div:nth-child(2)]:ml-0 min-[1180px]:gap-4 min-[1180px]:[&>div:nth-child(2)]:ml-0"
             audioSrc="/audios/screen_3_audio.mpeg"
             onTextTyped={() => setRobuDone(true)}
           />

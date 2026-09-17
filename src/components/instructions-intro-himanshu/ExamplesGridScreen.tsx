@@ -148,6 +148,11 @@ export function ExamplesGridScreen({
         text={slide.title}
         instant={instantSpeech}
         side="right"
+        // No `robuClassName`/gap overrides below `md:` — that's `main`'s
+        // own bare `ROBU_DEFAULT_SIZE` (`h-32 sm:h-60`) and default pull,
+        // matching it exactly there. `md:`+ is untouched either way: this
+        // screen's own `md:w-auto md:max-w-105 md:shrink-0` etc. below
+        // predates that removed override and was never part of it.
         className="md:w-auto md:max-w-105 md:shrink-0 min-[1024px]:flex-col-reverse min-[1024px]:items-center min-[1024px]:justify-center"
         registerAnchor={setHeadingAnchorEl}
       />
@@ -156,7 +161,7 @@ export function ExamplesGridScreen({
         {slide.pairs.map((pair, index) => (
           <div
             key={pair.leftLabel}
-            className="flex flex-row items-center justify-center gap-2 sm:gap-4 md:gap-3"
+            className="flex items-center justify-center gap-4 md:gap-3"
           >
             <ExampleTile
               image={pair.leftImage}
@@ -203,7 +208,7 @@ function ExampleTile({
 }) {
   return (
     <div
-      className={`relative flex w-full min-w-0 max-w-30 flex-col items-center gap-1.5 transition-transform duration-300 ${
+      className={`relative flex max-md:w-[30vw] max-md:min-w-20 md:w-full max-w-30 flex-col items-center gap-1.5 transition-transform duration-300 ${
         highlighted ? "scale-110" : "scale-100"
       }`}
     >

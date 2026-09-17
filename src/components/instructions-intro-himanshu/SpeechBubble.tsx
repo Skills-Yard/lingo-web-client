@@ -261,10 +261,20 @@ export function SpeechBubble({
     );
   }
 
+  // `max-w-70` (not `max-w-full`): a *percentage* max-width, measured
+  // against this bubble's own still-being-resolved flex-item width, gets
+  // treated as unconstrained during the browser's hypothetical/intrinsic
+  // sizing pass — so a row this bubble shares with Robu (see RobuSays,
+  // `side="right"`'s `flex-row-reverse` + `flex-wrap`) never sees a reason
+  // to wrap it, and it just renders at its full one-line width, overflowing
+  // straight past the row (and the viewport) instead of wrapping or
+  // shrinking. A definite value sidesteps that ambiguity entirely — this
+  // was already `main`'s own bug (unchanged code, just never hit at the
+  // width it was tested at), not something this branch introduced.
   const bubbleSize =
     size === "lg"
-      ? "max-w-full px-3 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
-      : "max-w-full px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
+      ? "max-w-70 px-3 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
+      : "max-w-70 px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
   const textSize =
     size === "lg" ? "text-xl sm:text-base" : "text-[13px] sm:text-sm";
 

@@ -78,24 +78,28 @@ export function QuestionnaireScreen({
           direct grid children so they can each take their own explicit cell
           (row 1: Robu in column 1, heading in column 2) instead of staying
           forced together. ── */}
-      <div className="flex items-center gap-3 md:contents">
+      <div className="animate-fade-in flex w-full items-center justify-start gap-2 md:contents">
+        {/* Below `md:` this is `main`'s own RobuSays sizing (`ROBU_DEFAULT_SIZE`'s
+            base/`sm:` steps) — bigger than this screen's own tighter `md:`+
+            scale below, which only takes over once `md:col-start-1` actually
+            places him in his own grid cell with room to match. */}
         <RobuAnchor
           registerAnchor={registerAnchor}
-          className="shrink-0 h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 lg:h-32 lg:w-32 xl:h-36 xl:w-36 md:col-start-1 md:row-start-1"
+          className="shrink-0 h-32 w-32 sm:h-60 sm:w-60 md:h-28 md:w-28 lg:h-32 lg:w-32 xl:h-36 xl:w-36 md:col-start-1 md:row-start-1"
         />
         {/* "heading" — plain bold text, no bubble chrome, matching every
-            other current-branch screen's title treatment. `whitespace-nowrap`
-            + a smaller base font (the `!` beats the unprefixed `text-xl`
-            SpeechBubble's own "heading" size sets — same equal-specificity
-            fight `justify-center!` fixed elsewhere): unbounded, this line
-            wrapped across 4 short lines beside Robu on a narrow phone instead
-            of reading as one title. */}
+            other current-branch screen's title treatment. `min-w-0` +
+            the negative margin (`main`'s own `ROBU_TRAILING_GAP_PULL`,
+            inlined here since there's no wrapper div to hang it on) pull the
+            text in against Robu's own art instead of his square anchor
+            box's empty edge — both cancelled at `md:` so this screen's own
+            grid-cell positioning there is untouched. */}
         <SpeechBubble
           text={slide.title}
           highlight={slide.highlightWord}
           instant={instantSpeech}
           size="heading"
-          className="md:col-start-2 md:row-start-1 whitespace-nowrap max-sm:text-base!"
+          className="min-w-0 pb-6 -ml-7 sm:-ml-15 md:pb-0 md:ml-0 md:col-start-2 md:row-start-1"
         />
       </div>
 

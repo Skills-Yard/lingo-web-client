@@ -28,8 +28,10 @@ export function VideoScreen({
           // `justify-start` (left-aligned), unchanged from before. The `!`
           // forces this one call site's override to actually stick past
           // that default instead of silently losing to it regardless of
-          // class order.
-          className="min-[996px]:justify-center! gap-4"
+          // class order. `gap-4` scoped the same way — unprefixed, it was
+          // fighting RobuSays' own base `gap-2` for mobile/md too, widening
+          // spacing there that main never had.
+          className="min-[996px]:justify-center! min-[996px]:gap-4"
         />
       </div>
 
