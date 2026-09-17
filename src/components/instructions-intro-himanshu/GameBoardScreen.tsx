@@ -105,10 +105,20 @@ export function GameBoardScreen({
           className="flex w-full flex-wrap items-start justify-center"
           transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
         >
-          {!robuJoinedGame && (
+          {!robuJoinedGame ? (
             <RobuAnchor
               registerAnchor={registerAnchor}
-              className={`shrink-0 ${ROBU_DEFAULT_SIZE}`}
+              className={`shrink-0 ${ROBU_DEFAULT_SIZE} lg:h-40 lg:w-40`}
+            />
+          ) : (
+            // `lg:` only — reserves the exact same box Robu just vacated so
+            // the header's own height never changes and the board/controls
+            // below it don't reflow into a new centered position a beat
+            // after this screen first mounts. Skipped below `lg:`, where the
+            // bubble is meant to expand into this space once he goes.
+            <div
+              aria-hidden
+              className="invisible hidden shrink-0 lg:block lg:h-32 lg:w-32"
             />
           )}
 
@@ -123,6 +133,7 @@ export function GameBoardScreen({
               instant={instantSpeech}
               size="lg"
               tailCorner="bottom-left"
+              className="sm:max-w-md"
             />
           </motion.div>
         </motion.div>
@@ -133,7 +144,7 @@ export function GameBoardScreen({
               him actually saying it rather than a page title. */}
 
           {slide.description && (
-            <p className="mt-2 text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
+            <p className="mt-2 text-base font-medium leading-[1.4] text-[#666666] dark:text-neutral-400">
               {slide.description}
             </p>
           )}

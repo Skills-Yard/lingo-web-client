@@ -99,10 +99,10 @@ export function CoverScreen({
   // (the one-shot entrance pose) stay their own, deliberately different
   // sizes for those specific moments.
   const robuSize = entering
-    ? "h-99 w-99 sm:h-144 sm:w-144 md:h-180 md:w-180"
+    ? "h-99 w-99 sm:h-144 sm:w-144 md:h-180 md:w-180 lg:h-216 lg:w-216"
     : revealed
-      ? "h-26 w-26 sm:h-40 sm:w-40 md:h-56 md:w-56"
-      : ROBU_DEFAULT_SIZE;
+      ? "h-26 w-26 sm:h-40 sm:w-40 md:h-56 md:w-56 lg:h-64 lg:w-64"
+      : `${ROBU_DEFAULT_SIZE} lg:h-96 lg:w-96`;
 
   // Both fixed, always — this is what actually pins the heading in place.
   // Screen 2's top slot (`heroOrder`) reserves the exact same height whether
@@ -159,6 +159,17 @@ export function CoverScreen({
         // spacer only ever approximated centering for one assumed viewport
         // height; flex centering here holds at any height.
         !isReveal ? "justify-center" : ""
+      } ${
+        // Screen 2 only, and only once there's room for two columns: switches
+        // from the flex-col stack (used everywhere below `lg`) to a 2-col
+        // grid — the hero row, intro bubble, reveal prompt and reveal card
+        // stacked in the left column (same DOM order/`order-*` values as the
+        // mobile stack, untouched), the "thinking" illustration alone in the
+        // right column, spanning enough rows to center against their
+        // combined height. Gated on `lg:` (1024), not `md:` (768): Robu's
+        // own box is nearly as wide as a `md:grid-cols-2` column leaves room
+        // for between 768-1023px.
+        isReveal ? "lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-12" : ""
       }`}
     >
       {/* ── Robu + speech bubble — laid out as real flex siblings (not
@@ -202,12 +213,20 @@ export function CoverScreen({
               : // Screen 2, before reveal: reserves exactly Robu's entrance
                 // height so the heading below him never jumps as he arrives.
                 "min-h-0"
-        }`}
+        } ${isReveal ? "lg:col-start-1 lg:row-start-1" : ""}`}
       >
         {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
             down-right into it; two little accent ticks above echo the
             reference design's "speaking" marks. */}
-        <div className="flex w-full items-start justify-center">
+        <div
+          className={`flex w-full justify-center ${
+            // Screen 2 centers the robu icon on its own vertical middle
+            // instead of pinning it to the top of its (much taller than
+            // its art) box — screen 1's greeting keeps its original top
+            // alignment.
+            isReveal ? "items-center lg:justify-start" : "items-start"
+          }`}
+        >
           {!isReveal && !entering && (
             // Bubble waits for Robu's entrance to settle instead of popping
             // in alongside a Robu that's still arriving.
@@ -231,7 +250,7 @@ export function CoverScreen({
                 highlight={slide.robuGreetingHighlight}
                 tailCorner="bottom-right"
                 instant
-                className="invisible"
+                className="invisible lg:max-w-md lg:px-6 lg:py-4"
               />
               <div className="absolute inset-0">
                 <SpeechBubble
@@ -239,6 +258,7 @@ export function CoverScreen({
                   highlight={slide.robuGreetingHighlight}
                   tailCorner="bottom-right"
                   instant={instantSpeech}
+                  className="lg:max-w-md lg:px-6 lg:py-4"
                 />
               </div>
             </div>
@@ -278,7 +298,7 @@ export function CoverScreen({
           // as a plain flex child here, this bubble's `w-max` box would grow
           // and recenter itself against the column on every keystroke of
           // the typewriter, sliding sideways instead of holding still.
-          className="self-start ml-4 sm:ml-6"
+          className="self-start ml-4 sm:ml-6 lg:col-start-1 lg:row-start-2 lg:ml-0 lg:max-w-md lg:px-6 lg:py-4"
         />
       )}
 
@@ -288,7 +308,7 @@ export function CoverScreen({
           // `slide.robuPrompt` too, so a centered row would recompute its
           // center — and slide Robu + the bubble sideways — on every
           // keystroke, same as the row above.
-          className="relative z-10 order-3 flex w-full items-center justify-start gap-0"
+          className="relative z-10 order-3 flex w-full items-center justify-start gap-0 lg:col-start-1 lg:row-start-3"
         >
           {robu}
           <div className={`relative mr-6 ${bubbleSideOrder}`}>
@@ -327,7 +347,11 @@ export function CoverScreen({
         initial={false}
         animate={{ opacity: entering ? 0 : 1, y: entering ? 8 : 0 }}
         transition={WALK_TRANSITION}
-        className={`px-4 text-center sm:px-6 ${headingOrder}`}
+        className={`px-4 text-center sm:px-6 ${headingOrder} ${
+          isReveal
+            ? "lg:col-start-2 lg:row-start-1 lg:row-span-4 lg:self-center lg:px-0"
+            : ""
+        }`}
       >
         <AnimatePresence mode="wait" initial={false}>
           {isReveal ? (
@@ -368,7 +392,7 @@ export function CoverScreen({
                 aria-hidden="true"
                 width={743}
                 height={512}
-                className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72"
+                className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72 lg:w-96"
               />
               <Image
                 src="/images/thinkingBlack.png"
@@ -376,7 +400,7 @@ export function CoverScreen({
                 aria-hidden="true"
                 width={743}
                 height={512}
-                className="hidden h-auto w-44 object-contain dark:block sm:w-64 md:w-72"
+                className="hidden h-auto w-44 object-contain dark:block sm:w-64 md:w-72 lg:w-96"
               />
             </motion.div>
           ) : (
@@ -387,11 +411,11 @@ export function CoverScreen({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             >
-              <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
+              <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl lg:text-4xl">
                 <span className="text-foreground">{slide.title}</span>{" "}
                 <span className="text-primary">{slide.highlightTitle}</span>
               </h1>
-              <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base">
+              <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base lg:max-w-md lg:text-lg">
                 {slide.description}
               </p>
             </motion.div>
@@ -407,12 +431,12 @@ export function CoverScreen({
             onOpenModal();
             onBoxTap();
           }}
-          className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 ${
+          className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:h-52 lg:max-w-lg lg:gap-10 lg:p-8 lg:col-start-1 lg:row-start-4 lg:mt-4 ${
             cardHighlight ? "animate-card-glow" : ""
           }`}
           aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
         >
-          <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">
+          <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32 lg:h-40 lg:w-40">
             {/* Plays once, right as this card mounts (i.e. as soon as the
                 reveal step appears) — no loop. Square and sized to fill the
                 card's own height (minus its padding) so the box reads at
@@ -426,7 +450,7 @@ export function CoverScreen({
             <p className="text-sm text-[#BEBEBE] font-medium sm:text-[15px] md:text-base">
               about
             </p>
-            <p className="text-lg font-semibold tracking-wide text-primary sm:text-xl md:text-2xl">
+            <p className="text-lg font-semibold tracking-wide text-primary sm:text-xl md:text-2xl lg:text-3xl">
               {slide.revealSubject}
             </p>
           </div>

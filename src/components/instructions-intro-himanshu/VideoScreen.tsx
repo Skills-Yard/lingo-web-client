@@ -13,13 +13,19 @@ export function VideoScreen({
   registerAnchor: (el: HTMLDivElement | null) => void;
 }) {
   return (
-    <div className="flex flex-col gap-5 min-[996px]:grid min-[996px]:grid-cols-5 min-[996px]:gap-x-8 min-[996px]:items-center min-[996px]:min-h-full min-[996px]:content-center">
+    <div className="flex flex-col gap-4 sm:gap-5 min-[996px]:grid min-[996px]:grid-cols-5 min-[996px]:gap-x-8 min-[996px]:items-center min-[996px]:min-h-full min-[996px]:content-center-safe">
       <div className="flex flex-col gap-4 min-[996px]:col-span-1 min-[996px]:col-start-1 min-[996px]:row-start-1">
         <RobuSays
           text={`${slide.highlightWord} ${slide.title}`}
           highlight={slide.highlightWord}
           instant={instantSpeech}
           side="left"
+          // Column 1 of the 5-col grid is only ~160px wide at `lg:` and
+          // ~212px at `xl:` (the whole grid caps at the shared 1280px
+          // container) — sizes bigger than that overflow into the bubble's
+          // own space next to it, so growth at `lg:`/`xl:` has to stay
+          // under those, not just "bigger than before".
+          robuClassName="h-20 w-20 sm:h-24 sm:w-24 lg:h-36 lg:w-36 xl:h-44 xl:w-44"
           registerAnchor={registerAnchor}
           audioSrc="/audios/screen_6_audio.mpeg"
         />

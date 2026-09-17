@@ -70,9 +70,9 @@ export function QuestionnaireScreen({
   };
 
   return (
-    <div className="flex flex-col gap-5 md:grid md:grid-cols-[1fr_1.9fr] md:gap-x-8 md:gap-y-6 md:min-h-full md:content-center md:items-start">
+    <div className="flex flex-col gap-5 lg:grid lg:grid-cols-[1fr_1.9fr] lg:gap-x-8 lg:gap-y-6 lg:min-h-full lg:content-center lg:items-start">
       {/* ── Left column — "Q." badge, heading, prompt, illustration ── */}
-      <div className="flex flex-col gap-4 md:col-start-1 md:row-start-1 md:row-span-2 md:self-stretch md:border-r border-black/10 dark:border-white/10 md:pr-8">
+      <div className="flex flex-col gap-4 lg:col-start-1 lg:row-start-1 lg:row-span-2 lg:self-stretch lg:border-r border-black/10 dark:border-white/10 lg:pr-8">
         <RobuSays
           text={slide.title}
           highlight={slide.highlightWord}
@@ -86,7 +86,7 @@ export function QuestionnaireScreen({
         </p>
 
         {/* Supporting illustration — desktop only (mobile keeps the compact spec) */}
-        <div className="hidden md:mt-2 md:flex md:items-center md:justify-center">
+        <div className="hidden lg:mt-2 lg:flex lg:items-center lg:justify-center">
           <Image
             src="/images/computer.png"
             alt=""
@@ -99,7 +99,7 @@ export function QuestionnaireScreen({
       </div>
 
       {/* ── Option cards — Frame 12 / 61 / 62 (idle) & Frame 11 (selected) ── */}
-      <div className="flex flex-col gap-[18px] md:col-start-2 md:row-start-1 md:row-span-2 md:self-center">
+      <div className="flex flex-col gap-[18px] lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center">
         {slide.items.map((item) => {
           const isSelected = selectedId === item.id;
 
@@ -161,7 +161,7 @@ export function QuestionnaireScreen({
           Desktop shows this inline panel; mobile keeps it in the footer (see IntroFooter). */}
       {checked && selectedItem && (
         <div
-          className={`hidden md:block relative overflow-hidden rounded-[12px] p-4 pr-28 md:col-span-2 md:row-start-3 md:pr-44 animate-pop-in ${
+          className={`hidden lg:block relative overflow-hidden rounded-[12px] p-4 pr-28 lg:col-span-2 lg:row-start-3 lg:pr-44 animate-pop-in ${
             isCorrect
               ? "[background:linear-gradient(180deg,rgba(223,255,248,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(1,161,127,0.20)_0%,rgba(255,255,255,0)_98.7%)]"
               : "[background:linear-gradient(180deg,rgba(255,226,226,0.68)_0%,rgba(255,255,255,0)_98.7%)] dark:[background:linear-gradient(180deg,rgba(220,38,38,0.20)_0%,rgba(255,255,255,0)_98.7%)]"
@@ -189,7 +189,7 @@ export function QuestionnaireScreen({
           </div>
 
           {selectedItem.feedback && (
-            <p className="mt-2 max-w-[260px] text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400 md:max-w-md">
+            <p className="mt-2 max-w-[260px] text-sm font-medium leading-[1.4] text-[#666666] dark:text-neutral-400 lg:max-w-md">
               {isCorrect ? (
                 <Highlight
                   text={selectedItem.feedback}
@@ -203,7 +203,7 @@ export function QuestionnaireScreen({
 
           <RobuReaction
             mood={isCorrect ? "happy" : "sad"}
-            className="pointer-events-none absolute -bottom-1 right-1 h-23 w-23 md:bottom-1/2 md:right-6 md:h-32.5 md:w-32.5 md:translate-y-1/2"
+            className="pointer-events-none absolute -bottom-1 right-1 h-23 w-23 lg:bottom-1/2 lg:right-6 lg:h-32.5 lg:w-32.5 lg:translate-y-1/2"
           />
         </div>
       )}

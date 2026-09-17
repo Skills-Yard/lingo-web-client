@@ -36,11 +36,14 @@ export function IntroFooter({
   primaryTone = "brand",
 }: IntroFooterProps) {
   return (
-    <footer className="shrink-0 px-4 pt-3 pb-3 bg-background dark:bg-[#0D1016]">
-      <div className="w-full flex flex-col gap-3">
+    <footer className="shrink-0 px-3 pt-2.5 pb-3 sm:px-4 sm:pt-3 sm:pb-3 bg-background dark:bg-[#0D1016] pb-safe">
+      <div className="w-full flex flex-col gap-2.5 sm:gap-3">
         {feedback && (
           <div
-            className="w-full rounded-[6px] p-3.5 flex items-center justify-between gap-2 animate-pop-in overflow-hidden md:hidden"
+            // Matches the `lg:` split TeacherQuizScreen/QuestionnaireScreen's
+            // own inline feedback panels switch on — below that they're the
+            // only place feedback shows, so keep this one up through `lg:`.
+            className="w-full rounded-[6px] p-3.5 flex items-center justify-between gap-2 animate-pop-in overflow-hidden lg:hidden"
             style={{
               background: feedback.isCorrect
                 ? "linear-gradient(180deg, rgba(1,161,127,0.16) 0%, rgba(255,255,255,0) 98.7%)"
@@ -121,7 +124,7 @@ export function IntroFooter({
           type="button"
           onClick={onPrimaryAction}
           disabled={primaryState === "disabled"}
-          className={`relative w-full h-13 rounded-[6px] font-medium text-base transition-all flex items-center justify-center gap-2 shadow-lg active:scale-98 cursor-pointer ${
+          className={`relative w-full h-12 sm:h-13 rounded-[6px] font-medium text-sm sm:text-base transition-all flex items-center justify-center gap-2 shadow-lg active:scale-98 cursor-pointer ${
             ctaFullWidth ? "" : "md:w-auto md:self-end md:min-w-44 md:px-10"
           } ${
             primaryState === "disabled"

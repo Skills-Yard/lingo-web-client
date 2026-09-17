@@ -79,7 +79,7 @@ export function RobuSays({
       // everywhere" the mascot's going for) or letting the bubble run off
       // the edge, the bubble simply drops to its own line underneath him
       // when there isn't room beside him.
-      className={`animate-fade-in flex w-full pt-2 items-center justify-start gap-2 ${
+      className={`animate-fade-in flex w-full flex-wrap pt-2 items-center justify-start gap-2 ${
         side === "right" ? "flex-row-reverse" : ""
       } ${className ?? ""}`}
     >
@@ -92,7 +92,12 @@ export function RobuSays({
       />
       </div>
       <div
-        className={` pb-6 w-[70%] ${
+        // `min-w-0` (not a fixed `w-[70%]`, which didn't shrink below that
+        // share of the row even once the row itself is narrower than the
+        // bubble needs — overflowing into whatever sits beside it, e.g.
+        // VideoScreen's narrow grid column): lets the bubble shrink to
+        // whatever room `flex-wrap` above actually leaves it.
+        className={`pb-6 min-w-0 ${
           side === "right"
             ? "ml-6 -mr-12 sm:-mr-4 md:mr-0"
             : " mr-0 -ml-12 sm:-ml-4 md:ml-0"

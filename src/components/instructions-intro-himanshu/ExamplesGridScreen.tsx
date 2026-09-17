@@ -148,7 +148,14 @@ export function ExamplesGridScreen({
         text={slide.title}
         instant={instantSpeech}
         side="right"
-        className="md:w-56 md:shrink-0"
+        // No fixed `md:w-56` here any more: Robu's own anchor is already
+        // ROBU_DEFAULT_SIZE's fixed 336px at `md`, wider than that column
+        // ever was, so the column never actually constrained him — it only
+        // clipped how much room his heading had, shoving it under the tile
+        // grid. `md:w-auto` overrides RobuSays' own base `w-full` so this
+        // row sizes to its content (Robu + heading) instead of claiming the
+        // whole flex row and squeezing the grid sibling down to nothing.
+        className="md:w-auto md:max-w-105 md:shrink-0"
         registerAnchor={setHeadingAnchorEl}
       />
 
@@ -156,7 +163,7 @@ export function ExamplesGridScreen({
         {slide.pairs.map((pair, index) => (
           <div
             key={pair.leftLabel}
-            className="flex items-center justify-center gap-4 md:gap-3"
+            className="flex items-center justify-center gap-4 md:gap-2"
           >
             <ExampleTile
               image={pair.leftImage}

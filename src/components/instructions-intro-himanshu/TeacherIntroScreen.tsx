@@ -23,8 +23,13 @@ export function TeacherIntroScreen({
   const [noteDone, setNoteDone] = useState(false);
 
   return (
-    <div className="flex flex-col gap-3 md:grid md:grid-cols-5 md:gap-x-12 md:items-center md:min-h-full">
-      <div className="flex w-full flex-col items-center gap-3 text-center md:col-span-2 md:items-start md:text-left md:gap-8">
+    // Grid split gated on `lg:` (1024), not `md:` (768): between those two
+    // widths the note-card + desktop illustration content already switches
+    // on (still at `md:`, kept as-is below), but staying single-column a
+    // breakpoint longer gives that content the room it needs instead of
+    // squeezing it into a too-narrow `md:col-span-2` column.
+    <div className="flex flex-col gap-3 lg:grid lg:grid-cols-5 lg:gap-x-12 lg:items-center lg:min-h-full">
+      <div className="flex w-full flex-col items-center gap-3 text-center lg:col-span-2 md:items-start md:text-left md:gap-8">
         {/* `w-full` on both this row and the one below (not just
             `items-center` on the mobile-centered ones): without it, a flex
             column's `items-center` cross-axis alignment leaves each child at
@@ -39,6 +44,12 @@ export function TeacherIntroScreen({
             highlight={slide.eyebrow}
             instant={instantSpeech}
             side="left"
+            // Spelled out in full rather than `${ROBU_DEFAULT_SIZE} md:h-36
+            // ...`: appending an `md:` override after ROBU_DEFAULT_SIZE's
+            // own `md:h-84` doesn't reliably win (same breakpoint tier, so
+            // it comes down to Tailwind's own generation order, not source
+            // order) — it was rendering at the full 336px despite this.
+            robuClassName="h-32 w-32 sm:h-60 sm:w-60 md:h-36 md:w-36 lg:h-48 lg:w-48"
             registerAnchor={registerAnchor}
             audioSrc="/audios/screen_3_audio.mpeg"
             onTextTyped={() => setRobuDone(true)}
@@ -89,7 +100,7 @@ export function TeacherIntroScreen({
         noteHighlighted={noteDone}
       />
       <TeacherIllustration
-        className="hidden md:block md:h-105 md:col-span-3"
+        className="hidden md:block md:h-105 lg:col-span-3"
         fit="contain"
         variant="bleed"
         imageLight="/images/answerImgWhite.png"
