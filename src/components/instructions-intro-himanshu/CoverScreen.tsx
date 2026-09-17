@@ -99,10 +99,10 @@ export function CoverScreen({
   // (the one-shot entrance pose) stay their own, deliberately different
   // sizes for those specific moments.
   const robuSize = entering
-    ? "h-99 w-99 sm:h-144 sm:w-144 md:h-180 md:w-180 lg:h-216 lg:w-216"
+    ? "h-99 w-99 sm:h-144 sm:w-144 md:h-180 md:w-180"
     : revealed
-      ? "h-26 w-26 sm:h-40 sm:w-40 md:h-56 md:w-56 lg:h-64 lg:w-64"
-      : `${ROBU_DEFAULT_SIZE} lg:h-96 lg:w-96`;
+      ? "h-26 w-26 sm:h-40 sm:w-40 md:h-56 md:w-56"
+      : ROBU_DEFAULT_SIZE;
 
   // Both fixed, always — this is what actually pins the heading in place.
   // Screen 2's top slot (`heroOrder`) reserves the exact same height whether
@@ -115,10 +115,11 @@ export function CoverScreen({
   const heroOrder = "order-1";
   const headingOrder = "order-2";
 
-  // Screen 1 has the bubble on Robu's left (Robu on the right); screen 2
-  // flips that (Robu moves to the left, bubble to the right).
-  const robuSideOrder = !isReveal ? "order-2" : "order-1";
-  const bubbleSideOrder = !isReveal ? "order-1" : "order-2";
+  // Robu stays on the same side on every screen — the left, matching every
+  // other screen's RobuSays default (see RobuAnchor/RobuSays) — instead of
+  // screen 1 putting him on the right while screen 2 puts him on the left.
+  const robuSideOrder = "order-1";
+  const bubbleSideOrder = "order-2";
 
   const robu = (
     // A plain (non-motion) wrapper on purpose: this only reserves Robu's
@@ -126,12 +127,8 @@ export function CoverScreen({
     // should land instantly, not animate, since RobuStage is what glides the
     // real mascot smoothly from wherever it last stood to this new rect.
     // Animating both the anchor *and* the mascot chasing it would fight each
-    // other. Reused at two different call sites below (screen 2's top slot
-    // and its second, post-reveal anchor) rather than one that just flips
-    // `order` — RobuAnchor is cheap to mount twice (see its own doc
-    // comment: it's never more than an invisible measurement box), and the
-    // real Rive canvas living once in RobuStage is what actually makes the
-    // move between them read as a glide instead of a cut.
+    // other. Robu stays this one persistent anchor across screens 1 and 2
+    // (its `order` just flips) instead of living inside a branch that swaps.
     <div className={`relative ${robuSideOrder}`}>
       {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
       {isReveal && (
@@ -153,309 +150,334 @@ export function CoverScreen({
   return (
     <div
       className={`flex w-full flex-1 flex-col items-center gap-0 sm:gap-0 md:min-h-full ${
-        // Screen 1 (not the reveal step) centers its whole block — Robu row
-        // + heading — at true vertical middle of the available height,
-        // instead of relying on the fixed vh spacer below to fake it. That
-        // spacer only ever approximated centering for one assumed viewport
-        // height; flex centering here holds at any height.
-        !isReveal ? "justify-center" : ""
-      } ${
-        // Screen 2 only, and only once there's room for two columns: switches
-        // from the flex-col stack (used everywhere below `lg`) to a 2-col
-        // grid — the hero row, intro bubble, reveal prompt and reveal card
-        // stacked in the left column (same DOM order/`order-*` values as the
-        // mobile stack, untouched), the "thinking" illustration alone in the
-        // right column, spanning enough rows to center against their
-        // combined height. Gated on `lg:` (1024), not `md:` (768): Robu's
-        // own box is nearly as wide as a `md:grid-cols-2` column leaves room
-        // for between 768-1023px.
-        isReveal ? "lg:grid lg:grid-cols-2 lg:items-start lg:gap-x-12" : ""
+        // Screen 2 only: center the whole hero+heading+card block vertically
+        // in the available area instead of it hugging the top with a big
+        // empty gap below (screen 1 keeps its own bespoke entrance spacing).
+        isReveal ? "justify-center" : ""
       }`}
     >
-      {/* ── Robu + speech bubble — laid out as real flex siblings (not
-          absolute-positioned) so on narrow screens the bubble shrinks and
-          wraps to stay glued to Robu instead of running off the edge.
-          `flex-wrap` is the actual guarantee of that on the smallest phones
-          (~320-360px): Robu's own fixed size plus the bubble's own max-width
-          can still add up to more than the available width there, so rather
-          than the bubble running past the edge, it drops to its own line
-          underneath him — same fallback RobuSays uses for its wider bubble.
-          Nothing here animates its own layout any more (no `layout` prop,
-          no CSS `transition` on min-height/padding): Robu's own anchor lives
-          inside it, and RobuStage is what glides the real mascot smoothly to
-          wherever this row's *final* position ends up. Letting this row's
-          own height/order also animate meant RobuStage was chasing a target
-          that kept moving for the whole 700ms of that transition too,
-          roughly doubling how long Robu took to settle. The bubble's own
-          content swap (below) still crossfades on its own, so the now-instant
-          reorder doesn't read as a cut. ── */}
-      <motion.div
-        layout
-        transition={WALK_TRANSITION}
-        className={`relative top-2 z-10 flex-col w-full items-start justify-center gap-0 sm:gap-0  ${heroOrder} ${
-          !isReveal
-            ? // Screen 1: no fixed vh spacer — the root's justify-center
-              // above now centers this row + the heading below it together.
-              ""
-            : revealed
-              ? // Screen 2, revealed: Robu already left this slot for his
-                // second anchor above the reveal card (below), so holding it
-                // at its pre-reveal height would just leave a dead gap up
-                // top. Collapsing it — animated, via the `layout` prop above
-                // — reclaims that space and lets the header bubble + every
-                // sibling below ride up to fill the screen instead. Safe to
-                // animate now (this used to stay fixed always, see the
-                // sibling branch below): RobuStage measures its anchor every
-                // frame (see its own doc comment) specifically so it can
-                // keep pace with an ancestor's own layout animation like
-                // this one, instead of only snapping once it settles.
-                "min-h-0 pt-1 sm:pt-2"
-              : // Screen 2, before reveal: reserves exactly Robu's entrance
-                // height so the heading below him never jumps as he arrives.
-                "min-h-0"
-        } ${isReveal ? "lg:col-start-1 lg:row-start-1" : ""}`}
+      {/* ── Screen 2 only, and only once there's room for two columns
+          (`lg:` — same split point GameBoardScreen uses for board/controls):
+          switches from the flex-col stack (used everywhere below `lg`, and
+          for screen 1 at every width) to a 2-col grid — Robu (with the
+          heading text now beside him instead of above) and the reveal card
+          stacked in the left column, the "thinking" illustration alone in
+          the right column, spanning both rows so it centers against their
+          combined height. The three children below are the exact same three
+          the flex-col layout stacks (hero row, heading slot, card) — only
+          their `lg:` placement changes; their mobile `order-*` values
+          (`heroOrder`/`headingOrder`/the card's own fixed `order-3`) are
+          untouched, so below `lg` this is pixel-identical to before this
+          grid existed. Only one copy of the illustration ever renders (it
+          just grows at `lg:` along with the rest of its column instead of a
+          second, desktop-only copy being drawn elsewhere); the heading
+          slot's own big headline text hides at `lg:` since the hero row
+          shows that same line beside Robu there instead. ── */}
+      <div
+        className={`flex w-full flex-col items-center ${
+          // Gated on `lg:` (1024), not `md:` (768): Robu's own box (sized to
+          // match every other screen's resting Robu — see ROBU_DEFAULT_SIZE)
+          // is nearly as wide as a two-column split leaves room for between
+          // 768-1023px, which used to run the bubble straight into the
+          // illustration there. Staying single-column (image below, like
+          // mobile) until `lg:` gives both siblings the whole row's width
+          // instead of a too-narrow column.
+          isReveal ? "lg:grid lg:grid-cols-2 lg:items-stretch lg:gap-x-12" : ""
+        }`}
       >
-        {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
-            down-right into it; two little accent ticks above echo the
-            reference design's "speaking" marks. */}
+        {/* ── Robu + speech bubble — laid out as real flex siblings (not
+            absolute-positioned) so on narrow screens the bubble shrinks and
+            wraps to stay glued to Robu instead of running off the edge.
+            `flex-wrap` is the actual guarantee of that on the smallest
+            phones (~320-360px): Robu's own fixed size plus the bubble's own
+            max-width can still add up to more than the available width
+            there, so rather than the bubble running past the edge, it drops
+            to its own line underneath him — same fallback RobuSays uses for
+            its wider bubble. Nothing here animates its own layout any more
+            (no `layout` prop, no CSS `transition` on min-height/padding):
+            Robu's own anchor lives inside it, and RobuStage is what glides
+            the real mascot smoothly to wherever this row's *final* position
+            ends up. Letting this row's own height/order also animate meant
+            RobuStage was chasing a target that kept moving for the whole
+            700ms of that transition too, roughly doubling how long Robu
+            took to settle. The bubble's own content swap (below) still
+            crossfades on its own, so the now-instant reorder doesn't read
+            as a cut. At `lg:`, this row anchors the left column (row 1 of
+            2), left-aligned instead of centered. ── */}
         <div
-          className={`flex w-full justify-center ${
-            // Screen 2 centers the robu icon on its own vertical middle
-            // instead of pinning it to the top of its (much taller than
-            // its art) box — screen 1's greeting keeps its original top
-            // alignment.
-            isReveal ? "items-center lg:justify-start" : "items-start"
-          }`}
+          className={`relative top-2 z-10 flex-col w-full items-start justify-center gap-0 sm:gap-0  ${heroOrder} ${
+            revealed
+              ? "min-h-0 pt-1 sm:pt-2 md:pt-0"
+              : isReveal
+                ? "min-h-[20vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[30vh] md:pt-6"
+                : "min-h-[15vh] sm:min-h-[40vh] sm:pt-10 md:min-h-[45vh] md:pt-14"
+          } ${isReveal ? "lg:col-start-1 lg:row-start-1" : ""}`}
         >
-          {!isReveal && !entering && (
-            // Bubble waits for Robu's entrance to settle instead of popping
-            // in alongside a Robu that's still arriving.
-            <div className={`relative -mr-6 ${bubbleSideOrder}`}>
-              <div
-                aria-hidden
-                className="absolute  left-3 flex gap-1 text-primary "
-              >
-                <span className="h-3 w-0.5 rotate-[-14deg] rounded-full bg-current sm:h-4" />
-                <span className="h-2 w-0.5 rotate-10 rounded-full bg-current sm:h-2.5" />
-              </div>
-              {/* Invisible, already-complete copy of the line — reserves
-                  this bubble's final `w-max` width up front so the row above
-                  (now `justify-center`) can center Robu + the bubble as a
-                  pair without recomputing — and visibly sliding them
-                  sideways — on every keystroke of the real typewriter below.
-                  Same "invisible placeholder reserves the box" idiom
-                  RobuAnchor itself uses. */}
-              <SpeechBubble
-                text={slide.robuGreeting}
-                highlight={slide.robuGreetingHighlight}
-                tailCorner="bottom-right"
-                instant
-                className="invisible lg:max-w-md lg:px-6 lg:py-4"
-              />
-              <div className="absolute inset-0">
+          {/* Screen 1 — greeting bubble to the left of Robu, tail pointing
+              down-right into it; two little accent ticks above echo the
+              reference design's "speaking" marks. Screen 2 — bubble sits to
+              Robu's right instead, tail pointing back down-left into it.
+              Robu itself (below) is NOT branched here — only its `order`
+              flips — so it stays mounted and glides across instead of
+              disappearing from one side and popping in on the other. */}
+          <div
+            className={`flex w-full flex-wrap ${
+              // Screen 2 (both before and after the card reveals) centers the
+              // bubble on Robu's own vertical center instead of pinning it to
+              // the top of his (much taller than his art) box — screen 1's
+              // greeting keeps its original top alignment.
+              isReveal ? "items-center" : "items-start"
+            } justify-center ${isReveal ? "lg:flex-nowrap lg:justify-start" : ""}`}
+          >
+            {!isReveal && !entering && (
+              // Bubble waits for Robu's entrance to settle instead of popping
+              // in alongside a Robu that's still arriving.
+              <div className={`relative -mr-6 ${bubbleSideOrder}`}>
+                <div
+                  aria-hidden
+                  className="absolute  left-3 flex gap-1 text-primary "
+                >
+                  <span className="h-3 w-0.5 rotate-[-14deg] rounded-full bg-current sm:h-4" />
+                  <span className="h-2 w-0.5 rotate-10 rounded-full bg-current sm:h-2.5" />
+                </div>
                 <SpeechBubble
                   text={slide.robuGreeting}
                   highlight={slide.robuGreetingHighlight}
                   tailCorner="bottom-right"
                   instant={instantSpeech}
-                  className="lg:max-w-md lg:px-6 lg:py-4"
                 />
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Robu himself only stands in this top slot while screen 2 hasn't
-              revealed yet (or on screen 1, always — `revealed` never flips
-              there). Once revealed he moves to his own second anchor further
-              down, right above the card, and this slot collapses (see its
-              own `layout` animation above) instead of staying reserved and
-              empty. */}
-          {(!isReveal || !revealed) && robu}
+            {robu}
+
+            {isReveal && (
+              // `min-w-0` unconditionally (not just at `lg:`): a flex item's
+              // default `min-width: auto` refuses to shrink below its
+              // content's own unwrapped width, which — now that the bubble
+              // text scales up to `text-4xl` — is wide enough to overflow
+              // the viewport below `lg:` instead of wrapping inside the
+              // bubble's own max-width. `lg:flex-1` (only at `lg:`, where
+              // the row goes single-line/nowrap) additionally sizes this to
+              // fill whatever room Robu's (much wider than his art) box
+              // actually leaves, so it doesn't run into the illustration
+              // column on the right.
+              <div
+                className={`relative min-w-0 lg:-ml-6 lg:flex-1 ${bubbleSideOrder}`}
+              >
+                <AnimatePresence mode="popLayout" initial={false}>
+                  <motion.div
+                    key={revealed ? "prompt" : "intro"}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ duration: 0.2, ease: "easeOut" }}
+                  >
+                    {revealed ? (
+                      <>
+                        {/* Mobile/tablet — short prompt bubble, unchanged. */}
+                        <div className="lg:hidden">
+                          <SpeechBubble
+                            text={slide.robuPrompt}
+                            tailCorner="bottom-left"
+                            instant={instantSpeech}
+                          />
+                        </div>
+                        {/* Desktop — the full line, right beside Robu
+                            instead of the short prompt, since the standalone
+                            headline above the illustration hides at `lg:`
+                            (see the heading slot) in favor of living here. */}
+                        <div className="hidden lg:block">
+                          <SpeechBubble
+                            text={slide.robuIntro}
+                            highlight={slide.robuIntroHighlight}
+                            instant={instantSpeech}
+                            size="heading"
+                          />
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Mobile/tablet — this line is long enough that the
+                            row wraps: Robu ends up on the line above instead
+                            of beside the bubble, so the tail points up into
+                            him instead of the desktop "beside him" corner —
+                            otherwise it reads as talking to empty space. */}
+                        <div className="lg:hidden">
+                          <SpeechBubble
+                            text={slide.robuIntro}
+                            highlight={slide.robuIntroHighlight}
+                            tailCorner="top-right"
+                            instant={instantSpeech}
+                            // Voices screen 2's title line. Only this (always-
+                            // mounted, just CSS-hidden past `lg:`) copy carries
+                            // the audio — the `hidden lg:block` copy right
+                            // below renders the exact same text, and mounting
+                            // the clip on both would double-play it. Sound has
+                            // no notion of "hidden", so it plays either way
+                            // regardless of which copy is actually visible.
+                            audioSrc="/audios/screen_2_audio.mpeg"
+                            // Same reason this is the one copy that carries
+                            // the audio: firing the auto-reveal off both
+                            // mounted copies would fire it twice (once from
+                            // this one's own audio "ended" event, once from
+                            // the other's plain typewriter finishing sooner)
+                            // — only this one drives it.
+                            onTypingComplete={!revealed ? onIntroTypingComplete : undefined}
+                          />
+                        </div>
+                        {/* Desktop — row stays one line (Robu to the left),
+                            tail points back down-left into him as before. */}
+                        <div className="hidden lg:block">
+                          <SpeechBubble
+                            text={slide.robuIntro}
+                            highlight={slide.robuIntroHighlight}
+                            tailCorner="bottom-left"
+                            instant={instantSpeech}
+                          />
+                        </div>
+                      </>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            )}
+          </div>
         </div>
-      </motion.div>
 
-      {/* ── Robu's second anchor — only once revealed, sitting right above
-          the reveal card instead of stranded up top next to a heading he's
-          no longer talking about. A real second `<RobuAnchor>` mount (not a
-          reorder of the one above): cheap, since RobuAnchor is only ever an
-          invisible measurement box (see its own doc comment) — the actual
-          Rive mascot lives once, in RobuStage, and just glides over to
-          whichever anchor is currently registered. ── */}
-      {isReveal && (
-        <SpeechBubble
-          text={slide.robuIntro}
-          highlight={slide.robuIntroHighlight}
-          instant={instantSpeech}
-          size="lg"
-          onTypingComplete={onIntroTypingComplete}
-          // Voices screen 2's title line: the typewriter is re-paced to this
-          // audio's own duration, and the reveal card (gated on
-          // `onIntroTypingComplete` above) now waits for the audio to
-          // actually finish instead of just the text catching up to it.
-          audioSrc="/audios/screen_2_audio.mpeg"
-          // `self-start` (overriding the outer column's own `items-center`)
-          // + a left margin matching this screen's own content inset: left
-          // as a plain flex child here, this bubble's `w-max` box would grow
-          // and recenter itself against the column on every keystroke of
-          // the typewriter, sliding sideways instead of holding still.
-          className="self-start ml-4 sm:ml-6 lg:col-start-1 lg:row-start-2 lg:ml-0 lg:max-w-md lg:px-6 lg:py-4"
-        />
-      )}
-
-      {isReveal && revealed && (
-        <div
-          // `justify-start` (not `-center`): this bubble types out
-          // `slide.robuPrompt` too, so a centered row would recompute its
-          // center — and slide Robu + the bubble sideways — on every
-          // keystroke, same as the row above.
-          className="relative z-10 order-3 flex w-full items-center justify-start gap-0 lg:col-start-1 lg:row-start-3"
+        {/* ── This slot is either the shared title+description heading (page
+            1) or, on page 2, the "thinking" illustration — up throughout page
+            2, both before and after it's revealed. Fades in once Robu's
+            entrance settles rather than appearing with it. At `lg:`, this
+            becomes the right column, spanning both of the left column's rows
+            (hero row + card) so it centers against their combined height —
+            its own headline text hides there since the hero row shows that
+            line beside Robu instead (see above). ── */}
+        <motion.div
+          layout="position"
+          initial={false}
+          animate={{ opacity: entering ? 0 : 1, y: entering ? 8 : 0 }}
+          transition={WALK_TRANSITION}
+          className={`px-4 text-center sm:px-6 ${headingOrder} ${
+            isReveal
+              ? "lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:px-0"
+              : ""
+          }`}
         >
-          {robu}
-          <div className={`relative mr-6 ${bubbleSideOrder}`}>
-            <AnimatePresence mode="popLayout" initial={false}>
+          <AnimatePresence mode="wait" initial={false}>
+            {isReveal ? (
               <motion.div
-                key="prompt"
+                key="thinking-image"
                 initial={{ opacity: 0, scale: 0.92 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.92 }}
-                transition={{ duration: 0.2, ease: "easeOut" }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="mx-auto flex h-full flex-col items-center justify-center gap-3"
               >
-                {/* Robu's own bubble only ever carries this reveal prompt
-                    now — his intro line lives permanently in the heading
-                    slot above instead (see that block's own comment), typed
-                    once as soon as this screen is reached rather than said
-                    twice. This second anchor sits directly above the reveal
-                    card, so this prompt reads as him talking right at the
-                    box. */}
-                <SpeechBubble
-                  text={slide.robuPrompt}
-                  tailCorner="bottom-left"
-                  instant={instantSpeech}
+                {/* Once revealed, Robu's own bubble switches over to the
+                    full line instead of the short "Hey, Click this box"
+                    prompt at `lg:` (see the hero row above) — so this copy
+                    of it hides there to avoid saying the same thing twice;
+                    it only shows below `lg:`, where Robu's own bubble stays
+                    the short prompt. Always `instant`, not tied to
+                    `instantSpeech`: this exact line was just typed out a
+                    second ago in Robu's own bubble, so re-running the
+                    typewriter here would read as a stutter, not a fresh
+                    line — it fades in already fully formed instead. */}
+                {revealed && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25, ease: "easeOut", delay: 0.1 }}
+                    className="lg:hidden"
+                  >
+                    <SpeechBubble
+                      text={slide.robuIntro}
+                      highlight={slide.robuIntroHighlight}
+                      instant
+                      size="heading"
+                    />
+                  </motion.div>
+                )}
+                {/* Natural size is 743x512 (~1.45:1) — `width`/`height` set
+                    that intrinsic ratio for Next/Image, `h-auto` + the `w-*`
+                    classes below are what actually size it on screen, so it
+                    scales up cleanly instead of being squeezed into a fixed
+                    box with the wrong aspect ratio. Light/dark are two
+                    actual images (not a CSS filter) swapped via `dark:` —
+                    mirrors every other theme-aware asset in this flow. Up
+                    for both of page 2's states (not just once revealed).
+                    One copy only — see this block's own doc comment above. */}
+                <Image
+                  src="/images/thinkingWhite.png"
+                  alt=""
+                  aria-hidden="true"
+                  width={743}
+                  height={512}
+                  className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72 lg:w-full lg:max-w-md"
+                />
+                <Image
+                  src="/images/thinkingBlack.png"
+                  alt=""
+                  aria-hidden="true"
+                  width={743}
+                  height={512}
+                  className="hidden h-auto w-44 object-contain dark:block sm:w-64 md:w-72 lg:w-full lg:max-w-md"
                 />
               </motion.div>
-            </AnimatePresence>
-          </div>
-        </div>
-      )}
+            ) : (
+              <motion.div
+                key="title"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2, ease: "easeOut" }}
+              >
+                <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl">
+                  <span className="text-foreground">{slide.title}</span>{" "}
+                  <span className="text-primary">{slide.highlightTitle}</span>
+                </h1>
+                <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base">
+                  {slide.description}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
 
-      {/* ── This slot is either the shared title+description heading (page
-          1) or, on page 2, the "thinking" illustration — up throughout page
-          2, both before and after it's revealed. Fades in once Robu's
-          entrance settles rather than appearing with it. ── */}
-      <motion.div
-        layout="position"
-        initial={false}
-        animate={{ opacity: entering ? 0 : 1, y: entering ? 8 : 0 }}
-        transition={WALK_TRANSITION}
-        className={`px-4 text-center sm:px-6 ${headingOrder} ${
-          isReveal
-            ? "lg:col-start-2 lg:row-start-1 lg:row-span-4 lg:self-center lg:px-0"
-            : ""
-        }`}
-      >
-        <AnimatePresence mode="wait" initial={false}>
-          {isReveal ? (
-            <motion.div
-              key="thinking-image"
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.92 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-              className="mx-auto flex flex-col items-center justify-center gap-3"
-            >
-              {/* Robu's own bubble never carries this line — it lives here
-                  instead, for the whole of page 2 (typed once as soon as the
-                  reveal step is reached, not just once revealed), at a fixed
-                  spot above the illustration. Kept as a real bubble (`size`
-                  "lg", not "heading") — this branch's original design always
-                  gave this line bubble chrome, and consolidating it into one
-                  fixed copy shouldn't also mean losing that look. Its
-                  completion is what fires the auto-reveal (see
-                  `onIntroTypingComplete`), so nothing about this bubble's own
-                  position or the image below it ever needs to move when that
-                  happens. */}
-
-              {/* Natural size is 743x512 (~1.45:1) — `width`/`height` set
-                  that intrinsic ratio for Next/Image, `h-auto` + the fixed
-                  `w-*` classes below are what actually size it on screen at
-                  every breakpoint (including the base one), so it never
-                  depends on the `width` attribute for its rendered size —
-                  that's also why `width` itself stays constant instead of
-                  varying with `revealed`: this image must render at the
-                  exact same size and position whether or not the reveal has
-                  fired yet. Light/dark are two actual images (not a CSS
-                  filter) swapped via `dark:` — mirrors every other
-                  theme-aware asset in this flow. */}
-              <Image
-                src="/images/thinkingWhite.png"
-                alt=""
-                aria-hidden="true"
-                width={743}
-                height={512}
-                className="h-auto w-44 object-contain dark:hidden sm:w-64 md:w-72 lg:w-96"
-              />
-              <Image
-                src="/images/thinkingBlack.png"
-                alt=""
-                aria-hidden="true"
-                width={743}
-                height={512}
-                className="hidden h-auto w-44 object-contain dark:block sm:w-64 md:w-72 lg:w-96"
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="title"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
-            >
-              <h1 className="text-xl font-semibold tracking-tight leading-tight sm:text-2xl md:text-3xl lg:text-4xl">
-                <span className="text-foreground">{slide.title}</span>{" "}
-                <span className="text-primary">{slide.highlightTitle}</span>
-              </h1>
-              <p className="mx-auto mt-2 max-w-xs text-sm font-medium leading-relaxed text-muted-foreground md:max-w-sm md:text-base lg:max-w-md lg:text-lg">
-                {slide.description}
+        {/* ── Reveal card — hidden until "Next" pops it in. At `lg:` this is
+            row 2 of the left column, directly under Robu. ── */}
+        {isReveal && revealed && (
+          <button
+            type="button"
+            onClick={() => {
+              onOpenModal();
+              onBoxTap();
+            }}
+            className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:col-start-1 lg:row-start-2 lg:mt-4 ${
+              cardHighlight ? "animate-card-glow" : ""
+            }`}
+            aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
+          >
+            <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">
+              {/* Plays once, right as this card mounts (i.e. as soon as the
+                  reveal step appears) — no loop. Square and sized to fill the
+                  card's own height (minus its padding) so the box reads at
+                  full size instead of being squeezed down to fit a narrow slot. */}
+              <BoxLottie className="h-full w-full" />
+            </div>
+            <div className="text-left">
+              <p className="text-sm text-white font-medium sm:text-[15px] md:text-base">
+                {slide.revealLabel}
               </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-
-      {/* ── Reveal card — hidden until "Next" pops it in ── */}
-      {isReveal && revealed && (
-        <button
-          type="button"
-          onClick={() => {
-            onOpenModal();
-            onBoxTap();
-          }}
-          className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:h-52 lg:max-w-lg lg:gap-10 lg:p-8 lg:col-start-1 lg:row-start-4 lg:mt-4 ${
-            cardHighlight ? "animate-card-glow" : ""
-          }`}
-          aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
-        >
-          <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32 lg:h-40 lg:w-40">
-            {/* Plays once, right as this card mounts (i.e. as soon as the
-                reveal step appears) — no loop. Square and sized to fill the
-                card's own height (minus its padding) so the box reads at
-                full size instead of being squeezed down to fit a narrow slot. */}
-            <BoxLottie className="h-full w-full" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm text-white font-medium sm:text-[15px] md:text-base">
-              {slide.revealLabel}
-            </p>
-            <p className="text-sm text-[#BEBEBE] font-medium sm:text-[15px] md:text-base">
-              about
-            </p>
-            <p className="text-lg font-semibold tracking-wide text-primary sm:text-xl md:text-2xl lg:text-3xl">
-              {slide.revealSubject}
-            </p>
-          </div>
-        </button>
-      )}
+              <p className="text-sm text-[#BEBEBE] font-medium sm:text-[15px] md:text-base">
+                about
+              </p>
+              <p className="text-lg font-semibold tracking-wide text-primary sm:text-xl md:text-2xl">
+                {slide.revealSubject}
+              </p>
+            </div>
+          </button>
+        )}
+      </div>
 
       {/* ── Modal portal — Robu followed the learner in ── */}
       {isReveal && modalOpen && (
@@ -464,3 +486,4 @@ export function CoverScreen({
     </div>
   );
 }
+
