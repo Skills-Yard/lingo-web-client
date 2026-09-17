@@ -170,14 +170,32 @@ export type InstructionsSlide =
 
 /** Per-screen slide types, so each screen component can be strictly typed to its own slide. */
 export type CoverSlide = Extract<InstructionsSlide, { kind: "cover" }>;
-export type CoverRevealSlide = Extract<InstructionsSlide, { kind: "cover-reveal" }>;
-export type TeacherIntroSlide = Extract<InstructionsSlide, { kind: "teacher-intro" }>;
-export type TeacherQuizSlide = Extract<InstructionsSlide, { kind: "teacher-quiz" }>;
-export type ExamplesGridSlide = Extract<InstructionsSlide, { kind: "examples-grid" }>;
+export type CoverRevealSlide = Extract<
+  InstructionsSlide,
+  { kind: "cover-reveal" }
+>;
+export type TeacherIntroSlide = Extract<
+  InstructionsSlide,
+  { kind: "teacher-intro" }
+>;
+export type TeacherQuizSlide = Extract<
+  InstructionsSlide,
+  { kind: "teacher-quiz" }
+>;
+export type ExamplesGridSlide = Extract<
+  InstructionsSlide,
+  { kind: "examples-grid" }
+>;
 export type VideoSlide = Extract<InstructionsSlide, { kind: "video" }>;
-export type QuestionnaireSlide = Extract<InstructionsSlide, { kind: "questionnaire" }>;
+export type QuestionnaireSlide = Extract<
+  InstructionsSlide,
+  { kind: "questionnaire" }
+>;
 export type RewardSlide = Extract<InstructionsSlide, { kind: "reward" }>;
-export type CommandsGridSlide = Extract<InstructionsSlide, { kind: "commands-grid" }>;
+export type CommandsGridSlide = Extract<
+  InstructionsSlide,
+  { kind: "commands-grid" }
+>;
 export type GameSlide = Extract<InstructionsSlide, { kind: "game" }>;
 export type RobuSlide = Extract<InstructionsSlide, { kind: "robu" }>;
 
@@ -218,7 +236,7 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
   {
     kind: "teacher-quiz",
     highlightWord: "What",
-    title: "teacher is doing?",
+    title: "is the teacher doing?",
     options: [
       {
         text: "Asking Question",
@@ -236,7 +254,8 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     correctTitle: "Correct!",
     correctText: "Yes! Teacher is giving an instruction.",
     incorrectTitle: "Oops! Not quite.",
-    incorrectText: "Teacher is not asking a question, teacher is giving an instruction.",
+    incorrectText:
+      "Teacher is not asking a question, teacher is giving an instruction.",
     submitLabel: "Check",
     cta: "Continue",
   },
@@ -244,9 +263,24 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     kind: "examples-grid",
     title: "Some examples of instruction",
     pairs: [
-      { leftLabel: "Parent", leftImage: "/images/parent.png", rightLabel: "Eat the food", rightImage: "/images/food.png" },
-      { leftLabel: "Coach", leftImage: "/images/coach.png", rightLabel: "Run", rightImage: "/images/run.png" },
-      { leftLabel: "Traffic Signal", leftImage: "/images/trafficSignal.png", rightLabel: "Stop", rightImage: "/images/stop.png" },
+      {
+        leftLabel: "Parent",
+        leftImage: "/images/parent.png",
+        rightLabel: "Eat the food",
+        rightImage: "/images/food.png",
+      },
+      {
+        leftLabel: "Coach",
+        leftImage: "/images/coach.png",
+        rightLabel: "Run",
+        rightImage: "/images/run.png",
+      },
+      {
+        leftLabel: "Traffic Signal",
+        leftImage: "/images/trafficSignal.png",
+        rightLabel: "Stop",
+        rightImage: "/images/stop.png",
+      },
     ],
     cta: "Continue",
   },
@@ -254,7 +288,8 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
     kind: "video",
     highlightWord: "What",
     title: "are Instructions?",
-    caption: "In this video, we will tell that in programming what instructions really known as.",
+    caption:
+      "In this video, we will tell that in programming what instructions really known as.",
     cta: "Continue",
   },
   {
@@ -270,7 +305,8 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
         icon: "/images/statement.png",
         description: "A declaration that performs an action.",
         isCorrect: false,
-        feedback: "Statements are lines of code, but not all statements are instructions.",
+        feedback:
+          "Statements are lines of code, but not all statements are instructions.",
       },
       {
         id: "command",
@@ -286,7 +322,8 @@ export const INSTRUCTIONS_INTRO_SLIDES: InstructionsSlide[] = [
         icon: "/images/question.png",
         description: "A query used to get information.",
         isCorrect: false,
-        feedback: "Questions are not instructions; they're used to check conditions.",
+        feedback:
+          "Questions are not instructions; they're used to check conditions.",
       },
     ],
     cta: "Claim Reward",

@@ -12,7 +12,11 @@ import { ProgramSlots } from "./game/ProgramSlots";
 import { CommandPalette } from "./game/CommandPalette";
 import { GameFooter } from "./game/GameFooter";
 import { SpeechBubble } from "./SpeechBubble";
-import { RobuAnchor, ROBU_DEFAULT_SIZE } from "./RobuAnchor";
+import {
+  RobuAnchor,
+  ROBU_DEFAULT_SIZE,
+  ROBU_TRAILING_GAP_PULL,
+} from "./RobuAnchor";
 import { motion } from "framer-motion";
 
 interface GameBoardScreenProps {
@@ -129,7 +133,7 @@ export function GameBoardScreen({
           <motion.div
             layout
             transition={{ layout: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } }}
-            className="-ml-12 shrink-0 sm:-ml-4 md:ml-0"
+            className={`min-w-0 ${ROBU_TRAILING_GAP_PULL}`}
           >
             <SpeechBubble
               text={`${slide.highlightWord} ${slide.title}`}

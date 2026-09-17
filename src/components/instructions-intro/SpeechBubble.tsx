@@ -21,8 +21,12 @@ interface SpeechBubbleProps {
    * the bubble chrome (border/background/tail) entirely and renders the
    * same typed/highlighted text as a big bold heading instead — for a
    * moment that wants to read as a headline, not a chat bubble, while still
-   * reusing the exact same typewriter behavior. */
-  size?: "sm" | "lg" | "heading";
+   * reusing the exact same typewriter behavior. "plain" drops the chrome
+   * *and* the heading's own font sizing — just the typed characters and
+   * cursor, inline, so a caller can drop this into a slot that already has
+   * its own text styling (e.g. a note card's own heading) and still get the
+   * same typewriter behavior. */
+  size?: "sm" | "lg" | "heading" | "plain";
   /** Extra classes for the bubble itself, such as a wider max-width. */
   bubbleClassName?: string;
   className?: string;
@@ -42,16 +46,17 @@ interface SpeechBubbleProps {
   /** When set, this line is voiced: the audio starts playing the moment this
    * bubble mounts, and `onTypingComplete` fires on the audio's own "ended"
    * event rather than on the last character — so a caller gating an
-   * auto-advance on it holds until the voice line has actually finished
-   * playing, not just once the text has finished appearing. The typewriter
-   * itself still runs at its own pace (`speedMs`) — it's deliberately *not*
-   * stretched to match the audio's length, since a short line under a long
-   * line of audio would otherwise crawl at a few characters a second; typing
-   * simply finishes early and the full line sits there for the rest of the
-   * clip. Ignored for `instant` bubbles (a revisit never replays the line).
-   * Falls back to the plain typewriter — completing on the last character,
-   * no audio — if the asset fails to load or autoplay is blocked, so this
-   * never strands the caller waiting on an "ended" event that'll never fire. */
+   * auto-advance on it (see CoverScreen's screen 2) holds until the voice
+   * line has actually finished playing, not just once the text has finished
+   * appearing. The typewriter itself still runs at its own pace (`speedMs`)
+   * — it's deliberately *not* stretched to match the audio's length, since a
+   * short line under a long line of audio would otherwise crawl at a few
+   * characters a second; typing simply finishes early and the full line
+   * sits there for the rest of the clip. Ignored for `instant` bubbles (a
+   * revisit never replays the line). Falls back to the plain typewriter —
+   * completing on the last character, no audio — if the asset fails to load
+   * or autoplay is blocked, so this never strands the caller waiting on an
+   * "ended" event that'll never fire. */
   audioSrc?: string;
   /** Milliseconds per character. Defaults to `TYPE_SPEED_MS` below — pass a
    * smaller number for a faster typewriter (e.g. `20`) or a larger one to
@@ -63,8 +68,10 @@ interface SpeechBubbleProps {
 }
 
 /** How long each character takes to appear, in ms, when a call site doesn't
- * pass its own `speedMs`. */
-const TYPE_SPEED_MS = 40;
+ * pass its own `speedMs`. To slow down or speed up *every* bubble at once,
+ * change this default; for one screen only, pass `speedMs` instead (see its
+ * doc above) rather than editing this constant. */
+const TYPE_SPEED_MS = 70;
 
 /**
  * A small talk bubble that types `text` out character by character, cursor and
@@ -172,8 +179,8 @@ export function SpeechBubble({
       };
       // The typewriter's own completion is *not* what signals "done talking"
       // here — the audio's "ended" event is, so a caller gating an
-      // auto-advance on this holds for the whole voice line, not just until
-      // the text catches up to it.
+      // auto-advance on this (see CoverScreen's screen 2) holds for the
+      // whole voice line, not just until the text catches up to it.
       const onEnded = () => {
         if (cancelled) return;
         window.clearInterval(charTimer);
@@ -225,6 +232,17 @@ export function SpeechBubble({
     // that identity changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, skipTyping, audioSrc, speedMs]);
+
+  if (size === "plain") {
+    return (
+      <>
+        {renderTyped(shown, text, highlight)}
+        {stillTyping && (
+          <span className="ml-0.5 inline-block h-[0.9em] w-0.5 animate-pulse bg-primary align-middle" />
+        )}
+      </>
+    );
+  }
 
   if (size === "heading") {
     return (

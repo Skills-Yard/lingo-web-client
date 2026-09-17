@@ -125,6 +125,12 @@ export function InstructionsIntroFlow({
   // mascot itself now lives in the single shared RobuStage, not that screen.
   const robuShake = slide.kind === "cover-reveal" && coverRevealed && !boxTapped;
 
+  // Robu's one-shot "hii" wave: only on screen 1 itself, and only once his
+  // entrance has actually finished (see `robuIntroDone` above) — going
+  // false->true again (e.g. Back to screen 1 from screen 2) replays it, same
+  // as arriving fresh.
+  const robuGreeting = slide.kind === "cover" && robuIntroDone;
+
   const isQuiz = slide.kind === "teacher-quiz";
   const isQuestionnaire = slide.kind === "questionnaire";
 
@@ -159,10 +165,11 @@ export function InstructionsIntroFlow({
         setBoxTapped(false);
         return;
       }
-      if (coverRevealed) {
-        setCoverRevealed(false);
-        return;
-      }
+      // No separate "undo the reveal" stop any more: the reveal itself is no
+      // longer a manual step (see `onIntroTypingComplete`) — it fires on its
+      // own the instant Robu's line finishes typing, so there's nothing
+      // stable to rewind back to between screen 1 and the box being tapped.
+      // Back here falls straight through to leaving the screen entirely.
     }
     if (isQuiz) {
       if (checked) {
@@ -357,6 +364,7 @@ export function InstructionsIntroFlow({
             onIntroComplete={() => setRobuIntroDone(true)}
             skipIntro={skipRobuIntro}
             talking={robuTalking}
+            greet={robuGreeting}
           />
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
             {(slide.kind === "cover" || slide.kind === "cover-reveal") && (
@@ -366,9 +374,22 @@ export function InstructionsIntroFlow({
                 slide={slide}
                 revealed={coverRevealed}
                 onBoxTap={() => setBoxTapped(true)}
+                boxTapped={boxTapped}
                 modalOpen={modalOpen}
                 onOpenModal={() => setModalOpen(true)}
-                onCloseModal={() => setModalOpen(false)}
+                // Dismissing the reveal modal (X / backdrop / Escape) is the
+                // learner finishing screen 2's interaction — advance straight
+                // to the next screen instead of leaving them to press the
+                // footer's "Next" a second time. goNext() already resets
+                // `modalOpen` (and everything else per-slide) as part of its
+                // own transition. The header's own Back button is unaffected
+                // — it still just closes the modal in place (see goBack).
+                onCloseModal={goNext}
+                // Collapses screen 2's old two-Next-press flow into one: the
+                // reveal card pops in on its own the moment Robu's intro line
+                // finishes typing, instead of waiting on a manual press that
+                // would only ever do the same thing.
+                onIntroTypingComplete={() => setCoverRevealed(true)}
                 instantSpeech={instantSpeech}
                 registerAnchor={setRobuAnchorEl}
                 robuIntroDone={robuIntroDone}

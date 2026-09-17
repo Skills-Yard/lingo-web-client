@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { TeacherIntroSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
@@ -12,6 +15,13 @@ export function TeacherIntroScreen({
   instantSpeech?: boolean;
   registerAnchor: (el: HTMLDivElement | null) => void;
   }) {
+  // Sequences the "Open Your Notebook" note after Robu's own line: it holds
+  // its text back until Robu finishes talking, types it out the same way his
+  // line does, then glows once that's done — instead of every text on this
+  // screen typing at once.
+  const [robuDone, setRobuDone] = useState(false);
+  const [noteDone, setNoteDone] = useState(false);
+
   return (
     // Grid split gated on `lg:` (1024), not `md:` (768): between those two
     // widths the note-card + desktop illustration content already switches
@@ -20,7 +30,15 @@ export function TeacherIntroScreen({
     // squeezing it into a too-narrow `md:col-span-2` column.
     <div className="flex flex-col gap-3 lg:grid lg:grid-cols-5 lg:gap-x-8 lg:items-center lg:min-h-full lg:content-center">
       <div className="relative z-10 flex flex-col items-center gap-3 text-center lg:col-span-2 md:items-start md:text-left md:gap-6">
-        <div className="flex flex-col items-center gap-3 md:items-start">
+        {/* `w-full` on both this row and the one below (not just `items-center`
+            on the mobile-centered ones): without it, a flex column's
+            `items-center` cross-axis alignment leaves each child at its own
+            shrink-to-fit width instead of stretching it — so RobuSays' own
+            `w-full` row inside had nothing to actually span, and the whole
+            chain shrink-wrapped to the growing heading text, recentering
+            (and visibly sliding sideways) on every keystroke of the
+            typewriter, same as the bug fixed elsewhere in RobuSays/CoverScreen. */}
+        <div className="flex w-full flex-col items-center gap-3 md:items-start">
           <RobuSays
             text={`${slide.eyebrow} ${slide.title}`}
             highlight={slide.eyebrow}
@@ -35,6 +53,7 @@ export function TeacherIntroScreen({
             // order) — it was rendering at the full 336px despite this.
             robuClassName="h-32 w-32 sm:h-60 sm:w-60 md:h-36 md:w-36 lg:h-48 lg:w-48"
             registerAnchor={registerAnchor}
+            onTextTyped={() => setRobuDone(true)}
           />
         </div>
 
@@ -76,6 +95,10 @@ export function TeacherIntroScreen({
         variant="bleed"
         imageLight="/images/teacherWhite.png"
         imageDark="/images/teacherBlack.png"
+        noteStartTyping={robuDone}
+        noteInstant={instantSpeech}
+        onNoteTypingComplete={() => setNoteDone(true)}
+        noteHighlighted={noteDone}
       />
       <TeacherIllustration
         className="relative z-0 hidden md:block md:h-96 lg:col-span-3"

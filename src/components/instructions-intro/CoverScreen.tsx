@@ -1,6 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion } from "framer-motion";
+import { Lightbulb, Sparkle } from "lucide-react";
 import type {
   CoverSlide,
   CoverRevealSlide,
@@ -23,12 +24,23 @@ interface CoverScreenProps {
   /** Fired the first time the reveal card is tapped, so the flow can unlock
    * the footer's primary button. */
   onBoxTap: () => void;
+  /** True once the reveal card has been tapped. Drives the card's own
+   * attention-grabbing glow (see `cardHighlight` below) — it should stop
+   * calling attention to itself the instant it's been tapped, same moment
+   * Robu's own nudge (`robuShake` in the flow) stops. */
+  boxTapped: boolean;
   /** Whether the reveal card's modal is open. Lifted up to the flow (rather
    * than local state) so its Back button can close it as its own step
    * instead of only being reachable through the modal's own X/Escape. */
   modalOpen: boolean;
   onOpenModal: () => void;
   onCloseModal: () => void;
+  /** Fired the instant Robu finishes "saying" the reveal-step intro line
+   * (step 02, before the box is revealed) — collapses what used to be two
+   * separate manual Next-presses on this screen into one: the reveal now
+   * happens on its own as soon as that line finishes typing, instead of
+   * waiting on a press the learner would have to make anyway. */
+  onIntroTypingComplete?: () => void;
   /** Skip Robu's typewriter for whichever line is showing — set once this
    * component's slide has already been seen. */
   instantSpeech?: boolean;
@@ -54,14 +66,22 @@ export function CoverScreen({
   slide,
   revealed,
   onBoxTap,
+  boxTapped,
   modalOpen,
   onOpenModal,
   onCloseModal,
+  onIntroTypingComplete,
   instantSpeech,
   registerAnchor,
   robuIntroDone,
 }: CoverScreenProps) {
   const isReveal = slide.kind === "cover-reveal";
+
+  // The instant the reveal card pops in (right after screen 2's audio +
+  // heading finish and `revealed` flips true), give it its own glow so it
+  // reads as the thing to tap next — same trigger/lifetime as Robu's own
+  // `robuShake` nudge in the flow, just expressed on the card itself.
+  const cardHighlight = isReveal && revealed && !boxTapped;
 
   // Robu's very first entrance (step 01 only): his `intro.riv` timeline
   // plays big and centered, alone — heading and bubble stay held back, and
@@ -84,20 +104,22 @@ export function CoverScreen({
       ? "h-26 w-26 sm:h-40 sm:w-40 md:h-56 md:w-56"
       : ROBU_DEFAULT_SIZE;
 
-  // Robu (with its speech bubble) and the heading swap vertical order once
-  // the reveal card shows up: Robu leaves its greeting spot at the top and
-  // "walks" down to sit right above the card it wants tapped, bubble and all
-  // — so the two are always right next to each other, never split across the
-  // screen. Both blocks stay put in the tree the whole time (same parent,
-  // same slot); only their flex `order` changes, so Robu's Rive canvas never
-  // remounts.
-  const heroOrder = revealed ? "order-2" : "order-1";
-  const headingOrder = revealed ? "order-1" : "order-2";
+  // Both fixed, always — this is what actually pins the heading in place.
+  // Screen 2's top slot (`heroOrder`) reserves the exact same height whether
+  // or not Robu is currently the one standing in it (see its own className
+  // below), so the heading right after it (`headingOrder`) never has reason
+  // to move: nothing above it ever changes size. Robu himself still moves —
+  // once revealed he leaves this top slot for a second anchor of his own
+  // further down, right above the reveal card — but that's a second,
+  // separate slot appearing later in the tree, not a reorder of these two.
+  const heroOrder = "order-1";
+  const headingOrder = "order-2";
 
-  // Screen 1 has the bubble on Robu's left (Robu on the right); screen 2
-  // flips that (Robu moves to the left, bubble to the right).
-  const robuSideOrder = !isReveal ? "order-2" : "order-1";
-  const bubbleSideOrder = !isReveal ? "order-1" : "order-2";
+  // Robu stays on the same side on every screen — the left, matching every
+  // other screen's RobuSays default (see RobuAnchor/RobuSays) — instead of
+  // screen 1 putting him on the right while screen 2 puts him on the left.
+  const robuSideOrder = "order-1";
+  const bubbleSideOrder = "order-2";
 
   const robu = (
     // A plain (non-motion) wrapper on purpose: this only reserves Robu's
@@ -108,6 +130,19 @@ export function CoverScreen({
     // other. Robu stays this one persistent anchor across screens 1 and 2
     // (its `order` just flips) instead of living inside a branch that swaps.
     <div className={`relative ${robuSideOrder}`}>
+      {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
+      {isReveal && (
+        <div
+          aria-hidden
+          className="absolute top-4 right-1 text-primary sm:-top-7 sm:-right-3 md:-top-9 md:-right-4"
+        >
+          <Lightbulb
+            className="h-5 w-5 sm:h-7 sm:w-7 md:h-9 md:w-9"
+            strokeWidth={1.75}
+          />
+          <Sparkle className="absolute -left-3 top-1.5 h-2 w-2 fill-current opacity-70 sm:-left-4 sm:top-2 sm:h-2.5 sm:w-2.5" />
+        </div>
+      )}
       <RobuAnchor registerAnchor={registerAnchor} className={robuSize} />
     </div>
   );
@@ -280,6 +315,13 @@ export function CoverScreen({
                             // no notion of "hidden", so it plays either way
                             // regardless of which copy is actually visible.
                             audioSrc="/audios/screen_2_audio.mpeg"
+                            // Same reason this is the one copy that carries
+                            // the audio: firing the auto-reveal off both
+                            // mounted copies would fire it twice (once from
+                            // this one's own audio "ended" event, once from
+                            // the other's plain typewriter finishing sooner)
+                            // — only this one drives it.
+                            onTypingComplete={!revealed ? onIntroTypingComplete : undefined}
                           />
                         </div>
                         {/* Desktop — row stays one line (Robu to the left),
@@ -410,7 +452,9 @@ export function CoverScreen({
               onOpenModal();
               onBoxTap();
             }}
-            className="animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:col-start-1 lg:row-start-2 lg:mt-4"
+            className={`animate-pop-in order-3 -mt-2 flex h-36 w-full max-w-md items-center gap-4 rounded-[8px] bg-[#1A1C22] p-4 text-left shadow-lg transition-all duration-150 hover:bg-[#22252e] active:scale-[0.98] cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary sm:-mt-1 sm:h-40 sm:gap-6 sm:p-5 md:h-44 md:gap-8 md:p-6 lg:col-start-1 lg:row-start-2 lg:mt-4 ${
+              cardHighlight ? "animate-card-glow" : ""
+            }`}
             aria-label={`${slide.revealLabel} about ${slide.revealSubject}`}
           >
             <div className="flex h-28 w-28 shrink-0 items-center justify-center sm:h-30 sm:w-30 md:h-32 md:w-32">

@@ -32,16 +32,16 @@ interface RobuSaysProps {
   robuClassName?: string;
   bubbleClassName?: string;
   className?: string;
-  /** Forwarded straight to SpeechBubble — fires once Robu's line is fully
-   * shown (immediately for `instant`, otherwise on the typewriter's/audio's
-   * own completion). Lets a caller react to "Robu's done talking", e.g.
-   * highlighting something else on screen only once he's finished saying it. */
-  onTypingComplete?: () => void;
   /** Forwarded straight to SpeechBubble — fires as soon as Robu's line
    * finishes *appearing*, even for a voiced line whose audio is still
    * playing. Use this (not `onTypingComplete`) for a caller that should
    * react to the text animation alone, not the voice line. */
   onTextTyped?: () => void;
+  /** "heading" (default) — this is a real page heading, styled bold and
+   * plain like every other screen's, not a chat bubble. Pass "lg" for a
+   * screen whose Robu line is short enough to stay an actual bubble instead
+   * (e.g. RewardScreen's "CLAIM reward"). */
+  size?: "heading" | "lg";
   /** This screen's own voice line for this text, forwarded straight to
    * SpeechBubble — see its own `audioSrc` doc for the sync behavior. Each
    * call site passes its own screen's file; there's no shared default here
@@ -53,6 +53,13 @@ interface RobuSaysProps {
    * down. Independent of `audioSrc`: it never stretches to match a voice
    * line's length (see SpeechBubble's doc for why). */
   speedMs?: number;
+  /** Forwarded straight to SpeechBubble's own `onTypingComplete` — fires
+   * once this line is fully "said": right away for a revisit (`instant`),
+   * on the last typed character for a plain line, or on the voice line's
+   * own "ended" event when `audioSrc` is set. Lets a caller chain something
+   * onto "Robu just finished saying this" (e.g. TeacherQuizScreen narrating
+   * its options right after the heading is voiced). */
+  onTypingComplete?: () => void;
 }
 
 /**
@@ -74,10 +81,11 @@ export function RobuSays({
   robuClassName = ROBU_DEFAULT_SIZE,
   bubbleClassName,
   className,
-  onTypingComplete,
-  onTextTyped,
+  size = "heading",
   audioSrc,
   speedMs,
+  onTypingComplete,
+  onTextTyped,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -128,7 +136,7 @@ export function RobuSays({
           text={text}
           highlight={highlight}
           instant={instant}
-          size="lg"
+          size={size}
           tailCorner={tailCorner}
           bubbleClassName={bubbleClassName}
           onTypingComplete={onTypingComplete}

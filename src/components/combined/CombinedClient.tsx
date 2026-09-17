@@ -3,10 +3,31 @@
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { InstructionsIntroFlow as MergeChangesFlow } from "@/components/instructions-intro-merge-changes/InstructionsIntroFlow";
+// `instructions-intro/` is both feat/res's own tree (compared against
+// feat/merge-changes below) and, unrelatedly, "the current branch" `/`
+// compares feat/himanshu against — same import, so it's aliased once and
+// reused as both `ResFlow` and `CurrentFlow` rather than imported twice.
 import { InstructionsIntroFlow as ResFlow } from "@/components/instructions-intro/InstructionsIntroFlow";
+import { InstructionsIntroFlow as HimanshuFlow } from "@/components/instructions-intro-himanshu/InstructionsIntroFlow";
 
-/** 0 = feat/merge-changes' design, 1 = feat/res's (this branch's, now the
- * merged SM-from-merge-changes/MD+-from-res result) design. */
+const CurrentFlow = ResFlow;
+
+type FlowComponent = typeof MergeChangesFlow;
+
+/** The two trees `/` vs. `/combined` each interleave — see the pairing each
+ * page passes in and this component's own doc comment below. */
+export type FlowPair = [slotZero: FlowComponent, slotOne: FlowComponent];
+
+/** `/combined`'s own pair — the SM/MD-XL responsive merge: feat/merge-changes
+ * vs. this branch's own already-merged tree. */
+export const MERGE_VS_RES: FlowPair = [MergeChangesFlow, ResFlow];
+
+/** `/`'s own pair — feat/himanshu vs. this branch, unrelated to the
+ * responsive merge above. Exactly the pairing `/` compared before this
+ * branch also grew its own `/combined` tool. */
+export const HIMANSHU_VS_CURRENT: FlowPair = [HimanshuFlow, CurrentFlow];
+
+/** 0 = the pair's first design, 1 = its second. */
 type Slot = 0 | 1;
 
 // Same badge every screen's shared `IntroHeader` renders — identical markup
@@ -71,7 +92,10 @@ function retreat({ screenIndex, slot }: Position): Position | null {
  * md:/lg:/xl: classes kept as feat/res's own). `instructions-intro-merge-
  * changes/` is a frozen, standalone copy of feat/merge-changes' tree as it
  * stood at merge time — it never changes as `instructions-intro/` itself is
- * edited, so this comparison stays stable.
+ * edited, so this comparison stays stable. The root `/` page runs this same
+ * component over the *other* pair (feat/himanshu vs. this branch), and
+ * `/review` still exists separately for comparing any two trees as full,
+ * manually-switchable flows rather than interleaved.
  *
  * Neither tree's `InstructionsIntroFlow` gained a prop for this — each
  * screen's own Next/Back still just calls its own internal goNext/goBack,
@@ -93,7 +117,19 @@ function retreat({ screenIndex, slot }: Position): Position | null {
  * mount, and every mount after that passes `skipRobuIntro` so Robu picks up
  * straight in his ambient loop instead of re-entering from scratch.
  */
-export function CombinedClient({ initialScreenIndex }: { initialScreenIndex: number }) {
+export function CombinedClient({
+  initialScreenIndex,
+  flows = MERGE_VS_RES,
+  restartHref = "/combined",
+}: {
+  initialScreenIndex: number;
+  /** Which two trees to interleave — defaults to `/combined`'s own pair.
+   * `/` passes `HIMANSHU_VS_CURRENT` instead (see the exports above). */
+  flows?: FlowPair;
+  /** Where "Start over" links once every screen's been shown in both
+   * designs — defaults to `/combined` itself; `/` passes `"/"`. */
+  restartHref?: string;
+}) {
   const [position, setPosition] = useState<Position>({
     screenIndex: initialScreenIndex,
     slot: 0,
@@ -149,14 +185,15 @@ export function CombinedClient({ initialScreenIndex }: { initialScreenIndex: num
         <p className="text-lg font-semibold">
           That&apos;s every screen, in both designs.
         </p>
-        <a href="/combined" className="text-sm text-primary underline">
+        <a href={restartHref} className="text-sm text-primary underline">
           Start over
         </a>
       </div>
     );
   }
 
-  const Flow = position.slot === 0 ? MergeChangesFlow : ResFlow;
+  const [slotZeroFlow, slotOneFlow] = flows;
+  const Flow = position.slot === 0 ? slotZeroFlow : slotOneFlow;
 
   return (
     <div ref={containerRef}>

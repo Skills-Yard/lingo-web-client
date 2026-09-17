@@ -131,7 +131,8 @@ export function RewardScreen({
 
   return (
     <div className="mx-auto flex w-full max-w-md flex-col items-center gap-4 py-2 md:min-h-full md:justify-center lg:gap-2 lg:py-1">
-      {/* ── Heading — Robu announces the claim instead of a bare title ── */}
+      {/* ── "CLAIM reward" — RobuSays' default heading treatment, same as
+          every other current-branch screen (no bubble chrome). ── */}
       <RobuSays
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.title}

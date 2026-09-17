@@ -133,11 +133,16 @@ export function TeacherQuizScreen({
         onTypingComplete={() => setHeadingVoiced(true)}
       />
 
+      {/* Same "Open Your Notebook" note as screen 03, but shown fully formed
+          right away — this screen's own heading is already voiced narration,
+          so a second thing typing at the same time would be one animation
+          too many. */}
       <TeacherIllustration
         className="h-64 lg:h-80 lg:col-start-1 lg:row-start-2"
         fit="contain"
         imageLight="/images/answerImgWhite.png"
         imageDark="/images/answerImgBlack.png"
+        noteInstant
       />
 
       <div className="flex flex-col gap-2 lg:col-start-2 lg:row-start-1 lg:row-span-2 lg:self-center">
