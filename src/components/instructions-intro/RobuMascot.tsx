@@ -39,15 +39,23 @@ const STATE_MACHINE = "Robu-StateMachine";
 // How long that boot sequence takes to settle into its own idle state,
 // measured against the actual timeline lengths in the .riv — the state
 // machine doesn't expose a "boot done" event to wait on instead, so this is
-// the cue for handing off to the overlays below and telling the caller
+// the cue for handing off to the ambient loop below and telling the caller
 // (`onIntroComplete`) the intro has finished.
 const INTRO_SETTLE_MS = 3200;
 
-// A caller that skips the intro entirely (see `skipIntro`) can't jump the
-// state machine straight to its idle state (it has no inputs to do that
-// with), so it bypasses the state machine altogether and plays the raw
-// `idle ` timeline directly instead — same mechanism `<RobuEyeBlink>` itself
-// uses, via the same `useAmbientLoop` watchdog.
+// Once the boot sequence settles, playback hands off from the state machine
+// to this raw timeline (same mechanism `<RobuEyeBlink>` itself uses, via the
+// same `useAmbientLoop` watchdog) rather than leaving the state machine
+// running for good. The state machine keeps its own "mouth" layer driving
+// every frame for as long as it's playing, which was silently overriding
+// `useTalkingMouth`'s own `rive.play("Mouth_expression")` calls — no visible mouth
+// movement ever showed up while a heading was typing. Handing off to a
+// plain timeline removes that competing driver, so the overlays below
+// (eyeblink, glance, mouth-talk) are the only things touching those layers
+// once the intro is done. A caller that skips the intro entirely (see
+// `skipIntro`) goes straight to this same raw timeline for the same
+// reason — it also can't jump the state machine straight to its idle state,
+// since it has no inputs to do that with.
 const BASE_ANIMATIONS = ["idle "];
 
 const EYEBLINK_ANIMATIONS = ["eye blink 2"];
@@ -126,16 +134,17 @@ export function RobuMascot({
     }
 
     const timer = window.setTimeout(() => {
+      // Hand off from the state machine to the raw ambient timeline — see
+      // BASE_ANIMATIONS above for why this matters for the overlays below.
+      rive.stop(STATE_MACHINE);
+      rive.play(BASE_ANIMATIONS[0]);
       setAmbientReady(true);
       onIntroComplete();
     }, INTRO_SETTLE_MS);
     return () => window.clearTimeout(timer);
   }, [rive, onIntroComplete, skipIntro]);
 
-  // Only relevant for the `skipIntro` path above — a no-op against `null`
-  // otherwise (the normal path's ambient loop lives inside the state
-  // machine itself, not a raw timeline this hook needs to watchdog).
-  useAmbientLoop(skipIntro && ambientReady ? rive : null, BASE_ANIMATIONS);
+  useAmbientLoop(ambientReady ? rive : null, BASE_ANIMATIONS);
   useRandomOverlay(ambientReady ? rive : null, EYEBLINK_ANIMATIONS, EYEBLINK_MIN_MS, EYEBLINK_MAX_MS);
   useRandomOverlay(ambientReady ? rive : null, GLANCE_ANIMATIONS, GLANCE_MIN_MS, GLANCE_MAX_MS);
   // Gated on `ambientReady` same as the overlays above — the one-shot intro

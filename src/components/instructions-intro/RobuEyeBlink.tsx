@@ -42,10 +42,15 @@ const GLANCE_ANIMATIONS = ["eyes left & right", "eys left "];
 const GLANCE_MIN_MS = 5000;
 const GLANCE_MAX_MS = 10000;
 
-// The artboard's only generic mouth clip — no start/loop/end trio like the
-// old rig had, so `useTalkingMouth` below just keeps this one playing for
-// as long as `talking` is true and stops it the instant it isn't.
-const MOUTH_ANIMATION = "mouth ";
+// The same expression clip the boot sequence itself opens with (see
+// RobuMascot's STATE_MACHINE) — no separate start/loop/end talking trio
+// like the old rig had, so `useTalkingMouth` below just keeps replaying
+// this one clip for as long as `talking` is true and stops it the instant
+// it isn't. The plain `mouth ` clip was tried first and rejected — playing
+// it blanks the whole screen (no visible eyes/mouth) rather than showing a
+// distinct expression, confirmed by watching it frozen through an entire
+// typing span.
+const MOUTH_ANIMATION = "Mouth_expression";
 const MOUTH_WATCHDOG_MS = 500;
 
 // How often the watchdog below checks that the base loop is still playing.
@@ -194,12 +199,12 @@ export function useGreetingOverlay(rive: RiveInstance | null, trigger: boolean) 
 
 /**
  * Drives Robu's mouth-movement overlay on top of the ambient base loop:
- * keeps `mouth ` (the artboard's only generic mouth clip — no start/loop/end
- * trio like the old rig had) playing for as long as `talking` is true, and
+ * keeps `Mouth_expression` playing for as long as `talking` is true, and
  * stops it the instant it flips false. The watchdog mirrors
- * `useAmbientLoop`'s own — in case `mouth ` is authored as one-shot rather
- * than looping, this keeps re-triggering it rather than freezing on its
- * last frame for the rest of a long line.
+ * `useAmbientLoop`'s own — it's authored as one-shot rather than looping,
+ * so this keeps re-triggering it (`stop()` then `play()`, to actually
+ * rewind it — see useAmbientLoop's own doc comment for why) rather than
+ * freezing on its last frame for the rest of a long line.
  */
 export function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
   useEffect(() => {
@@ -212,6 +217,11 @@ export function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
 
     const ensurePlaying = () => {
       if (!rive.playingAnimationNames.includes(MOUTH_ANIMATION)) {
+        // Re-trigger from frame 0 — see useAmbientLoop's own doc comment for
+        // why `stop()` has to come first: calling `play()` again on an
+        // already-finished one-shot instance just holds its last frame
+        // rather than rewinding it.
+        rive.stop(MOUTH_ANIMATION);
         rive.play(MOUTH_ANIMATION);
       }
     };

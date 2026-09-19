@@ -103,9 +103,9 @@ export function CoverScreen({
   // (the one-shot entrance pose) stay their own, deliberately different
   // sizes for those specific moments.
   const robuSize = entering
-    ? "h-99 w-99 sm:h-144 sm:w-144 md:h-180 md:w-180"
+    ? "h-149 w-149 sm:h-216 sm:w-216 md:h-270 md:w-270"
     : revealed
-      ? "h-26 w-26 sm:h-40 sm:w-40 md:h-56 md:w-56"
+      ? "h-39 w-39 sm:h-60 sm:w-60 md:h-84 md:w-84"
       : ROBU_DEFAULT_SIZE;
 
   // Both fixed, always — this is what actually pins the heading in place.
