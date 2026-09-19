@@ -6,11 +6,7 @@ import type {
   CoverSlide,
   CoverRevealSlide,
 } from "@/lib/constants/instructionsIntro";
-import {
-  RobuAnchor,
-  ROBU_DEFAULT_SIZE,
-  ROBU_TRAILING_GAP_PULL,
-} from "./RobuAnchor";
+import { RobuAnchor, ROBU_TRAILING_GAP_PULL } from "./RobuAnchor";
 import { SpeechBubble } from "./SpeechBubble";
 import { RevealModal } from "./RevealModal";
 import { BoxLottie } from "./BoxLottie";
@@ -20,6 +16,36 @@ import Image from "next/image";
 // as the reveal card shows up — Robu's own glide between anchors is handled
 // entirely by RobuStage now, so this is only for everything else in the row.
 const WALK_TRANSITION = { duration: 0.7, ease: [0.22, 1, 0.36, 1] as const };
+
+// Screen 1's resting Robu — smaller than `ROBU_DEFAULT_SIZE` at every
+// breakpoint, and additionally capped by the viewport's height so the Robu +
+// greeting + heading column never outgrows the scrollable body. `22rem` is
+// what's left once the header (~68px), footer (~76px), body padding and
+// everything stacked below Robu (greeting line + title + description, below
+// the 1180px split where the greeting drops under him) are subtracted;
+// `clamp`'s 8rem floor keeps him visible on very short (landscape phone)
+// viewports, where scrolling is unavoidable anyway. `100vh` (not `svh`) to
+// match `main`'s own `h-screen`.
+const COVER_ROBU_SIZE =
+  "h-[clamp(8rem,calc(100vh_-_22rem),11rem)] w-[clamp(8rem,calc(100vh_-_22rem),11rem)] sm:h-[clamp(8rem,calc(100vh_-_22rem),17.5rem)] sm:w-[clamp(8rem,calc(100vh_-_22rem),17.5rem)] md:h-[clamp(8rem,calc(100vh_-_22rem),22rem)] md:w-[clamp(8rem,calc(100vh_-_22rem),22rem)]";
+
+// Screen 2's two Robu poses, sized the same way as `COVER_ROBU_SIZE` above —
+// a smaller max per breakpoint, plus a `clamp` off the viewport height so the
+// whole stack never outgrows the scrollable body. The `rem` in each
+// `100vh - Nrem` is everything else stacked on this screen at that width:
+// header + footer + body padding (~156px) plus the intro heading, the
+// thinking illustration, Robu's prompt bubble (below the 1180px split it
+// stacks above him) and — once revealed — the reveal card. Every tier is
+// scoped with `max-[1179px]:` / `min-[1180px]:` (same split point as the
+// rest of this screen) rather than plain `sm:`/`md:` + a `min-[1180px]:`
+// override, since Tailwind emits the arbitrary breakpoint *before* `md:` and
+// the override would lose the cascade (see the hero row's own note below).
+// Pre-reveal: Robu in the top slot, above the illustration.
+const REVEAL_ROBU_SIZE =
+  "max-[1179px]:size-[clamp(8rem,calc(100vh_-_21rem),11rem)] max-[1179px]:sm:size-[clamp(8rem,calc(100vh_-_28rem),17.5rem)] max-[1179px]:md:size-[clamp(8rem,calc(100vh_-_31rem),22rem)] min-[1180px]:size-[clamp(8rem,calc(100vh_-_15rem),22rem)]";
+// Revealed: Robu crouched beside the reveal card, which is also on screen.
+const REVEALED_ROBU_SIZE =
+  "max-[1179px]:size-[clamp(6rem,calc(100vh_-_34rem),9rem)] max-[1179px]:sm:size-[clamp(6rem,calc(100vh_-_39rem),13.5rem)] max-[1179px]:md:size-[clamp(6rem,calc(100vh_-_41.5rem),17rem)] min-[1180px]:size-[clamp(6rem,calc(100vh_-_28rem),18rem)]";
 
 interface CoverScreenProps {
   slide: CoverSlide | CoverRevealSlide;
@@ -89,24 +115,24 @@ export function CoverScreen({
 
   // Robu's very first entrance (step 01 only): his `intro.riv` timeline
   // plays big and centered, alone — heading and bubble stay held back, and
-  // Robu stays at this bigger size, until that animation actually finishes.
-  // This never re-triggers on `revealed` toggling or on later slides, since
-  // `robuIntroDone` only ever flips true once for the whole session.
+  // Robu stays in this full-body pose, until that animation actually
+  // finishes. This never re-triggers on `revealed` toggling or on later
+  // slides, since `robuIntroDone` only ever flips true once for the whole
+  // session.
   const entering = slide.kind === "cover" && !robuIntroDone;
 
-  // Robu shrinks once it's crouched next to the reveal card — and starts
-  // out bigger still, centered, for the entrance above. The default,
-  // steady-state greeting size is the same shared `ROBU_DEFAULT_SIZE` every
-  // other screen's resting Robu uses (see RobuAnchor) — not its own bespoke
-  // value — so he reads as literally the same size everywhere, not just a
-  // similar one. `revealed` (crouched beside the reveal card) and `entering`
-  // (the one-shot entrance pose) stay their own, deliberately different
-  // sizes for those specific moments.
-  const robuSize = entering
-    ? "h-149 w-149 sm:h-216 sm:w-216 md:h-270 md:w-270"
-    : revealed
-      ? "h-39 w-39 sm:h-60 sm:w-60 md:h-84 md:w-84"
-      : ROBU_DEFAULT_SIZE;
+  // Robu shrinks once it's crouched next to the reveal card. Both screens'
+  // poses opt out of the shared `ROBU_DEFAULT_SIZE` (see RobuAnchor) on
+  // purpose: each stacks Robu with a heading/illustration (and, revealed, the
+  // card) in one column, so the shared size overflows the body and scrolls on
+  // short viewports — see the `*_ROBU_SIZE` constants above. The one-shot
+  // `entering` pose has no size of its own here — it's an overlay anchor sized
+  // off the body (see the root below), not a slot in the row.
+  const robuSize = revealed
+    ? REVEALED_ROBU_SIZE
+    : isReveal
+      ? REVEAL_ROBU_SIZE
+      : COVER_ROBU_SIZE;
 
   // Both fixed, always — this is what actually pins the heading in place.
   // Screen 2's top slot (`heroOrder`) reserves the exact same height whether
@@ -159,6 +185,10 @@ export function CoverScreen({
   return (
     <div
       className={`flex w-full flex-1 flex-col items-center gap-0 sm:gap-0 md:min-h-full ${
+        // Only while entering: this root is the positioning parent for the
+        // full-body Robu anchor below.
+        entering ? "relative" : ""
+      } ${
         // Screen 1 (not the reveal step) centers its whole block — Robu row
         // + heading — at true vertical middle of the available height,
         // instead of relying on the fixed vh spacer below to fake it. That
@@ -286,9 +316,27 @@ export function CoverScreen({
               down, right above the card, and this slot collapses (see its
               own `layout` animation above) instead of staying reserved and
               empty. */}
-          {(!isReveal || !revealed) && robu}
+          {(!isReveal || !revealed) && !entering && robu}
         </div>
       </motion.div>
+
+      {/* ── Robu's entrance anchor — a box centered in this screen body while
+          the boot-up/loading intro plays, instead of a fixed-size slot in the
+          row above. The row's heading is held back (opacity 0) but still
+          takes up space, and the old fixed box was taller than a phone's
+          body, so in-flow it never landed at true center. Sized as a share of
+          the body (70%) with a per-breakpoint cap, so the whole character
+          stays inside the screen with breathing room on any viewport instead
+          of touching its edges. RobuStage measures this box and the Rive
+          canvas (`Fit.Contain` + `Alignment.Center`) centers Robu inside it;
+          once the intro is done this unmounts and Robu glides to the row's
+          own anchor. ── */}
+      {entering && (
+        <RobuAnchor
+          registerAnchor={registerAnchor}
+          className="absolute left-1/2 top-1/2 h-[70%] w-[70%] max-h-96 max-w-96 -translate-x-1/2 -translate-y-1/2 sm:max-h-128 sm:max-w-lg md:max-h-160 md:max-w-160"
+        />
+      )}
 
       {/* ── Robu's second anchor — only once revealed, sitting right above
           the reveal card instead of stranded up top next to a heading he's
