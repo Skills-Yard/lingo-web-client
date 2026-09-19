@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRive } from "@rive-app/react-canvas";
-import { EventType, Layout, Fit, Alignment } from "@rive-app/canvas";
-import { configureRiveRuntime, getRobuRiveSrc } from "@/lib/rive/runtime";
-import { useTheme } from "@/context/ThemeContext";
+import { EventType, Layout, Fit, Alignment, type Event as RiveEvent } from "@rive-app/canvas";
+import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
 import {
   useAmbientLoop,
   useGreetingOverlay,
@@ -15,59 +14,64 @@ import {
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
-// `updated_robu.riv`'s "Anim Skill" artboard carries both a one-shot
-// entrance timeline AND the same ambient idle/ear/eyeblink set
-// `<RobuEyeBlink>` drives elsewhere (see getRobuRiveSrc — it's the one `.riv`
-// for every Robu instance in the app), so this one file/instance can carry
-// Robu's *entire* time on screen: entrance, then the ambient loop. RobuStage
-// renders only this component for its one persistent mascot, for the whole
-// session, instead of swapping to a different component/instance once the
-// entrance finishes. That swap used to be the actual source of a visible
-// "cut" on the handoff — it forced a fresh canvas to mount (its own decode
-// delay) showing a completely different first frame, at the exact instant
-// the shrink to Robu's normal size also kicked in. With one instance for
-// good, only the shrink itself (RobuStage's own width/height animation) is
-// ever visible; the character underneath never cuts to a different canvas.
-//
-// The entrance plays `intro  improve` (yes, two spaces — that's the timeline's
-// actual name, confirmed byte-for-byte against the `.riv`'s length-prefixed
-// string table) rather than the plainer `intro` also on this artboard: it's
-// the smoother of the two entrance timelines this file ships.
-const ARTBOARD = "Anim Skill";
-const INTRO_ANIMATION = "intro  improve";
+// `orbi.riv`'s "Artboard 1" carries both the one-shot boot-up intro AND the
+// same ambient idle/eyeblink set `<RobuEyeBlink>` drives elsewhere (see
+// ROBU_RIVE_SRC — it's the one `.riv` for every Robu instance in the app),
+// so this one file/instance can carry Robu's *entire* time on screen:
+// intro, then the ambient loop. RobuStage renders only this component for
+// its one persistent mascot, for the whole session, instead of swapping to
+// a different component/instance once the intro finishes. That swap used to
+// be the actual source of a visible "cut" on the handoff — it forced a
+// fresh canvas to mount (its own decode delay) showing a completely
+// different first frame, at the exact instant the shrink to Robu's normal
+// size also kicked in. With one instance for good, only the shrink itself
+// (RobuStage's own width/height animation) is ever visible; the character
+// underneath never cuts to a different canvas.
+const ARTBOARD = "Artboard 1";
 
-// Ambient loop once the entrance is done — same names, same shape, as
+// The intro plays as three chained one-shot clips rather than a single
+// timeline: only the first two were specified outright (an expression, then
+// the face transitioning into "loading"); `LOADING_TO_FACE` is this file's
+// own addition to bring the face back out of the loading pose before idle
+// takes over below — without it, idle's first frame would pop in mid
+// "loading" instead of settling naturally. Each name is confirmed
+// byte-for-byte against the `.riv`'s own length-prefixed string table (same
+// technique used on the old rig's oddly-spaced timeline names).
+const INTRO_STEPS = ["Mouth_expression", "Face_to_loading", "Loading_to_face"] as const;
+
+// Ambient loop once the intro is done — same names, same shape, as
 // RobuEyeBlink's own ambient loop (see its exported hooks), since both
-// components now share this one `.riv`.
-const BASE_ANIMATIONS = ["idle2"];
-const EAR_ANIMATION = "ears";
-const EAR_INTERVAL_MS = 3000;
-const EYEBLINK_ANIMATION = "eyeblink twice";
+// components now share this one `.riv`. Note the trailing space — that's
+// the clip's actual name in the file (confirmed the same way as above).
+const BASE_ANIMATIONS = ["idle "];
+// `orbi.riv` has no dedicated ear-wiggle clip (the old rig's `ears`) — Robu
+// just stays on the ambient loop above for that beat instead.
+const EYEBLINK_ANIMATION = "eye blink 2";
 const EYEBLINK_INTERVAL_MS = 5000;
 
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 interface RobuMascotProps {
   className?: string;
-  /** Fired once the one-shot entrance timeline has played through (or
+  /** Fired once the one-shot intro sequence has played through (or
    * immediately, if `skipIntro` is set). This is also the exact moment the
-   * ambient idle/ear/eyeblink loop below takes over. */
+   * ambient idle/eyeblink loop below takes over. */
   onIntroComplete: () => void;
-  /** Skip the one-shot entrance and start straight in the ambient loop —
-   * for a caller that's already shown Robu's entrance once and is mounting
-   * a fresh canvas instance anyway (a full remount elsewhere in the tree),
-   * where replaying the entrance would read as Robu re-entering from
-   * scratch instead of picking back up. Default (false) is every normal
-   * appearance of Robu, which still gets the entrance. */
+  /** Skip the one-shot intro and start straight in the ambient loop — for a
+   * caller that's already shown Robu's intro once and is mounting a fresh
+   * canvas instance anyway (a full remount elsewhere in the tree), where
+   * replaying the intro would read as Robu re-entering from scratch instead
+   * of picking back up. Default (false) is every normal appearance of Robu,
+   * which still gets the intro. */
   skipIntro?: boolean;
   /** True while any heading/bubble text is actively being typed out
    * somewhere in the flow (see RobuTalkingContext) — plays Robu's
    * mouth-talking overlay for exactly that span, on top of the ambient loop
    * below. */
   talking?: boolean;
-  /** True while Robu should be playing his one-shot "hii" wave on top of the
-   * ambient loop — screen 1 sets this once its own entrance-complete flag
-   * flips true, so the wave plays right after the entrance finishes. Only
+  /** True while Robu should be playing his one-shot greeting wave on top of
+   * the ambient loop — screen 1 sets this once its own entrance-complete
+   * flag flips true, so the wave plays right after the intro finishes. Only
    * fires again on a later false->true edge (e.g. leaving and coming back to
    * that screen) — see `useGreetingOverlay`. */
   greet?: boolean;
@@ -75,42 +79,33 @@ interface RobuMascotProps {
 
 /**
  * The one and only Robu canvas for the whole flow (see RobuStage) — plays
- * the entrance, then settles into an ambient loop, all on one Rive instance
+ * the intro, then settles into an ambient loop, all on one Rive instance
  * that lives for as long as Robu is on screen. `onIntroComplete` lets
  * CoverScreen sync its own choreography (shrinking Robu, revealing his "Hi,
- * I am robu!" bubble) to the moment the entrance actually finishes.
- *
- * `useRive`'s own `src` option isn't reactive — it only loads once, the
- * first time the hook mounts — so swapping Robu's `.riv` when the theme
- * toggles needs an actual remount, not just a re-render. `key={theme}` below
- * forces exactly that: React tears down and recreates `RobuMascotCanvas`
- * (and its `useRive` instance) whenever `theme` flips, same as any other
- * caller that wants Robu's entrance to play again on a fresh canvas.
+ * I am robu!" bubble) to the moment the intro actually finishes.
  */
-export function RobuMascot(props: RobuMascotProps) {
-  const { theme } = useTheme();
-  return <RobuMascotCanvas key={theme} {...props} src={getRobuRiveSrc(theme)} />;
-}
-
-function RobuMascotCanvas({
+export function RobuMascot({
   className,
   onIntroComplete,
   skipIntro = false,
   talking = false,
   greet = false,
-  src,
-}: RobuMascotProps & { src: string }) {
+}: RobuMascotProps) {
   // Gates the ambient hooks below so they only start driving `rive` once the
-  // entrance is done — before that, `useAmbientLoop`/`usePeriodicOverlay`
-  // just see `null` and do nothing (both bail out immediately on a null rive).
-  // Starts already-true when skipping the entrance, since there's no `Stop`
+  // intro is done — before that, `useAmbientLoop`/`usePeriodicOverlay` just
+  // see `null` and do nothing (both bail out immediately on a null rive).
+  // Starts already-true when skipping the intro, since there's no `Stop`
   // event coming to flip it.
   const [ambientReady, setAmbientReady] = useState(skipIntro);
+  // Which step of INTRO_STEPS is currently playing — advanced by matching
+  // the *name* of whatever just stopped, since three one-shot clips are
+  // chained back to back and only the last one's Stop means "intro done".
+  const introStepRef = useRef(0);
 
   const { rive, RiveComponent } = useRive({
-    src,
+    src: ROBU_RIVE_SRC,
     artboard: ARTBOARD,
-    animations: skipIntro ? BASE_ANIMATIONS : INTRO_ANIMATION,
+    animations: skipIntro ? BASE_ANIMATIONS : INTRO_STEPS[0],
     autoplay: true,
     layout: LAYOUT,
   });
@@ -119,18 +114,31 @@ function RobuMascotCanvas({
     if (!rive) return;
 
     if (skipIntro) {
-      // Nothing one-shot is playing to wait on — go straight to "entrance done".
+      // Nothing one-shot is playing to wait on — go straight to "intro done".
       onIntroComplete();
       return;
     }
 
-    // The entrance is one-shot, so it fires its own `Stop` once it reaches
-    // its last frame — nothing here ever calls stop() itself. That's the
-    // signal to hand off to the ambient loop and notify the caller. The
-    // listener is removed as soon as it fires once so it can never react to
-    // a *later* Stop event too (e.g. the ambient hooks' own stop()/play()
-    // calls once they take over below).
-    const handleStop = () => {
+    introStepRef.current = 0;
+
+    const handleStop = (event: RiveEvent) => {
+      const stopped = event.data;
+      const names = Array.isArray(stopped)
+        ? stopped
+        : typeof stopped === "string"
+          ? [stopped]
+          : [];
+      // Ignore Stop events for anything other than the step we're actually
+      // waiting on (e.g. the ambient hooks' own stop()/play() calls once
+      // they take over below).
+      if (!names.includes(INTRO_STEPS[introStepRef.current])) return;
+
+      introStepRef.current += 1;
+      if (introStepRef.current < INTRO_STEPS.length) {
+        rive.play(INTRO_STEPS[introStepRef.current]);
+        return;
+      }
+
       rive.off(EventType.Stop, handleStop);
       setAmbientReady(true);
       onIntroComplete();
@@ -140,11 +148,10 @@ function RobuMascotCanvas({
   }, [rive, onIntroComplete, skipIntro]);
 
   useAmbientLoop(ambientReady ? rive : null, BASE_ANIMATIONS);
-  usePeriodicOverlay(ambientReady ? rive : null, EAR_ANIMATION, EAR_INTERVAL_MS);
   usePeriodicOverlay(ambientReady ? rive : null, EYEBLINK_ANIMATION, EYEBLINK_INTERVAL_MS);
-  // Gated on `ambientReady` same as the overlays above — the one-shot
-  // entrance should never be interrupted by a talking cue that fires before
-  // it's even settled into the ambient loop.
+  // Gated on `ambientReady` same as the overlay above — the one-shot intro
+  // should never be interrupted by a talking cue that fires before it's
+  // even settled into the ambient loop.
   useTalkingMouth(ambientReady ? rive : null, talking);
   useGreetingOverlay(ambientReady ? rive : null, greet);
 

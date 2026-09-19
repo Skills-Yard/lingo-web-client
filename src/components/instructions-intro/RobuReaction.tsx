@@ -3,18 +3,17 @@
 import type { CSSProperties } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
-import { configureRiveRuntime, getRobuRiveSrc } from "@/lib/rive/runtime";
-import { useTheme } from "@/context/ThemeContext";
+import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
 import { useAmbientLoop, useMoodOverlay, type Mood } from "./RobuEyeBlink";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
-// Same artboard/file every other Robu instance uses (see getRobuRiveSrc) —
+// Same artboard/file every other Robu instance uses (see ROBU_RIVE_SRC) —
 // this is a second, independent instance, same pattern as RevealModal's own
 // standalone <RobuEyeBlink>, not the single gliding RobuStage mascot.
-const ARTBOARD = "Anim Skill";
-const BASE_ANIMATIONS = ["idle2"];
+const ARTBOARD = "Artboard 1";
+const BASE_ANIMATIONS = ["idle "];
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 interface RobuReactionProps {
@@ -26,26 +25,15 @@ interface RobuReactionProps {
 
 /**
  * A small standalone Robu, reacting with the artboard's happy/sad eyes+mouth
- * trio — for a quiz result card's own mascot slot (TeacherQuizScreen /
+ * trio (see `useMoodOverlay` — a no-op against `orbi.riv` until it ships a
+ * matching trio, so this currently just shows the ambient loop regardless of
+ * `mood`) — for a quiz result card's own mascot slot (TeacherQuizScreen /
  * IntroFooter), which previously just bounced a static PNG regardless of
  * whether the answer was right.
  */
 export function RobuReaction({ className, style, mood }: RobuReactionProps) {
-  const { theme } = useTheme();
-  return (
-    <RobuReactionCanvas
-      key={theme}
-      className={className}
-      style={style}
-      mood={mood}
-      src={getRobuRiveSrc(theme)}
-    />
-  );
-}
-
-function RobuReactionCanvas({ className, style, mood, src }: RobuReactionProps & { src: string }) {
   const { rive, RiveComponent } = useRive({
-    src,
+    src: ROBU_RIVE_SRC,
     artboard: ARTBOARD,
     animations: BASE_ANIMATIONS,
     autoplay: true,
