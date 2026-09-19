@@ -10,50 +10,60 @@ import {
   type Rive as RiveInstance,
   type Event as RiveEvent,
 } from "@rive-app/canvas";
-import { configureRiveRuntime, getRobuRiveSrc } from "@/lib/rive/runtime";
-import { useTheme } from "@/context/ThemeContext";
+import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
-// `updated_robu.riv` — artboard `Anim Skill` (same file/artboard RobuMascot's
-// entrance plays on — see getRobuRiveSrc). The `robu anim` state machine has
-// no inputs, so we drive the timelines directly: the slow `idle2` loop is
-// the ambient base (it also keeps Rive's render loop alive), and `ears` /
-// `eyeblink twice` are each replayed on top on their own interval.
-const ROBU_ARTBOARD = "Anim Skill";
-const ROBU_BASE_ANIMATIONS = ["idle2"];
+// `orbi.riv` — artboard `Artboard 1` (same file/artboard RobuMascot's intro
+// plays on — see ROBU_RIVE_SRC). This standalone badge has no boot-up intro
+// of its own (unlike RobuMascot), so it drives the ambient `idle ` timeline
+// directly rather than through `Robu-StateMachine` — going through the state
+// machine here would replay its own boot sequence on every mount, which is
+// exactly what this component (used for the reveal-card modal, the game
+// screens' demo/level platforms) is not supposed to show.
+const ROBU_ARTBOARD = "Artboard 1";
+const ROBU_BASE_ANIMATIONS = ["idle "];
 const ROBU_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
-const EAR_ANIMATION = "ears";
-const EAR_INTERVAL_MS = 3000;
+// Both randomized rather than fixed-interval — see `useRandomOverlay` —
+// so the blink and the idle glance below read as unscripted instead of
+// metronomic. Ranges are this file's own judgment call (not specified),
+// picked so blink stays roughly human-paced and the glance is rarer, so
+// they don't constantly compete with each other or with `idle ` itself.
+const EYEBLINK_ANIMATIONS = ["eye blink 2"];
+const EYEBLINK_MIN_MS = 3000;
+const EYEBLINK_MAX_MS = 6000;
 
-const EYEBLINK_ANIMATION = "eyeblink twice";
-const EYEBLINK_INTERVAL_MS = 5000;
+// The two "look to the side" clips, replayed at random and picked at random
+// each cycle — `eys left ` is the file's own spelling (confirmed against its
+// string table), not a typo introduced here.
+const GLANCE_ANIMATIONS = ["eyes left & right", "eys left "];
+const GLANCE_MIN_MS = 5000;
+const GLANCE_MAX_MS = 10000;
 
-// Same artboard's mouth-talking trio — a one-shot open ("start"), a looping
-// chatter cycle ("idle"), and a one-shot close ("end"). Same naming shape as
-// the eyes' own happy/sad trios on this artboard, just driven by "is Robu
-// currently talking" instead of a fixed interval.
-const MOUTH_TALK_START = "mouth talking start";
-const MOUTH_TALK_LOOP = "mouth talking idle";
-const MOUTH_TALK_END = "mouth talking end";
-// Safety net for the start->loop handoff below, mirroring the watchdog
-// pattern already used for the ambient base loop.
-const MOUTH_TALK_WATCHDOG_MS = 500;
+// The same expression clip the boot sequence itself opens with (see
+// RobuMascot's STATE_MACHINE) — no separate start/loop/end talking trio
+// like the old rig had, so `useTalkingMouth` below just keeps replaying
+// this one clip for as long as `talking` is true and stops it the instant
+// it isn't. The plain `mouth ` clip was tried first and rejected — playing
+// it blanks the whole screen (no visible eyes/mouth) rather than showing a
+// distinct expression, confirmed by watching it frozen through an entire
+// typing span.
+const MOUTH_ANIMATION = "Mouth_expression";
+const MOUTH_WATCHDOG_MS = 500;
 
 // How often the watchdog below checks that the base loop is still playing.
 const AMBIENT_WATCHDOG_MS = 500;
 
 export type Mood = "happy" | "sad";
 
-// Same artboard's eyes/mouth happy+sad trios the mouth-talking comment above
-// points at — confirmed byte-for-byte against the `.riv`'s string table
-// (same technique used to confirm `INTRO_ANIMATION` in RobuMascot). Eyes get
-// a full start/loop/end trio for both moods; mouth only has a loop for
-// "happy" — "sad" is just a start/end pair, so `mouthLoop` is left unset and
-// the mouth simply holds on "mouth sad start"'s last frame once it finishes,
-// same as MOUTH_TALK_END already does after a line stops.
+// The old rig's eyes/mouth happy+sad trios. Kept as-is (rather than remapped
+// to orbi.riv's partial "Eye happy start" / "Mouth_happy" /
+// "Mouth_happy_to_normal" clips, which don't cover a full trio for either
+// mood, let alone a "sad" one at all) — none of these names exist on
+// orbi.riv's artboard, so `useMoodOverlay`'s own guard below leaves Robu on
+// the ambient loop for both moods until a real trio exists to swap in.
 const MOOD_TIMELINES: Record<
   Mood,
   { eyesStart: string; eyesLoop: string; eyesEnd: string; mouthStart: string; mouthLoop?: string; mouthEnd: string }
@@ -79,10 +89,9 @@ const MOOD_WATCHDOG_MS = 500;
 
 /**
  * Exported (rather than kept local to this file) so RobuMascot can drive the
- * exact same ambient behavior on its own Rive instance once its one-shot
- * entrance timeline finishes — see RobuMascot's doc comment for why it needs
- * its own copy of "the ambient loop" instead of just switching over to this
- * component.
+ * exact same ambient behavior on its own Rive instance for the one case it
+ * still plays a raw `idle ` timeline directly (skipping its own intro) —
+ * see RobuMascot's doc comment.
  *
  * Keep the ambient base animations playing for the whole life of the
  * component. If a base timeline is authored as one-shot (not looping) in the
@@ -93,7 +102,7 @@ const MOOD_WATCHDOG_MS = 500;
  * creates a fresh one and explicitly resets it to frame 0 (same as the
  * one-shot overlays below). This also guards against Rive's render loop going
  * idle when nothing is actively playing, which would otherwise freeze
- * everything on the canvas, `idle2` included.
+ * everything on the canvas, the ambient loop itself included.
  */
 export function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
   useEffect(() => {
@@ -115,41 +124,47 @@ export function useAmbientLoop(rive: RiveInstance | null, animations: string[]) 
 }
 
 /**
- * Replay a one-shot timeline on top of the ambient base loop every
- * `intervalMs`. `stop` before `play` rewinds it so each replay starts from
- * frame 0 even if the previous one is still finishing.
+ * Replay one of `animations` (picked at random each cycle — a single-name
+ * array always replays that one) on top of whatever's already running,
+ * waiting a random delay between `minMs` and `maxMs` before each replay.
+ * Drives Robu's eyeblink and idle eye-glance flourishes — random timing
+ * (rather than `usePeriodicOverlay`'s fixed interval) is what keeps them
+ * reading as unscripted instead of metronomic.
  */
-export function usePeriodicOverlay(
+export function useRandomOverlay(
   rive: RiveInstance | null,
-  animation: string,
-  intervalMs: number,
+  animations: string[],
+  minMs: number,
+  maxMs: number,
 ) {
   useEffect(() => {
-    if (!rive) return;
+    if (!rive || animations.length === 0) return;
 
-    const replay = () => {
-      rive.stop(animation);
-      rive.play(animation);
+    let timer: number;
+    const scheduleNext = () => {
+      const delay = minMs + Math.random() * (maxMs - minMs);
+      timer = window.setTimeout(() => {
+        const name = animations[Math.floor(Math.random() * animations.length)];
+        rive.stop(name);
+        rive.play(name);
+        scheduleNext();
+      }, delay);
     };
 
-    const timer = window.setInterval(replay, intervalMs);
-    return () => {
-      window.clearInterval(timer);
-      rive.stop(animation);
-    };
-  }, [rive, animation, intervalMs]);
+    scheduleNext();
+    return () => window.clearTimeout(timer);
+  }, [rive, animations, minMs, maxMs]);
 }
 
 /**
- * Robu's one-shot greeting wave — screen 1 plays this right after the
- * entrance finishes (see `trigger`). The two theme `.riv` files turn out to
- * name this differently: the dark-theme file has one complete "hii" timeline,
- * while the light-theme file only has a "hii start"/"hii end" bookend pair
- * (no plain "hii", confirmed by loading both files through the actual Rive
- * runtime — everything else on this artboard *is* named identically across
- * themes, this is the one exception). Reading `rive.animationNames` at
- * trigger time picks whichever shape the loaded file actually has instead of
- * hardcoding one name that would silently no-op on the other theme.
+ * Robu's one-shot greeting wave — screen 1 plays this right after the intro
+ * finishes (see `trigger`). The old rig's two theme `.riv` files named this
+ * differently (one had a complete "hii" timeline, the other only a "hii
+ * start"/"hii end" bookend pair) — reading `rive.animationNames` at trigger
+ * time picks whichever shape the loaded file actually has instead of
+ * hardcoding one name that would silently no-op on the other. `orbi.riv` has
+ * neither, so this naturally no-ops there too and Robu just stays on the
+ * ambient loop instead of waving.
  */
 export function useGreetingOverlay(rive: RiveInstance | null, trigger: boolean) {
   useEffect(() => {
@@ -183,63 +198,38 @@ export function useGreetingOverlay(rive: RiveInstance | null, trigger: boolean) 
 }
 
 /**
- * Drives Robu's mouth-talking overlay on top of the ambient base loop, same
- * artboard as `useAmbientLoop`/`usePeriodicOverlay` above. `talking` flipping
- * true plays the one-shot "start" timeline, then — once that timeline
- * actually finishes, not immediately — hands off to the looping "idle"
- * chatter cycle; layering both from frame 0 instead would let the loop's own
- * frames immediately fight the opening transition. Flipping back to false
- * stops the loop and plays the one-shot "end" timeline to close the mouth
- * back up. Exported (like the two hooks above) so RobuMascot can drive the
- * exact same overlay on its own Rive instance.
+ * Drives Robu's mouth-movement overlay on top of the ambient base loop:
+ * keeps `Mouth_expression` playing for as long as `talking` is true, and
+ * stops it the instant it flips false. The watchdog mirrors
+ * `useAmbientLoop`'s own — it's authored as one-shot rather than looping,
+ * so this keeps re-triggering it (`stop()` then `play()`, to actually
+ * rewind it — see useAmbientLoop's own doc comment for why) rather than
+ * freezing on its last frame for the rest of a long line.
  */
 export function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
   useEffect(() => {
     if (!rive) return;
 
     if (!talking) {
-      rive.stop(MOUTH_TALK_LOOP);
-      rive.stop(MOUTH_TALK_START);
-      rive.play(MOUTH_TALK_END);
+      rive.stop(MOUTH_ANIMATION);
       return;
     }
 
-    rive.stop(MOUTH_TALK_END);
-    rive.play(MOUTH_TALK_START);
-
-    let loopStarted = false;
-    const startLoop = () => {
-      if (loopStarted) return;
-      loopStarted = true;
-      rive.play(MOUTH_TALK_LOOP);
-    };
-
-    const handleStop = (event: RiveEvent) => {
-      const stopped = event.data;
-      const names = Array.isArray(stopped)
-        ? stopped
-        : typeof stopped === "string"
-          ? [stopped]
-          : [];
-      if (names.includes(MOUTH_TALK_START)) startLoop();
-    };
-    rive.on(EventType.Stop, handleStop);
-
-    // In case the Stop event is ever missed (e.g. autoplay hiccups), don't
-    // strand Robu mid-transition with a closed mouth for the rest of a long
-    // line — same fallback shape as RobuMascot's own intro-timeline handoff.
-    const fallback = window.setTimeout(startLoop, 600);
-
-    const watchdog = window.setInterval(() => {
-      if (loopStarted && !rive.playingAnimationNames.includes(MOUTH_TALK_LOOP)) {
-        rive.play(MOUTH_TALK_LOOP);
+    const ensurePlaying = () => {
+      if (!rive.playingAnimationNames.includes(MOUTH_ANIMATION)) {
+        // Re-trigger from frame 0 — see useAmbientLoop's own doc comment for
+        // why `stop()` has to come first: calling `play()` again on an
+        // already-finished one-shot instance just holds its last frame
+        // rather than rewinding it.
+        rive.stop(MOUTH_ANIMATION);
+        rive.play(MOUTH_ANIMATION);
       }
-    }, MOUTH_TALK_WATCHDOG_MS);
-
+    };
+    ensurePlaying();
+    const watchdog = window.setInterval(ensurePlaying, MOUTH_WATCHDOG_MS);
     return () => {
-      rive.off(EventType.Stop, handleStop);
-      window.clearTimeout(fallback);
       window.clearInterval(watchdog);
+      rive.stop(MOUTH_ANIMATION);
     };
   }, [rive, talking]);
 }
@@ -262,12 +252,17 @@ export function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
  * away), so there's nothing to settle back to neutral anyway. Same
  * listeners/timers-only cleanup shape `useTalkingMouth`/`useGreetingOverlay`
  * already use above.
+ *
+ * Guarded on `rive.animationNames` same as `useTalkingMouth` used to be —
+ * `orbi.riv` has neither mood's trio, so this no-ops there and Robu stays on
+ * the ambient loop regardless of `mood`.
  */
 export function useMoodOverlay(rive: RiveInstance | null, mood: Mood | null) {
   useEffect(() => {
     if (!rive || !mood) return;
 
     const cfg = MOOD_TIMELINES[mood];
+    if (!rive.animationNames.includes(cfg.eyesStart)) return;
     const other = MOOD_TIMELINES[mood === "happy" ? "sad" : "happy"];
     rive.stop(other.eyesStart);
     rive.stop(other.eyesLoop);
@@ -326,19 +321,10 @@ interface RobuEyeBlinkProps {
  * Robu mascot. The `.riv` is vector-only, so it is cheap to drop onto any
  * screen. Give it a sized wrapper via `className` — the canvas fills it and
  * `Fit.Contain` keeps the whole mascot visible as it scales.
- *
- * `useRive`'s `src` option only loads once at mount, so swapping Robu's
- * `.riv` when the theme toggles needs a remount — `key={theme}` on the inner
- * component forces exactly that (see RobuMascot's identical trick).
  */
 export function RobuEyeBlink({ className }: RobuEyeBlinkProps) {
-  const { theme } = useTheme();
-  return <RobuEyeBlinkCanvas key={theme} className={className} src={getRobuRiveSrc(theme)} />;
-}
-
-function RobuEyeBlinkCanvas({ className, src }: RobuEyeBlinkProps & { src: string }) {
   const { rive, RiveComponent } = useRive({
-    src,
+    src: ROBU_RIVE_SRC,
     artboard: ROBU_ARTBOARD,
     animations: ROBU_BASE_ANIMATIONS,
     autoplay: true,
@@ -347,8 +333,8 @@ function RobuEyeBlinkCanvas({ className, src }: RobuEyeBlinkProps & { src: strin
   });
 
   useAmbientLoop(rive, ROBU_BASE_ANIMATIONS);
-  usePeriodicOverlay(rive, EAR_ANIMATION, EAR_INTERVAL_MS);
-  usePeriodicOverlay(rive, EYEBLINK_ANIMATION, EYEBLINK_INTERVAL_MS);
+  useRandomOverlay(rive, EYEBLINK_ANIMATIONS, EYEBLINK_MIN_MS, EYEBLINK_MAX_MS);
+  useRandomOverlay(rive, GLANCE_ANIMATIONS, GLANCE_MIN_MS, GLANCE_MAX_MS);
 
   return (
     <div className={className}>

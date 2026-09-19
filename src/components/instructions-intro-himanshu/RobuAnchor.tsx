@@ -8,7 +8,7 @@
 // here — both rows that pair Robu with a speech bubble (RobuSays' and
 // CoverScreen's own) now wrap the bubble onto its own line instead of
 // overflowing if there's ever not enough room beside him.
-export const ROBU_DEFAULT_SIZE = "h-32 w-32 sm:h-60 sm:w-60 md:h-84 md:w-84";
+export const ROBU_DEFAULT_SIZE = "h-48 w-48 sm:h-90 sm:w-90 md:h-126 md:w-126";
 
 interface RobuAnchorProps {
   /** Registers (or, on unmount, unregisters via `null`) this element as the

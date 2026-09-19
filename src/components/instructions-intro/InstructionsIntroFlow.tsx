@@ -6,8 +6,7 @@ import { Poppins } from "next/font/google";
 import {
   configureRiveRuntime,
   REWARD_RIVE_SRC,
-  ROBU_RIVE_SRC_LIGHT,
-  ROBU_RIVE_SRC_DARK,
+  ROBU_RIVE_SRC,
 } from "@/lib/rive/runtime";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
@@ -321,10 +320,7 @@ export function InstructionsIntroFlow({
     configureRiveRuntime();
     preload("/rive/rive.wasm", { as: "fetch" });
     preload(REWARD_RIVE_SRC, { as: "fetch" });
-    // Preload both themes' Robu file — whichever isn't active yet is still
-    // needed the moment the user toggles dark/light mode.
-    preload(ROBU_RIVE_SRC_LIGHT, { as: "fetch" });
-    preload(ROBU_RIVE_SRC_DARK, { as: "fetch" });
+    preload(ROBU_RIVE_SRC, { as: "fetch" });
   }, []);
 
   return (
