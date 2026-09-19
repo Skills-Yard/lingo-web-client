@@ -38,7 +38,7 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
  * One file for both themes (unlike `ROBU_RIVE_SRC_LIGHT`/`_DARK` below) — no
  * `getRobuRiveSrc(theme)` lookup needed, just this constant.
  */
-export const ROBU_RIVE_SRC = "/animations/orbi2.riv";
+export const ROBU_RIVE_SRC = "/animations/orbi_part2.riv";
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in
