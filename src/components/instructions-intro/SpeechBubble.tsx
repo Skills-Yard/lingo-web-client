@@ -69,7 +69,7 @@ interface SpeechBubbleProps {
  * pass its own `speedMs`. To slow down or speed up *every* bubble at once,
  * change this default; for one screen only, pass `speedMs` instead (see its
  * doc above) rather than editing this constant. */
-const TYPE_SPEED_MS = 50;
+const TYPE_SPEED_MS = 70;
 
 /**
  * A small talk bubble that types `text` out character by character, cursor and
@@ -134,6 +134,7 @@ export function SpeechBubble({
     // `onDone` — shared by both the plain and voiced paths below so there's
     // exactly one place pacing `shown`.
     const typeOver = (onDone: () => void) => {
+      beginTalking();
       const perCharMs = Math.max(speedMs, 10);
       let i = 0;
       charTimer = window.setInterval(() => {
@@ -160,7 +161,7 @@ export function SpeechBubble({
       const begin = () => {
         if (started || cancelled) return;
         started = true;
-        typeOver(() => {});
+        typeOver(() => onTextTyped?.());
         // Safety net, mirroring the flow's own Robu-intro fallback: if the
         // audio stalls and its "ended" event never fires, don't strand the
         // caller waiting on it forever. Falls back to a generous flat delay
@@ -190,7 +191,10 @@ export function SpeechBubble({
       const onUnplayable = () => {
         if (started || cancelled) return;
         started = true;
-        typeOver(() => onTypingComplete?.());
+        typeOver(() => {
+          onTextTyped?.();
+          onTypingComplete?.();
+        });
       };
 
       audio.addEventListener("loadedmetadata", begin);
@@ -210,7 +214,10 @@ export function SpeechBubble({
       };
     }
 
-    typeOver(() => onTypingComplete?.());
+    typeOver(() => {
+      onTextTyped?.();
+      onTypingComplete?.();
+    });
     return () => {
       cancelled = true;
       window.clearInterval(charTimer);
@@ -222,6 +229,17 @@ export function SpeechBubble({
     // that identity changed.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [text, skipTyping, audioSrc, speedMs]);
+
+  if (size === "plain") {
+    return (
+      <>
+        {renderTyped(shown, text, highlight)}
+        {stillTyping && (
+          <span className="ml-0.5 inline-block h-[0.9em] w-0.5 animate-pulse bg-primary align-middle" />
+        )}
+      </>
+    );
+  }
 
   if (size === "heading") {
     return (

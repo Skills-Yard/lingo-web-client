@@ -137,9 +137,7 @@ export function CoverScreen({
     // comment: it's never more than an invisible measurement box), and the
     // real Rive canvas living once in RobuStage is what actually makes the
     // move between them read as a glide instead of a cut.
-    <div
-      className={`relative
-    left-[-12px] ${robuSideOrder}`}
+    <div className={`relative left-[-12px] ${robuSideOrder}`}
     >
       {/* Idea lightbulb — screen 2 only, echoes the original cover art */}
       {isReveal && (
@@ -222,11 +220,26 @@ export function CoverScreen({
             <div
               className={`relative min-w-0 ${ROBU_TRAILING_GAP_PULL} ${bubbleSideOrder}`}
             >
+              {/* Invisible, already-complete copy of the line — reserves
+                  this block's final width up front so the row above (now
+                  `justify-center`) can center Robu + the greeting as a pair
+                  without recomputing — and visibly sliding them sideways —
+                  on every keystroke of the real typewriter underneath. Same
+                  "invisible placeholder reserves the box" idiom RobuAnchor
+                  itself uses. */}
+              <SpeechBubble
+                text={slide.robuGreeting}
+                highlight={slide.robuGreetingHighlight}
+                instant
+                size="heading"
+                className="invisible"
+              />
               <SpeechBubble
                 text={slide.robuGreeting}
                 highlight={slide.robuGreetingHighlight}
                 instant={instantSpeech}
                 size="heading"
+                className="absolute inset-0"
               />
             </div>
           )}
@@ -260,10 +273,24 @@ export function CoverScreen({
           // `onIntroTypingComplete` above) now waits for the audio to
           // actually finish instead of just the text catching up to it.
           audioSrc="/audios/screen_2_audio.mpeg"
+          // `self-start` (overriding the outer column's own `items-center`)
+          // + a fixed left padding matching the title/description block
+          // right below it: left as a plain flex child here, this heading
+          // would recenter itself against the column on every keystroke
+          // (its own shrink-to-fit width growing as the typewriter adds
+          // characters), sliding sideways instead of holding still. Pinning
+          // it to a fixed left edge means it only ever grows rightward.
+          className="self-start px-4 sm:px-6"
         />
       )}
       {isReveal && revealed && (
-        <div className="relative z-10 order-3 flex w-full items-center justify-center gap-0">
+        <div
+          // `justify-start` (not `-center`): this bubble types out
+          // `slide.robuPrompt` too, so a centered row would recompute its
+          // center — and slide Robu + the bubble sideways — on every
+          // keystroke, same as the rows above.
+          className="relative z-10 order-3 flex w-full items-center justify-start gap-0"
+        >
           {robu}
           <div className={`relative mr-6 ${bubbleSideOrder}`}>
             <AnimatePresence mode="popLayout" initial={false}>

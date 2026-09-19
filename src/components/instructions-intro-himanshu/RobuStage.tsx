@@ -35,6 +35,10 @@ interface RobuStageProps {
   onIntroComplete: () => void;
   /** Forwarded straight to RobuMascot — see its own doc comment. */
   skipIntro?: boolean;
+  /** Forwarded straight to RobuMascot — see its own doc comment. */
+  talking?: boolean;
+  /** Forwarded straight to RobuMascot — see its own doc comment. */
+  greet?: boolean;
 }
 
 /**
@@ -63,6 +67,8 @@ export function RobuStage({
   containerRef,
   onIntroComplete,
   skipIntro,
+  talking,
+  greet,
 }: RobuStageProps) {
   const [rect, setRect] = useState<Rect | null>(null);
 
@@ -115,6 +121,8 @@ export function RobuStage({
           className="h-full w-full"
           onIntroComplete={onIntroComplete}
           skipIntro={skipIntro}
+          talking={talking}
+          greet={greet}
         />
       </div>
     </motion.div>

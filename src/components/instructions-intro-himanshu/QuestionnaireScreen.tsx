@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Check, X } from "lucide-react";
 import type { QuestionnaireSlide } from "@/lib/constants/instructionsIntro";
 import { RobuSays } from "./RobuSays";
+import { RobuReaction } from "./RobuReaction";
 
 interface QuestionnaireScreenProps {
   slide: QuestionnaireSlide;
@@ -200,12 +201,9 @@ export function QuestionnaireScreen({
             </p>
           )}
 
-          <Image
-            src={isCorrect ? "/images/sprouty.png" : "/images/sprouty-worng-ans.png"}
-            alt=""
-            width={140}
-            height={130}
-            className="pointer-events-none absolute -bottom-1 right-1 h-[92px] w-auto object-contain md:bottom-1/2 md:right-6 md:h-[130px] md:translate-y-1/2"
+          <RobuReaction
+            mood={isCorrect ? "happy" : "sad"}
+            className="pointer-events-none absolute -bottom-1 right-1 h-23 w-23 md:bottom-1/2 md:right-6 md:h-32.5 md:w-32.5 md:translate-y-1/2"
           />
         </div>
       )}

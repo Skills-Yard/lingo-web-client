@@ -219,12 +219,28 @@ export function CoverScreen({
                 <span className="h-3 w-0.5 rotate-[-14deg] rounded-full bg-current sm:h-4" />
                 <span className="h-2 w-0.5 rotate-10 rounded-full bg-current sm:h-2.5" />
               </div>
+              {/* Invisible, already-complete copy of the line — reserves
+                  this bubble's final `w-max` width up front so the row above
+                  (now `justify-center`) can center Robu + the bubble as a
+                  pair without recomputing — and visibly sliding them
+                  sideways — on every keystroke of the real typewriter below.
+                  Same "invisible placeholder reserves the box" idiom
+                  RobuAnchor itself uses. */}
               <SpeechBubble
                 text={slide.robuGreeting}
                 highlight={slide.robuGreetingHighlight}
                 tailCorner="bottom-right"
-                instant={instantSpeech}
+                instant
+                className="invisible"
               />
+              <div className="absolute inset-0">
+                <SpeechBubble
+                  text={slide.robuGreeting}
+                  highlight={slide.robuGreetingHighlight}
+                  tailCorner="bottom-right"
+                  instant={instantSpeech}
+                />
+              </div>
             </div>
           )}
 
@@ -257,11 +273,23 @@ export function CoverScreen({
           // `onIntroTypingComplete` above) now waits for the audio to
           // actually finish instead of just the text catching up to it.
           audioSrc="/audios/screen_2_audio.mpeg"
+          // `self-start` (overriding the outer column's own `items-center`)
+          // + a left margin matching this screen's own content inset: left
+          // as a plain flex child here, this bubble's `w-max` box would grow
+          // and recenter itself against the column on every keystroke of
+          // the typewriter, sliding sideways instead of holding still.
+          className="self-start ml-4 sm:ml-6"
         />
       )}
 
       {isReveal && revealed && (
-        <div className="relative z-10 order-3 flex w-full items-center justify-center gap-0">
+        <div
+          // `justify-start` (not `-center`): this bubble types out
+          // `slide.robuPrompt` too, so a centered row would recompute its
+          // center — and slide Robu + the bubble sideways — on every
+          // keystroke, same as the row above.
+          className="relative z-10 order-3 flex w-full items-center justify-start gap-0"
+        >
           {robu}
           <div className={`relative mr-6 ${bubbleSideOrder}`}>
             <AnimatePresence mode="popLayout" initial={false}>

@@ -5,7 +5,12 @@ import { useRive } from "@rive-app/react-canvas";
 import { EventType, Layout, Fit, Alignment } from "@rive-app/canvas";
 import { configureRiveRuntime, getRobuRiveSrc } from "@/lib/rive/runtime";
 import { useTheme } from "@/context/ThemeContext";
-import { useAmbientLoop, usePeriodicOverlay } from "./RobuEyeBlink";
+import {
+  useAmbientLoop,
+  useGreetingOverlay,
+  usePeriodicOverlay,
+  useTalkingMouth,
+} from "./RobuEyeBlink";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -55,6 +60,17 @@ interface RobuMascotProps {
    * scratch instead of picking back up. Default (false) is every normal
    * appearance of Robu, which still gets the entrance. */
   skipIntro?: boolean;
+  /** True while any heading/bubble text is actively being typed out
+   * somewhere in the flow (see RobuTalkingContext) — plays Robu's
+   * mouth-talking overlay for exactly that span, on top of the ambient loop
+   * below. */
+  talking?: boolean;
+  /** True while Robu should be playing his one-shot "hii" wave on top of the
+   * ambient loop — screen 1 sets this once its own entrance-complete flag
+   * flips true, so the wave plays right after the entrance finishes. Only
+   * fires again on a later false->true edge (e.g. leaving and coming back to
+   * that screen) — see `useGreetingOverlay`. */
+  greet?: boolean;
 }
 
 /**
@@ -80,6 +96,8 @@ function RobuMascotCanvas({
   className,
   onIntroComplete,
   skipIntro = false,
+  talking = false,
+  greet = false,
   src,
 }: RobuMascotProps & { src: string }) {
   // Gates the ambient hooks below so they only start driving `rive` once the
@@ -124,6 +142,11 @@ function RobuMascotCanvas({
   useAmbientLoop(ambientReady ? rive : null, BASE_ANIMATIONS);
   usePeriodicOverlay(ambientReady ? rive : null, EAR_ANIMATION, EAR_INTERVAL_MS);
   usePeriodicOverlay(ambientReady ? rive : null, EYEBLINK_ANIMATION, EYEBLINK_INTERVAL_MS);
+  // Gated on `ambientReady` same as the overlays above — the one-shot
+  // entrance should never be interrupted by a talking cue that fires before
+  // it's even settled into the ambient loop.
+  useTalkingMouth(ambientReady ? rive : null, talking);
+  useGreetingOverlay(ambientReady ? rive : null, greet);
 
   return (
     <div className={className}>

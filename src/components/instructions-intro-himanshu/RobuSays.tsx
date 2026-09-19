@@ -40,6 +40,11 @@ interface RobuSaysProps {
    * onto "Robu just finished saying this" (e.g. TeacherQuizScreen narrating
    * its options right after the heading is voiced). */
   onTypingComplete?: () => void;
+  /** Forwarded straight to SpeechBubble — fires as soon as Robu's line
+   * finishes *appearing*, even for a voiced line whose audio is still
+   * playing. Use this (not `onTypingComplete`) for a caller that should
+   * react to the text animation alone, not the voice line. */
+  onTextTyped?: () => void;
 }
 
 /**
@@ -61,6 +66,7 @@ export function RobuSays({
   audioSrc,
   speedMs,
   onTypingComplete,
+  onTextTyped,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -101,6 +107,7 @@ export function RobuSays({
           audioSrc={audioSrc}
           speedMs={speedMs}
           onTypingComplete={onTypingComplete}
+          onTextTyped={onTextTyped}
         />
       </div>
     </div>

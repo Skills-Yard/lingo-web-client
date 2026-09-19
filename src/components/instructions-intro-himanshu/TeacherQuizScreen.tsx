@@ -3,6 +3,8 @@ import { Check, X } from "lucide-react";
 import type { TeacherQuizSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
+import { RobuReaction } from "./RobuReaction";
+import { useRobuTalking } from "./RobuTalkingContext";
 
 interface TeacherQuizScreenProps {
   slide: TeacherQuizSlide;
@@ -37,6 +39,7 @@ export function TeacherQuizScreen({
   instantSpeech,
   registerAnchor,
 }: TeacherQuizScreenProps) {
+  const { startTalking, stopTalking } = useRobuTalking();
   const selectedOption = selected !== null ? slide.options[selected] : null;
   const isCorrect = !!selectedOption?.isCorrect;
   const showFeedback = checked && selectedOption;
@@ -58,7 +61,18 @@ export function TeacherQuizScreen({
 
     let cancelled = false;
     let audio: HTMLAudioElement | null = null;
+    let talkingActive = false;
     let i = 0;
+
+    // Each clip's own start/stop pair, mirroring SpeechBubble's audio-driven
+    // talking so Robu's mouth animation only runs while a clip is actually
+    // playing and always hands back to idle the moment it ends/errors/the
+    // screen is left mid-sequence — see RobuTalkingContext.
+    const stopClipTalking = () => {
+      if (!talkingActive) return;
+      talkingActive = false;
+      stopTalking();
+    };
 
     const playNext = () => {
       if (cancelled) return;
@@ -71,6 +85,7 @@ export function TeacherQuizScreen({
       audio = new Audio(step.src);
       const advance = () => {
         if (cancelled) return;
+        stopClipTalking();
         i += 1;
         playNext();
       };
@@ -78,6 +93,8 @@ export function TeacherQuizScreen({
       // A missing/unsupported clip skips ahead rather than stalling the
       // whole sequence on one bad file.
       audio.addEventListener("error", advance);
+      talkingActive = true;
+      startTalking();
       audio.play().catch(advance);
     };
 
@@ -85,10 +102,11 @@ export function TeacherQuizScreen({
 
     return () => {
       cancelled = true;
+      stopClipTalking();
       audio?.pause();
       setNarratingIdx(null);
     };
-  }, [headingVoiced, instantSpeech]);
+  }, [headingVoiced, instantSpeech, startTalking, stopTalking]);
 
   return (
     <div className="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-x-10 md:items-center md:min-h-full md:content-center">
@@ -103,11 +121,16 @@ export function TeacherQuizScreen({
         onTypingComplete={() => setHeadingVoiced(true)}
       />
 
+      {/* Same "Open Your Notebook" note as screen 03, but shown fully formed
+          right away — this screen's own heading is already voiced narration,
+          so a second thing typing at the same time would be one animation
+          too many. */}
       <TeacherIllustration
         className="h-64 md:h-80 md:col-start-1 md:row-start-2"
         fit="cover"
         imageLight="/images/answerImgWhite.png"
         imageDark="/images/answerImgBlack.png"
+        noteInstant
       />
 
       <div className="flex flex-col gap-2 md:col-start-2 md:row-start-1 md:row-span-2 md:self-center">
@@ -224,10 +247,9 @@ export function TeacherQuizScreen({
                 {feedbackBody}
               </p>
             </div>
-            <img
-              src="/images/sliceAnswer.png"
-              alt=""
-              className="w-16 h-16 object-contain shrink-0 -scale-x-100 animate-bounce-slow"
+            <RobuReaction
+              mood={isCorrect ? "happy" : "sad"}
+              className="w-16 h-16 shrink-0"
             />
           </div>
         )}

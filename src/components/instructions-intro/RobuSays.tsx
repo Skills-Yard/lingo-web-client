@@ -18,19 +18,11 @@ interface RobuSaysProps {
    * somewhere that actually fits its own layout instead of every screen
    * defaulting to the same corner. */
   side?: "left" | "right";
-  /** Center the row instead of letting it hug the text width — for screens
-   * whose heading is centered on mobile. */
-  center?: boolean;
   /** Registers where Robu (a single persistent mascot — see RobuStage) should
    * stand for this screen. */
   registerAnchor: (el: HTMLDivElement | null) => void;
   robuClassName?: string;
   className?: string;
-  /** Forwarded straight to SpeechBubble — fires once Robu's line is fully
-   * shown (immediately for `instant`, otherwise on the typewriter's/audio's
-   * own completion). Lets a caller react to "Robu's done talking", e.g.
-   * highlighting something else on screen only once he's finished saying it. */
-  onTypingComplete?: () => void;
   /** Forwarded straight to SpeechBubble — fires as soon as Robu's line
    * finishes *appearing*, even for a voiced line whose audio is still
    * playing. Use this (not `onTypingComplete`) for a caller that should
@@ -73,7 +65,6 @@ export function RobuSays({
   highlight,
   instant,
   side = "left",
-  center = true,
   registerAnchor,
   robuClassName = ROBU_DEFAULT_SIZE,
   className,
@@ -81,6 +72,7 @@ export function RobuSays({
   audioSrc,
   speedMs,
   onTypingComplete,
+  onTextTyped,
 }: RobuSaysProps) {
   const tailCorner = side === "left" ? "bottom-left" : "bottom-right";
 
@@ -97,7 +89,13 @@ export function RobuSays({
       // that branch below) — so forcing the same flex-wrap here would drop
       // the *whole row* (Robu included) onto its own centered line instead
       // of just letting the heading wrap in place beside him.
-      className={`animate-fade-in flex w-full pt-0 items-center justify-center gap-2 ${
+      //
+      // `justify-start` (not `-center`): the typewriter grows `text` one
+      // character at a time, so a centered row would recompute its center
+      // — and visibly shift Robu and the text sideways — on every
+      // keystroke. Anchoring to the start means the row only ever grows to
+      // the right from a fixed left edge.
+      className={`animate-fade-in flex w-full pt-0 items-center justify-start gap-2 ${
         size === "lg" ? "flex-wrap" : ""
       } ${side === "right" ? "flex-row-reverse" : ""} ${className ?? ""}`}
     >
@@ -137,6 +135,7 @@ export function RobuSays({
           audioSrc={audioSrc}
           speedMs={speedMs}
           onTypingComplete={onTypingComplete}
+          onTextTyped={onTextTyped}
         />
       </div>
     </div>
