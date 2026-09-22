@@ -135,7 +135,15 @@ export function RewardScreen({
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.title}
         instant={instantSpeech}
-        side="right"
+        side="left"
+        // This screen's column is capped at `max-w-md` (448px) at every
+        // width, so `ROBU_DEFAULT_SIZE` (up to 504px at `md:`) never left room
+        // beside the bubble — RobuSays' default `flex-wrap` dropped it onto
+        // its own line under Robu. A small Robu + `flex-nowrap!` (the `!`
+        // beats that base `flex-wrap`, same specificity) keeps the bubble
+        // right beside him.
+        robuClassName="h-32 w-32 md:h-40 md:w-40"
+        className="flex-nowrap!"
         registerAnchor={registerAnchor}
       />
 

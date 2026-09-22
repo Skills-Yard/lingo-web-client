@@ -78,16 +78,23 @@ export function QuestionnaireScreen({
           direct grid children so they can each take their own explicit cell
           (row 1: Robu in column 1, bubble in column 2) instead of staying
           forced together. ── */}
-      <div className="animate-fade-in flex w-full flex-wrap items-center justify-start gap-2 pt-2 md:contents">
+      <div className="animate-fade-in flex w-full flex-nowrap items-center justify-start gap-2 pt-2 md:contents">
         <RobuAnchor
           registerAnchor={registerAnchor}
-          // Below `md:` this is `main`'s own RobuSays sizing
+          // Below `md:` this used to be `main`'s own RobuSays sizing
           // (`ROBU_DEFAULT_SIZE`'s base/`sm:` steps) + its own `side="left"`
           // pull (`-ml-4`, cancelled at `md:`) — bigger than this screen's
           // own tighter `md:`+ scale below, which only takes over once
           // `md:col-start-1` places him in his own grid cell with room to
-          // match.
-          className="shrink-0 -ml-4 md:ml-0 h-32 w-32 sm:h-60 sm:w-60 md:h-28 md:w-28 lg:h-40 lg:w-40 xl:h-48 xl:w-48 md:col-start-1 md:row-start-1"
+          // match. Dropped the `sm:h-60 sm:w-60` (240px) step: this screen's
+          // own container is still capped at `max-w-md` through that whole
+          // 640-767px range, so that size left no room beside the bubble and
+          // (with the row above forced back to `flex-wrap`'s fallback) it
+          // dropped the bubble onto its own line under him instead of
+          // reading as beside it. Robu now stays at his `128px` base size
+          // all the way to `md:`, and the row above is `flex-nowrap` so the
+          // bubble shrinks to fit beside him instead of ever wrapping away.
+          className="shrink-0 -ml-4 md:ml-0 h-32 w-32 md:h-28 md:w-28 lg:h-40 lg:w-40 xl:h-48 xl:w-48 md:col-start-1 md:row-start-1"
         />
         <SpeechBubble
           text={slide.title}
@@ -105,7 +112,19 @@ export function QuestionnaireScreen({
           // there's no wrapper div to hang it on here — both cancelled at
           // `md:` so this screen's own grid-cell positioning there is
           // untouched.
-          className="w-fit min-w-0 pb-6 -ml-12 sm:-ml-4 md:pb-0 md:ml-0 md:max-w-none md:whitespace-nowrap md:col-start-2 md:row-start-1"
+          // `lg:whitespace-nowrap` (was `md:`): combined with `w-fit`, forcing
+          // this heading onto one line sizes the div to that full single-line
+          // width regardless of its actual grid column — at `md:` specifically
+          // the 1.9fr column isn't wide enough yet for that (the container
+          // itself is still narrower there, only reaching its full max-width
+          // well past it), so the heading overflowed its column instead of
+          // reading as beside Robu. `lg:`'s wider column has room for it, so
+          // nowrap only kicks in there; `md:` now just wraps.
+          //
+          // `-ml-12` now applies through the whole sub-`md:` range (dropped
+          // `sm:-ml-4`) to match Robu's own size no longer growing at `sm:`
+          // — same pull, same Robu, all the way to `md:`.
+          className="w-fit min-w-0 pb-6 -ml-12 md:pb-0 md:ml-0 md:max-w-none lg:whitespace-nowrap md:col-start-2 md:row-start-1"
           textClassName="text-2xl lg:text-3xl xl:text-4xl"
         />
       </div>

@@ -13,7 +13,12 @@ export function VideoScreen({
   registerAnchor: (el: HTMLDivElement | null) => void;
 }) {
   return (
-    <div className="flex flex-col gap-5 min-[996px]:grid min-[996px]:grid-cols-5 min-[996px]:gap-x-8 min-[996px]:items-center min-[996px]:min-h-full min-[996px]:content-center">
+    // `gap-3` (was `gap-5`) + `min-[996px]:gap-y-0`: `gap-5` also set the grid's
+    // *row* gap (only `gap-x-8` was overridden there), so Robu's row always sat
+    // 20px above the video row on top of his own box's empty space. Now the
+    // only space between them is that box itself — which the smaller Robu
+    // below shrinks too.
+    <div className="flex flex-col gap-3 min-[996px]:grid min-[996px]:grid-cols-5 min-[996px]:gap-x-8 min-[996px]:gap-y-0 min-[996px]:items-center min-[996px]:min-h-full min-[996px]:content-center">
       <div className="min-[996px]:col-span-5 min-[996px]:col-start-1 min-[996px]:row-start-1">
         <RobuSays
           text={`${slide.highlightWord} ${slide.title}`}
@@ -30,7 +35,9 @@ export function VideoScreen({
           // box left no room beside the bubble and forced it onto its own
           // line. Only grows again once `md:` also lifts that cap to
           // `max-w-7xl`, where there's genuinely more room to grow into.
-          robuClassName="h-32 w-32 md:h-60 md:w-60 min-[996px]:h-84 min-[996px]:w-84"
+          // (`md:`/`min-[996px]:` sizes since shrunk again — 240/336px was
+          // still leaving a tall empty strip between Robu and the video.)
+          robuClassName="h-32 w-32 md:h-40 md:w-40 min-[996px]:h-56 min-[996px]:w-56"
           // `min-[996px]:justify-center!`: RobuSays' own row hardcodes
           // `justify-start` (every other screen that uses it wants Robu
           // left-aligned), which wins over a plain `justify-center` passed
@@ -39,7 +46,17 @@ export function VideoScreen({
           // losing to it. Scoped to `min-[996px]:` (this was unconditional
           // before, along with `gap-4` below) so mobile/md keep RobuSays'
           // own default left-aligned `gap-2` row, matching main.
-          className="min-[996px]:justify-center! min-[996px]:gap-4"
+          //
+          // `max-md:[&>div:nth-child(2)]:ml-0`: below ~416px of content
+          // width (e.g. a 358px-wide phone) the bubble doesn't fit beside
+          // Robu, and RobuSays' own base `flex-wrap` drops it to its own
+          // line — but the bubble wrapper's `side="left"` pull (`-ml-12` at
+          // base, meant to tighten the *side-by-side* gap to Robu) still
+          // applied even then, yanking that now-first-on-its-own-line bubble
+          // 48px left of the viewport's edge instead of just closing a gap.
+          // Cancelling it below `md:` (where it can still wrap) keeps it
+          // flush at the row's own left edge whichever way it lays out.
+          className="min-[996px]:justify-center! min-[996px]:gap-4 max-md:[&>div:nth-child(2)]:ml-0"
         />
       </div>
 

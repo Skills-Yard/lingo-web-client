@@ -148,12 +148,30 @@ export function ExamplesGridScreen({
         text={slide.title}
         instant={instantSpeech}
         side="right"
-        // No `robuClassName`/gap overrides below `md:` — that's `main`'s
-        // own bare `ROBU_DEFAULT_SIZE` (`h-32 sm:h-60`) and default pull,
-        // matching it exactly there. `md:`+ is untouched either way: this
-        // screen's own `md:w-auto md:max-w-105 md:shrink-0` etc. below
-        // predates that removed override and was never part of it.
-        className="md:w-auto md:max-w-105 md:shrink-0 min-[1024px]:flex-col-reverse min-[1024px]:items-center min-[1024px]:justify-center"
+        // Robu stays smaller and to the heading's *left* (a plain row,
+        // un-reversing `side="right"`'s own `flex-row-reverse`) through
+        // `sm`/`md` — only `lg:` keeps the original stacked-above,
+        // full-size-Robu look untouched.
+        robuClassName="h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 lg:h-126 lg:w-126"
+        // `md:w-auto md:max-w-105 md:shrink-0`: pre-existing, still needed at
+        // every width from `md:` up (`lg:` included, nothing overrides it
+        // there) so this row doesn't stretch across the outer `md:flex-row`
+        // split with the tile grid.
+        //
+        // Below `lg:`: `max-lg:flex-row!` un-reverses `side="right"`'s own
+        // `flex-row-reverse` (the `!` beats it, same specificity),
+        // `max-lg:flex-nowrap!` keeps the bubble beside Robu instead of
+        // falling back to RobuSays' own base `flex-wrap` if it's ever tight,
+        // and `max-lg:[&>div]:mx-0` cancels both children's `side="right"`
+        // margins — tuned for that reversed row against `ROBU_DEFAULT_SIZE`'s
+        // much bigger icon, they'd otherwise overlap this row's small Robu
+        // onto the text (same bug fixed on screen 3's small Robu, see
+        // TeacherIntroScreen). Only the row's own `gap-2` separates them now.
+        //
+        // At `lg:` and up: the original stacked layout, just re-scoped from
+        // unconditional to `lg:` (where it now actually starts) instead of
+        // applying everywhere.
+        className="md:w-auto md:max-w-105 md:shrink-0 max-lg:flex-row! max-lg:flex-nowrap! max-lg:[&>div]:mx-0 lg:flex-col-reverse! lg:justify-center! lg:[&>div]:mx-0"
         registerAnchor={setHeadingAnchorEl}
       />
 

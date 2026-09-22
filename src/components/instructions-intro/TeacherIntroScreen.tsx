@@ -4,7 +4,6 @@ import { useState } from "react";
 import type { TeacherIntroSlide } from "@/lib/constants/instructionsIntro";
 import { TeacherIllustration } from "./TeacherIllustration";
 import { RobuSays } from "./RobuSays";
-import { SpeechBubble } from "./SpeechBubble";
 
 export function TeacherIntroScreen({
   slide,
@@ -47,53 +46,40 @@ export function TeacherIntroScreen({
             // had nothing real to glide the actual mascot to, so he could
             // end up rendered off in a corner past the visible screen
             // instead of sitting in this row.
-            robuClassName="h-32 w-32 sm:h-60 sm:w-60 md:h-84 md:w-84 min-[1180px]:h-52 min-[1180px]:w-52"
-            // The column-reverse stack was `max-[1179px]:`-scoped — i.e. it
-            // covered *everything* below 1180px, `md`/`lg` included, not
-            // just true mobile. Below `md` that stacked Robu below his own
-            // heading instead of RobuSays' own plain side-by-side row (what
-            // `main` renders there); re-scoped to `md:max-[1179px]:` so the
-            // md–1179 window (left alone per instructions) keeps exactly
-            // what it had, while sub-`md` now falls through to that same
-            // untouched default, matching `main`.
-            className="md:max-[1179px]:flex-col-reverse md:max-[1179px]:items-center md:max-[1179px]:gap-0 md:max-[1179px]:[&>div:nth-child(2)]:ml-0 min-[1180px]:gap-4 min-[1180px]:[&>div:nth-child(2)]:ml-0"
+            // Dropped the old `sm:h-60 sm:w-60` (240px) step: below `md` the
+            // flow's own container is still capped at `max-w-md` (448px), so
+            // that size left barely any room beside the bubble and pushed it
+            // onto its own line under him.
+            robuClassName="h-32 w-32 md:h-84 md:w-84 min-[1180px]:h-52 min-[1180px]:w-52"
+            // `max-md:flex-nowrap!` (the `!` beats RobuSays' own base
+            // `flex-wrap`, same specificity): keeps the bubble beside Robu
+            // below `md`, where he stays on the text's left.
+            // `max-md:[&>div:nth-child(2)]:ml-0`: the bubble wrapper's own
+            // side="left" margin (`-ml-12`/`sm:-ml-4`) is tuned to trim the
+            // blank space around `ROBU_DEFAULT_SIZE`'s much bigger icon —
+            // against this screen's small `h-32` Robu it instead pulled the
+            // bubble in far enough to overlap his actual artwork onto the
+            // text. Cancelling it leaves just the row's own `gap-2` between
+            // them below `md`.
+            // `md:flex-col-reverse`: from `md` up, the heading stacks above
+            // Robu instead of sitting beside him — RobuSays' own base
+            // `items-center` (unconditional) then centers that column
+            // horizontally, since it's the cross-axis once the row becomes a
+            // column. `[&>div:nth-child(2)]:ml-0` still needed here too,
+            // cancelling the bubble's side-by-side negative left-margin that
+            // would otherwise skew it off-center.
+            className="max-md:flex-nowrap! max-md:[&>div:nth-child(2)]:ml-0 md:flex-col-reverse md:gap-4 md:[&>div:nth-child(2)]:ml-0"
             audioSrc="/audios/screen_3_audio.mpeg"
             onTextTyped={() => setRobuDone(true)}
           />
         </div>
-
-        <div
-          className={`relative hidden md:block max-w-60 rounded-[10px] bg-white px-6 py-5 text-[#2C2C2C] shadow-lg transition-shadow ${
-            noteDone ? "animate-note-highlight" : ""
-          }`}
-        >
-          <span
-            aria-hidden
-            className="absolute top-3 left-4 font-serif text-4xl leading-none text-primary"
-          >
-            &ldquo;
-          </span>
-          <span className="inline-block min-h-[1.5em] text-lg font-semibold leading-snug">
-            {robuDone && (
-              <SpeechBubble
-                text="Open Your Notebook"
-                size="plain"
-                instant={instantSpeech}
-                onTypingComplete={() => setNoteDone(true)}
-              />
-            )}
-          </span>
-          <span
-            aria-hidden
-            className="absolute -bottom-3 right-4 font-serif text-4xl leading-none text-primary"
-          >
-            &rdquo;
-          </span>
-        </div>
       </div>
 
       {/* Mobile keeps this screen's own teacher artwork; laptop reuses the wider
-          "answer" illustration from screen 03 so it fills the 3-col space cleanly. */}
+          "answer" illustration from screen 03 so it fills the 3-col space cleanly.
+          Both sizes show the "Open Your Notebook" note overlaid on the image
+          itself (TeacherIllustration's own built-in note) instead of a
+          separate off-image card beside it. */}
       <TeacherIllustration
         className="h-68.75 md:hidden"
         fit="contain"
@@ -109,9 +95,12 @@ export function TeacherIntroScreen({
         className="hidden md:block md:h-105 md:col-span-3"
         fit="contain"
         variant="bleed"
-        showNote={false}
         imageLight="/images/answerImgWhite.png"
         imageDark="/images/answerImgBlack.png"
+        noteStartTyping={robuDone}
+        noteInstant={instantSpeech}
+        onNoteTypingComplete={() => setNoteDone(true)}
+        noteHighlighted={noteDone}
       />
     </div>
   );

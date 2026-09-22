@@ -114,8 +114,14 @@ export function TeacherQuizScreen({
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.highlightWord}
         instant={instantSpeech}
-        side="right"
-        className="md:col-start-1 md:row-start-1 md:[&>div:nth-child(2)]:pb-0"
+        side="left"
+        // Smaller than `ROBU_DEFAULT_SIZE` (which at `md:` is wider than this
+        // screen's own half-width column) so the bubble always has room
+        // beside him. `flex-nowrap!` keeps it on his right at every width —
+        // RobuSays' default `flex-wrap` would drop it underneath him instead
+        // whenever the column is too narrow, and the bubble just shrinks.
+        robuClassName="h-32 w-32 sm:h-60 sm:w-60 md:h-40 md:w-40"
+        className="flex-nowrap! md:col-start-1 md:row-start-1 md:[&>div:nth-child(2)]:pb-0"
         registerAnchor={registerAnchor}
         audioSrc={HEADING_AUDIO_SRC}
         onTypingComplete={() => setHeadingVoiced(true)}

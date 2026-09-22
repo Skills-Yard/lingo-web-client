@@ -12,11 +12,7 @@ import { ProgramSlots } from "./game/ProgramSlots";
 import { CommandPalette } from "./game/CommandPalette";
 import { GameFooter } from "./game/GameFooter";
 import { SpeechBubble } from "./SpeechBubble";
-import {
-  RobuAnchor,
-  ROBU_DEFAULT_SIZE,
-  ROBU_TRAILING_GAP_PULL,
-} from "./RobuAnchor";
+import { RobuAnchor, ROBU_TRAILING_GAP_PULL } from "./RobuAnchor";
 import { motion } from "framer-motion";
 
 interface GameBoardScreenProps {
@@ -112,7 +108,12 @@ export function GameBoardScreen({
           {!robuJoinedGame && (
             <RobuAnchor
               registerAnchor={registerAnchor}
-              className={`shrink-0 ${ROBU_DEFAULT_SIZE}`}
+              // Smaller than `ROBU_DEFAULT_SIZE` (up to 504px at `md:`) —
+              // he only stands here for `JOIN_GAME_DELAY_MS` before gliding
+              // onto the board, so arriving that big just to shrink again a
+              // beat later read as an oversized flash (same fix as
+              // RewardScreen/TeacherQuizScreen).
+              className="shrink-0 h-32 w-32 md:h-40 md:w-40"
             />
           )}
 

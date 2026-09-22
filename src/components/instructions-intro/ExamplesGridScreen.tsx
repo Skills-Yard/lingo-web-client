@@ -155,8 +155,26 @@ export function ExamplesGridScreen({
         // fix, under Robu himself). `md:w-auto` overrides RobuSays' own
         // base `w-full` so this row sizes to its content (Robu + heading)
         // instead of claiming the whole flex row and squeezing the grid
-        // sibling down to nothing.
-        className="md:w-auto md:max-w-105 md:shrink-0"
+        // sibling down to nothing. Still needed at `lg:` too — nothing
+        // overrides it there.
+        //
+        // Robu stays smaller and to the heading's *left* (RobuSays' own
+        // default row for `size="heading"`, already un-wrapped/left-justified)
+        // through `sm`/`md` — only `lg:` keeps the original stacked-above,
+        // full-size-Robu look untouched.
+        robuClassName="h-28 w-28 sm:h-32 sm:w-32 md:h-36 md:w-36 lg:h-126 lg:w-126"
+        // Below `lg:`: `max-lg:[&>div:nth-child(2)]:ml-0` drops
+        // `ROBU_TRAILING_GAP_PULL` — sized for `ROBU_DEFAULT_SIZE`'s much
+        // bigger icon, it would otherwise pull the heading in far enough to
+        // overlap this row's small Robu (same bug fixed on screen 3's small
+        // Robu, see TeacherIntroScreen).
+        //
+        // At `lg:` and up: the original stacked layout (heading above Robu,
+        // centered), just re-scoped to `lg:` (where it now actually starts)
+        // instead of applying everywhere. `lg:justify-center!` needs the `!`
+        // to beat this row's own base `justify-start` (same specificity, no
+        // variant).
+        className="md:w-auto md:max-w-105 md:shrink-0 max-lg:[&>div:nth-child(2)]:ml-0 lg:flex-col-reverse lg:justify-center! lg:text-center lg:[&>div:nth-child(2)]:ml-0"
         registerAnchor={setHeadingAnchorEl}
       />
 

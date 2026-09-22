@@ -114,7 +114,14 @@ export function TeacherQuizScreen({
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.highlightWord}
         instant={instantSpeech}
-        className="md:col-start-1 md:row-start-1 md:[&>div:nth-child(2)]:pb-0"
+        side="left"
+        // Smaller than `ROBU_DEFAULT_SIZE` (which at `md:` is wider than this
+        // screen's own half-width column, leaving the heading almost no room
+        // beside him). base/`sm:` are the same track `ROBU_TRAILING_GAP_PULL`
+        // is calibrated to; at `md:` the pull is re-scaled (~25% of the box,
+        // same ratio) so the heading doesn't slide under the smaller Robu.
+        robuClassName="h-32 w-32 sm:h-60 sm:w-60 md:h-40 md:w-40"
+        className="md:col-start-1 md:row-start-1 md:[&>div:nth-child(2)]:pb-0 md:[&>div:nth-child(2)]:-ml-10"
         registerAnchor={registerAnchor}
         audioSrc={HEADING_AUDIO_SRC}
         onTypingComplete={() => setHeadingVoiced(true)}

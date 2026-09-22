@@ -136,6 +136,15 @@ export function RewardScreen({
         text={`${slide.highlightWord} ${slide.title}`}
         highlight={slide.title}
         instant={instantSpeech}
+        // This screen's column is capped at `max-w-md` (448px) at every
+        // width, so `ROBU_DEFAULT_SIZE` (up to 504px at `md:`) was wider than
+        // the column itself and squeezed the heading to almost nothing beside
+        // him. Smaller Robu instead, with `ROBU_TRAILING_GAP_PULL` re-scaled
+        // to the same ~22-25% of his box (128 -> -ml-7, 160 -> -ml-10); the
+        // unprefixed one also covers `sm:` (he stays 128 there), beating
+        // RobuSays' own `sm:-ml-15`/`md:-ml-21` by specificity.
+        robuClassName="h-32 w-32 md:h-40 md:w-40"
+        className="[&>div:nth-child(2)]:-ml-7 md:[&>div:nth-child(2)]:-ml-10"
         registerAnchor={registerAnchor}
       />
 

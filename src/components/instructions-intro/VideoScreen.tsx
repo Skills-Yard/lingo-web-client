@@ -13,13 +13,25 @@ export function VideoScreen({
   registerAnchor: (el: HTMLDivElement | null) => void;
 }) {
   return (
-    <div className="flex flex-col gap-5 min-[996px]:grid min-[996px]:grid-cols-5 min-[996px]:gap-x-8 min-[996px]:items-center min-[996px]:min-h-full min-[996px]:content-center">
+    // `gap-3` (was `gap-5`) + `min-[996px]:gap-y-0`: `gap-5` also set the grid's
+    // *row* gap (only `gap-x-8` was overridden there), so Robu's row always sat
+    // 20px above the video row on top of his own box's empty space. Now the
+    // only space between them is that box itself — which the smaller Robu
+    // below shrinks too.
+    <div className="flex flex-col gap-3 min-[996px]:grid min-[996px]:grid-cols-5 min-[996px]:gap-x-8 min-[996px]:gap-y-0 min-[996px]:items-center min-[996px]:min-h-full min-[996px]:content-center">
       <div className="min-[996px]:col-span-5 min-[996px]:col-start-1 min-[996px]:row-start-1">
         <RobuSays
           text={`${slide.highlightWord} ${slide.title}`}
           highlight={slide.highlightWord}
           instant={instantSpeech}
           side="left"
+          // Smaller than `ROBU_DEFAULT_SIZE` so Robu doesn't crowd out the
+          // video below, and so the empty strip inside his box between him
+          // and the video stays thin. This is *off* the w-32/sm:w-60/md:w-84
+          // track `ROBU_TRAILING_GAP_PULL` is calibrated to, so the pull is
+          // re-scaled to the same ~22-25% of the box at each step (see the
+          // `className` below) — otherwise the heading would slide under him.
+          robuClassName="h-32 w-32 md:h-40 md:w-40 min-[996px]:h-56 min-[996px]:w-56"
           registerAnchor={registerAnchor}
           audioSrc="/audios/screen_6_audio.mpeg"
           // `min-[996px]:justify-center!`: only from the point this row
@@ -31,7 +43,12 @@ export function VideoScreen({
           // class order. `gap-4` scoped the same way — unprefixed, it was
           // fighting RobuSays' own base `gap-2` for mobile/md too, widening
           // spacing there that main never had.
-          className="min-[996px]:justify-center! min-[996px]:gap-4"
+          //
+          // The three `[&>div:nth-child(2)]:-ml-*` re-scale the heading's pull
+          // to Robu's box at each size (128 -> -ml-7, 160 -> -ml-10, 224 ->
+          // -ml-14). The unprefixed one also covers `sm:` (Robu stays 128
+          // there), beating RobuSays' own `sm:-ml-15`/`md:-ml-21` by specificity.
+          className="min-[996px]:justify-center! min-[996px]:gap-4 [&>div:nth-child(2)]:-ml-7 md:[&>div:nth-child(2)]:-ml-10 min-[996px]:[&>div:nth-child(2)]:-ml-14"
         />
       </div>
 
