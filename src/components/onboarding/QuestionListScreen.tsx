@@ -1,5 +1,6 @@
 import type { OnboardingListOption, TextSpan } from "@/lib/constants/onboarding";
 import { Button3D } from "@/components/ui/Button3D";
+import { OnboardingFox } from "./robu/OnboardingFox";
 
 interface QuestionListScreenProps {
   heading: TextSpan[];
@@ -27,18 +28,16 @@ export function QuestionListScreen({
 }: QuestionListScreenProps) {
   return (
     <div className={`flex flex-1 flex-col bg-white px-4 ${className ?? ""}`}>
-      <div className="flex items-start gap-3 pt-2">
-        <div
-          aria-hidden
-          className="relative flex h-14 w-14 shrink-0 items-center justify-center"
-        >
-          <span className="absolute -left-1 -top-1 text-lg font-bold text-[#8B5CF6]">?</span>
-          <span className="absolute -right-1 -top-1 text-lg font-bold text-[#8B5CF6]">?</span>
-          <svg viewBox="0 0 100 100" className="h-12 w-12">
-            <polygon points="50,5 90,40 90,95 10,95 10,40" fill="#22C08C" />
-          </svg>
+      <div className="flex items-center gap-1 pt-1">
+        {/* The Rive artboard has a lot of built-in padding around the fox,
+            so this box is much larger than the fox itself reads — negative
+            margins trim that dead space off the row's own height. */}
+        <div aria-hidden className="relative -my-3 -ml-3 h-28 w-28 shrink-0">
+          <span className="absolute left-3 top-4 z-10 text-lg font-bold text-[#8B5CF6]">?</span>
+          <span className="absolute right-3 top-3 z-10 text-lg font-bold text-[#8B5CF6]">?</span>
+          <OnboardingFox className="h-full w-full" />
         </div>
-        <h1 className="pt-1 text-lg font-semibold leading-snug text-[#1A1C22] sm:text-xl">
+        <h1 className="text-lg font-semibold leading-snug text-[#1A1C22] sm:text-xl">
           {heading.map((span, i) => (
             <span key={i} className={span.highlight ? "text-primary" : undefined}>
               {span.text}
@@ -56,8 +55,8 @@ export function QuestionListScreen({
               key={option.id}
               type="button"
               onClick={() => onSelect(option.id)}
-              className={`relative flex w-full items-center gap-3 overflow-hidden rounded-xl border bg-white px-4 py-3.5 text-left transition-colors ${
-                selected ? "border-2 border-primary" : "border-black/10"
+              className={`flex w-full items-center gap-3 rounded-xl border bg-white px-4 py-3.5 text-left transition-colors ${
+                selected ? "border-2 border-primary" : "border-black/10 border-b-4 border-b-[#E3D8B8]"
               }`}
             >
               <span
@@ -70,12 +69,6 @@ export function QuestionListScreen({
               <span className="text-sm font-medium text-[#1A1C22] sm:text-base">
                 {option.label}
               </span>
-              {!selected && (
-                <span
-                  aria-hidden
-                  className="absolute -right-2 top-1/2 h-6 w-6 -translate-y-1/2 rotate-45 bg-[#D9CBA3]"
-                />
-              )}
             </button>
           );
         })}

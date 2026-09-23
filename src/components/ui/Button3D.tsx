@@ -22,47 +22,50 @@ const TONE_STYLES: Record<Button3DTone, { face: string; depth: string; text: str
 const CHAMFER =
   "polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)";
 
-// How far the face sits above its own depth layer at rest, and therefore
-// how far it travels on press — this is the "clickable top to bottom" push.
-const RAISE_PX = 6;
+// The whole button leans back a few degrees around its own top edge — the
+// "tilted backward in 3D" look the reference asks for — rather than sitting
+// perfectly flat. `perspective()` as part of the same transform (rather than
+// a `perspective` property on a parent) keeps the tilt self-contained to
+// just this element, no extra wrapper needed. Modest on purpose: much more
+// than this and the label starts reading as skewed rather than tilted.
+const TILT_TRANSFORM = "perspective(400px) rotateX(20deg)";
 
 interface Button3DProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
   children: ReactNode;
   tone?: Button3DTone;
-  /** The two pale diagonal accent stripes from the reference design.
-   * Defaults to on for the brand tone (that's the tone the reference itself
-   * used) and off for the others, where they'd fight the tone's own color. */
-  stripes?: boolean;
+  /** The pale diagonal shine that sweeps left-to-right across the face every
+   * 5s. Defaults to on for the brand tone (the tone the reference itself
+   * used) and off for the others, where it'd fight the tone's own color. */
+  shine?: boolean;
   className?: string;
 }
 
 /**
- * The app's one 3D "push" button, replacing plain flat `<button>`s for
- * primary actions (IntroFooter's Next/Continue/Claim, PreLoginScreen's Get
- * Started, ...): a raised face sitting `RAISE_PX` above its own darker depth
- * layer, both clipped to the same chamfered silhouette. Press (mouse, touch,
- * or keyboard) drops the face all the way down onto the depth layer — the
- * "clickable top to bottom" travel the reference asked for — and it springs
- * back up on release. The depth layer is sized exactly to the face's own
- * box (not a separate fixed height), so together they're one `<button>`
- * hit-target spanning the whole visible shape, not just the raised top.
+ * The app's one 3D "push" button: a raised face sitting a few pixels above
+ * its own darker depth layer, the whole thing tilted back slightly in 3D,
+ * with a pale shine sweeping across the face every 5s. Press (mouse, touch,
+ * or keyboard) drops the face down onto the depth layer, springing back on
+ * release. The depth layer is sized exactly to the face's own box (not a
+ * separate fixed height), so together they're one `<button>` hit-target
+ * spanning the whole visible shape, not just the raised top.
  */
 export function Button3D({
   children,
   tone = "brand",
-  stripes,
+  shine,
   disabled,
   className,
   ...rest
 }: Button3DProps) {
-  const showStripes = stripes ?? tone === "brand";
+  const showShine = shine ?? tone === "brand";
   const { face, depth, text } = TONE_STYLES[tone];
 
   return (
     <button
       type="button"
       disabled={disabled}
+      style={{ transform: TILT_TRANSFORM }}
       className={`group relative block border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
       } ${className ?? ""}`}
@@ -82,22 +85,18 @@ export function Button3D({
       <span
         className={`relative flex items-center justify-center gap-2 overflow-hidden px-6 py-4 text-center text-lg font-semibold transition-transform duration-100 ease-out ${
           disabled
-            ? `translate-y-0 bg-muted text-muted-foreground`
+            ? "translate-y-0 bg-muted text-muted-foreground"
             : `-translate-y-1.5 group-active:translate-y-0 ${face} ${text}`
         }`}
         style={{ clipPath: CHAMFER }}
       >
-        {showStripes && !disabled && (
-          <>
-            <span
-              aria-hidden
-              className="absolute left-[18%] top-0 h-full w-[9%] -skew-x-12 bg-[#FFFBD0]/90"
-            />
-            <span
-              aria-hidden
-              className="absolute left-[29%] top-0 h-full w-[6%] -skew-x-12 bg-[#FFFBD0]/90"
-            />
-          </>
+        {showShine && !disabled && (
+          <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+            <span className="animate-button-shine absolute inset-y-0 left-0 w-1/4">
+              <span className="absolute inset-y-0 left-[10%] w-[45%] -skew-x-12 bg-[#FFFBD0]/90" />
+              <span className="absolute inset-y-0 left-[65%] w-[30%] -skew-x-12 bg-[#FFFBD0]/90" />
+            </span>
+          </span>
         )}
         <span className="relative">{children}</span>
       </span>

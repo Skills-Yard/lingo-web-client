@@ -31,15 +31,20 @@ export function OnboardingHeader({
       </button>
 
       {progress && (
-        <div className="flex-1 flex items-center gap-1.5 px-2 md:mx-auto md:max-w-xs">
-          {Array.from({ length: progress.total }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full grow transition-all duration-300 ${
-                i < progress.step ? "bg-primary" : "bg-black/10"
-              }`}
-            />
-          ))}
+        <div className="flex-1 px-2 md:mx-auto md:max-w-xs">
+          <p className="mb-1 text-xs font-semibold tabular-nums text-primary">
+            {String(progress.step).padStart(2, "0")}/{String(progress.total).padStart(2, "0")}
+          </p>
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: progress.total }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-1.5 rounded-full grow transition-all duration-300 ${
+                  i < progress.step ? "bg-primary" : "bg-black/10"
+                }`}
+              />
+            ))}
+          </div>
         </div>
       )}
 

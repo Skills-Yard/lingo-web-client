@@ -16,29 +16,42 @@ interface OnboardingBubbleProps {
  * mouth-sync/typewriter machinery (RobuTalkingContext) that doesn't apply
  * here (no persistent gliding mascot in this flow, just a per-screen fox).
  *
- * Colors are hardcoded light values (not the `bg-card`/`text-foreground`
- * theme tokens) — this flow is styled to match the reference design
- * exactly, which is light-only with no dark-mode treatment of its own, so
- * it shouldn't inherit the rest of the site's dark-by-default theme.
+ * The border/gradient/tail is the actual `dialogue-box.png` design asset
+ * (290x111, tail pointing down) rather than a hand-built CSS+SVG
+ * reconstruction of it — earlier attempts at reproducing this exact shape
+ * (rounded border, flat drop-shadow, gradient notch) kept drifting from the
+ * source design in small ways. It's stretched to the text's own box via
+ * `background-size: 100% 100%` rather than tiled/sliced — at the padding
+ * below (chosen to roughly track the source image's own ~2.6:1 aspect
+ * ratio for 2-3 lines of text) that stays close to undistorted; it only
+ * visibly stretches for much longer or shorter lines than this was sized
+ * for.
+ *
+ * For `tail="up"`, only the *image* flips (`scale-y-[-1]` on its own layer,
+ * not the whole bubble) — the text stays upright, with its own padding
+ * swapped top/bottom so it still sits inside the rounded box and clear of
+ * the tail, which is now at the top instead of the bottom.
  */
 export function OnboardingBubble({ spans, tail, className }: OnboardingBubbleProps) {
   return (
     <div className={`relative inline-flex ${className ?? ""}`}>
-      <div className="rounded-2xl border border-black/10 bg-white px-4 py-2.5 text-center text-sm font-medium leading-snug shadow-sm sm:text-base">
+      <div
+        aria-hidden
+        className={`absolute inset-0 bg-[url(/images/dialogue-box.png)] bg-size-[100%_100%] bg-no-repeat ${
+          tail === "up" ? "scale-y-[-1]" : ""
+        }`}
+      />
+      <div
+        className={`relative px-9 text-center text-base font-medium leading-tight text-black sm:px-10 ${
+          tail === "down" ? "pt-6 pb-11 sm:pt-7" : "pt-11 pb-6 sm:pb-7"
+        }`}
+      >
         {spans.map((span, i) => (
-          <span key={i} className={span.highlight ? "text-primary" : "text-[#1A1C22]"}>
+          <span key={i} className={span.highlight ? "text-primary" : undefined}>
             {span.text}
           </span>
         ))}
       </div>
-      <span
-        aria-hidden
-        className={`absolute left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 border-black/10 bg-white ${
-          tail === "down"
-            ? "-bottom-1.5 border-b border-r"
-            : "-top-1.5 border-l border-t"
-        }`}
-      />
     </div>
   );
 }

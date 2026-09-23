@@ -14,10 +14,11 @@ interface PreLoginScreenProps {
 }
 
 /**
- * The onboarding flow's very first screen: "LINGO" wordmark, Robu, "Get
- * Started" / "Log in". "Log in" has nowhere to go yet — there's no
- * login/signup route in this app — so it's inert for now; only "Get
- * Started" is wired up, advancing into the question flow.
+ * The onboarding flow's "Get Started" screen: "LINGO" wordmark, Robu, "Get
+ * Started" / "Log in". No ground shadow under Robu — the reference design's
+ * own shadow ellipse is deliberately left out. "Log in" has nowhere to go
+ * yet — there's no login/signup route in this app — so it's inert for now;
+ * only "Get Started" is wired up, advancing into the question flow.
  */
 export function PreLoginScreen({ className, onGetStarted }: PreLoginScreenProps) {
   return (
@@ -28,12 +29,8 @@ export function PreLoginScreen({ className, onGetStarted }: PreLoginScreenProps)
         LINGO
       </h1>
 
-      <div className="relative flex flex-1 items-center justify-center">
+      <div className="flex flex-1 items-center justify-center">
         <OnboardingFox className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64" />
-        <div
-          aria-hidden
-          className="absolute bottom-[10%] h-4 w-36 rounded-full bg-black/15 blur-[3px] sm:w-40"
-        />
       </div>
 
       <div className="w-full max-w-xs px-4 pb-6 sm:max-w-sm">

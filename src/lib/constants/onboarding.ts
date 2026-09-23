@@ -57,7 +57,7 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
   { id: "data-analyst", label: "Data Analyst", icon: PieChart },
   { id: "devops-cloud", label: "DevOps / Cloud Engineer", icon: Cloud },
   { id: "cybersecurity", label: "Cybersecurity", icon: ShieldCheck },
-  { id: "automation-scripting", label: "Automation / Scripting", icon: Bot },
+  { id: "automation-scripting", label: "Automation & Scripting", icon: Bot },
 ];
 
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
@@ -160,12 +160,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     bubble: () => [{ text: "Are you ready?" }],
     cta: "Yes!",
   },
-  {
-    kind: "notification-permission",
-    id: "notifications",
-    heading: "Get notified when it's time to learn.",
-    cta: "Continue",
-  },
+  // The notification-permission step (`kind: "notification-permission"`,
+  // rendered by NotificationPermissionScreen) used to sit here; the career
+  // question now follows "Are you ready?" directly, per the reference.
   {
     kind: "question-list",
     id: "career",

@@ -321,6 +321,25 @@ html {
   animation: fadeIn 0.4s ease-out both;
 }
 
+/* Button3D's shine sweep — travels left-to-right across the face once per
+   5s cycle (the first 30% of it), then sits off-screen right for the
+   remainder before looping back to the start. `translateX` (not `left`) so
+   the sweep stays a GPU-composited transform instead of forcing layout on
+   every frame. */
+@keyframes buttonShine {
+  0% {
+    transform: translateX(-260%);
+  }
+  30%,
+  100% {
+    transform: translateX(500%);
+  }
+}
+
+.animate-button-shine {
+  animation: buttonShine 5s ease-in-out infinite;
+}
+
 /* Hide the scrollbar on the scrollable body of the flow while keeping it scrollable. */
 .scrollbar-none {
   scrollbar-width: none;
