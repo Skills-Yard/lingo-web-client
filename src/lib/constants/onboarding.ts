@@ -83,6 +83,20 @@ export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
   { id: "professional", label: "Professional", illustration: "trophy" },
 ];
 
+export const TIME_COMMITMENT_OPTIONS: OnboardingGridOption[] = [
+  { id: "15min", label: "15 min a day", illustration: "books" },
+  { id: "30min", label: "30 min a day", illustration: "mobile" },
+  { id: "45min", label: "45 min a day", illustration: "chart" },
+  { id: "1hour", label: "1 hour a day", illustration: "trophy" },
+];
+
+export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
+  { id: "morning", label: "Morning", illustration: "books" },
+  { id: "afternoon", label: "Afternoon", illustration: "mobile" },
+  { id: "evening", label: "Evening", illustration: "chart" },
+  { id: "night", label: "Night", illustration: "trophy" },
+];
+
 /** Every career in this flow leads to the same language track — the
  * reference design only ever shows a Python path (screen 11: "your [career
  * path] journey runs on Python"), so there's no real per-career mapping to
@@ -141,12 +155,9 @@ export type OnboardingStep =
       cta: string;
     };
 
-/** The 4 real questions in this flow (career, experience, Python level,
- * motivation) — used to compute "question N of TOTAL" progress. The
- * fox-message/notification-permission connector steps in between aren't
- * counted; the reference's own "7 quick questions" line is flavor copy on
- * one screen, not a literal count this flow currently has content for. */
-export const ONBOARDING_QUESTION_COUNT = 4;
+/** The real questions in this flow (career, experience, Python level,
+ * motivation, time commitment, learning time) — used to compute "question N of TOTAL" progress. */
+export const ONBOARDING_QUESTION_COUNT = 6;
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
@@ -164,9 +175,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     bubble: () => [{ text: "Are you ready?" }],
     cta: "Yes!",
   },
-  // The notification-permission step (`kind: "notification-permission"`,
-  // rendered by NotificationPermissionScreen) used to sit here; the career
-  // question now follows "Are you ready?" directly, per the reference.
   {
     kind: "question-list",
     id: "career",
@@ -242,5 +250,43 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     options: MOTIVATION_OPTIONS,
     answerKey: "motivation",
     cta: "Continue",
+  },
+  {
+    kind: "question-grid",
+    id: "timeCommitment",
+    heading: (a) => [
+      { text: "How much time can you give " },
+      { text: careerLabel(a), highlight: true },
+      { text: " each day?" },
+    ],
+    options: TIME_COMMITMENT_OPTIONS,
+    // Add timeCommitment to OnboardingAnswers in a real project, but we can reuse a key if needed or assume it's extensible
+    answerKey: "motivation", 
+    cta: "Continue",
+  },
+  {
+    kind: "question-grid",
+    id: "learningTime",
+    heading: (a) => [
+      { text: "What is the " },
+      { text: "best time", highlight: true },
+      { text: " in a day for you to learn " },
+      { text: careerLabel(a), highlight: true },
+      { text: "?" },
+    ],
+    options: LEARNING_TIME_OPTIONS,
+    answerKey: "motivation",
+    cta: "Continue",
+  },
+  {
+    kind: "fox-message",
+    id: "pace-wow",
+    bubble: (a) => [
+      { text: "WOW!", highlight: true },
+      { text: "\nAt this pace, you'll finish your first 3 lessons toward [" },
+      { text: careerLabel(a), highlight: true },
+      { text: "] this week." },
+    ],
+    cta: "Yes!",
   },
 ];

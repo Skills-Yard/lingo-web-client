@@ -39,17 +39,10 @@ export function QuestionGridScreen({
   className,
 }: QuestionGridScreenProps) {
   return (
-    <div className={`flex flex-1 flex-col bg-white px-4 ${className ?? ""}`}>
+    <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
       <div className="flex items-start gap-3 pt-2">
-        <div
-          aria-hidden
-          className="relative flex h-14 w-14 shrink-0 items-center justify-center"
-        >
-          <span className="absolute -left-1 -top-1 text-lg font-bold text-[#8B5CF6]">?</span>
-          <span className="absolute -right-1 -top-1 text-lg font-bold text-[#8B5CF6]">?</span>
-          <svg viewBox="0 0 100 100" className="h-12 w-12">
-            <polygon points="50,5 90,40 90,95 10,95 10,40" fill="#22C08C" />
-          </svg>
+        <div aria-hidden className="relative shrink-0">
+          <img src="/images/quesfoxi.png" alt="" className="w-16 h-16 object-contain" />
         </div>
         <h1 className="pt-1 text-lg font-semibold leading-snug text-[#1A1C22] sm:text-xl">
           {heading.map((span, i) => (

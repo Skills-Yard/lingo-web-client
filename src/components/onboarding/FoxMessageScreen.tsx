@@ -32,7 +32,7 @@ export function FoxMessageScreen({
   className,
 }: FoxMessageScreenProps) {
   return (
-    <div className={`flex flex-col items-center bg-white px-6 ${className ?? ""}`}>
+    <div className={`flex flex-col items-center min-h-0 bg-white px-6 ${className ?? ""}`}>
       {heading && (
         <div className="relative mt-[8vh] flex items-start gap-1.5">
           <h1 className="max-w-xs text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl">

@@ -27,15 +27,10 @@ export function QuestionListScreen({
   className,
 }: QuestionListScreenProps) {
   return (
-    <div className={`flex flex-1 flex-col bg-white px-4 ${className ?? ""}`}>
+    <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
       <div className="flex items-center gap-1 pt-1">
-        {/* The Rive artboard has a lot of built-in padding around the fox,
-            so this box is much larger than the fox itself reads — negative
-            margins trim that dead space off the row's own height. */}
-        <div aria-hidden className="relative -my-3 -ml-3 h-28 w-28 shrink-0">
-          <span className="absolute left-3 top-4 z-10 text-lg font-bold text-[#8B5CF6]">?</span>
-          <span className="absolute right-3 top-3 z-10 text-lg font-bold text-[#8B5CF6]">?</span>
-          <OnboardingFox className="h-full w-full" />
+        <div aria-hidden className="relative shrink-0 mr-2">
+          <img src="/images/quesfoxi.png" alt="" className="w-16 h-16 object-contain" />
         </div>
         <h1 className="text-lg font-semibold leading-snug text-[#1A1C22] sm:text-xl">
           {heading.map((span, i) => (
