@@ -37,8 +37,18 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
  *
  * One file for both themes (unlike `ROBU_RIVE_SRC_LIGHT`/`_DARK` below) — no
  * `getRobuRiveSrc(theme)` lookup needed, just this constant.
+ *
+ * `-3`: adds a second, separate state machine ("splash screen") that drives
+ * Robu's boot-up sequence on its own — internally chaining its own
+ * "mouth idle " -> "mouth idle to hi " -> "hi " -> "mouth hi to idle " ->
+ * "mouth idle "/"idle " clips, the same automatic (no-input) transition
+ * pattern the original rig's single state machine used to use for its own
+ * boot chain. RobuMascot now plays *that* state machine at mount instead of
+ * the raw "hi " clip; "hi " itself moved to the greeting wave (see
+ * useGreetingOverlay) that plays once screen 1's bubble shows. Every other
+ * clip/artboard name is unchanged from the previous file.
  */
-export const ROBU_RIVE_SRC = "/animations/orbi_part2.riv";
+export const ROBU_RIVE_SRC = "/animations/foxi-3.riv";
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in
@@ -47,7 +57,7 @@ export const ROBU_RIVE_SRC = "/animations/orbi_part2.riv";
  * `ROBU_RIVE_SRC` above instead.
  */
 export const ROBU_RIVE_SRC_LIGHT = "/animations/robu_dark.riv";
-export const ROBU_RIVE_SRC_DARK = "/animations/updated_robu.riv";
+export const ROBU_RIVE_SRC_DARK = "/animations/foxi.riv";
 
 /** Pick Robu's `.riv` for the given theme — see `ROBU_RIVE_SRC_LIGHT`/`_DARK`. */
 export function getRobuRiveSrc(theme: "light" | "dark"): string {

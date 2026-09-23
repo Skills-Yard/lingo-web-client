@@ -12,7 +12,7 @@ configureRiveRuntime();
 // Same artboard/file every other Robu instance uses (see ROBU_RIVE_SRC) —
 // this is a second, independent instance, same pattern as RevealModal's own
 // standalone <RobuEyeBlink>, not the single gliding RobuStage mascot.
-const ARTBOARD = "Artboard 1";
+const ARTBOARD = "Artboard 2";
 const BASE_ANIMATIONS = ["idle "];
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 

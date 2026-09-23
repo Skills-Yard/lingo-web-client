@@ -1,23 +1,12 @@
-import { CombinedClient } from "@/components/combined/CombinedClient";
+import { OnboardingFlow } from "@/components/onboarding/OnboardingFlow";
 
 /**
- * Interleaved review of both branches' designs for the instructions-intro
- * flow: each screen shows feat/himanshu's design immediately followed by
- * the current branch's design, before moving to the next screen — see
- * `CombinedClient`'s doc comment. `/review` still exists separately for
- * comparing the two as full, manually-switchable flows.
+ * The site's main entry point — PreLoginScreen, then the career/Python
+ * onboarding questionnaire (see OnboardingFlow). This replaces the
+ * interleaved instructions-intro design comparison that used to live here;
+ * that comparison still exists at `/combined` (and `/review`), just no
+ * longer on `/` itself.
  */
-export default async function HomePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ step?: string }>;
-}) {
-  const { step } = await searchParams;
-  const initialIndex = Number(step);
-
-  return (
-    <CombinedClient
-      initialScreenIndex={Number.isInteger(initialIndex) && initialIndex >= 0 ? initialIndex : 0}
-    />
-  );
+export default function HomePage() {
+  return <OnboardingFlow />;
 }

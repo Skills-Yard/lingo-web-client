@@ -28,13 +28,6 @@ interface RobuStageProps {
    * `position: relative` (or similar) and contain every screen that renders
    * a `<RobuAnchor>`. */
   containerRef: RefObject<HTMLDivElement | null>;
-  /** Fired once Robu's one-shot entrance (see RobuMascot) has fully played
-   * through. Forwarded straight from RobuMascot so the flow can sync
-   * CoverScreen's own choreography (shrinking Robu, revealing his greeting
-   * bubble) to it. */
-  onIntroComplete: () => void;
-  /** Forwarded straight to RobuMascot — see its own doc comment. */
-  skipIntro?: boolean;
   /** Forwarded straight to RobuMascot — see its own doc comment. */
   talking?: boolean;
   /** Forwarded straight to RobuMascot — see its own doc comment. */
@@ -51,22 +44,21 @@ interface RobuStageProps {
  * walking the learner through the flow rather than a fresh mascot cutting in
  * on every screen.
  *
- * `<RobuMascot>` itself is the *one* Rive instance for Robu's whole time on
- * screen — it plays the one-shot entrance itself and then keeps looping
- * ambiently, so this component never swaps it out for a different
- * component/canvas. That used to happen here (intro component -> eyeblink
- * component right as Robu shrank to his normal size) and was the actual
- * source of the entrance ever reading as a size/position jump: a brand new
- * canvas mounting (its own decode delay, a completely different first
- * frame) at the exact instant the shrink kicked in. With a single instance,
- * only the shrink itself (the `motion.div` below) is ever visible.
+ * `<RobuMascot>` itself is just the ambient idle/eyeblink loop (see its own
+ * doc comment) — this component never swaps it out for a different
+ * component/canvas once mounted, which is what makes a later reposition
+ * (e.g. the crouch beside the reveal card) read as a glide instead of a cut:
+ * a fresh canvas mounting mid-flow would have its own decode delay and a
+ * completely different first frame right at the moment of the shrink. The
+ * one-shot splash entrance now happens *before* this component is even
+ * mounted (see `<RobuSplash>`, swapped out for this one in
+ * InstructionsIntroFlow once the splash sequence finishes) rather than on
+ * this same persistent instance.
  */
 export function RobuStage({
   anchorEl,
   shake,
   containerRef,
-  onIntroComplete,
-  skipIntro,
   talking,
   greet,
 }: RobuStageProps) {
@@ -117,13 +109,7 @@ export function RobuStage({
       transition={ROBU_WALK_TRANSITION}
     >
       <div className={`h-full w-full `}>
-        <RobuMascot
-          className="h-full w-full"
-          onIntroComplete={onIntroComplete}
-          skipIntro={skipIntro}
-          talking={talking}
-          greet={greet}
-        />
+        <RobuMascot className="h-full w-full" talking={talking} greet={greet} />
       </div>
     </motion.div>
   );

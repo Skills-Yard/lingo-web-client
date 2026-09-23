@@ -22,6 +22,8 @@ import { RewardScreen } from "./RewardScreen";
 import { GameBoardScreen } from "./GameBoardScreen";
 import { RobuScreen } from "./RobuScreen";
 import { RobuStage } from "./RobuStage";
+import { RobuSplash } from "./RobuSplash";
+import { PreLoginScreen } from "./PreLoginScreen";
 import { RobuTalkingContext } from "./RobuTalkingContext";
 
 const poppins = Poppins({
@@ -87,18 +89,24 @@ export function InstructionsIntroFlow({
     if (talkingCountRef.current === 0) setRobuTalking(false);
   }, []);
 
-  // Whether Robu's one-shot `intro` Rive timeline has finished. Owned here
-  // (not inside RobuStage) so CoverScreen can hold its heading/bubble back
-  // and keep Robu at his big "entering" size until this actually flips —
-  // synced to the real animation instead of a guessed timer. The 6s
-  // fallback is only a safety net in case the Rive completion event never
-  // fires for some reason, so the rest of screen 1 is never stuck hidden.
-  const [robuIntroDone, setRobuIntroDone] = useState(skipRobuIntro);
+  // Whether Robu's one-shot splash sequence (`<RobuSplash>`, rendered below
+  // in place of `<PreLoginScreen>`/`<RobuStage>` while this is false — see
+  // `showSplash`) has finished. The 6s fallback is only a safety net in case
+  // RobuSplash's own completion timer never fires for some reason, so the
+  // rest of screen 1 is never stuck hidden.
+  const [splashDone, setSplashDone] = useState(skipRobuIntro);
   useEffect(() => {
-    if (robuIntroDone) return;
-    const t = window.setTimeout(() => setRobuIntroDone(true), 6000);
+    if (splashDone) return;
+    const t = window.setTimeout(() => setSplashDone(true), 6000);
     return () => window.clearTimeout(t);
-  }, [robuIntroDone]);
+  }, [splashDone]);
+
+  // Whether `<PreLoginScreen>` ("Get Started"/"Log in", shown right after
+  // the splash — see `showPreLogin`) has been dismissed. CoverScreen's own
+  // heading/bubble hold-back (its `robuIntroDone` prop) keys off *this*, not
+  // `splashDone` — the cover screen shouldn't reveal itself while the
+  // pre-login screen is still covering it.
+  const [preLoginDone, setPreLoginDone] = useState(skipRobuIntro);
 
   const total = INSTRUCTIONS_INTRO_SLIDES.length;
   const slide = INSTRUCTIONS_INTRO_SLIDES[index];
@@ -124,11 +132,28 @@ export function InstructionsIntroFlow({
   // mascot itself now lives in the single shared RobuStage, not that screen.
   const robuShake = slide.kind === "cover-reveal" && coverRevealed && !boxTapped;
 
-  // Robu's one-shot "hii" wave: only on screen 1 itself, and only once his
-  // entrance has actually finished (see `robuIntroDone` above) — going
+  // Robu's one-shot "hi " wave: only on screen 1 itself, and only once
+  // pre-login has actually been dismissed (see `preLoginDone` above) — going
   // false->true again (e.g. Back to screen 1 from screen 2) replays it, same
   // as arriving fresh.
-  const robuGreeting = slide.kind === "cover" && robuIntroDone;
+  const robuGreeting = slide.kind === "cover" && preLoginDone;
+
+  // While true, screen 1 shows the full-screen `<RobuSplash>` in place of
+  // `<PreLoginScreen>`/the persistent, gliding mascot — false on every other
+  // screen regardless of `splashDone`, so a learner who somehow advances
+  // past screen 1 before the splash's own timer fires still gets the
+  // persistent mascot rather than nothing at all.
+  const showSplash = slide.kind === "cover" && !splashDone;
+
+  // Once the splash is done, screen 1 shows `<PreLoginScreen>` in its place
+  // until "Get Started" is pressed — same false-everywhere-else reasoning
+  // as `showSplash` above.
+  const showPreLogin = slide.kind === "cover" && splashDone && !preLoginDone;
+
+  // Robu's "speak" mouth overlay only plays from screen 2 onward — screen 1
+  // (cover) is still carrying its own "hi" intro/greeting, so this keeps the
+  // two from fighting each other on that first screen.
+  const robuTalkingActive = robuTalking && slide.kind !== "cover";
 
   const isQuiz = slide.kind === "teacher-quiz";
   const isQuestionnaire = slide.kind === "questionnaire";
@@ -348,15 +373,32 @@ export function InstructionsIntroFlow({
           className="relative flex-1 min-h-0 overflow-y-auto px-4 md:px-10 scrollbar-none"
           style={{ msOverflowStyle: "none" }}
         >
-          <RobuStage
-            anchorEl={robuAnchorEl}
-            shake={robuShake}
-            containerRef={robuStageRef}
-            onIntroComplete={() => setRobuIntroDone(true)}
-            skipIntro={skipRobuIntro}
-            talking={robuTalking}
-            greet={robuGreeting}
-          />
+          {showSplash ? (
+            <RobuSplash
+              // `fixed inset-0` (not `absolute`) so this covers the actual
+              // screen edge-to-edge, including over the header above —
+              // regardless of the `max-w-md`/`max-w-7xl` content column
+              // everything else here sits inside. z-50 to sit above that
+              // header rather than under it.
+              className="pointer-events-none fixed inset-0 z-50"
+              onComplete={() => setSplashDone(true)}
+            />
+          ) : showPreLogin ? (
+            <PreLoginScreen
+              // Same full-screen treatment as RobuSplash above, minus
+              // `pointer-events-none` — this one has real buttons on it.
+              className="fixed inset-0 z-50"
+              onGetStarted={() => setPreLoginDone(true)}
+            />
+          ) : (
+            <RobuStage
+              anchorEl={robuAnchorEl}
+              shake={robuShake}
+              containerRef={robuStageRef}
+              greet={robuGreeting}
+              talking={robuTalkingActive}
+            />
+          )}
           <div className="flex flex-col gap-3 select-none min-h-full pb-3 md:pb-0 md:justify-center">
             {(slide.kind === "cover" || slide.kind === "cover-reveal") && (
               // One call site for both steps — see CoverScreen's doc comment:
@@ -376,7 +418,10 @@ export function InstructionsIntroFlow({
                 onIntroTypingComplete={() => setCoverRevealed(true)}
                 instantSpeech={instantSpeech}
                 registerAnchor={setRobuAnchorEl}
-                robuIntroDone={robuIntroDone}
+                // Named for what CoverScreen actually needs to know ("is my
+                // own hold-back over") rather than which upstream state
+                // happens to drive it right now — see `preLoginDone` above.
+                robuIntroDone={preLoginDone}
               />
             )}
             {slide.kind === "teacher-intro" && (

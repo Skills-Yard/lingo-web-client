@@ -67,6 +67,30 @@
   --card-glow-shadow: rgba(0, 0, 0, 0);
 }
 
+/* The onboarding flow (src/components/onboarding) is styled to match its
+   reference design exactly, which is light-only with no dark-mode treatment
+   of its own — unlike the rest of the site, it should never pick up dark
+   mode. Re-declaring the same custom properties `:root`'s own light block
+   sets, scoped to this class, overrides whatever `.dark`/`data-theme="dark"`
+   an ancestor (e.g. `<html>`, if the site's theme preference is dark) would
+   otherwise cascade down to it — CSS custom properties inherit from the
+   *nearest* declaration, not straight from `:root`. */
+.onboarding-light {
+  color-scheme: light;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --popover: #ffffff;
+  --popover-foreground: #000000;
+  --muted: #f2f2f2;
+  --muted-foreground: #bebebe;
+  --border: #e0e0e0;
+  --input: #e0e0e0;
+  --secondary: #e3f6f1;
+  --secondary-foreground: #01805f;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

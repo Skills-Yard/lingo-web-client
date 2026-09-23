@@ -83,24 +83,24 @@ export function CoverScreen({
   // `robuShake` nudge in the flow, just expressed on the card itself.
   const cardHighlight = isReveal && revealed && !boxTapped;
 
-  // Robu's very first entrance (step 01 only): his `intro.riv` timeline
-  // plays big and centered, alone — heading and bubble stay held back, and
-  // Robu stays at this bigger size, until that animation actually finishes.
-  // This never re-triggers on `revealed` toggling or on later slides, since
-  // `robuIntroDone` only ever flips true once for the whole session.
+  // Robu's very first entrance (step 01 only): the bottom-attached
+  // `<RobuSplash>` (InstructionsIntroFlow) plays alone — heading and bubble
+  // stay held back, and the persistent gliding mascot (`<RobuStage>`) isn't
+  // even mounted yet, until that finishes. This never re-triggers on
+  // `revealed` toggling or on later slides, since `robuIntroDone` only ever
+  // flips true once for the whole session.
   const entering = slide.kind === "cover" && !robuIntroDone;
 
-  // Robu shrinks once it's crouched next to the reveal card — and starts
-  // out bigger still, centered, for the entrance above. The default,
-  // steady-state greeting size is the same shared `ROBU_DEFAULT_SIZE` every
-  // other screen's resting Robu uses (see RobuAnchor) — not its own bespoke
-  // value — so he reads as literally the same size everywhere, not just a
-  // similar one. `revealed` (crouched beside the reveal card) and `entering`
-  // (the one-shot entrance pose) stay their own, deliberately different
-  // sizes for those specific moments.
-  const robuSize = entering
-    ? "h-149 w-149 sm:h-216 sm:w-216 md:h-270 md:w-270"
-    : revealed
+  // The persistent mascot's inline anchor doesn't need its own bigger size
+  // for the entrance any more — `<RobuSplash>` (positioned separately, see
+  // InstructionsIntroFlow) covers that, and `<RobuStage>` isn't even mounted
+  // until `entering` is already false. The default, steady-state greeting
+  // size is the same shared `ROBU_DEFAULT_SIZE` every other screen's resting
+  // Robu uses (see RobuAnchor) — not its own bespoke value — so he reads as
+  // literally the same size everywhere, not just a similar one. `revealed`
+  // (crouched beside the reveal card) stays its own, deliberately different
+  // size for that specific moment.
+  const robuSize = revealed
       ? "h-39 w-39 sm:h-60 sm:w-60 md:h-84 md:w-84"
       : ROBU_DEFAULT_SIZE;
 

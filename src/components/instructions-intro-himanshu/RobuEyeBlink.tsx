@@ -15,42 +15,43 @@ import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
-// `orbi.riv` — artboard `Artboard 1` (same file/artboard RobuMascot's intro
+// `orbi.riv` — artboard `Artboard 2` (same file/artboard RobuMascot's intro
 // plays on — see ROBU_RIVE_SRC). This standalone badge has no boot-up intro
 // of its own (unlike RobuMascot), so it drives the ambient `idle ` timeline
-// directly rather than through `Robu-StateMachine` — going through the state
-// machine here would replay its own boot sequence on every mount, which is
-// exactly what this component (used for the reveal-card modal, the game
-// screens' demo/level platforms) is not supposed to show.
-const ROBU_ARTBOARD = "Artboard 1";
+// directly rather than playing the "hi " clip first — that clip is only for
+// RobuMascot's own one-shot entrance, and playing it here would replay it on
+// every mount, which is exactly what this component (used for the
+// reveal-card modal, the game screens' demo/level platforms) is not supposed
+// to show.
+const ROBU_ARTBOARD = "Artboard 2";
 const ROBU_BASE_ANIMATIONS = ["idle "];
 const ROBU_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
-// Both randomized rather than fixed-interval — see `useRandomOverlay` —
-// so the blink and the idle glance below read as unscripted instead of
-// metronomic. Ranges are this file's own judgment call (not specified),
-// picked so blink stays roughly human-paced and the glance is rarer, so
-// they don't constantly compete with each other or with `idle ` itself.
-const EYEBLINK_ANIMATIONS = ["eye blink 2"];
-const EYEBLINK_MIN_MS = 3000;
-const EYEBLINK_MAX_MS = 6000;
+// Fixed 5s cadence rather than a random range — the blink clip loops in the
+// editor (it doesn't settle back to open on its own), so without an explicit
+// `holdMs` force-stop (see useRandomOverlay) it would just keep blinking for
+// the entire gap until the next trigger, reading as never stopping at all.
+// Trailing space on the blink clip is the file's own spelling (confirmed
+// against its string table), not a typo introduced here.
+const EYEBLINK_ANIMATIONS = ["both eye pupil blink "];
+const EYEBLINK_MIN_MS = 5000;
+const EYEBLINK_MAX_MS = 5000;
+const EYEBLINK_HOLD_MS = 600;
 
-// The two "look to the side" clips, replayed at random and picked at random
-// each cycle — `eys left ` is the file's own spelling (confirmed against its
-// string table), not a typo introduced here.
-const GLANCE_ANIMATIONS = ["eyes left & right", "eys left "];
-const GLANCE_MIN_MS = 5000;
-const GLANCE_MAX_MS = 10000;
+// The ear flourish is randomized (not fixed-interval) so it reads as
+// unscripted instead of metronomic, centered on the ~10s cadence asked for.
+const EAR_ANIMATIONS = ["ear blink"];
+const EAR_MIN_MS = 8000;
+const EAR_MAX_MS = 12000;
 
-// The same expression clip the boot sequence itself opens with (see
-// RobuMascot's STATE_MACHINE) — no separate start/loop/end talking trio
-// like the old rig had, so `useTalkingMouth` below just keeps replaying
-// this one clip for as long as `talking` is true and stops it the instant
-// it isn't. The plain `mouth ` clip was tried first and rejected — playing
-// it blanks the whole screen (no visible eyes/mouth) rather than showing a
-// distinct expression, confirmed by watching it frozen through an entire
-// typing span.
-const MOUTH_ANIMATION = "Mouth_expression";
+// Robu's mouth-movement clip for the talking overlay — no separate
+// start/loop/end talking trio like the old rig had, so `useTalkingMouth`
+// below just keeps replaying this one clip for as long as `talking` is true
+// and stops it the instant it isn't. The caller gates `talking` to screen 2
+// onward (InstructionsIntroFlow only passes it true once past the cover
+// screen), so this never fights the "hi " intro clip on screen 1. Trailing
+// space is the file's own spelling.
+const MOUTH_ANIMATION = "speak ";
 const MOUTH_WATCHDOG_MS = 500;
 
 // How often the watchdog below checks that the base loop is still playing.
@@ -125,52 +126,75 @@ export function useAmbientLoop(rive: RiveInstance | null, animations: string[]) 
 
 /**
  * Replay one of `animations` (picked at random each cycle — a single-name
- * array always replays that one) on top of whatever's already running,
- * waiting a random delay between `minMs` and `maxMs` before each replay.
- * Drives Robu's eyeblink and idle eye-glance flourishes — random timing
- * (rather than `usePeriodicOverlay`'s fixed interval) is what keeps them
- * reading as unscripted instead of metronomic.
+ * array always replays that one, and `minMs === maxMs` gives a fixed
+ * cadence instead of a random one) on top of whatever's already running,
+ * waiting a delay between `minMs` and `maxMs` before each replay. Drives
+ * Robu's eyeblink and idle eye-glance flourishes — random timing (rather
+ * than `usePeriodicOverlay`'s fixed interval) is what keeps them reading as
+ * unscripted instead of metronomic.
+ *
+ * `holdMs`, if given, force-stops the clip that many ms after triggering it
+ * rather than leaving it running until the next scheduled replay. Without
+ * it, a clip authored to loop in the editor (rather than play once and
+ * settle) never stops on its own — it just keeps looping for the entire gap
+ * until the next trigger calls `stop()` right before replaying it, which
+ * reads as the clip never having stopped at all.
  */
 export function useRandomOverlay(
   rive: RiveInstance | null,
   animations: string[],
   minMs: number,
   maxMs: number,
+  holdMs?: number,
 ) {
   useEffect(() => {
     if (!rive || animations.length === 0) return;
 
     let timer: number;
+    let stopTimer: number | undefined;
     const scheduleNext = () => {
       const delay = minMs + Math.random() * (maxMs - minMs);
       timer = window.setTimeout(() => {
         const name = animations[Math.floor(Math.random() * animations.length)];
         rive.stop(name);
         rive.play(name);
+        if (holdMs !== undefined) {
+          stopTimer = window.setTimeout(() => rive.stop(name), holdMs);
+        }
         scheduleNext();
       }, delay);
     };
 
     scheduleNext();
-    return () => window.clearTimeout(timer);
-  }, [rive, animations, minMs, maxMs]);
+    return () => {
+      window.clearTimeout(timer);
+      if (stopTimer !== undefined) window.clearTimeout(stopTimer);
+    };
+  }, [rive, animations, minMs, maxMs, holdMs]);
 }
 
 /**
  * Robu's one-shot greeting wave — screen 1 plays this right after the intro
- * finishes (see `trigger`). The old rig's two theme `.riv` files named this
- * differently (one had a complete "hii" timeline, the other only a "hii
- * start"/"hii end" bookend pair) — reading `rive.animationNames` at trigger
- * time picks whichever shape the loaded file actually has instead of
- * hardcoding one name that would silently no-op on the other. `orbi.riv` has
- * neither, so this naturally no-ops there too and Robu just stays on the
- * ambient loop instead of waving.
+ * finishes (see `trigger`): the boot-up "splash screen" state machine
+ * (RobuMascot) only covers the entrance itself, and this "hi " clip is what
+ * actually plays once the "Hi, I am robu!" bubble is about to show. Reading
+ * `rive.animationNames` at trigger time (rather than hardcoding one name)
+ * also keeps the old rig's two theme `.riv` files working — one had a
+ * complete "hii" timeline, the other only a "hii start"/"hii end" bookend
+ * pair — falling all the way through to a no-op (Robu just stays on the
+ * ambient loop) only if none of these three shapes exist on the loaded file.
  */
 export function useGreetingOverlay(rive: RiveInstance | null, trigger: boolean) {
   useEffect(() => {
     if (!rive || !trigger) return;
 
     const names = rive.animationNames;
+    if (names.includes("hi ")) {
+      rive.stop("hi ");
+      rive.play("hi ");
+      return;
+    }
+
     if (names.includes("hii")) {
       rive.stop("hii");
       rive.play("hii");
@@ -199,7 +223,7 @@ export function useGreetingOverlay(rive: RiveInstance | null, trigger: boolean) 
 
 /**
  * Drives Robu's mouth-movement overlay on top of the ambient base loop:
- * keeps `Mouth_expression` playing for as long as `talking` is true, and
+ * keeps `speak` playing for as long as `talking` is true, and
  * stops it the instant it flips false. The watchdog mirrors
  * `useAmbientLoop`'s own — it's authored as one-shot rather than looping,
  * so this keeps re-triggering it (`stop()` then `play()`, to actually
@@ -333,8 +357,8 @@ export function RobuEyeBlink({ className }: RobuEyeBlinkProps) {
   });
 
   useAmbientLoop(rive, ROBU_BASE_ANIMATIONS);
-  useRandomOverlay(rive, EYEBLINK_ANIMATIONS, EYEBLINK_MIN_MS, EYEBLINK_MAX_MS);
-  useRandomOverlay(rive, GLANCE_ANIMATIONS, GLANCE_MIN_MS, GLANCE_MAX_MS);
+  useRandomOverlay(rive, EYEBLINK_ANIMATIONS, EYEBLINK_MIN_MS, EYEBLINK_MAX_MS, EYEBLINK_HOLD_MS);
+  useRandomOverlay(rive, EAR_ANIMATIONS, EAR_MIN_MS, EAR_MAX_MS);
 
   return (
     <div className={className}>
