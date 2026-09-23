@@ -113,6 +113,9 @@ export type OnboardingStep =
        * for completeness even though no current step sets it. */
       questionMarks?: boolean;
       bubble: (answers: OnboardingAnswers) => TextSpan[];
+      /** Fox waves hello once when the screen appears — only the "Hey! I am
+       * foxy" greeting does. */
+      greet?: boolean;
       cta: string;
     }
   | {
@@ -150,6 +153,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "fox-message",
     id: "greeting",
     bubble: () => [{ text: "Hey! I am foxy, your coding buddy" }],
+    greet: true,
     cta: "Continue",
   },
   {

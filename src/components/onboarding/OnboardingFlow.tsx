@@ -137,6 +137,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 heading={step.heading?.(answers)}
                 sparkle={step.sparkle}
                 bubble={step.bubble(answers)}
+                greet={step.greet}
                 cta={step.cta}
                 onContinue={goNext}
               />

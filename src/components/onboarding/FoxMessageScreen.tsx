@@ -8,6 +8,8 @@ interface FoxMessageScreenProps {
   heading?: TextSpan[];
   sparkle?: boolean;
   bubble: TextSpan[];
+  /** Fox waves hello once on mount — see OnboardingFox's `greet`. */
+  greet?: boolean;
   cta: string;
   onContinue: () => void;
   className?: string;
@@ -24,6 +26,7 @@ export function FoxMessageScreen({
   heading,
   sparkle,
   bubble,
+  greet,
   cta,
   onContinue,
   className,
@@ -50,7 +53,7 @@ export function FoxMessageScreen({
 
       <div className="flex flex-1 flex-col items-center justify-center gap-4">
         {!heading && <OnboardingBubble spans={bubble} tail="down" />}
-        <OnboardingFox className="h-40 w-40 sm:h-48 sm:w-48" />
+        <OnboardingFox greet={greet} className="h-40 w-40 sm:h-48 sm:w-48" />
         {heading && <OnboardingBubble spans={bubble} tail="up" />}
       </div>
 

@@ -6,6 +6,8 @@ import {
   Layout,
   Fit,
   Alignment,
+  EventType,
+  type Event as RiveEvent,
   type Rive as RiveInstance,
 } from "@rive-app/canvas";
 import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
@@ -38,6 +40,17 @@ const BLINK_HOLD_MS = 600;
 const EAR_ANIMATIONS = ["ear blink"];
 const EAR_MIN_MS = 8000;
 const EAR_MAX_MS = 12000;
+
+// The greeting wave — the file's "hi " clip (trailing space is the file's own
+// spelling, same as the blink clip above). The clip is authored to loop, so
+// "once" means stopping it at the end of its first cycle (see
+// useGreetingOnce) — and, unlike the ambient/blink loops, there's
+// deliberately no watchdog or repeat timer to bring it back. The short delay
+// lets the screen's own crossfade-in (see OnboardingFlow's SCREEN_TRANSITION)
+// finish first, so the wave starts on a fully visible fox instead of playing
+// out mid-fade.
+const GREETING_ANIMATIONS = ["hi "];
+const GREETING_DELAY_MS = 400;
 
 const AMBIENT_WATCHDOG_MS = 500;
 
@@ -89,8 +102,38 @@ function useRandomOverlay(
   }, [rive, animations, minMs, maxMs, holdMs]);
 }
 
+function useGreetingOnce(rive: RiveInstance | null, enabled: boolean) {
+  useEffect(() => {
+    if (!rive || !enabled) return;
+    const name = GREETING_ANIMATIONS.find((n) => rive.animationNames.includes(n));
+    if (!name) return;
+
+    // A looping clip reports each completed cycle as a Loop event — stopping
+    // on the first one leaves exactly one full wave.
+    const handleLoop = (event: RiveEvent) => {
+      const data = event.data as { animation?: string } | undefined;
+      if (data?.animation === name) rive.stop(name);
+    };
+    rive.on(EventType.Loop, handleLoop);
+
+    const timer = window.setTimeout(() => {
+      rive.stop(name);
+      rive.play(name);
+    }, GREETING_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timer);
+      rive.off(EventType.Loop, handleLoop);
+    };
+  }, [rive, enabled]);
+}
+
 interface OnboardingFoxProps {
   className?: string;
+  /** Waves hello once, shortly after mounting — only the "Hey! I am foxy"
+   * greeting screen; every other screen's fox stays on the plain ambient
+   * loop. */
+  greet?: boolean;
 }
 
 /**
@@ -99,7 +142,7 @@ interface OnboardingFoxProps {
  * this in already-idle, same role `<RobuEyeBlink>` plays for
  * instructions-intro's own reveal-card modal and game screens).
  */
-export function OnboardingFox({ className }: OnboardingFoxProps) {
+export function OnboardingFox({ className, greet = false }: OnboardingFoxProps) {
   const { rive, RiveComponent } = useRive({
     src: ROBU_RIVE_SRC,
     artboard: ARTBOARD,
@@ -109,6 +152,7 @@ export function OnboardingFox({ className }: OnboardingFoxProps) {
   });
 
   useAmbientLoop(rive, BASE_ANIMATIONS);
+  useGreetingOnce(rive, greet);
   useRandomOverlay(rive, BLINK_ANIMATIONS, BLINK_MS, BLINK_MS, BLINK_HOLD_MS);
   useRandomOverlay(rive, EAR_ANIMATIONS, EAR_MIN_MS, EAR_MAX_MS);
 
