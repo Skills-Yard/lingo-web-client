@@ -1,51 +1,115 @@
 "use client";
 
-import { OnboardingFox } from "./robu/OnboardingFox";
+import { useEffect } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { NotificationFox } from "./robu/NotificationFox";
+
+// Choreography, in order: the screen crossfades in (OnboardingFlow's
+// SCREEN_TRANSITION), the prompt springs open from the center — with a short
+// buzz as it lands — and then the fox rises up from behind it to peek over
+// the top, carrying on with its own "notification" animation from there.
+const PROMPT_DELAY_S = 0.35;
+const PROMPT_IN = { type: "spring", stiffness: 380, damping: 24 } as const;
+const FOX_DELAY_S = 0.75;
+const FOX_IN = { duration: 0.6, ease: [0.22, 1, 0.36, 1] } as const;
+/** Two short pulses — reads as a notification arriving. */
+const VIBRATION_PATTERN = [40, 60, 40];
 
 interface NotificationPermissionScreenProps {
   heading: string;
+  /** "Allow" on the prompt — the caller asks for the real permission. */
+  onAllow: () => void;
+  /** "Don't Allow" on the prompt. */
+  onDeny: () => void;
   className?: string;
 }
 
 /**
- * The reference design's notification-priming screen — the "Notification"
- * card here is a plain illustration (real system permission prompts render
- * with whatever chrome the OS/browser gives them, never this exact card, so
- * it can't be reproduced pixel-for-pixel as real UI). Pressing "Continue"
- * fires the actual `Notification.requestPermission()` prompt when the
- * browser supports it, then advances regardless of the learner's choice —
- * same "priming screen first, real permission prompt second" pattern most
- * apps use, so this illustration only ever sets expectations rather than
- * standing in for the real dialog.
+ * The notification-priming screen: the fox peeking up over a
+ * notification-permission prompt. The prompt is the app's own card, not the
+ * browser's (a real system prompt looks however the OS draws it), so it
+ * only sets expectations — "Allow" and the Continue button both go on to
+ * fire the actual `Notification.requestPermission()` prompt (see
+ * OnboardingFlow), "Don't Allow" just moves on.
  */
 export function NotificationPermissionScreen({
   heading,
+  onAllow,
+  onDeny,
   className,
 }: NotificationPermissionScreenProps) {
+  const reduceMotion = useReducedMotion();
+
+  // Buzz as the prompt lands. Android browsers support this; iOS Safari has
+  // no Vibration API, so it's a silent no-op there.
+  useEffect(() => {
+    const timer = window.setTimeout(
+      () => {
+        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+          navigator.vibrate(VIBRATION_PATTERN);
+        }
+      },
+      reduceMotion ? 0 : PROMPT_DELAY_S * 1000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [reduceMotion]);
+
   return (
-    <div
-      className={`flex flex-col items-center bg-[#EDEDED] px-6 ${className ?? ""}`}
-    >
-      <h1 className="mt-[3dvh] max-w-xs shrink-0 text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl">
+    <div className={`flex flex-col items-center px-6 ${className ?? ""}`}>
+      <h1 className="mt-[5dvh] max-w-xs shrink-0 text-center text-xl font-semibold leading-snug text-[#2C2C2C] sm:text-2xl">
         {heading}
       </h1>
 
-      <div className="relative flex min-h-0 w-full flex-1 flex-col items-center justify-center">
-        <OnboardingFox className="aspect-square h-[min(9rem,22dvh)]" />
+      <div className="flex min-h-0 w-full flex-1 items-center justify-center">
+        <div className="relative w-full max-w-[17.5rem]">
+          {/* Peeking over the prompt's top-right corner. The rig's
+              "notification" pose keeps the fox (head + paws) in the bottom
+              half of its frame with the paws on the frame's bottom edge, so
+              the frame sits just above the prompt's top edge — close enough
+              that the paws rest on the edge. It rises up from behind the
+              prompt as it appears. */}
+          <motion.div
+            className="absolute right-0 bottom-[calc(100%-0.125rem)] aspect-square h-[min(10rem,22dvh)]"
+            initial={reduceMotion ? false : { opacity: 0, y: 48 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...FOX_IN, delay: FOX_DELAY_S }}
+          >
+            <NotificationFox className="h-full w-full" />
+          </motion.div>
 
-        {/* Illustration only — see doc comment above. */}
-        <div
-          aria-hidden
-          className="-mt-6 w-full max-w-72 rounded-xl border border-black/10 bg-white p-4 text-center shadow-xl sm:w-80"
-        >
-          <p className="text-sm font-semibold text-[#1A1C22]">Notification</p>
-          <p className="mt-1 text-xs text-[#666666]">
-            &ldquo;Lingo&rdquo; would like to send you notifications
-          </p>
-          <div className="mt-3 grid grid-cols-2 divide-x divide-black/10 border-t border-black/10 text-sm">
-            <span className="py-2.5 text-[#666666]">Don&apos;t Allow</span>
-            <span className="py-2.5 font-medium text-primary">Allow</span>
-          </div>
+          <motion.div
+            role="dialog"
+            aria-label="Notification"
+            className="relative overflow-hidden rounded-[14px] bg-white text-center shadow-[0_12px_32px_rgba(0,0,0,0.14)]"
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.5 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ ...PROMPT_IN, delay: PROMPT_DELAY_S }}
+          >
+            <div className="px-5 pt-4 pb-4">
+              <p className="text-[15px] font-semibold text-[#1A1C22]">Notification</p>
+              <p className="mt-1.5 text-[13px] leading-snug text-[#3C3C43]">
+                &ldquo;Lingo&rdquo; would like to send
+                <br />
+                you notifications
+              </p>
+            </div>
+            <div className="grid grid-cols-2 divide-x divide-black/10 border-t border-black/10 text-[15px]">
+              <button
+                type="button"
+                onClick={onDeny}
+                className="py-3 text-[#8E8E93] transition-colors active:bg-black/5"
+              >
+                Don&apos;t Allow
+              </button>
+              <button
+                type="button"
+                onClick={onAllow}
+                className="py-3 font-medium text-[#1C8CE6] transition-colors active:bg-black/5"
+              >
+                Allow
+              </button>
+            </div>
+          </motion.div>
         </div>
       </div>
     </div>

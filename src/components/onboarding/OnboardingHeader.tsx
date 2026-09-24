@@ -9,6 +9,8 @@ interface OnboardingHeaderProps {
    * intro, ready-check, notification permission) show only the back button
    * (reference screens 5-7) — there's nothing to show progress *of* yet. */
   progress?: { step: number; total: number };
+  /** Show the sound toggle even without a progress bar (the streak screen). */
+  showSound?: boolean;
   muted: boolean;
   onToggleMuted: () => void;
 }
@@ -16,6 +18,7 @@ interface OnboardingHeaderProps {
 export function OnboardingHeader({
   onBack,
   progress,
+  showSound = false,
   muted,
   onToggleMuted,
 }: OnboardingHeaderProps) {
@@ -48,7 +51,7 @@ export function OnboardingHeader({
         </div>
       )}
 
-      {progress ? (
+      {progress || showSound ? (
         <button
           type="button"
           onClick={onToggleMuted}

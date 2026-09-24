@@ -31,9 +31,10 @@ interface FoxMessageScreenProps {
 /**
  * Robu's plain "message" screen, in one of three layouts matching the
  * reference design per screen: bubble-above-fox with no heading (the
- * greeting, "Perfect starting point"), heading-then-fox-then-bubble
- * ("Building Career Path..."), or bubble-then-fox-then-heading ("Are you
- * ready?", `headingPlacement="bottom"`).
+ * greeting, "Perfect starting point"), bubble-then-fox-then-heading ("Are
+ * you ready?", "Building Career Path...", `headingPlacement="bottom"`), or
+ * heading-then-fox-then-bubble (the default placement — no current screen
+ * uses it).
  */
 export function FoxMessageScreen({
   heading,

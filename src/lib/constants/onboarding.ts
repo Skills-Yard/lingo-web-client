@@ -34,12 +34,16 @@ export interface OnboardingAnswers {
   motivation?: string;
   timeCommitment?: string;
   learningTime?: string;
+  startingPoint?: string;
 }
 
 export interface OnboardingListOption {
   id: string;
   label: string;
-  icon: LucideIcon;
+  /** Either a small icon (shown in a mint circle) or a picture (`image`,
+   * shown as-is) — see QuestionListScreen. */
+  icon?: LucideIcon;
+  image?: string;
 }
 
 export interface OnboardingGridOption {
@@ -51,6 +55,9 @@ export interface OnboardingGridOption {
    * Python level), just relabeled, so this is shared rather than
    * per-question. */
   illustration: "books" | "mobile" | "chart" | "trophy";
+  /** A full-bleed picture for the tile's top panel (drawn at the panel's
+   * own 169:134 shape) — takes the place of the `illustration` icon. */
+  image?: string;
 }
 
 export const CAREER_OPTIONS: OnboardingListOption[] = [
@@ -71,32 +78,38 @@ export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   { id: "not-sure", label: "Not sure yet", icon: HelpCircle },
 ];
 
+export const STARTING_POINT_OPTIONS: OnboardingListOption[] = [
+  { id: "basics", label: "Start from the basics", image: "/images/screen-07/07-1.png" },
+  { id: "skip-ahead", label: "Skip ahead, I already know some of this", image: "/images/screen-07/07-2.png" },
+  { id: "choose", label: "Let me choose where to start", image: "/images/screen-07/07-3.png" },
+];
+
 export const EXPERIENCE_OPTIONS: OnboardingGridOption[] = [
-  { id: "none", label: "No experience", illustration: "books" },
-  { id: "little", label: "A little exposure", illustration: "mobile" },
-  { id: "hands-on", label: "Hands-on", illustration: "chart" },
-  { id: "professional", label: "Professional", illustration: "trophy" },
+  { id: "none", label: "No", illustration: "books", image: "/images/screen-02/02-1.png" },
+  { id: "little", label: "A little exposure", illustration: "mobile", image: "/images/screen-02/02-2.png" },
+  { id: "hands-on", label: "Hands-on", illustration: "chart", image: "/images/screen-02/02-3.png" },
+  { id: "professional", label: "Professional", illustration: "trophy", image: "/images/screen-02/02-4.png" },
 ];
 
 export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
-  { id: "never", label: "Never used", illustration: "books" },
-  { id: "basics", label: "Know the basics", illustration: "mobile" },
-  { id: "hands-on-coder", label: "Hands-on coder", illustration: "chart" },
-  { id: "professional", label: "Professional", illustration: "trophy" },
+  { id: "never", label: "Never used", illustration: "books", image: "/images/screen-03/03-1.png" },
+  { id: "basics", label: "Know the basics", illustration: "mobile", image: "/images/screen-03/03-2.png" },
+  { id: "hands-on-coder", label: "Hands-on coder", illustration: "chart", image: "/images/screen-03/03-3.png" },
+  { id: "professional", label: "Professional", illustration: "trophy", image: "/images/screen-03/03-4.png" },
 ];
 
 export const TIME_COMMITMENT_OPTIONS: OnboardingGridOption[] = [
-  { id: "15min", label: "15 min a day", illustration: "books" },
-  { id: "30min", label: "30 min a day", illustration: "mobile" },
-  { id: "45min", label: "45 min a day", illustration: "chart" },
-  { id: "1hour", label: "1 hour a day", illustration: "trophy" },
+  { id: "15min", label: "15 min a day", illustration: "books", image: "/images/screen-05/05-1.png" },
+  { id: "30min", label: "30 min a day", illustration: "mobile", image: "/images/screen-05/05-2.png" },
+  { id: "45min", label: "45 min a day", illustration: "chart", image: "/images/screen-05/05-3.png" },
+  { id: "1hour", label: "1 hour a day", illustration: "trophy", image: "/images/screen-05/05-4.png" },
 ];
 
 export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
-  { id: "morning", label: "Morning", illustration: "books" },
-  { id: "afternoon", label: "Afternoon", illustration: "mobile" },
-  { id: "evening", label: "Evening", illustration: "chart" },
-  { id: "night", label: "Night", illustration: "trophy" },
+  { id: "morning", label: "Morning", illustration: "books", image: "/images/screen-06/06-1.png" },
+  { id: "afternoon", label: "Afternoon", illustration: "mobile", image: "/images/screen-06/06-2.png" },
+  { id: "evening", label: "Evening", illustration: "chart", image: "/images/screen-06/06-3.png" },
+  { id: "night", label: "Night", illustration: "trophy", image: "/images/screen-06/06-4.png" },
 ];
 
 /** Every career in this flow leads to the same language track — the
@@ -116,14 +129,14 @@ export type OnboardingStep =
   | {
       kind: "fox-message";
       id: string;
-      /** Heading above the fox — when present, the bubble sits *below* the
-       * fox ("Building Career Path..."); when absent, the bubble sits *above*
-       * the fox instead ("Hey! I am foxy", "Perfect starting point"),
-       * matching the reference exactly. See `headingPlacement` for the
-       * heading-below variant. */
+      /** Optional heading. Where it goes is `headingPlacement`; the bubble
+       * always sits on the opposite side of the fox. With no heading, the
+       * bubble sits above the fox ("Hey! I am foxy", "Perfect starting
+       * point"). */
       heading?: (answers: OnboardingAnswers) => TextSpan[];
-      /** "bottom" puts the heading *under* the fox instead, with the bubble
-       * back above it (the "Are you ready?" screen). Defaults to "top". */
+      /** "bottom": bubble above the fox, heading below it ("Are you ready?",
+       * "Building Career Path..."). Defaults to "top" (heading above, bubble
+       * below the fox). */
       headingPlacement?: "top" | "bottom";
       /** Small sparkle accent next to the heading — only the two headed
        * variants above have it in the reference. */
@@ -145,6 +158,14 @@ export type OnboardingStep =
       kind: "notification-permission";
       id: string;
       heading: string;
+      cta: string;
+    }
+  | {
+      kind: "streak";
+      id: string;
+      heading: (answers: OnboardingAnswers) => TextSpan[];
+      /** The home-screen mockup with the streak widget. */
+      image: string;
       cta: string;
     }
   | {
@@ -170,9 +191,6 @@ export type OnboardingStep =
       cta: string;
     };
 
-/** The real questions in this flow (career, experience, Python level,
- * motivation, time commitment, learning time) — used to compute "question N of TOTAL" progress. */
-export const ONBOARDING_QUESTION_COUNT = 6;
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
@@ -211,12 +229,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "question-grid",
     id: "experience",
-    heading: (a) => [
+    heading: () => [
       { text: "Have you " },
       { text: "worked", highlight: true },
-      { text: " with code before, on your way to " },
-      { text: careerLabel(a), highlight: true },
-      { text: "?" },
+      { text: " with code before?" },
     ],
     options: EXPERIENCE_OPTIONS,
     answerKey: "experience",
@@ -226,6 +242,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "fox-message",
     id: "building-path",
     heading: () => [{ text: "Building Career Path..." }],
+    headingPlacement: "bottom",
     sparkle: true,
     bubble: (a) => [
       { text: "Good news: your " },
@@ -234,7 +251,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: languageForCareer(a.career), highlight: true },
       { text: ". One of the most in-demand languages." },
     ],
-    cta: "Yes!",
+    cta: "Continue",
   },
   {
     kind: "question-grid",
@@ -306,6 +323,55 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "\nAt this pace, you'll finish your first 3 lessons toward [" },
       { text: careerLabel(a), highlight: true },
       { text: "] this week." },
+    ],
+    cta: "Yes!",
+  },
+  {
+    kind: "notification-permission",
+    id: "notifications",
+    heading: "Get notified when it’s time to learn.",
+    cta: "Continue",
+  },
+  {
+    kind: "streak",
+    id: "streak",
+    heading: () => [
+      { text: "Let’s keep your " },
+      { text: "coding streak", highlight: true },
+      { text: " going! Stay one tap away from your next lesson." },
+    ],
+    image: "/images/codingStreak/codingStreak.png",
+    cta: "Continue",
+  },
+  {
+    kind: "fox-message",
+    id: "three-months",
+    bubble: (a) => [
+      { text: "In 3 months, you could be well past the basics and building real " },
+      { text: careerLabel(a), highlight: true },
+      { text: " projects on your own." },
+    ],
+    cta: "Yes!",
+  },
+  {
+    kind: "question-list",
+    id: "startingPoint",
+    heading: (a) => [
+      { text: "How do you want to begin your " },
+      { text: careerLabel(a), highlight: true },
+      { text: " path?" },
+    ],
+    options: STARTING_POINT_OPTIONS,
+    answerKey: "startingPoint",
+    cta: "Continue",
+  },
+  {
+    kind: "fox-message",
+    id: "foundation",
+    bubble: () => [
+      { text: "Smart, a strong foundation makes everything after this easier. Starting from " },
+      { text: "Module 1", highlight: true },
+      { text: "." },
     ],
     cta: "Yes!",
   },

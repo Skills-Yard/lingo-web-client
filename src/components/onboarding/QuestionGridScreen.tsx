@@ -1,24 +1,26 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { BookOpen, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
+import { Poppins } from "next/font/google";
+import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption, TextSpan } from "@/lib/constants/onboarding";
 import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
 import { playClickSound } from "./clickSound";
 import { useVoiceover } from "./useVoiceover";
 import { optionCardClass } from "./optionCard";
 
-// The reference design reuses the same 4 illustrations for both grid
-// questions (experience level, Python level) — see OnboardingGridOption's
-// own doc comment. No matching custom illustration assets exist in this
-// repo, so each slot is approximated as a big icon on a soft-tinted card
-// rather than the reference's own bespoke artwork.
-const ILLUSTRATIONS: Record<OnboardingGridOption["illustration"], { icon: LucideIcon; bg: string; fg: string }> = {
-  books: { icon: BookOpen, bg: "bg-[#EAF7EC]", fg: "text-[#2FA84F]" },
-  mobile: { icon: Smartphone, bg: "bg-[#EFEAFB]", fg: "text-[#7C5CE0]" },
-  chart: { icon: BarChart3, bg: "bg-[#E8F1FB]", fg: "text-[#3B82C4]" },
-  trophy: { icon: Trophy, bg: "bg-[#FDF3E0]", fg: "text-[#D69A1F]" },
+// Grid options without their own `image` get an icon in the picture panel
+// instead — no matching artwork exists for those yet ("No", and the later
+// grid questions' options).
+const ILLUSTRATIONS: Record<OnboardingGridOption["illustration"], { icon: LucideIcon; fg: string }> = {
+  books: { icon: CircleX, fg: "text-[#2F6FE4]" },
+  mobile: { icon: Smartphone, fg: "text-[#7C5CE0]" },
+  chart: { icon: BarChart3, fg: "text-[#3B82C4]" },
+  trophy: { icon: Trophy, fg: "text-[#D69A1F]" },
 };
+
+// The Figma label type: Poppins 500, 16px / 140%.
+const poppins = Poppins({ subsets: ["latin"], weight: "500" });
 
 interface QuestionGridScreenProps {
   heading: TextSpan[];
@@ -70,7 +72,7 @@ export function QuestionGridScreen({
         {options.map((option, i) => {
           const selected = option.id === selectedId;
           const spotlight = !selected && i === spokenOption;
-          const { icon: Icon, bg, fg } = ILLUSTRATIONS[option.illustration];
+          const { icon: Icon, fg } = ILLUSTRATIONS[option.illustration];
           return (
             <button
               key={option.id}
@@ -79,12 +81,27 @@ export function QuestionGridScreen({
                 playClickSound();
                 onSelect(option.id);
               }}
-              className={`flex flex-col items-center gap-2 p-3 text-center ${optionCardClass(selected, spotlight)}`}
+              // Figma "Group 94": a 169x189 tile — a light-blue 134px picture
+              // panel over a white 55px label strip (the card's own khaki
+              // bottom edge from optionCardClass underneath).
+              className={`flex aspect-[169/189] flex-col overflow-hidden text-center ${optionCardClass(selected, spotlight)}`}
             >
-              <span className={`flex h-16 w-full items-center justify-center rounded-lg ${bg}`}>
-                <Icon className={`h-7 w-7 ${fg}`} />
+              <span className="relative flex min-h-0 w-full flex-1 items-center justify-center bg-[#E5EFFD]">
+                {option.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={option.image}
+                    alt=""
+                    draggable={false}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                ) : (
+                  <Icon className={`h-14 w-14 ${fg}`} strokeWidth={1.75} />
+                )}
               </span>
-              <span className="text-xs font-medium text-[#1A1C22] sm:text-sm">
+              <span
+                className={`${poppins.className} flex h-[55px] w-full shrink-0 items-center justify-center px-2.5 text-balance text-base font-medium leading-[1.4] text-[#2C2C2C]`}
+              >
                 {option.label}
               </span>
             </button>

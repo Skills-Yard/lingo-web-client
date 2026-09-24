@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ONBOARDING_STEPS,
-  ONBOARDING_QUESTION_COUNT,
   type OnboardingAnswers,
 } from "@/lib/constants/onboarding";
 import { PreLoginScreen } from "./PreLoginScreen";
@@ -14,13 +13,14 @@ import { FoxMessageScreen } from "./FoxMessageScreen";
 import { NotificationPermissionScreen } from "./NotificationPermissionScreen";
 import { QuestionListScreen } from "./QuestionListScreen";
 import { QuestionGridScreen } from "./QuestionGridScreen";
+import { StreakScreen } from "./StreakScreen";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
 import { Button3D } from "@/components/ui/Button3D";
 
 // 1-indexed position of each question-kind step among *only* the question
 // steps, keyed by step id — e.g. `{ career: 1, experience: 2, ... }`. Built
 // once at module scope (the step list is static) rather than recomputed on
-// every render; drives the header's "question N of ONBOARDING_QUESTION_COUNT"
+// every render; drives the header's "question N of QUESTION_COUNT"
 // progress bar, which only advances on question screens, not the
 // fox-message/notification connector screens between them.
 const QUESTION_NUMBER: Record<string, number> = {};
@@ -33,6 +33,9 @@ const QUESTION_NUMBER: Record<string, number> = {};
     }
   }
 }
+
+/** How many questions the progress bar counts ("N of QUESTION_COUNT"). */
+const QUESTION_COUNT = Object.keys(QUESTION_NUMBER).length;
 
 // Every screen swap in this flow (splash -> pre-login -> each question) uses
 // this same crossfade — `mode="sync"` on the AnimatePresence below lets the
@@ -100,7 +103,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const step = index >= 0 ? ONBOARDING_STEPS[index] : null;
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
   const progress = questionNumber
-    ? { step: questionNumber, total: ONBOARDING_QUESTION_COUNT }
+    ? { step: questionNumber, total: QUESTION_COUNT }
     : undefined;
 
   // The one CTA for the whole flow (see the footer below): its label,
@@ -110,19 +113,28 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     index < -1 ||
     ((step?.kind === "question-list" || step?.kind === "question-grid") &&
       !answers[step.answerKey]);
+  const requestNotifications = () => {
+    if ("Notification" in window) Notification.requestPermission().catch(() => {});
+  };
   const handleCta = () => {
-    if (step?.kind === "notification-permission" && "Notification" in window) {
-      Notification.requestPermission().catch(() => {});
-    }
+    if (step?.kind === "notification-permission") requestNotifications();
     goNext();
   };
+
+  // The notification screen is grey edge to edge (footer included), so the
+  // whole flow's background eases over to it and back.
+  const greyScreen = step?.kind === "notification-permission";
 
   // `h-dvh`, not `h-screen`: on mobile, 100vh is the height with the
   // browser's address bar hidden, so whenever the bar is showing the flow ran
   // taller than the visible area and the page scrolled. `dvh` tracks the
   // actually-visible height, so every screen fits on one screen.
   return (
-    <main className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white">
+    <main
+      className={`onboarding-light relative flex h-dvh w-full flex-col overflow-hidden transition-colors duration-500 ${
+        greyScreen ? "bg-[#E9E9E9]" : "bg-white"
+      }`}
+    >
       {/* Screens crossfade in the space above the footer. */}
       <div className="relative min-h-0 flex-1">
         <AnimatePresence mode="sync">
@@ -146,7 +158,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={SCREEN_TRANSITION}
-              className="absolute inset-0 flex flex-col bg-white"
+              className={`absolute inset-0 flex flex-col ${greyScreen ? "bg-[#E9E9E9]" : "bg-white"}`}
             >
               {/* Phone-width column, centered on tablets/desktops so options
                   don't stretch across a wide screen. */}
@@ -154,6 +166,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <OnboardingHeader
                   onBack={goBack}
                   progress={progress}
+                  showSound={step.kind === "streak"}
                   muted={muted}
                   onToggleMuted={() => setMuted((m) => !m)}
                 />
@@ -172,7 +185,23 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 )}
 
                 {step.kind === "notification-permission" && (
-                  <NotificationPermissionScreen className="flex-1" heading={step.heading} />
+                  <NotificationPermissionScreen
+                    className="flex-1"
+                    heading={step.heading}
+                    onAllow={() => {
+                      playClickSound();
+                      requestNotifications();
+                      goNext();
+                    }}
+                    onDeny={() => {
+                      playClickSound();
+                      goNext();
+                    }}
+                  />
+                )}
+
+                {step.kind === "streak" && (
+                  <StreakScreen className="flex-1" heading={step.heading(answers)} image={step.image} />
                 )}
 
                 {step.kind === "question-list" && (
