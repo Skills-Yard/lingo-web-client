@@ -20,7 +20,7 @@ export function OnboardingHeader({
   onToggleMuted,
 }: OnboardingHeaderProps) {
   return (
-    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 pt-4 pb-3 select-none">
+    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 pt-3 pb-2 select-none">
       <button
         type="button"
         onClick={onBack}

@@ -38,17 +38,17 @@ export function NotificationPermissionScreen({
     <div
       className={`flex flex-col items-center bg-[#EDEDED] px-6 ${className ?? ""}`}
     >
-      <h1 className="mt-[8vh] max-w-xs text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl">
+      <h1 className="mt-[3dvh] max-w-xs shrink-0 text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl">
         {heading}
       </h1>
 
-      <div className="relative flex flex-1 flex-col items-center justify-center">
-        <OnboardingFox className="h-32 w-32 sm:h-36 sm:w-36" />
+      <div className="relative flex min-h-0 w-full flex-1 flex-col items-center justify-center">
+        <OnboardingFox className="aspect-square h-[min(9rem,22dvh)]" />
 
         {/* Illustration only — see doc comment above. */}
         <div
           aria-hidden
-          className="-mt-6 w-72 rounded-xl border border-black/10 bg-white p-4 text-center shadow-xl sm:w-80"
+          className="-mt-6 w-full max-w-72 rounded-xl border border-black/10 bg-white p-4 text-center shadow-xl sm:w-80"
         >
           <p className="text-sm font-semibold text-[#1A1C22]">Notification</p>
           <p className="mt-1 text-xs text-[#666666]">
@@ -61,7 +61,7 @@ export function NotificationPermissionScreen({
         </div>
       </div>
 
-      <div className="w-full max-w-xs pb-6 sm:max-w-sm">
+      <div className="w-full max-w-xs shrink-0 pb-4 sm:max-w-sm sm:pb-6">
         <Button3D onClick={handleContinue} className="w-full">
           {cta}
         </Button3D>

@@ -47,8 +47,12 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
  * the raw "hi " clip; "hi " itself moved to the greeting wave (see
  * useGreetingOverlay) that plays once screen 1's bubble shows. Every other
  * clip/artboard name is unchanged from the previous file.
+ *
+ * `-4`: renames the default state machine "State Machine 1" -> "Idle state"
+ * and adds "laptop idle" / "tail idle" clips; "splash screen" and every clip
+ * name the components play are unchanged from `-3`.
  */
-export const ROBU_RIVE_SRC = "/animations/foxi-3.riv";
+export const ROBU_RIVE_SRC = "/animations/foxi-4.riv";
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in

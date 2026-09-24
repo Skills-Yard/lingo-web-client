@@ -40,9 +40,9 @@ export function QuestionGridScreen({
 }: QuestionGridScreenProps) {
   return (
     <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
-      <div className="flex items-start gap-3 pt-2">
+      <div className="flex shrink-0 items-start gap-3 pt-1">
         <div aria-hidden className="relative shrink-0">
-          <img src="/images/quesfoxi.png" alt="" className="w-16 h-16 object-contain" />
+          <img src="/images/quesfoxi.png" alt="" className="h-12 w-12 object-contain sm:h-16 sm:w-16" />
         </div>
         <h1 className="pt-1 text-lg font-semibold leading-snug text-[#1A1C22] sm:text-xl">
           {heading.map((span, i) => (
@@ -53,7 +53,7 @@ export function QuestionGridScreen({
         </h1>
       </div>
 
-      <div className="mt-6 grid flex-1 grid-cols-2 gap-3 content-start overflow-y-auto pb-4">
+      <div className="mt-3 grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto pb-2 sm:mt-5">
         {options.map((option) => {
           const selected = option.id === selectedId;
           const { icon: Icon, bg, fg } = ILLUSTRATIONS[option.illustration];
@@ -66,7 +66,7 @@ export function QuestionGridScreen({
                 selected ? "border-2 border-primary" : "border-black/10"
               }`}
             >
-              <span className={`flex h-16 w-full items-center justify-center rounded-lg ${bg}`}>
+              <span className={`flex h-[min(4rem,9dvh)] w-full items-center justify-center rounded-lg ${bg}`}>
                 <Icon className={`h-7 w-7 ${fg}`} />
               </span>
               <span className="text-xs font-medium text-[#1A1C22] sm:text-sm">
@@ -77,7 +77,7 @@ export function QuestionGridScreen({
         })}
       </div>
 
-      <div className="w-full pb-6 pt-2">
+      <div className="w-full shrink-0 pb-4 pt-2 sm:pb-6">
         <Button3D onClick={onContinue} disabled={!selectedId} className="w-full">
           {cta}
         </Button3D>

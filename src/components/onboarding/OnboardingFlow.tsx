@@ -86,8 +86,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     ? { step: questionNumber, total: ONBOARDING_QUESTION_COUNT }
     : undefined;
 
+  // `h-dvh`, not `h-screen`: on mobile, 100vh is the height with the
+  // browser's address bar hidden, so whenever the bar is showing the flow ran
+  // taller than the visible area and the page scrolled. `dvh` tracks the
+  // actually-visible height, so every screen fits on one screen.
   return (
-    <main className="onboarding-light relative h-screen w-full overflow-hidden bg-white">
+    <main className="onboarding-light relative h-dvh w-full overflow-hidden bg-white">
       <AnimatePresence mode="sync">
         {index === -2 && (
           <motion.div
@@ -124,57 +128,61 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             transition={SCREEN_TRANSITION}
             className="absolute inset-0 flex flex-col bg-white"
           >
-            <OnboardingHeader
-              onBack={goBack}
-              progress={progress}
-              muted={muted}
-              onToggleMuted={() => setMuted((m) => !m)}
-            />
-
-            {step.kind === "fox-message" && (
-              <FoxMessageScreen
-                className="flex-1"
-                heading={step.heading?.(answers)}
-                sparkle={step.sparkle}
-                bubble={step.bubble(answers)}
-                greet={step.greet}
-                cta={step.cta}
-                onContinue={goNext}
+            {/* Phone-width column, centered on tablets/desktops so options
+                and the CTA don't stretch across a wide screen. */}
+            <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col">
+              <OnboardingHeader
+                onBack={goBack}
+                progress={progress}
+                muted={muted}
+                onToggleMuted={() => setMuted((m) => !m)}
               />
-            )}
 
-            {step.kind === "notification-permission" && (
-              <NotificationPermissionScreen
-                className="flex-1"
-                heading={step.heading}
-                cta={step.cta}
-                onContinue={goNext}
-              />
-            )}
+              {step.kind === "fox-message" && (
+                <FoxMessageScreen
+                  className="flex-1"
+                  heading={step.heading?.(answers)}
+                  sparkle={step.sparkle}
+                  bubble={step.bubble(answers)}
+                  greet={step.greet}
+                  cta={step.cta}
+                  onContinue={goNext}
+                />
+              )}
 
-            {step.kind === "question-list" && (
-              <QuestionListScreen
-                className="flex-1"
-                heading={step.heading(answers)}
-                options={step.options}
-                selectedId={answers[step.answerKey] ?? null}
-                onSelect={(id) => setAnswer(step.answerKey, id)}
-                cta={step.cta}
-                onContinue={goNext}
-              />
-            )}
+              {step.kind === "notification-permission" && (
+                <NotificationPermissionScreen
+                  className="flex-1"
+                  heading={step.heading}
+                  cta={step.cta}
+                  onContinue={goNext}
+                />
+              )}
 
-            {step.kind === "question-grid" && (
-              <QuestionGridScreen
-                className="flex-1"
-                heading={step.heading(answers)}
-                options={step.options}
-                selectedId={answers[step.answerKey] ?? null}
-                onSelect={(id) => setAnswer(step.answerKey, id)}
-                cta={step.cta}
-                onContinue={goNext}
-              />
-            )}
+              {step.kind === "question-list" && (
+                <QuestionListScreen
+                  className="flex-1"
+                  heading={step.heading(answers)}
+                  options={step.options}
+                  selectedId={answers[step.answerKey] ?? null}
+                  onSelect={(id) => setAnswer(step.answerKey, id)}
+                  cta={step.cta}
+                  onContinue={goNext}
+                />
+              )}
+
+              {step.kind === "question-grid" && (
+                <QuestionGridScreen
+                  className="flex-1"
+                  heading={step.heading(answers)}
+                  options={step.options}
+                  selectedId={answers[step.answerKey] ?? null}
+                  onSelect={(id) => setAnswer(step.answerKey, id)}
+                  cta={step.cta}
+                  onContinue={goNext}
+                />
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

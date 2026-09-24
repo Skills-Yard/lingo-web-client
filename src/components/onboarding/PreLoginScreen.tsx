@@ -24,16 +24,16 @@ export function PreLoginScreen({ className, onGetStarted }: PreLoginScreenProps)
   return (
     <div className={`flex flex-col items-center bg-white ${className ?? ""}`}>
       <h1
-        className={`${sekuya.className} pt-[18vh] text-center text-4xl text-[#01A17F] sm:pt-[16vh] sm:text-5xl`}
+        className={`${sekuya.className} pt-[12dvh] text-center text-4xl text-[#01A17F] sm:text-5xl`}
       >
         LINGO
       </h1>
 
-      <div className="flex flex-1 items-center justify-center">
-        <OnboardingFox className="h-48 w-48 sm:h-56 sm:w-56 md:h-64 md:w-64" />
+      <div className="flex min-h-0 flex-1 items-center justify-center">
+        <OnboardingFox className="aspect-square h-[min(16rem,34dvh)]" />
       </div>
 
-      <div className="w-full max-w-xs px-4 pb-6 sm:max-w-sm">
+      <div className="w-full max-w-xs px-4 pb-4 sm:max-w-sm sm:pb-6">
         <Button3D onClick={onGetStarted} className="w-full">
           Get Started
         </Button3D>

@@ -18,7 +18,7 @@ const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
 
 const ARTBOARD = "Artboard 2";
 
-// A second, separate state machine from "State Machine 1" (see
+// A second, separate state machine from "Idle state" (see
 // ROBU_RIVE_SRC's own doc comment) — a close-up, zoomed-in boot reveal that
 // drives its own internal automatic (no-input) transition chain and settles
 // into its own "idle" state, staying at that same zoomed framing rather than
@@ -97,12 +97,12 @@ export function OnboardingSplash({ className, onComplete }: OnboardingSplashProp
         initial={{ opacity: 0, y: 16, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={TEXT_INTRO}
-        className={`${sekuya.className} relative z-10 pt-[24vh] text-center text-5xl text-white sm:pt-[22vh] sm:text-6xl md:pt-[20vh] md:text-7xl`}
+        className={`${sekuya.className} relative z-10 pt-[24dvh] text-center text-5xl text-white sm:pt-[22dvh] sm:text-6xl md:pt-[20dvh] md:text-7xl`}
       >
         LINGO
       </motion.h1>
 
-      <div className="absolute inset-x-0 bottom-0 z-10 h-[45vh] sm:h-[50vh] md:h-[55vh]">
+      <div className="absolute inset-x-0 bottom-0 z-10 h-[45dvh] sm:h-[50dvh] md:h-[55dvh]">
         <RiveComponent className="h-full w-full" />
       </div>
     </div>

@@ -1,6 +1,14 @@
 "use client";
 
-import type { ButtonHTMLAttributes, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
+
+// A click holds the button pressed for PRESS_HOLD_MS, releases it, and only
+// then (at CLICK_DELAY_MS) runs the caller's `onClick` — otherwise a click
+// that navigates to the next screen unmounts the button before its press
+// animation has visibly played.
+const PRESS_HOLD_MS = 150;
+const CLICK_DELAY_MS = 330;
 
 export type Button3DTone = "brand" | "dark" | "destructive";
 
@@ -30,21 +38,34 @@ const CHAMFER =
 // than this and the label starts reading as skewed rather than tilted.
 const TILT_TRANSFORM = "perspective(300px) rotateX(25deg)";
 
-// The brand tone is drawn from two pre-rendered images instead of CSS: the
-// face (`top-part.png`, already drawn in perspective) sitting on the slab
-// (`bottom-part.png`). Measured in the images' own pixels — both are ~1076px
-// wide. The face is solid down to its row 160, and the slab's black top
-// outline starts at its own row 19, so the slab sits at row 142 of the face:
-// that outline lands just under the face's bottom edge with no see-through
-// gap between them (at 145 a ~2px transparent row showed as a white line).
-// Together they stack into one shape 199px tall.
-const IMG_FACE = "/images/polygon-btn/top-part.png";
-const IMG_SLAB = "/images/polygon-btn/bottom-part.png";
-const IMG_W = 1076;
-const IMG_H = 199;
+// The brand tone is drawn from two pre-rendered images in
+// public/images/polygon-btn instead of CSS: `default-btn.png` at rest, and
+// `btn-pressed.png` while pressed (the same face on a much thinner slab, in
+// the same slab colour). Measured in default-btn.png's own pixels (1099x224):
+// btn-pressed.png is 1101x197 at the same scale, drawn 1px further right (so
+// it's shifted 1px left to line up) and sits 27px lower so the two share the
+// same bottom edge — its face lands lower, which is what reads as pushed in.
+const IMG_REST = "/images/polygon-btn/default-btn.png";
+const IMG_PRESSED = "/images/polygon-btn/btn-pressed.png";
+const IMG_W = 1099;
+const IMG_H = 224;
+const PRESSED_X = -1;
+const PRESSED_W = 1101;
+const PRESSED_H = 197;
+const PRESSED_Y = 27;
+/** The green face's height at rest — the label is centered on it. */
 const FACE_H = 162;
-const SLAB_TOP = 142;
-const SLAB_H = 57;
+
+// Pressed = `:active` (finger/mouse held down) *or* `data-pressed` (the
+// click-hold below). Written out in full so Tailwind can see them.
+/** Resting image: hidden while pressed. */
+const HIDE_WHILE_DOWN = "group-active:invisible group-data-pressed:invisible";
+/** Pressed image: shown only while pressed. */
+const SHOW_WHILE_DOWN =
+  "invisible group-active:visible group-data-pressed:visible";
+/** The label drops with the face: 27px of its 162px box ≈ 16.7%. */
+const LABEL_DOWN =
+  "group-active:translate-y-[16.7%] group-data-pressed:translate-y-[16.7%]";
 
 interface Button3DProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
@@ -72,10 +93,33 @@ export function Button3D({
   shine,
   disabled,
   className,
+  onClick,
   ...rest
 }: Button3DProps) {
   const showShine = shine ?? tone === "brand";
   const { face, depth, text } = TONE_STYLES[tone];
+
+  // `pressed` shows the same pressed look as `:active`, but held on purpose
+  // for PRESS_HOLD_MS after a click; `pending` swallows repeat clicks while
+  // the delayed `onClick` is still waiting to run.
+  const [pressed, setPressed] = useState(false);
+  const pending = useRef(false);
+  const timers = useRef<number[]>([]);
+  useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
+
+  const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
+    if (!onClick) return;
+    if (pending.current) return;
+    pending.current = true;
+    setPressed(true);
+    timers.current.push(
+      window.setTimeout(() => setPressed(false), PRESS_HOLD_MS),
+      window.setTimeout(() => {
+        pending.current = false;
+        onClick(e);
+      }, CLICK_DELAY_MS),
+    );
+  };
 
   if (tone === "brand") {
     return (
@@ -87,45 +131,60 @@ export function Button3D({
           disabled ? "cursor-not-allowed opacity-60 grayscale" : "cursor-pointer"
         } ${className ?? ""}`}
         {...rest}
+        onClick={handleClick}
+        data-pressed={pressed || undefined}
       >
-        {/* Slab — fixed in place; the face drops onto it when pressed. */}
+        {/* Resting image — swapped for the pressed one while pressed. */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src={IMG_SLAB}
+          src={IMG_REST}
           alt=""
           aria-hidden
           draggable={false}
-          className="pointer-events-none absolute left-0 w-full select-none"
-          style={{ top: `${(SLAB_TOP / IMG_H) * 100}%`, height: `${(SLAB_H / IMG_H) * 100}%` }}
-        />
-        {/* Face — the pressable layer, carrying the label and shine. */}
-        <span
-          className={`absolute inset-x-0 top-0 flex items-center justify-center gap-2 text-center text-xl font-medium text-primary-foreground transition-transform duration-100 ease-out ${
-            // Pressed, the face drops ~20% of its own height — about the
-            // slab's visible thickness — so it lands down on the slab.
-            disabled ? "" : "group-active:translate-y-[20%]"
+          className={`pointer-events-none absolute inset-0 h-full w-full select-none ${
+            disabled ? "" : HIDE_WHILE_DOWN
           }`}
-          style={{ height: `${(FACE_H / IMG_H) * 100}%` }}
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element */}
+        />
+        {!disabled && (
+          // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={IMG_FACE}
+            src={IMG_PRESSED}
             alt=""
             aria-hidden
             draggable={false}
-            className="pointer-events-none absolute inset-0 h-full w-full select-none"
+            className={`pointer-events-none absolute select-none ${SHOW_WHILE_DOWN}`}
+            style={{
+              left: `${(PRESSED_X / IMG_W) * 100}%`,
+              top: `${(PRESSED_Y / IMG_H) * 100}%`,
+              width: `${(PRESSED_W / IMG_W) * 100}%`,
+              height: `${(PRESSED_H / IMG_H) * 100}%`,
+            }}
           />
+        )}
+        {/* Label and shine, on the green face (not the slab below it); the
+            label drops with the face when pressed. */}
+        <span
+          className={`absolute inset-x-0 top-0 flex items-center justify-center gap-2 text-center text-xl font-medium text-primary-foreground ${
+            disabled ? "" : LABEL_DOWN
+          }`}
+          style={{ height: `${(FACE_H / IMG_H) * 100}%` }}
+        >
           {showShine && !disabled && (
-            // Masked by the face image itself, so the shine never spills
-            // past the face's angled edges.
+            // Masked by the resting image itself (sized to the full image, so
+            // its face lines up with this face-only box), so the shine never
+            // spills past the face's angled edges. Hidden while pressed.
             <span
               aria-hidden
-              className="pointer-events-none absolute inset-0 overflow-hidden"
+              className={`pointer-events-none absolute inset-0 overflow-hidden ${HIDE_WHILE_DOWN}`}
               style={{
-                maskImage: `url(${IMG_FACE})`,
-                maskSize: "100% 100%",
-                WebkitMaskImage: `url(${IMG_FACE})`,
-                WebkitMaskSize: "100% 100%",
+                maskImage: `url(${IMG_REST})`,
+                maskSize: `100% ${(IMG_H / FACE_H) * 100}%`,
+                maskPosition: "top",
+                maskRepeat: "no-repeat",
+                WebkitMaskImage: `url(${IMG_REST})`,
+                WebkitMaskSize: `100% ${(IMG_H / FACE_H) * 100}%`,
+                WebkitMaskPosition: "top",
+                WebkitMaskRepeat: "no-repeat",
               }}
             >
               <span className="animate-button-shine absolute inset-y-0 left-0 w-1/4">
@@ -149,6 +208,7 @@ export function Button3D({
         disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
       } ${className ?? ""}`}
       {...rest}
+      onClick={handleClick}
     >
       {/* Depth — fixed in place; only ever visible as the sliver the face
           uncovers by rising above it (or fully, once pressed down onto
@@ -165,7 +225,7 @@ export function Button3D({
         className={`relative flex items-center justify-center gap-2 overflow-hidden px-6 py-5 text-center text-lg font-semibold transition-transform duration-100 ease-out ${
           disabled
             ? "translate-y-0 bg-muted text-muted-foreground"
-            : `-translate-y-3 group-active:translate-y-0 ${face} ${text}`
+            : `${pressed ? "translate-y-0" : "-translate-y-3 group-active:translate-y-0"} ${face} ${text}`
         }`}
         style={{ clipPath: CHAMFER }}
       >

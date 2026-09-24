@@ -16,7 +16,7 @@ const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
 
 const ARTBOARD = "Artboard 2";
 
-// A second, separate state machine from "State Machine 1" (see
+// A second, separate state machine from "Idle state" (see
 // ROBU_RIVE_SRC's own doc comment) — a close-up, zoomed-in boot reveal that
 // drives its own internal automatic (no-input) transition chain and settles
 // into its own "idle" state, staying at that same zoomed framing rather than
