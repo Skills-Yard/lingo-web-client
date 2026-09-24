@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { DialogueBubble } from "@/components/ui/DialogueBubble";
 
 export function BuildingPathScreen({ onNext, onBack, careerTitle = "Software Engineer" }: { onNext?: () => void; onBack?: () => void; careerTitle?: string }) {
   return (
@@ -28,15 +29,17 @@ export function BuildingPathScreen({ onNext, onBack, careerTitle = "Software Eng
         </div>
 
         {/* Speech Bubble */}
-        <div className="relative w-full max-w-xs mx-auto">
-          {/* Tail of speech bubble */}
-          <div className="absolute -top-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white dark:bg-[#15181E] border-l-2 border-t-2 border-[#01A17F] rotate-45 transform origin-center z-0 rounded-sm"></div>
-          
-          <div className="relative z-10 bg-white dark:bg-[#15181E] border-2 border-[#01A17F] rounded-3xl p-5 text-center shadow-[0_4px_20px_rgba(1,161,127,0.15)]">
+        {/* pt-4 makes room for the tail, which overhangs the bubble's box. */}
+        <div className="w-full max-w-xs mx-auto pt-4">
+          <DialogueBubble
+            tail="up"
+            className="dark:[--bubble-fill:#15181E]"
+            contentClassName="px-4 py-3 text-center"
+          >
             <p className="font-medium text-[15px] leading-relaxed">
               Good news: your <span className="font-bold">[{careerTitle}]</span> journey runs on <span className="text-[#01A17F] font-bold">Python</span>. One of the most in-demand languages.
             </p>
-          </div>
+          </DialogueBubble>
         </div>
       </div>
 

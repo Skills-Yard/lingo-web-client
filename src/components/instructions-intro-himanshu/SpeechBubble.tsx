@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { DialogueBubble } from "@/components/ui/DialogueBubble";
 import { useRobuTalking } from "./RobuTalkingContext";
 
 interface SpeechBubbleProps {
@@ -70,6 +71,11 @@ interface SpeechBubbleProps {
  * change this default; for one screen only, pass `speedMs` instead (see its
  * doc above) rather than editing this constant. */
 const TYPE_SPEED_MS = 70;
+
+/** Corner radius (px) of the `sm`/`lg` bubbles — tighter than
+ * `DialogueBubble`'s default, to suit their small text and tight padding. */
+const BUBBLE_RADIUS_SM = 12;
+const BUBBLE_RADIUS_LG = 14;
 
 /**
  * A small talk bubble that types `text` out character by character, cursor and
@@ -254,16 +260,19 @@ export function SpeechBubble({
     );
   }
 
-  const bubbleSize =
-    size === "lg"
-      ? "max-w-full px-3 py-2.5 sm:max-w-72 sm:px-5 sm:py-3"
-      : "max-w-full px-3.5 py-2 sm:max-w-56 sm:px-4 sm:py-2.5";
+  const bubbleWidth = size === "lg" ? "max-w-full sm:max-w-72" : "max-w-full sm:max-w-56";
+  const bubblePadding =
+    size === "lg" ? "px-3 py-1.5 sm:px-3.5 sm:py-2" : "px-2.5 py-1 sm:px-3 sm:py-1.5";
   const textSize =
     size === "lg" ? "text-xl sm:text-base" : "text-[13px] sm:text-sm";
 
   return (
-    <div
-      className={`animate-pop-in relative rounded-2xl border border-primary/50 bg-white shadow-lg dark:bg-[#12141A] ${bubbleSize} ${className ?? ""}`}
+    <DialogueBubble
+      tail={tailCorner === "top-right" ? "up" : "down"}
+      tailAlign={tailCorner === "bottom-left" ? "left" : "right"}
+      radius={size === "lg" ? BUBBLE_RADIUS_LG : BUBBLE_RADIUS_SM}
+      className={`animate-pop-in dark:[--bubble-fill:#12141A] ${bubbleWidth} ${className ?? ""}`}
+      contentClassName={bubblePadding}
     >
       <p
         className={`font-semibold leading-snug text-[#2C2C2C] dark:text-white ${textSize}`}
@@ -273,17 +282,7 @@ export function SpeechBubble({
           <span className="ml-0.5 inline-block h-[1em] w-0.5 animate-pulse bg-primary align-middle" />
         )}
       </p>
-      <span
-        aria-hidden
-        className={`absolute h-3 w-3 rotate-45 border-primary/50 bg-white dark:bg-[#12141A] ${
-          tailCorner === "bottom-right"
-            ? "-bottom-1.5 right-6 border-b border-r"
-            : tailCorner === "bottom-left"
-              ? "-bottom-1.5 left-6 border-b border-l"
-              : "-top-1.5 right-6 border-t border-l"
-        }`}
-      />
-    </div>
+    </DialogueBubble>
   );
 }
 

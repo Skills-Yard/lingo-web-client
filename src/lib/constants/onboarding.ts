@@ -163,7 +163,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "fox-message",
     id: "greeting",
-    bubble: () => [{ text: "Hey! I am foxy, your coding buddy" }],
+    bubble: () => [{ text: "Hey! I am foxy,\nyour coding buddy" }],
     greet: true,
     cta: "Continue",
   },

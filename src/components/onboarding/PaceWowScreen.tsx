@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { DialogueBubble } from "@/components/ui/DialogueBubble";
 
 export function PaceWowScreen({ onNext, onBack, careerTitle = "Software Engineering" }: { onNext?: () => void; onBack?: () => void; careerTitle?: string }) {
   return (
@@ -18,16 +19,18 @@ export function PaceWowScreen({ onNext, onBack, careerTitle = "Software Engineer
       <div className="flex-1 flex flex-col items-center justify-center gap-12 px-4 pb-6">
         
         {/* Speech Bubble */}
-        <div className="relative w-full max-w-xs mx-auto">
-          {/* Tail of speech bubble (pointing down this time) */}
-          <div className="absolute -bottom-3 left-1/2 -translate-x-1/2 w-6 h-6 bg-white dark:bg-[#15181E] border-r-2 border-b-2 border-[#01A17F] rotate-45 transform origin-center z-0 rounded-sm"></div>
-          
-          <div className="relative z-10 bg-white dark:bg-[#15181E] border-2 border-[#01A17F] rounded-3xl p-5 text-center shadow-[0_4px_20px_rgba(1,161,127,0.15)]">
+        {/* pb-4 makes room for the tail, which overhangs the bubble's box. */}
+        <div className="w-full max-w-xs mx-auto pb-4">
+          <DialogueBubble
+            tail="down"
+            className="dark:[--bubble-fill:#15181E]"
+            contentClassName="px-4 py-3 text-center"
+          >
             <p className="font-bold text-[18px] mb-2 text-[#01A17F]">WOW!</p>
             <p className="font-medium text-[15px] leading-relaxed">
               At this pace, you'll finish your first 3 lessons toward <span className="font-bold">[{careerTitle}]</span> this week.
             </p>
-          </div>
+          </DialogueBubble>
         </div>
 
         {/* Large Fox Character */}
