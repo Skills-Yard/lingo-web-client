@@ -12,7 +12,7 @@ import {
   type RefObject,
 } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
-import { OnboardingFox } from "./robu/OnboardingFox";
+import { OnboardingFox, type FoxPose } from "./robu/OnboardingFox";
 
 /**
  * One fox for the whole onboarding flow. Screens don't render their own fox;
@@ -28,6 +28,7 @@ interface SlotInfo {
   ref: RefObject<HTMLDivElement | null>;
   talking: boolean;
   greet: boolean;
+  pose: FoxPose;
 }
 
 interface FoxStage {
@@ -71,22 +72,39 @@ interface FoxSlotProps {
   talking?: boolean;
   /** Waves hello once when this slot becomes current. */
   greet?: boolean;
+  /** See FoxPose — "laptop" on question screens, "excited" for the
+   * "Are you ready?" reaction. */
+  pose?: FoxPose;
 }
 
 /** Where the fox should stand on this screen — sized like the fox itself. */
-export function FoxSlot({ className, style, talking = false, greet = false }: FoxSlotProps) {
+export function FoxSlot({
+  className,
+  style,
+  talking = false,
+  greet = false,
+  pose = "default",
+}: FoxSlotProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
   const stage = useContext(FoxStageContext);
 
   useEffect(() => {
-    stage?.register(id, { ref, talking, greet });
-  }, [stage, id, talking, greet]);
+    stage?.register(id, { ref, talking, greet, pose });
+  }, [stage, id, talking, greet, pose]);
   useEffect(() => () => stage?.unregister(id), [stage, id]);
 
   // Outside the flow (no stage), just draw a fox in place.
   if (!stage) {
-    return <OnboardingFox className={className} style={style} talking={talking} greet={greet} />;
+    return (
+      <OnboardingFox
+        className={className}
+        style={style}
+        talking={talking}
+        greet={greet}
+        pose={pose}
+      />
+    );
   }
   return <div ref={ref} aria-hidden className={className} style={style} />;
 }
@@ -158,7 +176,12 @@ export function PersistentFox({
       className="pointer-events-none absolute top-0 left-0 z-[5] origin-top-left"
       style={{ x, y, scale, opacity, width: BASE_SIZE, height: BASE_SIZE }}
     >
-      <OnboardingFox className="h-full w-full" talking={slot?.talking ?? false} greet={slot?.greet ?? false} />
+      <OnboardingFox
+        className="h-full w-full"
+        talking={slot?.talking ?? false}
+        greet={slot?.greet ?? false}
+        pose={slot?.pose ?? "default"}
+      />
     </motion.div>
   );
 }

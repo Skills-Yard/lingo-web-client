@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import {
   Layout,
@@ -59,11 +59,41 @@ const SPEAK_ANIMATION = "speak";
 
 const AMBIENT_WATCHDOG_MS = 500;
 
-function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
+/**
+ * What the fox is doing:
+ * - "default": the plain clip-driven fox — `idle `, blinks, ear flicks, the
+ *   greeting wave, the talking mouth (cut scenes, Get Started, streak).
+ * - "excited": the "Are you ready?" reaction — the "excitement" state
+ *   machine (Excitement, then taking the laptop out), then — once that has
+ *   played — the "laptop" state machine.
+ * - "laptop": the question screens — the "laptop" state machine.
+ *
+ * The two laptop poses run only those state machines, no individual clips:
+ * everything clip-driven is stopped first, and the default pose's clip
+ * overlays (blinks, ears, mouth) stay off until the fox is back to default —
+ * the state machines have their own blink and mouth layers.
+ */
+export type FoxPose = "default" | "excited" | "laptop";
+
+const IDLE = "idle ";
+const EXCITEMENT_SM = "excitement";
+const LAPTOP_SM = "laptop";
+/** How long "excitement" runs before handing over to "laptop": its
+ * Excitement state (2.37s exit time) plus "laptop taking out" (0.42s). */
+const EXCITEMENT_SM_MS = 2790;
+
+type FoxMode = "clips" | "excitement" | "laptop";
+
+function usePose(rive: RiveInstance | null, pose: FoxPose) {
+  // What the ambient watchdog keeps looping in the clip-driven pose.
+  const base = useRef<string[]>([IDLE]);
+  const mode = useRef<FoxMode>("clips");
+  const handOver = useRef<number | undefined>(undefined);
+
   useEffect(() => {
     if (!rive) return;
     const ensurePlaying = () => {
-      for (const name of animations) {
+      for (const name of base.current) {
         if (!rive.playingAnimationNames.includes(name)) {
           rive.stop(name);
           rive.play(name);
@@ -73,8 +103,47 @@ function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
     ensurePlaying();
     const timer = window.setInterval(ensurePlaying, AMBIENT_WATCHDOG_MS);
     return () => window.clearInterval(timer);
-  }, [rive, animations]);
+  }, [rive]);
+
+  useEffect(() => {
+    if (!rive) return;
+    const startLaptop = () => {
+      rive.stop();
+      rive.play(LAPTOP_SM);
+      mode.current = "laptop";
+    };
+
+    if (pose === "default") {
+      window.clearTimeout(handOver.current);
+      base.current = [IDLE];
+      if (mode.current !== "clips") {
+        // A state machine leaves the artboard however it last set it (the
+        // laptop, the sunglasses), which `idle ` doesn't touch — start the
+        // artboard over, back on the plain idle loop.
+        mode.current = "clips";
+        rive.reset({ artboard: ARTBOARD, animations: [IDLE], autoplay: true });
+      }
+    } else if (pose === "excited") {
+      window.clearTimeout(handOver.current);
+      base.current = [];
+      rive.stop();
+      rive.play(EXCITEMENT_SM);
+      mode.current = "excitement";
+      handOver.current = window.setTimeout(startLaptop, EXCITEMENT_SM_MS);
+    } else if (mode.current === "clips") {
+      // "laptop" straight from the default pose. (From "excited", the hand-
+      // over to "laptop" is already scheduled — let excitement finish.)
+      base.current = [];
+      startLaptop();
+    }
+  }, [rive, pose]);
+
+  // Timer only — calling into `rive` here could run after Rive has deleted
+  // the artboard.
+  useEffect(() => () => window.clearTimeout(handOver.current), []);
 }
+
+const NO_ANIMATIONS: string[] = [];
 
 function useRandomOverlay(
   rive: RiveInstance | null,
@@ -188,6 +257,8 @@ interface OnboardingFoxProps {
   /** Moves the fox's mouth ("speak" clip) for as long as this is true — the
    * screen's speech bubble typing its line. */
   talking?: boolean;
+  /** See FoxPose. */
+  pose?: FoxPose;
 }
 
 /**
@@ -201,6 +272,7 @@ export function OnboardingFox({
   style,
   greet = false,
   talking = false,
+  pose = "default",
 }: OnboardingFoxProps) {
   const { rive, RiveComponent } = useRive({
     src: ROBU_RIVE_SRC,
@@ -210,11 +282,13 @@ export function OnboardingFox({
     layout: LAYOUT,
   });
 
-  useAmbientLoop(rive, BASE_ANIMATIONS);
-  useGreetingOnce(rive, greet);
-  useTalkingMouth(rive, talking);
-  useRandomOverlay(rive, BLINK_ANIMATIONS, BLINK_MS, BLINK_MS, BLINK_HOLD_MS);
-  useRandomOverlay(rive, EAR_ANIMATIONS, EAR_MIN_MS, EAR_MAX_MS);
+  usePose(rive, pose);
+  // The clip overlays only run in the clip-driven pose (see FoxPose).
+  const clipDriven = pose === "default";
+  useGreetingOnce(rive, greet && clipDriven);
+  useTalkingMouth(rive, talking && clipDriven);
+  useRandomOverlay(rive, clipDriven ? BLINK_ANIMATIONS : NO_ANIMATIONS, BLINK_MS, BLINK_MS, BLINK_HOLD_MS);
+  useRandomOverlay(rive, clipDriven ? EAR_ANIMATIONS : NO_ANIMATIONS, EAR_MIN_MS, EAR_MAX_MS);
 
   return (
     <div className={className} style={style}>

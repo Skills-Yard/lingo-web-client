@@ -192,6 +192,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       voiceover={resolveVoiceover(step.voiceover, answers)}
                     voiceReadsHeading={step.voiceReadsHeading}
                       voiceReads={step.voiceReads}
+                      excite={step.excite}
                       muted={muted}
                     />
                   )}

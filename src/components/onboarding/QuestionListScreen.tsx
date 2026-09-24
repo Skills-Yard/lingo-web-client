@@ -51,7 +51,12 @@ export function QuestionListScreen({
 
   return (
     <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
-      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} />
+      <QuestionHeading
+        heading={heading}
+        spoken={spokenQuestion}
+        talking={voice.playing}
+        pose="laptop"
+      />
 
       {/* Options keep their natural height; if they don't all fit, only
           this section scrolls (scrollbar hidden) — the CTA below is

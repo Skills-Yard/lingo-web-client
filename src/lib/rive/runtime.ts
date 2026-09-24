@@ -55,8 +55,18 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
  * `-5`: renames the talking clip "speak " -> "speak" (no trailing space) and
  * makes it the "Idle state" state machine's mouth-layer entry state; every
  * other clip/state-machine name is unchanged from `-4`.
+ *
+ * `-8`: adds the laptop clips ("laptop idle", "laptop taking out ",
+ * "laptop typing ", "tail typing", "Excitement ") and the "laptop idle" /
+ * "laptop_typing " state machines — see OnboardingFox's FoxPose. Every
+ * earlier clip/state-machine name is unchanged from `-5`.
+ *
+ * `-9`: same clips as `-8`; renames the state machines to "laptop" (laptop
+ * idle) and "excitement" (Excitement, then taking the laptop out after
+ * 2.37s). Neither has inputs and "excitement"'s body layer has no entry
+ * transition, so OnboardingFox still plays those clips directly.
  */
-export const ROBU_RIVE_SRC = "/animations/foxi-5.riv";
+export const ROBU_RIVE_SRC = "/animations/foxi-9.riv";
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in

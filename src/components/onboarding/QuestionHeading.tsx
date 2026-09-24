@@ -2,6 +2,7 @@
 
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { FoxSlot } from "./foxStage";
+import type { FoxPose } from "./robu/OnboardingFox";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
 
@@ -33,6 +34,9 @@ interface QuestionHeadingProps {
   spoken: number;
   /** The fox's mouth moves while this is true. */
   talking: boolean;
+  /** "laptop" on question screens (see FoxPose); the streak screen, which
+   * reuses this row, keeps the default. */
+  pose?: FoxPose;
 }
 
 /**
@@ -41,7 +45,12 @@ interface QuestionHeadingProps {
  * already spoken is at full strength, the rest faded, so the highlight moves
  * along with the voice.
  */
-export function QuestionHeading({ heading, spoken, talking }: QuestionHeadingProps) {
+export function QuestionHeading({
+  heading,
+  spoken,
+  talking,
+  pose = "default",
+}: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
   const parts = heading.map((span, i) => {
@@ -52,7 +61,11 @@ export function QuestionHeading({ heading, spoken, talking }: QuestionHeadingPro
   return (
     <div className="flex shrink-0 items-center justify-center gap-3 pt-4 sm:pt-6">
       <div aria-hidden className="relative shrink-0">
-        <FoxSlot talking={talking} className="h-20 w-20 sm:h-24 sm:w-24" />
+        <FoxSlot
+          talking={talking}
+          pose={pose}
+          className="h-20 w-20 sm:h-24 sm:w-24"
+        />
       </div>
       <h1 className="max-w-60 text-lg font-semibold leading-snug text-[#1A1C22] sm:max-w-72 sm:text-xl">
         {parts.map(({ span, cut }, i) => (
