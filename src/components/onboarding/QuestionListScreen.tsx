@@ -70,15 +70,27 @@ export function QuestionListScreen({
                 playClickSound();
                 onSelect(option.id);
               }}
-              className={`flex h-14 w-full shrink-0 items-center gap-3 px-4 text-left ${optionCardClass(selected, spotlight)}`}
+              className={`flex min-h-14 w-full shrink-0 items-center gap-3 px-4 py-2 text-left ${optionCardClass(selected, spotlight)}`}
             >
-              <span
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
-                  lit ? "bg-primary text-white" : "bg-[#D9F6EC] text-[#1A1C22]"
-                }`}
-              >
-                <Icon className="h-4.5 w-4.5" />
-              </span>
+              {option.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={option.image}
+                  alt=""
+                  draggable={false}
+                  className="h-11 w-11 shrink-0 object-contain"
+                />
+              ) : (
+                Icon && (
+                  <span
+                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                      lit ? "bg-primary text-white" : "bg-[#D9F6EC] text-[#1A1C22]"
+                    }`}
+                  >
+                    <Icon className="h-4.5 w-4.5" />
+                  </span>
+                )
+              )}
               <span className="text-sm font-medium text-[#1A1C22] sm:text-base">
                 {option.label}
               </span>
