@@ -201,7 +201,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     heading: () => [
       { text: "What's the " },
       { text: "career", highlight: true },
-      { text: " you're chasing?" },
+      { text: " you are working towards?" },
     ],
     options: CAREER_OPTIONS,
     answerKey: "career",
