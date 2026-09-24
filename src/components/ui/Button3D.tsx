@@ -86,7 +86,7 @@ export function Button3D({
         className={`relative flex items-center justify-center gap-2 overflow-hidden px-6 py-5 text-center text-lg font-semibold transition-transform duration-100 ease-out ${
           disabled
             ? "translate-y-0 bg-muted text-muted-foreground"
-            : `-translate-y-2.5 group-active:translate-y-0 ${face} ${text}`
+            : `-translate-y-3 group-active:translate-y-0 ${face} ${text}`
         }`}
         style={{ clipPath: CHAMFER }}
       >
