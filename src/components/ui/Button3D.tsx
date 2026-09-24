@@ -20,7 +20,7 @@ const TONE_STYLES: Record<Button3DTone, { face: string; depth: string; text: str
 // peeks out as a matching-shaped sliver, never a rectangular edge poking out
 // past the chamfer.
 const CHAMFER =
-  "polygon(14px 0, calc(100% - 14px) 0, 100% 14px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 14px)";
+  "polygon(9px 0, calc(100% - 9px) 0, 100% 9px, 100% calc(100% - 14px), calc(100% - 14px) 100%, 14px 100%, 0 calc(100% - 14px), 0 9px)";
 
 // The whole button leans back a few degrees around its own top edge — the
 // "tilted backward in 3D" look the reference asks for — rather than sitting
@@ -28,7 +28,7 @@ const CHAMFER =
 // a `perspective` property on a parent) keeps the tilt self-contained to
 // just this element, no extra wrapper needed. Modest on purpose: much more
 // than this and the label starts reading as skewed rather than tilted.
-const TILT_TRANSFORM = "perspective(400px) rotateX(20deg)";
+const TILT_TRANSFORM = "perspective(300px) rotateX(25deg)";
 
 interface Button3DProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
@@ -83,10 +83,10 @@ export function Button3D({
           etc., set by the caller via `className`) is what actually sizes
           the button; the depth layer above just matches it via `inset-0`. */}
       <span
-        className={`relative flex items-center justify-center gap-2 overflow-hidden px-6 py-4 text-center text-lg font-semibold transition-transform duration-100 ease-out ${
+        className={`relative flex items-center justify-center gap-2 overflow-hidden px-6 py-5 text-center text-lg font-semibold transition-transform duration-100 ease-out ${
           disabled
             ? "translate-y-0 bg-muted text-muted-foreground"
-            : `-translate-y-1.5 group-active:translate-y-0 ${face} ${text}`
+            : `-translate-y-2.5 group-active:translate-y-0 ${face} ${text}`
         }`}
         style={{ clipPath: CHAMFER }}
       >
