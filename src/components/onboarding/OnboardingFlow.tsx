@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ONBOARDING_STEPS,
-  ONBOARDING_QUESTION_COUNT,
   resolveVoiceover,
   type OnboardingAnswers,
 } from "@/lib/constants/onboarding";

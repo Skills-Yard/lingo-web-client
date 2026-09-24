@@ -321,10 +321,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "question-grid",
     id: "experience",
     heading: () => [
-    heading: () => [
       { text: "Have you " },
       { text: "worked", highlight: true },
-      { text: " with code before?" },
       { text: " with code before?" },
     ],
     options: EXPERIENCE_OPTIONS,
