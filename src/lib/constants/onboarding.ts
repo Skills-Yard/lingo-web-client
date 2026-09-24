@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Briefcase,
-  HelpCircle,
   Lightbulb,
   Rocket,
   TrendingUp,
@@ -65,12 +64,11 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
 ];
 
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
-  { id: "switching-careers", label: "Switching careers into tech", icon: Briefcase },
-  { id: "first-tech-job", label: "Landing my first tech job", icon: Rocket },
-  { id: "promotion", label: "Promotion in current role", icon: TrendingUp },
-  { id: "personal-project", label: "Personal project or curiosity", icon: Lightbulb },
-  { id: "freelance", label: "Freelance / side income", icon: Wallet },
-  { id: "not-sure", label: "Not sure yet", icon: HelpCircle },
+  { id: "switching-careers", label: "Switching careers", icon: Briefcase },
+  { id: "first-tech-job", label: "Landing my first job", icon: Rocket },
+  { id: "promotion", label: "Leveling up / promotion", icon: TrendingUp },
+  { id: "personal-project", label: "Personal project", icon: Lightbulb },
+  { id: "freelance", label: "Freelance", icon: Wallet },
 ];
 
 export const STARTING_POINT_OPTIONS: OnboardingListOption[] = [
@@ -90,14 +88,14 @@ export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
   { id: "never", label: "Never used", illustration: "books", image: "/images/screen-03/03-1.png" },
   { id: "basics", label: "Know the basics", illustration: "mobile", image: "/images/screen-03/03-2.png" },
   { id: "hands-on-coder", label: "Hands-on coder", illustration: "chart", image: "/images/screen-03/03-3.png" },
-  { id: "professional", label: "Professional", illustration: "trophy", image: "/images/screen-03/03-4.png" },
+  { id: "professional", label: "Advanced", illustration: "trophy", image: "/images/screen-03/03-4.png" },
 ];
 
 export const TIME_COMMITMENT_OPTIONS: OnboardingGridOption[] = [
-  { id: "15min", label: "15 min a day", illustration: "books", image: "/images/screen-05/05-1.png" },
-  { id: "30min", label: "30 min a day", illustration: "mobile", image: "/images/screen-05/05-2.png" },
-  { id: "45min", label: "45 min a day", illustration: "chart", image: "/images/screen-05/05-3.png" },
-  { id: "1hour", label: "1 hour a day", illustration: "trophy", image: "/images/screen-05/05-4.png" },
+  { id: "5min", label: "5 min a day", illustration: "books", image: "/images/screen-05/05-1.png" },
+  { id: "10min", label: "10 min a day", illustration: "mobile", image: "/images/screen-05/05-2.png" },
+  { id: "15min", label: "15 min a day", illustration: "chart", image: "/images/screen-05/05-3.png" },
+  { id: "30min-plus", label: "30+ min a day", illustration: "trophy", image: "/images/screen-05/05-4.png" },
 ];
 
 export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
