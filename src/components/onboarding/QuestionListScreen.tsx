@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { OnboardingListOption, TextSpan } from "@/lib/constants/onboarding";
 import { playClickSound } from "./clickSound";
 import { useVoiceover } from "./useVoiceover";
@@ -39,6 +39,9 @@ export function QuestionListScreen({
   const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
   const spokenOption = spokenOptionIndex(voice, options.length);
 
+  // Each pick has the fox type on its laptop (see QuestionHeading).
+  const [typing, setTyping] = useState(0);
+
   // If the options scroll (short phones), keep the one being read in view.
   const optionsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -51,7 +54,7 @@ export function QuestionListScreen({
 
   return (
     <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
-      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} />
+      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} typing={typing} />
 
       {/* Options keep their natural height; if they don't all fit, only
           this section scrolls (scrollbar hidden) — the CTA below is
@@ -68,6 +71,7 @@ export function QuestionListScreen({
               type="button"
               onClick={() => {
                 playClickSound();
+                setTyping(Date.now());
                 onSelect(option.id);
               }}
               className={`flex min-h-14 w-full shrink-0 items-center gap-3 px-4 py-2 text-left ${optionCardClass(selected, spotlight)}`}

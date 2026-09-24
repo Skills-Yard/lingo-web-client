@@ -59,6 +59,15 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 export const ROBU_RIVE_SRC = "/animations/foxi-5.riv";
 
 /**
+ * The onboarding flow's persistent fox (`OnboardingFox`). Same rig and clip
+ * names as `ROBU_RIVE_SRC`, plus a "laptop" state machine (fox sitting with
+ * its laptop — "laptop idle" / blink / "mouth idle " layers, no inputs) and
+ * the one-shot "laptop typing " / looping "tail typing" clips the question
+ * screens play when an option is picked.
+ */
+export const ONBOARDING_FOX_RIVE_SRC = "/animations/foxy-me-2.riv";
+
+/**
  * The old two-theme Robu rig — kept only for the unused legacy copy in
  * `instructions-intro-robu-position-heading-consistency` (not routed from
  * any page). Both `instructions-intro` and `instructions-intro-himanshu` use
