@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   ONBOARDING_STEPS,
   ONBOARDING_QUESTION_COUNT,
+  resolveVoiceover,
   type OnboardingAnswers,
 } from "@/lib/constants/onboarding";
 import { PreLoginScreen } from "./PreLoginScreen";
@@ -166,7 +167,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     sparkle={step.sparkle}
                     bubble={step.bubble(answers)}
                     greet={step.greet}
-                    voiceover={step.voiceover}
+                    voiceover={resolveVoiceover(step.voiceover, answers)}
+                    voiceReadsHeading={step.voiceReadsHeading}
                     muted={muted}
                   />
                 )}
@@ -182,7 +184,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     options={step.options}
                     selectedId={answers[step.answerKey] ?? null}
                     onSelect={(id) => setAnswer(step.answerKey, id)}
-                    voiceover={step.voiceover}
+                    voiceover={resolveVoiceover(step.voiceover, answers)}
                     muted={muted}
                   />
                 )}
@@ -194,7 +196,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     options={step.options}
                     selectedId={answers[step.answerKey] ?? null}
                     onSelect={(id) => setAnswer(step.answerKey, id)}
-                    voiceover={step.voiceover}
+                    voiceover={resolveVoiceover(step.voiceover, answers)}
                     muted={muted}
                   />
                 )}

@@ -24,6 +24,9 @@ interface FoxMessageScreenProps {
    * paced so the last letter lands as the voice ends — and the fox's mouth
    * moves exactly while it plays. */
   voiceover?: readonly string[];
+  /** Whether the voiceover reads the heading too (default true). When
+   * false, the heading shows in full and only the bubble types along. */
+  voiceReadsHeading?: boolean;
   muted?: boolean;
   className?: string;
 }
@@ -42,6 +45,7 @@ export function FoxMessageScreen({
   bubble,
   greet,
   voiceover,
+  voiceReadsHeading = true,
   muted = false,
   className,
 }: FoxMessageScreenProps) {
@@ -62,7 +66,8 @@ export function FoxMessageScreen({
   const synced = hasVoice && voice.status !== "failed";
 
   const bubbleLen = spansLength(bubble);
-  const headingLen = heading && hasVoice ? spansLength(heading) : 0;
+  const typesHeading = hasVoice && voiceReadsHeading;
+  const headingLen = heading && typesHeading ? spansLength(heading) : 0;
   const total = bubbleLen + headingLen;
 
   const [ticks, setTicks] = useState(0);
@@ -89,7 +94,7 @@ export function FoxMessageScreen({
   const headingBlock = heading && (
     <div className="relative flex shrink-0 items-start gap-1.5">
       <h1 className="max-w-xs text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl">
-        {hasVoice ? (
+        {typesHeading ? (
           <TypedText spans={heading} shown={headingShown} />
         ) : (
           heading.map((span, i) => (
