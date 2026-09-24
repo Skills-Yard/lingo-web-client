@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Poppins } from "next/font/google";
 import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption, TextSpan } from "@/lib/constants/onboarding";
@@ -54,6 +54,9 @@ export function QuestionGridScreen({
   const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
   const spokenOption = spokenOptionIndex(voice, options.length);
 
+  // Each pick has the fox type on its laptop (see QuestionHeading).
+  const [typing, setTyping] = useState(0);
+
   // If the options scroll (short phones), keep the one being read in view.
   const optionsRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -66,9 +69,13 @@ export function QuestionGridScreen({
 
   return (
     <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
-      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} />
+      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} typing={typing} />
 
-      <div ref={optionsRef} className="scrollbar-none mt-4 grid min-h-0 flex-1 grid-cols-2 content-start gap-x-4 gap-y-5 overflow-y-auto -mx-2.5 px-3 pt-1.5 pb-3 sm:mt-5">
+      {/* `auto-rows-max` keeps each row the full tile height: on short screens
+        auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
+        over the gap into the next row. Now the gap is always gap-y-5 and the
+        grid scrolls instead. */}
+      <div ref={optionsRef} className="scrollbar-none mt-4 grid min-h-0 flex-1 grid-cols-2 auto-rows-max content-start gap-x-4 gap-y-5 overflow-y-auto -mx-2.5 px-3 pt-1.5 pb-3 sm:mt-5">
         {options.map((option, i) => {
           const selected = option.id === selectedId;
           const spotlight = !selected && i === spokenOption;
@@ -79,6 +86,7 @@ export function QuestionGridScreen({
               type="button"
               onClick={() => {
                 playClickSound();
+                setTyping(Date.now());
                 onSelect(option.id);
               }}
               // Figma "Group 94": a 169x189 tile — a light-blue 134px picture

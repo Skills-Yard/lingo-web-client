@@ -28,6 +28,9 @@ interface SlotInfo {
   ref: RefObject<HTMLDivElement | null>;
   talking: boolean;
   greet: boolean;
+  excited: boolean;
+  laptop: boolean;
+  typing: number;
 }
 
 interface FoxStage {
@@ -71,22 +74,48 @@ interface FoxSlotProps {
   talking?: boolean;
   /** Waves hello once when this slot becomes current. */
   greet?: boolean;
+  /** Plays the "excitement" state machine while true (standing only). */
+  excited?: boolean;
+  /** Seats the fox at its laptop instead of standing. */
+  laptop?: boolean;
+  /** With `laptop`: set to a new unique value (e.g. `Date.now()`) to have the
+   * fox type one pass on its laptop. 0 on every (re)mounted screen, so
+   * arriving — forward or back — never replays a pass from before. */
+  typing?: number;
 }
 
 /** Where the fox should stand on this screen — sized like the fox itself. */
-export function FoxSlot({ className, style, talking = false, greet = false }: FoxSlotProps) {
+export function FoxSlot({
+  className,
+  style,
+  talking = false,
+  greet = false,
+  excited = false,
+  laptop = false,
+  typing = 0,
+}: FoxSlotProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
   const stage = useContext(FoxStageContext);
 
   useEffect(() => {
-    stage?.register(id, { ref, talking, greet });
-  }, [stage, id, talking, greet]);
+    stage?.register(id, { ref, talking, greet, excited, laptop, typing });
+  }, [stage, id, talking, greet, excited, laptop, typing]);
   useEffect(() => () => stage?.unregister(id), [stage, id]);
 
   // Outside the flow (no stage), just draw a fox in place.
   if (!stage) {
-    return <OnboardingFox className={className} style={style} talking={talking} greet={greet} />;
+    return (
+      <OnboardingFox
+        className={className}
+        style={style}
+        talking={talking}
+        greet={greet}
+        excited={excited}
+        laptop={laptop}
+        typing={typing}
+      />
+    );
   }
   return <div ref={ref} aria-hidden className={className} style={style} />;
 }
@@ -158,7 +187,14 @@ export function PersistentFox({
       className="pointer-events-none absolute top-0 left-0 z-[5] origin-top-left"
       style={{ x, y, scale, opacity, width: BASE_SIZE, height: BASE_SIZE }}
     >
-      <OnboardingFox className="h-full w-full" talking={slot?.talking ?? false} greet={slot?.greet ?? false} />
+      <OnboardingFox
+        className="h-full w-full"
+        talking={slot?.talking ?? false}
+        greet={slot?.greet ?? false}
+        excited={slot?.excited ?? false}
+        laptop={slot?.laptop ?? false}
+        typing={slot?.typing ?? 0}
+      />
     </motion.div>
   );
 }
