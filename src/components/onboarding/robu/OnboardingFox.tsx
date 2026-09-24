@@ -52,6 +52,11 @@ const EAR_MAX_MS = 12000;
 const GREETING_ANIMATIONS = ["hi "];
 const GREETING_DELAY_MS = 400;
 
+// The mouth layer's talking clip, played on top of the ambient loop for as
+// long as the screen's speech bubble is typing (see FoxMessageScreen).
+// Unlike the clips above, this one has no trailing space in the file.
+const SPEAK_ANIMATION = "speak";
+
 const AMBIENT_WATCHDOG_MS = 500;
 
 function useAmbientLoop(rive: RiveInstance | null, animations: string[]) {
@@ -128,12 +133,60 @@ function useGreetingOnce(rive: RiveInstance | null, enabled: boolean) {
   }, [rive, enabled]);
 }
 
+/**
+ * Loops `speak` back-to-back for as long as `talking` is true (the clip is
+ * authored one-shot, so it's restarted the instant it ends) and stops it the
+ * moment `talking` flips false. Cleanup only clears the listener/timer —
+ * calling `rive.stop()` there would also run on unmount, after Rive may
+ * already have deleted the artboard.
+ */
+function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
+  useEffect(() => {
+    if (!rive || !rive.animationNames.includes(SPEAK_ANIMATION)) return;
+    if (!talking) {
+      rive.stop(SPEAK_ANIMATION);
+      return;
+    }
+    // `stop()` before `play()` rewinds the clip — replaying a finished
+    // one-shot would otherwise just hold its last frame. `restarting` keeps
+    // our own `stop()` (which fires a Stop event too) from re-entering.
+    let restarting = false;
+    const restart = () => {
+      if (restarting) return;
+      restarting = true;
+      rive.stop(SPEAK_ANIMATION);
+      rive.play(SPEAK_ANIMATION);
+      restarting = false;
+    };
+    // Loops the clip seamlessly: restart it the instant it ends, for as long
+    // as the text is still typing.
+    const handleStop = (event: RiveEvent) => {
+      const stopped = event.data;
+      const names = Array.isArray(stopped) ? stopped : [stopped];
+      if (names.includes(SPEAK_ANIMATION)) restart();
+    };
+    rive.on(EventType.Stop, handleStop);
+    restart();
+    // Backup only, in case a Stop event is ever missed.
+    const timer = window.setInterval(() => {
+      if (!rive.playingAnimationNames.includes(SPEAK_ANIMATION)) restart();
+    }, AMBIENT_WATCHDOG_MS);
+    return () => {
+      window.clearInterval(timer);
+      rive.off(EventType.Stop, handleStop);
+    };
+  }, [rive, talking]);
+}
+
 interface OnboardingFoxProps {
   className?: string;
   /** Waves hello once, shortly after mounting — only the "Hey! I am foxy"
    * greeting screen; every other screen's fox stays on the plain ambient
    * loop. */
   greet?: boolean;
+  /** Moves the fox's mouth ("speak" clip) for as long as this is true — the
+   * screen's speech bubble typing its line. */
+  talking?: boolean;
 }
 
 /**
@@ -142,7 +195,7 @@ interface OnboardingFoxProps {
  * this in already-idle, same role `<RobuEyeBlink>` plays for
  * instructions-intro's own reveal-card modal and game screens).
  */
-export function OnboardingFox({ className, greet = false }: OnboardingFoxProps) {
+export function OnboardingFox({ className, greet = false, talking = false }: OnboardingFoxProps) {
   const { rive, RiveComponent } = useRive({
     src: ROBU_RIVE_SRC,
     artboard: ARTBOARD,
@@ -153,6 +206,7 @@ export function OnboardingFox({ className, greet = false }: OnboardingFoxProps) 
 
   useAmbientLoop(rive, BASE_ANIMATIONS);
   useGreetingOnce(rive, greet);
+  useTalkingMouth(rive, talking);
   useRandomOverlay(rive, BLINK_ANIMATIONS, BLINK_MS, BLINK_MS, BLINK_HOLD_MS);
   useRandomOverlay(rive, EAR_ANIMATIONS, EAR_MIN_MS, EAR_MAX_MS);
 

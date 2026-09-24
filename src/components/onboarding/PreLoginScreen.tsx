@@ -3,6 +3,7 @@
 import { Sekuya } from "next/font/google";
 import { OnboardingFox } from "./robu/OnboardingFox";
 import { Button3D } from "@/components/ui/Button3D";
+import { playClickSound } from "./clickSound";
 
 // Sekuya only ships one weight (400) — still passed explicitly since
 // next/font requires it for any non-variable Google font.
@@ -34,7 +35,7 @@ export function PreLoginScreen({ className, onGetStarted }: PreLoginScreenProps)
       </div>
 
       <div className="w-full max-w-xs px-4 pb-4 sm:max-w-sm sm:pb-6">
-        <Button3D onClick={onGetStarted} className="w-full">
+        <Button3D onClick={onGetStarted} onPress={playClickSound} className="w-full">
           Get Started
         </Button3D>
 

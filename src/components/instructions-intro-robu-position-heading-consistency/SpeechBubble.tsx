@@ -29,10 +29,10 @@ interface SpeechBubbleProps {
 /** How long each character takes to appear, in ms. */
 const TYPE_SPEED_MS = 40;
 
-/** Corner radius (px) of the `sm`/`lg` bubbles — tighter than
- * `DialogueBubble`'s default, to suit their small text and tight padding. */
-const BUBBLE_RADIUS_SM = 12;
-const BUBBLE_RADIUS_LG = 14;
+/** Corner radius (px) of the `sm`/`lg` bubbles — every bubble in the app is
+ * 10px, matching `DialogueBubble`'s default. */
+const BUBBLE_RADIUS_SM = 10;
+const BUBBLE_RADIUS_LG = 10;
 const CHARS_PER_TICK = 3;
 
 

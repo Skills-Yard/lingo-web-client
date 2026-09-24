@@ -1,6 +1,11 @@
+"use client";
+
 import { BookOpen, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption, TextSpan } from "@/lib/constants/onboarding";
 import { Button3D } from "@/components/ui/Button3D";
+import { playClickSound } from "./clickSound";
+import { useVoiceover } from "./useVoiceover";
+import { optionCardClass } from "./optionCard";
 
 // The reference design reuses the same 4 illustrations for both grid
 // questions (experience level, Python level) — see OnboardingGridOption's
@@ -21,6 +26,9 @@ interface QuestionGridScreenProps {
   onSelect: (id: string) => void;
   cta: string;
   onContinue: () => void;
+  /** Question (then options) voiceover, played as the screen appears. */
+  voiceover?: readonly string[];
+  muted?: boolean;
   className?: string;
 }
 
@@ -36,8 +44,12 @@ export function QuestionGridScreen({
   onSelect,
   cta,
   onContinue,
+  voiceover,
+  muted = false,
   className,
 }: QuestionGridScreenProps) {
+  useVoiceover(voiceover, true, muted);
+
   return (
     <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
       <div className="flex shrink-0 items-start gap-3 pt-1">
@@ -53,7 +65,7 @@ export function QuestionGridScreen({
         </h1>
       </div>
 
-      <div className="mt-3 grid min-h-0 flex-1 grid-cols-2 content-start gap-3 overflow-y-auto pb-2 sm:mt-5">
+      <div className="mt-3 grid min-h-0 flex-1 grid-cols-2 content-start gap-x-4 gap-y-5 overflow-y-auto px-0.5 pb-3 sm:mt-5">
         {options.map((option) => {
           const selected = option.id === selectedId;
           const { icon: Icon, bg, fg } = ILLUSTRATIONS[option.illustration];
@@ -61,10 +73,11 @@ export function QuestionGridScreen({
             <button
               key={option.id}
               type="button"
-              onClick={() => onSelect(option.id)}
-              className={`flex flex-col items-center gap-2 rounded-xl border bg-white p-3 text-center transition-colors ${
-                selected ? "border-2 border-primary" : "border-black/10"
-              }`}
+              onClick={() => {
+                playClickSound();
+                onSelect(option.id);
+              }}
+              className={`flex flex-col items-center gap-2 p-3 text-center ${optionCardClass(selected)}`}
             >
               <span className={`flex h-[min(4rem,9dvh)] w-full items-center justify-center rounded-lg ${bg}`}>
                 <Icon className={`h-7 w-7 ${fg}`} />
@@ -78,7 +91,12 @@ export function QuestionGridScreen({
       </div>
 
       <div className="w-full shrink-0 pb-4 pt-2 sm:pb-6">
-        <Button3D onClick={onContinue} disabled={!selectedId} className="w-full">
+        <Button3D
+          onClick={onContinue}
+          onPress={playClickSound}
+          disabled={!selectedId}
+          className="w-full"
+        >
           {cta}
         </Button3D>
       </div>

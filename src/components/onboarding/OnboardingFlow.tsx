@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ONBOARDING_STEPS,
@@ -14,6 +14,7 @@ import { FoxMessageScreen } from "./FoxMessageScreen";
 import { NotificationPermissionScreen } from "./NotificationPermissionScreen";
 import { QuestionListScreen } from "./QuestionListScreen";
 import { QuestionGridScreen } from "./QuestionGridScreen";
+import { preloadClickSound, setClickSoundMuted } from "./clickSound";
 
 // 1-indexed position of each question-kind step among *only* the question
 // steps, keyed by step id — e.g. `{ career: 1, experience: 2, ... }`. Built
@@ -64,6 +65,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [index, setIndex] = useState(-2);
   const [answers, setAnswers] = useState<OnboardingAnswers>({});
   const [muted, setMuted] = useState(false);
+
+  // Option/CTA taps play a click (see clickSound) — warmed up once here so
+  // the first tap isn't late, and silenced by the header's sound toggle.
+  useEffect(preloadClickSound, []);
+  useEffect(() => setClickSoundMuted(muted), [muted]);
 
   const goNext = () => {
     if (index >= ONBOARDING_STEPS.length - 1) {
@@ -142,9 +148,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <FoxMessageScreen
                   className="flex-1"
                   heading={step.heading?.(answers)}
+                  headingPlacement={step.headingPlacement}
                   sparkle={step.sparkle}
                   bubble={step.bubble(answers)}
                   greet={step.greet}
+                  voiceover={step.voiceover}
+                  muted={muted}
                   cta={step.cta}
                   onContinue={goNext}
                 />
@@ -166,6 +175,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   options={step.options}
                   selectedId={answers[step.answerKey] ?? null}
                   onSelect={(id) => setAnswer(step.answerKey, id)}
+                  voiceover={step.voiceover}
+                  muted={muted}
                   cta={step.cta}
                   onContinue={goNext}
                 />
@@ -178,6 +189,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   options={step.options}
                   selectedId={answers[step.answerKey] ?? null}
                   onSelect={(id) => setAnswer(step.answerKey, id)}
+                  voiceover={step.voiceover}
+                  muted={muted}
                   cta={step.cta}
                   onContinue={goNext}
                 />

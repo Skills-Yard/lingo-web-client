@@ -16,7 +16,7 @@ const FILL = "var(--bubble-fill, #ffffff)";
 /** Deliberately tighter than the source asset's full pill (which needs a lot
  * of padding to keep text off its curved ends) — a modest rounded-rectangle
  * corner that stays the same however many lines the text wraps to. */
-const DEFAULT_RADIUS = 20;
+const DEFAULT_RADIUS = 10;
 
 // The tail is a fixed-size SVG, since — unlike the box — it shouldn't scale
 // with the text. Its y=0 sits on the *inner* edge of the box's border, so the

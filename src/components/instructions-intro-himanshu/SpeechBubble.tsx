@@ -72,10 +72,10 @@ interface SpeechBubbleProps {
  * doc above) rather than editing this constant. */
 const TYPE_SPEED_MS = 70;
 
-/** Corner radius (px) of the `sm`/`lg` bubbles — tighter than
- * `DialogueBubble`'s default, to suit their small text and tight padding. */
-const BUBBLE_RADIUS_SM = 12;
-const BUBBLE_RADIUS_LG = 14;
+/** Corner radius (px) of the `sm`/`lg` bubbles — every bubble in the app is
+ * 10px, matching `DialogueBubble`'s default. */
+const BUBBLE_RADIUS_SM = 10;
+const BUBBLE_RADIUS_LG = 10;
 
 /**
  * A small talk bubble that types `text` out character by character, cursor and

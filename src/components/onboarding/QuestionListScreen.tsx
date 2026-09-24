@@ -1,5 +1,10 @@
+"use client";
+
 import type { OnboardingListOption, TextSpan } from "@/lib/constants/onboarding";
 import { Button3D } from "@/components/ui/Button3D";
+import { playClickSound } from "./clickSound";
+import { useVoiceover } from "./useVoiceover";
+import { optionCardClass } from "./optionCard";
 import { OnboardingFox } from "./robu/OnboardingFox";
 
 interface QuestionListScreenProps {
@@ -9,6 +14,9 @@ interface QuestionListScreenProps {
   onSelect: (id: string) => void;
   cta: string;
   onContinue: () => void;
+  /** Question (then options) voiceover, played as the screen appears. */
+  voiceover?: readonly string[];
+  muted?: boolean;
   className?: string;
 }
 
@@ -24,8 +32,12 @@ export function QuestionListScreen({
   onSelect,
   cta,
   onContinue,
+  voiceover,
+  muted = false,
   className,
 }: QuestionListScreenProps) {
+  useVoiceover(voiceover, true, muted);
+
   return (
     <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
       <div className="flex shrink-0 items-center gap-1 pt-1">
@@ -45,7 +57,7 @@ export function QuestionListScreen({
           size), so all six shrink to fit a short phone instead of pushing
           the CTA off-screen. `overflow-y-auto` is only a last resort for
           e.g. a phone in landscape. */}
-      <div className="mt-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto pb-2 sm:mt-5 sm:gap-3">
+      <div className="mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-0.5 pb-3 sm:mt-5 sm:gap-[1.125rem]">
         {options.map((option) => {
           const selected = option.id === selectedId;
           const Icon = option.icon;
@@ -53,14 +65,15 @@ export function QuestionListScreen({
             <button
               key={option.id}
               type="button"
-              onClick={() => onSelect(option.id)}
-              className={`flex max-h-16 min-h-11 w-full flex-1 shrink-0 basis-0 items-center gap-3 rounded-xl border bg-white px-4 text-left transition-colors ${
-                selected ? "border-2 border-primary" : "border-black/10 border-b-4 border-b-[#E3D8B8]"
-              }`}
+              onClick={() => {
+                playClickSound();
+                onSelect(option.id);
+              }}
+              className={`flex max-h-16 min-h-11 w-full flex-1 shrink-0 basis-0 items-center gap-3 px-4 text-left ${optionCardClass(selected)}`}
             >
               <span
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
-                  selected ? "rounded-md bg-[#1A1C22] text-white" : "bg-black/5 text-[#1A1C22]"
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
+                  selected ? "bg-primary text-white" : "bg-[#D9F6EC] text-[#1A1C22]"
                 }`}
               >
                 <Icon className="h-4.5 w-4.5" />
@@ -74,7 +87,12 @@ export function QuestionListScreen({
       </div>
 
       <div className="w-full shrink-0 pb-4 pt-2 sm:pb-6">
-        <Button3D onClick={onContinue} disabled={!selectedId} className="w-full">
+        <Button3D
+          onClick={onContinue}
+          onPress={playClickSound}
+          disabled={!selectedId}
+          className="w-full"
+        >
           {cta}
         </Button3D>
       </div>

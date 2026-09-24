@@ -51,7 +51,7 @@ const EAR_MAX_MS = 12000;
 // onward (InstructionsIntroFlow only passes it true once past the cover
 // screen), so this never fights the "hi " intro clip on screen 1. Trailing
 // space is the file's own spelling.
-const MOUTH_ANIMATION = "speak ";
+const MOUTH_ANIMATION = "speak";
 const MOUTH_WATCHDOG_MS = 500;
 
 // How often the watchdog below checks that the base loop is still playing.

@@ -115,10 +115,14 @@ export type OnboardingStep =
       kind: "fox-message";
       id: string;
       /** Heading above the fox — when present, the bubble sits *below* the
-       * fox (screens "7 quick questions", "Building Career Path..."); when
-       * absent, the bubble sits *above* the fox instead (screens "Hey! I am
-       * foxy", "Perfect starting point"), matching the reference exactly. */
+       * fox ("Building Career Path..."); when absent, the bubble sits *above*
+       * the fox instead ("Hey! I am foxy", "Perfect starting point"),
+       * matching the reference exactly. See `headingPlacement` for the
+       * heading-below variant. */
       heading?: (answers: OnboardingAnswers) => TextSpan[];
+      /** "bottom" puts the heading *under* the fox instead, with the bubble
+       * back above it (the "Are you ready?" screen). Defaults to "top". */
+      headingPlacement?: "top" | "bottom";
       /** Small sparkle accent next to the heading — only the two headed
        * variants above have it in the reference. */
       sparkle?: boolean;
@@ -130,6 +134,9 @@ export type OnboardingStep =
       /** Fox waves hello once when the screen appears — only the "Hey! I am
        * foxy" greeting does. */
       greet?: boolean;
+      /** Voiceover clips (in `public/audios`) played back-to-back when the
+       * screen appears — see useVoiceover. */
+      voiceover?: readonly string[];
       cta: string;
     }
   | {
@@ -144,6 +151,9 @@ export type OnboardingStep =
       heading: (answers: OnboardingAnswers) => TextSpan[];
       options: OnboardingListOption[];
       answerKey: keyof OnboardingAnswers;
+      /** Voiceover clips (in `public/audios`) played back-to-back when the
+       * screen appears — see useVoiceover. */
+      voiceover?: readonly string[];
       cta: string;
     }
   | {
@@ -152,6 +162,9 @@ export type OnboardingStep =
       heading: (answers: OnboardingAnswers) => TextSpan[];
       options: OnboardingGridOption[];
       answerKey: keyof OnboardingAnswers;
+      /** Voiceover clips (in `public/audios`) played back-to-back when the
+       * screen appears — see useVoiceover. */
+      voiceover?: readonly string[];
       cta: string;
     };
 
@@ -163,15 +176,20 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "fox-message",
     id: "greeting",
-    bubble: () => [{ text: "Hey! I am foxy,\nyour coding buddy" }],
+    bubble: () => [{ text: "Hey! I am foxy,\nyour skills buddy" }],
     greet: true,
+    voiceover: ["/audios/text-1.mpeg"],
     cta: "Continue",
   },
   {
     kind: "fox-message",
     id: "ready-check",
-    heading: () => [{ text: "You need to answer just 7 quick questions!" }],
+    heading: () => [
+      { text: "Before your first lesson, a few quick questions to personalize your path." },
+    ],
+    headingPlacement: "bottom",
     sparkle: true,
+    voiceover: ["/audios/text-2-screen.mpeg"],
     bubble: () => [{ text: "Are you ready?" }],
     cta: "Yes!",
   },
@@ -185,6 +203,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: CAREER_OPTIONS,
     answerKey: "career",
+    voiceover: ["/audios/screen-1-question.mpeg", "/audios/screen-1-options.mpeg"],
     cta: "Continue",
   },
   {

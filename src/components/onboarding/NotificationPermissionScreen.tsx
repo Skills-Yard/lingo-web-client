@@ -2,6 +2,7 @@
 
 import { OnboardingFox } from "./robu/OnboardingFox";
 import { Button3D } from "@/components/ui/Button3D";
+import { playClickSound } from "./clickSound";
 
 interface NotificationPermissionScreenProps {
   heading: string;
@@ -62,7 +63,7 @@ export function NotificationPermissionScreen({
       </div>
 
       <div className="w-full max-w-xs shrink-0 pb-4 sm:max-w-sm sm:pb-6">
-        <Button3D onClick={handleContinue} className="w-full">
+        <Button3D onClick={handleContinue} onPress={playClickSound} className="w-full">
           {cta}
         </Button3D>
       </div>

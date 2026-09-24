@@ -75,6 +75,10 @@ interface Button3DProps
    * 5s. Defaults to on for the brand tone (the tone the reference itself
    * used) and off for the others, where it'd fight the tone's own color. */
   shine?: boolean;
+  /** Fires the instant the button is clicked — unlike `onClick`, which waits
+   * for the press animation (CLICK_DELAY_MS). For immediate feedback such as
+   * a click sound. */
+  onPress?: () => void;
   className?: string;
 }
 
@@ -94,6 +98,7 @@ export function Button3D({
   disabled,
   className,
   onClick,
+  onPress,
   ...rest
 }: Button3DProps) {
   const showShine = shine ?? tone === "brand";
@@ -110,6 +115,7 @@ export function Button3D({
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
     if (!onClick) return;
     if (pending.current) return;
+    onPress?.();
     pending.current = true;
     setPressed(true);
     timers.current.push(

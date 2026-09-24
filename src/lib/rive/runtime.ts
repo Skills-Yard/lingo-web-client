@@ -51,8 +51,12 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
  * `-4`: renames the default state machine "State Machine 1" -> "Idle state"
  * and adds "laptop idle" / "tail idle" clips; "splash screen" and every clip
  * name the components play are unchanged from `-3`.
+ *
+ * `-5`: renames the talking clip "speak " -> "speak" (no trailing space) and
+ * makes it the "Idle state" state machine's mouth-layer entry state; every
+ * other clip/state-machine name is unchanged from `-4`.
  */
-export const ROBU_RIVE_SRC = "/animations/foxi-4.riv";
+export const ROBU_RIVE_SRC = "/animations/foxi-5.riv";
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in
