@@ -30,6 +30,22 @@ const CHAMFER =
 // than this and the label starts reading as skewed rather than tilted.
 const TILT_TRANSFORM = "perspective(300px) rotateX(25deg)";
 
+// The brand tone is drawn from two pre-rendered images instead of CSS: the
+// face (`top-part.png`, already drawn in perspective) sitting on the slab
+// (`bottom-part.png`). Measured in the images' own pixels — both are ~1076px
+// wide. The face is solid down to its row 160, and the slab's black top
+// outline starts at its own row 19, so the slab sits at row 142 of the face:
+// that outline lands just under the face's bottom edge with no see-through
+// gap between them (at 145 a ~2px transparent row showed as a white line).
+// Together they stack into one shape 199px tall.
+const IMG_FACE = "/images/polygon-btn/top-part.png";
+const IMG_SLAB = "/images/polygon-btn/bottom-part.png";
+const IMG_W = 1076;
+const IMG_H = 199;
+const FACE_H = 162;
+const SLAB_TOP = 142;
+const SLAB_H = 57;
+
 interface Button3DProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
   children: ReactNode;
@@ -60,6 +76,69 @@ export function Button3D({
 }: Button3DProps) {
   const showShine = shine ?? tone === "brand";
   const { face, depth, text } = TONE_STYLES[tone];
+
+  if (tone === "brand") {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        style={{ aspectRatio: `${IMG_W} / ${IMG_H}` }}
+        className={`group relative block border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+          disabled ? "cursor-not-allowed opacity-60 grayscale" : "cursor-pointer"
+        } ${className ?? ""}`}
+        {...rest}
+      >
+        {/* Slab — fixed in place; the face drops onto it when pressed. */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={IMG_SLAB}
+          alt=""
+          aria-hidden
+          draggable={false}
+          className="pointer-events-none absolute left-0 w-full select-none"
+          style={{ top: `${(SLAB_TOP / IMG_H) * 100}%`, height: `${(SLAB_H / IMG_H) * 100}%` }}
+        />
+        {/* Face — the pressable layer, carrying the label and shine. */}
+        <span
+          className={`absolute inset-x-0 top-0 flex items-center justify-center gap-2 text-center text-xl font-medium text-primary-foreground transition-transform duration-100 ease-out ${
+            // Pressed, the face drops ~20% of its own height — about the
+            // slab's visible thickness — so it lands down on the slab.
+            disabled ? "" : "group-active:translate-y-[20%]"
+          }`}
+          style={{ height: `${(FACE_H / IMG_H) * 100}%` }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={IMG_FACE}
+            alt=""
+            aria-hidden
+            draggable={false}
+            className="pointer-events-none absolute inset-0 h-full w-full select-none"
+          />
+          {showShine && !disabled && (
+            // Masked by the face image itself, so the shine never spills
+            // past the face's angled edges.
+            <span
+              aria-hidden
+              className="pointer-events-none absolute inset-0 overflow-hidden"
+              style={{
+                maskImage: `url(${IMG_FACE})`,
+                maskSize: "100% 100%",
+                WebkitMaskImage: `url(${IMG_FACE})`,
+                WebkitMaskSize: "100% 100%",
+              }}
+            >
+              <span className="animate-button-shine absolute inset-y-0 left-0 w-1/4">
+                <span className="absolute inset-y-0 left-[10%] w-[45%] -skew-x-12 bg-[#FFFBD0]/90" />
+                <span className="absolute inset-y-0 left-[65%] w-[30%] -skew-x-12 bg-[#FFFBD0]/90" />
+              </span>
+            </span>
+          )}
+          <span className="relative flex items-center gap-2">{children}</span>
+        </span>
+      </button>
+    );
+  }
 
   return (
     <button
