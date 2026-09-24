@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
+import { RiveButtonFace, RIVE_BUTTON_H, RIVE_BUTTON_W } from "./RiveButtonFace";
 
 // A click holds the button pressed for PRESS_HOLD_MS, releases it, and only
 // then (at CLICK_DELAY_MS) runs the caller's `onClick` — otherwise a click
@@ -38,34 +39,20 @@ const CHAMFER =
 // than this and the label starts reading as skewed rather than tilted.
 const TILT_TRANSFORM = "perspective(300px) rotateX(25deg)";
 
-// The brand tone is drawn from two pre-rendered images in
-// public/images/polygon-btn instead of CSS: `default-btn.png` at rest, and
-// `btn-pressed.png` while pressed (the same face on a much thinner slab, in
-// the same slab colour). Measured in default-btn.png's own pixels (1099x224):
-// btn-pressed.png is 1101x197 at the same scale, drawn 1px further right (so
-// it's shifted 1px left to line up) and sits 27px lower so the two share the
-// same bottom edge — its face lands lower, which is what reads as pushed in.
-const IMG_REST = "/images/polygon-btn/default-btn.png";
-const IMG_PRESSED = "/images/polygon-btn/btn-pressed.png";
-const IMG_W = 1099;
-const IMG_H = 224;
-const PRESSED_X = -1;
-const PRESSED_W = 1101;
-const PRESSED_H = 197;
-const PRESSED_Y = 27;
-/** The green face's height at rest — the label is centered on it. */
-const FACE_H = 162;
+// The brand tone is drawn by Rive (`btn-click.riv`, see RiveButtonFace):
+// plain-text children become the file's own label via its `buttonName` run,
+// so every screen's CTA text shows up on the artwork itself.
 
-// Pressed = `:active` (finger/mouse held down) *or* `data-pressed` (the
-// click-hold below). Written out in full so Tailwind can see them.
-/** Resting image: hidden while pressed. */
-const HIDE_WHILE_DOWN = "group-active:invisible group-data-pressed:invisible";
-/** Pressed image: shown only while pressed. */
-const SHOW_WHILE_DOWN =
-  "invisible group-active:visible group-data-pressed:visible";
-/** The label drops with the face: 27px of its 162px box ≈ 16.7%. */
-const LABEL_DOWN =
-  "group-active:translate-y-[16.7%] group-data-pressed:translate-y-[16.7%]";
+/** Flattens plain-text children ("Continue", `{cta}`, ["Step ", 2]) into
+ * one string, or null when they include anything richer (an icon etc.). */
+function plainText(children: ReactNode): string | null {
+  if (typeof children === "string" || typeof children === "number") return String(children);
+  if (Array.isArray(children)) {
+    const parts = children.map(plainText);
+    return parts.every((part) => part !== null) ? parts.join("") : null;
+  }
+  return null;
+}
 
 interface Button3DProps
   extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, "className"> {
@@ -108,6 +95,8 @@ export function Button3D({
   // for PRESS_HOLD_MS after a click; `pending` swallows repeat clicks while
   // the delayed `onClick` is still waiting to run.
   const [pressed, setPressed] = useState(false);
+  // Brand tone only: each click bumps this to replay Rive's press clip.
+  const [pressCount, setPressCount] = useState(0);
   const pending = useRef(false);
   const timers = useRef<number[]>([]);
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
@@ -118,6 +107,7 @@ export function Button3D({
     onPress?.();
     pending.current = true;
     setPressed(true);
+    setPressCount((n) => n + 1);
     timers.current.push(
       window.setTimeout(() => setPressed(false), PRESS_HOLD_MS),
       window.setTimeout(() => {
@@ -128,79 +118,34 @@ export function Button3D({
   };
 
   if (tone === "brand") {
+    const label = plainText(children);
     return (
       <button
         type="button"
         disabled={disabled}
-        style={{ aspectRatio: `${IMG_W} / ${IMG_H}` }}
-        className={`group relative block border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
+        style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}
+        className={`relative block border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
           disabled ? "cursor-not-allowed opacity-60 grayscale" : "cursor-pointer"
         } ${className ?? ""}`}
         {...rest}
         onClick={handleClick}
-        data-pressed={pressed || undefined}
       >
-        {/* Resting image — swapped for the pressed one while pressed. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={IMG_REST}
-          alt=""
-          aria-hidden
-          draggable={false}
-          className={`pointer-events-none absolute inset-0 h-full w-full select-none ${
-            disabled ? "" : HIDE_WHILE_DOWN
-          }`}
+        <RiveButtonFace
+          label={label ?? ""}
+          pressCount={pressCount}
+          shine={showShine && !disabled}
         />
-        {!disabled && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={IMG_PRESSED}
-            alt=""
-            aria-hidden
-            draggable={false}
-            className={`pointer-events-none absolute select-none ${SHOW_WHILE_DOWN}`}
-            style={{
-              left: `${(PRESSED_X / IMG_W) * 100}%`,
-              top: `${(PRESSED_Y / IMG_H) * 100}%`,
-              width: `${(PRESSED_W / IMG_W) * 100}%`,
-              height: `${(PRESSED_H / IMG_H) * 100}%`,
-            }}
-          />
+        {label === null ? (
+          // Richer content (e.g. an icon + text) can't go into the Rive text
+          // run, so it's overlaid in HTML instead.
+          <span className="absolute inset-0 flex items-center justify-center gap-2 text-center text-xl font-medium text-primary-foreground">
+            <span className="relative flex items-center gap-2">{children}</span>
+          </span>
+        ) : (
+          // The visible label is drawn on the canvas; keep it readable to
+          // screen readers too.
+          <span className="sr-only">{label}</span>
         )}
-        {/* Label and shine, on the green face (not the slab below it); the
-            label drops with the face when pressed. */}
-        <span
-          className={`absolute inset-x-0 top-0 flex items-center justify-center gap-2 text-center text-xl font-medium text-primary-foreground ${
-            disabled ? "" : LABEL_DOWN
-          }`}
-          style={{ height: `${(FACE_H / IMG_H) * 100}%` }}
-        >
-          {showShine && !disabled && (
-            // Masked by the resting image itself (sized to the full image, so
-            // its face lines up with this face-only box), so the shine never
-            // spills past the face's angled edges. Hidden while pressed.
-            <span
-              aria-hidden
-              className={`pointer-events-none absolute inset-0 overflow-hidden ${HIDE_WHILE_DOWN}`}
-              style={{
-                maskImage: `url(${IMG_REST})`,
-                maskSize: `100% ${(IMG_H / FACE_H) * 100}%`,
-                maskPosition: "top",
-                maskRepeat: "no-repeat",
-                WebkitMaskImage: `url(${IMG_REST})`,
-                WebkitMaskSize: `100% ${(IMG_H / FACE_H) * 100}%`,
-                WebkitMaskPosition: "top",
-                WebkitMaskRepeat: "no-repeat",
-              }}
-            >
-              <span className="animate-button-shine absolute inset-y-0 left-0 w-1/4">
-                <span className="absolute inset-y-0 left-[10%] w-[45%] -skew-x-12 bg-[#FFFBD0]/90" />
-                <span className="absolute inset-y-0 left-[65%] w-[30%] -skew-x-12 bg-[#FFFBD0]/90" />
-              </span>
-            </span>
-          )}
-          <span className="relative flex items-center gap-2">{children}</span>
-        </span>
       </button>
     );
   }
@@ -238,8 +183,8 @@ export function Button3D({
         {showShine && !disabled && (
           <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
             <span className="animate-button-shine absolute inset-y-0 left-0 w-1/4">
-              <span className="absolute inset-y-0 left-[10%] w-[45%] -skew-x-12 bg-[#FFFBD0]/90" />
-              <span className="absolute inset-y-0 left-[65%] w-[30%] -skew-x-12 bg-[#FFFBD0]/90" />
+              <span className="absolute inset-y-0 left-[10%] w-[45%] -skew-x-12 bg-white/90" />
+              <span className="absolute inset-y-0 left-[65%] w-[30%] -skew-x-12 bg-white/90" />
             </span>
           </span>
         )}

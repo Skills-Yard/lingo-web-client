@@ -1,19 +1,17 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import type { OnboardingListOption, TextSpan } from "@/lib/constants/onboarding";
-import { Button3D } from "@/components/ui/Button3D";
 import { playClickSound } from "./clickSound";
 import { useVoiceover } from "./useVoiceover";
 import { optionCardClass } from "./optionCard";
-import { OnboardingFox } from "./robu/OnboardingFox";
+import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
 
 interface QuestionListScreenProps {
   heading: TextSpan[];
   options: OnboardingListOption[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  cta: string;
-  onContinue: () => void;
   /** Question (then options) voiceover, played as the screen appears. */
   voiceover?: readonly string[];
   muted?: boolean;
@@ -30,36 +28,39 @@ export function QuestionListScreen({
   options,
   selectedId,
   onSelect,
-  cta,
-  onContinue,
   voiceover,
   muted = false,
   className,
 }: QuestionListScreenProps) {
-  useVoiceover(voiceover, true, muted);
+  // The fox beside the question talks exactly while its voice plays; the
+  // question fills in as it's read, then each option lights up (selected look
+  // + slight scale-up, never actually selected) as it's read out.
+  const voice = useVoiceover(voiceover, true, muted);
+  const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
+  const spokenOption = spokenOptionIndex(voice, options.length);
+
+  // If the options scroll (short phones), keep the one being read in view.
+  const optionsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (spokenOption < 0) return;
+    optionsRef.current?.children[spokenOption]?.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [spokenOption]);
 
   return (
     <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
-      <div className="flex shrink-0 items-center gap-1 pt-1">
-        <div aria-hidden className="relative shrink-0 mr-2">
-          <img src="/images/quesfoxi.png" alt="" className="h-12 w-12 object-contain sm:h-16 sm:w-16" />
-        </div>
-        <h1 className="text-lg font-semibold leading-snug text-[#1A1C22] sm:text-xl">
-          {heading.map((span, i) => (
-            <span key={i} className={span.highlight ? "text-primary" : undefined}>
-              {span.text}
-            </span>
-          ))}
-        </h1>
-      </div>
+      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} />
 
-      {/* Options share the leftover height (each capped at its natural
-          size), so all six shrink to fit a short phone instead of pushing
-          the CTA off-screen. `overflow-y-auto` is only a last resort for
-          e.g. a phone in landscape. */}
-      <div className="mt-3 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-0.5 pb-3 sm:mt-5 sm:gap-[1.125rem]">
-        {options.map((option) => {
+      {/* Options keep their natural height; if they don't all fit, only
+          this section scrolls (scrollbar hidden) — the CTA below is
+          `shrink-0`, so it always stays fully on screen. */}
+      <div ref={optionsRef} className="scrollbar-none mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto -mx-2.5 px-3 pt-1.5 pb-3 sm:mt-5 sm:gap-[1.125rem]">
+        {options.map((option, i) => {
           const selected = option.id === selectedId;
+          const spotlight = !selected && i === spokenOption;
+          const lit = selected || spotlight;
           const Icon = option.icon;
           return (
             <button
@@ -69,11 +70,11 @@ export function QuestionListScreen({
                 playClickSound();
                 onSelect(option.id);
               }}
-              className={`flex max-h-16 min-h-11 w-full flex-1 shrink-0 basis-0 items-center gap-3 px-4 text-left ${optionCardClass(selected)}`}
+              className={`flex h-14 w-full shrink-0 items-center gap-3 px-4 text-left ${optionCardClass(selected, spotlight)}`}
             >
               <span
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
-                  selected ? "bg-primary text-white" : "bg-[#D9F6EC] text-[#1A1C22]"
+                  lit ? "bg-primary text-white" : "bg-[#D9F6EC] text-[#1A1C22]"
                 }`}
               >
                 <Icon className="h-4.5 w-4.5" />
@@ -86,16 +87,6 @@ export function QuestionListScreen({
         })}
       </div>
 
-      <div className="w-full shrink-0 pb-4 pt-2 sm:pb-6">
-        <Button3D
-          onClick={onContinue}
-          onPress={playClickSound}
-          disabled={!selectedId}
-          className="w-full"
-        >
-          {cta}
-        </Button3D>
-      </div>
     </div>
   );
 }

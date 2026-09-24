@@ -1,8 +1,9 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { BookOpen, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption, TextSpan } from "@/lib/constants/onboarding";
-import { Button3D } from "@/components/ui/Button3D";
+import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
 import { playClickSound } from "./clickSound";
 import { useVoiceover } from "./useVoiceover";
 import { optionCardClass } from "./optionCard";
@@ -24,8 +25,6 @@ interface QuestionGridScreenProps {
   options: OnboardingGridOption[];
   selectedId: string | null;
   onSelect: (id: string) => void;
-  cta: string;
-  onContinue: () => void;
   /** Question (then options) voiceover, played as the screen appears. */
   voiceover?: readonly string[];
   muted?: boolean;
@@ -42,32 +41,35 @@ export function QuestionGridScreen({
   options,
   selectedId,
   onSelect,
-  cta,
-  onContinue,
   voiceover,
   muted = false,
   className,
 }: QuestionGridScreenProps) {
-  useVoiceover(voiceover, true, muted);
+  // The fox beside the question talks exactly while its voice plays; the
+  // question fills in as it's read, then each option lights up (selected look
+  // + slight scale-up, never actually selected) as it's read out.
+  const voice = useVoiceover(voiceover, true, muted);
+  const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
+  const spokenOption = spokenOptionIndex(voice, options.length);
+
+  // If the options scroll (short phones), keep the one being read in view.
+  const optionsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (spokenOption < 0) return;
+    optionsRef.current?.children[spokenOption]?.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [spokenOption]);
 
   return (
     <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
-      <div className="flex shrink-0 items-start gap-3 pt-1">
-        <div aria-hidden className="relative shrink-0">
-          <img src="/images/quesfoxi.png" alt="" className="h-12 w-12 object-contain sm:h-16 sm:w-16" />
-        </div>
-        <h1 className="pt-1 text-lg font-semibold leading-snug text-[#1A1C22] sm:text-xl">
-          {heading.map((span, i) => (
-            <span key={i} className={span.highlight ? "text-primary" : undefined}>
-              {span.text}
-            </span>
-          ))}
-        </h1>
-      </div>
+      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} />
 
-      <div className="mt-3 grid min-h-0 flex-1 grid-cols-2 content-start gap-x-4 gap-y-5 overflow-y-auto px-0.5 pb-3 sm:mt-5">
-        {options.map((option) => {
+      <div ref={optionsRef} className="scrollbar-none mt-4 grid min-h-0 flex-1 grid-cols-2 content-start gap-x-4 gap-y-5 overflow-y-auto -mx-2.5 px-3 pt-1.5 pb-3 sm:mt-5">
+        {options.map((option, i) => {
           const selected = option.id === selectedId;
+          const spotlight = !selected && i === spokenOption;
           const { icon: Icon, bg, fg } = ILLUSTRATIONS[option.illustration];
           return (
             <button
@@ -77,9 +79,9 @@ export function QuestionGridScreen({
                 playClickSound();
                 onSelect(option.id);
               }}
-              className={`flex flex-col items-center gap-2 p-3 text-center ${optionCardClass(selected)}`}
+              className={`flex flex-col items-center gap-2 p-3 text-center ${optionCardClass(selected, spotlight)}`}
             >
-              <span className={`flex h-[min(4rem,9dvh)] w-full items-center justify-center rounded-lg ${bg}`}>
+              <span className={`flex h-16 w-full items-center justify-center rounded-lg ${bg}`}>
                 <Icon className={`h-7 w-7 ${fg}`} />
               </span>
               <span className="text-xs font-medium text-[#1A1C22] sm:text-sm">
@@ -90,16 +92,6 @@ export function QuestionGridScreen({
         })}
       </div>
 
-      <div className="w-full shrink-0 pb-4 pt-2 sm:pb-6">
-        <Button3D
-          onClick={onContinue}
-          onPress={playClickSound}
-          disabled={!selectedId}
-          className="w-full"
-        >
-          {cta}
-        </Button3D>
-      </div>
     </div>
   );
 }

@@ -32,6 +32,8 @@ export interface OnboardingAnswers {
   experience?: string;
   pythonLevel?: string;
   motivation?: string;
+  timeCommitment?: string;
+  learningTime?: string;
 }
 
 export interface OnboardingListOption {
@@ -279,8 +281,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: " each day?" },
     ],
     options: TIME_COMMITMENT_OPTIONS,
-    // Add timeCommitment to OnboardingAnswers in a real project, but we can reuse a key if needed or assume it's extensible
-    answerKey: "motivation", 
+    answerKey: "timeCommitment",
     cta: "Continue",
   },
   {
@@ -294,7 +295,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "?" },
     ],
     options: LEARNING_TIME_OPTIONS,
-    answerKey: "motivation",
+    answerKey: "learningTime",
     cta: "Continue",
   },
   {

@@ -1,10 +1,10 @@
 import type { ReactNode } from "react";
 
-// Measured off `public/images/dialogue-box.png`, the design asset this bubble
-// reproduces: a 3px light-green outline, a flat dark-green shadow offset 3px
-// straight down, and a V-notch tail. Kept as constants so the box, the tail
-// and the shadow can't drift apart from each other.
-const STROKE_COLOR = "#87e494";
+// Based on `public/images/dialogue-box.png`, the design asset this bubble
+// reproduces: a 3px green (#32D192) outline, a flat dark-green (#005731)
+// shadow offset 3px straight down, and a V-notch tail. Kept as constants so
+// the box, the tail and the shadow can't drift apart from each other.
+const STROKE_COLOR = "#32D192";
 const SHADOW_COLOR = "#005731";
 const STROKE_WIDTH = 3;
 const SHADOW_OFFSET = 3;

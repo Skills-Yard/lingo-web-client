@@ -1,13 +1,9 @@
 "use client";
 
 import { OnboardingFox } from "./robu/OnboardingFox";
-import { Button3D } from "@/components/ui/Button3D";
-import { playClickSound } from "./clickSound";
 
 interface NotificationPermissionScreenProps {
   heading: string;
-  cta: string;
-  onContinue: () => void;
   className?: string;
 }
 
@@ -24,17 +20,8 @@ interface NotificationPermissionScreenProps {
  */
 export function NotificationPermissionScreen({
   heading,
-  cta,
-  onContinue,
   className,
 }: NotificationPermissionScreenProps) {
-  const handleContinue = () => {
-    if (typeof window !== "undefined" && "Notification" in window) {
-      Notification.requestPermission().catch(() => {});
-    }
-    onContinue();
-  };
-
   return (
     <div
       className={`flex flex-col items-center bg-[#EDEDED] px-6 ${className ?? ""}`}
@@ -60,12 +47,6 @@ export function NotificationPermissionScreen({
             <span className="py-2.5 font-medium text-primary">Allow</span>
           </div>
         </div>
-      </div>
-
-      <div className="w-full max-w-xs shrink-0 pb-4 sm:max-w-sm sm:pb-6">
-        <Button3D onClick={handleContinue} onPress={playClickSound} className="w-full">
-          {cta}
-        </Button3D>
       </div>
     </div>
   );

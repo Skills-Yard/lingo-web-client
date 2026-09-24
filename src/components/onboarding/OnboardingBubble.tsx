@@ -6,25 +6,67 @@ import type { TextSpan } from "@/lib/constants/onboarding";
 import { DialogueBubble } from "@/components/ui/DialogueBubble";
 
 // The bubble pops in first — delayed so the screen's own crossfade (see
-// OnboardingFlow's SCREEN_TRANSITION) is mostly done — and the text only
-// starts typing once that entrance has finished.
+// OnboardingFlow's SCREEN_TRANSITION) is mostly done — and the text and voice
+// only start once that entrance has finished (see `onEntered`).
 const BUBBLE_IN_DELAY_S = 0.25;
 const BUBBLE_IN = { type: "spring", stiffness: 420, damping: 26 } as const;
-/** Milliseconds per character of the typewriter. */
-const TYPE_SPEED_MS = 30;
+
+export function spansLength(spans: TextSpan[]): number {
+  return spans.reduce((n, span) => n + span.text.length, 0);
+}
+
+/**
+ * Typewriter text that never reflows: the full text is laid out from the
+ * first frame, with the first `shown` characters visible and the rest just
+ * transparent — so its box is already at its final size and every line
+ * already wraps where it will end up. Typing only reveals letters in place.
+ * The caret sits at the boundary while typing, as a zero-width inline so it
+ * never affects wrapping either.
+ */
+export function TypedText({ spans, shown }: { spans: TextSpan[]; shown: number }) {
+  const total = spansLength(spans);
+  const starts = spans.map((_, i) => spansLength(spans.slice(0, i)));
+  return (
+    <>
+      {spans.map((span, i) => {
+        const start = starts[i];
+        const end = start + span.text.length;
+        const cut = Math.max(0, Math.min(span.text.length, shown - start));
+        const caretHere = shown > 0 && shown < total && shown >= start && shown < end;
+        return (
+          <span key={i} className={span.highlight ? "text-primary" : undefined}>
+            {span.text.slice(0, cut)}
+            {caretHere && <Caret />}
+            {cut < span.text.length && (
+              <span className="text-transparent">{span.text.slice(cut)}</span>
+            )}
+          </span>
+        );
+      })}
+    </>
+  );
+}
+
+function Caret() {
+  return (
+    <span aria-hidden className="relative">
+      <span className="absolute left-0 top-1/2 h-[1em] w-0.5 -translate-y-1/2 animate-pulse bg-primary" />
+    </span>
+  );
+}
 
 interface OnboardingBubbleProps {
   spans: TextSpan[];
+  /** How many characters are typed so far — driven by the screen (see
+   * FoxMessageScreen), which paces it to the voiceover when there is one. */
+  shown: number;
   /** "down" (tail points down, into a fox below the bubble) or "up" (tail
    * points up, into a fox above the bubble) — matches whichever of the two
    * bubble/fox arrangements the reference design uses for a given screen. */
   tail: "down" | "up";
   className?: string;
-  /** Fires `true` when the text starts typing and `false` once it's done —
-   * lets the screen move the fox's mouth for exactly that span. */
-  onTypingChange?: (typing: boolean) => void;
   /** Fires once the bubble has finished popping in (immediately, with
-   * reduced motion) — the moment its text starts typing. */
+   * reduced motion) — the moment its text and voice start. */
   onEntered?: () => void;
 }
 
@@ -35,70 +77,25 @@ interface OnboardingBubbleProps {
  * machinery (RobuTalkingContext) that doesn't apply here (no persistent
  * gliding mascot in this flow, just a per-screen fox).
  *
- * The bubble springs in from its tail, then types its text out. The full
- * text is laid out from the first frame with the not-yet-typed characters
- * just transparent, so the bubble is already at its final size and every
- * line already wraps where it will end up — typing only reveals letters in
- * place, never resizes the bubble or reflows the text.
+ * The bubble springs in from its tail, then shows its text typed out to
+ * `shown` characters (see TypedText — the bubble is at its final size
+ * throughout).
  *
  * The shape itself (outline, flat shadow, tail) is the shared
  * `DialogueBubble`; this just gives it the onboarding flow's text styling and
  * pads the wrapper out to the tail's tip, so callers spacing this against a
  * fox (e.g. `gap-4`) measure to the tip rather than to the box.
  */
-export function OnboardingBubble({
-  spans,
-  tail,
-  className,
-  onTypingChange,
-  onEntered,
-}: OnboardingBubbleProps) {
+export function OnboardingBubble({ spans, shown, tail, className, onEntered }: OnboardingBubbleProps) {
   const reduceMotion = useReducedMotion();
-  const total = spans.reduce((n, span) => n + span.text.length, 0);
   const [entered, setEntered] = useState(false);
-  const [typed, setTyped] = useState(0);
-  const shown = reduceMotion ? total : typed;
-
-  useEffect(() => {
-    if (!entered || reduceMotion || typed >= total) return;
-    const timer = window.setTimeout(() => setTyped(typed + 1), TYPE_SPEED_MS);
-    return () => window.clearTimeout(timer);
-  }, [entered, reduceMotion, typed, total]);
 
   useEffect(() => {
     if (entered || reduceMotion) onEntered?.();
-    // Same reasoning as onTypingChange below.
+    // onEntered excluded — callers pass a fresh inline function each render;
+    // this should only fire when the bubble's own state flips.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entered, reduceMotion]);
-
-  const typing = entered && !reduceMotion && typed < total;
-  useEffect(() => {
-    onTypingChange?.(typing);
-    // onTypingChange excluded — callers pass a fresh inline function each
-    // render; this should only fire when `typing` itself flips.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [typing]);
-
-  // Splits every span at the typed/untyped boundary; the caret goes right at
-  // that boundary as a zero-width inline, so it never affects wrapping.
-  const starts = spans.map((_, i) =>
-    spans.slice(0, i).reduce((n, span) => n + span.text.length, 0),
-  );
-  const content = spans.map((span, i) => {
-    const start = starts[i];
-    const end = start + span.text.length;
-    const cut = Math.max(0, Math.min(span.text.length, shown - start));
-    const caretHere = shown < total && shown >= start && shown < end;
-    return (
-      <span key={i} className={span.highlight ? "text-primary" : undefined}>
-        {span.text.slice(0, cut)}
-        {caretHere && <Caret />}
-        {cut < span.text.length && (
-          <span className="text-transparent">{span.text.slice(cut)}</span>
-        )}
-      </span>
-    );
-  });
 
   return (
     <motion.div
@@ -117,16 +114,8 @@ export function OnboardingBubble({
         className={`max-w-xs sm:max-w-sm ${tail === "up" ? "pt-4 pb-0.75" : "pb-4"}`}
         contentClassName="whitespace-pre-line text-balance px-3 py-3 text-center text-base font-medium leading-tight text-black sm:px-6 sm:py-3.5"
       >
-        {content}
+        <TypedText spans={spans} shown={shown} />
       </DialogueBubble>
     </motion.div>
-  );
-}
-
-function Caret() {
-  return (
-    <span aria-hidden className="relative">
-      <span className="absolute left-0 top-1/2 h-[1em] w-0.5 -translate-y-1/2 animate-pulse bg-primary" />
-    </span>
   );
 }

@@ -2,8 +2,6 @@
 
 import { Sekuya } from "next/font/google";
 import { OnboardingFox } from "./robu/OnboardingFox";
-import { Button3D } from "@/components/ui/Button3D";
-import { playClickSound } from "./clickSound";
 
 // Sekuya only ships one weight (400) — still passed explicitly since
 // next/font requires it for any non-variable Google font.
@@ -11,7 +9,6 @@ const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
 
 interface PreLoginScreenProps {
   className?: string;
-  onGetStarted: () => void;
 }
 
 /**
@@ -21,7 +18,7 @@ interface PreLoginScreenProps {
  * yet — there's no login/signup route in this app — so it's inert for now;
  * only "Get Started" is wired up, advancing into the question flow.
  */
-export function PreLoginScreen({ className, onGetStarted }: PreLoginScreenProps) {
+export function PreLoginScreen({ className }: PreLoginScreenProps) {
   return (
     <div className={`flex flex-col items-center bg-white ${className ?? ""}`}>
       <h1
@@ -32,19 +29,6 @@ export function PreLoginScreen({ className, onGetStarted }: PreLoginScreenProps)
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
         <OnboardingFox className="aspect-square h-[min(16rem,34dvh)]" />
-      </div>
-
-      <div className="w-full max-w-xs px-4 pb-4 sm:max-w-sm sm:pb-6">
-        <Button3D onClick={onGetStarted} onPress={playClickSound} className="w-full">
-          Get Started
-        </Button3D>
-
-        <p className="mt-3 text-center text-base text-[#666666]">
-          Already have an account?{" "}
-          <button type="button" className="font-medium text-foreground" aria-disabled>
-            Log in
-          </button>
-        </p>
       </div>
     </div>
   );

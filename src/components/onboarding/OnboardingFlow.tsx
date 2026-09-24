@@ -14,7 +14,8 @@ import { FoxMessageScreen } from "./FoxMessageScreen";
 import { NotificationPermissionScreen } from "./NotificationPermissionScreen";
 import { QuestionListScreen } from "./QuestionListScreen";
 import { QuestionGridScreen } from "./QuestionGridScreen";
-import { preloadClickSound, setClickSoundMuted } from "./clickSound";
+import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
+import { Button3D } from "@/components/ui/Button3D";
 
 // 1-indexed position of each question-kind step among *only* the question
 // steps, keyed by step id — e.g. `{ career: 1, experience: 2, ... }`. Built
@@ -71,16 +72,26 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   useEffect(preloadClickSound, []);
   useEffect(() => setClickSoundMuted(muted), [muted]);
 
+  // Every question opens with nothing selected — including when coming back
+  // to it — so its answer is cleared on the way in.
+  const goTo = (next: number) => {
+    const target = ONBOARDING_STEPS[next];
+    if (target && (target.kind === "question-list" || target.kind === "question-grid")) {
+      setAnswers((prev) => ({ ...prev, [target.answerKey]: undefined }));
+    }
+    setIndex(next);
+  };
+
   const goNext = () => {
     if (index >= ONBOARDING_STEPS.length - 1) {
       onComplete?.();
       return;
     }
-    setIndex((i) => i + 1);
+    goTo(index + 1);
   };
 
   const goBack = () => {
-    setIndex((i) => Math.max(-1, i - 1));
+    goTo(Math.max(-1, index - 1));
   };
 
   const setAnswer = (key: keyof OnboardingAnswers, value: string) =>
@@ -92,13 +103,149 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     ? { step: questionNumber, total: ONBOARDING_QUESTION_COUNT }
     : undefined;
 
+  // The one CTA for the whole flow (see the footer below): its label,
+  // enabled state and action follow whichever screen is current.
+  const ctaLabel = step ? step.cta : "Get Started";
+  const ctaDisabled =
+    index < -1 ||
+    ((step?.kind === "question-list" || step?.kind === "question-grid") &&
+      !answers[step.answerKey]);
+  const handleCta = () => {
+    if (step?.kind === "notification-permission" && "Notification" in window) {
+      Notification.requestPermission().catch(() => {});
+    }
+    goNext();
+  };
+
   // `h-dvh`, not `h-screen`: on mobile, 100vh is the height with the
   // browser's address bar hidden, so whenever the bar is showing the flow ran
   // taller than the visible area and the page scrolled. `dvh` tracks the
   // actually-visible height, so every screen fits on one screen.
   return (
-    <main className="onboarding-light relative h-dvh w-full overflow-hidden bg-white">
-      <AnimatePresence mode="sync">
+    <main className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white">
+      {/* Screens crossfade in the space above the footer. */}
+      <div className="relative min-h-0 flex-1">
+        <AnimatePresence mode="sync">
+          {index === -1 && (
+            <motion.div
+              key="prelogin"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={SCREEN_TRANSITION}
+              className="absolute inset-0 flex flex-col bg-white"
+            >
+              <PreLoginScreen className="flex flex-1 flex-col" />
+            </motion.div>
+          )}
+
+          {step && (
+            <motion.div
+              key={`step-${step.id}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={SCREEN_TRANSITION}
+              className="absolute inset-0 flex flex-col bg-white"
+            >
+              {/* Phone-width column, centered on tablets/desktops so options
+                  don't stretch across a wide screen. */}
+              <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col">
+                <OnboardingHeader
+                  onBack={goBack}
+                  progress={progress}
+                  muted={muted}
+                  onToggleMuted={() => setMuted((m) => !m)}
+                />
+
+                {step.kind === "fox-message" && (
+                  <FoxMessageScreen
+                    className="flex-1"
+                    heading={step.heading?.(answers)}
+                    headingPlacement={step.headingPlacement}
+                    sparkle={step.sparkle}
+                    bubble={step.bubble(answers)}
+                    greet={step.greet}
+                    voiceover={step.voiceover}
+                    muted={muted}
+                  />
+                )}
+
+                {step.kind === "notification-permission" && (
+                  <NotificationPermissionScreen className="flex-1" heading={step.heading} />
+                )}
+
+                {step.kind === "question-list" && (
+                  <QuestionListScreen
+                    className="flex-1"
+                    heading={step.heading(answers)}
+                    options={step.options}
+                    selectedId={answers[step.answerKey] ?? null}
+                    onSelect={(id) => setAnswer(step.answerKey, id)}
+                    voiceover={step.voiceover}
+                    muted={muted}
+                  />
+                )}
+
+                {step.kind === "question-grid" && (
+                  <QuestionGridScreen
+                    className="flex-1"
+                    heading={step.heading(answers)}
+                    options={step.options}
+                    selectedId={answers[step.answerKey] ?? null}
+                    onSelect={(id) => setAnswer(step.answerKey, id)}
+                    voiceover={step.voiceover}
+                    muted={muted}
+                  />
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* The CTA lives here, outside the screen transitions, so it's the same
+          size and in the same spot on every screen and never remounts — a
+          per-screen button flickered while its Rive canvas reloaded on each
+          crossfade. The slot under it has a fixed height on every screen
+          (only Get Started fills it, with the log-in line), so switching
+          screens never nudges the button. */}
+      <div className="shrink-0">
+        <div className="mx-auto w-full max-w-[22rem] px-4">
+          <Button3D
+            onClick={handleCta}
+            onPress={playClickSound}
+            disabled={ctaDisabled}
+            className="w-full"
+          >
+            {ctaLabel}
+          </Button3D>
+          <div className="flex h-10 items-center justify-center">
+            <AnimatePresence>
+              {index === -1 && (
+                <motion.p
+                  key="login"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={SCREEN_TRANSITION}
+                  className="text-center text-sm text-[#666666] sm:text-base"
+                >
+                  Already have an account?{" "}
+                  {/* No login route exists yet, so this is inert for now. */}
+                  <button type="button" className="font-medium text-foreground" aria-disabled>
+                    Log in
+                  </button>
+                </motion.p>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </div>
+
+      {/* The splash covers everything, footer included — which also lets the
+          footer's Rive button load behind it, ready before Get Started. */}
+      <AnimatePresence>
         {index === -2 && (
           <motion.div
             key="splash"
@@ -106,96 +253,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={SCREEN_TRANSITION}
-            className="absolute inset-0"
+            className="absolute inset-0 z-10"
           >
             <OnboardingSplash className="relative h-full w-full" onComplete={goNext} />
-          </motion.div>
-        )}
-
-        {index === -1 && (
-          <motion.div
-            key="prelogin"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={SCREEN_TRANSITION}
-            className="absolute inset-0 flex flex-col bg-white"
-          >
-            <PreLoginScreen className="flex flex-1 flex-col" onGetStarted={goNext} />
-          </motion.div>
-        )}
-
-        {step && (
-          <motion.div
-            key={`step-${step.id}`}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={SCREEN_TRANSITION}
-            className="absolute inset-0 flex flex-col bg-white"
-          >
-            {/* Phone-width column, centered on tablets/desktops so options
-                and the CTA don't stretch across a wide screen. */}
-            <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col">
-              <OnboardingHeader
-                onBack={goBack}
-                progress={progress}
-                muted={muted}
-                onToggleMuted={() => setMuted((m) => !m)}
-              />
-
-              {step.kind === "fox-message" && (
-                <FoxMessageScreen
-                  className="flex-1"
-                  heading={step.heading?.(answers)}
-                  headingPlacement={step.headingPlacement}
-                  sparkle={step.sparkle}
-                  bubble={step.bubble(answers)}
-                  greet={step.greet}
-                  voiceover={step.voiceover}
-                  muted={muted}
-                  cta={step.cta}
-                  onContinue={goNext}
-                />
-              )}
-
-              {step.kind === "notification-permission" && (
-                <NotificationPermissionScreen
-                  className="flex-1"
-                  heading={step.heading}
-                  cta={step.cta}
-                  onContinue={goNext}
-                />
-              )}
-
-              {step.kind === "question-list" && (
-                <QuestionListScreen
-                  className="flex-1"
-                  heading={step.heading(answers)}
-                  options={step.options}
-                  selectedId={answers[step.answerKey] ?? null}
-                  onSelect={(id) => setAnswer(step.answerKey, id)}
-                  voiceover={step.voiceover}
-                  muted={muted}
-                  cta={step.cta}
-                  onContinue={goNext}
-                />
-              )}
-
-              {step.kind === "question-grid" && (
-                <QuestionGridScreen
-                  className="flex-1"
-                  heading={step.heading(answers)}
-                  options={step.options}
-                  selectedId={answers[step.answerKey] ?? null}
-                  onSelect={(id) => setAnswer(step.answerKey, id)}
-                  voiceover={step.voiceover}
-                  muted={muted}
-                  cta={step.cta}
-                  onContinue={goNext}
-                />
-              )}
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
