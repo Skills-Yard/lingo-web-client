@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, type CSSProperties } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import {
   Layout,
@@ -180,6 +180,7 @@ function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
 
 interface OnboardingFoxProps {
   className?: string;
+  style?: CSSProperties;
   /** Waves hello once, shortly after mounting — only the "Hey! I am foxy"
    * greeting screen; every other screen's fox stays on the plain ambient
    * loop. */
@@ -195,7 +196,12 @@ interface OnboardingFoxProps {
  * this in already-idle, same role `<RobuEyeBlink>` plays for
  * instructions-intro's own reveal-card modal and game screens).
  */
-export function OnboardingFox({ className, greet = false, talking = false }: OnboardingFoxProps) {
+export function OnboardingFox({
+  className,
+  style,
+  greet = false,
+  talking = false,
+}: OnboardingFoxProps) {
   const { rive, RiveComponent } = useRive({
     src: ROBU_RIVE_SRC,
     artboard: ARTBOARD,
@@ -211,7 +217,7 @@ export function OnboardingFox({ className, greet = false, talking = false }: Onb
   useRandomOverlay(rive, EAR_ANIMATIONS, EAR_MIN_MS, EAR_MAX_MS);
 
   return (
-    <div className={className}>
+    <div className={className} style={style}>
       <RiveComponent className="h-full w-full" />
     </div>
   );

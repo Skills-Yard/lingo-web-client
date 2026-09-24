@@ -65,6 +65,9 @@ interface OnboardingBubbleProps {
    * bubble/fox arrangements the reference design uses for a given screen. */
   tail: "down" | "up";
   className?: string;
+  /** False keeps the bubble invisible in its spot (so the layout doesn't
+   * shift) and holds its entrance until this turns true. Defaults to true. */
+  show?: boolean;
   /** Fires once the bubble has finished popping in (immediately, with
    * reduced motion) — the moment its text and voice start. */
   onEntered?: () => void;
@@ -86,25 +89,35 @@ interface OnboardingBubbleProps {
  * pads the wrapper out to the tail's tip, so callers spacing this against a
  * fox (e.g. `gap-4`) measure to the tip rather than to the box.
  */
-export function OnboardingBubble({ spans, shown, tail, className, onEntered }: OnboardingBubbleProps) {
+export function OnboardingBubble({
+  spans,
+  shown,
+  tail,
+  className,
+  show = true,
+  onEntered,
+}: OnboardingBubbleProps) {
   const reduceMotion = useReducedMotion();
   const [entered, setEntered] = useState(false);
 
   useEffect(() => {
-    if (entered || reduceMotion) onEntered?.();
+    if (entered || (reduceMotion && show)) onEntered?.();
     // onEntered excluded — callers pass a fresh inline function each render;
     // this should only fire when the bubble's own state flips.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [entered, reduceMotion]);
+  }, [entered, reduceMotion, show]);
 
+  const hidden = { opacity: 0, scale: 0.6, y: tail === "down" ? 12 : -12 };
   return (
     <motion.div
       className={`inline-block ${className ?? ""}`}
       style={{ transformOrigin: tail === "down" ? "50% 100%" : "50% 0%" }}
-      initial={reduceMotion ? false : { opacity: 0, scale: 0.6, y: tail === "down" ? 12 : -12 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
+      initial={reduceMotion && show ? false : hidden}
+      animate={show ? { opacity: 1, scale: 1, y: 0 } : hidden}
       transition={{ ...BUBBLE_IN, delay: BUBBLE_IN_DELAY_S }}
-      onAnimationComplete={() => setEntered(true)}
+      onAnimationComplete={() => {
+        if (show) setEntered(true);
+      }}
     >
       <DialogueBubble
         tail={tail}

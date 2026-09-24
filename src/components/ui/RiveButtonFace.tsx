@@ -43,8 +43,10 @@ interface RiveButtonFaceProps {
 /** The Rive-drawn face of Button3D's brand tone — fills its parent. */
 export function RiveButtonFace({ label, pressCount, shine }: RiveButtonFaceProps) {
   // Fetch starts as early as the first button renders; later instances reuse
-  // the browser's cached copy.
-  preload(RIVE_BUTTON_SRC, { as: "fetch" });
+  // the browser's cached copy. `crossOrigin: "anonymous"` matches the
+  // credentials mode of Rive's own `fetch()`, or the browser ignores the
+  // preload and downloads the file a second time.
+  preload(RIVE_BUTTON_SRC, { as: "fetch", crossOrigin: "anonymous" });
 
   const { rive, RiveComponent } = useRive({
     src: RIVE_BUTTON_SRC,

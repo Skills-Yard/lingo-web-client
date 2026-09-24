@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { ChevronLeft, Volume2, VolumeX } from "lucide-react";
 
 interface OnboardingHeaderProps {
@@ -38,15 +39,16 @@ export function OnboardingHeader({
           <p className="mb-1 text-xs font-semibold tabular-nums text-primary">
             {String(progress.step).padStart(2, "0")}/{String(progress.total).padStart(2, "0")}
           </p>
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: progress.total }).map((_, i) => (
-              <div
-                key={i}
-                className={`h-1.5 rounded-full grow transition-all duration-300 ${
-                  i < progress.step ? "bg-primary" : "bg-black/10"
-                }`}
-              />
-            ))}
+          {/* One continuous track. Each question's header mounts fresh with
+              its screen, so the fill starts at the previous question's
+              length and grows to this one's. */}
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10">
+            <motion.div
+              className="h-full rounded-full bg-primary"
+              initial={{ width: `${((progress.step - 1) / progress.total) * 100}%` }}
+              animate={{ width: `${(progress.step / progress.total) * 100}%` }}
+              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+            />
           </div>
         </div>
       )}

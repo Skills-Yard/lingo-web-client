@@ -1,14 +1,9 @@
 import type { LucideIcon } from "lucide-react";
 import {
-  Bot,
   Briefcase,
-  Cloud,
-  Code2,
   HelpCircle,
   Lightbulb,
-  PieChart,
   Rocket,
-  ShieldCheck,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -61,12 +56,12 @@ export interface OnboardingGridOption {
 }
 
 export const CAREER_OPTIONS: OnboardingListOption[] = [
-  { id: "software-engineer", label: "Software Engineer", icon: Code2 },
-  { id: "data-scientist", label: "Data Scientist", icon: TrendingUp },
-  { id: "data-analyst", label: "Data Analyst", icon: PieChart },
-  { id: "devops-cloud", label: "DevOps / Cloud Engineer", icon: Cloud },
-  { id: "cybersecurity", label: "Cybersecurity", icon: ShieldCheck },
-  { id: "automation-scripting", label: "Automation & Scripting", icon: Bot },
+  { id: "software-engineer", label: "Software Engineer", image: "/images/screen-01/01-1.png" },
+  { id: "data-scientist", label: "Data Scientist", image: "/images/screen-01/01-2.png" },
+  { id: "data-analyst", label: "Data Analyst", image: "/images/screen-01/01-3.png" },
+  { id: "devops-cloud", label: "DevOps / Cloud Engineer", image: "/images/screen-01/01-4.png" },
+  { id: "cybersecurity", label: "Cybersecurity", image: "/images/screen-01/01-5.png" },
+  { id: "automation-scripting", label: "Automation & Scripting", image: "/images/screen-01/01-6.png" },
 ];
 
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
@@ -152,6 +147,12 @@ export type OnboardingStep =
       /** Voiceover clips (in `public/audios`) played back-to-back when the
        * screen appears — see useVoiceover. */
       voiceover?: readonly string[];
+      /** What the voiceover reads. "all" (default): the bubble, plus the
+       * heading if there is one — everything types along with it once the
+       * bubble has popped in. "heading": only the heading — it types along
+       * with the voice first, then the bubble pops in and types quickly
+       * ("Are you ready?"). */
+      voiceReads?: "all" | "heading";
       cta: string;
     }
   | {
@@ -210,6 +211,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     headingPlacement: "bottom",
     sparkle: true,
     voiceover: ["/audios/text-2-screen.mpeg"],
+    voiceReads: "heading",
     bubble: () => [{ text: "Are you ready?" }],
     cta: "Yes!",
   },

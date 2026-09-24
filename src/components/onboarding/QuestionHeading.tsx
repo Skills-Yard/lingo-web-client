@@ -1,7 +1,7 @@
 "use client";
 
 import type { TextSpan } from "@/lib/constants/onboarding";
-import { OnboardingFox } from "./robu/OnboardingFox";
+import { FoxSlot } from "./foxStage";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
 
@@ -52,7 +52,7 @@ export function QuestionHeading({ heading, spoken, talking }: QuestionHeadingPro
   return (
     <div className="flex shrink-0 items-center justify-center gap-3 pt-4 sm:pt-6">
       <div aria-hidden className="relative shrink-0">
-        <OnboardingFox talking={talking} className="h-20 w-20 sm:h-24 sm:w-24" />
+        <FoxSlot talking={talking} className="h-20 w-20 sm:h-24 sm:w-24" />
       </div>
       <h1 className="max-w-60 text-lg font-semibold leading-snug text-[#1A1C22] sm:max-w-72 sm:text-xl">
         {parts.map(({ span, cut }, i) => (

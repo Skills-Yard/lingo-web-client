@@ -1,7 +1,7 @@
 "use client";
 
 import { Sekuya } from "next/font/google";
-import { OnboardingFox } from "./robu/OnboardingFox";
+import { FoxSlot } from "./foxStage";
 
 // Sekuya only ships one weight (400) — still passed explicitly since
 // next/font requires it for any non-variable Google font.
@@ -28,7 +28,7 @@ export function PreLoginScreen({ className }: PreLoginScreenProps) {
       </h1>
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
-        <OnboardingFox className="aspect-square h-[min(16rem,34dvh)]" />
+        <FoxSlot className="aspect-square h-[min(16rem,34dvh)]" />
       </div>
     </div>
   );
