@@ -238,6 +238,9 @@ export type OnboardingStep =
       /** Fox waves hello once when the screen appears — only the "Hey! I am
        * foxy" greeting does. */
       greet?: boolean;
+      /** Fox plays its "excitement" state machine once all the screen's text
+       * has typed out ("Are you ready?"). */
+      excite?: boolean;
       voiceover?: StepVoiceover;
       /** Whether the voiceover also reads the heading (default true). When
        * false, the heading shows in full and only the bubble types along. */
@@ -301,6 +304,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     headingPlacement: "bottom",
     sparkle: true,
+    excite: true,
     voiceover: ["/audios/text-2-screen.mpeg"],
     voiceReads: "heading",
     bubble: () => [{ text: "Are you ready?" }],
