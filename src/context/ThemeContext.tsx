@@ -8,26 +8,84 @@ type Theme = "light" | "dark";
 /** Where the circular reveal should originate from (usually the toggle button). */
 type TransitionOrigin = { x: number; y: number };
 
-/** Where the circular reveal should start from; `"wipe"` for a diagonal
+/** A diagonal sweep (see `runWipe`), in each theme's own background colour. */
+type Wipe = { wipe: Record<Theme, string> };
+
+/** Where the circular reveal should start from; a `Wipe` for a diagonal
  * sweep from the top-right corner to the bottom-left instead; or
  * `"instant"` to skip the animation altogether. */
-type ThemeChange = TransitionOrigin | "wipe" | "instant";
+type ThemeChange = TransitionOrigin | Wipe | "instant";
 
-/** Clip-path keyframes for the reveal: a circle growing from `origin`, or
- * for "wipe" a triangle anchored at the top-right corner whose long edge
- * sweeps across, parallel to the other diagonal — at full size that edge
- * runs through the bottom-left corner, so the whole screen is covered. */
-function revealKeyframes(origin: TransitionOrigin | "wipe" | undefined): string[] {
-  if (origin === "wipe") {
-    return ["polygon(100% 0%, 100% 0%, 100% 0%)", "polygon(100% 0%, 100% 200%, -100% 0%)"];
-  }
-  const x = origin?.x ?? window.innerWidth;
-  const y = origin?.y ?? 0;
-  const endRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y),
-  );
-  return [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`];
+const WIPE_MS = 700;
+let wiping = false;
+
+/**
+ * A band of `color` (the new theme's background) sweeps across the screen
+ * from the top-right corner to the bottom-left, its edges parallel to the
+ * other diagonal so it reaches both remaining corners together. The theme
+ * flips at the halfway point, while the band covers the whole screen, so
+ * the band's trailing edge uncovers the new theme behind it.
+ *
+ * Unlike the circular reveal this takes no page snapshot and animates only
+ * `transform`, which the browser runs off the main thread — so it stays
+ * smooth even while the page is busy (the onboarding's Rive fox).
+ */
+function runWipe(commit: () => void, color: string) {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const diagonal = Math.hypot(w, h);
+  // Distance between the top-right and bottom-left corners, measured
+  // along the sweep direction.
+  const span = (2 * w * h) / diagonal;
+  const feather = span * 0.15;
+  const thickness = span + 2 * feather;
+  const travel = (span + thickness) / 2;
+  // Unit vector of the sweep, and the band's tilt (its length runs along
+  // the top-left to bottom-right diagonal).
+  const nx = -h / diagonal;
+  const ny = w / diagonal;
+  const angle = (Math.atan2(h, w) * 180) / Math.PI;
+  const at = (s: number) => `translate(${nx * s}px, ${ny * s}px) rotate(${angle}deg)`;
+  const edge = (feather / thickness) * 100;
+
+  const band = document.createElement("div");
+  band.setAttribute("aria-hidden", "true");
+  Object.assign(band.style, {
+    position: "fixed",
+    left: `${w / 2 - diagonal / 2 - 2}px`,
+    top: `${h / 2 - thickness / 2}px`,
+    width: `${diagonal + 4}px`,
+    height: `${thickness}px`,
+    zIndex: "2147483647",
+    pointerEvents: "none",
+    willChange: "transform",
+    transform: at(-travel),
+    background: `linear-gradient(to bottom, transparent, ${color} ${edge}%, ${color} ${100 - edge}%, transparent)`,
+  });
+  document.body.appendChild(band);
+  wiping = true;
+
+  const done = () => {
+    band.remove();
+    wiping = false;
+  };
+  // Two halves of one sine ease-in-out, so the speed carries straight
+  // through the midpoint where the theme flips.
+  band
+    .animate([{ transform: at(-travel) }, { transform: at(0) }], {
+      duration: WIPE_MS / 2,
+      easing: "cubic-bezier(0.12, 0, 0.39, 0)",
+      fill: "forwards",
+    })
+    .finished.then(() => {
+      commit();
+      return band.animate([{ transform: at(0) }, { transform: at(travel) }], {
+        duration: WIPE_MS / 2,
+        easing: "cubic-bezier(0.61, 1, 0.88, 1)",
+        fill: "forwards",
+      }).finished;
+    })
+    .then(done, done);
 }
 
 interface ThemeContextType {
@@ -64,20 +122,34 @@ function resolveInitialTheme(): Theme {
 }
 
 /**
- * Swap the theme with a reveal animation via the View Transitions API — a
- * circle expanding from `origin`, or a diagonal wipe. Falls back to an instant swap when the API is missing
+ * Swap the theme with a circular-reveal animation via the View Transitions API,
+ * expanding from `origin` — or with a diagonal wipe (see `runWipe`). Falls back to an instant swap when the API is missing
  * or the user prefers reduced motion.
  */
-function runThemeChange(commit: () => void, origin?: ThemeChange) {
+function runThemeChange(commit: () => void, nextTheme: Theme, origin?: ThemeChange) {
   const doc = document as ViewTransitionDocument;
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (origin === "instant" || !doc.startViewTransition || prefersReduced) {
+  if (origin === "instant" || prefersReduced) {
+    commit();
+    return;
+  }
+  if (origin && "wipe" in origin) {
+    runWipe(commit, origin.wipe[nextTheme]);
+    return;
+  }
+  if (!doc.startViewTransition) {
     commit();
     return;
   }
 
-  const clipPath = revealKeyframes(origin);
+  const x = origin?.x ?? window.innerWidth;
+  const y = origin?.y ?? 0;
+  const endRadius = Math.hypot(
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y),
+  );
+
   const transition = doc.startViewTransition(() => {
     // flushSync so React commits the new theme before the "new" snapshot is taken.
     flushSync(commit);
@@ -86,7 +158,12 @@ function runThemeChange(commit: () => void, origin?: ThemeChange) {
   transition.ready
     .then(() => {
       document.documentElement.animate(
-        { clipPath },
+        {
+          clipPath: [
+            `circle(0px at ${x}px ${y}px)`,
+            `circle(${endRadius}px at ${x}px ${y}px)`,
+          ],
+        },
         {
           duration: 450,
           easing: "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -112,11 +189,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const setTheme = (newTheme: Theme, origin?: ThemeChange) => {
+    // A second tap mid-wipe would stack a second band over the first.
+    if (wiping) return;
     localStorage.setItem("lingo_theme", newTheme);
-    runThemeChange(() => {
-      setThemeState(newTheme);
-      applyTheme(newTheme);
-    }, origin);
+    runThemeChange(
+      () => {
+        setThemeState(newTheme);
+        applyTheme(newTheme);
+      },
+      newTheme,
+      origin,
+    );
   };
 
   const toggleTheme = (origin?: ThemeChange) => {

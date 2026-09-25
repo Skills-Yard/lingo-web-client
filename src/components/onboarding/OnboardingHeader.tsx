@@ -4,6 +4,10 @@ import { motion } from "framer-motion";
 import { ChevronLeft, Moon, Sun, Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 
+/** The theme switch's wipe colours — each theme's onboarding background
+ * (`--background` in globals.css, `.onboarding-light` and its dark override). */
+const WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
+
 /** Back, light/dark and sound share one look — same size, same weight. */
 const ICON_BUTTON =
   "w-10 h-10 flex items-center justify-center rounded-full text-[#1A1C22]/70 hover:bg-black/5 transition-all active:scale-95 cursor-pointer dark:text-white/70 dark:hover:bg-white/10";
@@ -51,7 +55,7 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
             wiped in diagonally from the top-right corner. */}
         <button
           type="button"
-          onClick={() => toggleTheme("wipe")}
+          onClick={() => toggleTheme(WIPE)}
           className={`${ICON_BUTTON} dark:text-amber-400`}
           aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
         >
