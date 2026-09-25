@@ -139,7 +139,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <FoxStageProvider stage={foxStage}>
       <main
         ref={mainRef}
-        className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white"
+        className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background"
       >
         {/* Screens crossfade in the space above the footer. */}
         <div className="relative min-h-0 flex-1">
@@ -151,7 +151,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={SCREEN_TRANSITION}
-                className="absolute inset-0 flex flex-col bg-white"
+                className="absolute inset-0 flex flex-col bg-white dark:bg-background"
               >
                 <PreLoginScreen className="flex flex-1 flex-col" />
               </motion.div>
@@ -164,7 +164,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={SCREEN_TRANSITION}
-                className="absolute inset-0 flex flex-col bg-white"
+                className="absolute inset-0 flex flex-col bg-white dark:bg-background"
               >
                 {/* Phone-width column, centered on tablets/desktops so options
                   don't stretch across a wide screen. */}
@@ -172,7 +172,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <OnboardingHeader
                     onBack={goBack}
                     progress={progress}
-                    showSound={step.kind === "streak"}
                     muted={muted}
                     onToggleMuted={() => setMuted((m) => !m)}
                   />

@@ -63,7 +63,7 @@ export function NotificationPermissionScreen({
 
   return (
     <div className={`flex flex-col items-center px-6 ${className ?? ""}`}>
-      <h1 className="mt-[5dvh] max-w-xs shrink-0 text-center text-xl font-semibold leading-snug text-[#2C2C2C] sm:text-2xl">
+      <h1 className="mt-[5dvh] max-w-xs shrink-0 text-center text-xl font-semibold leading-snug text-[#2C2C2C] sm:text-2xl dark:text-white">
         {heading}
       </h1>
 
@@ -94,31 +94,31 @@ export function NotificationPermissionScreen({
           <motion.div
             role="dialog"
             aria-label="Notification"
-            className="relative overflow-hidden rounded-[14px] bg-[#E9E9E9] text-center shadow-[0_12px_32px_rgba(0,0,0,0.14)]"
+            className="relative overflow-hidden rounded-[14px] bg-[#E9E9E9] text-center shadow-[0_12px_32px_rgba(0,0,0,0.14)] dark:bg-[#2C2C2E] dark:shadow-[0_12px_32px_rgba(0,0,0,0.5)]"
             initial={reduceMotion ? false : { opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ ...PROMPT_IN, delay: PROMPT_DELAY_S }}
           >
             <div className="px-5 pt-4 pb-4">
-              <p className="text-[15px] font-semibold text-[#1A1C22]">Notification</p>
-              <p className="mt-1.5 text-[13px] leading-snug text-[#3C3C43]">
+              <p className="text-[15px] font-semibold text-[#1A1C22] dark:text-white">Notification</p>
+              <p className="mt-1.5 text-[13px] leading-snug text-[#3C3C43] dark:text-white/70">
                 &ldquo;Lingo&rdquo; would like to send
                 <br />
                 you notifications
               </p>
             </div>
-            <div className="grid grid-cols-2 divide-x divide-black/10 border-t border-black/10 text-[15px]">
+            <div className="grid grid-cols-2 divide-x divide-black/10 border-t border-black/10 dark:divide-white/15 dark:border-white/15 text-[15px]">
               <button
                 type="button"
                 onClick={onDeny}
-                className="py-3 text-[#8E8E93] transition-colors active:bg-black/5"
+                className="py-3 text-[#8E8E93] transition-colors active:bg-black/5 dark:active:bg-white/10"
               >
                 Don&apos;t Allow
               </button>
               <button
                 type="button"
                 onClick={onAllow}
-                className="py-3 font-medium text-[#1C8CE6] transition-colors active:bg-black/5"
+                className="py-3 font-medium text-[#1C8CE6] transition-colors active:bg-black/5 dark:text-[#3AA0FF] dark:active:bg-white/10"
               >
                 Allow
               </button>

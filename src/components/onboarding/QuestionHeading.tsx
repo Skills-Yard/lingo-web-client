@@ -58,7 +58,7 @@ export function QuestionHeading({ heading, spoken, talking, typing = 0 }: Questi
       <div aria-hidden className="relative shrink-0">
         <FoxSlot laptop talking={talking} typing={typing} className="h-28 w-28 sm:h-32 sm:w-32" />
       </div>
-      <h1 className="max-w-60 text-lg font-semibold leading-snug text-[#1A1C22] sm:max-w-72 sm:text-xl">
+      <h1 className="max-w-60 text-lg font-semibold leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white sm:text-xl">
         {parts.map(({ span, cut }, i) => (
           <span key={i} className={span.highlight ? "text-primary" : undefined}>
             {span.text.slice(0, cut)}

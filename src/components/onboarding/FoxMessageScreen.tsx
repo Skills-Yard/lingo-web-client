@@ -161,7 +161,7 @@ export function FoxMessageScreen({
 
   const headingBlock = heading && (
     <div className="relative flex shrink-0 items-start gap-1.5">
-      <h1 className="max-w-xs text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl">
+      <h1 className="max-w-xs text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl dark:text-white">
         {typesHeading ? (
           <TypedText spans={heading} shown={headingShown} />
         ) : (
@@ -223,7 +223,7 @@ export function FoxMessageScreen({
   );
 
   return (
-    <div className={`flex min-h-0 flex-col bg-white px-6 ${className ?? ""}`}>
+    <div className={`flex min-h-0 flex-col bg-white px-6 dark:bg-background ${className ?? ""}`}>
       {headingOnTop && <div className="mt-[3dvh] shrink-0 self-center">{headingBlock}</div>}
 
       <div ref={stageRef} className="relative min-h-0 flex-1">

@@ -40,7 +40,7 @@ export function StreakScreen({ heading, image, className }: StreakScreenProps) {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent dark:from-background"
         />
       </div>
     </div>

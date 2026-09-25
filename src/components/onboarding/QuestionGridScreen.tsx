@@ -70,7 +70,7 @@ export function QuestionGridScreen({
   }, [spokenOption]);
 
   return (
-    <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
+    <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 dark:bg-background ${className ?? ""}`}>
       <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} typing={typing} />
 
       {/* `auto-rows-max` keeps each row the full tile height: on short screens
@@ -110,7 +110,7 @@ export function QuestionGridScreen({
                 )}
               </span>
               <span
-                className={`${poppins.className} flex h-[55px] w-full shrink-0 items-center justify-center px-2.5 text-balance text-base font-medium leading-[1.4] text-[#2C2C2C]`}
+                className={`${poppins.className} flex h-[55px] w-full shrink-0 items-center justify-center px-2.5 text-balance text-base font-medium leading-[1.4] text-[#2C2C2C] dark:text-white`}
               >
                 {option.label}
               </span>

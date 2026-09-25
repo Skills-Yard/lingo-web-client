@@ -8,10 +8,32 @@ type Theme = "light" | "dark";
 /** Where the circular reveal should originate from (usually the toggle button). */
 type TransitionOrigin = { x: number; y: number };
 
+/** Where the circular reveal should start from; `"wipe"` for a diagonal
+ * sweep from the top-right corner to the bottom-left instead; or
+ * `"instant"` to skip the animation altogether. */
+type ThemeChange = TransitionOrigin | "wipe" | "instant";
+
+/** Clip-path keyframes for the reveal: a circle growing from `origin`, or
+ * for "wipe" a triangle anchored at the top-right corner whose long edge
+ * sweeps across, parallel to the other diagonal — at full size that edge
+ * runs through the bottom-left corner, so the whole screen is covered. */
+function revealKeyframes(origin: TransitionOrigin | "wipe" | undefined): string[] {
+  if (origin === "wipe") {
+    return ["polygon(100% 0%, 100% 0%, 100% 0%)", "polygon(100% 0%, 100% 200%, -100% 0%)"];
+  }
+  const x = origin?.x ?? window.innerWidth;
+  const y = origin?.y ?? 0;
+  const endRadius = Math.hypot(
+    Math.max(x, window.innerWidth - x),
+    Math.max(y, window.innerHeight - y),
+  );
+  return [`circle(0px at ${x}px ${y}px)`, `circle(${endRadius}px at ${x}px ${y}px)`];
+}
+
 interface ThemeContextType {
   theme: Theme;
-  setTheme: (theme: Theme, origin?: TransitionOrigin) => void;
-  toggleTheme: (origin?: TransitionOrigin) => void;
+  setTheme: (theme: Theme, origin?: ThemeChange) => void;
+  toggleTheme: (origin?: ThemeChange) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -42,26 +64,20 @@ function resolveInitialTheme(): Theme {
 }
 
 /**
- * Swap the theme with a circular-reveal animation via the View Transitions API,
- * expanding from `origin`. Falls back to an instant swap when the API is missing
+ * Swap the theme with a reveal animation via the View Transitions API — a
+ * circle expanding from `origin`, or a diagonal wipe. Falls back to an instant swap when the API is missing
  * or the user prefers reduced motion.
  */
-function runThemeChange(commit: () => void, origin?: TransitionOrigin) {
+function runThemeChange(commit: () => void, origin?: ThemeChange) {
   const doc = document as ViewTransitionDocument;
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (!doc.startViewTransition || prefersReduced) {
+  if (origin === "instant" || !doc.startViewTransition || prefersReduced) {
     commit();
     return;
   }
 
-  const x = origin?.x ?? window.innerWidth;
-  const y = origin?.y ?? 0;
-  const endRadius = Math.hypot(
-    Math.max(x, window.innerWidth - x),
-    Math.max(y, window.innerHeight - y),
-  );
-
+  const clipPath = revealKeyframes(origin);
   const transition = doc.startViewTransition(() => {
     // flushSync so React commits the new theme before the "new" snapshot is taken.
     flushSync(commit);
@@ -70,12 +86,7 @@ function runThemeChange(commit: () => void, origin?: TransitionOrigin) {
   transition.ready
     .then(() => {
       document.documentElement.animate(
-        {
-          clipPath: [
-            `circle(0px at ${x}px ${y}px)`,
-            `circle(${endRadius}px at ${x}px ${y}px)`,
-          ],
-        },
+        { clipPath },
         {
           duration: 450,
           easing: "cubic-bezier(0.4, 0, 0.2, 1)",
@@ -100,7 +111,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setThemeState(initial);
   }, []);
 
-  const setTheme = (newTheme: Theme, origin?: TransitionOrigin) => {
+  const setTheme = (newTheme: Theme, origin?: ThemeChange) => {
     localStorage.setItem("lingo_theme", newTheme);
     runThemeChange(() => {
       setThemeState(newTheme);
@@ -108,7 +119,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }, origin);
   };
 
-  const toggleTheme = (origin?: TransitionOrigin) => {
+  const toggleTheme = (origin?: ThemeChange) => {
     setTheme(theme === "dark" ? "light" : "dark", origin);
   };
 

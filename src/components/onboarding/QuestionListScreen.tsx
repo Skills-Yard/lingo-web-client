@@ -55,7 +55,7 @@ export function QuestionListScreen({
   }, [spokenOption]);
 
   return (
-    <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 ${className ?? ""}`}>
+    <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 dark:bg-background ${className ?? ""}`}>
       <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} typing={typing} />
 
       {/* Options keep their natural height; if they don't all fit, only
@@ -90,14 +90,14 @@ export function QuestionListScreen({
                 Icon && (
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
-                      lit ? "bg-primary text-white" : "bg-[#D9F6EC] text-[#1A1C22]"
+                      lit ? "bg-primary text-white" : "bg-[#D9F6EC] text-[#1A1C22] dark:bg-[#0F2921] dark:text-white"
                     }`}
                   >
                     <Icon className="h-4.5 w-4.5" />
                   </span>
                 )
               )}
-              <span className="text-sm font-medium text-[#1A1C22] sm:text-base">
+              <span className="text-sm font-medium text-[#1A1C22] sm:text-base dark:text-white">
                 {option.label}
               </span>
             </button>
