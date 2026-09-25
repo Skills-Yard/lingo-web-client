@@ -194,6 +194,23 @@ const WHATS_DRIVING_AUDIO: Record<string, string> = {
   "automation-scripting": "/audios/screen-09/WDAMS.m4a",
 };
 
+/** The "At this pace…" voiceover after screen 5, per time commitment — files
+ * in `public/audios/ATP`, ATP + the minutes a day. */
+const AT_THIS_PACE_AUDIO: Record<string, string> = {
+  "5min": "/audios/ATP/ATP5.m4a",
+  "10min": "/audios/ATP/ATP10.m4a",
+  "15min": "/audios/ATP/ATP15.m4a",
+  "30min-plus": "/audios/ATP/ATP30.m4a",
+};
+
+/** The "At this pace…" bubble text after screen 5, per time commitment. */
+const AT_THIS_PACE_TEXT: Record<string, string> = {
+  "5min": "At this pace, you'll finish your first 3 lessons this week.",
+  "10min": "At this pace, you'll wrap up Module 1 by the end of the week.",
+  "15min": "At this pace, you'll finish Module 1 and start Module 2 this week.",
+  "30min-plus": "At this pace, you could clear 2 full modules this week. Ambitious, I like it.",
+};
+
 function careerLabel(answers: OnboardingAnswers): string {
   return CAREER_OPTIONS.find((c) => c.id === answers.career)?.label ?? "your career";
 }
@@ -409,10 +426,12 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "pace-wow",
     bubble: (a) => [
       { text: "WOW!", highlight: true },
-      { text: "\nAt this pace, you'll finish your first 3 lessons toward [" },
-      { text: careerLabel(a), highlight: true },
-      { text: "] this week." },
+      { text: `\n${AT_THIS_PACE_TEXT[a.timeCommitment ?? ""] ?? AT_THIS_PACE_TEXT["5min"]}` },
     ],
+    voiceover: (a) => {
+      const src = a.timeCommitment ? AT_THIS_PACE_AUDIO[a.timeCommitment] : undefined;
+      return src ? [src] : undefined;
+    },
     cta: "Yes!",
   },
   {

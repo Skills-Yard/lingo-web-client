@@ -122,6 +122,63 @@ function resolveInitialTheme(): Theme {
 }
 
 /**
+ * The same top-right → bottom-left diagonal sweep as `runWipe`, but as a
+ * View Transition: the new theme's snapshot is revealed over the old one,
+ * so the text, fox and buttons stay on screen the whole time instead of
+ * vanishing under an opaque band at the halfway point.
+ */
+function runDiagonalReveal(doc: ViewTransitionDocument, commit: () => void) {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const diagonal = Math.hypot(w, h);
+  // Sweep direction (toward the bottom-left) and the edge's direction
+  // (parallel to the top-left → bottom-right diagonal).
+  const nx = -h / diagonal;
+  const ny = w / diagonal;
+  const dx = w / diagonal;
+  const dy = h / diagonal;
+  const span = (2 * w * h) / diagonal;
+  const far = diagonal * 2;
+  // The revealed half-plane: everything behind an edge `s` px from the
+  // top-right corner. Same four vertices at every `s`, so it interpolates
+  // as a straight sweep.
+  const reveal = (s: number) => {
+    const cx = w + nx * s;
+    const cy = ny * s;
+    const pts = [
+      [cx + dx * far, cy + dy * far],
+      [cx - dx * far, cy - dy * far],
+      [cx - dx * far - nx * far, cy - dy * far - ny * far],
+      [cx + dx * far - nx * far, cy + dy * far - ny * far],
+    ];
+    return `polygon(${pts.map(([x, y]) => `${x}px ${y}px`).join(", ")})`;
+  };
+
+  wiping = true;
+  const transition = doc.startViewTransition(() => {
+    flushSync(commit);
+  });
+  transition.ready
+    .then(() => {
+      document.documentElement.animate(
+        { clipPath: [reveal(0), reveal(span)] },
+        {
+          duration: WIPE_MS,
+          easing: "cubic-bezier(0.37, 0, 0.63, 1)",
+          pseudoElement: "::view-transition-new(root)",
+        },
+      );
+    })
+    .catch(() => {
+      /* transition was skipped/interrupted — theme is already applied */
+    });
+  const done = () => {
+    wiping = false;
+  };
+  transition.finished.then(done, done);
+}
+
+/**
  * Swap the theme with a circular-reveal animation via the View Transitions API,
  * expanding from `origin` — or with a diagonal wipe (see `runWipe`). Falls back to an instant swap when the API is missing
  * or the user prefers reduced motion.
@@ -135,7 +192,8 @@ function runThemeChange(commit: () => void, nextTheme: Theme, origin?: ThemeChan
     return;
   }
   if (origin && "wipe" in origin) {
-    runWipe(commit, origin.wipe[nextTheme]);
+    if (!doc.startViewTransition) runWipe(commit, origin.wipe[nextTheme]);
+    else runDiagonalReveal(doc, commit);
     return;
   }
   if (!doc.startViewTransition) {
