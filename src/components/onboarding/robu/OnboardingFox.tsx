@@ -75,7 +75,7 @@ const LAPTOP_TYPING_ANIMATIONS = ["laptop typing ", "tail typing"];
 const LAPTOP_TYPING_MS = 4000;
 const NO_ANIMATIONS: string[] = [];
 
-// "Are you ready?" once its text has typed out: "Excitement ", then (2.2s
+// "Are you ready?" once its heading has typed out: "Excitement ", then (2.2s
 // in) "laptop taking out " — chained inside the state machine itself.
 const EXCITEMENT_STATE_MACHINE = "excitement";
 

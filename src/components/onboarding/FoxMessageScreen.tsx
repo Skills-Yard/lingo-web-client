@@ -40,8 +40,9 @@ interface FoxMessageScreenProps {
   bubble: TextSpan[];
   /** Fox waves hello once on mount — see FoxSlot's `greet`. */
   greet?: boolean;
-  /** Fox gets excited once all the text has typed out — see FoxSlot's
-   * `excited`. */
+  /** Fox gets excited once all the text has typed out — or, on a
+   * heading-first screen, as soon as the heading has, alongside the bubble
+   * typing. See FoxSlot's `excited`. */
   excite?: boolean;
   /** Played once the bubble has popped in. The text types along with it —
    * paced so the last letter lands as the voice ends — and the fox's mouth
@@ -154,6 +155,9 @@ export function FoxMessageScreen({
   // Everything has typed out (and the mouth has stopped).
   const typedOut =
     bubbleIn && showBubble && bubbleShown >= bubbleLen && headingShown >= headingLen && !talking;
+  // Heading-first screens get excited the moment the heading has typed out,
+  // together with the bubble popping in and typing; others once all is typed.
+  const excited = excite && (headingFirst ? showBubble : typedOut);
 
   const headingBlock = heading && (
     <div className="relative flex shrink-0 items-start gap-1.5">
@@ -241,7 +245,7 @@ export function FoxMessageScreen({
           <FoxSlot
             greet={greet}
             talking={talking}
-            excited={excite && typedOut}
+            excited={excited}
             className="aspect-square"
             style={{ height: FOX_SIZE }}
           />

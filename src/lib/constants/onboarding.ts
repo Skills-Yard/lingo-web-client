@@ -237,7 +237,8 @@ export type OnboardingStep =
        * foxy" greeting does. */
       greet?: boolean;
       /** Fox plays its "excitement" state machine once all the screen's text
-       * has typed out ("Are you ready?"). */
+       * has typed out — or, with `voiceReads: "heading"`, as soon as the
+       * heading has, together with the bubble typing ("Are you ready?"). */
       excite?: boolean;
       voiceover?: StepVoiceover;
       /** Whether the voiceover also reads the heading (default true). When
