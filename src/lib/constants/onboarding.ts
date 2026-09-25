@@ -405,6 +405,17 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     cta: "Continue",
   },
   {
+    kind: "fox-message",
+    id: "pace-wow",
+    bubble: (a) => [
+      { text: "WOW!", highlight: true },
+      { text: "\nAt this pace, you'll finish your first 3 lessons toward [" },
+      { text: careerLabel(a), highlight: true },
+      { text: "] this week." },
+    ],
+    cta: "Yes!",
+  },
+  {
     kind: "question-grid",
     id: "learningTime",
     heading: () => [
@@ -416,17 +427,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     answerKey: "learningTime",
     voiceover: ["/audios/best_time_Ques.m4a", "/audios/best_time_Option.m4a"],
     cta: "Continue",
-  },
-  {
-    kind: "fox-message",
-    id: "pace-wow",
-    bubble: (a) => [
-      { text: "WOW!", highlight: true },
-      { text: "\nAt this pace, you'll finish your first 3 lessons toward [" },
-      { text: careerLabel(a), highlight: true },
-      { text: "] this week." },
-    ],
-    cta: "Yes!",
   },
   {
     kind: "notification-permission",

@@ -34,8 +34,10 @@ export function QuestionListScreen({
 }: QuestionListScreenProps) {
   // The fox beside the question talks exactly while its voice plays; the
   // question fills in as it's read, then each option lights up (selected look
-  // + slight scale-up, never actually selected) as it's read out.
-  const voice = useVoiceover(voiceover, true, muted);
+  // + slight scale-up, never actually selected) as it's read out. Picking
+  // an answer cuts all that short — the voice fades out and the highlighting
+  // stops.
+  const voice = useVoiceover(voiceover, true, muted, selectedId !== null);
   const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
   const spokenOption = spokenOptionIndex(voice, options.length);
 
