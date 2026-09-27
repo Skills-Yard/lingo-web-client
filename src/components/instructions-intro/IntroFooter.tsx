@@ -1,7 +1,7 @@
 import { ArrowRight, Check, X, Sparkle } from "lucide-react";
 import type { ReactNode } from "react";
 import { RobuReaction } from "./RobuReaction";
-import { Button3D } from "@/components/ui/Button3D";
+import { Button3D, type Button3DTone } from "@/components/ui/Button3D";
 
 export interface QuizFeedback {
   isCorrect: boolean;
@@ -36,6 +36,13 @@ export function IntroFooter({
   leadingIcon,
   primaryTone = "brand",
 }: IntroFooterProps) {
+  const tone: Button3DTone =
+    primaryState === "retry"
+      ? "destructive"
+      : primaryTone === "dark"
+        ? "dark"
+        : "brand";
+
   return (
     <footer className="shrink-0 px-4 pt-3 pb-3 bg-background dark:bg-[#0D1016]">
       <div className="w-full flex flex-col gap-3">
@@ -121,28 +128,31 @@ export function IntroFooter({
         <Button3D
           onClick={onPrimaryAction}
           disabled={primaryState === "disabled"}
-          tone={
-            primaryState === "retry"
-              ? "destructive"
-              : primaryTone === "dark"
-                ? "dark"
-                : "brand"
-          }
+          tone={tone}
           className={`w-full ${ctaFullWidth ? "" : "md:w-auto md:self-end md:min-w-44"}`}
         >
-          {leadingIcon && (
-            <span className="">
-              <img
-                src="/animations/svg/box.svg"
-                alt=""
-                className="w-10 h-10 object-contain"
+          {tone === "brand" ? (
+            // Plain text only, so Button3D writes it into the Rive button's
+            // own `Text` run (as on the onboarding CTA) rather than
+            // overlaying HTML on the artwork.
+            primaryLabel
+          ) : (
+            <>
+              {leadingIcon && (
+                <span className="">
+                  <img
+                    src="/animations/svg/box.svg"
+                    alt=""
+                    className="w-10 h-10 object-contain"
+                  />
+                </span>
+              )}
+              <span>{primaryLabel}</span>
+              <ArrowRight
+                className={`w-5 h-5 ${ctaFullWidth ? "md:hidden" : ""}`}
               />
-            </span>
+            </>
           )}
-          <span>{primaryLabel}</span>
-          <ArrowRight
-            className={`w-5 h-5 ${ctaFullWidth ? "md:hidden" : ""}`}
-          />
         </Button3D>
       </div>
     </footer>

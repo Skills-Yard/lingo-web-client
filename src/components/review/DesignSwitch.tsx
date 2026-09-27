@@ -18,7 +18,7 @@ interface DesignSwitchProps {
  * so switching design variants reads as the same kind of gesture switching
  * light/dark does, just choosing between "current" and "himanshu" instead of
  * a color scheme. Purely a review-tool affordance: it lives only on
- * `/review` and never touches either branch's own components.
+ * `/module1/review` and never touches either branch's own components.
  */
 export function DesignSwitch({ variant, onChange }: DesignSwitchProps) {
   const isHimanshu = variant === "himanshu";

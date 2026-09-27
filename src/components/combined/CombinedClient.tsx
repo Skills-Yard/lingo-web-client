@@ -61,10 +61,10 @@ function retreat({ screenIndex, slot }: Position): Position | null {
 }
 
 /**
- * `/combined` — one interleaved walkthrough of both branches' designs for
+ * `/module1/combined` — one interleaved walkthrough of both branches' designs for
  * the instructions-intro flow: screen 1 in feat/himanshu's design, then
  * screen 1 in the current branch's design, then screen 2 in feat/himanshu's
- * design, and so on, instead of `/review`'s "one full flow at a time,
+ * design, and so on, instead of `/module1/review`'s "one full flow at a time,
  * switch manually" toggle.
  *
  * Neither branch's `InstructionsIntroFlow` gained a prop for this — each

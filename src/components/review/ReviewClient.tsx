@@ -71,7 +71,7 @@ function runVariantChange(commit: () => void, origin: { x: number; y: number }) 
 }
 
 /**
- * Renders either branch's `InstructionsIntroFlow` at `/review`, switchable
+ * Renders either branch's `InstructionsIntroFlow` at `/module1/review`, switchable
  * via the bottom-left `DesignSwitch`. Both flows are the exact, untouched
  * components from their own branches (`instructions-intro/` = current,
  * `instructions-intro-himanshu/` = a self-contained, verified byte-for-byte

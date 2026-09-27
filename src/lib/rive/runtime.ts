@@ -23,20 +23,24 @@ const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
 export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 
 /**
- * The `.riv` for every Robu instance in both the current branch's own
- * instructions-intro flow (`src/components/instructions-intro`) and its
- * `-himanshu` counterpart (used by `/review` and `/combined` to compare
- * designs — both now render the same Orbi rig, so that comparison is of the
- * layout/copy differences only, not the mascot's own art anymore) —
- * RobuMascot (the single persistent mascot that glides between every
- * screen's anchor in the main flow: its boot-up intro sequence plays once,
- * in place of a CSS/framer opacity+scale fade, before the same file settles
- * into Robu's ambient idle loop for the rest of the session) and every
- * standalone `<RobuEyeBlink>` (the reveal-card modal, the game screens'
- * demo/level platforms) alike.
+ * The `.riv` for every Robu instance in the module 1 instructions-intro
+ * flows — both the current branch's own (`src/components/instructions-intro`)
+ * and its `-himanshu` counterpart (used by `/module1/review` and
+ * `/module1/combined` to compare designs — both render the same Orbi rig, so
+ * that comparison is of the layout/copy differences only) — RobuMascot (the
+ * single persistent mascot that glides between every screen's anchor: its
+ * boot-up intro sequence plays once, then settles into Robu's ambient idle
+ * loop) and every standalone `<RobuEyeBlink>` / `<RobuReaction>` alike.
  *
- * One file for both themes (unlike `ROBU_RIVE_SRC_LIGHT`/`_DARK` below) — no
- * `getRobuRiveSrc(theme)` lookup needed, just this constant.
+ * "Artboard 1" / "Robu-StateMachine" rig — same artboard, state machine and
+ * clip names as the earlier `orbi_part2.riv`. The onboarding flow uses the
+ * fox rigs below instead (`ROBU_RIVE_SRC` / `ONBOARDING_FOX_RIVE_SRC`).
+ */
+export const ORBI_RIVE_SRC = "/animations/orbi_final.riv";
+
+/**
+ * The fox rig used by the onboarding flow's splash and notification fox
+ * (`OnboardingSplash`, `NotificationFox`).
  *
  * `-3`: adds a second, separate state machine ("splash screen") that drives
  * Robu's boot-up sequence on its own — internally chaining its own
@@ -71,7 +75,7 @@ export const ONBOARDING_FOX_RIVE_SRC = "/animations/foxy-me-2.riv";
  * The old two-theme Robu rig — kept only for the unused legacy copy in
  * `instructions-intro-robu-position-heading-consistency` (not routed from
  * any page). Both `instructions-intro` and `instructions-intro-himanshu` use
- * `ROBU_RIVE_SRC` above instead.
+ * `ORBI_RIVE_SRC` above instead.
  */
 export const ROBU_RIVE_SRC_LIGHT = "/animations/robu_dark.riv";
 export const ROBU_RIVE_SRC_DARK = "/animations/foxi.riv";
