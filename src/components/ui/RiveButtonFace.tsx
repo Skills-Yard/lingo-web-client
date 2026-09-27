@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { preload } from "react-dom";
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
@@ -30,7 +30,8 @@ const SHINE_EVERY_MS = 5000;
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 // Shown until the .riv has loaded (it's ~250 KB, mostly its embedded font),
-// so the button never renders as an empty gap.
+// so the button never renders as an empty gap. The label only ever comes
+// from Rive's own text run.
 const PLACEHOLDER_SRC = "/images/polygon-btn/default-btn.png";
 
 interface RiveButtonFaceProps {
@@ -57,12 +58,23 @@ export function RiveButtonFace({ label, pressCount, shine }: RiveButtonFaceProps
     layout: LAYOUT,
   });
 
+  // True once the canvas has painted `label` itself. Until then the
+  // placeholder stays up and the canvas stays hidden: on load Rive paints
+  // the artboard's own default text first, so swapping the moment `rive`
+  // exists would flash that frame between the placeholder and the real
+  // label — visible every time a button mounts fresh (e.g. each screen on
+  // /module1/combined, which remounts its whole flow per screen).
+  const [labelDrawn, setLabelDrawn] = useState(false);
+
   // Nothing is animating when the label changes, so redraw explicitly —
   // setting the run's text alone doesn't repaint the canvas.
   useEffect(() => {
     if (!rive) return;
     rive.setTextRunValue(TEXT_RUN, label);
     rive.drawFrame();
+    // drawFrame() paints on the next animation frame, so reveal after it.
+    const raf = requestAnimationFrame(() => requestAnimationFrame(() => setLabelDrawn(true)));
+    return () => cancelAnimationFrame(raf);
   }, [rive, label]);
 
   useEffect(() => {
@@ -86,25 +98,22 @@ export function RiveButtonFace({ label, pressCount, shine }: RiveButtonFaceProps
 
   return (
     <>
-      {!rive && (
-        <>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={PLACEHOLDER_SRC}
-            alt=""
-            aria-hidden
-            draggable={false}
-            className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
-          />
-          <span
-            aria-hidden
-            className="absolute inset-0 flex items-center justify-center text-xl font-medium text-primary-foreground"
-          >
-            {label}
-          </span>
-        </>
+      {/* Art only, no HTML label: text overlaid here never lines up with
+          the text Rive then draws, so it read as a jump on every load. */}
+      {!labelDrawn && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={PLACEHOLDER_SRC}
+          alt=""
+          aria-hidden
+          draggable={false}
+          className="pointer-events-none absolute inset-0 h-full w-full select-none object-contain"
+        />
       )}
-      <RiveComponent aria-hidden className="pointer-events-none absolute inset-0 h-full w-full" />
+      <RiveComponent
+        aria-hidden
+        className={`pointer-events-none absolute inset-0 h-full w-full ${labelDrawn ? "" : "opacity-0"}`}
+      />
     </>
   );
 }
