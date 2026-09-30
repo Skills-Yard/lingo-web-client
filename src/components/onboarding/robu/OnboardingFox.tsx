@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, type CSSProperties } from "react";
+import { useEffect, useRef, type CSSProperties } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import {
   Layout,
@@ -45,8 +45,10 @@ const GREETING_DELAY_MS = 400;
 // The mouth's talking clip, played on top of the idle state machine for as
 // long as the screen's speech bubble is typing (see FoxMessageScreen).
 const SPEAK_ANIMATION = "Talking";
-// Played once when talking ends, to settle the mouth back to rest.
-const SPEAK_END_ANIMATION = "Talking_to_idol";
+// Played once when talking ends, to snap the mouth shut. Spelled as it is in
+// the file, double space included.
+const MOUTH_CLOSED_ANIMATION = "Mouth  Closed";
+const SPEAK_END_FALLBACK = "Talking_to_idol";
 
 const AMBIENT_WATCHDOG_MS = 500;
 
@@ -144,6 +146,9 @@ function useGreetingOnce(rive: RiveInstance | null, enabled: boolean) {
  * already have deleted the artboard.
  */
 function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
+  // True once talking has started, so the wind-down only plays after speech —
+  // not on mount or when `rive` first loads.
+  const hasTalked = useRef(false);
   useEffect(() => {
     if (!rive || !rive.animationNames.includes(SPEAK_ANIMATION)) return;
     // Not talking: stop the clip right away (it may be authored to loop, so
@@ -151,16 +156,29 @@ function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
     // clip once — or, without it, rewind to the first frame — so the mouth
     // doesn't freeze open mid-word.
     if (!talking) {
-      if (rive.playingAnimationNames.includes(SPEAK_ANIMATION)) {
-        rive.stop(SPEAK_ANIMATION);
-        if (rive.animationNames.includes(SPEAK_END_ANIMATION)) {
-          rive.stop(SPEAK_END_ANIMATION);
-          rive.play(SPEAK_END_ANIMATION);
-        } else {
-          rive.scrub(SPEAK_ANIMATION, 0);
-        }
+      if (!hasTalked.current) return;
+      hasTalked.current = false;
+      // Every talking-ish clip (the loop, its lead-in, the hello line, …) —
+      // stopping only "Talking" left the others running.
+      const names = rive.animationNames;
+      const endClip =
+        [MOUTH_CLOSED_ANIMATION, SPEAK_END_FALLBACK].find((name) => names.includes(name)) ??
+        null;
+      const talkClips = names.filter((name) => /talk/i.test(name) && name !== endClip);
+      if (talkClips.length > 0) rive.stop(talkClips);
+      if (endClip) {
+        rive.stop(endClip);
+        rive.play(endClip);
+      } else {
+        rive.scrub(SPEAK_ANIMATION, 0);
       }
       return;
+    }
+    hasTalked.current = true;
+    // The closing clip keeps holding the mouth shut after it plays, which
+    // would override the talking clip — release it before talking starts.
+    for (const name of [MOUTH_CLOSED_ANIMATION, SPEAK_END_FALLBACK]) {
+      if (rive.playingAnimationNames.includes(name)) rive.stop(name);
     }
     // `stop()` before `play()` rewinds the clip — replaying a finished
     // one-shot would otherwise just hold its last frame. `restarting` keeps

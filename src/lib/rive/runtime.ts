@@ -69,13 +69,13 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 export const ROBU_RIVE_SRC = "/animations/foxi-9.riv";
 
 /**
- * The onboarding fox's rig — `zox-2.riv`, artboard "Charachter " (spelled as
+ * The onboarding fox's rig — `zox-2.riv`, artboard "Character " (spelled as
  * it is in the file, trailing space included). Replaces `ROBU_RIVE_SRC` for the
  * onboarding flow only; the
  * instructions-intro screens still use `foxi-9.riv`'s "Artboard 2".
  */
 export const ONBOARDING_FOX_RIVE_SRC = "/animations/zox-2.riv";
-export const ONBOARDING_FOX_ARTBOARD = "Charachter ";
+export const ONBOARDING_FOX_ARTBOARD = "Character ";
 /** Zox's idle pose — the state machine every onboarding fox plays. */
 export const ONBOARDING_FOX_IDLE_STATE_MACHINE = "Zox_Main";
 
