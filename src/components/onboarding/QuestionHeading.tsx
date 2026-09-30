@@ -40,8 +40,7 @@ interface QuestionHeadingProps {
   spoken: number;
   /** The fox's mouth moves while this is true. */
   talking: boolean;
-  /** Set anew (`Date.now()`) on each option pick. Accepted for the screens,
-   * unused — the tablet Zox has no typing pass to trigger yet. */
+  /** Set anew (`Date.now()`) on each option pick; plays Zox's typing pass. */
   typing?: number;
 }
 
@@ -55,7 +54,7 @@ interface QuestionHeadingProps {
 export function QuestionHeading({
   heading,
   spoken,
-  talking,
+  typing,
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
@@ -67,7 +66,7 @@ export function QuestionHeading({
   return (
     <div className="flex shrink-0 items-center justify-center gap-3 pt-4 sm:pt-6">
       <div aria-hidden className="relative shrink-0">
-        <ZoxTabFox className="h-28 w-28 sm:h-32 sm:w-32" />
+        <ZoxTabFox className="h-[9.1rem] w-[9.1rem] sm:h-[10.4rem] sm:w-[10.4rem]" typing={typing} />
       </div>
       <h1 className="max-w-60 text-lg font-semibold leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white sm:text-xl">
         {parts.map(({ span, cut }, i) => (

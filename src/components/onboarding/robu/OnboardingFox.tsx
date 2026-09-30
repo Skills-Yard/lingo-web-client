@@ -45,6 +45,8 @@ const GREETING_DELAY_MS = 400;
 // The mouth's talking clip, played on top of the idle state machine for as
 // long as the screen's speech bubble is typing (see FoxMessageScreen).
 const SPEAK_ANIMATION = "Talking";
+// Played once when talking ends, to settle the mouth back to rest.
+const SPEAK_END_ANIMATION = "Talking_to_idol";
 
 const AMBIENT_WATCHDOG_MS = 500;
 
@@ -144,8 +146,20 @@ function useGreetingOnce(rive: RiveInstance | null, enabled: boolean) {
 function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
   useEffect(() => {
     if (!rive || !rive.animationNames.includes(SPEAK_ANIMATION)) return;
+    // Not talking: stop the clip right away (it may be authored to loop, so
+    // it can't be left to end by itself), then play the mouth's wind-down
+    // clip once — or, without it, rewind to the first frame — so the mouth
+    // doesn't freeze open mid-word.
     if (!talking) {
-      rive.stop(SPEAK_ANIMATION);
+      if (rive.playingAnimationNames.includes(SPEAK_ANIMATION)) {
+        rive.stop(SPEAK_ANIMATION);
+        if (rive.animationNames.includes(SPEAK_END_ANIMATION)) {
+          rive.stop(SPEAK_END_ANIMATION);
+          rive.play(SPEAK_END_ANIMATION);
+        } else {
+          rive.scrub(SPEAK_ANIMATION, 0);
+        }
+      }
       return;
     }
     // `stop()` before `play()` rewinds the clip — replaying a finished

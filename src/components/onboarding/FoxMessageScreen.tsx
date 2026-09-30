@@ -148,10 +148,13 @@ export function FoxMessageScreen({
     headingShown = headingOnTop ? shown : shown - bubbleLen;
   }
   const showBubble = !headingFirst || headingShown >= headingLen;
-  // The mouth moves while the voice plays, and while anything types without it.
+  // The mouth moves while the voice plays, and while anything types without
+  // it — but stops as soon as the text has finished typing, even if the voice
+  // clip runs on a moment longer.
+  const textTyped = bubbleShown >= bubbleLen && headingShown >= headingLen;
   const typingUnsynced =
     typingStarted && !reduceMotion && !bubbleWaiting && ticks < unsyncedLen;
-  const talking = (synced && voice.playing) || typingUnsynced;
+  const talking = ((synced && voice.playing) || typingUnsynced) && !textTyped;
   // Everything has typed out (and the mouth has stopped).
   const typedOut =
     bubbleIn && showBubble && bubbleShown >= bubbleLen && headingShown >= headingLen && !talking;

@@ -31,10 +31,9 @@ const SPLASH_STATE_MACHINE = ONBOARDING_FOX_IDLE_STATE_MACHINE;
 // How long the splash stays up before handing over to the next screen.
 const SPLASH_SETTLE_MS = 3200;
 
-// Cover (not Contain): the artwork stretches to fill the box's full width —
-// cropping top/bottom as needed, bottom-aligned — so it reads as attached to
-// both side edges instead of floating with empty margin on either side.
-const LAYOUT = new Layout({ fit: Fit.Cover, alignment: Alignment.BottomCenter });
+// Contain, bottom-aligned: the whole artboard always fits in the box, so his
+// head is never cropped at the top (Cover cut it off on wide/short boxes).
+const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.BottomCenter });
 
 // The wordmark's own entrance — quick, since it only has to read before
 // Robu's own boot-up sequence gets going underneath it, not span the whole
@@ -96,7 +95,7 @@ export function OnboardingSplash({ className, onComplete }: OnboardingSplashProp
         LINGO
       </motion.h1>
 
-      <div className="absolute inset-x-0 bottom-0 z-10 h-[45dvh] sm:h-[50dvh] md:h-[55dvh]">
+      <div className="absolute inset-x-0 bottom-0 z-20 h-[45dvh] sm:h-[50dvh] md:h-[55dvh]">
         <RiveComponent className="h-full w-full" />
       </div>
     </div>
