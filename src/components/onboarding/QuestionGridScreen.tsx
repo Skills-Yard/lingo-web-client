@@ -87,6 +87,7 @@ export function QuestionGridScreen({
               key={option.id}
               type="button"
               onClick={() => {
+                voice.stop();
                 playClickSound();
                 setTyping(Date.now());
                 onSelect(option.id);

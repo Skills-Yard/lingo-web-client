@@ -28,7 +28,7 @@ export function PreLoginScreen({ className }: PreLoginScreenProps) {
       </h1>
 
       <div className="flex min-h-0 flex-1 items-center justify-center">
-        <FoxSlot className="aspect-square h-[min(16rem,34dvh)]" />
+        <FoxSlot className="aspect-square h-[min(20rem,42dvh)]" />
       </div>
     </div>
   );

@@ -21,8 +21,8 @@ const SCREEN_SETTLE_MS = 400;
 // hangs off its top and the heading off its bottom, instead of all three
 // being centered as a group (which moved the fox whenever the text length
 // changed).
-const FOX_SIZE = "min(12rem, 28dvh)";
-const FOX_HALF = "min(6rem, 14dvh)";
+const FOX_SIZE = "min(16rem, 36dvh)";
+const FOX_HALF = "min(8rem, 18dvh)";
 const FOX_CENTER = "54%";
 /** Breathing room kept between the text and the edges of that space. */
 const EDGE_GAP_PX = 12;
@@ -148,10 +148,13 @@ export function FoxMessageScreen({
     headingShown = headingOnTop ? shown : shown - bubbleLen;
   }
   const showBubble = !headingFirst || headingShown >= headingLen;
-  // The mouth moves while the voice plays, and while anything types without it.
+  // The mouth moves while the voice plays, and while anything types without
+  // it — but stops as soon as the text has finished typing, even if the voice
+  // clip runs on a moment longer.
+  const textTyped = bubbleShown >= bubbleLen && headingShown >= headingLen;
   const typingUnsynced =
     typingStarted && !reduceMotion && !bubbleWaiting && ticks < unsyncedLen;
-  const talking = (synced && voice.playing) || typingUnsynced;
+  const talking = ((synced && voice.playing) || typingUnsynced) && !textTyped;
   // Everything has typed out (and the mouth has stopped).
   const typedOut =
     bubbleIn && showBubble && bubbleShown >= bubbleLen && headingShown >= headingLen && !talking;
@@ -253,7 +256,7 @@ export function FoxMessageScreen({
           {(headingOnTop || headingBelow) && (
             <div
               ref={belowRef}
-              className="absolute top-full left-1/2 flex w-max max-w-[calc(100vw-3rem)] -translate-x-1/2 justify-center pt-4"
+              className="absolute top-full left-1/2 flex w-max max-w-[calc(100vw-3rem)] -translate-x-1/2 justify-center pt-8"
             >
               {headingOnTop ? bubbleEl("up") : headingBlock}
             </div>

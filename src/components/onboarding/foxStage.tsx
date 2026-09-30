@@ -131,7 +131,7 @@ export function FoxSlot({
 /** The fox is drawn at this size and scaled to each slot — scaling (a
  * transform) keeps the Rive canvas from being re-sized every frame while it
  * glides between slots of different sizes. As big as the biggest slot. */
-const BASE_SIZE = 256;
+const BASE_SIZE = 320;
 const GLIDE = { stiffness: 210, damping: 30, mass: 1 } as const;
 /** Arriving at a hidden slot: fade out as the glide lands. */
 const HIDE_FADE = { duration: 0.25, delay: 0.3 } as const;
@@ -216,9 +216,11 @@ export function PersistentFox({
       } else {
         parked.current = false;
         unhideAt.current = null;
+        // Gone at once: the new screen has no fox of this kind, and lingering
+        // over it while the old screen fades looks dirty.
         if (shown.current) {
           shown.current = false;
-          animate(opacity, 0, { duration: 0.25 });
+          opacity.jump(0);
         }
       }
       frame = window.requestAnimationFrame(tick);

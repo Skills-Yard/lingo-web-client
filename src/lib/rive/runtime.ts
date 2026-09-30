@@ -59,17 +59,29 @@ export const ORBI_RIVE_SRC = "/animations/orbi_final.riv";
  * `-5`: renames the talking clip "speak " -> "speak" (no trailing space) and
  * makes it the "Idle state" state machine's mouth-layer entry state; every
  * other clip/state-machine name is unchanged from `-4`.
+ *
+ * `-8`: adds the laptop clips ("laptop idle", "laptop taking out ",
+ * "laptop typing ", "tail typing", "Excitement ") and the "laptop idle" /
+ * "laptop_typing " state machines — see OnboardingFox's FoxPose. Every
+ * earlier clip/state-machine name is unchanged from `-5`.
+ *
+ * `-9`: same clips as `-8`; renames the state machines to "laptop" (laptop
+ * idle) and "excitement" (Excitement, then taking the laptop out after
+ * 2.37s). Neither has inputs and "excitement"'s body layer has no entry
+ * transition, so OnboardingFox still plays those clips directly.
  */
-export const ROBU_RIVE_SRC = "/animations/foxi-5.riv";
+export const ROBU_RIVE_SRC = "/animations/foxi-9.riv";
 
 /**
- * The onboarding flow's persistent fox (`OnboardingFox`). Same rig and clip
- * names as `ROBU_RIVE_SRC`, plus a "laptop" state machine (fox sitting with
- * its laptop — "laptop idle" / blink / "mouth idle " layers, no inputs) and
- * the one-shot "laptop typing " / looping "tail typing" clips the question
- * screens play when an option is picked.
+ * The onboarding fox's rig — `zox-2.riv`, artboard "Character " (spelled as
+ * it is in the file, trailing space included). Replaces `ROBU_RIVE_SRC` for the
+ * onboarding flow only; the
+ * instructions-intro screens still use `foxi-9.riv`'s "Artboard 2".
  */
-export const ONBOARDING_FOX_RIVE_SRC = "/animations/foxy-me-2.riv";
+export const ONBOARDING_FOX_RIVE_SRC = "/animations/zox-2.riv";
+export const ONBOARDING_FOX_ARTBOARD = "Character ";
+/** Zox's idle pose — the state machine every onboarding fox plays. */
+export const ONBOARDING_FOX_IDLE_STATE_MACHINE = "Zox_Main";
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in
@@ -99,3 +111,14 @@ export function configureRiveRuntime(): void {
   RuntimeLoader.setWasmUrl(WASM_URL);
   RuntimeLoader.setWasmFallbackUrl(WASM_FALLBACK_URL);
 }
+
+/**
+ * Zox on the question screens — `zox-tab.riv`, artboard "ZoxTabArtboard":
+ * Zox with his tablet. Driven by animation name, not the state machine:
+ * "Idle" plays by default, "Typing" plays once on each option pick, then back
+ * to "Idle". The file also has "L_Arm" and "R_arm" clips, unused.
+ */
+export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab.riv";
+export const ZOX_TAB_ARTBOARD = "ZoxTabArtboard";
+export const ZOX_TAB_IDLE_ANIMATION = "Idle";
+export const ZOX_TAB_TYPING_ANIMATION = "Typing";

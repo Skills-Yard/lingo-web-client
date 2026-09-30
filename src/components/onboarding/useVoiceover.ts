@@ -18,6 +18,9 @@ export interface Voiceover {
    * e.g. a question screen's question clip vs. its options clip. */
   clip: number;
   clipProgress: number;
+  /** Cuts the voice off where it is (an option was picked). The text and
+   * mouth settle as if it had finished; nothing restarts it. */
+  stop: () => void;
 }
 
 /**
@@ -132,6 +135,7 @@ export function useVoiceover(
     playNext();
 
     return () => {
+      stopRef.current = () => {};
       cancelled = true;
       stopRef.current = null;
       window.cancelAnimationFrame(frame);
@@ -149,5 +153,6 @@ export function useVoiceover(
     progress: status === "done" ? 1 : (position.clip + position.t) / count,
     clip: position.clip,
     clipProgress: position.t,
+    stop: () => stopRef.current?.(),
   };
 }

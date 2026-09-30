@@ -5,7 +5,12 @@ import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { motion } from "framer-motion";
 import { Sekuya } from "next/font/google";
-import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
+import {
+  configureRiveRuntime,
+  ONBOARDING_FOX_RIVE_SRC,
+  ONBOARDING_FOX_ARTBOARD,
+  ONBOARDING_FOX_IDLE_STATE_MACHINE,
+} from "@/lib/rive/runtime";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -16,31 +21,19 @@ configureRiveRuntime();
 // green-on-white.
 const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
 
-const ARTBOARD = "Artboard 2";
+const ARTBOARD = ONBOARDING_FOX_ARTBOARD;
 
-// A second, separate state machine from "Idle state" (see
-// ROBU_RIVE_SRC's own doc comment) — a close-up, zoomed-in boot reveal that
-// drives its own internal automatic (no-input) transition chain and settles
-// into its own "idle" state, staying at that same zoomed framing rather than
-// resetting to the normal full-body pose. That's why this stays its own
-// disposable canvas rather than something OnboardingFox's persistent
-// instance plays and hands off from — handing off only stops the timeline,
-// it doesn't reset whatever root transform the state machine left behind
-// (confirmed against instructions-intro's own RobuSplash, which this
-// mirrors — see its doc comment for the fuller story).
-const SPLASH_STATE_MACHINE = "splash screen";
+// Zox's idle state machine. The rig has no boot-up "splash screen" sequence,
+// so the splash just shows him idling; the timer below still decides how long
+// the splash stays up.
+const SPLASH_STATE_MACHINE = ONBOARDING_FOX_IDLE_STATE_MACHINE;
 
-// No "done" event to wait on (state machines don't expose one the way a
-// single linear animation's Stop event does), so this is a plain timer
-// standing in for one: how long the boot sequence takes to settle into its
-// own held idle look, measured against the actual timeline lengths in the
-// .riv.
+// How long the splash stays up before handing over to the next screen.
 const SPLASH_SETTLE_MS = 3200;
 
-// Cover (not Contain): the artwork stretches to fill the box's full width —
-// cropping top/bottom as needed, bottom-aligned — so it reads as attached to
-// both side edges instead of floating with empty margin on either side.
-const LAYOUT = new Layout({ fit: Fit.Cover, alignment: Alignment.BottomCenter });
+// Contain, bottom-aligned: the whole artboard always fits in the box, so his
+// head is never cropped at the top (Cover cut it off on wide/short boxes).
+const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.BottomCenter });
 
 // The wordmark's own entrance — quick, since it only has to read before
 // Robu's own boot-up sequence gets going underneath it, not span the whole
@@ -62,7 +55,7 @@ interface OnboardingSplashProps {
  */
 export function OnboardingSplash({ className, onComplete }: OnboardingSplashProps) {
   const { RiveComponent } = useRive({
-    src: ROBU_RIVE_SRC,
+    src: ONBOARDING_FOX_RIVE_SRC,
     artboard: ARTBOARD,
     stateMachines: SPLASH_STATE_MACHINE,
     autoplay: true,
@@ -102,7 +95,7 @@ export function OnboardingSplash({ className, onComplete }: OnboardingSplashProp
         LINGO
       </motion.h1>
 
-      <div className="absolute inset-x-0 bottom-0 z-10 h-[45dvh] sm:h-[50dvh] md:h-[55dvh]">
+      <div className="absolute inset-x-0 bottom-0 z-20 h-[45dvh] sm:h-[50dvh] md:h-[55dvh]">
         <RiveComponent className="h-full w-full" />
       </div>
     </div>

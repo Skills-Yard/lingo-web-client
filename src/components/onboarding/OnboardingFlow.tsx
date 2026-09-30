@@ -109,6 +109,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
 
   const step = index >= 0 ? ONBOARDING_STEPS[index] : null;
+  // A screen's slot only unregisters once that screen has finished fading
+  // out, so the fox would linger over the next screen until then. It follows
+  // the current screen instead: no slot for one that doesn't place the fox
+  // (the questions have their own Zox), and it's gone that instant.
+  const foxOnScreen = index === -1 || step?.kind === "fox-message" || step?.kind === "streak";
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
   const progress = questionNumber
     ? { step: questionNumber, total: QUESTION_COUNT }
@@ -184,10 +189,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       sparkle={step.sparkle}
                       bubble={step.bubble(answers)}
                       greet={step.greet}
-                      excite={step.excite}
                       voiceover={resolveVoiceover(step.voiceover, answers)}
-                    voiceReadsHeading={step.voiceReadsHeading}
+                      voiceReadsHeading={step.voiceReadsHeading}
                       voiceReads={step.voiceReads}
+                      excite={step.excite}
                       muted={muted}
                     />
                   )}
@@ -289,7 +294,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </div>
         </div>
 
-        <PersistentFox containerRef={mainRef} slot={foxSlot} />
+        <PersistentFox containerRef={mainRef} slot={foxOnScreen ? foxSlot : null} />
 
         {/* The splash covers everything, footer included — which also lets the
           footer's Rive button load behind it, ready before Get Started. */}

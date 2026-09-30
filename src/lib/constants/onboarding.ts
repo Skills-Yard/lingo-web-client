@@ -1,11 +1,5 @@
 import type { LucideIcon } from "lucide-react";
-import {
-  Briefcase,
-  Lightbulb,
-  Rocket,
-  TrendingUp,
-  Wallet,
-} from "lucide-react";
+import { Briefcase, Lightbulb, Rocket, TrendingUp, Wallet } from "lucide-react";
 
 /** One highlighted (or plain) run of text — headings/bubbles are built from
  * a small array of these instead of a single string + one "highlight this
@@ -55,12 +49,36 @@ export interface OnboardingGridOption {
 }
 
 export const CAREER_OPTIONS: OnboardingListOption[] = [
-  { id: "software-engineer", label: "Software Engineer", image: "/images/screen-01/01-1.png" },
-  { id: "data-scientist", label: "Data Scientist", image: "/images/screen-01/01-2.png" },
-  { id: "data-analyst", label: "Data Analyst", image: "/images/screen-01/01-3.png" },
-  { id: "devops-cloud", label: "DevOps / Cloud Engineer", image: "/images/screen-01/01-4.png" },
-  { id: "cybersecurity", label: "Cybersecurity", image: "/images/screen-01/01-5.png" },
-  { id: "automation-scripting", label: "Automation & Scripting", image: "/images/screen-01/01-6.png" },
+  {
+    id: "software-engineer",
+    label: "Software Engineer",
+    image: "/images/screen-01/01-1.png",
+  },
+  {
+    id: "data-scientist",
+    label: "Data Scientist",
+    image: "/images/screen-01/01-2.png",
+  },
+  {
+    id: "data-analyst",
+    label: "Data Analyst",
+    image: "/images/screen-01/01-3.png",
+  },
+  {
+    id: "devops-cloud",
+    label: "DevOps / Cloud Engineer",
+    image: "/images/screen-01/01-4.png",
+  },
+  {
+    id: "cybersecurity",
+    label: "Cybersecurity",
+    image: "/images/screen-01/01-5.png",
+  },
+  {
+    id: "automation-scripting",
+    label: "Automation & Scripting",
+    image: "/images/screen-01/01-6.png",
+  },
 ];
 
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
@@ -72,37 +90,129 @@ export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
 ];
 
 export const STARTING_POINT_OPTIONS: OnboardingListOption[] = [
-  { id: "basics", label: "Start from the basics", image: "/images/screen-07/07-1.png" },
-  { id: "skip-ahead", label: "Skip ahead, I already know some of this", image: "/images/screen-07/07-2.png" },
-  { id: "choose", label: "Let me choose where to start", image: "/images/screen-07/07-3.png" },
+  {
+    id: "basics",
+    label: "Start from the basics",
+    image: "/images/screen-07/07-1.png",
+  },
+  {
+    id: "skip-ahead",
+    label: "Skip ahead, I already know some of this",
+    image: "/images/screen-07/07-2.png",
+  },
+  {
+    id: "choose",
+    label: "Let me choose where to start",
+    image: "/images/screen-07/07-3.png",
+  },
 ];
 
 export const EXPERIENCE_OPTIONS: OnboardingGridOption[] = [
-  { id: "none", label: "No", illustration: "books", image: "/images/screen-02/02-1.png" },
-  { id: "little", label: "A little exposure", illustration: "mobile", image: "/images/screen-02/02-2.png" },
-  { id: "hands-on", label: "Hands-on", illustration: "chart", image: "/images/screen-02/02-3.png" },
-  { id: "professional", label: "Professional", illustration: "trophy", image: "/images/screen-02/02-4.png" },
+  {
+    id: "none",
+    label: "No",
+    illustration: "books",
+    image: "/images/screen-02/02-1.png",
+  },
+  {
+    id: "little",
+    label: "A little exposure",
+    illustration: "mobile",
+    image: "/images/screen-02/02-2.png",
+  },
+  {
+    id: "hands-on",
+    label: "Hands-on",
+    illustration: "chart",
+    image: "/images/screen-02/02-3.png",
+  },
+  {
+    id: "professional",
+    label: "Professional",
+    illustration: "trophy",
+    image: "/images/screen-02/02-4.png",
+  },
 ];
 
 export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
-  { id: "never", label: "Never used", illustration: "books", image: "/images/screen-03/03-1.png" },
-  { id: "basics", label: "Know the basics", illustration: "mobile", image: "/images/screen-03/03-2.png" },
-  { id: "hands-on-coder", label: "Hands-on coder", illustration: "chart", image: "/images/screen-03/03-3.png" },
-  { id: "professional", label: "Advanced", illustration: "trophy", image: "/images/screen-03/03-4.png" },
+  {
+    id: "never",
+    label: "Never used",
+    illustration: "books",
+    image: "/images/screen-03/03-1.png",
+  },
+  {
+    id: "basics",
+    label: "Know the basics",
+    illustration: "mobile",
+    image: "/images/screen-03/03-2.png",
+  },
+  {
+    id: "hands-on-coder",
+    label: "Hands-on coder",
+    illustration: "chart",
+    image: "/images/screen-03/03-3.png",
+  },
+  {
+    id: "professional",
+    label: "Advanced",
+    illustration: "trophy",
+    image: "/images/screen-03/03-4.png",
+  },
 ];
 
 export const TIME_COMMITMENT_OPTIONS: OnboardingGridOption[] = [
-  { id: "5min", label: "5 min a day", illustration: "books", image: "/images/screen-05/05-1.png" },
-  { id: "10min", label: "10 min a day", illustration: "mobile", image: "/images/screen-05/05-2.png" },
-  { id: "15min", label: "15 min a day", illustration: "chart", image: "/images/screen-05/05-3.png" },
-  { id: "30min-plus", label: "30+ min a day", illustration: "trophy", image: "/images/screen-05/05-4.png" },
+  {
+    id: "5min",
+    label: "5 min a day",
+    illustration: "books",
+    image: "/images/screen-05/05-1.png",
+  },
+  {
+    id: "10min",
+    label: "10 min a day",
+    illustration: "mobile",
+    image: "/images/screen-05/05-2.png",
+  },
+  {
+    id: "15min",
+    label: "15 min a day",
+    illustration: "chart",
+    image: "/images/screen-05/05-3.png",
+  },
+  {
+    id: "30min-plus",
+    label: "30+ min a day",
+    illustration: "trophy",
+    image: "/images/screen-05/05-4.png",
+  },
 ];
 
 export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
-  { id: "morning", label: "Morning", illustration: "books", image: "/images/screen-06/06-1.png" },
-  { id: "afternoon", label: "Afternoon", illustration: "mobile", image: "/images/screen-06/06-2.png" },
-  { id: "evening", label: "Evening", illustration: "chart", image: "/images/screen-06/06-3.png" },
-  { id: "night", label: "Night", illustration: "trophy", image: "/images/screen-06/06-4.png" },
+  {
+    id: "morning",
+    label: "Morning",
+    illustration: "books",
+    image: "/images/screen-06/06-1.png",
+  },
+  {
+    id: "afternoon",
+    label: "Afternoon",
+    illustration: "mobile",
+    image: "/images/screen-06/06-2.png",
+  },
+  {
+    id: "evening",
+    label: "Evening",
+    illustration: "chart",
+    image: "/images/screen-06/06-3.png",
+  },
+  {
+    id: "night",
+    label: "Night",
+    illustration: "trophy",
+    image: "/images/screen-06/06-4.png",
+  },
 ];
 
 /** Every career in this flow leads to the same language track — the
@@ -146,8 +256,11 @@ const CAREER_MIND_CAREER: Record<string, string> = {
 function careerMindAudio(a: OnboardingAnswers): readonly string[] | undefined {
   const level = a.pythonLevel ? CAREER_MIND_LEVEL[a.pythonLevel] : undefined;
   if (!level || !a.career) return undefined;
-  const career = a.career === "devops-cloud" ? level.devops : CAREER_MIND_CAREER[a.career];
-  return career ? [`/audios/carrer_mind/${level.code}${career}.m4a`] : undefined;
+  const career =
+    a.career === "devops-cloud" ? level.devops : CAREER_MIND_CAREER[a.career];
+  return career
+    ? [`/audios/carrer_mind/${level.code}${career}.m4a`]
+    : undefined;
 }
 
 /** Screen 8's bubble — its wording depends on the Python level answer. */
@@ -168,7 +281,9 @@ function careerMindBubble(a: OnboardingAnswers): TextSpan[] {
       ];
     case "professional":
       return [
-        { text: "Got it, we'll go deep and sharpen your skills specifically for " },
+        {
+          text: "Got it, we'll go deep and sharpen your skills specifically for ",
+        },
         career,
         { text: "." },
       ];
@@ -208,11 +323,14 @@ const AT_THIS_PACE_TEXT: Record<string, string> = {
   "5min": "At this pace, you'll finish your first 3 lessons this week.",
   "10min": "At this pace, you'll wrap up Module 1 by the end of the week.",
   "15min": "At this pace, you'll finish Module 1 and start Module 2 this week.",
-  "30min-plus": "At this pace, you could clear 2 full modules this week. Ambitious, I like it.",
+  "30min-plus":
+    "At this pace, you could clear 2 full modules this week. Ambitious, I like it.",
 };
 
 function careerLabel(answers: OnboardingAnswers): string {
-  return CAREER_OPTIONS.find((c) => c.id === answers.career)?.label ?? "your career";
+  return (
+    CAREER_OPTIONS.find((c) => c.id === answers.career)?.label ?? "your career"
+  );
 }
 
 /** Voiceover clips (in `public/audios`) played back-to-back when a screen
@@ -302,12 +420,11 @@ export type OnboardingStep =
       cta: string;
     };
 
-
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "fox-message",
     id: "greeting",
-    bubble: () => [{ text: "Hey! I am foxy,\nyour skills buddy" }],
+    bubble: () => [{ text: "Hey! I am Zox,\nyour skills buddy" }],
     greet: true,
     voiceover: ["/audios/text-1.mpeg"],
     cta: "Continue",
@@ -316,7 +433,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "fox-message",
     id: "ready-check",
     heading: () => [
-      { text: "Before your first lesson, a few quick questions to personalize your path." },
+      {
+        text: "Before your first lesson, a few quick questions to personalize your path.",
+      },
     ],
     headingPlacement: "bottom",
     sparkle: true,
@@ -336,7 +455,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: CAREER_OPTIONS,
     answerKey: "career",
-    voiceover: ["/audios/screen-1-question.mpeg", "/audios/screen-1-options.mpeg"],
+    voiceover: [
+      "/audios/screen-1-question.mpeg",
+      "/audios/screen-1-options.mpeg",
+    ],
     cta: "Continue",
   },
   {
@@ -426,10 +548,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "pace-wow",
     bubble: (a) => [
       { text: "WOW!", highlight: true },
-      { text: `\n${AT_THIS_PACE_TEXT[a.timeCommitment ?? ""] ?? AT_THIS_PACE_TEXT["5min"]}` },
+      {
+        text: `\n${AT_THIS_PACE_TEXT[a.timeCommitment ?? ""] ?? AT_THIS_PACE_TEXT["5min"]}`,
+      },
     ],
     voiceover: (a) => {
-      const src = a.timeCommitment ? AT_THIS_PACE_AUDIO[a.timeCommitment] : undefined;
+      const src = a.timeCommitment
+        ? AT_THIS_PACE_AUDIO[a.timeCommitment]
+        : undefined;
       return src ? [src] : undefined;
     },
     cta: "Yes!",
@@ -468,7 +594,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "fox-message",
     id: "three-months",
     bubble: (a) => [
-      { text: "In 3 months, you could be well past the basics and building real " },
+      {
+        text: "In 3 months, you could be well past the basics and building real ",
+      },
       { text: careerLabel(a), highlight: true },
       { text: " projects on your own." },
     ],
@@ -490,7 +618,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "fox-message",
     id: "foundation",
     bubble: () => [
-      { text: "Smart, a strong foundation makes everything after this easier. Starting from " },
+      {
+        text: "Smart, a strong foundation makes everything after this easier. Starting from ",
+      },
       { text: "Module 1", highlight: true },
       { text: "." },
     ],

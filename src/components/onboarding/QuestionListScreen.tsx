@@ -1,11 +1,18 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import type { OnboardingListOption, TextSpan } from "@/lib/constants/onboarding";
+import type {
+  OnboardingListOption,
+  TextSpan,
+} from "@/lib/constants/onboarding";
 import { playClickSound } from "./clickSound";
 import { useVoiceover } from "./useVoiceover";
 import { optionCardClass } from "./optionCard";
-import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
+import {
+  QuestionHeading,
+  questionSpoken,
+  spokenOptionIndex,
+} from "./QuestionHeading";
 
 interface QuestionListScreenProps {
   heading: TextSpan[];
@@ -55,13 +62,23 @@ export function QuestionListScreen({
   }, [spokenOption]);
 
   return (
-    <div className={`flex flex-1 flex-col min-h-0 bg-white px-4 dark:bg-background ${className ?? ""}`}>
-      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} typing={typing} />
+    <div
+      className={`flex flex-1 flex-col min-h-0 bg-white px-4 dark:bg-background ${className ?? ""}`}
+    >
+      <QuestionHeading
+        heading={heading}
+        spoken={spokenQuestion}
+        talking={voice.playing}
+        typing={typing}
+      />
 
       {/* Options keep their natural height; if they don't all fit, only
           this section scrolls (scrollbar hidden) — the CTA below is
           `shrink-0`, so it always stays fully on screen. */}
-      <div ref={optionsRef} className="scrollbar-none mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto -mx-2.5 px-3 pt-1.5 pb-3 sm:mt-5 sm:gap-[1.125rem]">
+      <div
+        ref={optionsRef}
+        className="scrollbar-none mt-4 flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto -mx-2.5 px-3 pt-1.5 pb-3 sm:mt-5 sm:gap-[1.125rem]"
+      >
         {options.map((option, i) => {
           const selected = option.id === selectedId;
           const spotlight = !selected && i === spokenOption;
@@ -72,6 +89,7 @@ export function QuestionListScreen({
               key={option.id}
               type="button"
               onClick={() => {
+                voice.stop();
                 playClickSound();
                 setTyping(Date.now());
                 onSelect(option.id);
@@ -90,7 +108,9 @@ export function QuestionListScreen({
                 Icon && (
                   <span
                     className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${
-                      lit ? "bg-primary text-white" : "bg-[#D9F6EC] text-[#1A1C22] dark:bg-[#0F2921] dark:text-white"
+                      lit
+                        ? "bg-primary text-white"
+                        : "bg-[#D9F6EC] text-[#1A1C22] dark:bg-[#0F2921] dark:text-white"
                     }`}
                   >
                     <Icon className="h-4.5 w-4.5" />
@@ -104,7 +124,6 @@ export function QuestionListScreen({
           );
         })}
       </div>
-
     </div>
   );
 }
