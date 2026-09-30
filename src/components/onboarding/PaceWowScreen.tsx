@@ -28,7 +28,7 @@ export function PaceWowScreen({ onNext, onBack, careerTitle = "Software Engineer
           >
             <p className="font-bold text-[18px] mb-2 text-[#01A17F]">WOW!</p>
             <p className="font-medium text-[15px] leading-relaxed">
-              At this pace, you'll finish your first 3 lessons toward <span className="font-bold">[{careerTitle}]</span> this week.
+              At this pace, you&apos;ll finish your first 3 lessons toward <span className="font-bold">[{careerTitle}]</span> this week.
             </p>
           </DialogueBubble>
         </div>

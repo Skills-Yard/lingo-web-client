@@ -124,8 +124,8 @@ export function OnboardingBubble({
         // The tail overhangs the wrapper on its own side (16px, hence
         // pt-4/pb-4); on the other side the flat shadow still spills 3px past
         // the box, so "up" gets that much room below too.
-        className={`max-w-xs sm:max-w-sm ${tail === "up" ? "pt-4 pb-0.75" : "pb-4"}`}
-        contentClassName="whitespace-pre-line text-balance px-3 py-3 text-center text-base font-medium leading-tight text-black sm:px-6 sm:py-3.5"
+        className={`max-w-xs sm:max-w-sm [--bubble-fill:var(--background)] ${tail === "up" ? "pt-4 pb-0.75" : "pb-4"}`}
+        contentClassName="whitespace-pre-line text-balance px-3 py-3 text-center text-base font-medium leading-tight text-black dark:text-white sm:px-6 sm:py-3.5"
       >
         <TypedText spans={spans} shown={shown} />
       </DialogueBubble>

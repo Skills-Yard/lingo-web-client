@@ -4,6 +4,12 @@ import { useEffect, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
 import { RiveButtonFace, RIVE_BUTTON_H, RIVE_BUTTON_W } from "./RiveButtonFace";
 
+// Firefox restores a button's disabled state across reloads, so after a
+// reload the DOM can disagree with the server HTML (hydration mismatch).
+// autocomplete="off" opts out. Spread in because React's types leave
+// `autoComplete` off <button>, though the attribute works there.
+const NO_STATE_RESTORE = { autoComplete: "off" };
+
 // A click holds the button pressed for PRESS_HOLD_MS, releases it, and only
 // then (at CLICK_DELAY_MS) runs the caller's `onClick` — otherwise a click
 // that navigates to the next screen unmounts the button before its press
@@ -40,7 +46,7 @@ const CHAMFER =
 const TILT_TRANSFORM = "perspective(300px) rotateX(25deg)";
 
 // The brand tone is drawn by Rive (`btn-click.riv`, see RiveButtonFace):
-// plain-text children become the file's own label via its `buttonName` run,
+// plain-text children become the file's own label via its `Text` run,
 // so every screen's CTA text shows up on the artwork itself.
 
 /** Flattens plain-text children ("Continue", `{cta}`, ["Step ", 2]) into
@@ -122,6 +128,7 @@ export function Button3D({
     return (
       <button
         type="button"
+        {...NO_STATE_RESTORE}
         disabled={disabled}
         style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}
         className={`relative block border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
@@ -153,6 +160,7 @@ export function Button3D({
   return (
     <button
       type="button"
+      {...NO_STATE_RESTORE}
       disabled={disabled}
       style={{ transform: TILT_TRANSFORM }}
       className={`group relative block border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${

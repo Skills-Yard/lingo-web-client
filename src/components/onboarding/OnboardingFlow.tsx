@@ -129,14 +129,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const requestNotifications = () => {
     if ("Notification" in window) Notification.requestPermission().catch(() => {});
   };
-  const handleCta = () => {
-    if (step?.kind === "notification-permission") requestNotifications();
-    goNext();
-  };
+  const handleCta = goNext;
 
-  // The notification screen is grey edge to edge (footer included), so the
-  // whole flow's background eases over to it and back.
-  const greyScreen = step?.kind === "notification-permission";
+  // The notification screen answers through its own prompt (Allow / Don't
+  // Allow), so the footer CTA fades out there — it keeps its space, so the
+  // screen's layout doesn't jump as it goes.
+  const hideCta = step?.kind === "notification-permission";
 
   // `h-dvh`, not `h-screen`: on mobile, 100vh is the height with the
   // browser's address bar hidden, so whenever the bar is showing the flow ran
@@ -146,9 +144,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <FoxStageProvider stage={foxStage}>
       <main
         ref={mainRef}
-        className={`onboarding-light relative flex h-dvh w-full flex-col overflow-hidden transition-colors duration-500 ${
-          greyScreen ? "bg-[#E9E9E9]" : "bg-white"
-        }`}
+        className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background"
       >
         {/* Screens crossfade in the space above the footer. */}
         <div className="relative min-h-0 flex-1">
@@ -160,7 +156,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={SCREEN_TRANSITION}
-                className="absolute inset-0 flex flex-col bg-white"
+                className="absolute inset-0 flex flex-col bg-white dark:bg-background"
               >
                 <PreLoginScreen className="flex flex-1 flex-col" />
               </motion.div>
@@ -173,7 +169,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={SCREEN_TRANSITION}
-                className={`absolute inset-0 flex flex-col ${greyScreen ? "bg-[#E9E9E9]" : "bg-white"}`}
+                className="absolute inset-0 flex flex-col bg-white dark:bg-background"
               >
                 {/* Phone-width column, centered on tablets/desktops so options
                   don't stretch across a wide screen. */}
@@ -181,7 +177,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   <OnboardingHeader
                     onBack={goBack}
                     progress={progress}
-                    showSound={step.kind === "streak"}
                     muted={muted}
                     onToggleMuted={() => setMuted((m) => !m)}
                   />
@@ -194,6 +189,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       sparkle={step.sparkle}
                       bubble={step.bubble(answers)}
                       greet={step.greet}
+                      excite={step.excite}
                       voiceover={resolveVoiceover(step.voiceover, answers)}
                     voiceReadsHeading={step.voiceReadsHeading}
                       voiceReads={step.voiceReads}
@@ -259,14 +255,23 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           screens never nudges the button. */}
         <div className="shrink-0">
           <div className="mx-auto w-full max-w-[22rem] px-4">
-            <Button3D
-              onClick={handleCta}
-              onPress={playClickSound}
-              disabled={ctaDisabled}
-              className="w-full"
+            <motion.div
+              initial={false}
+              animate={{ opacity: hideCta ? 0 : 1 }}
+              transition={SCREEN_TRANSITION}
+              aria-hidden={hideCta}
+              inert={hideCta}
+              className={hideCta ? "pointer-events-none" : undefined}
             >
-              {ctaLabel}
-            </Button3D>
+              <Button3D
+                onClick={handleCta}
+                onPress={playClickSound}
+                disabled={ctaDisabled || hideCta}
+                className="w-full"
+              >
+                {ctaLabel}
+              </Button3D>
+            </motion.div>
             <div className="flex h-10 items-center justify-center">
               <AnimatePresence>
                 {index === -1 && (

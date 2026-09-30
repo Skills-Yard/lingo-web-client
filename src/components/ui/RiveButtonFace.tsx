@@ -10,29 +10,31 @@ configureRiveRuntime();
 
 /**
  * `btn-click.riv` — the brand-tone Button3D's artwork. Artboard "Button"
- * (371x113) holds the green slab, a `ButtonText` text object whose run is
- * named `buttonName` (the only exported name, so the label can be set at
- * runtime), and three one-shot clips: "Shine" (0.67s), "Button Pressing"
- * (0.33s — the same length as Button3D's CLICK_DELAY_MS) and "Timeline 1"
- * (unused). The file has no state machine, so both clips are played by hand.
+ * (371x113) holds the green slab, a full-width centre-aligned text object
+ * whose run is named `Text` (so the label can be set at runtime), and three
+ * one-shot clips: "Shine" (0.67s), "Button Pressing" (0.33s — the same length
+ * as Button3D's CLICK_DELAY_MS) and "Button Idle" (unused). The artboard has
+ * no state machine, so both clips are played by hand. The file also carries
+ * an unrelated robot artboard ("Artboard 1", the default), hence the explicit
+ * `artboard` below.
  */
 export const RIVE_BUTTON_SRC = "/animations/btn-click.riv";
 export const RIVE_BUTTON_W = 371;
 export const RIVE_BUTTON_H = 113;
 const ARTBOARD = "Button";
-const TEXT_RUN = "buttonName";
+const TEXT_RUN = "Text";
 const SHINE_ANIMATION = "Shine";
 const PRESS_ANIMATION = "Button Pressing";
 /** Same cadence the old CSS shine used (`animate-button-shine`, 5s). */
 const SHINE_EVERY_MS = 5000;
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
-// Shown until the .riv has loaded (it's ~0.9 MB, mostly its embedded font),
+// Shown until the .riv has loaded (it's ~250 KB, mostly its embedded font),
 // so the button never renders as an empty gap.
 const PLACEHOLDER_SRC = "/images/polygon-btn/default-btn.png";
 
 interface RiveButtonFaceProps {
-  /** Written into the `buttonName` run; `""` leaves the Rive text empty so
+  /** Written into the `Text` run; `""` leaves the Rive text empty so
    * the caller can overlay richer content (e.g. an icon) in HTML instead. */
   label: string;
   /** Bumped by the caller on every click — each change plays the press clip. */

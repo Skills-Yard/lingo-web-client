@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
+import Link from "next/link";
 import { InstructionsIntroFlow as HimanshuFlow } from "@/components/instructions-intro-himanshu/InstructionsIntroFlow";
 import { InstructionsIntroFlow as CurrentFlow } from "@/components/instructions-intro/InstructionsIntroFlow";
 
@@ -143,9 +144,9 @@ export function CombinedClient({ initialScreenIndex }: { initialScreenIndex: num
         <p className="text-lg font-semibold">
           That&apos;s every screen, in both designs.
         </p>
-        <a href="/" className="text-sm text-primary underline">
+        <Link href="/" className="text-sm text-primary underline">
           Start over
-        </a>
+        </Link>
       </div>
     );
   }

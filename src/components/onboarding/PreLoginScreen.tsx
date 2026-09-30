@@ -20,7 +20,7 @@ interface PreLoginScreenProps {
  */
 export function PreLoginScreen({ className }: PreLoginScreenProps) {
   return (
-    <div className={`flex flex-col items-center bg-white ${className ?? ""}`}>
+    <div className={`flex flex-col items-center bg-white dark:bg-background ${className ?? ""}`}>
       <h1
         className={`${sekuya.className} pt-[12dvh] text-center text-4xl text-[#01A17F] sm:text-5xl`}
       >

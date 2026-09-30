@@ -46,7 +46,7 @@ export function MotivationScreen({ onNext, onBack, careerTitle = "Software Engin
             <Image src="/images/fox.png" alt="Fox mascot" width={64} height={64} className="object-contain" />
           </div>
           <h1 className="text-xl font-semibold leading-snug">
-            What's driving your move toward <span className="text-[#01A17F]">{careerTitle}</span>?
+            What&apos;s driving your move toward <span className="text-[#01A17F]">{careerTitle}</span>?
           </h1>
         </div>
 

@@ -40,6 +40,10 @@ interface FoxMessageScreenProps {
   bubble: TextSpan[];
   /** Fox waves hello once on mount — see FoxSlot's `greet`. */
   greet?: boolean;
+  /** Fox gets excited once all the text has typed out — or, on a
+   * heading-first screen, as soon as the heading has, alongside the bubble
+   * typing. See FoxSlot's `excited`. */
+  excite?: boolean;
   /** Played once the bubble has popped in. The text types along with it —
    * paced so the last letter lands as the voice ends — and the fox's mouth
    * moves exactly while it plays. */
@@ -71,6 +75,7 @@ export function FoxMessageScreen({
   sparkle,
   bubble,
   greet,
+  excite = false,
   voiceover,
   voiceReadsHeading = true,
   voiceReads = "all",
@@ -151,10 +156,16 @@ export function FoxMessageScreen({
   const typingUnsynced =
     typingStarted && !reduceMotion && !bubbleWaiting && ticks < unsyncedLen;
   const talking = (synced && voice.playing) || typingUnsynced;
+  // Everything has typed out (and the mouth has stopped).
+  const typedOut =
+    bubbleIn && showBubble && bubbleShown >= bubbleLen && headingShown >= headingLen && !talking;
+  // Heading-first screens get excited the moment the heading has typed out,
+  // together with the bubble popping in and typing; others once all is typed.
+  const excited = excite && (headingFirst ? showBubble : typedOut);
 
   const headingBlock = heading && (
     <div className="relative flex shrink-0 items-start gap-1.5">
-      <h1 className="max-w-xs text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl">
+      <h1 className="max-w-xs text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl dark:text-white">
         {typesHeading ? (
           <TypedText spans={heading} shown={headingShown} />
         ) : (
@@ -216,7 +227,7 @@ export function FoxMessageScreen({
   );
 
   return (
-    <div className={`flex min-h-0 flex-col bg-white px-6 ${className ?? ""}`}>
+    <div className={`flex min-h-0 flex-col bg-white px-6 dark:bg-background ${className ?? ""}`}>
       {headingOnTop && <div className="mt-[3dvh] shrink-0 self-center">{headingBlock}</div>}
 
       <div ref={stageRef} className="relative min-h-0 flex-1">

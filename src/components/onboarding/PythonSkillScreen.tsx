@@ -42,7 +42,7 @@ export function PythonSkillScreen({ onNext, onBack }: { onNext?: () => void; onB
             <Image src="/images/fox.png" alt="Fox mascot" width={64} height={64} className="object-contain" />
           </div>
           <h1 className="text-xl font-semibold leading-snug">
-            What's your <span className="text-[#01A17F]">Python</span> superpower level?
+            What&apos;s your <span className="text-[#01A17F]">Python</span> superpower level?
           </h1>
         </div>
 

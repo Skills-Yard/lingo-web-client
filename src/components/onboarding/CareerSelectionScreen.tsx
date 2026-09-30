@@ -44,7 +44,7 @@ export function CareerSelectionScreen({ onNext, onBack }: { onNext?: () => void;
             <Image src="/images/fox.png" alt="Fox mascot" width={64} height={64} className="object-contain" />
           </div>
           <h1 className="text-xl font-semibold leading-snug">
-            What's the <span className="text-[#01A17F]">career</span> you're chasing?
+            What&apos;s the <span className="text-[#01A17F]">career</span> you&apos;re chasing?
           </h1>
         </div>
 

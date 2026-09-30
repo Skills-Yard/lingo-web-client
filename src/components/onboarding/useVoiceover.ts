@@ -2,6 +2,9 @@
 
 import { useEffect, useRef, useState } from "react";
 
+/** How long the voice takes to fade away when stopped early. */
+const STOP_FADE_MS = 250;
+
 export type VoiceoverStatus = "idle" | "playing" | "done" | "failed";
 
 export interface Voiceover {
@@ -29,7 +32,13 @@ export interface Voiceover {
  * `muted` is applied live to the playing element rather than stopping it, so
  * toggling the header's sound button mid-line mutes/unmutes without losing
  * the place in the sequence — and synced typing keeps going either way.
- * Leaving the screen (unmount) stops playback, and so does `stop()`.
+ * Leaving the screen (unmount) stops playback.
+ *
+ * `stop` turning true (e.g. the user picked an answer mid-sentence) ends the
+ * sequence early: status goes straight to "done" — so voice-synced
+ * highlighting and the fox's mouth stop at once — while the audio itself
+ * fades out quickly rather than cutting off. (iOS ignores `volume`, so there
+ * it simply stops at the end of the fade.)
  *
  * Autoplay is fine here without extra handling: every screen with a voice is
  * reached by a tap (Get Started / Continue), which gives the page the user
@@ -40,13 +49,15 @@ export function useVoiceover(
   srcs: readonly string[] | undefined,
   start: boolean,
   muted: boolean,
+  stop = false,
 ): Voiceover {
   const [status, setStatus] = useState<VoiceoverStatus>("idle");
   // Current clip and how far through it, updated every frame while playing.
   const [position, setPosition] = useState({ clip: 0, t: 0 });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mutedRef = useRef(muted);
-  const stopRef = useRef<() => void>(() => {});
+  const stopRef = useRef<(() => void) | null>(null);
+  const stoppedRef = useRef(false);
   const key = srcs?.join("|") ?? "";
 
   useEffect(() => {
@@ -55,7 +66,13 @@ export function useVoiceover(
   }, [muted]);
 
   useEffect(() => {
-    if (!start || !key) return;
+    if (!stop || stoppedRef.current) return;
+    stoppedRef.current = true;
+    stopRef.current?.();
+  }, [stop]);
+
+  useEffect(() => {
+    if (!start || !key || stoppedRef.current) return;
     const queue = key.split("|");
     const audio = new Audio();
     audio.muted = mutedRef.current;
@@ -83,7 +100,11 @@ export function useVoiceover(
       audio
         .play()
         .then(() => {
-          if (cancelled) return;
+          // Stopped while the clip was still loading — keep it silent.
+          if (cancelled) {
+            audio.pause();
+            return;
+          }
           setStatus("playing");
           window.cancelAnimationFrame(frame);
           frame = window.requestAnimationFrame(tick);
@@ -93,13 +114,21 @@ export function useVoiceover(
         });
     };
 
+    let fadeFrame = 0;
     stopRef.current = () => {
-      if (cancelled) return;
       cancelled = true;
       window.cancelAnimationFrame(frame);
-      audio.pause();
-      setPosition({ clip: queue.length - 1, t: 1 });
+      audio.removeEventListener("ended", playNext);
       setStatus("done");
+      const from = audio.volume;
+      const began = performance.now();
+      const fade = () => {
+        const k = Math.min(1, (performance.now() - began) / STOP_FADE_MS);
+        audio.volume = from * (1 - k);
+        if (k < 1) fadeFrame = window.requestAnimationFrame(fade);
+        else audio.pause();
+      };
+      fadeFrame = window.requestAnimationFrame(fade);
     };
 
     audio.addEventListener("ended", playNext);
@@ -108,7 +137,9 @@ export function useVoiceover(
     return () => {
       stopRef.current = () => {};
       cancelled = true;
+      stopRef.current = null;
       window.cancelAnimationFrame(frame);
+      window.cancelAnimationFrame(fadeFrame);
       audio.removeEventListener("ended", playNext);
       audio.pause();
       audioRef.current = null;

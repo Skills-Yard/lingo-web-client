@@ -1,7 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import {
   Briefcase,
-  HelpCircle,
   Lightbulb,
   Rocket,
   TrendingUp,
@@ -65,12 +64,11 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
 ];
 
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
-  { id: "switching-careers", label: "Switching careers into tech", icon: Briefcase },
-  { id: "first-tech-job", label: "Landing my first tech job", icon: Rocket },
-  { id: "promotion", label: "Promotion in current role", icon: TrendingUp },
-  { id: "personal-project", label: "Personal project or curiosity", icon: Lightbulb },
-  { id: "freelance", label: "Freelance / side income", icon: Wallet },
-  { id: "not-sure", label: "Not sure yet", icon: HelpCircle },
+  { id: "switching-careers", label: "Switching careers", icon: Briefcase },
+  { id: "first-tech-job", label: "Landing my first job", icon: Rocket },
+  { id: "promotion", label: "Leveling up / promotion", icon: TrendingUp },
+  { id: "personal-project", label: "Personal project", icon: Lightbulb },
+  { id: "freelance", label: "Freelance", icon: Wallet },
 ];
 
 export const STARTING_POINT_OPTIONS: OnboardingListOption[] = [
@@ -90,14 +88,14 @@ export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
   { id: "never", label: "Never used", illustration: "books", image: "/images/screen-03/03-1.png" },
   { id: "basics", label: "Know the basics", illustration: "mobile", image: "/images/screen-03/03-2.png" },
   { id: "hands-on-coder", label: "Hands-on coder", illustration: "chart", image: "/images/screen-03/03-3.png" },
-  { id: "professional", label: "Professional", illustration: "trophy", image: "/images/screen-03/03-4.png" },
+  { id: "professional", label: "Advanced", illustration: "trophy", image: "/images/screen-03/03-4.png" },
 ];
 
 export const TIME_COMMITMENT_OPTIONS: OnboardingGridOption[] = [
-  { id: "15min", label: "15 min a day", illustration: "books", image: "/images/screen-05/05-1.png" },
-  { id: "30min", label: "30 min a day", illustration: "mobile", image: "/images/screen-05/05-2.png" },
-  { id: "45min", label: "45 min a day", illustration: "chart", image: "/images/screen-05/05-3.png" },
-  { id: "1hour", label: "1 hour a day", illustration: "trophy", image: "/images/screen-05/05-4.png" },
+  { id: "5min", label: "5 min a day", illustration: "books", image: "/images/screen-05/05-1.png" },
+  { id: "10min", label: "10 min a day", illustration: "mobile", image: "/images/screen-05/05-2.png" },
+  { id: "15min", label: "15 min a day", illustration: "chart", image: "/images/screen-05/05-3.png" },
+  { id: "30min-plus", label: "30+ min a day", illustration: "trophy", image: "/images/screen-05/05-4.png" },
 ];
 
 export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
@@ -196,6 +194,23 @@ const WHATS_DRIVING_AUDIO: Record<string, string> = {
   "automation-scripting": "/audios/screen-09/WDAMS.m4a",
 };
 
+/** The "At this pace…" voiceover after screen 5, per time commitment — files
+ * in `public/audios/ATP`, ATP + the minutes a day. */
+const AT_THIS_PACE_AUDIO: Record<string, string> = {
+  "5min": "/audios/ATP/ATP5.m4a",
+  "10min": "/audios/ATP/ATP10.m4a",
+  "15min": "/audios/ATP/ATP15.m4a",
+  "30min-plus": "/audios/ATP/ATP30.m4a",
+};
+
+/** The "At this pace…" bubble text after screen 5, per time commitment. */
+const AT_THIS_PACE_TEXT: Record<string, string> = {
+  "5min": "At this pace, you'll finish your first 3 lessons this week.",
+  "10min": "At this pace, you'll wrap up Module 1 by the end of the week.",
+  "15min": "At this pace, you'll finish Module 1 and start Module 2 this week.",
+  "30min-plus": "At this pace, you could clear 2 full modules this week. Ambitious, I like it.",
+};
+
 function careerLabel(answers: OnboardingAnswers): string {
   return CAREER_OPTIONS.find((c) => c.id === answers.career)?.label ?? "your career";
 }
@@ -238,6 +253,10 @@ export type OnboardingStep =
       /** Fox waves hello once when the screen appears — only the "Hey! I am
        * foxy" greeting does. */
       greet?: boolean;
+      /** Fox plays its "excitement" state machine once all the screen's text
+       * has typed out — or, with `voiceReads: "heading"`, as soon as the
+       * heading has, together with the bubble typing ("Are you ready?"). */
+      excite?: boolean;
       voiceover?: StepVoiceover;
       /** Whether the voiceover also reads the heading (default true). When
        * false, the heading shows in full and only the bubble types along. */
@@ -304,6 +323,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     headingPlacement: "bottom",
     sparkle: true,
+    excite: true,
     voiceover: ["/audios/text-2-screen.mpeg"],
     voiceReads: "heading",
     excite: true,
@@ -406,6 +426,19 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     cta: "Continue",
   },
   {
+    kind: "fox-message",
+    id: "pace-wow",
+    bubble: (a) => [
+      { text: "WOW!", highlight: true },
+      { text: `\n${AT_THIS_PACE_TEXT[a.timeCommitment ?? ""] ?? AT_THIS_PACE_TEXT["5min"]}` },
+    ],
+    voiceover: (a) => {
+      const src = a.timeCommitment ? AT_THIS_PACE_AUDIO[a.timeCommitment] : undefined;
+      return src ? [src] : undefined;
+    },
+    cta: "Yes!",
+  },
+  {
     kind: "question-grid",
     id: "learningTime",
     heading: () => [
@@ -417,17 +450,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     answerKey: "learningTime",
     voiceover: ["/audios/best_time_Ques.m4a", "/audios/best_time_Option.m4a"],
     cta: "Continue",
-  },
-  {
-    kind: "fox-message",
-    id: "pace-wow",
-    bubble: (a) => [
-      { text: "WOW!", highlight: true },
-      { text: "\nAt this pace, you'll finish your first 3 lessons toward [" },
-      { text: careerLabel(a), highlight: true },
-      { text: "] this week." },
-    ],
-    cta: "Yes!",
   },
   {
     kind: "notification-permission",
