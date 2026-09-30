@@ -21,8 +21,8 @@ const SCREEN_SETTLE_MS = 400;
 // hangs off its top and the heading off its bottom, instead of all three
 // being centered as a group (which moved the fox whenever the text length
 // changed).
-const FOX_SIZE = "min(12rem, 28dvh)";
-const FOX_HALF = "min(6rem, 14dvh)";
+const FOX_SIZE = "min(16rem, 36dvh)";
+const FOX_HALF = "min(8rem, 18dvh)";
 const FOX_CENTER = "54%";
 /** Breathing room kept between the text and the edges of that space. */
 const EDGE_GAP_PX = 12;
@@ -246,7 +246,7 @@ export function FoxMessageScreen({
           {(headingOnTop || headingBelow) && (
             <div
               ref={belowRef}
-              className="absolute top-full left-1/2 flex w-max max-w-[calc(100vw-3rem)] -translate-x-1/2 justify-center pt-4"
+              className="absolute top-full left-1/2 flex w-max max-w-[calc(100vw-3rem)] -translate-x-1/2 justify-center pt-8"
             >
               {headingOnTop ? bubbleEl("up") : headingBlock}
             </div>

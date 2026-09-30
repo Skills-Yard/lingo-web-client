@@ -112,14 +112,14 @@ export function FoxSlot({
 /** The fox is drawn at this size and scaled to each slot — scaling (a
  * transform) keeps the Rive canvas from being re-sized every frame while it
  * glides between slots of different sizes. As big as the biggest slot. */
-const BASE_SIZE = 256;
+const BASE_SIZE = 320;
 const GLIDE = { stiffness: 210, damping: 30, mass: 1 } as const;
 
 /**
  * The flow's one fox. Every frame it reads the current slot's on-screen box
  * and springs toward it — which tracks a slot that's itself moving (the
- * talking screens' lift) and glides across when the slot changes. It fades
- * out on screens with no slot and reappears in place (no glide) at the next
+ * talking screens' lift) and glides across when the slot changes. It hides
+ * at once on screens with no slot and reappears in place (no glide) at the next
  * one.
  */
 export function PersistentFox({
@@ -162,7 +162,7 @@ export function PersistentFox({
         }
       } else if (shown.current) {
         shown.current = false;
-        animate(opacity, 0, { duration: 0.25 });
+        opacity.jump(0);
       }
       frame = window.requestAnimationFrame(tick);
     };

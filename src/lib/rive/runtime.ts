@@ -69,6 +69,15 @@ export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 export const ROBU_RIVE_SRC = "/animations/foxi-9.riv";
 
 /**
+ * The onboarding fox's rig — `zox-2.riv`, artboard "Charachter " (spelled as
+ * it is in the file, trailing space included). Replaces `ROBU_RIVE_SRC` for the
+ * onboarding flow only; the
+ * instructions-intro screens still use `foxi-9.riv`'s "Artboard 2".
+ */
+export const ONBOARDING_FOX_RIVE_SRC = "/animations/zox-2.riv";
+export const ONBOARDING_FOX_ARTBOARD = "Charachter ";
+
+/**
  * The old two-theme Robu rig — kept only for the unused legacy copy in
  * `instructions-intro-robu-position-heading-consistency` (not routed from
  * any page). Both `instructions-intro` and `instructions-intro-himanshu` use
@@ -96,3 +105,13 @@ export function configureRiveRuntime(): void {
   RuntimeLoader.setWasmUrl(WASM_URL);
   RuntimeLoader.setWasmFallbackUrl(WASM_FALLBACK_URL);
 }
+
+/**
+ * Zox on the question screens — `zox-tab.riv`, artboard "ZoxTabArtboard":
+ * Zox with his tablet. "State Machine 1" (no inputs) enters the looping
+ * "Timeline 1" by itself. The file also has one-shot "L_Arm", "R_arm" and
+ * "R_arm 2" clips, unused so far.
+ */
+export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab.riv";
+export const ZOX_TAB_ARTBOARD = "ZoxTabArtboard";
+export const ZOX_TAB_STATE_MACHINE = "State Machine 1";

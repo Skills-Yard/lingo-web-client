@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type CSSProperties } from "react";
+import { useEffect, type CSSProperties } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import {
   Layout,
@@ -10,140 +10,80 @@ import {
   type Event as RiveEvent,
   type Rive as RiveInstance,
 } from "@rive-app/canvas";
-import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
+import { configureRiveRuntime, ONBOARDING_FOX_RIVE_SRC, ONBOARDING_FOX_ARTBOARD } from "@/lib/rive/runtime";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
-// Same file/artboard every other Robu instance in the app uses (see
-// ROBU_RIVE_SRC) — this is a fresh, minimal component rather than a reuse of
-// instructions-intro's own `<RobuEyeBlink>`: that one hardcodes its inner
-// canvas to `absolute top-10 right-20 h-[100px] w-[100px]`, sized for its one
-// call site (a small corner badge over a reveal-card modal) — sizing this
-// screen's fox instead needs a plain `h-full w-full` fill of whatever box the
-// caller gives it, the same pattern RobuMascot/RobuSplash already use.
-const ARTBOARD = "Artboard 2";
-const BASE_ANIMATIONS = ["idle "];
+// Zox's rig (`zox-2.riv`, see ONBOARDING_FOX_RIVE_SRC). The "Zox_Main" state
+// machine is his idle pose — breathing, ears, tail, and the eye-movement
+// joystick — and plays for as long as the fox is mounted. The blink is the
+// one thing layered on top by hand, at random intervals (see BLINK_*).
+const ARTBOARD = ONBOARDING_FOX_ARTBOARD;
+const IDLE_STATE_MACHINE = "Zox_Main";
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
-// Fixed 5s cadence rather than a random range — the blink clip loops in the
-// editor (it doesn't settle back to open on its own), so without an explicit
-// `holdMs` force-stop it would just keep blinking for the entire gap until
-// the next trigger, reading as never stopping at all. Trailing space on the
-// clip name is the file's own spelling (confirmed against its string table).
-const BLINK_ANIMATIONS = ["both eye pupil blink "];
-const BLINK_MS = 5000;
-const BLINK_HOLD_MS = 600;
+// "blink eye" loops in the editor (it doesn't settle back to open on its own),
+// so each blink is force-stopped after BLINK_HOLD_MS. Random gap, so it reads
+// as unscripted instead of metronomic.
+const BLINK_ANIMATIONS = ["blink eye"];
+const BLINK_MIN_MS = 2500;
+const BLINK_MAX_MS = 6000;
+const BLINK_HOLD_MS = 150;
 
-// Randomized (not fixed-interval) so it reads as unscripted instead of
-// metronomic, centered on a ~10s cadence.
-const EAR_ANIMATIONS = ["ear blink"];
-const EAR_MIN_MS = 8000;
-const EAR_MAX_MS = 12000;
-
-// The greeting wave — the file's "hi " clip (trailing space is the file's own
-// spelling, same as the blink clip above). The clip is authored to loop, so
-// "once" means stopping it at the end of its first cycle (see
-// useGreetingOnce) — and, unlike the ambient/blink loops, there's
-// deliberately no watchdog or repeat timer to bring it back. The short delay
-// lets the screen's own crossfade-in (see OnboardingFlow's SCREEN_TRANSITION)
-// finish first, so the wave starts on a fully visible fox instead of playing
-// out mid-fade.
-const GREETING_ANIMATIONS = ["hi "];
+// The greeting wave: the "ZoxVM" view model's `hi` trigger, which the file
+// wires to its wave. Fallback (no view model bound) plays the clip directly.
+const GREETING_TRIGGER = "hi";
+const GREETING_ANIMATIONS = ["hi_wave_01"];
 const GREETING_DELAY_MS = 400;
 
-// The mouth layer's talking clip, played on top of the ambient loop for as
+// The mouth's talking clip, played on top of the idle state machine for as
 // long as the screen's speech bubble is typing (see FoxMessageScreen).
-// Unlike the clips above, this one has no trailing space in the file.
-const SPEAK_ANIMATION = "speak";
+const SPEAK_ANIMATION = "Talking";
 
 const AMBIENT_WATCHDOG_MS = 500;
 
 /**
- * What the fox is doing:
- * - "default": the plain clip-driven fox — `idle `, blinks, ear flicks, the
- *   greeting wave, the talking mouth (cut scenes, Get Started, streak).
- * - "excited": the "Are you ready?" reaction — the "excitement" state
- *   machine (Excitement, then taking the laptop out), then — once that has
- *   played — the "laptop" state machine.
- * - "laptop": the question screens — the "laptop" state machine.
- *
- * The two laptop poses run only those state machines, no individual clips:
- * everything clip-driven is stopped first, and the default pose's clip
- * overlays (blinks, ears, mouth) stay off until the fox is back to default —
- * the state machines have their own blink and mouth layers.
+ * What the fox is doing. `zox-2.riv` has no laptop or excitement state
+ * machines yet, so "excited" and "laptop" currently show the same idle fox as
+ * "default" — the type stays so screens keep declaring the pose they want.
  */
 export type FoxPose = "default" | "excited" | "laptop";
 
-const IDLE = "idle ";
-const EXCITEMENT_SM = "excitement";
-const LAPTOP_SM = "laptop";
-/** How long "excitement" runs before handing over to "laptop": its
- * Excitement state (2.37s exit time) plus "laptop taking out" (0.42s). */
-const EXCITEMENT_SM_MS = 2790;
-
-type FoxMode = "clips" | "excitement" | "laptop";
-
-function usePose(rive: RiveInstance | null, pose: FoxPose) {
-  // What the ambient watchdog keeps looping in the clip-driven pose.
-  const base = useRef<string[]>([IDLE]);
-  const mode = useRef<FoxMode>("clips");
-  const handOver = useRef<number | undefined>(undefined);
-
+function useIdleStateMachine(rive: RiveInstance | null) {
   useEffect(() => {
     if (!rive) return;
     const ensurePlaying = () => {
-      for (const name of base.current) {
-        if (!rive.playingAnimationNames.includes(name)) {
-          rive.stop(name);
-          rive.play(name);
-        }
+      if (!rive.playingStateMachineNames.includes(IDLE_STATE_MACHINE)) {
+        rive.play(IDLE_STATE_MACHINE);
       }
     };
     ensurePlaying();
     const timer = window.setInterval(ensurePlaying, AMBIENT_WATCHDOG_MS);
     return () => window.clearInterval(timer);
   }, [rive]);
-
-  useEffect(() => {
-    if (!rive) return;
-    const startLaptop = () => {
-      rive.stop();
-      rive.play(LAPTOP_SM);
-      mode.current = "laptop";
-    };
-
-    if (pose === "default") {
-      window.clearTimeout(handOver.current);
-      base.current = [IDLE];
-      if (mode.current !== "clips") {
-        // A state machine leaves the artboard however it last set it (the
-        // laptop, the sunglasses), which `idle ` doesn't touch — start the
-        // artboard over, back on the plain idle loop.
-        mode.current = "clips";
-        rive.reset({ artboard: ARTBOARD, animations: [IDLE], autoplay: true });
-      }
-    } else if (pose === "excited") {
-      window.clearTimeout(handOver.current);
-      base.current = [];
-      rive.stop();
-      rive.play(EXCITEMENT_SM);
-      mode.current = "excitement";
-      handOver.current = window.setTimeout(startLaptop, EXCITEMENT_SM_MS);
-    } else if (mode.current === "clips") {
-      // "laptop" straight from the default pose. (From "excited", the hand-
-      // over to "laptop" is already scheduled — let excitement finish.)
-      base.current = [];
-      startLaptop();
-    }
-  }, [rive, pose]);
-
-  // Timer only — calling into `rive` here could run after Rive has deleted
-  // the artboard.
-  useEffect(() => () => window.clearTimeout(handOver.current), []);
 }
 
-const NO_ANIMATIONS: string[] = [];
+/**
+ * Eye-movement joystick: Rive only feeds pointer positions to the state
+ * machine while the pointer is over the fox's own canvas, so the page-wide
+ * pointer is forwarded to it as mouse events. Rive maps client coordinates
+ * through the canvas's bounding rect without clamping, so positions outside
+ * the canvas work too.
+ */
+function useEyeTracking(canvas: HTMLCanvasElement | null) {
+  useEffect(() => {
+    if (!canvas) return;
+    const forward = (event: PointerEvent) => {
+      if (event.target === canvas) return;
+      canvas.dispatchEvent(
+        new MouseEvent("mousemove", { clientX: event.clientX, clientY: event.clientY }),
+      );
+    };
+    window.addEventListener("pointermove", forward);
+    return () => window.removeEventListener("pointermove", forward);
+  }, [canvas]);
+}
 
 function useRandomOverlay(
   rive: RiveInstance | null,
@@ -179,26 +119,20 @@ function useRandomOverlay(
 function useGreetingOnce(rive: RiveInstance | null, enabled: boolean) {
   useEffect(() => {
     if (!rive || !enabled) return;
-    const name = GREETING_ANIMATIONS.find((n) => rive.animationNames.includes(n));
-    if (!name) return;
-
-    // A looping clip reports each completed cycle as a Loop event — stopping
-    // on the first one leaves exactly one full wave.
-    const handleLoop = (event: RiveEvent) => {
-      const data = event.data as { animation?: string } | undefined;
-      if (data?.animation === name) rive.stop(name);
-    };
-    rive.on(EventType.Loop, handleLoop);
 
     const timer = window.setTimeout(() => {
+      const trigger = rive.viewModelInstance?.trigger(GREETING_TRIGGER);
+      if (trigger) {
+        trigger.trigger();
+        return;
+      }
+      const name = GREETING_ANIMATIONS.find((n) => rive.animationNames.includes(n));
+      if (!name) return;
       rive.stop(name);
       rive.play(name);
     }, GREETING_DELAY_MS);
 
-    return () => {
-      window.clearTimeout(timer);
-      rive.off(EventType.Loop, handleLoop);
-    };
+    return () => window.clearTimeout(timer);
   }, [rive, enabled]);
 }
 
@@ -257,7 +191,7 @@ interface OnboardingFoxProps {
   /** Moves the fox's mouth ("speak" clip) for as long as this is true — the
    * screen's speech bubble typing its line. */
   talking?: boolean;
-  /** See FoxPose. */
+  /** See FoxPose — accepted for callers, no visual difference yet. */
   pose?: FoxPose;
 }
 
@@ -272,23 +206,21 @@ export function OnboardingFox({
   style,
   greet = false,
   talking = false,
-  pose = "default",
 }: OnboardingFoxProps) {
-  const { rive, RiveComponent } = useRive({
-    src: ROBU_RIVE_SRC,
+  const { rive, canvas, RiveComponent } = useRive({
+    src: ONBOARDING_FOX_RIVE_SRC,
     artboard: ARTBOARD,
-    animations: BASE_ANIMATIONS,
+    stateMachines: IDLE_STATE_MACHINE,
+    autoBind: true,
     autoplay: true,
     layout: LAYOUT,
   });
 
-  usePose(rive, pose);
-  // The clip overlays only run in the clip-driven pose (see FoxPose).
-  const clipDriven = pose === "default";
-  useGreetingOnce(rive, greet && clipDriven);
-  useTalkingMouth(rive, talking && clipDriven);
-  useRandomOverlay(rive, clipDriven ? BLINK_ANIMATIONS : NO_ANIMATIONS, BLINK_MS, BLINK_MS, BLINK_HOLD_MS);
-  useRandomOverlay(rive, clipDriven ? EAR_ANIMATIONS : NO_ANIMATIONS, EAR_MIN_MS, EAR_MAX_MS);
+  useIdleStateMachine(rive);
+  useEyeTracking(canvas);
+  useGreetingOnce(rive, greet);
+  useTalkingMouth(rive, talking);
+  useRandomOverlay(rive, BLINK_ANIMATIONS, BLINK_MIN_MS, BLINK_MAX_MS, BLINK_HOLD_MS);
 
   return (
     <div className={className} style={style}>

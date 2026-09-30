@@ -15,6 +15,9 @@ export interface Voiceover {
    * e.g. a question screen's question clip vs. its options clip. */
   clip: number;
   clipProgress: number;
+  /** Cuts the voice off where it is (an option was picked). The text and
+   * mouth settle as if it had finished; nothing restarts it. */
+  stop: () => void;
 }
 
 /**
@@ -26,7 +29,7 @@ export interface Voiceover {
  * `muted` is applied live to the playing element rather than stopping it, so
  * toggling the header's sound button mid-line mutes/unmutes without losing
  * the place in the sequence — and synced typing keeps going either way.
- * Leaving the screen (unmount) stops playback.
+ * Leaving the screen (unmount) stops playback, and so does `stop()`.
  *
  * Autoplay is fine here without extra handling: every screen with a voice is
  * reached by a tap (Get Started / Continue), which gives the page the user
@@ -43,6 +46,7 @@ export function useVoiceover(
   const [position, setPosition] = useState({ clip: 0, t: 0 });
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const mutedRef = useRef(muted);
+  const stopRef = useRef<() => void>(() => {});
   const key = srcs?.join("|") ?? "";
 
   useEffect(() => {
@@ -89,10 +93,20 @@ export function useVoiceover(
         });
     };
 
+    stopRef.current = () => {
+      if (cancelled) return;
+      cancelled = true;
+      window.cancelAnimationFrame(frame);
+      audio.pause();
+      setPosition({ clip: queue.length - 1, t: 1 });
+      setStatus("done");
+    };
+
     audio.addEventListener("ended", playNext);
     playNext();
 
     return () => {
+      stopRef.current = () => {};
       cancelled = true;
       window.cancelAnimationFrame(frame);
       audio.removeEventListener("ended", playNext);
@@ -108,5 +122,6 @@ export function useVoiceover(
     progress: status === "done" ? 1 : (position.clip + position.t) / count,
     clip: position.clip,
     clipProgress: position.t,
+    stop: () => stopRef.current(),
   };
 }

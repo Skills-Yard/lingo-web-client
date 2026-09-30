@@ -5,7 +5,7 @@ import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { motion } from "framer-motion";
 import { Sekuya } from "next/font/google";
-import { configureRiveRuntime, ROBU_RIVE_SRC } from "@/lib/rive/runtime";
+import { configureRiveRuntime, ONBOARDING_FOX_RIVE_SRC, ONBOARDING_FOX_ARTBOARD } from "@/lib/rive/runtime";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -16,7 +16,7 @@ configureRiveRuntime();
 // green-on-white.
 const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
 
-const ARTBOARD = "Artboard 2";
+const ARTBOARD = ONBOARDING_FOX_ARTBOARD;
 
 // A second, separate state machine from "Idle state" (see
 // ROBU_RIVE_SRC's own doc comment) — a close-up, zoomed-in boot reveal that
@@ -62,7 +62,7 @@ interface OnboardingSplashProps {
  */
 export function OnboardingSplash({ className, onComplete }: OnboardingSplashProps) {
   const { RiveComponent } = useRive({
-    src: ROBU_RIVE_SRC,
+    src: ONBOARDING_FOX_RIVE_SRC,
     artboard: ARTBOARD,
     stateMachines: SPLASH_STATE_MACHINE,
     autoplay: true,

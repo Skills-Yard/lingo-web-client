@@ -83,6 +83,7 @@ export function QuestionGridScreen({
               key={option.id}
               type="button"
               onClick={() => {
+                voice.stop();
                 playClickSound();
                 onSelect(option.id);
               }}

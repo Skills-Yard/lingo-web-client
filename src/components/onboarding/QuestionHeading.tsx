@@ -3,6 +3,7 @@
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { FoxSlot } from "./foxStage";
 import type { FoxPose } from "./robu/OnboardingFox";
+import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
 
@@ -34,7 +35,8 @@ interface QuestionHeadingProps {
   spoken: number;
   /** The fox's mouth moves while this is true. */
   talking: boolean;
-  /** "laptop" on question screens (see FoxPose); the streak screen, which
+  /** "laptop" on question screens — Zox with his tablet (ZoxTabFox) slides
+   * up into the row instead of the flow's fox; the streak screen, which
    * reuses this row, keeps the default. */
   pose?: FoxPose;
 }
@@ -61,11 +63,11 @@ export function QuestionHeading({
   return (
     <div className="flex shrink-0 items-center justify-center gap-3 pt-4 sm:pt-6">
       <div aria-hidden className="relative shrink-0">
-        <FoxSlot
-          talking={talking}
-          pose={pose}
-          className="h-20 w-20 sm:h-24 sm:w-24"
-        />
+        {pose === "laptop" ? (
+          <ZoxTabFox className="h-20 w-20 sm:h-24 sm:w-24" />
+        ) : (
+          <FoxSlot talking={talking} pose={pose} className="h-20 w-20 sm:h-24 sm:w-24" />
+        )}
       </div>
       <h1 className="max-w-60 text-lg font-semibold leading-snug text-[#1A1C22] sm:max-w-72 sm:text-xl">
         {parts.map(({ span, cut }, i) => (
