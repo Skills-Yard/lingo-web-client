@@ -267,9 +267,6 @@ export type OnboardingStep =
        * with the voice first, then the bubble pops in and types quickly
        * ("Are you ready?"). */
       voiceReads?: "all" | "heading";
-      /** The fox gets excited and takes out its laptop as the bubble
-       * appears — the lead-in to the question screens ("Are you ready?"). */
-      excite?: boolean;
       cta: string;
     }
   | {
@@ -326,7 +323,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     excite: true,
     voiceover: ["/audios/text-2-screen.mpeg"],
     voiceReads: "heading",
-    excite: true,
     bubble: () => [{ text: "Are you ready?" }],
     cta: "Yes!",
   },

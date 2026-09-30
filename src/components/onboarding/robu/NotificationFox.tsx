@@ -2,16 +2,19 @@
 
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
-import { configureRiveRuntime, ONBOARDING_FOX_RIVE_SRC, ONBOARDING_FOX_ARTBOARD } from "@/lib/rive/runtime";
+import {
+  configureRiveRuntime,
+  ONBOARDING_FOX_RIVE_SRC,
+  ONBOARDING_FOX_ARTBOARD,
+  ONBOARDING_FOX_IDLE_STATE_MACHINE,
+} from "@/lib/rive/runtime";
 
 configureRiveRuntime();
 
-// The rig's own "notification" state machine: the fox peeking up (its
-// looping "notification" clip) with its idle, eye-blink and tail layers
-// running alongside — all wired inside the file, so unlike OnboardingFox
-// there are no clips to drive by hand here.
+// Zox's idle state machine. The rig has no peeking "notification" pose, so
+// this screen shows the same idle Zox as everywhere else.
 const ARTBOARD = ONBOARDING_FOX_ARTBOARD;
-const STATE_MACHINE = "notification";
+const STATE_MACHINE = ONBOARDING_FOX_IDLE_STATE_MACHINE;
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.BottomCenter });
 
 /** The fox peeking up at the notification prompt (NotificationPermissionScreen). */

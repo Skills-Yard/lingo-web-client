@@ -12,7 +12,7 @@ import {
   type RefObject,
 } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
-import { OnboardingFox, type FoxPose } from "./robu/OnboardingFox";
+import { OnboardingFox } from "./robu/OnboardingFox";
 
 /**
  * One fox for the whole onboarding flow. Screens don't render their own fox;
@@ -216,9 +216,11 @@ export function PersistentFox({
       } else {
         parked.current = false;
         unhideAt.current = null;
+        // Gone at once: the new screen has no fox of this kind, and lingering
+        // over it while the old screen fades looks dirty.
         if (shown.current) {
           shown.current = false;
-          animate(opacity, 0, { duration: 0.25 });
+          opacity.jump(0);
         }
       }
       frame = window.requestAnimationFrame(tick);

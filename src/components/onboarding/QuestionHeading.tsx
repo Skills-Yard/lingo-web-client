@@ -1,8 +1,6 @@
 "use client";
 
 import type { TextSpan } from "@/lib/constants/onboarding";
-import { FoxSlot } from "./foxStage";
-import type { FoxPose } from "./robu/OnboardingFox";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
@@ -42,13 +40,13 @@ interface QuestionHeadingProps {
   spoken: number;
   /** The fox's mouth moves while this is true. */
   talking: boolean;
-  /** Set anew (`Date.now()`) on each option pick — the fox types one pass on
-   * its laptop. */
+  /** Set anew (`Date.now()`) on each option pick. Accepted for the screens,
+   * unused — the tablet Zox has no typing pass to trigger yet. */
   typing?: number;
 }
 
 /**
- * The fox (seated at its laptop) + question row at the top of both question
+ * Zox (with his tablet) + question row at the top of both question
  * screens. While the
  * question is being read out, its text fills in karaoke-style: the part
  * already spoken is at full strength, the rest faded, so the highlight moves
@@ -58,7 +56,6 @@ export function QuestionHeading({
   heading,
   spoken,
   talking,
-  typing = 0,
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
@@ -70,12 +67,7 @@ export function QuestionHeading({
   return (
     <div className="flex shrink-0 items-center justify-center gap-3 pt-4 sm:pt-6">
       <div aria-hidden className="relative shrink-0">
-        <FoxSlot
-          laptop
-          talking={talking}
-          typing={typing}
-          className="h-28 w-28 sm:h-32 sm:w-32"
-        />
+        <ZoxTabFox className="h-28 w-28 sm:h-32 sm:w-32" />
       </div>
       <h1 className="max-w-60 text-lg font-semibold leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white sm:text-xl">
         {parts.map(({ span, cut }, i) => (

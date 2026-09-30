@@ -76,15 +76,8 @@ export const ROBU_RIVE_SRC = "/animations/foxi-9.riv";
  */
 export const ONBOARDING_FOX_RIVE_SRC = "/animations/zox-2.riv";
 export const ONBOARDING_FOX_ARTBOARD = "Charachter ";
-
-/**
- * The onboarding flow's persistent fox (`OnboardingFox`). Same rig and clip
- * names as `ROBU_RIVE_SRC`, plus a "laptop" state machine (fox sitting with
- * its laptop — "laptop idle" / blink / "mouth idle " layers, no inputs) and
- * the one-shot "laptop typing " / looping "tail typing" clips the question
- * screens play when an option is picked.
- */
-export const ONBOARDING_FOX_RIVE_SRC = "/animations/foxy-me-2.riv";
+/** Zox's idle pose — the state machine every onboarding fox plays. */
+export const ONBOARDING_FOX_IDLE_STATE_MACHINE = "Zox_Main";
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in

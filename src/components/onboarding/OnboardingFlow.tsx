@@ -189,9 +189,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       sparkle={step.sparkle}
                       bubble={step.bubble(answers)}
                       greet={step.greet}
-                      excite={step.excite}
                       voiceover={resolveVoiceover(step.voiceover, answers)}
-                    voiceReadsHeading={step.voiceReadsHeading}
+                      voiceReadsHeading={step.voiceReadsHeading}
                       voiceReads={step.voiceReads}
                       excite={step.excite}
                       muted={muted}

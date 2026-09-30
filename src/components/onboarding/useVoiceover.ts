@@ -153,6 +153,6 @@ export function useVoiceover(
     progress: status === "done" ? 1 : (position.clip + position.t) / count,
     clip: position.clip,
     clipProgress: position.t,
-    stop: () => stopRef.current(),
+    stop: () => stopRef.current?.(),
   };
 }

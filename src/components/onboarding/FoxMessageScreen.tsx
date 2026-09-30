@@ -54,9 +54,6 @@ interface FoxMessageScreenProps {
   /** "heading": the voiceover reads only the heading — see OnboardingStep's
    * `voiceReads`. */
   voiceReads?: "all" | "heading";
-  /** The fox gets excited — and takes out its laptop — as the bubble
-   * appears (see FoxPose "excited"). */
-  excite?: boolean;
   muted?: boolean;
   className?: string;
 }
@@ -79,7 +76,6 @@ export function FoxMessageScreen({
   voiceover,
   voiceReadsHeading = true,
   voiceReads = "all",
-  excite = false,
   muted = false,
   className,
 }: FoxMessageScreenProps) {
@@ -249,7 +245,7 @@ export function FoxMessageScreen({
           <FoxSlot
             greet={greet}
             talking={talking}
-            pose={excite && showBubble ? "excited" : "default"}
+            excited={excited}
             className="aspect-square"
             style={{ height: FOX_SIZE }}
           />
