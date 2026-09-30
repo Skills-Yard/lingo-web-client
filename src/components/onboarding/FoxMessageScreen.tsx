@@ -54,6 +54,9 @@ interface FoxMessageScreenProps {
   /** "heading": the voiceover reads only the heading — see OnboardingStep's
    * `voiceReads`. */
   voiceReads?: "all" | "heading";
+  /** Type at this fixed ms-per-character instead of following the voice; the
+   * mouth then moves only while the text types, not for the whole clip. */
+  typeSpeedMs?: number;
   muted?: boolean;
   className?: string;
 }
@@ -76,6 +79,7 @@ export function FoxMessageScreen({
   voiceover,
   voiceReadsHeading = true,
   voiceReads = "all",
+  typeSpeedMs,
   muted = false,
   className,
 }: FoxMessageScreenProps) {
@@ -101,7 +105,7 @@ export function FoxMessageScreen({
   }, [headingFirst]);
 
   const voice = useVoiceover(voiceover, headingFirst ? screenIn : bubbleIn, muted);
-  const synced = hasVoice && voice.status !== "failed";
+  const synced = hasVoice && voice.status !== "failed" && typeSpeedMs === undefined;
   const voiceShown = (length: number) =>
     voice.status === "done" ? length : Math.floor(voice.progress * length);
 
@@ -125,7 +129,7 @@ export function FoxMessageScreen({
   // at the normal speed, then the bubble pops in and types at the quick one.
   const onBubble = headingFirst && (synced || ticks >= headingLen);
   const bubbleWaiting = headingFirst && !synced && ticks >= headingLen && !bubbleIn;
-  const typingSpeed = onBubble ? QUICK_TYPE_SPEED_MS : TYPE_SPEED_MS;
+  const typingSpeed = typeSpeedMs ?? (onBubble ? QUICK_TYPE_SPEED_MS : TYPE_SPEED_MS);
   useEffect(() => {
     if (!typingStarted || reduceMotion || bubbleWaiting || ticks >= unsyncedLen) return;
     const timer = window.setTimeout(() => setTicks((t) => t + 1), typingSpeed);

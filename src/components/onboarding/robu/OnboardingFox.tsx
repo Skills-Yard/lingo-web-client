@@ -50,6 +50,9 @@ const SPEAK_ANIMATION = "Talking";
 const MOUTH_CLOSED_ANIMATION = "Mouth  Closed";
 const SPEAK_END_FALLBACK = "Talking_to_idol";
 
+const MOUTH_HOLD_MS = 12000;
+const MOUTH_HOLD_TICK_MS = 100;
+
 const AMBIENT_WATCHDOG_MS = 500;
 
 function useIdleStateMachine(rive: RiveInstance | null) {
@@ -165,14 +168,27 @@ function useTalkingMouth(rive: RiveInstance | null, talking: boolean) {
         [MOUTH_CLOSED_ANIMATION, SPEAK_END_FALLBACK].find((name) => names.includes(name)) ??
         null;
       const talkClips = names.filter((name) => /talk/i.test(name) && name !== endClip);
-      if (talkClips.length > 0) rive.stop(talkClips);
-      if (endClip) {
-        rive.stop(endClip);
-        rive.play(endClip);
-      } else {
-        rive.scrub(SPEAK_ANIMATION, 0);
-      }
-      return;
+      const closeMouth = () => {
+        const running = talkClips.filter((name) => rive.playingAnimationNames.includes(name));
+        if (running.length > 0) rive.stop(running);
+        if (endClip) {
+          rive.stop(endClip);
+          rive.play(endClip);
+        } else {
+          rive.scrub(SPEAK_ANIMATION, 0);
+        }
+      };
+      closeMouth();
+      // The greeting's "hi" trigger runs its own hello-line talking clip
+      // through the state machine, which can start it again after the stop
+      // above — so keep the mouth shut for a while, until nothing talks.
+      const started = performance.now();
+      const timer = window.setInterval(() => {
+        const stillTalking = talkClips.some((name) => rive.playingAnimationNames.includes(name));
+        if (stillTalking) closeMouth();
+        if (performance.now() - started > MOUTH_HOLD_MS) window.clearInterval(timer);
+      }, MOUTH_HOLD_TICK_MS);
+      return () => window.clearInterval(timer);
     }
     hasTalked.current = true;
     // The closing clip keeps holding the mouth shut after it plays, which

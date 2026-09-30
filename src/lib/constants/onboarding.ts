@@ -385,6 +385,10 @@ export type OnboardingStep =
        * with the voice first, then the bubble pops in and types quickly
        * ("Are you ready?"). */
       voiceReads?: "all" | "heading";
+      /** Types at this fixed ms-per-character instead of following the
+       * voice, and the fox talks only while it types. For clips with a
+       * silent tail, where voice-synced typing (and the mouth) would run on. */
+      typeSpeedMs?: number;
       cta: string;
     }
   | {
@@ -427,6 +431,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     bubble: () => [{ text: "Hey! I am Zox,\nyour skills buddy" }],
     greet: true,
     voiceover: ["/audios/text-1.mpeg"],
+    typeSpeedMs: 70,
     cta: "Continue",
   },
   {
