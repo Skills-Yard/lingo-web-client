@@ -73,15 +73,20 @@ export const ORBI_RIVE_SRC = "/animations/orbi_final.riv";
 export const ROBU_RIVE_SRC = "/animations/foxi-9.riv";
 
 /**
- * The onboarding fox's rig — `zox-2.riv`, artboard "Character " (spelled as
- * it is in the file, trailing space included). Replaces `ROBU_RIVE_SRC` for the
+ * The onboarding fox's rig — `eyeMove-3.riv` (`zox-2.riv` plus a "ZoxSM" state
+ * machine for eye movement), artboard "CharacterZox" (the file's older
+ * "Character " artboard has no "ZoxSM"). Replaces `ROBU_RIVE_SRC` for the
  * onboarding flow only; the
  * instructions-intro screens still use `foxi-9.riv`'s "Artboard 2".
  */
-export const ONBOARDING_FOX_RIVE_SRC = "/animations/zox-2.riv";
-export const ONBOARDING_FOX_ARTBOARD = "Character ";
+export const ONBOARDING_FOX_RIVE_SRC = "/animations/eyeMove-3.riv";
+export const ONBOARDING_FOX_ARTBOARD = "CharacterZox";
 /** Zox's idle pose — the state machine every onboarding fox plays. */
 export const ONBOARDING_FOX_IDLE_STATE_MACHINE = "Zox_Main";
+/** The eyes' state machine — follows the view model's `posX` / `posY` (-1..1). */
+export const ONBOARDING_FOX_EYE_STATE_MACHINE = "ZoxSM";
+/** The view model holding those two numbers. */
+export const ONBOARDING_FOX_EYE_VIEW_MODEL = "Zox";
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in
@@ -115,10 +120,10 @@ export function configureRiveRuntime(): void {
 /**
  * Zox on the question screens — `zox-tab.riv`, artboard "ZoxTabArtboard":
  * Zox with his tablet. Driven by animation name, not the state machine:
- * "Idle" plays by default, "Typing" plays once on each option pick, then back
+ * "Idle" plays by default, "Typing2" plays once on each option pick, then back
  * to "Idle". The file also has "L_Arm" and "R_arm" clips, unused.
  */
 export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab.riv";
 export const ZOX_TAB_ARTBOARD = "ZoxTabArtboard";
 export const ZOX_TAB_IDLE_ANIMATION = "Idle";
-export const ZOX_TAB_TYPING_ANIMATION = "Typing";
+export const ZOX_TAB_TYPING_ANIMATION = "Typing2";

@@ -15,17 +15,23 @@ import {
   ONBOARDING_FOX_RIVE_SRC,
   ONBOARDING_FOX_ARTBOARD,
   ONBOARDING_FOX_IDLE_STATE_MACHINE,
+  ONBOARDING_FOX_EYE_STATE_MACHINE,
+  ONBOARDING_FOX_EYE_VIEW_MODEL,
 } from "@/lib/rive/runtime";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
-// Zox's rig (`zox-2.riv`, see ONBOARDING_FOX_RIVE_SRC). The "Zox_Main" state
-// machine is his idle pose — breathing, ears, tail, and the eye-movement
-// joystick — and plays for as long as the fox is mounted. The blink is the
-// one thing layered on top by hand, at random intervals (see BLINK_*).
+// Zox's rig (`eyeMove-3.riv`, see ONBOARDING_FOX_RIVE_SRC). The "Zox_Main" state
+// machine is his idle pose — breathing, ears, tail — and "ZoxSM" moves his
+// eyes after the pointer (see useEyeTracking); both play for as long as the
+// fox is mounted. The blink is the one thing layered on top by hand, at
+// random intervals (see BLINK_*).
 const ARTBOARD = ONBOARDING_FOX_ARTBOARD;
-const IDLE_STATE_MACHINE = ONBOARDING_FOX_IDLE_STATE_MACHINE;
+const STATE_MACHINES = [
+  ONBOARDING_FOX_IDLE_STATE_MACHINE,
+  ONBOARDING_FOX_EYE_STATE_MACHINE,
+];
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 // "blink eye" loops in the editor (it doesn't settle back to open on its own),
@@ -59,9 +65,12 @@ function useIdleStateMachine(rive: RiveInstance | null) {
   useEffect(() => {
     if (!rive) return;
     const ensurePlaying = () => {
-      if (!rive.playingStateMachineNames.includes(IDLE_STATE_MACHINE)) {
-        rive.play(IDLE_STATE_MACHINE);
-      }
+      const missing = STATE_MACHINES.filter(
+        (name) =>
+          rive.stateMachineNames.includes(name) &&
+          !rive.playingStateMachineNames.includes(name),
+      );
+      if (missing.length > 0) rive.play(missing);
     };
     ensurePlaying();
     const timer = window.setInterval(ensurePlaying, AMBIENT_WATCHDOG_MS);
@@ -70,24 +79,32 @@ function useIdleStateMachine(rive: RiveInstance | null) {
 }
 
 /**
- * Eye-movement joystick: Rive only feeds pointer positions to the state
- * machine while the pointer is over the fox's own canvas, so the page-wide
- * pointer is forwarded to it as mouse events. Rive maps client coordinates
- * through the canvas's bounding rect without clamping, so positions outside
- * the canvas work too.
+ * Eye movement: "ZoxSM" reads the "Zox" view model's `posX` / `posY` numbers,
+ * both -1..1 (0 = eyes centred, -1 = left / up, 1 = right / down). They're set
+ * from the page-wide pointer, measured from the fox's own centre and scaled
+ * by half the window, so the eyes follow the pointer wherever the fox stands.
  */
-function useEyeTracking(canvas: HTMLCanvasElement | null) {
+function useEyeTracking(rive: RiveInstance | null, canvas: HTMLCanvasElement | null) {
   useEffect(() => {
-    if (!canvas) return;
-    const forward = (event: PointerEvent) => {
-      if (event.target === canvas) return;
-      canvas.dispatchEvent(
-        new MouseEvent("mousemove", { clientX: event.clientX, clientY: event.clientY }),
-      );
+    if (!rive || !canvas) return;
+    // The artboard may not have the view model linked to it in the file (then
+    // autoBind binds nothing) — bind its default instance ourselves.
+    if (!rive.viewModelInstance) {
+      const instance = rive.viewModelByName(ONBOARDING_FOX_EYE_VIEW_MODEL)?.defaultInstance();
+      if (instance) rive.bindViewModelInstance(instance);
+    }
+    const posX = rive.viewModelInstance?.number("posX");
+    const posY = rive.viewModelInstance?.number("posY");
+    if (!posX || !posY) return;
+    const toUnit = (n: number) => Math.max(-1, Math.min(1, n));
+    const follow = (event: PointerEvent) => {
+      const box = canvas.getBoundingClientRect();
+      posX.value = toUnit((event.clientX - (box.left + box.width / 2)) / (window.innerWidth / 2));
+      posY.value = toUnit((event.clientY - (box.top + box.height / 2)) / (window.innerHeight / 2));
     };
-    window.addEventListener("pointermove", forward);
-    return () => window.removeEventListener("pointermove", forward);
-  }, [canvas]);
+    window.addEventListener("pointermove", follow);
+    return () => window.removeEventListener("pointermove", follow);
+  }, [rive, canvas]);
 }
 
 function useRandomOverlay(
@@ -238,7 +255,7 @@ interface OnboardingFoxProps {
    * screen's speech bubble typing its line. */
   talking?: boolean;
   /** The "Are you ready?" excitement, and the question screens' seated
-   * laptop fox with its typing pass — `zox-2.riv` has no such animations, so
+   * laptop fox with its typing pass — `eyeMove-3.riv` has no such animations, so
    * these are accepted for callers (FoxSlot) but change nothing yet. */
   excited?: boolean;
   laptop?: boolean;
@@ -260,14 +277,15 @@ export function OnboardingFox({
   const { rive, canvas, RiveComponent } = useRive({
     src: ONBOARDING_FOX_RIVE_SRC,
     artboard: ARTBOARD,
-    stateMachines: IDLE_STATE_MACHINE,
     autoBind: true,
-    autoplay: true,
+    // Machines are played once loaded (useIdleStateMachine), skipping any the
+    // file lacks — naming a missing one here would fail the whole load.
+    autoplay: false,
     layout: LAYOUT,
   });
 
   useIdleStateMachine(rive);
-  useEyeTracking(canvas);
+  useEyeTracking(rive, canvas);
   useGreetingOnce(rive, greet);
   useTalkingMouth(rive, talking);
   useRandomOverlay(rive, BLINK_ANIMATIONS, BLINK_MIN_MS, BLINK_MAX_MS, BLINK_HOLD_MS);

@@ -12,8 +12,7 @@ import { OnboardingSplash } from "./robu/OnboardingSplash";
 import { OnboardingHeader } from "./OnboardingHeader";
 import { FoxMessageScreen } from "./FoxMessageScreen";
 import { NotificationPermissionScreen } from "./NotificationPermissionScreen";
-import { QuestionListScreen } from "./QuestionListScreen";
-import { QuestionGridScreen } from "./QuestionGridScreen";
+import { QuestionScreen } from "./QuestionScreen";
 import { StreakScreen } from "./StreakScreen";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
@@ -114,6 +113,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // the current screen instead: no slot for one that doesn't place the fox
   // (the questions have their own Zox), and it's gone that instant.
   const foxOnScreen = index === -1 || step?.kind === "fox-message" || step?.kind === "streak";
+  const isQuestion = step?.kind === "question-list" || step?.kind === "question-grid";
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
   const progress = questionNumber
     ? { step: questionNumber, total: QUESTION_COUNT }
@@ -164,7 +164,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
             {step && (
               <motion.div
-                key={`step-${step.id}`}
+                // All questions share one key, so moving between questions
+                // doesn't crossfade the screen (and re-animate Zox).
+                key={isQuestion ? "question" : `step-${step.id}`}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
@@ -218,23 +220,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <StreakScreen className="flex-1" heading={step.heading(answers)} image={step.image} />
                   )}
 
-                  {step.kind === "question-list" && (
-                    <QuestionListScreen
+                  {/* One element for list and grid questions alike, so a
+                    list question followed by a grid one (or the reverse)
+                    keeps the same Zox instead of remounting him. */}
+                  {(step.kind === "question-list" || step.kind === "question-grid") && (
+                    <QuestionScreen
                       className="flex-1"
+                      questionId={step.id}
                       heading={step.heading(answers)}
-                      options={step.options}
-                      selectedId={answers[step.answerKey] ?? null}
-                      onSelect={(id) => setAnswer(step.answerKey, id)}
-                      voiceover={resolveVoiceover(step.voiceover, answers)}
-                      muted={muted}
-                    />
-                  )}
-
-                  {step.kind === "question-grid" && (
-                    <QuestionGridScreen
-                      className="flex-1"
-                      heading={step.heading(answers)}
-                      options={step.options}
+                      {...(step.kind === "question-list"
+                        ? { kind: step.kind, options: step.options }
+                        : { kind: step.kind, options: step.options })}
                       selectedId={answers[step.answerKey] ?? null}
                       onSelect={(id) => setAnswer(step.answerKey, id)}
                       voiceover={resolveVoiceover(step.voiceover, answers)}

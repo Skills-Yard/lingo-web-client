@@ -65,6 +65,14 @@ export function useVoiceover(
     if (audioRef.current) audioRef.current.muted = muted;
   }, [muted]);
 
+  // A new voiceover (e.g. the next question, when one screen component stays
+  // mounted across questions) starts from a clean slate.
+  useEffect(() => {
+    stoppedRef.current = false;
+    setStatus("idle");
+    setPosition({ clip: 0, t: 0 });
+  }, [key]);
+
   useEffect(() => {
     if (!stop || stoppedRef.current) return;
     stoppedRef.current = true;
