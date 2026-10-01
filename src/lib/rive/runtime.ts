@@ -73,13 +73,14 @@ export const ORBI_RIVE_SRC = "/animations/orbi_final.riv";
 export const ROBU_RIVE_SRC = "/animations/foxi-9.riv";
 
 /**
- * The onboarding fox's rig — `eyeMove-3.riv` (`zox-2.riv` plus a "ZoxSM" state
- * machine for eye movement), artboard "CharacterZox" (the file's older
- * "Character " artboard has no "ZoxSM"). Replaces `ROBU_RIVE_SRC` for the
+ * The onboarding fox's rig — `zox-final.riv`, artboard "CharacterZox": the
+ * "Zox_Main" state machine plus "ZoxSM" for eye movement; the "Zox" view
+ * model's `hi`, `talk` and `stopTalk` triggers drive the wave and the mouth.
+ * Replaces `ROBU_RIVE_SRC` for the
  * onboarding flow only; the
  * instructions-intro screens still use `foxi-9.riv`'s "Artboard 2".
  */
-export const ONBOARDING_FOX_RIVE_SRC = "/animations/eyeMove-3.riv";
+export const ONBOARDING_FOX_RIVE_SRC = "/animations/zox-final.riv";
 export const ONBOARDING_FOX_ARTBOARD = "CharacterZox";
 /** Zox's idle pose — the state machine every onboarding fox plays. */
 export const ONBOARDING_FOX_IDLE_STATE_MACHINE = "Zox_Main";
