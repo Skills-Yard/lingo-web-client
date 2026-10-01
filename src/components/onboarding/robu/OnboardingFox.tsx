@@ -8,7 +8,6 @@ import {
   ONBOARDING_FOX_RIVE_SRC,
   ONBOARDING_FOX_ARTBOARD,
   ONBOARDING_FOX_IDLE_STATE_MACHINE,
-  ONBOARDING_FOX_EYE_STATE_MACHINE,
   ONBOARDING_FOX_EYE_VIEW_MODEL,
 } from "@/lib/rive/runtime";
 
@@ -16,19 +15,19 @@ import {
 configureRiveRuntime();
 
 // Zox's rig (`zox-final.riv`, see ONBOARDING_FOX_RIVE_SRC). The "Zox_Main" state
-// machine plays from the start — idle pose, blink, wave and mouth — and
-// "ZoxSM" moves his eyes after the pointer (see useEyeTracking). The wave and
-// the mouth are fired through the "Zox" view model's triggers.
+// machine is the only one played, from the start — idle pose, blink, wave and
+// mouth. The wave and the mouth are fired through the "Zox" view model's
+// triggers (the eyes follow its `posX` / `posY`, see useEyeTracking).
 const ARTBOARD = ONBOARDING_FOX_ARTBOARD;
 const STATE_MACHINES = [
   ONBOARDING_FOX_IDLE_STATE_MACHINE,
-  ONBOARDING_FOX_EYE_STATE_MACHINE,
 ];
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 // `hi` waves, `talk` starts the talking mouth, `stopTalk` ends it.
 const GREETING_TRIGGER = "hi";
 const GREETING_DELAY_MS = 400;
+const GREETING_RETRY_MS = 100;
 const TALK_TRIGGER = "talk";
 const STOP_TALK_TRIGGER = "stopTalk";
 
@@ -83,9 +82,21 @@ function useEyeTracking(rive: RiveInstance | null, canvas: HTMLCanvasElement | n
 function useGreetingOnce(rive: RiveInstance | null, enabled: boolean) {
   useEffect(() => {
     if (!rive || !enabled) return;
-    const timer = window.setTimeout(() => {
-      rive.viewModelInstance?.trigger(GREETING_TRIGGER)?.trigger();
-    }, GREETING_DELAY_MS);
+    // Fires once the state machine is running and the view model is bound
+    // (a trigger fired before that is dropped), retrying until then.
+    let timer = 0;
+    const fire = () => {
+      const trigger = rive.viewModelInstance?.trigger(GREETING_TRIGGER);
+      const running = rive.playingStateMachineNames.includes(
+        ONBOARDING_FOX_IDLE_STATE_MACHINE,
+      );
+      if (trigger && running) {
+        trigger.trigger();
+        return;
+      }
+      timer = window.setTimeout(fire, GREETING_RETRY_MS);
+    };
+    timer = window.setTimeout(fire, GREETING_DELAY_MS);
     return () => window.clearTimeout(timer);
   }, [rive, enabled]);
 }
@@ -142,9 +153,10 @@ export function OnboardingFox({
     src: ONBOARDING_FOX_RIVE_SRC,
     artboard: ARTBOARD,
     autoBind: true,
-    // Machines are played once loaded (useIdleStateMachine), skipping any the
-    // file lacks — naming a missing one here would fail the whole load.
-    autoplay: false,
+    // Zox_Main plays from the first frame, with the view model bound to it —
+    // the `hi` / `talk` / `stopTalk` triggers only work on that machine.
+    stateMachines: ONBOARDING_FOX_IDLE_STATE_MACHINE,
+    autoplay: true,
     layout: LAYOUT,
   });
 

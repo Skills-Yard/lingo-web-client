@@ -243,12 +243,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </AnimatePresence>
         </div>
 
-        {/* The CTA lives here, outside the screen transitions, so it's the same
-          size and in the same spot on every screen and never remounts — a
-          per-screen button flickered while its Rive canvas reloaded on each
-          crossfade. The slot under it has a fixed height on every screen
-          (only Get Started fills it, with the log-in line), so switching
-          screens never nudges the button. */}
+        {/* The CTA lives here, outside the screen transitions, so it never
+          remounts — a per-screen button flickered while its Rive canvas
+          reloaded on each crossfade. The slot under it is tall on the
+          pre-login screen (it holds the log-in line, which keeps the button
+          where it is) and a short bottom padding everywhere else, so the
+          button sits near the bottom edge. */}
         <div className="shrink-0">
           <div className="mx-auto w-full max-w-[22rem] px-4">
             <motion.div
@@ -268,7 +268,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 {ctaLabel}
               </Button3D>
             </motion.div>
-            <div className="flex h-10 items-center justify-center">
+            <motion.div
+              initial={false}
+              animate={{ height: index === -1 ? 40 : 8 }}
+              transition={SCREEN_TRANSITION}
+              className="flex items-center justify-center"
+            >
               <AnimatePresence>
                 {index === -1 && (
                   <motion.p
@@ -287,7 +292,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                   </motion.p>
                 )}
               </AnimatePresence>
-            </div>
+            </motion.div>
           </div>
         </div>
 
