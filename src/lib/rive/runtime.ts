@@ -120,11 +120,11 @@ export function configureRiveRuntime(): void {
 
 /**
  * Zox on the question screens — `zox-tab.riv`, artboard "ZoxTabArtboard":
- * Zox with his tablet. Driven by animation name, not the state machine:
- * "Idle" plays by default, "Typing2" plays once on each option pick, then back
- * to "Idle". The file also has "L_Arm" and "R_arm" clips, unused.
+ * Zox with his tablet. Driven entirely by its "ZoxTabMain" state machine,
+ * through the "ZoxTab" view model's triggers (`showTab`, `lookUser`,
+ * `lookTab`, `typing`, `idle`, `blink`; `point` and `hideTab` are unused) —
+ * no clip is played by name.
  */
 export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab.riv";
 export const ZOX_TAB_ARTBOARD = "ZoxTabArtboard";
-export const ZOX_TAB_IDLE_ANIMATION = "Idle";
-export const ZOX_TAB_TYPING_ANIMATION = "Typing2";
+export const ZOX_TAB_STATE_MACHINE = "ZoxTabMain";

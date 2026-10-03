@@ -38,7 +38,8 @@ type QuestionScreenProps = {
  * question fills in as it's read, then each option lights up (selected look
  * + slight scale-up, never actually selected) as it's read out. Picking
  * an answer cuts all that short — the voice fades out and the highlighting
- * stops. Each pick also has Zox type on his tablet (see QuestionHeading).
+ * stops. Each pick also has Zox look at his tablet and type, and each new
+ * question has him look back up at the user (see ZoxTabFox).
  */
 export function QuestionScreen(props: QuestionScreenProps) {
   const { questionId, heading, selectedId, onSelect, voiceover, muted = false, className } = props;
@@ -58,7 +59,13 @@ export function QuestionScreen(props: QuestionScreenProps) {
 
   return (
     <div className={`flex min-h-0 flex-col bg-white px-4 dark:bg-background ${className ?? ""}`}>
-      <QuestionHeading heading={heading} spoken={spokenQuestion} talking={voice.playing} typing={typing} />
+      <QuestionHeading
+        heading={heading}
+        spoken={spokenQuestion}
+        talking={voice.playing}
+        typing={typing}
+        screenId={questionId}
+      />
 
       <motion.div
         key={questionId}
