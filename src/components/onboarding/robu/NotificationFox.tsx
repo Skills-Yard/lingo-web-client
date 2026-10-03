@@ -1,31 +1,41 @@
 "use client";
 
+import { useEffect } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import {
   configureRiveRuntime,
-  ONBOARDING_FOX_RIVE_SRC,
-  ONBOARDING_FOX_ARTBOARD,
-  ONBOARDING_FOX_IDLE_STATE_MACHINE,
+  ZOX_TAB_RIVE_SRC,
+  ZOX_TAB_ARTBOARD,
+  ZOX_TAB_POINT_ANIMATION,
+  ZOX_TAB_POINT_EYES_ANIMATION,
 } from "@/lib/rive/runtime";
 
 configureRiveRuntime();
 
-// Zox's idle state machine. The rig has no peeking "notification" pose, so
-// this screen shows the same idle Zox as everywhere else.
-const ARTBOARD = ONBOARDING_FOX_ARTBOARD;
-const STATE_MACHINE = ONBOARDING_FOX_IDLE_STATE_MACHINE;
-const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.BottomCenter });
+// The eyes clip starts this long after the pointing one.
+const EYES_DELAY_MS = 1500;
 
-/** The fox peeking up at the notification prompt (NotificationPermissionScreen). */
+const LAYOUT =new Layout({ fit: Fit.Contain, alignment: Alignment.BottomCenter });
+
+/** Zox pointing down at the Allow button (NotificationPermissionScreen). */
 export function NotificationFox({ className }: { className?: string }) {
-  const { RiveComponent } = useRive({
-    src: ONBOARDING_FOX_RIVE_SRC,
-    artboard: ARTBOARD,
-    stateMachines: STATE_MACHINE,
+  const { rive, RiveComponent } = useRive({
+    src: ZOX_TAB_RIVE_SRC,
+    artboard: ZOX_TAB_ARTBOARD,
+    animations: ZOX_TAB_POINT_ANIMATION,
     autoplay: true,
     layout: LAYOUT,
   });
+
+  useEffect(() => {
+    if (!rive) return;
+    const timer = setTimeout(
+      () => rive.play(ZOX_TAB_POINT_EYES_ANIMATION),
+      EYES_DELAY_MS,
+    );
+    return () => clearTimeout(timer);
+  }, [rive]);
 
   return (
     <div className={className}>
