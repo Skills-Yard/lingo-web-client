@@ -75,7 +75,7 @@ export function QuestionHeading({
           screenId={screenId}
         />
       </div>
-      <h1 className="max-w-60 text-lg font-semibold leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white sm:text-xl">
+      <h1 className="max-w-60 text-[20px] font-medium leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white">
         {parts.map(({ span, cut }, i) => (
           <span key={i} className={span.highlight ? "text-primary" : undefined}>
             {span.text.slice(0, cut)}

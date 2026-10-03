@@ -21,9 +21,13 @@ const SCREEN_SETTLE_MS = 400;
 // hangs off its top and the heading off its bottom, instead of all three
 // being centered as a group (which moved the fox whenever the text length
 // changed).
-const FOX_SIZE = "min(16rem, 36dvh)";
-const FOX_HALF = "min(8rem, 18dvh)";
-const FOX_CENTER = "54%";
+const FOX_MAX_REM = 25;
+const FOX_MAX_DVH = 52;
+const FOX_SIZE = `min(${FOX_MAX_REM}rem, ${FOX_MAX_DVH}dvh)`;
+const FOX_HALF = `min(${FOX_MAX_REM / 2}rem, ${FOX_MAX_DVH / 2}dvh)`;
+const FOX_CENTER = 0.67;
+/** The fox never shrinks below this (px) to make room for text below. */
+const FOX_MIN_PX = 128;
 /** Breathing room kept between the text and the edges of that space. */
 const EDGE_GAP_PX = 12;
 // When the text below the fox wouldn't fit (a long heading on a short
@@ -168,7 +172,7 @@ export function FoxMessageScreen({
 
   const headingBlock = heading && (
     <div className="relative flex shrink-0 items-start gap-1.5">
-      <h1 className="max-w-xs text-center text-xl font-semibold leading-snug text-[#1A1C22] sm:text-2xl dark:text-white">
+      <h1 className="max-w-[min(20rem,calc(100vw-3rem))] text-center text-[16px] font-medium leading-snug text-[#1A1C22] dark:text-white">
         {typesHeading ? (
           <TypedText spans={heading} shown={headingShown} />
         ) : (
@@ -188,28 +192,42 @@ export function FoxMessageScreen({
     </div>
   );
 
-  // How far the fox has to move up so the text below it fits — never so far
-  // that the text above it would leave the top. Re-measured whenever the
-  // space or the text changes size.
+  // Making the text below the fox fit: first the fox moves up as far as the
+  // text above it allows, and if that's still not enough it shrinks (down to
+  // FOX_MIN_PX), its top staying put. Re-measured whenever the space or the
+  // text changes size. `shrunk` is null while the fox is at its usual size.
   const stageRef = useRef<HTMLDivElement>(null);
   const foxRef = useRef<HTMLDivElement>(null);
   const aboveRef = useRef<HTMLDivElement>(null);
   const belowRef = useRef<HTMLDivElement>(null);
   const [lift, setLift] = useState(0);
+  const [shrunk, setShrunk] = useState<{ size: number; top: number } | null>(null);
   useEffect(() => {
     const stage = stageRef.current;
     const fox = foxRef.current;
     if (!stage || !fox) return;
     const measure = () => {
-      // offsetTop/offsetHeight ignore transforms, so this is the fox's
-      // resting position whatever the current lift is.
-      const above = aboveRef.current;
-      const below = belowRef.current;
-      const top = fox.offsetTop + (above ? above.offsetTop : 0);
-      const bottom = fox.offsetTop + (below ? below.offsetTop + below.offsetHeight : fox.offsetHeight);
-      const overflow = bottom + EDGE_GAP_PX - stage.clientHeight;
-      const room = top - EDGE_GAP_PX;
-      setLift(Math.max(0, Math.min(overflow, room)));
+      // Sizes of the text blocks don't depend on the fox's own size, and the
+      // fox's usual size is worked out here rather than read back, so a
+      // shrunk fox doesn't feed into its own measurement.
+      const stageHeight = stage.clientHeight;
+      const aboveHeight = aboveRef.current?.offsetHeight ?? 0;
+      const belowHeight = belowRef.current?.offsetHeight ?? 0;
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+      const size = Math.min(FOX_MAX_REM * rem, (FOX_MAX_DVH / 100) * window.innerHeight);
+      const top = FOX_CENTER * stageHeight - size / 2;
+
+      const overflow = top + size + belowHeight + EDGE_GAP_PX - stageHeight;
+      const room = Math.max(0, top - aboveHeight - EDGE_GAP_PX);
+      const up = Math.max(0, Math.min(overflow, room));
+      const stillOver = overflow - up;
+      if (stillOver > 0) {
+        setLift(0);
+        setShrunk({ size: Math.max(FOX_MIN_PX, size - stillOver), top: top - up });
+      } else {
+        setLift(up);
+        setShrunk(null);
+      }
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -237,7 +255,9 @@ export function FoxMessageScreen({
         <motion.div
           ref={foxRef}
           className="absolute left-1/2 -translate-x-1/2"
-          style={{ top: `calc(${FOX_CENTER} - ${FOX_HALF})` }}
+          style={{
+            top: shrunk ? shrunk.top : `calc(${FOX_CENTER * 100}% - ${FOX_HALF})`,
+          }}
           animate={{ y: -lift }}
           transition={reduceMotion ? { duration: 0 } : LIFT}
         >
@@ -254,7 +274,7 @@ export function FoxMessageScreen({
             talking={talking}
             excited={excited}
             className="aspect-square"
-            style={{ height: FOX_SIZE }}
+            style={{ height: shrunk ? shrunk.size : FOX_SIZE }}
           />
 
           {(headingOnTop || headingBelow) && (

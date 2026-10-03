@@ -611,7 +611,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "coding streak", highlight: true },
       { text: " going! Stay one tap away from your next lesson." },
     ],
-    image: "/images/codingStreak/codingStreak.png",
+    image: "/images/codingStreak/codingStreak-3.png",
     cta: "Continue",
   },
   {

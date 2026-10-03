@@ -101,9 +101,9 @@
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
   --color-surface-strong: var(--surface-strong);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-app-poppins);
   --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-sans);
+  --font-heading: var(--font-app-poppins);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -131,7 +131,8 @@
 }
 
 body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  font-family: var(--font-app-poppins), Arial, Helvetica, sans-serif;
+  font-weight: 500;
   transition: background-color 0.2s ease, color 0.2s ease;
 }
 

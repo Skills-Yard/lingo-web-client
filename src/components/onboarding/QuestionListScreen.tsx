@@ -76,7 +76,7 @@ export function QuestionListOptions({
                 </span>
               )
             )}
-            <span className="text-sm font-medium text-[#1A1C22] sm:text-base dark:text-white">
+            <span className="text-[16px] font-medium text-[#1A1C22] dark:text-white">
               {option.label}
             </span>
           </button>

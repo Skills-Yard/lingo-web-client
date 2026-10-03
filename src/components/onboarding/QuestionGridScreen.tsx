@@ -83,7 +83,7 @@ export function QuestionGridOptions({
               )}
             </span>
             <span
-              className={`${poppins.className} flex h-[46px] w-full shrink-0 items-center justify-center px-2 text-balance text-sm font-medium leading-[1.4] text-[#2C2C2C] dark:text-white`}
+              className={`${poppins.className} flex h-[46px] w-full shrink-0 items-center justify-center px-2 text-balance text-[16px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white`}
             >
               {option.label}
             </span>
