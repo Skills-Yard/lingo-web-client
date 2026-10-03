@@ -119,16 +119,17 @@ export function configureRiveRuntime(): void {
 }
 
 /**
- * Zox on the question screens — `zox-tab-2.riv`, artboard "ZoxTabArtboard":
- * Zox with his tablet. Driven by animation name, not the state machine; every
- * clip is a one-shot, so anything that should loop is replayed when it stops.
+ * Zox on the question screens — `zox-tab-3.riv`, artboard "ZoxTabArtboard":
+ * Zox with his tablet. Driven entirely by its "ZoxTabMain" state machine,
+ * through the "ZoxTab" view model's triggers (`showTab`, `lookUser`,
+ * `lookTab`, `typing`, `idle`, `blink`; `point` and `hideTab` are unused) —
+ * no clip is played by name.
  */
-export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab-2.riv";
+export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab-3.riv";
 export const ZOX_TAB_ARTBOARD = "ZoxTabArtboard";
-export const ZOX_TAB_IDLE_ANIMATION = "idle";
-export const ZOX_TAB_EAR_ANIMATION = "Ear";
-export const ZOX_TAB_BLINK_ANIMATION = "Blink";
-export const ZOX_TAB_TAB_OUT_ANIMATION = "Taking out Tab";
-export const ZOX_TAB_FACE_START_ANIMATION = "Face turning start";
-export const ZOX_TAB_FACE_END_ANIMATION = "Face turning end";
-export const ZOX_TAB_TYPING_ANIMATION = "Typing2";
+export const ZOX_TAB_STATE_MACHINE = "ZoxTabMain";
+/** Played by name (no state machine) on the notification screen: Zox
+ * pointing down at the Allow button. */
+export const ZOX_TAB_POINT_ANIMATION = "Pointing_for_allow screen";
+/** Plays alongside the pointing clip. */
+export const ZOX_TAB_POINT_EYES_ANIMATION = "Pointing_for_allow screen eyes";

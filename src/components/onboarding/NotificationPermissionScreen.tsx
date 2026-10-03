@@ -76,20 +76,22 @@ export function NotificationPermissionScreen({
             className="absolute top-1/2 left-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2"
           />
 
-          {/* Peeking over the prompt's top-right corner. The rig's
-              "notification" pose keeps the fox (head + paws) in the bottom
-              half of its frame with the paws on the frame's bottom edge, so
-              the frame sits just above the prompt's top edge — close enough
-              that the paws rest on the edge. It rises up from behind the
-              prompt as it appears. */}
-          <motion.div
-            className="absolute right-0 bottom-[calc(100%-0.125rem)] aspect-square h-[min(10rem,22dvh)]"
-            initial={reduceMotion ? false : { opacity: 0, y: 48 }}
-            animate={{ opacity: 1, y: 0, transition: { ...FOX_IN, delay: FOX_DELAY_S } }}
-            exit={reduceMotion ? undefined : { opacity: 0, y: 48, transition: FOX_OUT }}
-          >
-            <NotificationFox className="h-full w-full" />
-          </motion.div>
+          {/* Standing right on top of the prompt, centered over the Allow
+              button (the right half, so 75% across). The frame's bottom edge
+              sits on the prompt's top edge — a hair lower, so there's no gap
+              — and it rises up from behind the prompt as it appears. The
+              wrapper does the positioning because the motion div's own
+              transform would override a translate class. */}
+          <div className="absolute bottom-[calc(100%-0.125rem)] left-3/4 h-[min(10rem,22dvh)] w-[min(10rem,22dvh)] -translate-x-1/2">
+            <motion.div
+              className="h-full w-full"
+              initial={reduceMotion ? false : { opacity: 0, y: 48 }}
+              animate={{ opacity: 1, y: 0, transition: { ...FOX_IN, delay: FOX_DELAY_S } }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: 48, transition: FOX_OUT }}
+            >
+              <NotificationFox className="h-full w-full" />
+            </motion.div>
+          </div>
 
           <motion.div
             role="dialog"
