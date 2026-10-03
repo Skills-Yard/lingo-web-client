@@ -119,13 +119,13 @@ export function configureRiveRuntime(): void {
 }
 
 /**
- * Zox on the question screens — `zox-tab-3.riv`, artboard "ZoxTabArtboard":
+ * Zox on the question screens — `zox-tab-4.riv`, artboard "ZoxTabArtboard":
  * Zox with his tablet. Driven entirely by its "ZoxTabMain" state machine,
  * through the "ZoxTab" view model's triggers (`showTab`, `lookUser`,
  * `lookTab`, `typing`, `idle`, `blink`; `point` and `hideTab` are unused) —
  * no clip is played by name.
  */
-export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab-3.riv";
+export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab-4.riv";
 export const ZOX_TAB_ARTBOARD = "ZoxTabArtboard";
 export const ZOX_TAB_STATE_MACHINE = "ZoxTabMain";
 /** Played by name (no state machine) on the notification screen: Zox
