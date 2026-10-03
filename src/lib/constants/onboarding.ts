@@ -1,5 +1,4 @@
 import type { LucideIcon } from "lucide-react";
-import { Briefcase, Lightbulb, Rocket, TrendingUp, Wallet } from "lucide-react";
 
 /** One highlighted (or plain) run of text — headings/bubbles are built from
  * a small array of these instead of a single string + one "highlight this
@@ -82,11 +81,31 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
 ];
 
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
-  { id: "switching-careers", label: "Switching careers", icon: Briefcase },
-  { id: "first-tech-job", label: "Landing my first job", icon: Rocket },
-  { id: "promotion", label: "Leveling up / promotion", icon: TrendingUp },
-  { id: "personal-project", label: "Personal project", icon: Lightbulb },
-  { id: "freelance", label: "Freelance", icon: Wallet },
+  {
+    id: "switching-careers",
+    label: "Switching careers",
+    image: "/images/screen-04/04-1.png",
+  },
+  {
+    id: "first-tech-job",
+    label: "Landing my first job",
+    image: "/images/screen-04/04-2.png",
+  },
+  {
+    id: "promotion",
+    label: "Leveling up / promotion",
+    image: "/images/screen-04/04-3.png",
+  },
+  {
+    id: "personal-project",
+    label: "Personal project",
+    image: "/images/screen-04/04-4.png",
+  },
+  {
+    id: "freelance",
+    label: "Freelance",
+    image: "/images/screen-04/04-5.png",
+  },
 ];
 
 export const STARTING_POINT_OPTIONS: OnboardingListOption[] = [
