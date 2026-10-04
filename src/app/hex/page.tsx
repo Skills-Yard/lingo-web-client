@@ -244,7 +244,17 @@ const HexPlayer = ({ artboard, onArtboards }: HexPlayerProps) => {
 };
 
 const HexPage = () => {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
+
+  // Dark by default, unless a theme was already chosen on a previous visit.
+  useEffect(() => {
+    try {
+      if (!localStorage.getItem("lingo_theme")) setTheme("dark", "instant");
+    } catch {
+      setTheme("dark", "instant");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once on mount
+  }, []);
   const [artboard, setArtboard] = useState<string | undefined>(undefined);
 
   // Only the hex artboard is shown; fall back to the file's default if none is named "hex".
@@ -267,7 +277,7 @@ const HexPage = () => {
               key={mode}
               type="button"
               aria-pressed={theme === mode}
-              onClick={() => theme !== mode && toggleTheme()}
+              onClick={() => theme !== mode && setTheme(mode)}
               className={`h-9 rounded-full px-4 font-medium capitalize transition-colors ${
                 theme === mode
                   ? "bg-primary text-primary-foreground"
