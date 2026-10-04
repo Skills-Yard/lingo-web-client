@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment, EventType } from "@rive-app/canvas";
 import { configureRiveRuntime } from "@/lib/rive/runtime";
+import { useTheme } from "@/context/ThemeContext";
 
 configureRiveRuntime();
 
@@ -13,6 +14,13 @@ const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 type Playable = { kind: "animation" | "stateMachine"; name: string };
 
 const keyOf = (item: Playable) => `${item.kind}:${item.name}`;
+
+/** The hex movement clip plays by default: prefer "hex" + "move", then any "move". */
+const findHexMovement = (items: Playable[]) => {
+  const byName = (re: RegExp) => items.findIndex((item) => re.test(item.name));
+  const hexMove = byName(/hex.*mov|mov.*hex/i);
+  return hexMove >= 0 ? hexMove : byName(/mov/i);
+};
 
 type HexPlayerProps = {
   artboard?: string;
@@ -35,11 +43,12 @@ const HexPlayer = ({ artboard, onArtboards }: HexPlayerProps) => {
   useEffect(() => {
     if (!rive) return;
     onArtboards(rive.contents?.artboards?.map((a) => a.name) ?? []);
-    setItems([
+    const all: Playable[] = [
       ...rive.animationNames.map((name): Playable => ({ kind: "animation", name })),
       ...rive.stateMachineNames.map((name): Playable => ({ kind: "stateMachine", name })),
-    ]);
-    setIndex(0);
+    ];
+    setItems(all);
+    setIndex(Math.max(0, findHexMovement(all)));
   }, [rive, onArtboards]);
 
   const current = items[index];
@@ -164,28 +173,43 @@ const secondaryButton =
   "h-12 rounded-2xl border border-border bg-card px-4 font-medium text-card-foreground transition-transform active:scale-[0.96]";
 
 const HexPage = () => {
-  const [artboards, setArtboards] = useState<string[]>([]);
+  const { theme, toggleTheme } = useTheme();
   const [artboard, setArtboard] = useState<string | undefined>(undefined);
+
+  // Only the hex artboard is shown; fall back to the file's default if none is named "hex".
+  const pickHexArtboard = useCallback((names: string[]) => {
+    const hex = names.find((name) => /hex/i.test(name));
+    if (hex) setArtboard(hex);
+  }, []);
 
   return (
     <main className="flex min-h-screen flex-col items-center gap-6 bg-background px-4 py-10 text-foreground">
-      <h1 className="text-2xl font-semibold">hex.riv</h1>
-
-      {artboards.length > 1 && (
-        <select
-          value={artboard ?? artboards[0]}
-          onChange={(e) => setArtboard(e.target.value)}
-          className="h-10 rounded-2xl border border-input bg-card px-4 text-sm text-card-foreground"
+      <div className="flex w-full max-w-md items-center justify-between">
+        <h1 className="text-2xl font-semibold">hex.riv</h1>
+        <div
+          role="group"
+          aria-label="Theme"
+          className="flex rounded-full border border-border bg-card p-1 text-sm"
         >
-          {artboards.map((name) => (
-            <option key={name} value={name}>
-              Artboard: {name}
-            </option>
+          {(["light", "dark"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              aria-pressed={theme === mode}
+              onClick={() => theme !== mode && toggleTheme()}
+              className={`h-9 rounded-full px-4 font-medium capitalize transition-colors ${
+                theme === mode
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground"
+              }`}
+            >
+              {mode}
+            </button>
           ))}
-        </select>
-      )}
+        </div>
+      </div>
 
-      <HexPlayer key={artboard ?? "default"} artboard={artboard} onArtboards={setArtboards} />
+      <HexPlayer key={artboard ?? "default"} artboard={artboard} onArtboards={pickHexArtboard} />
     </main>
   );
 };
