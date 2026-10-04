@@ -9,7 +9,7 @@ import {
   configureRiveRuntime,
   ONBOARDING_FOX_RIVE_SRC,
   ONBOARDING_FOX_ARTBOARD,
-  ONBOARDING_FOX_IDLE_STATE_MACHINE,
+  ONBOARDING_FOX_IDLE_ANIMATION,
 } from "@/lib/rive/runtime";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
@@ -22,11 +22,6 @@ configureRiveRuntime();
 const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
 
 const ARTBOARD = ONBOARDING_FOX_ARTBOARD;
-
-// Zox's idle state machine. The rig has no boot-up "splash screen" sequence,
-// so the splash just shows him idling; the timer below still decides how long
-// the splash stays up.
-const SPLASH_STATE_MACHINE = ONBOARDING_FOX_IDLE_STATE_MACHINE;
 
 // How long the splash stays up before handing over to the next screen.
 const SPLASH_SETTLE_MS = 3200;
@@ -57,7 +52,7 @@ export function OnboardingSplash({ className, onComplete }: OnboardingSplashProp
   const { RiveComponent } = useRive({
     src: ONBOARDING_FOX_RIVE_SRC,
     artboard: ARTBOARD,
-    stateMachines: SPLASH_STATE_MACHINE,
+    animations: ONBOARDING_FOX_IDLE_ANIMATION,
     autoplay: true,
     layout: LAYOUT,
   });

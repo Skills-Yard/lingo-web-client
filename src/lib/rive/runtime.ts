@@ -73,21 +73,39 @@ export const ORBI_RIVE_SRC = "/animations/orbi_final.riv";
 export const ROBU_RIVE_SRC = "/animations/foxi-9.riv";
 
 /**
- * The onboarding fox's rig — `zox-final.riv`, artboard "CharacterZox": the
- * "Zox_Main" state machine plus "ZoxSM" for eye movement; the "Zox" view
- * model's `hi`, `talk` and `stopTalk` triggers drive the wave and the mouth.
- * Replaces `ROBU_RIVE_SRC` for the
- * onboarding flow only; the
+ * The onboarding fox's rig — `zox-vector-2.riv`, artboard "Zox_Vector". No
+ * state machine is played: the looping "Zox_Idle" clip runs all the time, and
+ * the hi wave and tap giggle are clips played by name in its place for a
+ * moment. Replaces `ROBU_RIVE_SRC` for the onboarding flow only; the
  * instructions-intro screens still use `foxi-9.riv`'s "Artboard 2".
  */
-export const ONBOARDING_FOX_RIVE_SRC = "/animations/zox-final.riv";
-export const ONBOARDING_FOX_ARTBOARD = "CharacterZox";
-/** Zox's idle pose — the state machine every onboarding fox plays. */
-export const ONBOARDING_FOX_IDLE_STATE_MACHINE = "Zox_Main";
-/** The eyes' state machine — follows the view model's `posX` / `posY` (-1..1). */
-export const ONBOARDING_FOX_EYE_STATE_MACHINE = "ZoxSM";
-/** The view model holding those two numbers. */
-export const ONBOARDING_FOX_EYE_VIEW_MODEL = "Zox";
+export const ONBOARDING_FOX_RIVE_SRC = "/animations/zox-vector-2.riv";
+export const ONBOARDING_FOX_ARTBOARD = "Zox_Vector";
+export const ONBOARDING_FOX_IDLE_ANIMATION = "Zox_Idle";
+/** The only state machine played: it moves his eyes to follow the pointer
+ * (its listener reads mouse moves over the canvas — see useEyeTracking). It has
+ * no inputs, and nothing else about him depends on it. */
+export const ONBOARDING_FOX_EYE_STATE_MACHINE = "Character_Joystick";
+/** Played on every tap on Zox on a cut-scene screen. */
+export const ONBOARDING_FOX_TAP_ANIMATION = "Zox_Tap_Giggle";
+export const ONBOARDING_FOX_TAP_MS = 1400;
+/** Artboard size of the onboarding fox, used to size the hi fox below to it. */
+export const ONBOARDING_FOX_ARTBOARD_SIZE = { width: 420, height: 520 };
+
+/**
+ * The greeting screen's hi wave comes from `zox-2.riv` instead, faded in over
+ * the main fox for the wave and faded out after: artboard "Character " (the
+ * trailing space is part of the name), "Zox_Main" state machine, and the
+ * "ZoxVM" view model's `hi` trigger. It's played for `GREETING_FOX_HI_MS` (the
+ * wave is ~385 frames at 60fps).
+ */
+export const GREETING_FOX_RIVE_SRC = "/animations/zox-2.riv";
+export const GREETING_FOX_ARTBOARD = "Character ";
+export const GREETING_FOX_STATE_MACHINE = "Zox_Main";
+export const GREETING_FOX_VIEW_MODEL = "ZoxVM";
+export const GREETING_FOX_HI_TRIGGER = "hi";
+export const GREETING_FOX_ARTBOARD_SIZE = { width: 479, height: 562 };
+export const GREETING_FOX_HI_MS = 6600;
 
 /**
  * The old two-theme Robu rig — kept only for the unused legacy copy in
@@ -119,17 +137,18 @@ export function configureRiveRuntime(): void {
 }
 
 /**
- * Zox on the question screens — `zox-tab-4.riv`, artboard "ZoxTabArtboard":
+ * Zox on the question screens — `zox-tab-5.riv`, artboard "ZoxTabArtboard":
  * Zox with his tablet. Driven entirely by its "ZoxTabMain" state machine,
  * through the "ZoxTab" view model's triggers (`showTab`, `lookUser`,
  * `lookTab`, `typing`, `idle`, `blink`; `point` and `hideTab` are unused) —
  * no clip is played by name.
  */
-export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab-4.riv";
+export const ZOX_TAB_RIVE_SRC = "/animations/zox-tab-5.riv";
 export const ZOX_TAB_ARTBOARD = "ZoxTabArtboard";
 export const ZOX_TAB_STATE_MACHINE = "ZoxTabMain";
-/** Played by name (no state machine) on the notification screen: Zox
- * pointing down at the Allow button. */
-export const ZOX_TAB_POINT_ANIMATION = "Pointing_for_allow screen";
-/** Plays alongside the pointing clip. */
-export const ZOX_TAB_POINT_EYES_ANIMATION = "Pointing_for_allow screen eyes";
+/** Played by name (no state machine) on the notification screen: Zox pointing
+ * down at the Allow button — the one-shot "start" first (one second), then the
+ * looping "clicking" for as long as the screen is up. */
+export const ZOX_TAB_POINT_START_ANIMATION = "Pointing_for_allow screen 2 start";
+export const ZOX_TAB_POINT_START_MS = 1000;
+export const ZOX_TAB_POINT_CLICKING_ANIMATION = "Pointing_for_allow screen 2 clicking";

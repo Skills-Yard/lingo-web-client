@@ -32,6 +32,7 @@ interface SlotInfo {
   laptop: boolean;
   typing: number;
   hidden: boolean;
+  tappable: boolean;
 }
 
 interface FoxStage {
@@ -88,6 +89,8 @@ interface FoxSlotProps {
    * for a visible slot, it waits for that screen's fox to go first, then
    * reappears here and glides on. */
   hidden?: boolean;
+  /** Tapping the fox here plays its giggle — cut-scene screens only. */
+  tappable?: boolean;
 }
 
 /** Where the fox should stand on this screen — sized like the fox itself. */
@@ -100,14 +103,15 @@ export function FoxSlot({
   laptop = false,
   typing = 0,
   hidden = false,
+  tappable = false,
 }: FoxSlotProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
   const stage = useContext(FoxStageContext);
 
   useEffect(() => {
-    stage?.register(id, { ref, talking, greet, excited, laptop, typing, hidden });
-  }, [stage, id, talking, greet, excited, laptop, typing, hidden]);
+    stage?.register(id, { ref, talking, greet, excited, laptop, typing, hidden, tappable });
+  }, [stage, id, talking, greet, excited, laptop, typing, hidden, tappable]);
   useEffect(() => () => stage?.unregister(id), [stage, id]);
 
   // Outside the flow (no stage), just draw a fox in place.
@@ -165,6 +169,26 @@ export function PersistentFox({
   const parked = useRef(false);
   /** When a parked fox may reappear and glide on. */
   const unhideAt = useRef<number | null>(null);
+  const [tapCount, setTapCount] = useState(0);
+
+  // The fox itself is pointer-events-none (it must never block the screen's
+  // buttons), so a tap is a page-wide pointerdown that lands inside the
+  // current tappable slot's box.
+  useEffect(() => {
+    if (!slot?.tappable) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const box = slot.ref.current?.getBoundingClientRect();
+      if (!box) return;
+      const inside =
+        event.clientX >= box.left &&
+        event.clientX <= box.right &&
+        event.clientY >= box.top &&
+        event.clientY <= box.bottom;
+      if (inside) setTapCount((count) => count + 1);
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, [slot]);
 
   useEffect(() => {
     let frame = 0;
@@ -242,6 +266,7 @@ export function PersistentFox({
         excited={slot?.excited ?? false}
         laptop={slot?.laptop ?? false}
         typing={slot?.typing ?? 0}
+        tapCount={tapCount}
       />
     </motion.div>
   );

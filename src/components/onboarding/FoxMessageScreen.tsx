@@ -273,6 +273,7 @@ export function FoxMessageScreen({
             greet={greet}
             talking={talking}
             excited={excited}
+            tappable
             className="aspect-square"
             style={{ height: shrunk ? shrunk.size : FOX_SIZE }}
           />
