@@ -1,7 +1,6 @@
 "use client";
 
 import { Sekuya } from "next/font/google";
-import { FoxSlot } from "./foxStage";
 
 // Sekuya only ships one weight (400) — still passed explicitly since
 // next/font requires it for any non-variable Google font.
@@ -20,16 +19,15 @@ interface PreLoginScreenProps {
  */
 export function PreLoginScreen({ className }: PreLoginScreenProps) {
   return (
-    <div className={`flex flex-col items-center bg-white dark:bg-background ${className ?? ""}`}>
+    <div className={`flex flex-col items-center ${className ?? ""}`}>
       <h1
         className={`${sekuya.className} pt-[12dvh] text-center text-4xl text-[#01A17F] sm:text-5xl`}
       >
         LINGO
       </h1>
 
-      <div className="flex min-h-0 flex-1 items-center justify-center">
-        <FoxSlot className="aspect-square h-[min(20rem,42dvh)]" />
-      </div>
+      {/* Hex is drawn by the splash's Rive canvas behind this screen. */}
+      <div className="min-h-0 flex-1" />
     </div>
   );
 }

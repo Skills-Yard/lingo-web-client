@@ -1,17 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useRive } from "@rive-app/react-canvas";
-import { Layout, Fit, Alignment, type Rive as RiveInstance } from "@rive-app/canvas";
+import { useEffect, useState } from "react";
+import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { motion } from "framer-motion";
-import {
-  configureRiveRuntime,
-  ZOX_TAB_RIVE_SRC,
-  ZOX_TAB_ARTBOARD,
-  ZOX_TAB_STATE_MACHINE,
-} from "@/lib/rive/runtime";
-
-configureRiveRuntime();
+import { HEX_STATE, HEX_TYPING_MS, HEX_FIDGET_MS, type HexState } from "@/lib/rive/runtime";
+import { useHexRive } from "./useHexRive";
 
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
@@ -20,119 +13,52 @@ const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 const SLIDE_FROM_PX = 28;
 const ENTER = { duration: 0.45, ease: [0.22, 1, 0.36, 1] } as const;
 
-// The "ZoxTab" view model's triggers, all fired through `fire`.
-const SHOW_TAB_TRIGGER = "showTab";
-const LOOK_USER_TRIGGER = "lookUser";
-const LOOK_TAB_TRIGGER = "lookTab";
-const TYPING_TRIGGER = "typing";
-const IDLE_TRIGGER = "idle";
-const BLINK_TRIGGER = "blink";
-
-// What each random loop fires. Every idle also has him look back up at the
-// user (a repeat while he already is does nothing).
-const IDLE_TRIGGERS = [IDLE_TRIGGER, LOOK_USER_TRIGGER] as const;
-const BLINK_TRIGGERS = [BLINK_TRIGGER] as const;
-
-// [min, max] gaps in ms. The idle loop fires this long after the last input
-// (an option pick or a new screen) and then keeps repeating while there's
-// none; blinking runs on its own, whatever the user does.
-const IDLE_AFTER_MS = [4000, 5000] as const;
-const BLINK_EVERY_MS = [2500, 6000] as const;
-
-const READY_RETRY_MS = 50;
-// The "Taking out Tab" clip runs 1s; `lookUser` waits it out, plus a margin.
-const LOOK_USER_AFTER_SHOW_MS = 1100;
+// [min, max] gap in ms. The fidget fires this long after the last input (an
+// option pick or a new screen) and then keeps repeating while there's none.
+const FIDGET_AFTER_MS = [4000, 5000] as const;
 
 const randomBetween = ([min, max]: readonly [number, number]) =>
   min + Math.random() * (max - min);
 
-/** Fires a view model trigger; false while the view model isn't bound yet. */
-function fire(rive: RiveInstance, name: string): boolean {
-  const trigger = rive.viewModelInstance?.trigger(name);
-  if (!trigger) return false;
-  // A state machine that has settled stops playing and would never see the
-  // trigger — wake it first.
-  if (!rive.playingStateMachineNames.includes(ZOX_TAB_STATE_MACHINE)) {
-    rive.play(ZOX_TAB_STATE_MACHINE);
-  }
-  trigger.trigger();
-  return true;
-}
-
-/** Brings the tablet out the instant Zox first appears — no delay, only a
- * retry until the view model is bound (a trigger fired before that is lost) —
- * then has him look at the user once the tablet is out. `showTab` and
- * `lookUser` share a state machine layer: fired together `lookUser` is
- * dropped, fired mid-way it cuts the tablet coming out short. */
-function useShowTabThenLookAtUser(rive: RiveInstance | null) {
+/** `HEX_STATE.typing` for `HEX_TYPING_MS` each time `typing` is set anew (an option pick). */
+function useTyping(typing: number) {
+  const [active, setActive] = useState(false);
   useEffect(() => {
-    if (!rive) return;
-    let timer = 0;
-    const show = () => {
-      if (fire(rive, SHOW_TAB_TRIGGER)) {
-        timer = window.setTimeout(
-          () => fire(rive, LOOK_USER_TRIGGER),
-          LOOK_USER_AFTER_SHOW_MS,
-        );
-      } else {
-        timer = window.setTimeout(show, READY_RETRY_MS);
-      }
-    };
-    show();
+    if (!typing) return;
+    setActive(true);
+    const timer = window.setTimeout(() => setActive(false), HEX_TYPING_MS);
     return () => window.clearTimeout(timer);
-  }, [rive]);
+  }, [typing]);
+  return active;
 }
 
-/** Zox looks back up at the user whenever the screen changes after the first
- * (the first one is `useShowTabThenLookAtUser`'s). */
-function useLookAtUserOnNewScreen(rive: RiveInstance | null, screenId?: string) {
-  const currentScreen = useRef(screenId);
+/** True for `HEX_FIDGET_MS` every so often while left alone; `restartKey` throws away the pending gap. */
+function useFidget(paused: boolean, restartKey: string) {
+  const [active, setActive] = useState(false);
   useEffect(() => {
-    if (!rive || screenId === currentScreen.current) return;
-    currentScreen.current = screenId;
-    fire(rive, LOOK_USER_TRIGGER);
-  }, [rive, screenId]);
-}
-
-/** On every option pick (`typing` is set anew each time) he looks down at the
- * tablet and types. */
-function useLookAtTabAndType(rive: RiveInstance | null, typing: number) {
-  useEffect(() => {
-    if (!rive || !typing) return;
-    fire(rive, LOOK_TAB_TRIGGER);
-    fire(rive, TYPING_TRIGGER);
-  }, [rive, typing]);
-}
-
-/** Fires `names` together again and again after a random gap. Changing
- * `restartKey` throws away the pending gap and draws a fresh one. */
-function useRandomTriggers(
-  rive: RiveInstance | null,
-  names: readonly string[],
-  gapMs: readonly [number, number],
-  restartKey: string | number = 0,
-) {
-  useEffect(() => {
-    if (!rive) return;
+    if (paused) return;
     let timer = 0;
     const schedule = () => {
       timer = window.setTimeout(() => {
-        names.forEach((name) => fire(rive, name));
-        schedule();
-      }, randomBetween(gapMs));
+        setActive(true);
+        timer = window.setTimeout(() => {
+          setActive(false);
+          schedule();
+        }, HEX_FIDGET_MS);
+      }, randomBetween(FIDGET_AFTER_MS));
     };
     schedule();
-    return () => window.clearTimeout(timer);
-  }, [rive, names, gapMs, restartKey]);
+    return () => {
+      window.clearTimeout(timer);
+      setActive(false);
+    };
+  }, [paused, restartKey]);
+  return active;
 }
 
-/** Zox with his tablet, in the question row. Own canvas; the flow's fox sits
- * these screens out. Everything he does is a trigger on the "ZoxTab" view
- * model, fired into the "ZoxTabMain" state machine: the tablet comes out as
- * he appears and he looks at the user, then again on each new `screenId`; he
- * looks down and types on each option pick (`typing`), blinks now and then,
- * and fidgets (`idle`, then looks at the user again) when left alone for a few
- * seconds. */
+/** Hex with his tablet, in the question row. Own canvas; the flow's fox sits
+ * these screens out. He holds the tablet ("HEX-Holding_Tab"), types on each
+ * option pick (`typing`) and fidgets when left alone for a few seconds. */
 export function ZoxTabFox({
   className,
   typing = 0,
@@ -144,20 +70,14 @@ export function ZoxTabFox({
   /** Changes with every new screen / question. */
   screenId?: string;
 }) {
-  const { rive, RiveComponent } = useRive({
-    src: ZOX_TAB_RIVE_SRC,
-    artboard: ZOX_TAB_ARTBOARD,
-    autoBind: true,
-    stateMachines: ZOX_TAB_STATE_MACHINE,
-    autoplay: true,
-    layout: LAYOUT,
-  });
+  const typingNow = useTyping(typing);
+  const fidgeting = useFidget(typingNow, `${typing}|${screenId}`);
 
-  useShowTabThenLookAtUser(rive);
-  useLookAtUserOnNewScreen(rive, screenId);
-  useLookAtTabAndType(rive, typing);
-  useRandomTriggers(rive, IDLE_TRIGGERS, IDLE_AFTER_MS, `${typing}|${screenId}`);
-  useRandomTriggers(rive, BLINK_TRIGGERS, BLINK_EVERY_MS);
+  let state: HexState = HEX_STATE.tablet;
+  if (typingNow) state = HEX_STATE.typing;
+  else if (fidgeting) state = HEX_STATE.fidget;
+
+  const { RiveComponent } = useHexRive(LAYOUT, state);
 
   return (
     <motion.div

@@ -71,10 +71,35 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [answers, setAnswers] = useState<OnboardingAnswers>({});
   const [muted, setMuted] = useState(false);
 
+  // Bumped each time the user comes back to the sign-up screen from a
+  // question, so the splash canvas replays its sign-up animations.
+  const [signUpReplays, setSignUpReplays] = useState(0);
+
+  // The sign-up buttons wait for the sign-up animation to finish (reported by
+  // the splash canvas, which detects it at runtime).
+  const [signUpSettled, setSignUpSettled] = useState(false);
+  const previousIndexRef = useRef(index);
+  useEffect(() => {
+    if (index === -1 && previousIndexRef.current >= 0) setSignUpReplays((n) => n + 1);
+    previousIndexRef.current = index;
+  }, [index]);
+
   // One fox for every screen (see foxStage): screens mark where it stands,
   // and it stays put — or glides — across screen changes instead of each
   // screen fading in a fox of its own.
   const mainRef = useRef<HTMLElement>(null);
+
+  // The splash/sign-up Rive canvas fills the space above the footer, so the
+  // CTA always has room and the artboard sits identically on both screens.
+  const footerRef = useRef<HTMLDivElement>(null);
+  const [footerHeight, setFooterHeight] = useState(0);
+  useEffect(() => {
+    const footer = footerRef.current;
+    if (!footer) return;
+    const observer = new ResizeObserver(() => setFooterHeight(footer.offsetHeight));
+    observer.observe(footer);
+    return () => observer.disconnect();
+  }, []);
   const { stage: foxStage, active: foxSlot } = useFoxStage();
 
   // Option/CTA taps play a click (see clickSound) — warmed up once here so
@@ -85,6 +110,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // Every question opens with nothing selected — including when coming back
   // to it — so its answer is cleared on the way in.
   const goTo = (next: number) => {
+    // Hide the sign-up buttons right away on the way back, before its
+    // animation replays.
+    if (next === -1) setSignUpSettled(false);
     const target = ONBOARDING_STEPS[next];
     if (target && (target.kind === "question-list" || target.kind === "question-grid")) {
       setAnswers((prev) => ({ ...prev, [target.answerKey]: undefined }));
@@ -100,6 +128,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     goTo(index + 1);
   };
 
+  // Only the splash's own timer calls this, once; it must not drag the user
+  // forward if they have already moved on.
+  const showSignUp = () => setIndex((current) => (current === -2 ? -1 : current));
+
   const goBack = () => {
     goTo(Math.max(-1, index - 1));
   };
@@ -112,7 +144,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // out, so the fox would linger over the next screen until then. It follows
   // the current screen instead: no slot for one that doesn't place the fox
   // (the questions have their own Zox), and it's gone that instant.
-  const foxOnScreen = index === -1 || step?.kind === "fox-message" || step?.kind === "streak";
+  const foxOnScreen = step?.kind === "fox-message" || step?.kind === "streak";
   const isQuestion = step?.kind === "question-list" || step?.kind === "question-grid";
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
   const progress = questionNumber
@@ -134,7 +166,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // The notification screen answers through its own prompt (Allow / Don't
   // Allow), so the footer CTA fades out there — it keeps its space, so the
   // screen's layout doesn't jump as it goes.
-  const hideCta = step?.kind === "notification-permission";
+  const hideCta =
+    step?.kind === "notification-permission" ||
+    index === -2 ||
+    (index === -1 && !signUpSettled);
 
   // `h-dvh`, not `h-screen`: on mobile, 100vh is the height with the
   // browser's address bar hidden, so whenever the bar is showing the flow ran
@@ -156,7 +191,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={SCREEN_TRANSITION}
-                className="absolute inset-0 flex flex-col bg-white dark:bg-background"
+                className="absolute inset-0 flex flex-col"
               >
                 <PreLoginScreen className="flex flex-1 flex-col" />
               </motion.div>
@@ -249,7 +284,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           pre-login screen (it holds the log-in line, which keeps the button
           where it is) and a short bottom padding everywhere else, so the
           button sits near the bottom edge. */}
-        <div className="shrink-0">
+        <div ref={footerRef} className="relative z-10 shrink-0">
           <div className="mx-auto w-full max-w-[22rem] px-4">
             <motion.div
               initial={false}
@@ -270,12 +305,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </motion.div>
             <motion.div
               initial={false}
-              animate={{ height: index === -1 ? 40 : 8 }}
+              animate={{ height: index <= -1 ? 40 : 8 }}
               transition={SCREEN_TRANSITION}
               className="flex items-center justify-center"
             >
               <AnimatePresence>
-                {index === -1 && (
+                {index === -1 && signUpSettled && (
                   <motion.p
                     key="login"
                     initial={{ opacity: 0 }}
@@ -298,22 +333,31 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
         <PersistentFox containerRef={mainRef} slot={foxOnScreen ? foxSlot : null} />
 
-        {/* The splash covers everything, footer included — which also lets the
-          footer's Rive button load behind it, ready before Get Started. */}
-        <AnimatePresence>
-          {index === -2 && (
-            <motion.div
-              key="splash"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={SCREEN_TRANSITION}
-              className="absolute inset-0 z-10"
-            >
-              <OnboardingSplash className="relative h-full w-full" onComplete={goNext} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* The splash/sign-up canvas stays mounted for the whole flow, so going
+          back to the sign-up screen from the first question finds Hex where
+          he was left — remounting restarted the splash and its timer. It sits
+          behind the screens and the footer, and is hidden once past sign-up. */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: index <= -1 ? 1 : 0 }}
+          transition={SCREEN_TRANSITION}
+          aria-hidden={index > -1}
+          className="pointer-events-none absolute inset-0 z-0"
+        >
+          <OnboardingSplash
+            // Brand green for the splash, then the device theme from the
+            // sign-up screen on.
+            className={`relative h-full w-full transition-colors duration-500 ${
+              index === -2
+                ? "bg-gradient-to-b from-[#00E5B5] to-[#1385B3]"
+                : "bg-white dark:bg-background"
+            }`}
+            bottomInset={footerHeight}
+            replayKey={signUpReplays}
+            onSignUpSettled={setSignUpSettled}
+            onComplete={showSignUp}
+          />
+        </motion.div>
       </main>
     </FoxStageProvider>
   );
