@@ -8,6 +8,8 @@ import {
   useViewModelInstanceTrigger,
 } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
+import { AnimatePresence, motion } from "framer-motion";
+import { Sekuya } from "next/font/google";
 import {
   configureRiveRuntime,
   SPLASH_RIVE_SRC,
@@ -16,6 +18,10 @@ import {
   SPLASH_VIEW_MODEL,
   SPLASH_SHOW_SIGNUP_TRIGGER,
 } from "@/lib/rive/runtime";
+
+// Sekuya only ships one weight (400) — passed explicitly since next/font
+// requires it for any non-variable Google font.
+const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -37,6 +43,8 @@ interface OnboardingSplashProps {
   /** Space (px) kept clear at the bottom for the footer CTA — the artboard
    * fits entirely in what's left above it. */
   bottomInset?: number;
+  /** Shows the "LINGO" wordmark at the bottom of the screen (splash only). */
+  showWordmark?: boolean;
   /** Changing this (after mount) replays the sign-up animations — used when
    * the user navigates back to the sign-up screen. */
   replayKey?: number;
@@ -55,7 +63,7 @@ interface OnboardingSplashProps {
  * fires the view model's `showSignUpScreen` trigger and hands over to the
  * sign-up screen.
  */
-export function OnboardingSplash({ className, bottomInset = 0, replayKey = 0, onSignUpSettled, onComplete }: OnboardingSplashProps) {
+export function OnboardingSplash({ className, bottomInset = 0, showWordmark = false, replayKey = 0, onSignUpSettled, onComplete }: OnboardingSplashProps) {
   const { rive, RiveComponent } = useRive({
     src: SPLASH_RIVE_SRC,
     artboard: SPLASH_ARTBOARD,
@@ -140,6 +148,21 @@ export function OnboardingSplash({ className, bottomInset = 0, replayKey = 0, on
       <div className="absolute inset-x-0 top-0" style={{ bottom: inset }}>
         <RiveComponent className="h-full w-full" />
       </div>
+
+      <AnimatePresence>
+        {showWordmark && (
+          <motion.h1
+            key="wordmark"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+            className={`${sekuya.className} pointer-events-none absolute inset-x-0 bottom-0 z-10 pb-[max(2rem,env(safe-area-inset-bottom))] text-center text-5xl text-white sm:text-6xl`}
+          >
+            LINGO
+          </motion.h1>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

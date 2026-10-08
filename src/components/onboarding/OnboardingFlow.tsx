@@ -353,6 +353,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 : "bg-white dark:bg-background"
             }`}
             bottomInset={footerHeight}
+            showWordmark={index === -2}
             replayKey={signUpReplays}
             onSignUpSettled={setSignUpSettled}
             onComplete={showSignUp}
