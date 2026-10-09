@@ -86,17 +86,17 @@ export function QuestionScreen(props: QuestionScreenProps) {
           talking={voice.playing}
           typing={typing}
           screenId={questionId}
-        showFox={!hexMode}
-      />
+          layout={props.zoxLayout === "row" ? "row" : "stacked"}
+          showFox={!hexMode}
+        />
+      )}
 
       {hexMode === "reactions" && (
         <ReactionsHex
           className="mx-auto aspect-[390/171] w-full max-w-[24rem] shrink-0"
           typing={typing}
           selectedOption={selectedOption}
-            layout={props.zoxLayout === "row" ? "row" : "stacked"}
         />
-      )}
       )}
 
       <motion.div

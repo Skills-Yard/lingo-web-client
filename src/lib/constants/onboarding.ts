@@ -125,6 +125,24 @@ export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   },
 ];
 
+export const STARTING_POINT_OPTIONS: OnboardingListOption[] = [
+  {
+    id: "basics",
+    label: "Start from the basics",
+    image: "/images/screen-07/07-1.png",
+  },
+  {
+    id: "skip-ahead",
+    label: "Skip ahead, I already know some of this",
+    image: "/images/screen-07/07-2.png",
+  },
+  {
+    id: "choose",
+    label: "Let me choose where to start",
+    image: "/images/screen-07/07-3.png",
+  },
+];
+
 export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
   {
     id: "morning",

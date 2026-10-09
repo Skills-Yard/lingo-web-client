@@ -51,6 +51,9 @@ interface QuestionHeadingProps {
   /** "row": Zox to the left of a left-aligned heading; default is the
    * heading centered with Zox below. */
   layout?: "stacked" | "row";
+  /** Zox beside the question (default true) — off where the design has no
+   * fox in the question row. */
+  showFox?: boolean;
 }
 
 /** The same karaoke fill-in as QuestionHeading's, without Zox: a big centered
@@ -77,9 +80,6 @@ export function QuestionTilesHeading({
       })}
     </h1>
   );
-  /** Zox beside the question (default true) — off where the design has no
-   * fox in the question row. */
-  showFox?: boolean;
 }
 
 /**
