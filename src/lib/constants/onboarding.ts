@@ -15,6 +15,7 @@ export interface TextSpan {
  * from this to personalize themselves (the reference design's "{career}"/
  * "{careerTitle}" placeholders). */
 export interface OnboardingAnswers {
+  name?: string;
   career?: string;
   experience?: string;
   pythonLevel?: string;
@@ -31,6 +32,8 @@ export interface OnboardingListOption {
    * shown as-is) — see QuestionListScreen. */
   icon?: LucideIcon;
   image?: string;
+  /** One line shown with Zox once the option is picked (tiles variant). */
+  description?: string;
 }
 
 export interface OnboardingGridOption {
@@ -52,38 +55,52 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
     id: "software-engineer",
     label: "Software Engineer",
     image: "/images/screen-01/01-1.png",
+    description: "Build apps, websites & systems people use every day.",
   },
   {
     id: "data-scientist",
     label: "Data Scientist",
     image: "/images/screen-01/01-2.png",
+    description: "Work with data, build models & solve real world problems.",
   },
   {
     id: "data-analyst",
     label: "Data Analyst",
     image: "/images/screen-01/01-3.png",
+    description: "Turn data into insights and dashboards that drive decisions.",
   },
   {
     id: "devops-cloud",
-    label: "DevOps / Cloud Engineer",
+    label: "DevOps",
     image: "/images/screen-01/01-4.png",
+    description:
+      "Automate deployments and keep cloud systems running smoothly.",
   },
   {
     id: "cybersecurity",
-    label: "Cybersecurity",
+    label: "Cyber Security",
     image: "/images/screen-01/01-5.png",
+    description: "Protect systems and data from threats and attacks.",
   },
   {
     id: "automation-scripting",
     label: "Automation & Scripting",
     image: "/images/screen-01/01-6.png",
+    description: "Write scripts that take over repetitive tasks for you.",
+  },
+  {
+    id: "not-sure",
+    label: "Not sure yet",
+    image: "/images/screen-01/01-7.png",
+    description:
+      "No worries, we'll start with Python basics useful on any path.",
   },
 ];
 
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   {
     id: "switching-careers",
-    label: "Switching careers",
+    label: "Switching careers into tech",
     image: "/images/screen-04/04-1.png",
   },
   {
@@ -93,7 +110,7 @@ export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   },
   {
     id: "promotion",
-    label: "Leveling up / promotion",
+    label: "Leveling up / Promotion",
     image: "/images/screen-04/04-3.png",
   },
   {
@@ -108,28 +125,40 @@ export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   },
 ];
 
-export const STARTING_POINT_OPTIONS: OnboardingListOption[] = [
+export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
   {
-    id: "basics",
-    label: "Start from the basics",
-    image: "/images/screen-07/07-1.png",
+    id: "morning",
+    label: "Morning",
+    illustration: "books",
+    image: "/images/screen-06/06-1.png",
   },
   {
-    id: "skip-ahead",
-    label: "Skip ahead, I already know some of this",
-    image: "/images/screen-07/07-2.png",
+    id: "afternoon",
+    label: "Afternoon",
+    illustration: "mobile",
+    image: "/images/screen-06/06-2.png",
   },
   {
-    id: "choose",
-    label: "Let me choose where to start",
-    image: "/images/screen-07/07-3.png",
+    id: "evening",
+    label: "Evening",
+    illustration: "chart",
+    image: "/images/screen-06/06-3.png",
+  },
+  {
+    id: "night",
+    label: "Night",
+    illustration: "trophy",
+    image: "/images/screen-06/06-4.png",
   },
 ];
+
+/** The daily-minutes dial's range and its starting value. */
+export const TIME_SLIDER = { min: 1, max: 20, initial: 10 } as const;
 
 export const EXPERIENCE_OPTIONS: OnboardingGridOption[] = [
   {
     id: "none",
-    label: "No",
+    label: "No experience",
     illustration: "books",
     image: "/images/screen-02/02-1.png",
   },
@@ -174,63 +203,9 @@ export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
   },
   {
     id: "professional",
-    label: "Advanced",
+    label: "Professional",
     illustration: "trophy",
     image: "/images/screen-03/03-4.png",
-  },
-];
-
-export const TIME_COMMITMENT_OPTIONS: OnboardingGridOption[] = [
-  {
-    id: "5min",
-    label: "5 min a day",
-    illustration: "books",
-    image: "/images/screen-05/05-1.png",
-  },
-  {
-    id: "10min",
-    label: "10 min a day",
-    illustration: "mobile",
-    image: "/images/screen-05/05-2.png",
-  },
-  {
-    id: "15min",
-    label: "15 min a day",
-    illustration: "chart",
-    image: "/images/screen-05/05-3.png",
-  },
-  {
-    id: "30min-plus",
-    label: "30+ min a day",
-    illustration: "trophy",
-    image: "/images/screen-05/05-4.png",
-  },
-];
-
-export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
-  {
-    id: "morning",
-    label: "Morning",
-    illustration: "books",
-    image: "/images/screen-06/06-1.png",
-  },
-  {
-    id: "afternoon",
-    label: "Afternoon",
-    illustration: "mobile",
-    image: "/images/screen-06/06-2.png",
-  },
-  {
-    id: "evening",
-    label: "Evening",
-    illustration: "chart",
-    image: "/images/screen-06/06-3.png",
-  },
-  {
-    id: "night",
-    label: "Night",
-    illustration: "trophy",
-    image: "/images/screen-06/06-4.png",
   },
 ];
 
@@ -317,36 +292,8 @@ function careerMindBubble(a: OnboardingAnswers): TextSpan[] {
   }
 }
 
-/** Screen 9's "What's driving your move toward {career}?" voiceover per
- * career — files in `public/audios/screen-09`, WD + the career's initials. */
-const WHATS_DRIVING_AUDIO: Record<string, string> = {
-  "software-engineer": "/audios/screen-09/WDSE.m4a",
-  "data-scientist": "/audios/screen-09/WDDS.m4a",
-  "data-analyst": "/audios/screen-09/WDDA.m4a",
-  "devops-cloud": "/audios/screen-09/WDDOCE.m4a",
-  cybersecurity: "/audios/screen-09/WDCE.m4a",
-  "automation-scripting": "/audios/screen-09/WDAMS.m4a",
-};
-
-/** The "At this pace…" voiceover after screen 5, per time commitment — files
- * in `public/audios/ATP`, ATP + the minutes a day. */
-const AT_THIS_PACE_AUDIO: Record<string, string> = {
-  "5min": "/audios/ATP/ATP5.m4a",
-  "10min": "/audios/ATP/ATP10.m4a",
-  "15min": "/audios/ATP/ATP15.m4a",
-  "30min-plus": "/audios/ATP/ATP30.m4a",
-};
-
-/** The "At this pace…" bubble text after screen 5, per time commitment. */
-const AT_THIS_PACE_TEXT: Record<string, string> = {
-  "5min": "At this pace, you'll finish your first 3 lessons this week.",
-  "10min": "At this pace, you'll wrap up Module 1 by the end of the week.",
-  "15min": "At this pace, you'll finish Module 1 and start Module 2 this week.",
-  "30min-plus":
-    "At this pace, you could clear 2 full modules this week. Ambitious, I like it.",
-};
-
 function careerLabel(answers: OnboardingAnswers): string {
+  if (answers.career === "not-sure") return "Programming";
   return (
     CAREER_OPTIONS.find((c) => c.id === answers.career)?.label ?? "your career"
   );
@@ -432,6 +379,22 @@ export type OnboardingStep =
       cta: string;
     }
   | {
+      kind: "name-input";
+      id: string;
+      /** The bubble's question, above the text field. */
+      prompt: string;
+      cta: string;
+    }
+  | {
+      kind: "time-slider";
+      id: string;
+      heading: (answers: OnboardingAnswers) => TextSpan[];
+      /** The note under the dial; `{minutes}` is the picked value. */
+      note: string;
+      answerKey: keyof OnboardingAnswers;
+      cta: string;
+    }
+  | {
       kind: "streak";
       id: string;
       heading: (answers: OnboardingAnswers) => TextSpan[];
@@ -442,6 +405,11 @@ export type OnboardingStep =
   | {
       kind: "question-list";
       id: string;
+      /** "tiles": no Zox, a centered heading and a 3-column grid of icon
+       * tiles (the career question). Default is the row list. */
+      variant?: "tiles";
+      /** "row": Zox beside the heading instead of below it. */
+      zoxLayout?: "row";
       heading: (answers: OnboardingAnswers) => TextSpan[];
       options: OnboardingListOption[];
       answerKey: keyof OnboardingAnswers;
@@ -452,6 +420,8 @@ export type OnboardingStep =
   | {
       kind: "question-grid";
       id: string;
+      /** "row": Zox beside the heading instead of below it. */
+      zoxLayout?: "row";
       heading: (answers: OnboardingAnswers) => TextSpan[];
       options: OnboardingGridOption[];
       answerKey: keyof OnboardingAnswers;
@@ -490,10 +460,11 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "question-list",
     id: "career",
+    variant: "tiles",
     heading: () => [
       { text: "What's the " },
       { text: "career", highlight: true },
-      { text: " you are working towards?" },
+      { text: " you're chasing?" },
     ],
     options: CAREER_OPTIONS,
     answerKey: "career",
@@ -506,10 +477,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     kind: "fox-message",
-    id: "building-path",
-    heading: () => [{ text: "Building Career Path..." }],
-    headingPlacement: "bottom",
-    sparkle: true,
+    id: "good-news",
     bubble: (a) => [
       { text: "Good news: your " },
       { text: `${careerLabel(a)} path`, highlight: true },
@@ -531,7 +499,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     heading: (a) => [
       { text: "What's your " },
       { text: languageForCareer(a.career), highlight: true },
-      { text: " superpower level?" },
+      { text: " superpower " },
+      { text: "level", highlight: true },
+      { text: "?" },
     ],
     options: PYTHON_LEVEL_OPTIONS,
     answerKey: "pythonLevel",
@@ -556,8 +526,22 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "fox-message",
     id: "starting-point",
+    heading: () => [{ text: "Building Career Path..." }],
+    headingPlacement: "bottom",
+    sparkle: true,
     bubble: careerMindBubble,
     voiceover: careerMindAudio,
+    voiceReadsHeading: false,
+    cta: "Continue",
+  },
+  {
+    kind: "fox-message",
+    id: "foundation",
+    bubble: () => [
+      {
+        text: "Smart, a strong foundation makes everything after this easier. Starting from Module 1.",
+      },
+    ],
     cta: "Yes!",
   },
   {
@@ -573,62 +557,78 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     cta: "Yes!",
   },
   {
-    kind: "question-list",
-    id: "motivation",
-    heading: (a) => [
-      { text: "What's driving your move toward " },
-      { text: careerLabel(a), highlight: true },
-      { text: "?" },
+    kind: "fox-message",
+    id: "all-set",
+    bubble: () => [
+      { text: "ALL SET!\nYour " },
+      { text: "programming journey", highlight: true },
+      { text: " begins here." },
     ],
-    options: MOTIVATION_OPTIONS,
-    answerKey: "motivation",
-    voiceover: (a) => {
-      const src = a.career ? WHATS_DRIVING_AUDIO[a.career] : undefined;
-      return src ? [src, "/audios/whats_driving_options.mp3"] : undefined;
-    },
-    cta: "Continue",
-  },
-  {
-    kind: "question-grid",
-    id: "timeCommitment",
-    heading: () => [
-      { text: "How much " },
-      { text: "time", highlight: true },
-      { text: " can you dedicate to learning each day?" },
-    ],
-    options: TIME_COMMITMENT_OPTIONS,
-    answerKey: "timeCommitment",
-    voiceover: ["/audios/HMT_Ques.m4a", "/audios/HMT_Options.m4a"],
     cta: "Continue",
   },
   {
     kind: "fox-message",
-    id: "pace-wow",
-    bubble: (a) => [
-      { text: "WOW!", highlight: true },
-      {
-        text: `\n${AT_THIS_PACE_TEXT[a.timeCommitment ?? ""] ?? AT_THIS_PACE_TEXT["5min"]}`,
-      },
+    id: "module-1",
+    bubble: () => [
+      { text: "Your first stop:\n" },
+      { text: "Module 1", highlight: true },
     ],
-    voiceover: (a) => {
-      const src = a.timeCommitment
-        ? AT_THIS_PACE_AUDIO[a.timeCommitment]
-        : undefined;
-      return src ? [src] : undefined;
-    },
+    cta: "Next",
+  },
+  {
+    kind: "name-input",
+    id: "name",
+    prompt: "What should I call you?",
+    cta: "Continue",
+  },
+  {
+    kind: "question-list",
+    id: "motivation",
+    zoxLayout: "row",
+    heading: () => [
+      { text: "What do you wish to " },
+      { text: "achieve", highlight: true },
+      { text: "?" },
+    ],
+    options: MOTIVATION_OPTIONS,
+    answerKey: "motivation",
+    cta: "Continue",
+  },
+  {
+    kind: "time-slider",
+    id: "timeCommitment",
+    heading: (a) => [
+      { text: "How much " },
+      { text: "time", highlight: true },
+      { text: ` can you give ${careerLabel(a)} each day?` },
+    ],
+    note: "Even {minutes} minutes a day can build a great habit!",
+    answerKey: "timeCommitment",
+    cta: "Continue",
+  },
+  {
+    kind: "fox-message",
+    id: "pace-great",
+    bubble: (a) => [
+      {
+        text: "GREAT!\nAt this pace, you'll finish your first 3 lessons toward ",
+      },
+      { text: careerLabel(a), highlight: true },
+      { text: " this week." },
+    ],
     cta: "Yes!",
   },
   {
     kind: "question-grid",
     id: "learningTime",
-    heading: () => [
+    zoxLayout: "row",
+    heading: (a) => [
       { text: "What is the " },
       { text: "best time", highlight: true },
-      { text: " in a day for you to learn?" },
+      { text: ` in a day for you to learn ${careerLabel(a)}?` },
     ],
     options: LEARNING_TIME_OPTIONS,
     answerKey: "learningTime",
-    voiceover: ["/audios/best_time_Ques.m4a", "/audios/best_time_Option.m4a"],
     cta: "Continue",
   },
   {

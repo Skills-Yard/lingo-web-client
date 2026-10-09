@@ -16,6 +16,9 @@ const ILLUSTRATIONS: Record<OnboardingGridOption["illustration"], { icon: Lucide
   trophy: { icon: Trophy, fg: "text-[#D69A1F]" },
 };
 
+// Picture-panel tints, in the Figma option order (blue, peach, lilac, mint).
+const PANEL_BG = ["#E5EFFD", "#FFF3DE", "#EFEAFC", "#ECF7ED"] as const;
+
 // The Figma label type: Poppins 500, 16px / 140%.
 const poppins = Poppins({ subsets: ["latin"], weight: "500" });
 
@@ -54,7 +57,7 @@ export function QuestionGridOptions({
     // auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
     // over the gap into the next row. Now the gap is always gap-y-3 and the
     // grid scrolls instead.
-    <div ref={optionsRef} className="scrollbar-none mt-2 grid min-h-0 flex-1 grid-cols-2 auto-rows-max content-start gap-x-3 gap-y-3 overflow-y-auto -mx-2.5 px-3 pt-1 pb-2 sm:mt-3">
+    <div ref={optionsRef} className="scrollbar-none mx-auto mt-4 grid w-full max-w-[306px] min-h-0 flex-1 grid-cols-[138px_138px] auto-rows-max content-start justify-between gap-y-[29px] overflow-y-auto px-0 pt-1 pb-2 sm:mt-5">
       {options.map((option, i) => {
         const selected = option.id === selectedId;
         const spotlight = !selected && i === spokenOption;
@@ -67,9 +70,12 @@ export function QuestionGridOptions({
             // Figma "Group 94": a 169x189 tile — a light-blue 134px picture
             // panel over a white 55px label strip (the card's own khaki
             // bottom edge from optionCardClass underneath).
-            className={`flex aspect-[169/165] flex-col overflow-hidden text-center ${optionCardClass(selected, spotlight)}`}
+            className={`flex h-[150px] w-[138px] flex-col overflow-hidden text-center ${optionCardClass(selected, spotlight)}`}
           >
-            <span className="relative flex min-h-0 w-full flex-1 items-center justify-center bg-[#E5EFFD]">
+            <span
+              className="relative flex min-h-0 w-full flex-1 items-center justify-center"
+              style={{ background: PANEL_BG[i % PANEL_BG.length] }}
+            >
               {option.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -83,7 +89,7 @@ export function QuestionGridOptions({
               )}
             </span>
             <span
-              className={`${poppins.className} flex h-[46px] w-full shrink-0 items-center justify-center px-2 text-balance text-[16px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white`}
+              className={`${poppins.className} flex h-[43.65px] w-full shrink-0 items-center justify-center px-2 text-balance text-[14px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white`}
             >
               {option.label}
             </span>

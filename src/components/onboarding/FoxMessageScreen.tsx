@@ -253,7 +253,7 @@ export function FoxMessageScreen({
   );
 
   return (
-    <div className={`flex min-h-0 flex-col bg-white px-6 dark:bg-background ${className ?? ""}`}>
+    <div className={`flex min-h-0 flex-col px-6 ${className ?? ""}`}>
       {headingOnTop && <div className="mt-[3dvh] shrink-0 self-center">{headingBlock}</div>}
 
       <div ref={stageRef} className="relative min-h-0 flex-1">

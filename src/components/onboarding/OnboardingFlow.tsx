@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ONBOARDING_STEPS,
+  TIME_SLIDER,
   resolveVoiceover,
   type OnboardingAnswers,
 } from "@/lib/constants/onboarding";
@@ -14,6 +15,8 @@ import { FoxMessageScreen } from "./FoxMessageScreen";
 import { NotificationPermissionScreen } from "./NotificationPermissionScreen";
 import { QuestionScreen } from "./QuestionScreen";
 import { StreakScreen } from "./StreakScreen";
+import { NameScreen } from "./NameScreen";
+import { TimeSliderScreen } from "./TimeSliderScreen";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
 import { Button3D } from "@/components/ui/Button3D";
@@ -28,7 +31,7 @@ const QUESTION_NUMBER: Record<string, number> = {};
 {
   let n = 0;
   for (const step of ONBOARDING_STEPS) {
-    if (step.kind === "question-list" || step.kind === "question-grid") {
+    if (step.kind === "question-list" || step.kind === "question-grid" || step.kind === "time-slider") {
       n += 1;
       QUESTION_NUMBER[step.id] = n;
     }
@@ -44,6 +47,11 @@ const QUESTION_COUNT = Object.keys(QUESTION_NUMBER).length;
 // rather than waiting for one to finish before starting the other, which is
 // what actually reads as "smooth" instead of a blank flash in between.
 const SCREEN_TRANSITION = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const };
+
+// Fox-message screens sit on the misty city backdrop (light theme only). It
+// covers the whole flow, footer included, so it reaches the bottom edge.
+const FOX_BACKDROP =
+  "bg-[url('/images/onboarding-bg.png')] bg-cover bg-bottom bg-no-repeat dark:bg-none";
 
 interface OnboardingFlowProps {
   /** Fired after the last question's "Continue" — nothing past this point
@@ -119,6 +127,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     if (target && (target.kind === "question-list" || target.kind === "question-grid")) {
       setAnswers((prev) => ({ ...prev, [target.answerKey]: undefined }));
     }
+    // The dial starts on its default so "Continue" is live straight away.
+    if (target?.kind === "time-slider") {
+      setAnswers((prev) => ({
+        ...prev,
+        [target.answerKey]: prev[target.answerKey] ?? String(TIME_SLIDER.initial),
+      }));
+    }
     setIndex(next);
   };
 
@@ -146,7 +161,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // out, so the fox would linger over the next screen until then. It follows
   // the current screen instead: no slot for one that doesn't place the fox
   // (the questions have their own Zox), and it's gone that instant.
-  const foxOnScreen = step?.kind === "fox-message" || step?.kind === "streak";
+  const foxOnScreen =
+    step?.kind === "fox-message" || step?.kind === "streak" || step?.kind === "name-input";
   const isQuestion = step?.kind === "question-list" || step?.kind === "question-grid";
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
   const progress = questionNumber
@@ -158,6 +174,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const ctaLabel = step ? step.cta : "Get Started";
   const ctaDisabled =
     index < -1 ||
+    (step?.kind === "name-input" && !answers.name?.trim()) ||
     ((step?.kind === "question-list" || step?.kind === "question-grid") &&
       !answers[step.answerKey]);
   const requestNotifications = () => {
@@ -183,6 +200,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         ref={mainRef}
         className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background"
       >
+        <motion.div
+          aria-hidden
+          initial={false}
+          animate={{ opacity: step?.kind === "fox-message" ? 1 : 0 }}
+          transition={SCREEN_TRANSITION}
+          className={`pointer-events-none absolute inset-0 z-0 ${FOX_BACKDROP}`}
+        />
+
         {/* Screens crossfade in the space above the footer. */}
         <div className="relative min-h-0 flex-1">
           <AnimatePresence mode="sync">
@@ -208,7 +233,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={SCREEN_TRANSITION}
-                className="absolute inset-0 flex flex-col bg-white dark:bg-background"
+                className={`absolute inset-0 flex flex-col ${
+                  step.kind === "fox-message" ? "" : "bg-white dark:bg-background"
+                }`}
               >
                 {/* Phone-width column, centered on tablets/desktops so options
                   don't stretch across a wide screen. */}
@@ -254,6 +281,26 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     />
                   )}
 
+                  {step.kind === "name-input" && (
+                    <NameScreen
+                      className="flex-1"
+                      prompt={step.prompt}
+                      value={answers.name ?? ""}
+                      onChange={(name) => setAnswer("name", name)}
+                      onSubmit={goNext}
+                    />
+                  )}
+
+                  {step.kind === "time-slider" && (
+                    <TimeSliderScreen
+                      className="flex-1"
+                      heading={step.heading(answers)}
+                      note={step.note}
+                      minutes={Number(answers.timeCommitment ?? TIME_SLIDER.initial)}
+                      onChange={(minutes) => setAnswer("timeCommitment", String(minutes))}
+                    />
+                  )}
+
                   {step.kind === "streak" && (
                     <StreakScreen className="flex-1" heading={step.heading(answers)} image={step.image} />
                   )}
@@ -267,7 +314,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       questionId={step.id}
                       heading={step.heading(answers)}
                       {...(step.kind === "question-list"
-                        ? { kind: step.kind, options: step.options }
+                        ? { kind: step.kind, options: step.options, variant: step.variant }
                         : { kind: step.kind, options: step.options })}
                       selectedId={answers[step.answerKey] ?? null}
                       hexMode={step.hexMode}
@@ -277,6 +324,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       }}
                       voiceover={resolveVoiceover(step.voiceover, answers)}
                       muted={muted}
+                      zoxLayout={step.zoxLayout}
                     />
                   )}
                 </div>
@@ -292,7 +340,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           where it is) and a short bottom padding everywhere else, so the
           button sits near the bottom edge. */}
         <div ref={footerRef} className="relative z-10 shrink-0">
-          <div className="mx-auto w-full max-w-[22rem] px-4">
+          <div className="mx-auto w-full max-w-[24rem] px-4">
             <motion.div
               initial={false}
               animate={{ opacity: hideCta ? 0 : 1 }}

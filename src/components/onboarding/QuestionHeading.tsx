@@ -1,9 +1,13 @@
 "use client";
 
+import { Inter } from "next/font/google";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
+
+// Question headings: Inter 600, 20px.
+const inter = Inter({ subsets: ["latin"], weight: ["600", "700"] });
 
 /**
  * How far through its own clip (0..1) the question text has been spoken:
@@ -44,6 +48,35 @@ interface QuestionHeadingProps {
   typing?: number;
   /** Changes with each new question; Zox looks back up at the user. */
   screenId?: string;
+  /** "row": Zox to the left of a left-aligned heading; default is the
+   * heading centered with Zox below. */
+  layout?: "stacked" | "row";
+}
+
+/** The same karaoke fill-in as QuestionHeading's, without Zox: a big centered
+ * title for the career question, whose tiles fill the screen instead. */
+export function QuestionTilesHeading({
+  heading,
+  spoken,
+}: Pick<QuestionHeadingProps, "heading" | "spoken">) {
+  const total = spansLength(heading);
+  const lit = spoken >= 1 ? total : Math.floor(spoken * total);
+  return (
+    <h1 className={`${inter.className} shrink-0 px-4 pt-5 text-center text-[24px] font-bold leading-[1.34] text-[#2C2C2C] sm:pt-6 dark:text-white`}>
+      {heading.map((span, i) => {
+        const start = spansLength(heading.slice(0, i));
+        const cut = Math.max(0, Math.min(span.text.length, lit - start));
+        return (
+          <span key={i} className={span.highlight ? "text-primary" : undefined}>
+            {span.text.slice(0, cut)}
+            {cut < span.text.length && (
+              <span className="opacity-35 transition-opacity">{span.text.slice(cut)}</span>
+            )}
+          </span>
+        );
+      })}
+    </h1>
+  );
   /** Zox beside the question (default true) — off where the design has no
    * fox in the question row. */
   showFox?: boolean;
@@ -61,6 +94,7 @@ export function QuestionHeading({
   spoken,
   typing,
   screenId,
+  layout = "stacked",
   showFox = true,
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
