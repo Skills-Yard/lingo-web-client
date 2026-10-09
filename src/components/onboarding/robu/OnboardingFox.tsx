@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
-import { HEX_STATE, HEX_HELLO_MS, HEX_TAP_MS, type HexState } from "@/lib/rive/runtime";
+import {
+  HEX_STATE,
+  HEX_HELLO_MS,
+  HEX_TAP_MS,
+  HEX_ONBOARDING_TRIGGER,
+  type HexState,
+} from "@/lib/rive/runtime";
+import type { HexOnboardingBeat } from "@/lib/constants/onboarding";
 import { useHexRive } from "./useHexRive";
 
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
@@ -62,13 +69,70 @@ interface OnboardingFoxProps {
   talking?: boolean;
   laptop?: boolean;
   typing?: number;
+  /** Plays the `Onboarding` state machine instead of the poses above, and
+   * fires this trigger on it (see `beatKey`). Taps then fire its `tap`. */
+  beat?: HexOnboardingBeat | null;
+  /** Fires `beat` each time this changes to a new non-null value. */
+  beatKey?: string | null;
+  /** On an "onboarding" question (Hex hidden): keeps the `Onboarding` state
+   * machine running, fires `showQuestion` for each new key and
+   * `selectOption` whenever `pickCount` goes up. */
+  questionKey?: string | null;
+  pickCount?: number;
+}
+
+/** `showQuestion` once per new `questionKey`, `selectOption` on each pick. */
+function useOnboardingQuestion(
+  fireTrigger: (name: string) => void,
+  ready: boolean,
+  questionKey: string | null,
+  pickCount: number,
+) {
+  const shownKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!questionKey) shownKey.current = null;
+    if (!ready || !questionKey || shownKey.current === questionKey) return;
+    shownKey.current = questionKey;
+    fireTrigger(HEX_ONBOARDING_TRIGGER.showQuestion);
+  }, [fireTrigger, ready, questionKey]);
+
+  const lastPickCount = useRef(pickCount);
+  useEffect(() => {
+    if (pickCount === lastPickCount.current) return;
+    lastPickCount.current = pickCount;
+    if (ready && questionKey) fireTrigger(HEX_ONBOARDING_TRIGGER.selectOption);
+  }, [fireTrigger, ready, questionKey, pickCount]);
+}
+
+/** Fires `beat` once per new `beatKey`, and the `tap` trigger on every tap. */
+function useOnboardingBeat(
+  fireTrigger: (name: string) => void,
+  ready: boolean,
+  beat: HexOnboardingBeat | null,
+  beatKey: string | null,
+  tapCount: number,
+) {
+  const firedKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || !beat || !beatKey || firedKey.current === beatKey) return;
+    firedKey.current = beatKey;
+    fireTrigger(HEX_ONBOARDING_TRIGGER[beat]);
+  }, [fireTrigger, ready, beat, beatKey]);
+
+  const lastTapCount = useRef(tapCount);
+  useEffect(() => {
+    if (tapCount === lastTapCount.current) return;
+    lastTapCount.current = tapCount;
+    if (beat) fireTrigger(HEX_ONBOARDING_TRIGGER.tap);
+  }, [fireTrigger, beat, tapCount]);
 }
 
 /**
  * The onboarding flow's fox: Hex, resting in "HEX-Floating" and switching to
  * the hello wave, the excitement or the tap jump for a moment each. No boot-up
  * of his own — PreLoginScreen and every cut-scene screen just drop him in
- * already idle (the splash plays "HEX-Entry" separately).
+ * already idle (the splash plays "HEX-Entry" separately). Screens with a
+ * `beat` play the `Onboarding` state machine instead.
  */
 export function OnboardingFox({
   className,
@@ -76,16 +140,23 @@ export function OnboardingFox({
   greet = false,
   excited = false,
   tapCount = 0,
+  beat = null,
+  beatKey = null,
+  questionKey = null,
+  pickCount = 0,
 }: OnboardingFoxProps) {
   const waving = useHello(greet);
-  const tapping = useTapping(tapCount, greet);
+  const tapping = useTapping(tapCount, greet || !!beat);
 
   let state: HexState = HEX_STATE.idle;
-  if (tapping) state = HEX_STATE.tap;
+  if (beat || questionKey) state = HEX_STATE.onboarding;
+  else if (tapping) state = HEX_STATE.tap;
   else if (waving) state = HEX_STATE.hello;
   else if (excited) state = HEX_STATE.excited;
 
-  const { RiveComponent } = useHexRive(LAYOUT, state);
+  const { RiveComponent, ready, fireTrigger } = useHexRive(LAYOUT, state);
+  useOnboardingBeat(fireTrigger, ready, beat, beatKey, tapCount);
+  useOnboardingQuestion(fireTrigger, ready, questionKey, pickCount);
 
   return (
     <div className={`relative ${className ?? ""}`} style={style}>

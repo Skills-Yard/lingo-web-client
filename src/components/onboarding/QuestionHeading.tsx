@@ -44,6 +44,9 @@ interface QuestionHeadingProps {
   typing?: number;
   /** Changes with each new question; Zox looks back up at the user. */
   screenId?: string;
+  /** Zox beside the question (default true) — off where the design has no
+   * fox in the question row. */
+  showFox?: boolean;
 }
 
 /**
@@ -58,6 +61,7 @@ export function QuestionHeading({
   spoken,
   typing,
   screenId,
+  showFox = true,
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
@@ -68,13 +72,15 @@ export function QuestionHeading({
 
   return (
     <div className="flex shrink-0 items-center justify-center gap-3 pt-2 sm:pt-3">
-      <div aria-hidden className="relative shrink-0">
-        <ZoxTabFox
-          className="h-[6rem] w-[6rem] sm:h-[7rem] sm:w-[7rem]"
-          typing={typing}
-          screenId={screenId}
-        />
-      </div>
+      {showFox && (
+        <div aria-hidden className="relative shrink-0">
+          <ZoxTabFox
+            className="h-[6rem] w-[6rem] sm:h-[7rem] sm:w-[7rem]"
+            typing={typing}
+            screenId={screenId}
+          />
+        </div>
+      )}
       <h1 className="max-w-60 text-[20px] font-medium leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white">
         {parts.map(({ span, cut }, i) => (
           <span key={i} className={span.highlight ? "text-primary" : undefined}>

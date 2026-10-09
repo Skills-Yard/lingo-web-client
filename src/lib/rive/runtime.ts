@@ -128,9 +128,44 @@ export const HEX_STATE = {
   fidget: "HEX-Curious",
   /** Notification screen: pointing down at the Allow button. */
   pointing: "HEX-Pointing",
+  /** The onboarding sequence — driven by `HEX_ONBOARDING_TRIGGER`s on the
+   * `Onboarding` view model rather than by switching machines. */
+  onboarding: "Onboarding",
 } as const;
 
 export type HexState = (typeof HEX_STATE)[keyof typeof HEX_STATE];
+
+/** The view model bound to both the "HEX" and the reactions artboard. */
+export const HEX_VIEW_MODEL = "Onboarding";
+
+/** Triggers on `HEX_VIEW_MODEL` that step the `Onboarding` state machine. */
+export const HEX_ONBOARDING_TRIGGER = {
+  /** Greeting screen. */
+  hi: "hi",
+  /** "Are you ready?" screen. */
+  ready: "ready",
+  /** A question appears. */
+  showQuestion: "showQuestion",
+  /** An option is picked. */
+  selectOption: "selectOption",
+  /** "Good news" screen. */
+  celebrate: "celebrate",
+  /** A tap on Hex. */
+  tap: "tap",
+} as const;
+
+export type HexOnboardingTrigger =
+  (typeof HEX_ONBOARDING_TRIGGER)[keyof typeof HEX_ONBOARDING_TRIGGER];
+
+/**
+ * Reactions — the "6.1 and 5.1" artboard in `hex.riv`, used by the "Have you
+ * worked with code" and "superpower level" questions. `Reactions_SM` reacts
+ * to the picked option: set `option` (1-4) and fire `select`.
+ */
+export const REACTIONS_ARTBOARD = "6.1 and 5.1";
+export const REACTIONS_STATE_MACHINE = "Reactions_SM";
+export const REACTIONS_OPTION = "option";
+export const REACTIONS_SELECT_TRIGGER = "select";
 
 export const HEX_HELLO_MS = 3000;
 export const HEX_TAP_MS = 1400;
@@ -138,11 +173,12 @@ export const HEX_TYPING_MS = 2200;
 export const HEX_FIDGET_MS = 2500;
 
 /**
- * Splash — `hex-splash-screen.riv`. Its "Splash Screen" artboard plays the
- * `Splash_SM` state machine, data-bound to the `Splash_VM` view model; firing
- * that view model's `showSignUpScreen` trigger animates the sign-up screen in.
+ * Splash — the "Splash Screen" artboard in `hex.riv` (same file as Hex). It
+ * plays the `Splash_SM` state machine, data-bound to the `Splash_VM` view
+ * model; firing that view model's `showSignUpScreen` trigger animates the
+ * sign-up screen in.
  */
-export const SPLASH_RIVE_SRC = "/animations/hex-splash-screen.riv";
+export const SPLASH_RIVE_SRC = HEX_RIVE_SRC;
 export const SPLASH_ARTBOARD = "Splash Screen";
 export const SPLASH_STATE_MACHINE = "Splash_SM";
 export const SPLASH_VIEW_MODEL = "Splash_VM";

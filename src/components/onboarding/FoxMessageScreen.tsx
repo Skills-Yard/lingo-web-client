@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Sparkle } from "lucide-react";
-import type { TextSpan } from "@/lib/constants/onboarding";
+import type { HexOnboardingBeat, TextSpan } from "@/lib/constants/onboarding";
 import { FoxSlot } from "./foxStage";
 import { OnboardingBubble, TypedText, spansLength } from "./OnboardingBubble";
 import { useVoiceover } from "./useVoiceover";
@@ -48,6 +48,9 @@ interface FoxMessageScreenProps {
    * heading-first screen, as soon as the heading has, alongside the bubble
    * typing. See FoxSlot's `excited`. */
   excite?: boolean;
+  /** Hex's `Onboarding` trigger for this screen — fired on arrival, or with
+   * `excite` at the excitement moment. See OnboardingStep's `hexBeat`. */
+  hexBeat?: HexOnboardingBeat;
   /** Played once the bubble has popped in. The text types along with it —
    * paced so the last letter lands as the voice ends — and the fox's mouth
    * moves exactly while it plays. */
@@ -80,6 +83,7 @@ export function FoxMessageScreen({
   bubble,
   greet,
   excite = false,
+  hexBeat,
   voiceover,
   voiceReadsHeading = true,
   voiceReads = "all",
@@ -169,6 +173,7 @@ export function FoxMessageScreen({
   // Heading-first screens get excited the moment the heading has typed out,
   // together with the bubble popping in and typing; others once all is typed.
   const excited = excite && (headingFirst ? showBubble : typedOut);
+  const beatDue = !!hexBeat && (!excite || excited);
 
   const headingBlock = heading && (
     <div className="relative flex shrink-0 items-start gap-1.5">
@@ -273,6 +278,8 @@ export function FoxMessageScreen({
             greet={greet}
             talking={talking}
             excited={excited}
+            beat={hexBeat}
+            beatDue={beatDue}
             tappable
             className="aspect-square"
             style={{ height: shrunk ? shrunk.size : FOX_SIZE }}

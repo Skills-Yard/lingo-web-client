@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import type {
   OnboardingGridOption,
   OnboardingListOption,
+  QuestionHexMode,
   TextSpan,
 } from "@/lib/constants/onboarding";
 import { playClickSound } from "./clickSound";
@@ -12,6 +13,7 @@ import { useVoiceover } from "./useVoiceover";
 import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
 import { QuestionListOptions } from "./QuestionListScreen";
 import { QuestionGridOptions } from "./QuestionGridScreen";
+import { ReactionsHex } from "./robu/ReactionsHex";
 
 type QuestionScreenProps = {
   /** Changes with each question; the options fade in anew when it does. */
@@ -22,6 +24,8 @@ type QuestionScreenProps = {
   /** Question (then options) voiceover, played as the screen appears. */
   voiceover?: readonly string[];
   muted?: boolean;
+  /** How Zox reacts — see OnboardingStep's `hexMode`. */
+  hexMode?: QuestionHexMode;
   className?: string;
 } & (
   | { kind: "question-list"; options: OnboardingListOption[] }
@@ -42,13 +46,16 @@ type QuestionScreenProps = {
  * question has him look back up at the user (see ZoxTabFox).
  */
 export function QuestionScreen(props: QuestionScreenProps) {
-  const { questionId, heading, selectedId, onSelect, voiceover, muted = false, className } = props;
+  const { questionId, heading, selectedId, onSelect, voiceover, muted = false, hexMode, className } =
+    props;
 
   const voice = useVoiceover(voiceover, true, muted, selectedId !== null);
   const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
   const spokenOption = spokenOptionIndex(voice, props.options.length);
 
   const [typing, setTyping] = useState(0);
+  // 1-based, as the reactions artboard numbers its options; 0 for none.
+  const selectedOption = props.options.findIndex((option) => option.id === selectedId) + 1;
 
   const pick = (id: string) => {
     voice.stop();
@@ -65,7 +72,16 @@ export function QuestionScreen(props: QuestionScreenProps) {
         talking={voice.playing}
         typing={typing}
         screenId={questionId}
+        showFox={!hexMode}
       />
+
+      {hexMode === "reactions" && (
+        <ReactionsHex
+          className="mx-auto aspect-[390/171] w-full max-w-[24rem] shrink-0"
+          typing={typing}
+          selectedOption={selectedOption}
+        />
+      )}
 
       <motion.div
         key={questionId}

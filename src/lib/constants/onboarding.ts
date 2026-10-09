@@ -366,6 +366,17 @@ export function resolveVoiceover(
   return typeof voiceover === "function" ? voiceover(answers) : voiceover;
 }
 
+/** The `Onboarding` state machine triggers a fox-message screen can fire. */
+export type HexOnboardingBeat = "hi" | "ready" | "celebrate";
+
+/**
+ * How a question's Hex reacts. "onboarding": the `Onboarding` state machine,
+ * `showQuestion` as the question appears and `selectOption` on each pick.
+ * "reactions": the reactions artboard, reacting to which option (1-4) was
+ * picked. Unset: the tablet poses.
+ */
+export type QuestionHexMode = "onboarding" | "reactions";
+
 export type OnboardingStep =
   | {
       kind: "fox-message";
@@ -408,6 +419,10 @@ export type OnboardingStep =
        * voice, and the fox talks only while it types. For clips with a
        * silent tail, where voice-synced typing (and the mouth) would run on. */
       typeSpeedMs?: number;
+      /** Plays Hex's `Onboarding` state machine on this screen and fires this
+       * trigger on it — on arrival, or with `excite` at the excitement moment
+       * instead. Replaces the `greet` / `excite` poses. */
+      hexBeat?: HexOnboardingBeat;
       cta: string;
     }
   | {
@@ -431,6 +446,7 @@ export type OnboardingStep =
       options: OnboardingListOption[];
       answerKey: keyof OnboardingAnswers;
       voiceover?: StepVoiceover;
+      hexMode?: QuestionHexMode;
       cta: string;
     }
   | {
@@ -440,6 +456,7 @@ export type OnboardingStep =
       options: OnboardingGridOption[];
       answerKey: keyof OnboardingAnswers;
       voiceover?: StepVoiceover;
+      hexMode?: QuestionHexMode;
       cta: string;
     };
 
@@ -448,7 +465,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "fox-message",
     id: "greeting",
     bubble: () => [{ text: "Hey! I am Zox,\nyour skills buddy" }],
-    greet: true,
+    hexBeat: "hi",
     voiceover: ["/audios/text-1.mpeg"],
     typeSpeedMs: 70,
     cta: "Continue",
@@ -464,6 +481,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     headingPlacement: "bottom",
     sparkle: true,
     excite: true,
+    hexBeat: "ready",
     voiceover: ["/audios/text-2-screen.mpeg"],
     voiceReads: "heading",
     bubble: () => [{ text: "Are you ready?" }],
@@ -479,23 +497,11 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: CAREER_OPTIONS,
     answerKey: "career",
+    hexMode: "onboarding",
     voiceover: [
       "/audios/screen-1-question.mpeg",
       "/audios/screen-1-options.mpeg",
     ],
-    cta: "Continue",
-  },
-  {
-    kind: "question-grid",
-    id: "experience",
-    heading: () => [
-      { text: "Have you " },
-      { text: "worked", highlight: true },
-      { text: " with code before?" },
-    ],
-    options: EXPERIENCE_OPTIONS,
-    answerKey: "experience",
-    voiceover: ["/audios/HYW_Ques.m4a", "/audios/HYW_Options.m4a"],
     cta: "Continue",
   },
   {
@@ -516,6 +522,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       return src ? [src] : undefined;
     },
     voiceReadsHeading: false,
+    hexBeat: "celebrate",
     cta: "Yes!",
   },
   {
@@ -528,7 +535,22 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: PYTHON_LEVEL_OPTIONS,
     answerKey: "pythonLevel",
+    hexMode: "reactions",
     voiceover: ["/audios/WYP_Ques.m4a", "/audios/WYP_Options.m4a"],
+    cta: "Continue",
+  },
+  {
+    kind: "question-grid",
+    id: "experience",
+    heading: () => [
+      { text: "Have you " },
+      { text: "worked", highlight: true },
+      { text: " with code before?" },
+    ],
+    options: EXPERIENCE_OPTIONS,
+    answerKey: "experience",
+    hexMode: "reactions",
+    voiceover: ["/audios/HYW_Ques.m4a", "/audios/HYW_Options.m4a"],
     cta: "Continue",
   },
   {
@@ -536,6 +558,18 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "starting-point",
     bubble: careerMindBubble,
     voiceover: careerMindAudio,
+    cta: "Yes!",
+  },
+  {
+    kind: "fox-message",
+    id: "foundation",
+    bubble: () => [
+      {
+        text: "Smart, a strong foundation makes everything after this easier. Starting from ",
+      },
+      { text: "Module 1", highlight: true },
+      { text: "." },
+    ],
     cta: "Yes!",
   },
   {
@@ -637,17 +671,5 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     options: STARTING_POINT_OPTIONS,
     answerKey: "startingPoint",
     cta: "Continue",
-  },
-  {
-    kind: "fox-message",
-    id: "foundation",
-    bubble: () => [
-      {
-        text: "Smart, a strong foundation makes everything after this easier. Starting from ",
-      },
-      { text: "Module 1", highlight: true },
-      { text: "." },
-    ],
-    cta: "Yes!",
   },
 ];

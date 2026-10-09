@@ -12,6 +12,7 @@ import {
   type RefObject,
 } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
+import type { HexOnboardingBeat } from "@/lib/constants/onboarding";
 import { OnboardingFox } from "./robu/OnboardingFox";
 
 /**
@@ -25,6 +26,9 @@ import { OnboardingFox } from "./robu/OnboardingFox";
  */
 
 interface SlotInfo {
+  /** Stable per slot — tells a remount (a beat to fire again) apart from a
+   * prop change on the same slot. */
+  id: string;
   ref: RefObject<HTMLDivElement | null>;
   talking: boolean;
   greet: boolean;
@@ -33,6 +37,8 @@ interface SlotInfo {
   typing: number;
   hidden: boolean;
   tappable: boolean;
+  beat: HexOnboardingBeat | null;
+  beatDue: boolean;
 }
 
 interface FoxStage {
@@ -91,6 +97,10 @@ interface FoxSlotProps {
   hidden?: boolean;
   /** Tapping the fox here plays its giggle — cut-scene screens only. */
   tappable?: boolean;
+  /** Plays Hex's `Onboarding` state machine here, firing this trigger once
+   * `beatDue` turns on — once per time the slot mounts. */
+  beat?: HexOnboardingBeat;
+  beatDue?: boolean;
 }
 
 /** Where the fox should stand on this screen — sized like the fox itself. */
@@ -104,14 +114,28 @@ export function FoxSlot({
   typing = 0,
   hidden = false,
   tappable = false,
+  beat,
+  beatDue = false,
 }: FoxSlotProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
   const stage = useContext(FoxStageContext);
 
   useEffect(() => {
-    stage?.register(id, { ref, talking, greet, excited, laptop, typing, hidden, tappable });
-  }, [stage, id, talking, greet, excited, laptop, typing, hidden, tappable]);
+    stage?.register(id, {
+      id,
+      ref,
+      talking,
+      greet,
+      excited,
+      laptop,
+      typing,
+      hidden,
+      tappable,
+      beat: beat ?? null,
+      beatDue,
+    });
+  }, [stage, id, talking, greet, excited, laptop, typing, hidden, tappable, beat, beatDue]);
   useEffect(() => () => stage?.unregister(id), [stage, id]);
 
   // Outside the flow (no stage), just draw a fox in place.
@@ -126,6 +150,8 @@ export function FoxSlot({
         excited={excited}
         laptop={laptop}
         typing={typing}
+        beat={beat ?? null}
+        beatKey={beatDue ? id : null}
       />
     );
   }
@@ -155,9 +181,14 @@ const UNHIDE_DELAY_MS = 350;
 export function PersistentFox({
   containerRef,
   slot,
+  questionKey = null,
+  pickCount = 0,
 }: {
   containerRef: RefObject<HTMLElement | null>;
   slot: SlotInfo | null;
+  /** See OnboardingFox's `questionKey` / `pickCount`. */
+  questionKey?: string | null;
+  pickCount?: number;
 }) {
   const reduceMotion = useReducedMotion();
   const x = useSpring(0, GLIDE);
@@ -266,6 +297,10 @@ export function PersistentFox({
         excited={slot?.excited ?? false}
         laptop={slot?.laptop ?? false}
         typing={slot?.typing ?? 0}
+        beat={slot?.beat ?? null}
+        beatKey={slot?.beatDue ? slot.id : null}
+        questionKey={questionKey}
+        pickCount={pickCount}
         tapCount={tapCount}
       />
     </motion.div>

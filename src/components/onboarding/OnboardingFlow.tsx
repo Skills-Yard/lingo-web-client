@@ -70,6 +70,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [index, setIndex] = useState(-2);
   const [answers, setAnswers] = useState<OnboardingAnswers>({});
   const [muted, setMuted] = useState(false);
+  // Counts option picks, so the persistent Hex can react to each one.
+  const [pickCount, setPickCount] = useState(0);
 
   // Bumped each time the user comes back to the sign-up screen from a
   // question, so the splash canvas replays its sign-up animations.
@@ -231,6 +233,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       voiceReads={step.voiceReads}
                       typeSpeedMs={step.typeSpeedMs}
                       excite={step.excite}
+                      hexBeat={step.hexBeat}
                       muted={muted}
                     />
                   )}
@@ -267,7 +270,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                         ? { kind: step.kind, options: step.options }
                         : { kind: step.kind, options: step.options })}
                       selectedId={answers[step.answerKey] ?? null}
-                      onSelect={(id) => setAnswer(step.answerKey, id)}
+                      hexMode={step.hexMode}
+                      onSelect={(id) => {
+                        setAnswer(step.answerKey, id);
+                        setPickCount((n) => n + 1);
+                      }}
                       voiceover={resolveVoiceover(step.voiceover, answers)}
                       muted={muted}
                     />
@@ -331,7 +338,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </div>
         </div>
 
-        <PersistentFox containerRef={mainRef} slot={foxOnScreen ? foxSlot : null} />
+        <PersistentFox
+          containerRef={mainRef}
+          slot={foxOnScreen ? foxSlot : null}
+          questionKey={isQuestion && step.hexMode === "onboarding" ? step.id : null}
+          pickCount={pickCount}
+        />
 
         {/* The splash/sign-up canvas stays mounted for the whole flow, so going
           back to the sign-up screen from the first question finds Hex where
