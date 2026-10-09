@@ -1,9 +1,13 @@
 "use client";
 
+import { Inter } from "next/font/google";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
+
+// Question headings: Inter 600, 20px.
+const inter = Inter({ subsets: ["latin"], weight: ["600", "700"] });
 
 /**
  * How far through its own clip (0..1) the question text has been spoken:
@@ -46,6 +50,32 @@ interface QuestionHeadingProps {
   screenId?: string;
 }
 
+/** The same karaoke fill-in as QuestionHeading's, without Zox: a big centered
+ * title for the career question, whose tiles fill the screen instead. */
+export function QuestionTilesHeading({
+  heading,
+  spoken,
+}: Pick<QuestionHeadingProps, "heading" | "spoken">) {
+  const total = spansLength(heading);
+  const lit = spoken >= 1 ? total : Math.floor(spoken * total);
+  return (
+    <h1 className={`${inter.className} shrink-0 px-4 pt-5 text-center text-[24px] font-bold leading-[1.34] text-[#2C2C2C] sm:pt-6 dark:text-white`}>
+      {heading.map((span, i) => {
+        const start = spansLength(heading.slice(0, i));
+        const cut = Math.max(0, Math.min(span.text.length, lit - start));
+        return (
+          <span key={i} className={span.highlight ? "text-primary" : undefined}>
+            {span.text.slice(0, cut)}
+            {cut < span.text.length && (
+              <span className="opacity-35 transition-opacity">{span.text.slice(cut)}</span>
+            )}
+          </span>
+        );
+      })}
+    </h1>
+  );
+}
+
 /**
  * Zox (with his tablet) + question row at the top of both question
  * screens. While the
@@ -67,15 +97,8 @@ export function QuestionHeading({
   });
 
   return (
-    <div className="flex shrink-0 items-center justify-center gap-3 pt-2 sm:pt-3">
-      <div aria-hidden className="relative shrink-0">
-        <ZoxTabFox
-          className="h-[6rem] w-[6rem] sm:h-[7rem] sm:w-[7rem]"
-          typing={typing}
-          screenId={screenId}
-        />
-      </div>
-      <h1 className="max-w-60 text-[20px] font-medium leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white">
+    <div className="flex shrink-0 flex-col items-center gap-2 pt-4 sm:pt-6">
+      <h1 className={`${inter.className} max-w-72 text-center text-[20px] font-semibold leading-snug text-[#1A1C22] sm:max-w-80 dark:text-white`}>
         {parts.map(({ span, cut }, i) => (
           <span key={i} className={span.highlight ? "text-primary" : undefined}>
             {span.text.slice(0, cut)}
@@ -87,6 +110,13 @@ export function QuestionHeading({
           </span>
         ))}
       </h1>
+      <div aria-hidden className="relative shrink-0">
+        <ZoxTabFox
+          className="h-[6.5rem] w-[6.5rem] sm:h-[7.5rem] sm:w-[7.5rem]"
+          typing={typing}
+          screenId={screenId}
+        />
+      </div>
     </div>
   );
 }

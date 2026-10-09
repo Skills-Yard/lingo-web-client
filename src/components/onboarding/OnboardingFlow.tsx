@@ -45,6 +45,11 @@ const QUESTION_COUNT = Object.keys(QUESTION_NUMBER).length;
 // what actually reads as "smooth" instead of a blank flash in between.
 const SCREEN_TRANSITION = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const };
 
+// Fox-message screens sit on the misty city backdrop (light theme only). It
+// covers the whole flow, footer included, so it reaches the bottom edge.
+const FOX_BACKDROP =
+  "bg-[url('/images/onboarding-bg.png')] bg-cover bg-bottom bg-no-repeat dark:bg-none";
+
 interface OnboardingFlowProps {
   /** Fired after the last question's "Continue" — nothing past this point
    * exists in the reference design yet, so the caller decides what (if
@@ -181,6 +186,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         ref={mainRef}
         className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background"
       >
+        <motion.div
+          aria-hidden
+          initial={false}
+          animate={{ opacity: step?.kind === "fox-message" ? 1 : 0 }}
+          transition={SCREEN_TRANSITION}
+          className={`pointer-events-none absolute inset-0 z-0 ${FOX_BACKDROP}`}
+        />
+
         {/* Screens crossfade in the space above the footer. */}
         <div className="relative min-h-0 flex-1">
           <AnimatePresence mode="sync">
@@ -206,7 +219,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={SCREEN_TRANSITION}
-                className="absolute inset-0 flex flex-col bg-white dark:bg-background"
+                className={`absolute inset-0 flex flex-col ${
+                  step.kind === "fox-message" ? "" : "bg-white dark:bg-background"
+                }`}
               >
                 {/* Phone-width column, centered on tablets/desktops so options
                   don't stretch across a wide screen. */}
@@ -264,7 +279,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       questionId={step.id}
                       heading={step.heading(answers)}
                       {...(step.kind === "question-list"
-                        ? { kind: step.kind, options: step.options }
+                        ? { kind: step.kind, options: step.options, variant: step.variant }
                         : { kind: step.kind, options: step.options })}
                       selectedId={answers[step.answerKey] ?? null}
                       onSelect={(id) => setAnswer(step.answerKey, id)}
@@ -285,7 +300,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           where it is) and a short bottom padding everywhere else, so the
           button sits near the bottom edge. */}
         <div ref={footerRef} className="relative z-10 shrink-0">
-          <div className="mx-auto w-full max-w-[22rem] px-4">
+          <div className="mx-auto w-full max-w-[24rem] px-4">
             <motion.div
               initial={false}
               animate={{ opacity: hideCta ? 0 : 1 }}

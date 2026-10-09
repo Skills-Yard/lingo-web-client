@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Poppins } from "next/font/google";
 import type { OnboardingListOption } from "@/lib/constants/onboarding";
 import { optionCardClass } from "./optionCard";
 
+const poppins = Poppins({ subsets: ["latin"], weight: "500" });
+
 interface QuestionListOptionsProps {
   options: OnboardingListOption[];
+  /** "tiles": a 3-column grid of icon-over-label tiles instead of rows. */
+  variant?: "tiles";
   selectedId: string | null;
   /** Index of the option the voice is reading right now, or -1. */
   spokenOption: number;
@@ -21,6 +26,7 @@ interface QuestionListOptionsProps {
  */
 export function QuestionListOptions({
   options,
+  variant,
   selectedId,
   spokenOption,
   onPick,
@@ -34,6 +40,51 @@ export function QuestionListOptions({
       behavior: "smooth",
     });
   }, [spokenOption]);
+
+  if (variant === "tiles") {
+    const lone = options.length % 3 === 1;
+    return (
+      // Figma "Frame 181": 358px wide, 108x118 tiles with 9px of space
+      // between, 18px between rows, a lone last tile spanning the row.
+      <div
+        ref={optionsRef}
+        className="scrollbar-none mx-auto mt-5 grid w-full max-w-[358px] min-h-0 flex-1 grid-cols-[repeat(3,108px)] auto-rows-max content-start justify-between gap-y-[18px] overflow-y-auto px-0 pt-1 pb-3"
+      >
+        {options.map((option, i) => {
+          const selected = option.id === selectedId;
+          const spotlight = !selected && i === spokenOption;
+          const wide = lone && i === options.length - 1;
+          return (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => onPick(option.id)}
+              className={`${poppins.className} flex h-[118px] flex-col items-center justify-center gap-[5px] rounded-[8px] border-[3px] px-2 py-2 text-center transition-[box-shadow,border-color,scale] duration-200 active:scale-[0.97] dark:bg-[#15181E] ${
+                wide ? "col-span-3" : ""
+              } ${
+                selected || spotlight
+                  ? "border-primary bg-[#F7F8FA] shadow-[1px_1px_9.4px_rgba(0,184,169,0.7)]"
+                  : "border-white bg-[#F7F8FA] shadow-[1px_1px_9.4px_rgba(0,0,0,0.16)] dark:border-white/10"
+              }`}
+            >
+              {option.image && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={option.image}
+                  alt=""
+                  draggable={false}
+                  className="h-[55px] w-[54px] shrink-0 object-contain"
+                />
+              )}
+              <span className="text-balance text-[14px] font-medium leading-[1.28] text-[#1A1C22] dark:text-white">
+                {option.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    );
+  }
 
   return (
     // Options keep their natural height; if they don't all fit, only this

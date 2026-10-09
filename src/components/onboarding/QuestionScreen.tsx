@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { Poppins } from "next/font/google";
+import { AnimatePresence, motion } from "framer-motion";
 import type {
   OnboardingGridOption,
   OnboardingListOption,
@@ -9,9 +10,12 @@ import type {
 } from "@/lib/constants/onboarding";
 import { playClickSound } from "./clickSound";
 import { useVoiceover } from "./useVoiceover";
-import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
+import { QuestionHeading, QuestionTilesHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
 import { QuestionListOptions } from "./QuestionListScreen";
+import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { QuestionGridOptions } from "./QuestionGridScreen";
+
+const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
 type QuestionScreenProps = {
   /** Changes with each question; the options fade in anew when it does. */
@@ -24,7 +28,7 @@ type QuestionScreenProps = {
   muted?: boolean;
   className?: string;
 } & (
-  | { kind: "question-list"; options: OnboardingListOption[] }
+  | { kind: "question-list"; options: OnboardingListOption[]; variant?: "tiles" }
   | { kind: "question-grid"; options: OnboardingGridOption[] }
 );
 
@@ -48,6 +52,11 @@ export function QuestionScreen(props: QuestionScreenProps) {
   const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
   const spokenOption = spokenOptionIndex(voice, props.options.length);
 
+  const tiles = props.kind === "question-list" && props.variant === "tiles";
+  const picked =
+    props.kind === "question-list" && props.variant === "tiles"
+      ? props.options.find((o) => o.id === selectedId && o.description)
+      : undefined;
   const [typing, setTyping] = useState(0);
 
   const pick = (id: string) => {
@@ -59,13 +68,17 @@ export function QuestionScreen(props: QuestionScreenProps) {
 
   return (
     <div className={`flex min-h-0 flex-col bg-white px-4 dark:bg-background ${className ?? ""}`}>
-      <QuestionHeading
-        heading={heading}
-        spoken={spokenQuestion}
-        talking={voice.playing}
-        typing={typing}
-        screenId={questionId}
-      />
+      {tiles ? (
+        <QuestionTilesHeading heading={heading} spoken={spokenQuestion} />
+      ) : (
+        <QuestionHeading
+          heading={heading}
+          spoken={spokenQuestion}
+          talking={voice.playing}
+          typing={typing}
+          screenId={questionId}
+        />
+      )}
 
       <motion.div
         key={questionId}
@@ -77,6 +90,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
         {props.kind === "question-list" ? (
           <QuestionListOptions
             options={props.options}
+            variant={props.variant}
             selectedId={selectedId}
             spokenOption={spokenOption}
             onPick={pick}
@@ -90,6 +104,34 @@ export function QuestionScreen(props: QuestionScreenProps) {
           />
         )}
       </motion.div>
+
+      {/* Tiles variant: Zox says what the picked option is about. */}
+      <AnimatePresence>
+        {picked && (
+          <motion.div
+            key="pick-info"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="-mx-4 flex shrink-0 items-start justify-center gap-4 rounded-2xl border-[3px] border-white bg-[linear-gradient(263.69deg,#E6F8F8_4.33%,#FFFFFF_100.87%)] px-3 pt-4 pb-3 shadow-[1px_1px_14.3px_2px_rgba(0,184,169,0.33)] dark:border-white/10 dark:bg-none dark:bg-[#0F2921]"
+          >
+            <ZoxTabFox
+              className="h-[100px] w-[137px] shrink-0"
+              typing={typing}
+              screenId={questionId}
+            />
+            <div className={`${poppins.className} flex w-[190px] min-w-0 flex-col justify-center gap-1.5`}>
+              <p className="text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
+                {picked.label}
+              </p>
+              <p className="text-[14px] font-medium leading-[1.34] text-[#666666] dark:text-white/65">
+                {picked.description}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
