@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ONBOARDING_STEPS,
+  TIME_SLIDER,
   resolveVoiceover,
   type OnboardingAnswers,
 } from "@/lib/constants/onboarding";
@@ -14,6 +15,8 @@ import { FoxMessageScreen } from "./FoxMessageScreen";
 import { NotificationPermissionScreen } from "./NotificationPermissionScreen";
 import { QuestionScreen } from "./QuestionScreen";
 import { StreakScreen } from "./StreakScreen";
+import { NameScreen } from "./NameScreen";
+import { TimeSliderScreen } from "./TimeSliderScreen";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
 import { Button3D } from "@/components/ui/Button3D";
@@ -28,7 +31,7 @@ const QUESTION_NUMBER: Record<string, number> = {};
 {
   let n = 0;
   for (const step of ONBOARDING_STEPS) {
-    if (step.kind === "question-list" || step.kind === "question-grid") {
+    if (step.kind === "question-list" || step.kind === "question-grid" || step.kind === "time-slider") {
       n += 1;
       QUESTION_NUMBER[step.id] = n;
     }
@@ -122,6 +125,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     if (target && (target.kind === "question-list" || target.kind === "question-grid")) {
       setAnswers((prev) => ({ ...prev, [target.answerKey]: undefined }));
     }
+    // The dial starts on its default so "Continue" is live straight away.
+    if (target?.kind === "time-slider") {
+      setAnswers((prev) => ({
+        ...prev,
+        [target.answerKey]: prev[target.answerKey] ?? String(TIME_SLIDER.initial),
+      }));
+    }
     setIndex(next);
   };
 
@@ -149,7 +159,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // out, so the fox would linger over the next screen until then. It follows
   // the current screen instead: no slot for one that doesn't place the fox
   // (the questions have their own Zox), and it's gone that instant.
-  const foxOnScreen = step?.kind === "fox-message" || step?.kind === "streak";
+  const foxOnScreen =
+    step?.kind === "fox-message" || step?.kind === "streak" || step?.kind === "name-input";
   const isQuestion = step?.kind === "question-list" || step?.kind === "question-grid";
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
   const progress = questionNumber
@@ -161,6 +172,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const ctaLabel = step ? step.cta : "Get Started";
   const ctaDisabled =
     index < -1 ||
+    (step?.kind === "name-input" && !answers.name?.trim()) ||
     ((step?.kind === "question-list" || step?.kind === "question-grid") &&
       !answers[step.answerKey]);
   const requestNotifications = () => {
@@ -266,6 +278,26 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     />
                   )}
 
+                  {step.kind === "name-input" && (
+                    <NameScreen
+                      className="flex-1"
+                      prompt={step.prompt}
+                      value={answers.name ?? ""}
+                      onChange={(name) => setAnswer("name", name)}
+                      onSubmit={goNext}
+                    />
+                  )}
+
+                  {step.kind === "time-slider" && (
+                    <TimeSliderScreen
+                      className="flex-1"
+                      heading={step.heading(answers)}
+                      note={step.note}
+                      minutes={Number(answers.timeCommitment ?? TIME_SLIDER.initial)}
+                      onChange={(minutes) => setAnswer("timeCommitment", String(minutes))}
+                    />
+                  )}
+
                   {step.kind === "streak" && (
                     <StreakScreen className="flex-1" heading={step.heading(answers)} image={step.image} />
                   )}
@@ -285,6 +317,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       onSelect={(id) => setAnswer(step.answerKey, id)}
                       voiceover={resolveVoiceover(step.voiceover, answers)}
                       muted={muted}
+                      zoxLayout={step.zoxLayout}
                     />
                   )}
                 </div>

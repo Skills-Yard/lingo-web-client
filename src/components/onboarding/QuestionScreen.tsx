@@ -26,6 +26,8 @@ type QuestionScreenProps = {
   /** Question (then options) voiceover, played as the screen appears. */
   voiceover?: readonly string[];
   muted?: boolean;
+  /** "row": Zox beside the heading — see QuestionHeading. */
+  zoxLayout?: "row";
   className?: string;
 } & (
   | { kind: "question-list"; options: OnboardingListOption[]; variant?: "tiles" }
@@ -77,6 +79,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
           talking={voice.playing}
           typing={typing}
           screenId={questionId}
+          layout={props.zoxLayout === "row" ? "row" : "stacked"}
         />
       )}
 

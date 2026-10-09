@@ -15,6 +15,7 @@ export interface TextSpan {
  * from this to personalize themselves (the reference design's "{career}"/
  * "{careerTitle}" placeholders). */
 export interface OnboardingAnswers {
+  name?: string;
   career?: string;
   experience?: string;
   pythonLevel?: string;
@@ -93,6 +94,64 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
     description: "No worries, we'll start with Python basics useful on any path.",
   },
 ];
+
+export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
+  {
+    id: "switching-careers",
+    label: "Switching careers into tech",
+    image: "/images/screen-04/04-1.png",
+  },
+  {
+    id: "first-tech-job",
+    label: "Landing my first job",
+    image: "/images/screen-04/04-2.png",
+  },
+  {
+    id: "promotion",
+    label: "Leveling up / Promotion",
+    image: "/images/screen-04/04-3.png",
+  },
+  {
+    id: "personal-project",
+    label: "Personal project",
+    image: "/images/screen-04/04-4.png",
+  },
+  {
+    id: "freelance",
+    label: "Freelance",
+    image: "/images/screen-04/04-5.png",
+  },
+];
+
+export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
+  {
+    id: "morning",
+    label: "Morning",
+    illustration: "books",
+    image: "/images/screen-06/06-1.png",
+  },
+  {
+    id: "afternoon",
+    label: "Afternoon",
+    illustration: "mobile",
+    image: "/images/screen-06/06-2.png",
+  },
+  {
+    id: "evening",
+    label: "Evening",
+    illustration: "chart",
+    image: "/images/screen-06/06-3.png",
+  },
+  {
+    id: "night",
+    label: "Night",
+    illustration: "trophy",
+    image: "/images/screen-06/06-4.png",
+  },
+];
+
+/** The daily-minutes dial's range and its starting value. */
+export const TIME_SLIDER = { min: 1, max: 20, initial: 10 } as const;
 
 export const EXPERIENCE_OPTIONS: OnboardingGridOption[] = [
   {
@@ -303,6 +362,22 @@ export type OnboardingStep =
       cta: string;
     }
   | {
+      kind: "name-input";
+      id: string;
+      /** The bubble's question, above the text field. */
+      prompt: string;
+      cta: string;
+    }
+  | {
+      kind: "time-slider";
+      id: string;
+      heading: (answers: OnboardingAnswers) => TextSpan[];
+      /** The note under the dial; `{minutes}` is the picked value. */
+      note: string;
+      answerKey: keyof OnboardingAnswers;
+      cta: string;
+    }
+  | {
       kind: "streak";
       id: string;
       heading: (answers: OnboardingAnswers) => TextSpan[];
@@ -316,6 +391,8 @@ export type OnboardingStep =
       /** "tiles": no Zox, a centered heading and a 3-column grid of icon
        * tiles (the career question). Default is the row list. */
       variant?: "tiles";
+      /** "row": Zox beside the heading instead of below it. */
+      zoxLayout?: "row";
       heading: (answers: OnboardingAnswers) => TextSpan[];
       options: OnboardingListOption[];
       answerKey: keyof OnboardingAnswers;
@@ -325,6 +402,8 @@ export type OnboardingStep =
   | {
       kind: "question-grid";
       id: string;
+      /** "row": Zox beside the heading instead of below it. */
+      zoxLayout?: "row";
       heading: (answers: OnboardingAnswers) => TextSpan[];
       options: OnboardingGridOption[];
       answerKey: keyof OnboardingAnswers;
@@ -451,5 +530,97 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: " begins here." },
     ],
     cta: "Continue",
+  },
+  {
+    kind: "fox-message",
+    id: "module-1",
+    bubble: () => [
+      { text: "Your first stop:\n" },
+      { text: "Module 1", highlight: true },
+    ],
+    cta: "Next",
+  },
+  {
+    kind: "name-input",
+    id: "name",
+    prompt: "What should I call you?",
+    cta: "Continue",
+  },
+  {
+    kind: "question-list",
+    id: "motivation",
+    zoxLayout: "row",
+    heading: () => [
+      { text: "What do you wish to " },
+      { text: "achieve", highlight: true },
+      { text: "?" },
+    ],
+    options: MOTIVATION_OPTIONS,
+    answerKey: "motivation",
+    cta: "Continue",
+  },
+  {
+    kind: "time-slider",
+    id: "timeCommitment",
+    heading: (a) => [
+      { text: "How much " },
+      { text: "time", highlight: true },
+      { text: ` can you give ${careerLabel(a)} each day?` },
+    ],
+    note: "Even {minutes} minutes a day can build a great habit!",
+    answerKey: "timeCommitment",
+    cta: "Continue",
+  },
+  {
+    kind: "fox-message",
+    id: "pace-great",
+    bubble: (a) => [
+      { text: "GREAT!\nAt this pace, you'll finish your first 3 lessons toward " },
+      { text: careerLabel(a), highlight: true },
+      { text: " this week." },
+    ],
+    cta: "Yes!",
+  },
+  {
+    kind: "question-grid",
+    id: "learningTime",
+    zoxLayout: "row",
+    heading: (a) => [
+      { text: "What is the " },
+      { text: "best time", highlight: true },
+      { text: ` in a day for you to learn ${careerLabel(a)}?` },
+    ],
+    options: LEARNING_TIME_OPTIONS,
+    answerKey: "learningTime",
+    cta: "Continue",
+  },
+  {
+    kind: "notification-permission",
+    id: "notifications",
+    heading: "Get notified when it’s time to learn.",
+    cta: "Continue",
+  },
+  {
+    kind: "streak",
+    id: "streak",
+    heading: () => [
+      { text: "Let’s keep your " },
+      { text: "coding streak", highlight: true },
+      { text: " going! Stay one tap away from your next lesson." },
+    ],
+    image: "/images/codingStreak/codingStreak-3.png",
+    cta: "Continue",
+  },
+  {
+    kind: "fox-message",
+    id: "three-months",
+    bubble: (a) => [
+      {
+        text: "In 3 months, you could be well past the basics and building real ",
+      },
+      { text: careerLabel(a), highlight: true },
+      { text: " projects on your own." },
+    ],
+    cta: "Yes!",
   },
 ];

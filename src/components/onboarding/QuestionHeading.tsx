@@ -48,6 +48,9 @@ interface QuestionHeadingProps {
   typing?: number;
   /** Changes with each new question; Zox looks back up at the user. */
   screenId?: string;
+  /** "row": Zox to the left of a left-aligned heading; default is the
+   * heading centered with Zox below. */
+  layout?: "stacked" | "row";
 }
 
 /** The same karaoke fill-in as QuestionHeading's, without Zox: a big centered
@@ -88,6 +91,7 @@ export function QuestionHeading({
   spoken,
   typing,
   screenId,
+  layout = "stacked",
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
@@ -96,27 +100,41 @@ export function QuestionHeading({
     return { span, cut: Math.max(0, Math.min(span.text.length, lit - start)) };
   });
 
+  const row = layout === "row";
+  const title = (
+    <h1
+      className={`${inter.className} text-[20px] font-semibold leading-snug text-[#1A1C22] dark:text-white ${
+        row ? "max-w-60 text-left" : "max-w-72 text-center sm:max-w-80"
+      }`}
+    >
+      {parts.map(({ span, cut }, i) => (
+        <span key={i} className={span.highlight ? "text-primary" : undefined}>
+          {span.text.slice(0, cut)}
+          {cut < span.text.length && (
+            <span className="opacity-35 transition-opacity">{span.text.slice(cut)}</span>
+          )}
+        </span>
+      ))}
+    </h1>
+  );
+  const zox = (
+    <div aria-hidden className="relative shrink-0">
+      <ZoxTabFox
+        className="h-[6.5rem] w-[6.5rem] sm:h-[7.5rem] sm:w-[7.5rem]"
+        typing={typing}
+        screenId={screenId}
+      />
+    </div>
+  );
+
   return (
-    <div className="flex shrink-0 flex-col items-center gap-2 pt-4 sm:pt-6">
-      <h1 className={`${inter.className} max-w-72 text-center text-[20px] font-semibold leading-snug text-[#1A1C22] sm:max-w-80 dark:text-white`}>
-        {parts.map(({ span, cut }, i) => (
-          <span key={i} className={span.highlight ? "text-primary" : undefined}>
-            {span.text.slice(0, cut)}
-            {cut < span.text.length && (
-              <span className="opacity-35 transition-opacity">
-                {span.text.slice(cut)}
-              </span>
-            )}
-          </span>
-        ))}
-      </h1>
-      <div aria-hidden className="relative shrink-0">
-        <ZoxTabFox
-          className="h-[6.5rem] w-[6.5rem] sm:h-[7.5rem] sm:w-[7.5rem]"
-          typing={typing}
-          screenId={screenId}
-        />
-      </div>
+    <div
+      className={`flex shrink-0 items-center pt-4 sm:pt-6 ${
+        row ? "flex-row gap-3" : "flex-col gap-2"
+      }`}
+    >
+      {row ? zox : title}
+      {row ? title : zox}
     </div>
   );
 }
