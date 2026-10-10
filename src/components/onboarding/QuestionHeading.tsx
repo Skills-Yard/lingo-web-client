@@ -65,7 +65,9 @@ export function QuestionTilesHeading({
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
   return (
-    <h1 className={`${inter.className} shrink-0 px-4 pt-5 text-center text-[24px] font-bold leading-[1.34] text-[#2C2C2C] sm:pt-6 dark:text-white`}>
+    // Figma: 228px wide (so it breaks "…the career / you're chasing?"),
+    // 24px Inter 700 at 134%; the 260px max-width is that plus the px-4.
+    <h1 className={`${inter.className} mx-auto w-full max-w-[260px] shrink-0 px-4 pt-5 text-center text-[24px] font-bold leading-[1.34] text-[#2C2C2C] [@media(min-height:760px)]:pt-14 dark:text-white`}>
       {heading.map((span, i) => {
         const start = spansLength(heading.slice(0, i));
         const cut = Math.max(0, Math.min(span.text.length, lit - start));

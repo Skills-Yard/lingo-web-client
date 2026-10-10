@@ -45,11 +45,12 @@ export function QuestionListOptions({
     const lone = options.length % 3 === 1;
     return (
       // Figma "Frame 181": 358px wide, rows of three 108x118 tiles
-      // (space-between, 9px minimum — 17px at full width) with 24px between
-      // rows; a lone last tile spans the row.
+      // (space-between, 9px minimum — 17px at full width) with 18px between
+      // rows; a lone last tile spans the row. The side/bottom padding leaves
+      // room for the tiles' soft shadow, which overflow-y would clip.
       <div
         ref={optionsRef}
-        className="scrollbar-none mx-auto mt-5 grid w-full max-w-[358px] min-h-0 flex-1 grid-cols-[repeat(3,108px)] auto-rows-max content-start justify-between gap-x-[9px] gap-y-[24px] overflow-y-auto px-0 pt-1 pb-3"
+        className="scrollbar-none mx-auto mt-5 grid w-full max-w-[358px] min-h-0 flex-1 grid-cols-[repeat(3,108px)] auto-rows-max content-start justify-between gap-x-[9px] gap-y-[24px] overflow-y-auto px-[3px] pt-1 pb-3"
       >
         {options.map((option, i) => {
           const selected = option.id === selectedId;

@@ -33,6 +33,10 @@ type QuestionScreenProps = {
   hexMode?: QuestionHexMode;
   /** "row": Zox beside the heading — see QuestionHeading. */
   zoxLayout?: "row";
+  /** Height of the CTA footer below the screen. The tiles variant's info
+   * card runs down under the button (Figma "Frame 31"), so it grows by this
+   * much and overlaps the footer. */
+  footerHeight?: number;
   className?: string;
 } & (
   | { kind: "question-list"; options: OnboardingListOption[]; variant?: "tiles" }
@@ -53,8 +57,17 @@ type QuestionScreenProps = {
  * question has him look back up at the user (see ZoxTabFox).
  */
 export function QuestionScreen(props: QuestionScreenProps) {
-  const { questionId, heading, selectedId, onSelect, voiceover, muted = false, hexMode, className } =
-    props;
+  const {
+    questionId,
+    heading,
+    selectedId,
+    onSelect,
+    voiceover,
+    muted = false,
+    hexMode,
+    footerHeight = 0,
+    className,
+  } = props;
 
   const voice = useVoiceover(voiceover, true, muted, selectedId !== null);
   const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
@@ -134,7 +147,14 @@ export function QuestionScreen(props: QuestionScreenProps) {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            className="-mx-4 flex shrink-0 items-start justify-center gap-4 rounded-2xl border-[3px] border-white bg-[linear-gradient(263.69deg,#E6F8F8_4.33%,#FFFFFF_100.87%)] px-3 pt-4 pb-3 shadow-[1px_1px_14.3px_2px_rgba(0,184,169,0.33)] dark:border-white/10 dark:bg-none dark:bg-[#0F2921]"
+            // Figma "Frame 31": the button sits 23px below the content, inside
+            // the card — so the card's bottom padding and a matching negative
+            // margin carry it under the (z-10) footer.
+            style={{
+              paddingBottom: footerHeight + 23,
+              marginBottom: -footerHeight,
+            }}
+            className="-mx-4 flex shrink-0 items-start justify-center gap-4 rounded-t-2xl border-[3px] border-b-0 border-white bg-[linear-gradient(263.69deg,#E6F8F8_4.33%,#FFFFFF_100.87%)] px-3 pt-4 shadow-[1px_1px_14.3px_2px_rgba(0,184,169,0.33)] dark:border-white/10 dark:bg-none dark:bg-background dark:shadow-none"
           >
             {hexMode === "onboarding" ? (
               <OnboardingPickHex className="h-[100px] w-[137px] shrink-0" typing={typing} />

@@ -341,6 +341,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       voiceover={resolveVoiceover(step.voiceover, answers)}
                       muted={muted}
                       zoxLayout={step.zoxLayout}
+                      footerHeight={footerHeight}
                     />
                   )}
                 </div>
