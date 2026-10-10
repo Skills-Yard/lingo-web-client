@@ -102,7 +102,7 @@ export function TimeSliderScreen({
       {/* Figma: Poppins 600 20px / 134%, 350px wide. */}
       <h1 className="mx-auto mt-[clamp(4px,4.5vh,40px)] w-full max-w-[350px] shrink-0 text-center text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
         {heading.map((span, i) => (
-          <span key={i} className={span.highlight ? "text-primary" : undefined}>
+          <span key={i} className={span.highlight ? "text-brand-gradient" : undefined}>
             {span.text}
           </span>
         ))}

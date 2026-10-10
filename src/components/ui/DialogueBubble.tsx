@@ -1,11 +1,17 @@
 import type { ReactNode } from "react";
 
 // Based on `public/images/dialogue-box.png`, the design asset this bubble
-// reproduces: a 3px green (#32D192) outline, a flat dark-green (#005731)
-// shadow offset 3px straight down, and a V-notch tail. Kept as constants so
-// the box, the tail and the shadow can't drift apart from each other.
-const STROKE_COLOR = "#32D192";
-const SHADOW_COLOR = "#005731";
+// reproduces: a 3px outline, a flat dark shadow offset 3px straight down, and
+// a V-notch tail. The outline is the brand's teal-to-blue gradient left to
+// right; the tail, being tiny, takes the gradient's colour at its own spot
+// (see TAIL_STROKE). Kept as constants so the box, the tail and the shadow
+// can't drift apart from each other.
+const STROKE_START = "#00B8A9";
+const STROKE_MID = "#0A9EAE";
+const STROKE_END = "#1287B3";
+const STROKE_GRADIENT = `linear-gradient(90deg, ${STROKE_START}, ${STROKE_MID}, ${STROKE_END})`;
+const TAIL_STROKE = { left: STROKE_START, center: STROKE_MID, right: STROKE_END } as const;
+const SHADOW_COLOR = "#0B4F5C";
 const STROKE_WIDTH = 3;
 const SHADOW_OFFSET = 3;
 /** The box's fill, and the tail's patch that erases the border under it —
@@ -101,8 +107,10 @@ export function DialogueBubble({
       <div
         className={`relative ${contentClassName ?? ""}`}
         style={{
-          backgroundColor: FILL,
-          border: `${STROKE_WIDTH}px solid ${STROKE_COLOR}`,
+          // The fill over the padding box, the gradient showing through the
+          // transparent border beneath it.
+          background: `linear-gradient(${FILL}, ${FILL}) padding-box, ${STROKE_GRADIENT} border-box`,
+          border: `${STROKE_WIDTH}px solid transparent`,
           borderRadius: radius,
           // Keeps the tail on the flat part of the edge even for a very
           // short line, where the box would otherwise be narrower than its
@@ -134,7 +142,7 @@ export function DialogueBubble({
               outline joins the box's border with no seam. */}
           <path
             fill="none"
-            stroke={STROKE_COLOR}
+            stroke={TAIL_STROKE[tailAlign]}
             strokeWidth={STROKE_WIDTH}
             strokeLinejoin="miter"
             d={`M0 ${TAIL_BASE_Y}H${TAIL_LEFT}L${TAIL_CENTER} ${TAIL_TIP_Y}L${TAIL_RIGHT} ${TAIL_BASE_Y}H${TAIL_WIDTH}`}

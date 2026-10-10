@@ -56,6 +56,32 @@ interface QuestionHeadingProps {
   showFox?: boolean;
 }
 
+/**
+ * One span of a heading: the first `cut` characters at full strength, the rest
+ * faded. A highlighted span's gradient is on each part itself rather than on
+ * a wrapper — a wrapper's `background-clip: text` ignores the faded child's
+ * opacity and would paint it at full strength.
+ */
+function KaraokeSpan({
+  text,
+  cut,
+  highlight,
+}: {
+  text: string;
+  cut: number;
+  highlight?: boolean;
+}) {
+  const color = highlight ? "text-brand-gradient" : "";
+  return (
+    <>
+      <span className={color}>{text.slice(0, cut)}</span>
+      {cut < text.length && (
+        <span className={`${color} opacity-35 transition-opacity`}>{text.slice(cut)}</span>
+      )}
+    </>
+  );
+}
+
 /** The same karaoke fill-in as QuestionHeading's, without Zox: a big centered
  * title for the career question, whose tiles fill the screen instead. */
 export function QuestionTilesHeading({
@@ -72,12 +98,7 @@ export function QuestionTilesHeading({
         const start = spansLength(heading.slice(0, i));
         const cut = Math.max(0, Math.min(span.text.length, lit - start));
         return (
-          <span key={i} className={span.highlight ? "text-primary" : undefined}>
-            {span.text.slice(0, cut)}
-            {cut < span.text.length && (
-              <span className="opacity-35 transition-opacity">{span.text.slice(cut)}</span>
-            )}
-          </span>
+          <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
         );
       })}
     </h1>
@@ -119,14 +140,7 @@ export function QuestionHeading({
       )}
       <h1 className="max-w-60 text-[20px] font-medium leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white">
         {parts.map(({ span, cut }, i) => (
-          <span key={i} className={span.highlight ? "text-primary" : undefined}>
-            {span.text.slice(0, cut)}
-            {cut < span.text.length && (
-              <span className="opacity-35 transition-opacity">
-                {span.text.slice(cut)}
-              </span>
-            )}
-          </span>
+          <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
         ))}
       </h1>
     </div>

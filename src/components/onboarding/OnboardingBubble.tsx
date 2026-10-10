@@ -34,11 +34,14 @@ export function TypedText({ spans, shown }: { spans: TextSpan[]; shown: number }
         const cut = Math.max(0, Math.min(span.text.length, shown - start));
         const caretHere = shown > 0 && shown < total && shown >= start && shown < end;
         return (
-          <span key={i} className={span.highlight ? "text-primary" : undefined}>
+          <span key={i} className={span.highlight ? "text-brand-gradient" : undefined}>
             {span.text.slice(0, cut)}
             {caretHere && <Caret />}
             {cut < span.text.length && (
-              <span className="text-transparent">{span.text.slice(cut)}</span>
+              // `invisible`, not `text-transparent`: inside the gradient text a
+              // transparent colour still shows the gradient (background-clip
+              // paints every glyph), which would show the untyped letters.
+              <span className="invisible">{span.text.slice(cut)}</span>
             )}
           </span>
         );

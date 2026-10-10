@@ -188,7 +188,7 @@ export function FoxMessageScreen({
           <TypedText spans={heading} shown={headingShown} />
         ) : (
           heading.map((span, i) => (
-            <span key={i} className={span.highlight ? "text-primary" : undefined}>
+            <span key={i} className={span.highlight ? "text-brand-gradient" : undefined}>
               {span.text}
             </span>
           ))
