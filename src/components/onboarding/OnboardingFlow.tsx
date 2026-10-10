@@ -53,7 +53,7 @@ interface OnboardingFlowProps {
   /** Fired after the last question's "Continue" — nothing past this point
    * exists in the reference design yet, so the caller decides what (if
    * anything) comes next. */
-  onComplete?: () => void;
+  onComplete?: (answers: OnboardingAnswers) => void;
 }
 
 /**
@@ -135,7 +135,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const goNext = () => {
     if (index >= ONBOARDING_STEPS.length - 1) {
-      onComplete?.();
+      onComplete?.(answers);
       return;
     }
     goTo(index + 1);
