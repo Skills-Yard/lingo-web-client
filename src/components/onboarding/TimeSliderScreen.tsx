@@ -5,22 +5,39 @@ import { Poppins } from "next/font/google";
 import { Sparkles } from "lucide-react";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { TIME_SLIDER } from "@/lib/constants/onboarding";
-import { QuestionTilesHeading } from "./QuestionHeading";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
-// The dial: an arc of a circle centred below the drawing, swept ±SWEEP_DEG
-// either side of straight up. Drawn in a 300x175 viewBox.
-const VIEW_W = 300;
-const VIEW_H = 175;
-const CX = 150;
-const CY = 255;
-const RADIUS = 182;
-const SWEEP_DEG = 52;
+// The dial, drawn in the Figma frame's own coordinates (390 wide): an arc of a
+// circle centred below the drawing, swept ±SWEEP_DEG either side of straight
+// up, whose top (the 10 min mark) is at DIAL_TOP.
+const CX = 195;
+const DIAL_TOP = 451.5;
+const RADIUS = 250;
+const CY = DIAL_TOP + RADIUS;
+const SWEEP_DEG = 40;
 const TRACK_WIDTH = 22;
-const KNOB_R = 13;
-const TICK_VALUES = [0, 5, 10, 15, 20] as const;
+const KNOB_OUTER_R = 21.5;
+const KNOB_INNER_R = 12.5;
+// The part of the frame the svg shows: x 20..370, y 385..590.
+const VIEW_X = 20;
+const VIEW_Y = 385;
+const VIEW_W = 350;
+const VIEW_H = 205;
+// Labels sit below the track (inside the arc), at the spots Figma puts them.
+const LABELS = [
+  { value: 0, x: 36.5, y: 568 },
+  { value: 5, x: 112.5, y: 526 },
+  { value: 10, x: 195, y: 515 },
+  { value: 15, x: 275, y: 526 },
+  { value: 20, x: 350, y: 568 },
+] as const;
+const MAJOR_TICKS = [0, 5, 10, 15, 20];
+// The knob jumps straight between 5, 10, 15 and 20 — no in-between minutes.
+const STEP = 5;
+const TOOLTIP_W = 81;
+const TOOLTIP_H = 36;
 
 const toRad = (deg: number) => (deg * Math.PI) / 180;
 const valueToDeg = (value: number) =>
@@ -34,6 +51,8 @@ const arcPath = (fromDeg: number, toDeg: number) => {
   const b = pointAt(toDeg, RADIUS);
   return `M ${a.x} ${a.y} A ${RADIUS} ${RADIUS} 0 0 1 ${b.x} ${b.y}`;
 };
+const clamp = (value: number, min: number, max: number) =>
+  Math.max(min, Math.min(max, value));
 
 interface TimeSliderScreenProps {
   heading: TextSpan[];
@@ -60,34 +79,54 @@ export function TimeSliderScreen({
   const setFromPointer = (clientX: number, clientY: number) => {
     const box = svgRef.current?.getBoundingClientRect();
     if (!box) return;
-    const px = ((clientX - box.left) / box.width) * VIEW_W;
-    const py = ((clientY - box.top) / box.height) * VIEW_H;
+    const px = VIEW_X + ((clientX - box.left) / box.width) * VIEW_W;
+    const py = VIEW_Y + ((clientY - box.top) / box.height) * VIEW_H;
     const deg = (Math.atan2(px - CX, CY - py) * 180) / Math.PI;
-    const clamped = Math.max(-SWEEP_DEG, Math.min(SWEEP_DEG, deg));
-    const raw = ((clamped + SWEEP_DEG) / (2 * SWEEP_DEG)) * TIME_SLIDER.max;
-    onChange(Math.max(TIME_SLIDER.min, Math.min(TIME_SLIDER.max, Math.round(raw))));
+    const raw = ((clamp(deg, -SWEEP_DEG, SWEEP_DEG) + SWEEP_DEG) / (2 * SWEEP_DEG)) * TIME_SLIDER.max;
+    onChange(clamp(Math.round(raw / STEP) * STEP, STEP, TIME_SLIDER.max));
   };
 
   const knobDeg = valueToDeg(minutes);
   const knob = pointAt(knobDeg, RADIUS);
 
+  // The tooltip sits up and to the right of the knob, kept inside the view;
+  // its pointer keeps following the knob.
+  const tipX = clamp(knob.x + 10.5, VIEW_X + 4, VIEW_X + VIEW_W - 4 - TOOLTIP_W);
+  const tipY = knob.y - 61.5;
+  const pointerX = clamp(knob.x + 31, tipX + 14, tipX + TOOLTIP_W - 14);
+
   return (
-    <div className={`flex min-h-0 flex-col items-center px-4 ${poppins.className} ${className ?? ""}`}>
-      <QuestionTilesHeading heading={heading} spoken={1} />
+    <div
+      className={`flex min-h-0 flex-col items-center px-4 ${poppins.className} ${className ?? ""}`}
+    >
+      {/* Figma: Poppins 600 20px / 134%, 350px wide. */}
+      <h1 className="mx-auto mt-[clamp(4px,4.5vh,40px)] w-full max-w-[350px] shrink-0 text-center text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
+        {heading.map((span, i) => (
+          <span key={i} className={span.highlight ? "text-primary" : undefined}>
+            {span.text}
+          </span>
+        ))}
+      </h1>
 
       <div aria-hidden className="mt-2 flex shrink-0 flex-col items-center">
-        <ZoxTabFox className="h-[7.5rem] w-[7.5rem]" screenId="timeCommitment" />
+        <ZoxTabFox className="h-48 w-48" screenId="timeCommitment" />
         <div className="-mt-1 h-2.5 w-24 rounded-full bg-black/10 blur-[2px] dark:bg-white/10" />
       </div>
 
-      <div className="mt-3 w-full max-w-[22rem] shrink-0 touch-none select-none">
+      {/* The dial and the note sit at the bottom of the screen, just above
+          the Continue button; Hex stays up top. */}
+      <div className="mt-auto flex w-full min-h-0 shrink-0 flex-col items-center pb-3">
+      <div className="mt-[clamp(0px,1.5vh,12px)] w-full max-w-[350px] shrink-0 touch-none select-none">
         <svg
           ref={svgRef}
-          viewBox={`0 0 ${VIEW_W} ${VIEW_H}`}
-          className="w-full cursor-pointer overflow-visible"
+          viewBox={`${VIEW_X} ${VIEW_Y} ${VIEW_W} ${VIEW_H}`}
+          // No focus box: it showed up after every drag, since the svg is
+          // focusable for the arrow keys.
+          className="w-full cursor-pointer overflow-visible outline-none"
           role="slider"
           aria-label="Minutes per day"
-          aria-valuemin={TIME_SLIDER.min}
+          aria-valuemin={STEP}
+          aria-valuestep={STEP}
           aria-valuemax={TIME_SLIDER.max}
           aria-valuenow={minutes}
           tabIndex={0}
@@ -99,24 +138,40 @@ export function TimeSliderScreen({
             if (e.currentTarget.hasPointerCapture(e.pointerId)) setFromPointer(e.clientX, e.clientY);
           }}
           onKeyDown={(e) => {
-            if (e.key === "ArrowRight" || e.key === "ArrowUp") onChange(Math.min(TIME_SLIDER.max, minutes + 1));
-            if (e.key === "ArrowLeft" || e.key === "ArrowDown") onChange(Math.max(TIME_SLIDER.min, minutes - 1));
+            if (e.key === "ArrowRight" || e.key === "ArrowUp") onChange(Math.min(TIME_SLIDER.max, minutes + STEP));
+            if (e.key === "ArrowLeft" || e.key === "ArrowDown") onChange(Math.max(STEP, minutes - STEP));
           }}
         >
           <defs>
-            <linearGradient id="dial-fill" x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0" stopColor="#00B8A9" />
-              <stop offset="1" stopColor="#7FE3D2" />
+            <linearGradient id="dial-fill" gradientUnits="userSpaceOnUse" x1="30" x2="195" y1="0" y2="0">
+              <stop offset="0" stopColor="#00877C" />
+              <stop offset="0.55" stopColor="#00B8A9" />
+              <stop offset="1" stopColor="#1DE0BE" />
+            </linearGradient>
+            <linearGradient id="dial-rest" gradientUnits="userSpaceOnUse" x1="195" x2="360" y1="0" y2="0">
+              <stop offset="0" stopColor="#D5E7E5" />
+              <stop offset="1" stopColor="#E9EEF0" />
+            </linearGradient>
+            <linearGradient id="dial-tip" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor="#01DBB5" />
+              <stop offset="0.18" stopColor="#1FC1BB" />
+              <stop offset="0.42" stopColor="#108585" />
+              <stop offset="0.75" stopColor="#055C60" />
+              <stop offset="1" stopColor="#00464D" />
+            </linearGradient>
+            <linearGradient id="dial-knob" x1="0.4" x2="0.6" y1="0" y2="1">
+              <stop offset="0" stopColor="#1386B3" />
+              <stop offset="1" stopColor="#01B8A9" />
             </linearGradient>
           </defs>
 
           <path
             d={arcPath(-SWEEP_DEG, SWEEP_DEG)}
             fill="none"
-            stroke="currentColor"
+            stroke="url(#dial-rest)"
             strokeWidth={TRACK_WIDTH}
             strokeLinecap="round"
-            className="text-[#E8EDEF] dark:text-white/10"
+            className="dark:opacity-20"
           />
           <path
             d={arcPath(-SWEEP_DEG, knobDeg)}
@@ -126,49 +181,70 @@ export function TimeSliderScreen({
             strokeLinecap="round"
           />
 
-          {TICK_VALUES.map((value) => {
+          {/* A tick per minute inside the track; every fifth is longer. */}
+          {Array.from({ length: TIME_SLIDER.max + 1 }, (_, value) => {
+            const major = MAJOR_TICKS.includes(value);
             const deg = valueToDeg(value);
-            const a = pointAt(deg, RADIUS + TRACK_WIDTH / 2 + 4);
-            const b = pointAt(deg, RADIUS + TRACK_WIDTH / 2 + 12);
-            const label = pointAt(deg, RADIUS + TRACK_WIDTH / 2 + 28);
+            const a = pointAt(deg, RADIUS - TRACK_WIDTH / 2 - 7);
+            const b = pointAt(deg, RADIUS - TRACK_WIDTH / 2 - (major ? 20 : 13));
             return (
-              <g key={value}>
-                <line x1={a.x} y1={a.y} x2={b.x} y2={b.y} stroke="#9AA3A8" strokeWidth={1.5} />
-                <text
-                  x={label.x}
-                  y={label.y}
-                  textAnchor="middle"
-                  dominantBaseline="middle"
-                  className="fill-[#1A1C22] text-[15px] font-medium dark:fill-white"
-                >
-                  {String(value).padStart(2, "0")}
-                </text>
-              </g>
+              <line
+                key={value}
+                x1={a.x}
+                y1={a.y}
+                x2={b.x}
+                y2={b.y}
+                stroke={major ? "#4A5358" : "#9AA3A8"}
+                strokeWidth={major ? 1.6 : 1.2}
+                strokeLinecap="round"
+              />
             );
           })}
 
-          <g transform={`translate(${knob.x} ${knob.y - 38})`}>
-            <rect x={-27} y={-13} width={54} height={26} rx={6} fill="#00806F" />
-            <path d="M -6 13 L 0 20 L 6 13 Z" fill="#00806F" />
+          {LABELS.map(({ value, x, y }) => (
             <text
+              key={value}
+              x={x}
+              y={y}
               textAnchor="middle"
               dominantBaseline="middle"
-              y={0}
-              className="fill-white text-[12px] font-medium"
+              className="fill-black text-[24px] font-medium dark:fill-white"
+            >
+              {String(value).padStart(2, "0")}
+            </text>
+          ))}
+
+          <g style={{ filter: "drop-shadow(1px 1px 6.4px rgba(0,0,0,0.25))" }}>
+            <circle cx={knob.x} cy={knob.y} r={KNOB_OUTER_R} fill="white" />
+          </g>
+          <circle cx={knob.x} cy={knob.y} r={KNOB_INNER_R} fill="url(#dial-knob)" />
+
+          <g>
+            <rect x={tipX} y={tipY} width={TOOLTIP_W} height={TOOLTIP_H} rx={6} fill="url(#dial-tip)" />
+            <path
+              d={`M ${pointerX - 8} ${tipY + TOOLTIP_H - 0.5} L ${pointerX} ${tipY + TOOLTIP_H + 8} L ${pointerX + 8} ${tipY + TOOLTIP_H - 0.5} Z`}
+              fill="#00464D"
+            />
+            <text
+              x={tipX + TOOLTIP_W / 2}
+              y={tipY + TOOLTIP_H / 2}
+              textAnchor="middle"
+              dominantBaseline="middle"
+              className="fill-white text-[16px] font-semibold"
             >
               {minutes} min
             </text>
           </g>
-          <circle cx={knob.x} cy={knob.y} r={KNOB_R + 4} fill="white" />
-          <circle cx={knob.x} cy={knob.y} r={KNOB_R} fill="#00B8A9" stroke="white" strokeWidth={3} />
         </svg>
       </div>
 
-      <div className="mt-4 flex w-full max-w-[22rem] shrink-0 items-center gap-3 rounded-lg bg-[#EAF6F5] px-4 py-3 dark:bg-white/10">
-        <Sparkles aria-hidden className="h-6 w-6 shrink-0 text-primary" />
-        <p className="text-[14px] font-medium leading-snug text-[#1A1C22] dark:text-white">
+      {/* Figma "Frame 29": 288x75, #EFF9FA, 8px corners, 33px stars. */}
+      <div className="mt-[clamp(8px,1.5vh,14px)] flex min-h-[75px] w-full max-w-[288px] shrink-0 items-center justify-center gap-3 rounded-lg bg-[#EFF9FA] px-2 py-[18px] dark:bg-white/10">
+        <Sparkles aria-hidden className="h-[33px] w-[33px] shrink-0 text-primary" strokeWidth={1.5} />
+        <p className="w-[208px] text-[16px] font-medium leading-[1.34] text-[#1A1C22] dark:text-white">
           {note.replace("{minutes}", String(minutes))}
         </p>
+      </div>
       </div>
     </div>
   );

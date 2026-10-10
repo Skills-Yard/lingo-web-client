@@ -42,15 +42,14 @@ export function QuestionListOptions({
   }, [spokenOption]);
 
   if (variant === "tiles") {
-    const lone = options.length % 3 === 1;
+    const lone = options.length % 2 === 1;
     return (
-      // Figma "Frame 181": 358px wide, rows of three 108x118 tiles
-      // (space-between, 9px minimum — 17px at full width) with 18px between
-      // rows; a lone last tile spans the row. The side/bottom padding leaves
-      // room for the tiles' soft shadow, which overflow-y would clip.
+      // Rows of two 118px-high tiles, 16px apart, the width split evenly; a
+      // lone last tile spans the row. The side/bottom padding leaves room for
+      // the tiles' soft shadow, which overflow-y would clip.
       <div
         ref={optionsRef}
-        className="scrollbar-none mx-auto mt-5 grid w-full max-w-[358px] min-h-0 flex-1 grid-cols-[repeat(3,108px)] auto-rows-max content-start justify-between gap-x-[9px] gap-y-[24px] overflow-y-auto px-[3px] pt-1 pb-3"
+        className="scrollbar-none mx-auto mt-5 grid w-full max-w-[358px] min-h-0 flex-1 grid-cols-2 auto-rows-max content-start gap-x-6 gap-y-[24px] overflow-y-auto px-[3px] pt-1 pb-3"
       >
         {options.map((option, i) => {
           const selected = option.id === selectedId;
@@ -68,7 +67,7 @@ export function QuestionListOptions({
               // `compact` tile (one-line label, e.g. DevOps) is 8px/18px
               // padded and top-aligned.
               className={`${poppins.className} box-border flex h-[118px] flex-col items-center rounded-[8px] border-0 border-b-[6px] bg-[#F7F8FA] text-center transition-[box-shadow,border-color,scale] duration-200 active:scale-[0.97] dark:bg-[#15181E] ${
-                wide ? "col-span-3 justify-center gap-1 p-[18px]" : ""
+                wide ? "col-span-2 justify-center gap-1 p-[18px]" : ""
               } ${
                 option.compact
                   ? "justify-start gap-[5px] px-[18px] py-2"

@@ -49,11 +49,6 @@ const QUESTION_COUNT = Object.keys(QUESTION_NUMBER).length;
 // what actually reads as "smooth" instead of a blank flash in between.
 const SCREEN_TRANSITION = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const };
 
-// Fox-message screens sit on the misty city backdrop (light theme only). It
-// covers the whole flow, footer included, so it reaches the bottom edge.
-const FOX_BACKDROP =
-  "bg-[url('/images/onboarding-bg.png')] bg-cover bg-bottom bg-no-repeat dark:bg-none";
-
 interface OnboardingFlowProps {
   /** Fired after the last question's "Continue" — nothing past this point
    * exists in the reference design yet, so the caller decides what (if
@@ -204,21 +199,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         ref={mainRef}
         className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background"
       >
-        <motion.div
-          aria-hidden
-          initial={false}
-          animate={{ opacity: step?.kind === "fox-message" ? 1 : 0 }}
-          transition={SCREEN_TRANSITION}
-          className={`pointer-events-none absolute inset-0 z-0 ${FOX_BACKDROP}`}
-        />
-
         {/* The animated grid behind every screen but the questions. Screens
           leave their own background transparent so it shows through. It stays
           mounted (just faded out on questions) so its loop never restarts. */}
         <motion.div
           aria-hidden
           initial={false}
-          animate={{ opacity: isQuestion ? 0 : 1 }}
+          animate={{ opacity: isQuestion || step?.kind === "time-slider" ? 0 : 1 }}
           transition={SCREEN_TRANSITION}
           className="pointer-events-none absolute inset-0 z-0"
         >

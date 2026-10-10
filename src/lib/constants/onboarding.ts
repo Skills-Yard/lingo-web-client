@@ -93,13 +93,14 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
     image: "/images/screen-01/01-6.png",
     description: "Write scripts that take over repetitive tasks for you.",
   },
-  {
-    id: "not-sure",
-    label: "Not sure yet",
-    image: "/images/screen-01/01-7.png",
-    description:
-      "No worries, we'll start with Python basics useful on any path.",
-  },
+  // Hidden for now — the career question is six options, two per row.
+  // {
+  //   id: "not-sure",
+  //   label: "Not sure yet",
+  //   image: "/images/screen-01/01-7.png",
+  //   description:
+  //     "No worries, we'll start with Python basics useful on any path.",
+  // },
 ];
 
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
