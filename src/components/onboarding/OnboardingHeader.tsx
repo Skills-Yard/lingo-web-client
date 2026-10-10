@@ -33,15 +33,18 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
 
       {progress && (
         <div className="flex-1 px-2 md:mx-auto md:max-w-xs">
-          <p className="mb-1 text-xs font-semibold tabular-nums text-primary">
-            {String(progress.step).padStart(2, "0")}/{String(progress.total).padStart(2, "0")}
+          <p className="mb-1 text-xs font-semibold tabular-nums text-[#2C2C2C] dark:text-white">
+            <span className="bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] bg-clip-text text-transparent">
+              {String(progress.step).padStart(2, "0")}
+            </span>
+            /{String(progress.total).padStart(2, "0")}
           </p>
           {/* One continuous track. Each question's header mounts fresh with
               its screen, so the fill starts at the previous question's
               length and grows to this one's. */}
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
             <motion.div
-              className="h-full rounded-full bg-primary"
+              className="h-full rounded-full bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3]"
               initial={{ width: `${((progress.step - 1) / progress.total) * 100}%` }}
               animate={{ width: `${(progress.step / progress.total) * 100}%` }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
