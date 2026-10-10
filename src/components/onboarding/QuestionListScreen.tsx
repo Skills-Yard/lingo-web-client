@@ -44,11 +44,12 @@ export function QuestionListOptions({
   if (variant === "tiles") {
     const lone = options.length % 3 === 1;
     return (
-      // Figma "Frame 181": 358px wide, 108x118 tiles with 9px of space
-      // between, 18px between rows, a lone last tile spanning the row.
+      // Figma "Frame 181": 358px wide, rows of three 108x118 tiles
+      // (space-between, 9px minimum — 17px at full width) with 24px between
+      // rows; a lone last tile spans the row.
       <div
         ref={optionsRef}
-        className="scrollbar-none mx-auto mt-5 grid w-full max-w-[358px] min-h-0 flex-1 grid-cols-[repeat(3,108px)] auto-rows-max content-start justify-between gap-y-[18px] overflow-y-auto px-0 pt-1 pb-3"
+        className="scrollbar-none mx-auto mt-5 grid w-full max-w-[358px] min-h-0 flex-1 grid-cols-[repeat(3,108px)] auto-rows-max content-start justify-between gap-x-[9px] gap-y-[24px] overflow-y-auto px-0 pt-1 pb-3"
       >
         {options.map((option, i) => {
           const selected = option.id === selectedId;
@@ -59,12 +60,24 @@ export function QuestionListOptions({
               key={option.id}
               type="button"
               onClick={() => onPick(option.id)}
-              className={`${poppins.className} flex h-[118px] flex-col items-center justify-center gap-[5px] rounded-[8px] border-[3px] px-2 py-2 text-center transition-[box-shadow,border-color,scale] duration-200 active:scale-[0.97] dark:bg-[#15181E] ${
-                wide ? "col-span-3" : ""
+              // Figma "Frame 128": 108x118, 18px padding, 5px gap, #F7F8FA
+              // with a 6px khaki bottom edge. Selected swaps the edge for
+              // the brand colour and adds a 3px ring (box-shadow, so the
+              // content never shifts). The wide tile has a 4px gap; a
+              // `compact` tile (one-line label, e.g. DevOps) is 8px/18px
+              // padded and top-aligned.
+              className={`${poppins.className} box-border flex h-[118px] flex-col items-center rounded-[8px] border-0 border-b-[6px] bg-[#F7F8FA] text-center transition-[box-shadow,border-color,scale] duration-200 active:scale-[0.97] dark:bg-[#15181E] ${
+                wide ? "col-span-3 justify-center gap-1 p-[18px]" : ""
+              } ${
+                option.compact
+                  ? "justify-start gap-[5px] px-[18px] py-2"
+                  : wide
+                    ? ""
+                    : "justify-center gap-[5px] p-[18px]"
               } ${
                 selected || spotlight
-                  ? "border-primary bg-[#F7F8FA] shadow-[1px_1px_9.4px_rgba(0,184,169,0.7)]"
-                  : "border-white bg-[#F7F8FA] shadow-[1px_1px_9.4px_rgba(0,0,0,0.16)] dark:border-white/10"
+                  ? "border-b-primary shadow-[0_0_0_3px_var(--color-primary),1px_1px_9.4px_rgba(0,184,169,0.7)]"
+                  : "border-b-[#BDBA99] shadow-[1px_1px_9.4px_rgba(0,0,0,0.16)] dark:border-b-[#2A2E37]"
               }`}
             >
               {option.image && (
@@ -73,10 +86,22 @@ export function QuestionListOptions({
                   src={option.image}
                   alt=""
                   draggable={false}
-                  className="h-[55px] w-[54px] shrink-0 object-contain"
+                  className={`shrink-0 object-contain ${
+                    wide
+                      ? "h-[51px] w-[51px]"
+                      : option.compact
+                        ? "h-[54px] w-[53px]"
+                        : "h-[55px] w-[54px]"
+                  }`}
                 />
               )}
-              <span className="text-balance text-[14px] font-medium leading-[1.28] text-[#1A1C22] dark:text-white">
+              <span
+                className={`self-stretch text-balance text-[14px] font-medium dark:text-white ${
+                  option.compact
+                    ? "leading-[1.24] text-[#2C2C2C]"
+                    : "leading-[1.28] text-[#1A1C22]"
+                }`}
+              >
                 {option.label}
               </span>
             </button>

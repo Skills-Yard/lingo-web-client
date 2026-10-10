@@ -33,6 +33,9 @@ export interface OnboardingListOption {
    * shown as-is) — see QuestionListScreen. */
   icon?: LucideIcon;
   image?: string;
+  /** Tiles variant: the one-line-label layout (8px/18px padding, top-aligned,
+   * 17px label line) the reference gives the DevOps tile. */
+  compact?: boolean;
   /** One line shown with Zox once the option is picked (tiles variant). */
   description?: string;
 }
@@ -74,6 +77,7 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
     id: "devops-cloud",
     label: "DevOps",
     image: "/images/screen-01/01-4.png",
+    compact: true,
     description:
       "Automate deployments and keep cloud systems running smoothly.",
   },
