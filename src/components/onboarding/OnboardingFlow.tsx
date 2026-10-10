@@ -179,15 +179,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const requestNotifications = () => {
     if ("Notification" in window) Notification.requestPermission().catch(() => {});
   };
-  const handleCta = goNext;
+  // On the notification screen the CTA is "Allow Notifications": it asks for
+  // the real permission, then moves on ("Don't Allow", below it, just moves on).
+  const onNotificationScreen = step?.kind === "notification-permission";
+  const handleCta = () => {
+    if (onNotificationScreen) requestNotifications();
+    goNext();
+  };
 
-  // The notification screen answers through its own prompt (Allow / Don't
-  // Allow), so the footer CTA fades out there — it keeps its space, so the
-  // screen's layout doesn't jump as it goes.
-  const hideCta =
-    step?.kind === "notification-permission" ||
-    index === -2 ||
-    (index === -1 && !signUpSettled);
+  // The CTA fades out on the splash and until the sign-up animation has
+  // settled — it keeps its space, so the layout doesn't jump as it goes.
+  const hideCta = index === -2 || (index === -1 && !signUpSettled);
 
   // `h-dvh`, not `h-screen`: on mobile, 100vh is the height with the
   // browser's address bar hidden, so whenever the bar is showing the flow ran
@@ -272,15 +274,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <NotificationPermissionScreen
                       className="flex-1"
                       heading={step.heading}
-                      onAllow={() => {
-                        playClickSound();
-                        requestNotifications();
-                        goNext();
-                      }}
-                      onDeny={() => {
-                        playClickSound();
-                        goNext();
-                      }}
                     />
                   )}
 
@@ -364,7 +357,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </motion.div>
             <motion.div
               initial={false}
-              animate={{ height: index <= -1 ? 40 : 8 }}
+              animate={{ height: index <= -1 || onNotificationScreen ? 40 : 8 }}
               transition={SCREEN_TRANSITION}
               className="flex items-center justify-center"
             >
@@ -384,6 +377,23 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       Log in
                     </button>
                   </motion.p>
+                )}
+                {onNotificationScreen && (
+                  <motion.button
+                    key="deny"
+                    type="button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={SCREEN_TRANSITION}
+                    onClick={() => {
+                      playClickSound();
+                      goNext();
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-[#666666] sm:text-base dark:text-white/70"
+                  >
+                    Don&apos;t Allow
+                  </motion.button>
                 )}
               </AnimatePresence>
             </motion.div>

@@ -664,7 +664,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "notification-permission",
     id: "notifications",
     heading: "Get notified when it’s time to learn.",
-    cta: "Continue",
+    cta: "Allow Notifications",
   },
   {
     kind: "streak",

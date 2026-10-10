@@ -119,6 +119,7 @@ export function QuestionTilesHeading({
 export function QuestionHeading({
   heading,
   spoken,
+  talking,
   typing,
   screenId,
   layout = "stacked",
@@ -141,6 +142,8 @@ export function QuestionHeading({
               className="h-[6rem] w-[6rem] sm:h-[7rem] sm:w-[7rem]"
               typing={typing ?? 0}
               screenId={screenId ?? ""}
+              speaking={talking && spoken < 1}
+              questionSpoken={spoken}
             />
           ) : (
             <ZoxTabFox

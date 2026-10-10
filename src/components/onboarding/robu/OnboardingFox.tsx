@@ -74,6 +74,9 @@ interface OnboardingFoxProps {
   beat?: HexOnboardingBeat | null;
   /** Fires `beat` each time this changes to a new non-null value. */
   beatKey?: string | null;
+  /** Fires `talk` — Hex speaking — each time this changes to a new non-null
+   * value (the screen's voiceover is playing); the `beat` follows it. */
+  talkKey?: string | null;
   /** On an "onboarding" question (Hex hidden): keeps the `Onboarding` state
    * machine running, fires `showQuestion` for each new key and
    * `selectOption` whenever `pickCount` goes up. */
@@ -104,14 +107,23 @@ function useOnboardingQuestion(
   }, [fireTrigger, ready, questionKey, pickCount]);
 }
 
-/** Fires `beat` once per new `beatKey`, and the `tap` trigger on every tap. */
+/** Fires `talk` once per new `talkKey`, `beat` once per new `beatKey`, and the
+ * `tap` trigger on every tap. */
 function useOnboardingBeat(
   fireTrigger: (name: string) => void,
   ready: boolean,
   beat: HexOnboardingBeat | null,
   beatKey: string | null,
+  talkKey: string | null,
   tapCount: number,
 ) {
+  const talkedKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || !beat || !talkKey || talkedKey.current === talkKey) return;
+    talkedKey.current = talkKey;
+    fireTrigger(HEX_ONBOARDING_TRIGGER.talk);
+  }, [fireTrigger, ready, beat, talkKey]);
+
   const firedKey = useRef<string | null>(null);
   useEffect(() => {
     if (!ready || !beat || !beatKey || firedKey.current === beatKey) return;
@@ -142,6 +154,7 @@ export function OnboardingFox({
   tapCount = 0,
   beat = null,
   beatKey = null,
+  talkKey = null,
   questionKey = null,
   pickCount = 0,
 }: OnboardingFoxProps) {
@@ -155,7 +168,7 @@ export function OnboardingFox({
   else if (excited) state = HEX_STATE.excited;
 
   const { RiveComponent, ready, fireTrigger } = useHexRive(LAYOUT, state);
-  useOnboardingBeat(fireTrigger, ready, beat, beatKey, tapCount);
+  useOnboardingBeat(fireTrigger, ready, beat, beatKey, talkKey, tapCount);
   useOnboardingQuestion(fireTrigger, ready, questionKey, pickCount);
 
   return (

@@ -18,16 +18,21 @@ const ENTER = { duration: 0.45, ease: [0.22, 1, 0.36, 1] } as const;
 const SELECT_AFTER_SHOW_MS = 150;
 
 /**
- * Hex on a question screen, playing the `Onboarding` state machine:
- * `showQuestion` as each question (`screenId`) appears, `selectOption` on
- * every pick (`typing`). In the career question's pick card he only mounts
- * with the first pick — `reactToMountPick` has that pick count too.
+ * Hex on a question screen, playing the `Onboarding` state machine: `talk`
+ * while the question's voiceover is being read (`speaking`), `showQuestion`
+ * once it has been (`questionSpoken` reaches 1 — at once when there's no
+ * voice), `selectOption` on every pick (`typing`). `selectOption` does
+ * nothing while he's still talking, so a pick before the question is done
+ * fires `showQuestion` first. In the career question's pick card he only
+ * mounts with the first pick — `reactToMountPick` has that pick count too.
  */
 export function OnboardingQuestionHex({
   className,
   typing,
   screenId,
   reactToMountPick = false,
+  speaking = false,
+  questionSpoken = 1,
 }: {
   className?: string;
   /** Set anew (`Date.now()`) on every option pick. */
@@ -36,9 +41,15 @@ export function OnboardingQuestionHex({
   screenId: string;
   /** Treat the `typing` he mounts with as a pick to react to. */
   reactToMountPick?: boolean;
+  /** The question's voiceover is playing. */
+  speaking?: boolean;
+  /** 0..1 — how much of the question has been read; 1 once it has (or with
+   * no voice). */
+  questionSpoken?: number;
 }) {
   const { RiveComponent, ready, fireTrigger } = useHexRive(LAYOUT, HEX_STATE.onboarding);
 
+  const talkedFor = useRef<string | null>(null);
   const shownFor = useRef<string | null>(null);
   const [mountTyping] = useState(typing);
   const firedFor = useRef(reactToMountPick ? 0 : mountTyping);
@@ -46,14 +57,23 @@ export function OnboardingQuestionHex({
   useEffect(() => () => window.clearTimeout(selectTimer.current), []);
   useEffect(() => {
     if (!ready) return;
+    const picked = !!typing && firedFor.current !== typing;
     let justShown = false;
     if (shownFor.current !== screenId) {
+      const reading = questionSpoken < 1 && !picked;
+      if (reading) {
+        if (speaking && talkedFor.current !== screenId) {
+          talkedFor.current = screenId;
+          fireTrigger(HEX_ONBOARDING_TRIGGER.talk);
+        }
+        return;
+      }
       shownFor.current = screenId;
       justShown = true;
       window.clearTimeout(selectTimer.current);
       fireTrigger(HEX_ONBOARDING_TRIGGER.showQuestion);
     }
-    if (!typing || firedFor.current === typing) return;
+    if (!picked) return;
     firedFor.current = typing;
     window.clearTimeout(selectTimer.current);
     if (!justShown) {
@@ -64,7 +84,7 @@ export function OnboardingQuestionHex({
       () => fireTrigger(HEX_ONBOARDING_TRIGGER.selectOption),
       SELECT_AFTER_SHOW_MS,
     );
-  }, [ready, screenId, typing, fireTrigger]);
+  }, [ready, screenId, typing, speaking, questionSpoken, fireTrigger]);
 
   return (
     <motion.div
