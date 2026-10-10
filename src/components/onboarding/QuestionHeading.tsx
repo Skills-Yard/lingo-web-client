@@ -3,6 +3,7 @@
 import { Inter } from "next/font/google";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
+import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
 
@@ -54,6 +55,9 @@ interface QuestionHeadingProps {
   /** Zox beside the question (default true) — off where the design has no
    * fox in the question row. */
   showFox?: boolean;
+  /** "onboarding": the fox plays Hex's `Onboarding` state machine (see
+   * OnboardingQuestionHex) instead of the tablet poses. */
+  foxMode?: "tablet" | "onboarding";
 }
 
 /**
@@ -119,6 +123,7 @@ export function QuestionHeading({
   screenId,
   layout = "stacked",
   showFox = true,
+  foxMode = "tablet",
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
@@ -131,11 +136,19 @@ export function QuestionHeading({
     <div className="flex shrink-0 items-center justify-center gap-3 pt-2 sm:pt-3">
       {showFox && (
         <div aria-hidden className="relative shrink-0">
-          <ZoxTabFox
-            className="h-[6rem] w-[6rem] sm:h-[7rem] sm:w-[7rem]"
-            typing={typing}
-            screenId={screenId}
-          />
+          {foxMode === "onboarding" ? (
+            <OnboardingQuestionHex
+              className="h-[6rem] w-[6rem] sm:h-[7rem] sm:w-[7rem]"
+              typing={typing ?? 0}
+              screenId={screenId ?? ""}
+            />
+          ) : (
+            <ZoxTabFox
+              className="h-[6rem] w-[6rem] sm:h-[7rem] sm:w-[7rem]"
+              typing={typing}
+              screenId={screenId}
+            />
+          )}
         </div>
       )}
       <h1 className="max-w-60 text-[20px] font-medium leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white">

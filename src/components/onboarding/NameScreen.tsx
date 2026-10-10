@@ -65,6 +65,8 @@ export function NameScreen({ prompt, value, onChange, onSubmit, className }: Nam
 
       <div className="relative min-h-0 w-full flex-1">
         <FoxSlot
+          beat="showQuestion"
+          beatDue
           className="absolute left-1/2 top-[6dvh] aspect-square -translate-x-1/2"
           style={{ height: "min(15rem, 30dvh)" }}
         />

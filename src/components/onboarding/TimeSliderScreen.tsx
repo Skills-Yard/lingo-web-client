@@ -1,11 +1,11 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Poppins } from "next/font/google";
 import { Sparkles } from "lucide-react";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { TIME_SLIDER } from "@/lib/constants/onboarding";
-import { ZoxTabFox } from "./robu/ZoxTabFox";
+import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
@@ -75,6 +75,9 @@ export function TimeSliderScreen({
   className,
 }: TimeSliderScreenProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  // Bumped each time the dial is grabbed (or nudged with the keys) — Hex's
+  // "option picked" reaction.
+  const [typing, setTyping] = useState(0);
 
   const setFromPointer = (clientX: number, clientY: number) => {
     const box = svgRef.current?.getBoundingClientRect();
@@ -109,7 +112,7 @@ export function TimeSliderScreen({
       </h1>
 
       <div aria-hidden className="mt-2 flex shrink-0 flex-col items-center">
-        <ZoxTabFox className="h-48 w-48" screenId="timeCommitment" />
+        <OnboardingQuestionHex className="h-48 w-48" screenId="timeCommitment" typing={typing} />
         <div className="-mt-1 h-2.5 w-24 rounded-full bg-black/10 blur-[2px] dark:bg-white/10" />
       </div>
 
@@ -132,12 +135,14 @@ export function TimeSliderScreen({
           tabIndex={0}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
+            setTyping(Date.now());
             setFromPointer(e.clientX, e.clientY);
           }}
           onPointerMove={(e) => {
             if (e.currentTarget.hasPointerCapture(e.pointerId)) setFromPointer(e.clientX, e.clientY);
           }}
           onKeyDown={(e) => {
+            if (e.key.startsWith("Arrow")) setTyping(Date.now());
             if (e.key === "ArrowRight" || e.key === "ArrowUp") onChange(Math.min(TIME_SLIDER.max, minutes + STEP));
             if (e.key === "ArrowLeft" || e.key === "ArrowDown") onChange(Math.max(STEP, minutes - STEP));
           }}

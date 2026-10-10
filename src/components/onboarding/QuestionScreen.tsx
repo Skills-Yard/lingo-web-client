@@ -16,7 +16,7 @@ import { QuestionListOptions } from "./QuestionListScreen";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { QuestionGridOptions } from "./QuestionGridScreen";
 import { ReactionsHex } from "./robu/ReactionsHex";
-import { OnboardingPickHex } from "./robu/OnboardingPickHex";
+import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
@@ -101,7 +101,8 @@ export function QuestionScreen(props: QuestionScreenProps) {
           typing={typing}
           screenId={questionId}
           layout={props.zoxLayout === "row" ? "row" : "stacked"}
-          showFox={!hexMode}
+          showFox={hexMode !== "reactions"}
+          foxMode={hexMode === "onboarding" ? "onboarding" : "tablet"}
         />
       )}
 
@@ -157,7 +158,12 @@ export function QuestionScreen(props: QuestionScreenProps) {
             className="-mx-4 flex shrink-0 items-start justify-center gap-4 rounded-t-2xl border-[3px] border-b-0 border-white bg-[linear-gradient(263.69deg,#E6F8F8_4.33%,#FFFFFF_100.87%)] px-3 pt-4 shadow-[1px_1px_14.3px_2px_rgba(0,184,169,0.33)] dark:border-white/10 dark:bg-none dark:bg-background dark:shadow-none"
           >
             {hexMode === "onboarding" ? (
-              <OnboardingPickHex className="h-[100px] w-[137px] shrink-0" typing={typing} />
+              <OnboardingQuestionHex
+                className="h-[100px] w-[137px] shrink-0"
+                typing={typing}
+                screenId={questionId}
+                reactToMountPick
+              />
             ) : (
               <ZoxTabFox
                 className="h-[100px] w-[137px] shrink-0"

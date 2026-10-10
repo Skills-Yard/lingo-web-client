@@ -598,6 +598,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "Your first stop:\n" },
       { text: "Module 1", highlight: true },
     ],
+    hexBeat: "showQuestion",
     cta: "Next",
   },
   {
@@ -617,6 +618,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: MOTIVATION_OPTIONS,
     answerKey: "motivation",
+    hexMode: "onboarding",
     cta: "Continue",
   },
   {
@@ -641,6 +643,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: careerLabel(a), highlight: true },
       { text: " this week." },
     ],
+    hexBeat: "showQuestion",
     cta: "Yes!",
   },
   {
@@ -654,6 +657,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: LEARNING_TIME_OPTIONS,
     answerKey: "learningTime",
+    hexMode: "onboarding",
     cta: "Continue",
   },
   {
@@ -683,6 +687,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: careerLabel(a), highlight: true },
       { text: " projects on your own." },
     ],
+    hexBeat: "showQuestion",
     cta: "Yes!",
   },
   {
@@ -695,6 +700,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: STARTING_POINT_OPTIONS,
     answerKey: "startingPoint",
+    hexMode: "onboarding",
     cta: "Continue",
   },
 ];
