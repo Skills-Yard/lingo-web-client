@@ -18,6 +18,7 @@ import { StreakScreen } from "./StreakScreen";
 import { NameScreen } from "./NameScreen";
 import { TimeSliderScreen } from "./TimeSliderScreen";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
+import { HexBackground } from "./robu/HexBackground";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
 import { Button3D } from "@/components/ui/Button3D";
 
@@ -161,8 +162,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // out, so the fox would linger over the next screen until then. It follows
   // the current screen instead: no slot for one that doesn't place the fox
   // (the questions have their own Zox), and it's gone that instant.
+  // A fox-message screen with a `hexScene` plays its own Hex instead.
   const foxOnScreen =
-    step?.kind === "fox-message" || step?.kind === "streak" || step?.kind === "name-input";
+    (step?.kind === "fox-message" && !step.hexScene) ||
+    step?.kind === "streak" ||
+    step?.kind === "name-input";
   const isQuestion = step?.kind === "question-list" || step?.kind === "question-grid";
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
   const progress = questionNumber
@@ -208,6 +212,19 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className={`pointer-events-none absolute inset-0 z-0 ${FOX_BACKDROP}`}
         />
 
+        {/* The animated grid behind every screen but the questions. Screens
+          leave their own background transparent so it shows through. It stays
+          mounted (just faded out on questions) so its loop never restarts. */}
+        <motion.div
+          aria-hidden
+          initial={false}
+          animate={{ opacity: isQuestion ? 0 : 1 }}
+          transition={SCREEN_TRANSITION}
+          className="pointer-events-none absolute inset-0 z-0"
+        >
+          <HexBackground className="h-full w-full" />
+        </motion.div>
+
         {/* Screens crossfade in the space above the footer. */}
         <div className="relative min-h-0 flex-1">
           <AnimatePresence mode="sync">
@@ -233,9 +250,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={SCREEN_TRANSITION}
-                className={`absolute inset-0 flex flex-col ${
-                  step.kind === "fox-message" ? "" : "bg-white dark:bg-background"
-                }`}
+                className="absolute inset-0 flex flex-col"
               >
                 {/* Phone-width column, centered on tablets/desktops so options
                   don't stretch across a wide screen. */}
@@ -261,6 +276,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       typeSpeedMs={step.typeSpeedMs}
                       excite={step.excite}
                       hexBeat={step.hexBeat}
+                      hexScene={step.hexScene}
                       muted={muted}
                     />
                   )}
@@ -405,15 +421,15 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className="pointer-events-none absolute inset-0 z-0"
         >
           <OnboardingSplash
-            // Brand green for the splash, then the device theme from the
-            // sign-up screen on.
+            // Brand green for the splash, then see-through from the sign-up
+            // screen on, so the page colour and the grid show behind it.
             className={`relative h-full w-full transition-colors duration-500 ${
               index === -2
                 ? "bg-gradient-to-b from-[#00E5B5] to-[#1385B3]"
-                : "bg-white dark:bg-background"
+                : "bg-transparent"
             }`}
             bottomInset={footerHeight}
-            showWordmark={index === -2}
+            showSignUpWordmark={index === -1}
             replayKey={signUpReplays}
             onSignUpSettled={setSignUpSettled}
             onComplete={showSignUp}

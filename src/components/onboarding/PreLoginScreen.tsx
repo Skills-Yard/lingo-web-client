@@ -1,17 +1,11 @@
 "use client";
 
-import { Sekuya } from "next/font/google";
-
-// Sekuya only ships one weight (400) — still passed explicitly since
-// next/font requires it for any non-variable Google font.
-const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
-
 interface PreLoginScreenProps {
   className?: string;
 }
 
 /**
- * The onboarding flow's "Get Started" screen: "LINGO" wordmark, Robu, "Get
+ * The onboarding flow's "Get Started" screen: "Lingo" wordmark, Robu, "Get
  * Started" / "Log in". No ground shadow under Robu — the reference design's
  * own shadow ellipse is deliberately left out. "Log in" has nowhere to go
  * yet — there's no login/signup route in this app — so it's inert for now;
@@ -20,13 +14,9 @@ interface PreLoginScreenProps {
 export function PreLoginScreen({ className }: PreLoginScreenProps) {
   return (
     <div className={`flex flex-col items-center ${className ?? ""}`}>
-      <h1
-        className={`${sekuya.className} pt-[12dvh] text-center text-4xl text-[#01A17F] sm:text-5xl`}
-      >
-        LINGO
-      </h1>
-
-      {/* Hex is drawn by the splash's Rive canvas behind this screen. */}
+      {/* The "Lingo" wordmark and Hex are both drawn by the splash layer
+        (OnboardingSplash), which places the wordmark just above wherever
+        Hex lands on this screen size. */}
       <div className="min-h-0 flex-1" />
     </div>
   );

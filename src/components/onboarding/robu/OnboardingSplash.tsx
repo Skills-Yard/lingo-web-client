@@ -8,8 +8,8 @@ import {
   useViewModelInstanceTrigger,
 } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
-import { AnimatePresence, motion } from "framer-motion";
-import { Sekuya } from "next/font/google";
+import { motion } from "framer-motion";
+import { Fascinate } from "next/font/google";
 import {
   configureRiveRuntime,
   SPLASH_RIVE_SRC,
@@ -19,9 +19,14 @@ import {
   SPLASH_SHOW_SIGNUP_TRIGGER,
 } from "@/lib/rive/runtime";
 
-// Sekuya only ships one weight (400) — passed explicitly since next/font
+// Fascinate only ships one weight (400) — passed explicitly since next/font
 // requires it for any non-variable Google font.
-const sekuya = Sekuya({ subsets: ["latin"], weight: "400" });
+const fascinate = Fascinate({ subsets: ["latin"], weight: "400" });
+
+// The "Lingo" wordmark (Figma): Fascinate 60px / 100%, filled with
+// the brand gradient. `bg-clip-text` only paints inside the box, and at 100%
+// line height the "g" hangs out of it — the padding keeps it filled.
+const WORDMARK_CLASS = `${fascinate.className} bg-[linear-gradient(98.77deg,#02DBB5_1.83%,#1289B3_113.52%)] bg-clip-text px-[0.05em] pt-[0.05em] pb-[0.2em] text-center text-[60px] leading-none text-transparent`;
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -33,18 +38,25 @@ const SPLASH_DURATION_MS = 2500;
 // sign-up trigger fires.
 const SIGNUP_ANIMATION_MS = 5500;
 
-// Full width, centred on the screen. If that would run into the footer button,
-// the artboard instead fits (whole) in the space above the footer.
+// Full width, centred on the screen. If that would run into the footer button
+// or the sign-up wordmark, the artboard instead fits (whole) between them.
 const LAYOUT_FIT_WIDTH = new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
 const LAYOUT_ABOVE_FOOTER = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+
+// The sign-up wordmark sits this far below the top edge at the least, and
+// this far above the artboard (Hex is at the artboard's very top).
+const WORDMARK_TOP_PX = 16;
+const WORDMARK_GAP_PX = 8;
 
 interface OnboardingSplashProps {
   className?: string;
   /** Space (px) kept clear at the bottom for the footer CTA — the artboard
    * fits entirely in what's left above it. */
   bottomInset?: number;
-  /** Shows the "LINGO" wordmark at the bottom of the screen (splash only). */
-  showWordmark?: boolean;
+  /** Shows the "Lingo" wordmark just above Hex (sign-up screen). Room
+   * for it is kept above the artboard on the splash too, so Hex doesn't
+   * move between the two. */
+  showSignUpWordmark?: boolean;
   /** Changing this (after mount) replays the sign-up animations — used when
    * the user navigates back to the sign-up screen. */
   replayKey?: number;
@@ -63,7 +75,7 @@ interface OnboardingSplashProps {
  * fires the view model's `showSignUpScreen` trigger and hands over to the
  * sign-up screen.
  */
-export function OnboardingSplash({ className, bottomInset = 0, showWordmark = false, replayKey = 0, onSignUpSettled, onComplete }: OnboardingSplashProps) {
+export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmark = false, replayKey = 0, onSignUpSettled, onComplete }: OnboardingSplashProps) {
   const { rive, RiveComponent } = useRive({
     src: SPLASH_RIVE_SRC,
     artboard: SPLASH_ARTBOARD,
@@ -86,10 +98,34 @@ export function OnboardingSplash({ className, bottomInset = 0, showWordmark = fa
     return () => observer.disconnect();
   }, []);
 
+  const signUpWordmarkRef = useRef<HTMLHeadingElement>(null);
+  const [signUpWordmarkHeight, setSignUpWordmarkHeight] = useState(0);
+  useEffect(() => {
+    const wordmark = signUpWordmarkRef.current;
+    if (!wordmark) return;
+    const observer = new ResizeObserver(() => setSignUpWordmarkHeight(wordmark.offsetHeight));
+    observer.observe(wordmark);
+    return () => observer.disconnect();
+  }, []);
+
+  // Where the artboard lands: full width and centred if that keeps clear of
+  // both the wordmark above and the footer below, else fitted between them.
   const bounds = rive?.bounds;
-  const aspect = bounds ? (bounds.maxY - bounds.minY) / (bounds.maxX - bounds.minX) : 0;
-  const overlapsFooter = size.width * aspect > size.height - 2 * bottomInset;
+  const artboardWidth = bounds ? bounds.maxX - bounds.minX : 0;
+  const artboardHeight = bounds ? bounds.maxY - bounds.minY : 0;
+  const aspect = artboardWidth ? artboardHeight / artboardWidth : 0;
+  const topInset = WORDMARK_TOP_PX + signUpWordmarkHeight + WORDMARK_GAP_PX;
+  const fullWidthTop = (size.height - size.width * aspect) / 2;
+  const overlapsFooter =
+    fullWidthTop < topInset || fullWidthTop + size.width * aspect > size.height - bottomInset;
   const inset = overlapsFooter ? bottomInset : 0;
+  const top = overlapsFooter ? topInset : 0;
+  let artboardTop = fullWidthTop;
+  if (overlapsFooter && artboardHeight) {
+    const area = size.height - bottomInset - topInset;
+    const scale = Math.min(size.width / artboardWidth, area / artboardHeight);
+    artboardTop = topInset + (area - scale * artboardHeight) / 2;
+  }
 
   useEffect(() => {
     if (!rive) return;
@@ -145,24 +181,23 @@ export function OnboardingSplash({ className, bottomInset = 0, showWordmark = fa
 
   return (
     <div ref={containerRef} className={`overflow-hidden ${className ?? ""}`}>
-      <div className="absolute inset-x-0 top-0" style={{ bottom: inset }}>
+      <div className="absolute inset-x-0" style={{ top, bottom: inset }}>
         <RiveComponent className="h-full w-full" />
       </div>
 
-      <AnimatePresence>
-        {showWordmark && (
-          <motion.h1
-            key="wordmark"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className={`${sekuya.className} pointer-events-none absolute inset-x-0 bottom-0 z-10 pb-[max(2rem,env(safe-area-inset-bottom))] text-center text-5xl text-white sm:text-6xl`}
-          >
-            LINGO
-          </motion.h1>
-        )}
-      </AnimatePresence>
+      {/* Always laid out (it sets the room kept above the artboard), shown
+        only on the sign-up screen. */}
+      <motion.h1
+        ref={signUpWordmarkRef}
+        aria-hidden={!showSignUpWordmark}
+        initial={false}
+        animate={{ opacity: showSignUpWordmark ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className={`${WORDMARK_CLASS} pointer-events-none absolute inset-x-0 z-10 mx-auto w-max`}
+        style={{ top: Math.max(WORDMARK_TOP_PX, artboardTop - WORDMARK_GAP_PX - signUpWordmarkHeight) }}
+      >
+        Lingo
+      </motion.h1>
     </div>
   );
 }

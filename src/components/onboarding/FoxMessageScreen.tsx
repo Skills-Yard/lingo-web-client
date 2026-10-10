@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Sparkle } from "lucide-react";
 import type { HexOnboardingBeat, TextSpan } from "@/lib/constants/onboarding";
+import type { HexScene as HexSceneConfig } from "@/lib/rive/runtime";
 import { FoxSlot } from "./foxStage";
+import { HexScene } from "./robu/HexScene";
 import { OnboardingBubble, TypedText, spansLength } from "./OnboardingBubble";
 import { useVoiceover } from "./useVoiceover";
 
@@ -51,6 +53,9 @@ interface FoxMessageScreenProps {
   /** Hex's `Onboarding` trigger for this screen — fired on arrival, or with
    * `excite` at the excitement moment. See OnboardingStep's `hexBeat`. */
   hexBeat?: HexOnboardingBeat;
+  /** Full-screen Hex artboard played instead of the fox and the bubble (it
+   * carries its own text). See OnboardingStep's `hexScene`. */
+  hexScene?: HexSceneConfig;
   /** Played once the bubble has popped in. The text types along with it —
    * paced so the last letter lands as the voice ends — and the fox's mouth
    * moves exactly while it plays. */
@@ -84,6 +89,7 @@ export function FoxMessageScreen({
   greet,
   excite = false,
   hexBeat,
+  hexScene,
   voiceover,
   voiceReadsHeading = true,
   voiceReads = "all",
@@ -251,6 +257,15 @@ export function FoxMessageScreen({
       onEntered={markBubbleIn}
     />
   );
+
+  // No FoxSlot here, so the flow's fox steps out while the scene plays.
+  if (hexScene) {
+    return (
+      <div className={`relative min-h-0 ${className ?? ""}`}>
+        <HexScene scene={hexScene} className="pointer-events-none absolute inset-0" />
+      </div>
+    );
+  }
 
   return (
     <div className={`flex min-h-0 flex-col px-6 ${className ?? ""}`}>

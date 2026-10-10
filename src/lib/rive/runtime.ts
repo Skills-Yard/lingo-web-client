@@ -150,6 +150,8 @@ export const HEX_ONBOARDING_TRIGGER = {
   selectOption: "selectOption",
   /** "Good news" screen. */
   celebrate: "celebrate",
+  /** "Building Career Path..." screen. */
+  buildCareerPath: "buildCareerPath",
   /** A tap on Hex. */
   tap: "tap",
 } as const;
@@ -166,6 +168,21 @@ export const REACTIONS_ARTBOARD = "6.1 and 5.1";
 export const REACTIONS_STATE_MACHINE = "Reactions_SM";
 export const REACTIONS_OPTION = "option";
 export const REACTIONS_SELECT_TRIGGER = "select";
+
+/**
+ * Full-screen Hex scenes in `hex.riv` — an artboard the size of the screen,
+ * played in place of the flow's fox (see OnboardingStep's `hexScene`).
+ * "09": Hex's "onboarding complete" moment, one-shot, no inputs.
+ */
+export const HEX_SCENE = {
+  onboardingComplete: { artboard: "09", stateMachine: "Onboarding_complete" },
+} as const;
+
+export type HexScene = (typeof HEX_SCENE)[keyof typeof HEX_SCENE];
+
+/** The onboarding flow's animated background — a transparent grid with
+ * pulses (`BG_PULSES`, looping, no inputs) laid over the page colour. */
+export const HEX_BACKGROUND = { artboard: "BG_Grid", stateMachine: "BG_SM" } as const;
 
 export const HEX_HELLO_MS = 3000;
 export const HEX_TAP_MS = 1400;

@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { HEX_SCENE, type HexScene } from "@/lib/rive/runtime";
 
 /** One highlighted (or plain) run of text — headings/bubbles are built from
  * a small array of these instead of a single string + one "highlight this
@@ -332,7 +333,12 @@ export function resolveVoiceover(
 }
 
 /** The `Onboarding` state machine triggers a fox-message screen can fire. */
-export type HexOnboardingBeat = "hi" | "ready" | "celebrate";
+export type HexOnboardingBeat =
+  | "hi"
+  | "ready"
+  | "celebrate"
+  | "buildCareerPath"
+  | "showQuestion";
 
 /**
  * How a question's Hex reacts. "onboarding": the `Onboarding` state machine,
@@ -388,6 +394,9 @@ export type OnboardingStep =
        * trigger on it — on arrival, or with `excite` at the excitement moment
        * instead. Replaces the `greet` / `excite` poses. */
       hexBeat?: HexOnboardingBeat;
+      /** Plays this full-screen Hex artboard instead of the flow's fox and
+       * the bubble — the artboard has its own text ("You're all set!"). */
+      hexScene?: HexScene;
       cta: string;
     }
   | {
@@ -547,20 +556,11 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     heading: () => [{ text: "Building Career Path..." }],
     headingPlacement: "bottom",
     sparkle: true,
+    hexBeat: "buildCareerPath",
     bubble: careerMindBubble,
     voiceover: careerMindAudio,
     voiceReadsHeading: false,
     cta: "Continue",
-  },
-  {
-    kind: "fox-message",
-    id: "foundation",
-    bubble: () => [
-      {
-        text: "Smart, a strong foundation makes everything after this easier. Starting from Module 1.",
-      },
-    ],
-    cta: "Yes!",
   },
   {
     kind: "fox-message",
@@ -572,6 +572,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "Module 1", highlight: true },
       { text: "." },
     ],
+    hexBeat: "showQuestion",
     cta: "Yes!",
   },
   {
@@ -582,6 +583,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "programming journey", highlight: true },
       { text: " begins here." },
     ],
+    hexScene: HEX_SCENE.onboardingComplete,
     cta: "Continue",
   },
   {

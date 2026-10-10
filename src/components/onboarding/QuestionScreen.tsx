@@ -16,6 +16,7 @@ import { QuestionListOptions } from "./QuestionListScreen";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { QuestionGridOptions } from "./QuestionGridScreen";
 import { ReactionsHex } from "./robu/ReactionsHex";
+import { OnboardingPickHex } from "./robu/OnboardingPickHex";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
@@ -76,7 +77,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
   };
 
   return (
-    <div className={`flex min-h-0 flex-col bg-white px-4 dark:bg-background ${className ?? ""}`}>
+    <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
       {tiles ? (
         <QuestionTilesHeading heading={heading} spoken={spokenQuestion} />
       ) : (
@@ -135,11 +136,15 @@ export function QuestionScreen(props: QuestionScreenProps) {
             transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             className="-mx-4 flex shrink-0 items-start justify-center gap-4 rounded-2xl border-[3px] border-white bg-[linear-gradient(263.69deg,#E6F8F8_4.33%,#FFFFFF_100.87%)] px-3 pt-4 pb-3 shadow-[1px_1px_14.3px_2px_rgba(0,184,169,0.33)] dark:border-white/10 dark:bg-none dark:bg-[#0F2921]"
           >
-            <ZoxTabFox
-              className="h-[100px] w-[137px] shrink-0"
-              typing={typing}
-              screenId={questionId}
-            />
+            {hexMode === "onboarding" ? (
+              <OnboardingPickHex className="h-[100px] w-[137px] shrink-0" typing={typing} />
+            ) : (
+              <ZoxTabFox
+                className="h-[100px] w-[137px] shrink-0"
+                typing={typing}
+                screenId={questionId}
+              />
+            )}
             <div className={`${poppins.className} flex w-[190px] min-w-0 flex-col justify-center gap-1.5`}>
               <p className="text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
                 {picked.label}
