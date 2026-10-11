@@ -39,6 +39,8 @@ const QUESTION_NUMBER: Record<string, number> = {};
   }
 }
 
+const BOT_HOVER_SRC = "/audios/bot hovering 3.mp3.mpeg";
+
 /** How many questions the progress bar counts ("N of QUESTION_COUNT"). */
 const QUESTION_COUNT = Object.keys(QUESTION_NUMBER).length;
 
@@ -112,6 +114,38 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // the first tap isn't late, and silenced by the header's sound toggle.
   useEffect(preloadClickSound, []);
   useEffect(() => setClickSoundMuted(muted), [muted]);
+
+  // Robu's hover hum plays once while the sign-up screen is showing, and is
+  // cut off when the user moves on. Muting follows the header's sound toggle.
+  const hoverAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    if (index !== -1) return;
+    const audio = new Audio(encodeURI(BOT_HOVER_SRC));
+    audio.muted = muted;
+    hoverAudioRef.current = audio;
+    // Autoplay can be refused before the user has tapped anything; if so,
+    // retry on their first touch/key press.
+    const unlockEvents = ["pointerdown", "keydown"] as const;
+    const removeUnlock = () =>
+      unlockEvents.forEach((e) => window.removeEventListener(e, retryOnGesture));
+    function retryOnGesture() {
+      removeUnlock();
+      audio.play().catch(() => {});
+    }
+    audio.play().catch(() => {
+      unlockEvents.forEach((e) => window.addEventListener(e, retryOnGesture));
+    });
+    return () => {
+      removeUnlock();
+      audio.pause();
+      hoverAudioRef.current = null;
+    };
+    // `muted` is applied separately below so toggling it doesn't restart the clip.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+  useEffect(() => {
+    if (hoverAudioRef.current) hoverAudioRef.current.muted = muted;
+  }, [muted]);
 
   // Every question opens with nothing selected — including when coming back
   // to it — so its answer is cleared on the way in.
