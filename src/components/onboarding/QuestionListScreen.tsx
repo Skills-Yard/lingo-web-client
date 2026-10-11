@@ -1,11 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Poppins } from "next/font/google";
 import type { OnboardingListOption } from "@/lib/constants/onboarding";
 import { optionCardClass } from "./optionCard";
-
-const poppins = Poppins({ subsets: ["latin"], weight: "500" });
 
 interface QuestionListOptionsProps {
   options: OnboardingListOption[];
@@ -63,7 +60,7 @@ export function QuestionListOptions({
                 // the brand colour and adds a 3px ring (box-shadow, so the
                 // content never shifts). A `compact` tile (one-line label,
                 // e.g. DevOps) is 8px/18px padded and top-aligned.
-                className={`${poppins.className} box-border flex h-[118px] flex-col items-center gap-[5px] rounded-[8px] border-0 border-b-[6px] bg-[#F7F8FA] text-center transition-[box-shadow,border-color,scale] duration-200 active:scale-[0.97] dark:bg-[#15181E] ${
+                className={`box-border flex h-[118px] flex-col items-center gap-[5px] rounded-[8px] border-0 border-b-[6px] bg-[#F7F8FA] text-center transition-[box-shadow,border-color,scale] duration-200 active:scale-[0.97] dark:bg-[#15181E] ${
                   option.compact ? "justify-start px-[18px] py-2" : "justify-center p-[18px]"
                 } ${
                   selected || spotlight

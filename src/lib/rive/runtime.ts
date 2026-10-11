@@ -140,6 +140,8 @@ export const HEX_VIEW_MODEL = "Onboarding";
 
 /** Triggers on `HEX_VIEW_MODEL` that step the `Onboarding` state machine. */
 export const HEX_ONBOARDING_TRIGGER = {
+  /** Resting — the time-commitment screen's stand-in for `showQuestion`. */
+  idle: "idle",
   /** Greeting screen. */
   hi: "hi",
   /** "Are you ready?" screen. */

@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Poppins } from "next/font/google";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { TIME_SLIDER } from "@/lib/constants/onboarding";
+import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
-
-const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
+import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
 
 // The dial, drawn in the Figma frame's own coordinates (390 wide): an arc of a
 // circle centred below the drawing, swept ±SWEEP_DEG either side of straight
@@ -73,9 +72,6 @@ export function TimeSliderScreen({
   className,
 }: TimeSliderScreenProps) {
   const svgRef = useRef<SVGSVGElement>(null);
-  // Bumped each time the dial is grabbed (or nudged with the keys) — Hex's
-  // "option picked" reaction.
-  const [typing, setTyping] = useState(0);
   // Where the knob is drawn, in (fractional) minutes.
   const [shown, setShown] = useState(minutes);
   const shownRef = useRef(minutes);
@@ -136,10 +132,9 @@ export function TimeSliderScreen({
 
   return (
     <div
-      className={`flex min-h-0 flex-col items-center px-4 ${poppins.className} ${className ?? ""}`}
+      className={`flex min-h-0 flex-col items-center px-4 ${className ?? ""}`}
     >
-      {/* Figma: Poppins 600 20px / 134%, 350px wide. */}
-      <h1 className="mx-auto mt-[clamp(4px,4.5vh,40px)] w-full max-w-[350px] shrink-0 text-center text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
+      <h1 className={`mx-auto mt-[clamp(4px,4.5vh,40px)] w-full max-w-[350px] shrink-0 text-left ${ONBOARDING_HEADING_CLASS}`}>
         {heading.map((span, i) => (
           <span key={i} className={span.highlight ? "text-brand-gradient" : undefined}>
             {span.text}
@@ -151,10 +146,11 @@ export function TimeSliderScreen({
         <OnboardingQuestionHex
           className="h-48 w-48"
           screenId="timeCommitment"
-          typing={typing}
+          // No `selectOption` here: changing the minutes only drives his count.
+          typing={0}
+          restTrigger={HEX_ONBOARDING_TRIGGER.idle}
           minutes={minutes}
         />
-        <div className="-mt-1 h-2.5 w-24 rounded-full bg-black/10 blur-[2px] dark:bg-white/10" />
       </div>
 
       {/* The dial sits at the bottom of the screen, just above
@@ -176,7 +172,6 @@ export function TimeSliderScreen({
           tabIndex={0}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
-            setTyping(Date.now());
             setFromPointer(e.clientX, e.clientY);
           }}
           onPointerMove={(e) => {
@@ -185,7 +180,6 @@ export function TimeSliderScreen({
           onPointerUp={release}
           onPointerCancel={release}
           onKeyDown={(e) => {
-            if (e.key.startsWith("Arrow")) setTyping(Date.now());
             if (e.key === "ArrowRight" || e.key === "ArrowUp") nudge(Math.min(TIME_SLIDER.max, minutes + STEP));
             if (e.key === "ArrowLeft" || e.key === "ArrowDown") nudge(Math.max(STEP, minutes - STEP));
           }}
