@@ -4,7 +4,8 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Poppins } from "next/font/google";
 import { motion } from "framer-motion";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
-import { Code2 } from "lucide-react";
+import { Code2, Moon, Sun } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
 import { HEX_STATE } from "@/lib/rive/runtime";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { BottomNav, type HomeTab } from "./BottomNav";
@@ -17,8 +18,6 @@ const STAGE_H = 844;
 const MAX_SCALE = 1.5;
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-
-type Tone = "purple" | "gray";
 
 /** done: lit platform with its tick; current: the one Hex stands on;
  * locked: greyed with a padlock. */
@@ -37,33 +36,54 @@ type PlatformSpec = {
 
 const LEVEL_COUNT = 50;
 /** The level Hex stands on ("Start"); every level before it is done. */
-const CURRENT_LEVEL = 5;
-/** Vertical distance between two levels. */
-const LEVEL_DY = 62;
-/** Top-face centres of the first level's cycle — the Figma path: right-up
- * steps, then back left, repeating every six levels. */
-const X_CYCLE = [91, 185, 260, 299, 266, 183] as const;
-/** Where level 1's top-face centre sits on the first screen (Figma y). */
-const FIRST_LEVEL_Y = 704;
-/** Room above the top level for the module card + a breath. */
-const WORLD_TOP_PAD = 295;
-/** The world is the Figma frame with the extra levels stacked above it. */
-const WORLD_SHIFT = (LEVEL_COUNT - 1) * LEVEL_DY - FIRST_LEVEL_Y + WORLD_TOP_PAD;
-const WORLD_H = STAGE_H + WORLD_SHIFT;
+const CURRENT_LEVEL = 3;
+/** Top-face centres of the first nine levels, read off the Figma frame
+ * (done x2, live, locked x4) and flipped so the path runs top to bottom.
+ * `y` is the distance below level 1. */
+const FIGMA_PATH = [
+  { x: 82, y: 0 },
+  { x: 189, y: 59 },
+  { x: 267, y: 153 },
+  { x: 316, y: 267 },
+  { x: 259, y: 333 },
+  { x: 194, y: 387 },
+  { x: 70, y: 431 },
+] as const;
+/** Past the design the path keeps swinging right and back left, at an even
+ * step. */
+const TAIL_X = [189, 267, 316, 259, 194, 82] as const;
+const TAIL_DY = 60;
+/** Where level 1's top-face centre sits, just under the pinned module card. */
+const FIRST_LEVEL_Y = 323;
+/** Room below the last level for the bottom nav + a breath. */
+const WORLD_BOTTOM_PAD = 200;
+/** Height of one repeat of the backdrop picture (world px). */
+const BG_TILE_H = 640;
+
+const LAST_FIGMA = FIGMA_PATH[FIGMA_PATH.length - 1];
+const WORLD_H =
+  FIRST_LEVEL_Y +
+  LAST_FIGMA.y +
+  (LEVEL_COUNT - FIGMA_PATH.length) * TAIL_DY +
+  WORLD_BOTTOM_PAD;
 
 type Point = { x: number; y: number };
 
 /** Top-face centre of a level in world coordinates. */
-const levelCenter = (level: number): Point => ({
-  x: X_CYCLE[(level - 1) % X_CYCLE.length],
-  y: FIRST_LEVEL_Y - (level - 1) * LEVEL_DY + WORLD_SHIFT,
-});
+const levelCenter = (level: number): Point => {
+  const fixed = FIGMA_PATH[level - 1];
+  if (fixed) return { x: fixed.x, y: FIRST_LEVEL_Y + fixed.y };
+  const past = level - FIGMA_PATH.length;
+  return {
+    x: TAIL_X[(past - 1) % TAIL_X.length],
+    y: FIRST_LEVEL_Y + LAST_FIGMA.y + past * TAIL_DY,
+  };
+};
 
-/** Slab size per level: the five open levels run big, small, small, big,
- * small (as in the design); the locked ones then alternate big, small. */
-const OPEN_SLAB_PATTERN = [true, false, false, true, false] as const;
-const isBigSlab = (level: number) =>
-  level <= CURRENT_LEVEL ? OPEN_SLAB_PATTERN[level - 1] : (level - CURRENT_LEVEL) % 2 === 1;
+/** Slab size per level: only the live fifth is big; the done ones before it
+ * and every locked one after it are the small slab (the big locked art is
+ * unused for now). */
+const isBigSlab = (level: number) => level === CURRENT_LEVEL;
 
 const PLATFORMS: PlatformSpec[] = Array.from({ length: LEVEL_COUNT }, (_, n) => {
   const level = n + 1;
@@ -97,44 +117,16 @@ const CENTERS = Array.from({ length: LEVEL_COUNT }, (_, n) => levelCenter(n + 1)
 const PURPLE_PATH = curveThrough(CENTERS.slice(0, CURRENT_LEVEL));
 const GRAY_PATH = curveThrough(CENTERS.slice(CURRENT_LEVEL - 1));
 const CURRENT = levelCenter(CURRENT_LEVEL);
-
-const SLAB_H = 54 / 92;
+/** -1: Hex stands left of the live platform, 1: right of it. */
+const HEX_SIDE = CURRENT.x > STAGE_W / 2 ? -1 : 1;
+const HEX_OFFSET_X = 155;
+/** Hex's hop onto the live platform: how long, how high the arc, and how far
+ * up he ends (so he stands on the top face). */
+const HOP_S = 0.42;
+const HOP_HEIGHT = 70;
+const HEX_PERCH = 37;
 
 const useHomeId = () => useId().replace(/:/g, "");
-
-/** An isometric slab: a lit top face over two shaded sides. */
-function Slab({ tone, w }: { tone: Tone; w: number }) {
-  const id = useHomeId();
-  const palette =
-    tone === "purple"
-      ? { from: "#9F91FE", to: "#E2DCFF", left: "#6B55FB", right: "#8A78FD", glow: "rgba(104,81,251,0.45)" }
-      : { from: "#A6A8B5", to: "#E0E2E7", left: "#9EA2AF", right: "#B6B9C4", glow: "rgba(150,155,170,0.4)" };
-  return (
-    <svg
-      width={w}
-      height={w * SLAB_H}
-      viewBox="0 0 92 54"
-      fill="none"
-      aria-hidden
-      className="overflow-visible"
-    >
-      <defs>
-        <linearGradient id={`${id}-top`} x1="12%" y1="0%" x2="88%" y2="100%">
-          <stop offset="0%" stopColor={palette.from} />
-          <stop offset="100%" stopColor={palette.to} />
-        </linearGradient>
-        <filter id={`${id}-blur`} x="-40%" y="-40%" width="180%" height="220%">
-          <feGaussianBlur stdDeviation="7" />
-        </filter>
-      </defs>
-      <ellipse cx="46" cy="46" rx="38" ry="14" fill={palette.glow} filter={`url(#${id}-blur)`} />
-      <path d="M0 18 L46 36 L46 54 L0 36 Z" fill={palette.left} />
-      <path d="M92 18 L46 36 L46 54 L92 36 Z" fill={palette.right} />
-      <path d="M46 0 L92 18 L46 36 L0 18 Z" fill={`url(#${id}-top)`} />
-      <path d="M0 18 L46 36 L92 18" stroke="white" strokeOpacity="0.55" strokeWidth="0.8" />
-    </svg>
-  );
-}
 
 /** The platform artwork (public/images/platforms): a slab with its own
  * reflection, the tick or padlock baked in. `ax`/`ay` are the centre of the
@@ -145,10 +137,24 @@ const ART = {
     small: { src: "/images/platforms/unlocked-small.png", w: 383, h: 354, ax: 190, ay: 98 },
   },
   locked: {
-    big: { src: "/images/platforms/locked-big.png", w: 516, h: 424, ax: 254, ay: 100 },
     small: { src: "/images/platforms/locked-small.png", w: 444, h: 423, ax: 219, ay: 114 },
   },
 } as const;
+
+/** The slab Hex stands on (public/images/platforms/live.png), anchored the
+ * same way: `ax`/`ay` is the centre of its top face. */
+const LIVE_FRAMES = [
+  { src: "/images/platforms/live-0.png", w: 461, ax: 227 },
+  { src: "/images/platforms/live-1.png", w: 461, ax: 227 },
+  { src: "/images/platforms/live-2.png", w: 461, ax: 227 },
+  { src: "/images/platforms/live-3.png", w: 471, ax: 230 },
+] as const;
+/** `ay` is the same for every frame: the centre of the top face. */
+const LIVE_ART = { h: 420, ay: 80 } as const;
+/** The live slab's frames: ripples spreading out around it, none to three
+ * rings, played in a loop so the platform feels alive. */
+const LIVE_FRAME_MS = 420;
+const LIVE_SCALE = 0.34;
 
 /** Picture px -> world px: a big slab comes out ~96px wide. */
 const ART_SCALE = 0.364;
@@ -157,30 +163,79 @@ const ART_SCALE = 0.364;
  * so fifty platforms don't mean fifty running animations. */
 const ANIMATED_LEVELS = 9;
 
-/** The lesson-type tile floating over a platform — the list on the first
- * level, the code tile on the fourth (public/images/platforms/glyph-*.png,
- * 170x173 pictures). */
-const GLYPH_ART: Partial<Record<number, { src: string; x: number; y: number }>> = {
-  // `x`/`y`: the tile's centre relative to the slab's top-face centre
-  // (right and up). The code tile sits over the tick baked into level 4's
-  // art, as in the design; the list tile leaves level 1's tick visible.
-  1: { src: "/images/platforms/glyph-list.png", x: -2, y: 20 },
-  4: { src: "/images/platforms/glyph-code.png", x: 14, y: 22 },
-};
-const GLYPH_SIZE = { w: 170 * ART_SCALE, h: 173 * ART_SCALE } as const;
-function PlatformArt({ spec }: { spec: PlatformSpec }) {
+/** The live slab once tapped: lit up with a beam, replacing the ripples.
+ * `ay` is again the centre of its top face. */
+const LIVE_ACTIVE = { src: "/images/platforms/live-active.png", w: 471, h: 593, ax: 230, ay: 253 } as const;
+const SWAP_MS = 180;
+
+type Launch = { launching: boolean; onLaunch: () => void };
+
+/** Every frame stays mounted (so none flashes in unloaded) and only the
+ * current one is shown. Tapping crossfades to the lit-up artwork. */
+function LivePlatform({ cx, cy, launching, onLaunch }: { cx: number; cy: number } & Launch) {
+  const [frame, setFrame] = useState(0);
+
+  useEffect(() => {
+    if (launching) return;
+    const timer = setInterval(() => setFrame((f) => (f + 1) % LIVE_FRAMES.length), LIVE_FRAME_MS);
+    return () => clearInterval(timer);
+  }, [launching]);
+
+  const fade = { transition: `opacity ${SWAP_MS}ms ease-out` };
+
+  return (
+    <>
+      {LIVE_FRAMES.map(({ src, w, ax }, n) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={src}
+          src={src}
+          alt=""
+          draggable={false}
+          className="absolute max-w-none select-none"
+          style={{
+            left: cx - ax * LIVE_SCALE,
+            top: cy - LIVE_ART.ay * LIVE_SCALE,
+            width: w * LIVE_SCALE,
+            height: LIVE_ART.h * LIVE_SCALE,
+            opacity: n === frame && !launching ? 1 : 0,
+            ...(launching ? fade : null),
+          }}
+        />
+      ))}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={LIVE_ACTIVE.src}
+        alt=""
+        draggable={false}
+        className="pointer-events-none absolute max-w-none select-none"
+        style={{
+          left: cx - LIVE_ACTIVE.ax * LIVE_SCALE,
+          top: cy - LIVE_ACTIVE.ay * LIVE_SCALE,
+          width: LIVE_ACTIVE.w * LIVE_SCALE,
+          height: LIVE_ACTIVE.h * LIVE_SCALE,
+          opacity: launching ? 1 : 0,
+          ...fade,
+        }}
+      />
+      <button
+        type="button"
+        onClick={onLaunch}
+        aria-label="Start level"
+        className="absolute"
+        style={{ left: cx - 50, top: cy - 32, width: 100, height: 64 }}
+      />
+    </>
+  );
+}
+
+function PlatformArt({ spec, launch }: { spec: PlatformSpec; launch: Launch }) {
   const { state, big, cx, cy } = spec;
   if (state === "current") {
-    // The platform under Hex has no tick, so it stays a drawn slab.
-    const w = 72;
-    return (
-      <div className="absolute" style={{ left: cx - w / 2, top: cy - (18 * w) / 92 }}>
-        <Slab tone="purple" w={w} />
-      </div>
-    );
+    // The platform under Hex: the live slab with its rippling rings.
+    return <LivePlatform cx={cx} cy={cy} {...launch} />;
   }
-  const art = ART[state === "done" ? "unlocked" : "locked"][big ? "big" : "small"];
-  const glyph = state === "done" ? GLYPH_ART[spec.level] : undefined;
+  const art = state === "done" ? ART.unlocked[big ? "big" : "small"] : ART.locked.small;
   return (
     <>
       {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -196,29 +251,13 @@ function PlatformArt({ spec }: { spec: PlatformSpec }) {
           height: art.h * ART_SCALE,
         }}
       />
-      {glyph && (
-        <motion.img
-          src={glyph.src}
-          alt=""
-          draggable={false}
-          className="absolute max-w-none select-none"
-          style={{
-            left: cx + glyph.x - GLYPH_SIZE.w / 2,
-            top: cy - glyph.y - GLYPH_SIZE.h / 2,
-            width: GLYPH_SIZE.w,
-            height: GLYPH_SIZE.h,
-          }}
-          animate={{ y: [0, -4, 0] }}
-          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: spec.level * 0.2 }}
-        />
-      )}
     </>
   );
 }
 
-function PlatformNode({ spec }: { spec: PlatformSpec }) {
+function PlatformNode({ spec, launch }: { spec: PlatformSpec; launch: Launch }) {
   const { level } = spec;
-  if (level > ANIMATED_LEVELS) return <PlatformArt spec={spec} />;
+  if (level > ANIMATED_LEVELS) return <PlatformArt spec={spec} launch={launch} />;
   return (
     <motion.div
       className="absolute left-0 top-0 h-0 w-0"
@@ -235,7 +274,7 @@ function PlatformNode({ spec }: { spec: PlatformSpec }) {
           delay: level * 0.3,
         }}
       >
-        <PlatformArt spec={spec} />
+        <PlatformArt spec={spec} launch={launch} />
       </motion.div>
     </motion.div>
   );
@@ -264,10 +303,184 @@ function PythonLogo() {
   );
 }
 
+const LESSONS_PER_MODULE = 7;
+const MODULES = [
+  { id: "m1", title: "Module 1 Programming Mindset", base: 2 },
+  { id: "m2", title: "Module 2 Variables & Data Types", base: 0 },
+  { id: "m3", title: "Module 3 Control Flow", base: 0 },
+] as const;
+
+const CARD_X = 16;
+const CARD_W = 357;
+const CARD_FULL_H = 158;
+const CARD_COMPACT_H = 78;
+const CARD_TOP_Y = 62;
+/** How far each card queued behind the front one peeks out (px), and how
+ * much narrower it is, so the stack reads as a pile. */
+const STACK_PEEK = 10;
+const STACK_SHRINK = 0.03;
+const STACK_VISIBLE = 2;
+/** The finished pile rests just above the bottom nav (nav top is 96px up). */
+const NAV_CLEARANCE = 96 + 8;
+
+type CardPlace = { y: number; scale: number; height: number; opacity: number; zIndex: number };
+
+/** Where module `index` sits when `done` modules are finished: the current
+ * one on top, the ones still to come queued behind it, the finished ones
+ * piled above the nav (the latest finished in front). */
+const cardPlace = (index: number, done: number, viewH: number): CardPlace => {
+  if (index >= done) {
+    const queued = index - done;
+    const depth = Math.min(queued, STACK_VISIBLE);
+    return {
+      y: CARD_TOP_Y + STACK_PEEK * depth,
+      scale: 1 - STACK_SHRINK * depth,
+      height: CARD_FULL_H,
+      opacity: queued > STACK_VISIBLE ? 0 : 1,
+      zIndex: 30 - queued,
+    };
+  }
+  const rank = done - 1 - index;
+  const depth = Math.min(rank, STACK_VISIBLE);
+  return {
+    y: viewH - NAV_CLEARANCE - CARD_COMPACT_H - STACK_PEEK * depth,
+    scale: 1 - STACK_SHRINK * depth,
+    height: CARD_COMPACT_H,
+    opacity: rank > STACK_VISIBLE ? 0 : 1,
+    zIndex: 20 - rank,
+  };
+};
+
+const SPRING = { type: "spring", stiffness: 300, damping: 32, mass: 0.9 } as const;
+
+/** One module's card. Full size while it is the current module, compact once
+ * finished; both layouts stay mounted and cross-fade as the card travels. */
+function ModuleCard({
+  title,
+  progress,
+  place,
+  compact,
+}: {
+  title: string;
+  progress: number;
+  place: CardPlace;
+  compact: boolean;
+}) {
+  const fill = (progress / LESSONS_PER_MODULE) * 128;
+  const fade = { duration: 0.2 };
+  return (
+    <motion.div
+      className="absolute top-0 box-border overflow-hidden rounded-lg border-b-[6px] border-[#BDBA99] bg-gradient-to-b from-white from-[30.82%] to-[#DCD5FE] shadow-[1px_1px_7.3px_1px_rgba(0,0,0,0.25)] dark:border-[#3a4a45] dark:from-[#1c2e36] dark:to-[#2b2a57]"
+      style={{ left: CARD_X, width: CARD_W, transformOrigin: "50% 0%", zIndex: place.zIndex }}
+      initial={false}
+      animate={{ y: place.y, scale: place.scale, height: place.height, opacity: place.opacity }}
+      transition={{ ...SPRING, opacity: { duration: 0.25 } }}
+    >
+      {/* Full */}
+      <motion.div
+        className="absolute inset-0 flex items-center gap-2.5 p-[18px]"
+        animate={{ opacity: compact ? 0 : 1 }}
+        transition={fade}
+      >
+        <div className="flex h-[116px] w-[229px] shrink-0 flex-col gap-2.5">
+          <div className="flex h-[30px] items-center gap-2.5">
+            <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[4px] bg-gradient-to-br from-[#E2DFFF] to-[#E6E2FC] text-[#5D4CFE]">
+              <Code2 className="h-[18px] w-[18px]" strokeWidth={2.2} />
+            </span>
+            <span className="text-xs font-medium uppercase leading-[18px] text-[#666666] dark:text-white/60">
+              Python Programming
+            </span>
+          </div>
+          <h1 className="text-xl font-semibold leading-[1.2] text-[#1A1C22] dark:text-white">{title}</h1>
+          <div className="flex h-[18px] items-center">
+            <span className="w-[101px] shrink-0 text-xs font-medium leading-[18px]">
+              {progress}/{LESSONS_PER_MODULE} completed
+            </span>
+            <span className="relative h-2 w-32 overflow-hidden rounded-full bg-black/8 dark:bg-white/15">
+              <motion.span
+                className="absolute inset-y-0 left-0 rounded-full bg-[#5D4CFE]"
+                initial={false}
+                animate={{ width: fill }}
+                transition={{ duration: 0.6, ease: EASE }}
+              />
+            </span>
+          </div>
+        </div>
+        <motion.div
+          className="relative -mt-2 shrink-0"
+          animate={{ y: [0, -4, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <PythonLogo />
+        </motion.div>
+      </motion.div>
+
+      {/* Compact */}
+      <motion.div
+        className="absolute inset-0 flex items-center gap-2.5 px-[18px]"
+        animate={{ opacity: compact ? 1 : 0 }}
+        transition={fade}
+        aria-hidden={!compact}
+      >
+        <div className="flex w-[229px] shrink-0 flex-col gap-2">
+          <div className="flex h-6 items-center gap-2">
+            <span className="flex h-6 w-6 items-center justify-center rounded-[4px] bg-gradient-to-br from-[#E2DFFF] to-[#E6E2FC] text-[#5D4CFE]">
+              <Code2 className="h-[14px] w-[14px]" strokeWidth={2.2} />
+            </span>
+            <span className="text-[11px] font-medium uppercase leading-[18px] text-[#666666] dark:text-white/60">
+              Python Programming
+            </span>
+          </div>
+          <div className="flex h-[18px] items-center">
+            <span className="w-[101px] shrink-0 text-xs font-medium leading-[18px]">
+              {progress}/{LESSONS_PER_MODULE} completed
+            </span>
+            <span className="relative h-2 w-32 overflow-hidden rounded-full bg-black/8 dark:bg-white/15">
+              <span className="absolute inset-y-0 left-0 rounded-full bg-[#5D4CFE]" style={{ width: fill }} />
+            </span>
+          </div>
+        </div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/python-logo.png"
+          alt=""
+          draggable={false}
+          className="ml-auto h-[64px] w-[72px] max-w-none select-none object-contain"
+        />
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/** Temporary: step the learner through the modules (mark the current one
+ * complete / take the last one back) to try the card stack. */
+function ProgressDebug({
+  done,
+  onComplete,
+  onUndo,
+}: {
+  done: number;
+  onComplete: () => void;
+  onUndo: () => void;
+}) {
+  const btn = "h-7 px-1.5 text-[10px] font-semibold leading-none transition-opacity disabled:opacity-35";
+  return (
+    <div className="pointer-events-auto absolute left-[84px] top-[18px] flex overflow-hidden rounded-full border border-black/8 bg-white/60 text-[#5D4CFE] dark:border-white/10 dark:bg-white/5 dark:text-[#A99FFF]">
+      <button type="button" className={btn} onClick={onComplete} disabled={done >= MODULES.length}>
+        Done
+      </button>
+      <span className="w-px bg-black/10 dark:bg-white/15" />
+      <button type="button" className={btn} onClick={onUndo} disabled={done <= 0}>
+        Undo
+      </button>
+    </div>
+  );
+}
+
 function StatChip({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`flex h-9 items-center gap-1.5 rounded-lg border border-black/8 bg-white/60 px-3 ${className ?? ""}`}
+      className={`flex h-9 items-center gap-1.5 rounded-lg border border-black/8 bg-white/60 px-3 dark:border-white/10 dark:bg-white/5 ${className ?? ""}`}
     >
       {children}
     </div>
@@ -306,6 +519,30 @@ function GemIcon() {
   );
 }
 
+/** The wipe colours: each theme's page background (see the screen's gradient). */
+const THEME_WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
+
+/** Light/dark switch, top centre between the streak and gem chips. */
+function ThemeSwitch() {
+  const { theme, toggleTheme } = useTheme();
+  const dark = theme === "dark";
+  return (
+    <motion.button
+      type="button"
+      onClick={() => toggleTheme(THEME_WIPE)}
+      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+      className="pointer-events-auto absolute left-1/2 top-[14px] flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-black/8 bg-white/60 text-[#1A1C22]/70 transition-transform active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-amber-400"
+      {...reveal(0)}
+    >
+      {dark ? (
+        <Sun key="sun" className="h-5 w-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
+      ) : (
+        <Moon key="moon" className="h-5 w-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
+      )}
+    </motion.button>
+  );
+}
+
 const reveal = (delay: number) => ({
   initial: { opacity: 0, y: 14 },
   animate: { opacity: 1, y: 0 },
@@ -315,7 +552,7 @@ const reveal = (delay: number) => ({
 /**
  * The learner's home: module card, the path of platforms (completed ones
  * lit, the next one under Hex with its "Start" bubble, then the locked levels
- * up to LEVEL_COUNT, which you scroll up to see) and the bottom nav. Laid out
+ * down to LEVEL_COUNT, which you scroll down to see) and the bottom nav. Laid out
  * on the Figma 390x844 frame and scaled to fit the viewport, so every
  * coordinate is the design's own. The header, module card and nav stay put;
  * only the path scrolls beneath them.
@@ -330,14 +567,20 @@ export function HomeScreen({
   const boxRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
-  const startedAtBottom = useRef(false);
+  const [viewH, setViewH] = useState(STAGE_H);
+  const [done, setDone] = useState(0);
+  const [launching, setLaunching] = useState(false);
+  const startLevel = () => setLaunching(true);
+  const launch: Launch = { launching, onLaunch: startLevel };
 
   useEffect(() => {
     const box = boxRef.current;
     if (!box) return;
     const measure = () => {
       const { width, height } = box.getBoundingClientRect();
-      setScale(Math.min(width / STAGE_W, height / STAGE_H, MAX_SCALE));
+      const next = Math.min(width / STAGE_W, height / STAGE_H, MAX_SCALE);
+      setScale(next);
+      setViewH(height / next);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -345,17 +588,9 @@ export function HomeScreen({
     return () => observer.disconnect();
   }, []);
 
-  // Open on the first screen — the path continues upward from there.
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    if (!scroller || startedAtBottom.current) return;
-    startedAtBottom.current = true;
-    scroller.scrollTop = scroller.scrollHeight;
-  }, [scale]);
-
   return (
     <main
-      className={`${poppins.className} onboarding-light flex h-dvh w-full justify-center overflow-hidden bg-gradient-to-b from-white from-[0.15%] via-[#FCFFFC] via-[47%] to-[#F4FFF6] text-[#1A1C22]`}
+      className={`${poppins.className} onboarding-light flex h-dvh w-full justify-center overflow-hidden bg-gradient-to-b from-[#F3F4F7] via-[#F3F4F7] to-[#F3F4F7] text-[#1A1C22] dark:from-[#0f1f26] dark:via-[#0f1f26] dark:to-[#0a171d] dark:text-white`}
     >
       <div ref={boxRef} className="relative h-full w-full">
         {/* The scrolling world: every level of the path. */}
@@ -367,21 +602,20 @@ export function HomeScreen({
             className="relative mx-auto"
             style={{ width: STAGE_W * scale, height: WORLD_H * scale }}
           >
+            {/* Backdrop: faint isometric tiles, repeated down the whole path
+                so it scrolls with it. */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 bg-repeat-y [filter:brightness(0.95)] dark:[filter:invert(1)_hue-rotate(180deg)_brightness(2.5)] dark:mix-blend-screen"
+              style={{
+                backgroundImage: "url(/images/level-bg.png)",
+                backgroundSize: `${STAGE_W * scale}px ${BG_TILE_H * scale}px`,
+              }}
+            />
             <div
               className="absolute left-0 top-0 origin-top-left"
               style={{ width: STAGE_W, height: WORLD_H, transform: `scale(${scale})` }}
             >
-              {/* Soft ghost tiles at the edges, as in the reference. */}
-              {Array.from({ length: Math.ceil(LEVEL_COUNT / 4) }, (_, n) => (
-                <span
-                  key={n}
-                  className={`absolute h-[92px] w-[131px] rounded-xl blur-[2px] ${
-                    n % 2 === 0 ? "-left-12 bg-[#E4DFFF]/60" : "-right-20 rotate-[-2deg] bg-[#E9ECF2]/70"
-                  }`}
-                  style={{ top: WORLD_H - 480 - n * 4 * LEVEL_DY }}
-                />
-              ))}
-
               {/* The dashed path, under everything on it. */}
               <svg
                 className="absolute inset-0"
@@ -413,50 +647,35 @@ export function HomeScreen({
                 />
               </svg>
 
-              {[...PLATFORMS].reverse().map((spec) => (
-                <PlatformNode key={spec.id} spec={spec} />
+              {PLATFORMS.map((spec) => (
+                <PlatformNode key={spec.id} spec={spec} launch={launch} />
               ))}
 
-              {/* Hex on the current platform, with his bubble. */}
-              <div
+              {/* Hex stands beside the live platform, on the side with more
+                room: platform on the right -> Hex on the left, and back. */}
+              <motion.button
+                type="button"
+                onClick={startLevel}
+                aria-label="Start level"
                 className="absolute"
-                style={{ left: CURRENT.x - 55, top: CURRENT.y - 92, width: 110, height: 110 }}
+                style={{ left: CURRENT.x + HEX_SIDE * HEX_OFFSET_X - 55, top: CURRENT.y - 55, width: 110, height: 110 }}
+                animate={
+                  launching
+                    ? { x: -HEX_SIDE * HEX_OFFSET_X, y: [0, -HOP_HEIGHT, -HEX_PERCH] }
+                    : { x: 0, y: 0 }
+                }
+                transition={
+                  launching
+                    ? {
+                        x: { duration: HOP_S, ease: "easeInOut" },
+                        y: { duration: HOP_S, times: [0, 0.5, 1], ease: ["easeOut", "easeIn"] },
+                      }
+                    : { duration: 0 }
+                }
+                onAnimationComplete={() => launching && onStart?.()}
               >
                 <HomeHex />
-              </div>
-
-              <motion.div
-                className="absolute h-[108px] w-[190px] rounded-lg bg-white shadow-[1px_1px_4px_#D2D1FA]"
-                style={{ left: CURRENT.x - 102, top: CURRENT.y - 168, transformOrigin: "30% 100%" }}
-                initial={{ opacity: 0, y: 10, scale: 0.94 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ duration: 0.5, ease: EASE, delay: 0.9 }}
-              >
-                <span className="absolute -bottom-[7px] left-[78px] h-4 w-4 rotate-45 rounded-[3px] bg-white shadow-[2px_2px_3px_rgba(210,209,250,0.7)]" />
-                <p className="absolute left-4 top-[18px] w-[157px] text-sm font-medium leading-[1.4] text-[#2C2C2C]">
-                  Variable Dependency
-                </p>
-                <button
-                  type="button"
-                  onClick={onStart}
-                  className="absolute left-[26px] top-[46px] flex h-8 w-[139px] items-center justify-center rounded-[44px] bg-[#5D4CFE] text-sm font-medium leading-[1.4] text-white shadow-[0_3px_0_#4536D6] transition-transform duration-150 active:translate-y-[2px] active:shadow-[0_1px_0_#4536D6]"
-                >
-                  Start
-                </button>
-              </motion.div>
-
-              {/* Play marker beside Hex's platform */}
-              <motion.span
-                className="absolute flex h-[35px] w-[35px] items-center justify-center rounded-full bg-gradient-to-br from-[#887FFE] via-[#5A48FF] to-[#5D46EE] shadow-[0_4px_8px_rgba(90,72,255,0.4)]"
-                style={{ left: CURRENT.x + 25, top: CURRENT.y - 28 }}
-                initial={{ opacity: 0, scale: 0.6 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.45, ease: EASE, delay: 1.05 }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="white" aria-hidden>
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </motion.span>
+              </motion.button>
             </div>
           </div>
         </div>
@@ -464,7 +683,7 @@ export function HomeScreen({
         {/* Header + module card: pinned to the top of the screen, over the
           path. The fade lets the scrolling path slide under them. */}
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-white from-[90%] to-transparent"
+          className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-transparent to-transparent dark:from-[#0f1f26] dark:from-[90%]"
           style={{ height: 246 * scale }}
         >
           <div
@@ -486,49 +705,39 @@ export function HomeScreen({
             </StatChip>
           </motion.div>
 
-          {/* Module card */}
-          <motion.div
-            className="pointer-events-auto absolute left-4 top-[62px] box-border flex h-[158px] w-[357px] items-center gap-2.5 rounded-lg border-b-[6px] border-[#BDBA99] bg-gradient-to-b from-white from-[30.82%] to-[#DCD5FE] p-[18px] shadow-[1px_1px_7.3px_1px_rgba(0,0,0,0.25)]"
-            {...reveal(0.1)}
+          {/* After the stats row, which spans the width, so it sits on top */}
+          <ThemeSwitch />
+          <ProgressDebug
+            done={done}
+            onComplete={() => setDone((d) => Math.min(d + 1, MODULES.length))}
+            onUndo={() => setDone((d) => Math.max(d - 1, 0))}
+          />
+
+          </div>
+        </div>
+
+        {/* The module cards: the current one on top with the next ones queued
+          behind it; finished ones drop into a pile above the nav. */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div
+            className="absolute left-1/2 top-0 origin-top"
+            style={{ width: STAGE_W, height: viewH, transform: `translateX(-50%) scale(${scale})` }}
           >
-            <div className="flex h-[116px] w-[229px] shrink-0 flex-col gap-2.5">
-              <div className="flex h-[30px] items-center gap-2.5">
-                <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[4px] bg-gradient-to-br from-[#E2DFFF] to-[#E6E2FC] text-[#5D4CFE]">
-                  <Code2 className="h-[18px] w-[18px]" strokeWidth={2.2} />
-                </span>
-                <span className="text-xs font-medium uppercase leading-[18px] text-[#666666]">
-                  Python Programming
-                </span>
-              </div>
-              <h1 className="text-xl font-semibold leading-[1.2] text-[#1A1C22]">
-                Module 1 Programming Mindset
-              </h1>
-              <div className="flex h-[18px] items-center">
-                <span className="w-[101px] shrink-0 text-xs font-medium leading-[18px]">2/7 completed</span>
-                <span className="relative h-2 w-32 overflow-hidden rounded-full bg-black/8">
-                  <motion.span
-                    className="absolute inset-y-0 left-0 rounded-full bg-[#5D4CFE]"
-                    initial={{ width: 0 }}
-                    animate={{ width: 46 }}
-                    transition={{ duration: 0.9, ease: EASE, delay: 0.7 }}
-                  />
-                </span>
-              </div>
-            </div>
-            <motion.div
-              className="relative -mt-2 shrink-0"
-              animate={{ y: [0, -4, 0] }}
-              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <PythonLogo />
-            </motion.div>
-          </motion.div>
+            {MODULES.map((m, i) => (
+              <ModuleCard
+                key={m.id}
+                title={m.title}
+                progress={i < done ? LESSONS_PER_MODULE : m.base}
+                place={cardPlace(i, done, viewH)}
+                compact={i < done}
+              />
+            ))}
           </div>
         </div>
 
         {/* Mobile nav: pinned to the bottom of the screen. */}
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#F4FFF6] from-[35%] to-transparent"
+          className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-transparent to-transparent dark:from-[#0a171d] dark:from-[35%]"
           style={{ height: 128 * scale }}
         >
           <div
