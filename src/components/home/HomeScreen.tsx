@@ -34,7 +34,7 @@ type PlatformSpec = {
   big: boolean;
 };
 
-const LEVEL_COUNT = 50;
+const LEVEL_COUNT = 100;
 /** The level Hex stands on ("Start"); every level before it is done. */
 const CURRENT_LEVEL = 3;
 /** Top-face centres of the first nine levels, read off the Figma frame
@@ -52,7 +52,14 @@ const FIGMA_PATH = [
 /** Past the design the path keeps swinging right and back left, at an even
  * step. */
 const TAIL_X = [189, 267, 316, 259, 194, 82] as const;
-const TAIL_DY = 60;
+/** Past the design the gap to the next level is never under TAIL_MIN_DY,
+ * and every so often it stretches by another TAIL_STEP, up to four times. */
+const TAIL_MIN_DY = 60;
+const TAIL_STEP = 25;
+/** A fixed hash of the level, not Math.random, so the server and the client
+ * draw the same path. */
+const tailGap = (level: number) =>
+  TAIL_MIN_DY + TAIL_STEP * ((Math.imul(level, 2654435761) >>> 11) % 5);
 /** Where level 1's top-face centre sits, just under the pinned module card. */
 const FIRST_LEVEL_Y = 323;
 /** Room below the last level for the bottom nav + a breath. */
@@ -60,25 +67,24 @@ const WORLD_BOTTOM_PAD = 200;
 /** Height of one repeat of the backdrop picture (world px). */
 const BG_TILE_H = 640;
 
-const LAST_FIGMA = FIGMA_PATH[FIGMA_PATH.length - 1];
-const WORLD_H =
-  FIRST_LEVEL_Y +
-  LAST_FIGMA.y +
-  (LEVEL_COUNT - FIGMA_PATH.length) * TAIL_DY +
-  WORLD_BOTTOM_PAD;
-
 type Point = { x: number; y: number };
 
-/** Top-face centre of a level in world coordinates. */
-const levelCenter = (level: number): Point => {
-  const fixed = FIGMA_PATH[level - 1];
-  if (fixed) return { x: fixed.x, y: FIRST_LEVEL_Y + fixed.y };
-  const past = level - FIGMA_PATH.length;
-  return {
-    x: TAIL_X[(past - 1) % TAIL_X.length],
-    y: FIRST_LEVEL_Y + LAST_FIGMA.y + past * TAIL_DY,
-  };
-};
+/** Top-face centre of every level in world coordinates, level 1 first. */
+const LEVEL_POINTS: Point[] = (() => {
+  const points: Point[] = FIGMA_PATH.map(({ x, y }) => ({ x, y: FIRST_LEVEL_Y + y }));
+  for (let level = FIGMA_PATH.length + 1; level <= LEVEL_COUNT; level++) {
+    const prev = points[points.length - 1];
+    points.push({
+      x: TAIL_X[(level - FIGMA_PATH.length - 1) % TAIL_X.length],
+      y: prev.y + tailGap(level),
+    });
+  }
+  return points;
+})();
+
+const WORLD_H = LEVEL_POINTS[LEVEL_COUNT - 1].y + WORLD_BOTTOM_PAD;
+
+const levelCenter = (level: number): Point => LEVEL_POINTS[level - 1];
 
 /** Slab size per level: only the live fifth is big; the done ones before it
  * and every locked one after it are the small slab (the big locked art is
