@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import type { Layout } from "@rive-app/canvas";
 import {
@@ -13,6 +13,10 @@ import {
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
+// Two triggers fired in the same frame aren't both consumed, so queued
+// triggers go out one at a time, this far apart.
+const TRIGGER_GAP_MS = 150;
+
 /**
  * Hex on his own canvas, playing the one state machine in `state`. Changing
  * `state` stops whatever is playing and starts the new machine, so only one
@@ -21,7 +25,9 @@ configureRiveRuntime();
  * The artboard's view model instance (`Onboarding` unless `viewModel` says
  * otherwise) is bound to whichever machine is playing (a machine started
  * later isn't bound on its own, hence the rebind after every `play`);
- * `fireTrigger` / `setNumber` drive it.
+ * `fireTrigger` / `setNumber` / `setBoolean` drive it. Triggers are queued
+ * and spaced `TRIGGER_GAP_MS` apart; `fireNow` drops what's still queued and
+ * fires its trigger at once, so whatever is fired after it follows it.
  */
 export function useHexRive(
   layout: Layout,
@@ -49,8 +55,42 @@ export function useHexRive(
     if (viewModelInstance) rive.bindViewModelInstance(viewModelInstance);
   }, [rive, state, viewModelInstance]);
 
+  const queue = useRef<string[]>([]);
+  const gapTimer = useRef<number | undefined>(undefined);
   const fireTrigger = useCallback(
-    (name: string) => viewModelInstance?.trigger(name)?.trigger(),
+    (name: string) => {
+      queue.current.push(name);
+      if (gapTimer.current !== undefined) return;
+      const drain = () => {
+        const next = queue.current.shift();
+        if (next === undefined) {
+          gapTimer.current = undefined;
+          return;
+        }
+        viewModelInstance?.trigger(next)?.trigger();
+        gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);
+      };
+      drain();
+    },
+    [viewModelInstance],
+  );
+
+  const fireNow = useCallback(
+    (name: string) => {
+      window.clearTimeout(gapTimer.current);
+      gapTimer.current = undefined;
+      queue.current = [];
+      fireTrigger(name);
+    },
+    [fireTrigger],
+  );
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(gapTimer.current);
+      gapTimer.current = undefined;
+      queue.current = [];
+    },
     [viewModelInstance],
   );
 
@@ -62,5 +102,21 @@ export function useHexRive(
     [viewModelInstance],
   );
 
-  return { rive, RiveComponent, ready: viewModelInstance !== null, fireTrigger, setNumber };
+  const setBoolean = useCallback(
+    (name: string, value: boolean) => {
+      const property = viewModelInstance?.boolean(name);
+      if (property) property.value = value;
+    },
+    [viewModelInstance],
+  );
+
+  return {
+    rive,
+    RiveComponent,
+    ready: viewModelInstance !== null,
+    fireTrigger,
+    fireNow,
+    setNumber,
+    setBoolean,
+  };
 }

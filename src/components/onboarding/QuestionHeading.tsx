@@ -49,6 +49,8 @@ interface QuestionHeadingProps {
   typing?: number;
   /** Changes with each new question; Zox looks back up at the user. */
   screenId?: string;
+  /** Index of the option the voice is reading, or -1 — Hex talks for each. */
+  spokenOption?: number;
   /** "row": Zox to the left of a left-aligned heading; default is the
    * heading centered with Zox below. */
   layout?: "stacked" | "row";
@@ -86,26 +88,45 @@ function KaraokeSpan({
   );
 }
 
-/** The same karaoke fill-in as QuestionHeading's, without Zox: a big centered
- * title for the career question, whose tiles fill the screen instead. */
+/** The career question's row (Figma "Frame 31"): Hex on the left, the
+ * question beside him, with the same karaoke fill-in as QuestionHeading. */
 export function QuestionTilesHeading({
   heading,
   spoken,
-}: Pick<QuestionHeadingProps, "heading" | "spoken">) {
+  talking,
+  typing,
+  screenId,
+  spokenOption,
+}: Pick<
+  QuestionHeadingProps,
+  "heading" | "spoken" | "talking" | "typing" | "screenId" | "spokenOption"
+>) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
   return (
-    // Figma: 228px wide (so it breaks "…the career / you're chasing?"),
-    // 24px Inter 700 at 134%; the 260px max-width is that plus the px-4.
-    <h1 className={`${inter.className} mx-auto w-full max-w-[260px] shrink-0 px-4 pt-5 text-center text-[24px] font-bold leading-[1.34] text-[#2C2C2C] [@media(min-height:760px)]:pt-14 dark:text-white`}>
-      {heading.map((span, i) => {
-        const start = spansLength(heading.slice(0, i));
-        const cut = Math.max(0, Math.min(span.text.length, lit - start));
-        return (
-          <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
-        );
-      })}
-    </h1>
+    // Figma: a 358px row, Hex 137.56x100.36, 12px gap, then a 213px heading
+    // in 20px Inter 600 at 134%. It sits 26px below the header's buttons.
+    <div className="mx-auto flex w-full max-w-[358px] shrink-0 items-center gap-3 pt-[18px]">
+      <div aria-hidden className="h-[100.36px] w-[137.56px] shrink-0">
+        <OnboardingQuestionHex
+          className="h-full w-full"
+          typing={typing ?? 0}
+          screenId={screenId ?? ""}
+          speaking={talking && spoken < 1}
+          questionSpoken={spoken}
+          spokenOption={spokenOption}
+        />
+      </div>
+      <h1 className={`${inter.className} w-[213px] min-w-0 text-[20px] font-semibold leading-[1.34] text-[#444444] dark:text-white`}>
+        {heading.map((span, i) => {
+          const start = spansLength(heading.slice(0, i));
+          const cut = Math.max(0, Math.min(span.text.length, lit - start));
+          return (
+            <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
+          );
+        })}
+      </h1>
+    </div>
   );
 }
 
@@ -122,6 +143,7 @@ export function QuestionHeading({
   talking,
   typing,
   screenId,
+  spokenOption,
   layout = "stacked",
   showFox = true,
   foxMode = "tablet",
@@ -144,6 +166,7 @@ export function QuestionHeading({
               screenId={screenId ?? ""}
               speaking={talking && spoken < 1}
               questionSpoken={spoken}
+              spokenOption={spokenOption}
             />
           ) : (
             <ZoxTabFox

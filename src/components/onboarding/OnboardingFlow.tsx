@@ -330,7 +330,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <TimeSliderScreen
                       className="flex-1"
                       heading={step.heading(answers)}
-                      note={step.note}
                       minutes={Number(answers.timeCommitment ?? TIME_SLIDER.initial)}
                       onChange={(minutes) => setAnswer("timeCommitment", String(minutes))}
                     />
@@ -360,7 +359,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       voiceover={resolveVoiceover(step.voiceover, answers)}
                       muted={muted}
                       zoxLayout={step.zoxLayout}
-                      footerHeight={footerHeight}
                     />
                   )}
                 </div>

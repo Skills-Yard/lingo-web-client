@@ -36,7 +36,13 @@ export interface OnboardingListOption {
   /** Tiles variant: the one-line-label layout (8px/18px padding, top-aligned,
    * 17px label line) the reference gives the DevOps tile. */
   compact?: boolean;
-  /** One line shown with Zox once the option is picked (tiles variant). */
+  /** Tiles variant: the picture's size in px when it isn't the default
+   * 54x55. */
+  imageSize?: { width: number; height: number };
+  /** Tiles variant: a 94px label, wider than the tile's 72px content box,
+   * for a label whose first word doesn't fit in 72px. */
+  wideLabel?: boolean;
+  /** A one-line summary of the option (not shown anywhere at the moment). */
   description?: string;
 }
 
@@ -78,6 +84,7 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
     label: "DevOps",
     image: "/images/screen-01/01-4.png",
     compact: true,
+    imageSize: { width: 53, height: 54 },
     description:
       "Automate deployments and keep cloud systems running smoothly.",
   },
@@ -85,15 +92,18 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
     id: "cybersecurity",
     label: "Cyber Security",
     image: "/images/screen-01/01-5.png",
+    imageSize: { width: 50, height: 54 },
     description: "Protect systems and data from threats and attacks.",
   },
   {
     id: "automation-scripting",
     label: "Automation & Scripting",
     image: "/images/screen-01/01-6.png",
+    imageSize: { width: 52, height: 54 },
+    wideLabel: true,
     description: "Write scripts that take over repetitive tasks for you.",
   },
-  // Hidden for now — the career question is six options, two per row.
+  // Hidden for now — the career question is six options, three per row.
   // {
   //   id: "not-sure",
   //   label: "Not sure yet",
@@ -421,8 +431,6 @@ export type OnboardingStep =
       kind: "time-slider";
       id: string;
       heading: (answers: OnboardingAnswers) => TextSpan[];
-      /** The note under the dial; `{minutes}` is the picked value. */
-      note: string;
       answerKey: keyof OnboardingAnswers;
       cta: string;
     }
@@ -631,7 +639,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "time", highlight: true },
       { text: ` can you give ${careerLabel(a)} each day?` },
     ],
-    note: "Even {minutes} minutes a day can build a great habit!",
     answerKey: "timeCommitment",
     cta: "Continue",
   },
