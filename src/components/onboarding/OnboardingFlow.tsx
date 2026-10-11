@@ -125,12 +125,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     hoverAudioRef.current = audio;
     // Autoplay can be refused before the user has tapped anything; if so,
     // retry on their first touch/key press.
-    const unlockEvents = ["pointerdown", "keydown"] as const;
+    // Touch only counts as a user activation on release (pointerup /
+    // touchend / click), not on pointerdown, so listen for all of them and
+    // keep listening until play() actually succeeds.
+    const unlockEvents = ["pointerdown", "pointerup", "touchend", "click", "keydown"] as const;
     const removeUnlock = () =>
       unlockEvents.forEach((e) => window.removeEventListener(e, retryOnGesture));
     function retryOnGesture() {
-      removeUnlock();
-      audio.play().catch(() => {});
+      audio
+        .play()
+        .then(removeUnlock)
+        .catch(() => {});
     }
     audio.play().catch(() => {
       unlockEvents.forEach((e) => window.addEventListener(e, retryOnGesture));
@@ -467,6 +472,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             onComplete={showSignUp}
           />
         </motion.div>
+
       </main>
     </FoxStageProvider>
   );

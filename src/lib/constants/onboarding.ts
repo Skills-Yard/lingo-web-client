@@ -528,6 +528,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "question-grid",
     id: "pythonLevel",
+    zoxLayout: "row",
     heading: (a) => [
       { text: "What's your " },
       { text: languageForCareer(a.career), highlight: true },
@@ -537,13 +538,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: PYTHON_LEVEL_OPTIONS,
     answerKey: "pythonLevel",
-    hexMode: "reactions",
+    hexMode: "onboarding",
     voiceover: ["/audios/WYP_Ques.m4a", "/audios/WYP_Options.m4a"],
     cta: "Continue",
   },
   {
     kind: "question-grid",
     id: "experience",
+    zoxLayout: "row",
     heading: () => [
       { text: "Have you " },
       { text: "worked", highlight: true },
@@ -551,7 +553,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: EXPERIENCE_OPTIONS,
     answerKey: "experience",
-    hexMode: "reactions",
+    hexMode: "onboarding",
     voiceover: ["/audios/HYW_Ques.m4a", "/audios/HYW_Options.m4a"],
     cta: "Continue",
   },
