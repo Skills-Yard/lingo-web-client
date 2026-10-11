@@ -140,8 +140,6 @@ export const HEX_VIEW_MODEL = "Onboarding";
 
 /** Triggers on `HEX_VIEW_MODEL` that step the `Onboarding` state machine. */
 export const HEX_ONBOARDING_TRIGGER = {
-  /** Hex speaks — while a screen's voiceover plays, before its own trigger. */
-  talk: "talk",
   /** Greeting screen. */
   hi: "hi",
   /** "Are you ready?" screen. */
@@ -158,8 +156,25 @@ export const HEX_ONBOARDING_TRIGGER = {
   tap: "tap",
 } as const;
 
+/** The time-commitment screen's dial on `HEX_VIEW_MODEL`: set `minutes` to
+ * the picked value, then turn `counting` on to play Hex's count. */
+export const HEX_TIME_COUNT = { minutes: "minutes", counting: "counting" } as const;
+
 export type HexOnboardingTrigger =
   (typeof HEX_ONBOARDING_TRIGGER)[keyof typeof HEX_ONBOARDING_TRIGGER];
+
+/** Hex speaks — while a screen's voiceover plays, before its own trigger.
+ * Each is a different talking animation on `HEX_VIEW_MODEL`; one is picked at
+ * random per line via `randomHexTalkTrigger`. */
+export const HEX_TALK_TRIGGERS = ["talk", "talk2", "talk3"] as const;
+
+export type HexTalkTrigger = (typeof HEX_TALK_TRIGGERS)[number];
+
+/** A random talk trigger — never `previous`, so back-to-back lines differ. */
+export const randomHexTalkTrigger = (previous?: HexTalkTrigger | null): HexTalkTrigger => {
+  const choices = HEX_TALK_TRIGGERS.filter((trigger) => trigger !== previous);
+  return choices[Math.floor(Math.random() * choices.length)] ?? "talk";
+};
 
 /**
  * Reactions — the "6.1 and 5.1" artboard in `hex.riv`, used by the "Have you

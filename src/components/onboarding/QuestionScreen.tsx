@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Poppins } from "next/font/google";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import type {
   OnboardingGridOption,
   OnboardingListOption,
@@ -13,12 +12,8 @@ import { playClickSound } from "./clickSound";
 import { useVoiceover } from "./useVoiceover";
 import { QuestionHeading, QuestionTilesHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
 import { QuestionListOptions } from "./QuestionListScreen";
-import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { QuestionGridOptions } from "./QuestionGridScreen";
 import { ReactionsHex } from "./robu/ReactionsHex";
-import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
-
-const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
 type QuestionScreenProps = {
   /** Changes with each question; the options fade in anew when it does. */
@@ -33,10 +28,6 @@ type QuestionScreenProps = {
   hexMode?: QuestionHexMode;
   /** "row": Zox beside the heading — see QuestionHeading. */
   zoxLayout?: "row";
-  /** Height of the CTA footer below the screen. The tiles variant's info
-   * card runs down under the button (Figma "Frame 31"), so it grows by this
-   * much and overlaps the footer. */
-  footerHeight?: number;
   className?: string;
 } & (
   | { kind: "question-list"; options: OnboardingListOption[]; variant?: "tiles" }
@@ -54,7 +45,7 @@ type QuestionScreenProps = {
  * + slight scale-up, never actually selected) as it's read out. Picking
  * an answer cuts all that short — the voice fades out and the highlighting
  * stops. Each pick also has Zox look at his tablet and type, and each new
- * question has him look back up at the user (see ZoxTabFox).
+ * question has him look back up at the user.
  */
 export function QuestionScreen(props: QuestionScreenProps) {
   const {
@@ -65,7 +56,6 @@ export function QuestionScreen(props: QuestionScreenProps) {
     voiceover,
     muted = false,
     hexMode,
-    footerHeight = 0,
     className,
   } = props;
 
@@ -74,10 +64,6 @@ export function QuestionScreen(props: QuestionScreenProps) {
   const spokenOption = spokenOptionIndex(voice, props.options.length);
 
   const tiles = props.kind === "question-list" && props.variant === "tiles";
-  const picked =
-    props.kind === "question-list" && props.variant === "tiles"
-      ? props.options.find((o) => o.id === selectedId && o.description)
-      : undefined;
   const [typing, setTyping] = useState(0);
   // 1-based, as the reactions artboard numbers its options; 0 for none.
   const selectedOption = props.options.findIndex((option) => option.id === selectedId) + 1;
@@ -92,7 +78,14 @@ export function QuestionScreen(props: QuestionScreenProps) {
   return (
     <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
       {tiles ? (
-        <QuestionTilesHeading heading={heading} spoken={spokenQuestion} />
+        <QuestionTilesHeading
+          heading={heading}
+          spoken={spokenQuestion}
+          talking={voice.playing}
+          typing={typing}
+          screenId={questionId}
+          spokenOption={spokenOption}
+        />
       ) : (
         <QuestionHeading
           heading={heading}
@@ -100,6 +93,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
           talking={voice.playing}
           typing={typing}
           screenId={questionId}
+          spokenOption={spokenOption}
           layout={props.zoxLayout === "row" ? "row" : "stacked"}
           showFox={hexMode !== "reactions"}
           foxMode={hexMode === "onboarding" ? "onboarding" : "tablet"}
@@ -139,49 +133,6 @@ export function QuestionScreen(props: QuestionScreenProps) {
         )}
       </motion.div>
 
-      {/* Tiles variant: Zox says what the picked option is about. */}
-      <AnimatePresence>
-        {picked && (
-          <motion.div
-            key="pick-info"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
-            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-            // Figma "Frame 31": the button sits 23px below the content, inside
-            // the card — so the card's bottom padding and a matching negative
-            // margin carry it under the (z-10) footer.
-            style={{
-              paddingBottom: footerHeight + 23,
-              marginBottom: -footerHeight,
-            }}
-            className="-mx-4 flex shrink-0 items-start justify-center gap-4 rounded-t-2xl border-[3px] border-b-0 border-white bg-[linear-gradient(263.69deg,#E6F8F8_4.33%,#FFFFFF_100.87%)] px-3 pt-4 shadow-[1px_1px_14.3px_2px_rgba(0,184,169,0.33)] dark:border-white/10 dark:bg-none dark:bg-background dark:shadow-none"
-          >
-            {hexMode === "onboarding" ? (
-              <OnboardingQuestionHex
-                className="h-[100px] w-[137px] shrink-0"
-                typing={typing}
-                screenId={questionId}
-                reactToMountPick
-              />
-            ) : (
-              <ZoxTabFox
-                className="h-[100px] w-[137px] shrink-0"
-                typing={typing}
-                screenId={questionId}
-              />
-            )}
-            <div className={`${poppins.className} flex w-[190px] min-w-0 flex-col justify-center gap-1.5`}>
-              <p className="text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
-                {picked.label}
-              </p>
-              <p className="text-[14px] font-medium leading-[1.34] text-[#666666] dark:text-white/65">
-                {picked.description}
-              </p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -158,6 +158,7 @@ export function FoxSlot({
         typing={typing}
         beat={beat ?? null}
         beatKey={beatDue ? id : null}
+        screenKey={id}
       />
     );
   }
@@ -308,6 +309,7 @@ export function PersistentFox({
         talkKey={slot?.speaking ? slot.id : null}
         questionKey={questionKey}
         pickCount={pickCount}
+        screenKey={questionKey ?? slot?.id ?? null}
         tapCount={tapCount}
       />
     </motion.div>

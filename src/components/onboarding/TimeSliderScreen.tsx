@@ -1,8 +1,7 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Poppins } from "next/font/google";
-import { Sparkles } from "lucide-react";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { TIME_SLIDER } from "@/lib/constants/onboarding";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
@@ -34,8 +33,10 @@ const LABELS = [
   { value: 20, x: 350, y: 568 },
 ] as const;
 const MAJOR_TICKS = [0, 5, 10, 15, 20];
-// The knob jumps straight between 5, 10, 15 and 20 — no in-between minutes.
+// The picked value is 5, 10, 15 or 20 — no in-between minutes. The knob
+// itself follows the finger freely and glides to the nearest step on release.
 const STEP = 5;
+const GLIDE_MS = 220;
 const TOOLTIP_W = 81;
 const TOOLTIP_H = 36;
 
@@ -56,8 +57,6 @@ const clamp = (value: number, min: number, max: number) =>
 
 interface TimeSliderScreenProps {
   heading: TextSpan[];
-  /** The note under the dial; `{minutes}` becomes the picked value. */
-  note: string;
   minutes: number;
   onChange: (minutes: number) => void;
   className?: string;
@@ -65,11 +64,10 @@ interface TimeSliderScreenProps {
 
 /**
  * "How much time can you give…": a draggable dial of minutes per day under
- * Zox, with a tooltip on the knob and an encouraging note beneath.
+ * Zox, with a tooltip on the knob.
  */
 export function TimeSliderScreen({
   heading,
-  note,
   minutes,
   onChange,
   className,
@@ -78,6 +76,30 @@ export function TimeSliderScreen({
   // Bumped each time the dial is grabbed (or nudged with the keys) — Hex's
   // "option picked" reaction.
   const [typing, setTyping] = useState(0);
+  // Where the knob is drawn, in (fractional) minutes.
+  const [shown, setShown] = useState(minutes);
+  const shownRef = useRef(minutes);
+  const glideRef = useRef(0);
+  // The step the knob settles on when let go.
+  const snappedRef = useRef(minutes);
+
+  const showAt = (value: number) => {
+    shownRef.current = value;
+    setShown(value);
+  };
+  const stopGlide = () => cancelAnimationFrame(glideRef.current);
+  const glideTo = (target: number) => {
+    stopGlide();
+    const from = shownRef.current;
+    const start = performance.now();
+    const frame = (now: number) => {
+      const t = Math.min(1, (now - start) / GLIDE_MS);
+      showAt(from + (target - from) * (1 - (1 - t) ** 3));
+      if (t < 1) glideRef.current = requestAnimationFrame(frame);
+    };
+    glideRef.current = requestAnimationFrame(frame);
+  };
+  useEffect(() => stopGlide, []);
 
   const setFromPointer = (clientX: number, clientY: number) => {
     const box = svgRef.current?.getBoundingClientRect();
@@ -85,11 +107,25 @@ export function TimeSliderScreen({
     const px = VIEW_X + ((clientX - box.left) / box.width) * VIEW_W;
     const py = VIEW_Y + ((clientY - box.top) / box.height) * VIEW_H;
     const deg = (Math.atan2(px - CX, CY - py) * 180) / Math.PI;
-    const raw = ((clamp(deg, -SWEEP_DEG, SWEEP_DEG) + SWEEP_DEG) / (2 * SWEEP_DEG)) * TIME_SLIDER.max;
-    onChange(clamp(Math.round(raw / STEP) * STEP, STEP, TIME_SLIDER.max));
+    const raw = clamp(
+      ((clamp(deg, -SWEEP_DEG, SWEEP_DEG) + SWEEP_DEG) / (2 * SWEEP_DEG)) * TIME_SLIDER.max,
+      STEP,
+      TIME_SLIDER.max,
+    );
+    stopGlide();
+    showAt(raw);
+    const snapped = clamp(Math.round(raw / STEP) * STEP, STEP, TIME_SLIDER.max);
+    snappedRef.current = snapped;
+    if (snapped !== minutes) onChange(snapped);
+  };
+  const release = () => glideTo(snappedRef.current);
+  const nudge = (next: number) => {
+    snappedRef.current = next;
+    onChange(next);
+    glideTo(next);
   };
 
-  const knobDeg = valueToDeg(minutes);
+  const knobDeg = valueToDeg(shown);
   const knob = pointAt(knobDeg, RADIUS);
 
   // The tooltip sits up and to the right of the knob, kept inside the view;
@@ -112,11 +148,16 @@ export function TimeSliderScreen({
       </h1>
 
       <div aria-hidden className="mt-2 flex shrink-0 flex-col items-center">
-        <OnboardingQuestionHex className="h-48 w-48" screenId="timeCommitment" typing={typing} />
+        <OnboardingQuestionHex
+          className="h-48 w-48"
+          screenId="timeCommitment"
+          typing={typing}
+          minutes={minutes}
+        />
         <div className="-mt-1 h-2.5 w-24 rounded-full bg-black/10 blur-[2px] dark:bg-white/10" />
       </div>
 
-      {/* The dial and the note sit at the bottom of the screen, just above
+      {/* The dial sits at the bottom of the screen, just above
           the Continue button; Hex stays up top. */}
       <div className="mt-auto flex w-full min-h-0 shrink-0 flex-col items-center pb-3">
       <div className="mt-[clamp(0px,1.5vh,12px)] w-full max-w-[350px] shrink-0 touch-none select-none">
@@ -141,10 +182,12 @@ export function TimeSliderScreen({
           onPointerMove={(e) => {
             if (e.currentTarget.hasPointerCapture(e.pointerId)) setFromPointer(e.clientX, e.clientY);
           }}
+          onPointerUp={release}
+          onPointerCancel={release}
           onKeyDown={(e) => {
             if (e.key.startsWith("Arrow")) setTyping(Date.now());
-            if (e.key === "ArrowRight" || e.key === "ArrowUp") onChange(Math.min(TIME_SLIDER.max, minutes + STEP));
-            if (e.key === "ArrowLeft" || e.key === "ArrowDown") onChange(Math.max(STEP, minutes - STEP));
+            if (e.key === "ArrowRight" || e.key === "ArrowUp") nudge(Math.min(TIME_SLIDER.max, minutes + STEP));
+            if (e.key === "ArrowLeft" || e.key === "ArrowDown") nudge(Math.max(STEP, minutes - STEP));
           }}
         >
           <defs>
@@ -241,14 +284,6 @@ export function TimeSliderScreen({
             </text>
           </g>
         </svg>
-      </div>
-
-      {/* Figma "Frame 29": 288x75, #EFF9FA, 8px corners, 33px stars. */}
-      <div className="mt-[clamp(8px,1.5vh,14px)] flex min-h-[75px] w-full max-w-[288px] shrink-0 items-center justify-center gap-3 rounded-lg bg-[#EFF9FA] px-2 py-[18px] dark:bg-white/10">
-        <Sparkles aria-hidden className="h-[33px] w-[33px] shrink-0 text-primary" strokeWidth={1.5} />
-        <p className="w-[208px] text-[16px] font-medium leading-[1.34] text-[#1A1C22] dark:text-white">
-          {note.replace("{minutes}", String(minutes))}
-        </p>
       </div>
       </div>
     </div>

@@ -7,6 +7,7 @@ import {
   HEX_HELLO_MS,
   HEX_TAP_MS,
   HEX_ONBOARDING_TRIGGER,
+  randomHexTalkTrigger,
   type HexState,
 } from "@/lib/rive/runtime";
 import type { HexOnboardingBeat } from "@/lib/constants/onboarding";
@@ -82,6 +83,21 @@ interface OnboardingFoxProps {
    * `selectOption` whenever `pickCount` goes up. */
   questionKey?: string | null;
   pickCount?: number;
+  /** Changes with every screen; on the `Onboarding` state machine each new
+   * one fires `showQuestion` at once, before that screen's own triggers. */
+  screenKey?: string | null;
+}
+
+/** `showQuestion` at once whenever the `Onboarding` machine lands on a new screen. */
+function useShowQuestionOnNewScreen(
+  fireNow: (name: string) => void,
+  ready: boolean,
+  onboarding: boolean,
+  screenKey: string | null,
+) {
+  useEffect(() => {
+    if (ready && onboarding) fireNow(HEX_ONBOARDING_TRIGGER.showQuestion);
+  }, [fireNow, ready, onboarding, screenKey]);
 }
 
 /** `showQuestion` once per new `questionKey`, `selectOption` on each pick. */
@@ -107,7 +123,7 @@ function useOnboardingQuestion(
   }, [fireTrigger, ready, questionKey, pickCount]);
 }
 
-/** Fires `talk` once per new `talkKey`, `beat` once per new `beatKey`, and the
+/** Fires a random talk trigger once per new `talkKey`, `beat` once per new `beatKey`, and the
  * `tap` trigger on every tap. */
 function useOnboardingBeat(
   fireTrigger: (name: string) => void,
@@ -121,7 +137,7 @@ function useOnboardingBeat(
   useEffect(() => {
     if (!ready || !beat || !talkKey || talkedKey.current === talkKey) return;
     talkedKey.current = talkKey;
-    fireTrigger(HEX_ONBOARDING_TRIGGER.talk);
+    fireTrigger(randomHexTalkTrigger());
   }, [fireTrigger, ready, beat, talkKey]);
 
   const firedKey = useRef<string | null>(null);
@@ -157,6 +173,7 @@ export function OnboardingFox({
   talkKey = null,
   questionKey = null,
   pickCount = 0,
+  screenKey = null,
 }: OnboardingFoxProps) {
   const waving = useHello(greet);
   const tapping = useTapping(tapCount, greet || !!beat);
@@ -167,7 +184,15 @@ export function OnboardingFox({
   else if (waving) state = HEX_STATE.hello;
   else if (excited) state = HEX_STATE.excited;
 
-  const { RiveComponent, ready, fireTrigger } = useHexRive(LAYOUT, state);
+  const { RiveComponent, ready, fireTrigger, fireNow } = useHexRive(LAYOUT, state);
+  // Before the hooks below, so `showQuestion` goes out ahead of the screen's
+  // triggers. Not on "Are you ready?", which goes straight to its `ready`.
+  useShowQuestionOnNewScreen(
+    fireNow,
+    ready,
+    state === HEX_STATE.onboarding && beat !== "ready",
+    screenKey,
+  );
   useOnboardingBeat(fireTrigger, ready, beat, beatKey, talkKey, tapCount);
   useOnboardingQuestion(fireTrigger, ready, questionKey, pickCount);
 
