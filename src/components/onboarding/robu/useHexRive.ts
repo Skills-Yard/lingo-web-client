@@ -18,11 +18,17 @@ configureRiveRuntime();
  * `state` stops whatever is playing and starts the new machine, so only one
  * pose ever runs. `null` leaves him stopped.
  *
- * The artboard's `Onboarding` view model instance is bound to whichever
- * machine is playing (a machine started later isn't bound on its own, hence
- * the rebind after every `play`); `fireTrigger` / `setNumber` drive it.
+ * The artboard's view model instance (`Onboarding` unless `viewModel` says
+ * otherwise) is bound to whichever machine is playing (a machine started
+ * later isn't bound on its own, hence the rebind after every `play`);
+ * `fireTrigger` / `setNumber` drive it.
  */
-export function useHexRive(layout: Layout, state: string | null, artboard: string = HEX_ARTBOARD) {
+export function useHexRive(
+  layout: Layout,
+  state: string | null,
+  artboard: string = HEX_ARTBOARD,
+  viewModel: string = HEX_VIEW_MODEL,
+) {
   const { rive, RiveComponent } = useRive({
     src: HEX_RIVE_SRC,
     artboard,
@@ -31,8 +37,8 @@ export function useHexRive(layout: Layout, state: string | null, artboard: strin
   });
 
   const viewModelInstance = useMemo(
-    () => rive?.viewModelByName(HEX_VIEW_MODEL)?.defaultInstance() ?? null,
-    [rive],
+    () => rive?.viewModelByName(viewModel)?.defaultInstance() ?? null,
+    [rive, viewModel],
   );
 
   useEffect(() => {

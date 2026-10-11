@@ -39,6 +39,7 @@ interface SlotInfo {
   tappable: boolean;
   beat: HexOnboardingBeat | null;
   beatDue: boolean;
+  speaking: boolean;
 }
 
 interface FoxStage {
@@ -101,6 +102,9 @@ interface FoxSlotProps {
    * `beatDue` turns on — once per time the slot mounts. */
   beat?: HexOnboardingBeat;
   beatDue?: boolean;
+  /** With `beat`: the screen's voiceover is playing, so Hex fires `talk`
+   * first — the beat follows once `beatDue`. */
+  speaking?: boolean;
 }
 
 /** Where the fox should stand on this screen — sized like the fox itself. */
@@ -116,6 +120,7 @@ export function FoxSlot({
   tappable = false,
   beat,
   beatDue = false,
+  speaking = false,
 }: FoxSlotProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
@@ -134,8 +139,9 @@ export function FoxSlot({
       tappable,
       beat: beat ?? null,
       beatDue,
+      speaking,
     });
-  }, [stage, id, talking, greet, excited, laptop, typing, hidden, tappable, beat, beatDue]);
+  }, [stage, id, talking, greet, excited, laptop, typing, hidden, tappable, beat, beatDue, speaking]);
   useEffect(() => () => stage?.unregister(id), [stage, id]);
 
   // Outside the flow (no stage), just draw a fox in place.
@@ -299,6 +305,7 @@ export function PersistentFox({
         typing={slot?.typing ?? 0}
         beat={slot?.beat ?? null}
         beatKey={slot?.beatDue ? slot.id : null}
+        talkKey={slot?.speaking ? slot.id : null}
         questionKey={questionKey}
         pickCount={pickCount}
         tapCount={tapCount}

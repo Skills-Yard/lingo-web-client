@@ -39,6 +39,8 @@ const QUESTION_NUMBER: Record<string, number> = {};
   }
 }
 
+const BOT_HOVER_SRC = "/audios/bot hovering 3.mp3.mpeg";
+
 /** How many questions the progress bar counts ("N of QUESTION_COUNT"). */
 const QUESTION_COUNT = Object.keys(QUESTION_NUMBER).length;
 
@@ -113,6 +115,43 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   useEffect(preloadClickSound, []);
   useEffect(() => setClickSoundMuted(muted), [muted]);
 
+  // Robu's hover hum plays once while the sign-up screen is showing, and is
+  // cut off when the user moves on. Muting follows the header's sound toggle.
+  const hoverAudioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    if (index !== -1) return;
+    const audio = new Audio(encodeURI(BOT_HOVER_SRC));
+    audio.muted = muted;
+    hoverAudioRef.current = audio;
+    // Autoplay can be refused before the user has tapped anything; if so,
+    // retry on their first touch/key press.
+    // Touch only counts as a user activation on release (pointerup /
+    // touchend / click), not on pointerdown, so listen for all of them and
+    // keep listening until play() actually succeeds.
+    const unlockEvents = ["pointerdown", "pointerup", "touchend", "click", "keydown"] as const;
+    const removeUnlock = () =>
+      unlockEvents.forEach((e) => window.removeEventListener(e, retryOnGesture));
+    function retryOnGesture() {
+      audio
+        .play()
+        .then(removeUnlock)
+        .catch(() => {});
+    }
+    audio.play().catch(() => {
+      unlockEvents.forEach((e) => window.addEventListener(e, retryOnGesture));
+    });
+    return () => {
+      removeUnlock();
+      audio.pause();
+      hoverAudioRef.current = null;
+    };
+    // `muted` is applied separately below so toggling it doesn't restart the clip.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+  useEffect(() => {
+    if (hoverAudioRef.current) hoverAudioRef.current.muted = muted;
+  }, [muted]);
+
   // Every question opens with nothing selected — including when coming back
   // to it — so its answer is cleared on the way in.
   const goTo = (next: number) => {
@@ -179,15 +218,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const requestNotifications = () => {
     if ("Notification" in window) Notification.requestPermission().catch(() => {});
   };
-  const handleCta = goNext;
+  // On the notification screen the CTA is "Allow Notifications": it asks for
+  // the real permission, then moves on ("Don't Allow", below it, just moves on).
+  const onNotificationScreen = step?.kind === "notification-permission";
+  const handleCta = () => {
+    if (onNotificationScreen) requestNotifications();
+    goNext();
+  };
 
-  // The notification screen answers through its own prompt (Allow / Don't
-  // Allow), so the footer CTA fades out there — it keeps its space, so the
-  // screen's layout doesn't jump as it goes.
-  const hideCta =
-    step?.kind === "notification-permission" ||
-    index === -2 ||
-    (index === -1 && !signUpSettled);
+  // The CTA fades out on the splash and until the sign-up animation has
+  // settled — it keeps its space, so the layout doesn't jump as it goes.
+  const hideCta = index === -2 || (index === -1 && !signUpSettled);
 
   // `h-dvh`, not `h-screen`: on mobile, 100vh is the height with the
   // browser's address bar hidden, so whenever the bar is showing the flow ran
@@ -272,15 +313,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <NotificationPermissionScreen
                       className="flex-1"
                       heading={step.heading}
-                      onAllow={() => {
-                        playClickSound();
-                        requestNotifications();
-                        goNext();
-                      }}
-                      onDeny={() => {
-                        playClickSound();
-                        goNext();
-                      }}
                     />
                   )}
 
@@ -364,7 +396,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </motion.div>
             <motion.div
               initial={false}
-              animate={{ height: index <= -1 ? 40 : 8 }}
+              animate={{ height: index <= -1 || onNotificationScreen ? 40 : 8 }}
               transition={SCREEN_TRANSITION}
               className="flex items-center justify-center"
             >
@@ -384,6 +416,23 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       Log in
                     </button>
                   </motion.p>
+                )}
+                {onNotificationScreen && (
+                  <motion.button
+                    key="deny"
+                    type="button"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={SCREEN_TRANSITION}
+                    onClick={() => {
+                      playClickSound();
+                      goNext();
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-[#666666] sm:text-base dark:text-white/70"
+                  >
+                    Don&apos;t Allow
+                  </motion.button>
                 )}
               </AnimatePresence>
             </motion.div>
@@ -423,6 +472,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             onComplete={showSignUp}
           />
         </motion.div>
+
       </main>
     </FoxStageProvider>
   );

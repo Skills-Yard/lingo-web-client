@@ -5,7 +5,7 @@ import { preload } from "react-dom";
 import { Poppins } from "next/font/google";
 import {
   configureRiveRuntime,
-  REWARD_RIVE_SRC,
+  REWARD_RIVE_SRC,   
   ORBI_RIVE_SRC,
 } from "@/lib/rive/runtime";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";

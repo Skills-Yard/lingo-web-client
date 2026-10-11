@@ -179,7 +179,11 @@ export function FoxMessageScreen({
   // Heading-first screens get excited the moment the heading has typed out,
   // together with the bubble popping in and typing; others once all is typed.
   const excited = excite && (headingFirst ? showBubble : typedOut);
-  const beatDue = !!hexBeat && (!excite || excited);
+  // With a voiceover, Hex speaks (`talk`) while it plays and the beat comes
+  // once the text has typed out; with none, the beat fires on arrival.
+  const speaking = hasVoice && voice.playing && !textTyped;
+  const voiceLeads = !!hexBeat && hasVoice && voice.status !== "failed";
+  const beatDue = !!hexBeat && (voiceLeads ? (excite ? excited : typedOut) : !excite || excited);
 
   const headingBlock = heading && (
     <div className="relative flex shrink-0 items-start gap-1.5">
@@ -295,6 +299,7 @@ export function FoxMessageScreen({
             excited={excited}
             beat={hexBeat}
             beatDue={beatDue}
+            speaking={speaking}
             tappable
             className="aspect-square"
             style={{ height: shrunk ? shrunk.size : FOX_SIZE }}
