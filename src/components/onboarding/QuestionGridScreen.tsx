@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Poppins } from "next/font/google";
 import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption } from "@/lib/constants/onboarding";
 import { optionCardClass } from "./optionCard";
@@ -20,7 +19,6 @@ const ILLUSTRATIONS: Record<OnboardingGridOption["illustration"], { icon: Lucide
 const PANEL_BG = ["#E5EFFD", "#FFF3DE", "#EFEAFC", "#ECF7ED"] as const;
 
 // The Figma label type: Poppins 500, 16px / 140%.
-const poppins = Poppins({ subsets: ["latin"], weight: "500" });
 
 interface QuestionGridOptionsProps {
   options: OnboardingGridOption[];
@@ -89,7 +87,7 @@ export function QuestionGridOptions({
               )}
             </span>
             <span
-              className={`${poppins.className} flex h-[43.65px] w-full shrink-0 items-center justify-center px-2 text-balance text-[14px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white`}
+              className={`flex h-[43.65px] w-full shrink-0 items-center justify-center px-2 text-balance text-[14px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white`}
             >
               {option.label}
             </span>

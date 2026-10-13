@@ -10,7 +10,7 @@ import type {
 } from "@/lib/constants/onboarding";
 import { playClickSound } from "./clickSound";
 import { useVoiceover } from "./useVoiceover";
-import { QuestionHeading, QuestionTilesHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
+import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
 import { QuestionListOptions } from "./QuestionListScreen";
 import { QuestionGridOptions } from "./QuestionGridScreen";
 import { ReactionsHex } from "./robu/ReactionsHex";
@@ -77,28 +77,18 @@ export function QuestionScreen(props: QuestionScreenProps) {
 
   return (
     <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
-      {tiles ? (
-        <QuestionTilesHeading
-          heading={heading}
-          spoken={spokenQuestion}
-          talking={voice.playing}
-          typing={typing}
-          screenId={questionId}
-          spokenOption={spokenOption}
-        />
-      ) : (
-        <QuestionHeading
-          heading={heading}
-          spoken={spokenQuestion}
-          talking={voice.playing}
-          typing={typing}
-          screenId={questionId}
-          spokenOption={spokenOption}
-          layout={props.zoxLayout === "row" ? "row" : "stacked"}
-          showFox={hexMode !== "reactions"}
-          foxMode={hexMode === "onboarding" ? "onboarding" : "tablet"}
-        />
-      )}
+      {/* Same Hex-beside-heading row on every question, tiles included. */}
+      <QuestionHeading
+        heading={heading}
+        spoken={spokenQuestion}
+        talking={voice.playing}
+        typing={typing}
+        screenId={questionId}
+        spokenOption={spokenOption}
+        layout={props.zoxLayout === "row" ? "row" : "stacked"}
+        showFox={tiles || hexMode !== "reactions"}
+        foxMode={tiles || hexMode === "onboarding" ? "onboarding" : "tablet"}
+      />
 
       {hexMode === "reactions" && (
         <ReactionsHex
