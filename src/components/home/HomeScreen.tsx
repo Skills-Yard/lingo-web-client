@@ -3,10 +3,11 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Poppins } from "next/font/google";
 import { motion } from "framer-motion";
-import { Layout, Fit, Alignment } from "@rive-app/canvas";
+import { Layout, Fit, Alignment, EventType, type Event as RiveEvent } from "@rive-app/canvas";
+import { useRive } from "@rive-app/react-canvas";
 import { Code2, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-import { HEX_STATE } from "@/lib/rive/runtime";
+import { HEX_STATE, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { BottomNav, type HomeTab } from "./BottomNav";
 
@@ -147,21 +148,12 @@ const ART = {
   },
 } as const;
 
-/** The slab Hex stands on (public/images/platforms/live.png), anchored the
- * same way: `ax`/`ay` is the centre of its top face. */
-const LIVE_FRAMES = [
-  { src: "/images/platforms/live-0.png", w: 461, ax: 227 },
-  { src: "/images/platforms/live-1.png", w: 461, ax: 227 },
-  { src: "/images/platforms/live-2.png", w: 461, ax: 227 },
-  { src: "/images/platforms/live-3.png", w: 471, ax: 230 },
-] as const;
-/** `ay` is the same for every frame: the centre of the top face. */
-const LIVE_ART = { h: 420, ay: 80 } as const;
-/** The live slab's frames: ripples spreading out around it, none to three
- * rings, played in a loop so the platform feels alive. */
-const LIVE_FRAME_MS = 420;
-const LIVE_SCALE = 0.34;
-
+/** The slab Hex stands on is `LIVE_PLATFORM`'s rive, drawn at `LIVE_RIV_SCALE`
+ * world px per artboard px so the slab comes out the size of the old artwork.
+ * `ax`/`ay` are the centre of its top face in artboard px, which is what gets
+ * pinned to the level. */
+const LIVE_RIV_SCALE = 1.02;
+const LIVE_RIV = { ax: 86.7, ay: 23.4 } as const;
 /** Picture px -> world px: a big slab comes out ~96px wide. */
 const ART_SCALE = 0.364;
 
@@ -169,61 +161,48 @@ const ART_SCALE = 0.364;
  * so fifty platforms don't mean fifty running animations. */
 const ANIMATED_LEVELS = 9;
 
-/** The live slab once tapped: lit up with a beam, replacing the ripples.
- * `ay` is again the centre of its top face. */
-const LIVE_ACTIVE = { src: "/images/platforms/live-active.png", w: 471, h: 593, ax: 230, ay: 253 } as const;
-const SWAP_MS = 180;
-
 type Launch = { launching: boolean; onLaunch: () => void };
 
-/** Every frame stays mounted (so none flashes in unloaded) and only the
- * current one is shown. Tapping crossfades to the lit-up artwork. */
-function LivePlatform({ cx, cy, launching, onLaunch }: { cx: number; cy: number } & Launch) {
-  const [frame, setFrame] = useState(0);
+const LIVE_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+
+/** The live slab: "Start" plays once when it loads, then "Repeat" loops, so
+ * the platform feels alive. It keeps animating after a tap too, while Hex
+ * jumps onto it. */
+function LivePlatform({ cx, cy, onLaunch }: { cx: number; cy: number } & Launch) {
+  const { rive, RiveComponent } = useRive({
+    src: LIVE_PLATFORM.src,
+    artboard: LIVE_PLATFORM.artboard,
+    animations: LIVE_PLATFORM.start,
+    autoplay: true,
+    layout: LIVE_LAYOUT,
+  });
 
   useEffect(() => {
-    if (launching) return;
-    const timer = setInterval(() => setFrame((f) => (f + 1) % LIVE_FRAMES.length), LIVE_FRAME_MS);
-    return () => clearInterval(timer);
-  }, [launching]);
-
-  const fade = { transition: `opacity ${SWAP_MS}ms ease-out` };
+    if (!rive) return;
+    const onStop = (event: RiveEvent) => {
+      const stopped = event.data;
+      if (Array.isArray(stopped) && stopped.includes(LIVE_PLATFORM.start)) {
+        rive.play(LIVE_PLATFORM.loop);
+      }
+    };
+    rive.on(EventType.Stop, onStop);
+    return () => rive.off(EventType.Stop, onStop);
+  }, [rive]);
 
   return (
     <>
-      {LIVE_FRAMES.map(({ src, w, ax }, n) => (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          key={src}
-          src={src}
-          alt=""
-          draggable={false}
-          className="absolute max-w-none select-none"
-          style={{
-            left: cx - ax * LIVE_SCALE,
-            top: cy - LIVE_ART.ay * LIVE_SCALE,
-            width: w * LIVE_SCALE,
-            height: LIVE_ART.h * LIVE_SCALE,
-            opacity: n === frame && !launching ? 1 : 0,
-            ...(launching ? fade : null),
-          }}
-        />
-      ))}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={LIVE_ACTIVE.src}
-        alt=""
-        draggable={false}
-        className="pointer-events-none absolute max-w-none select-none"
+      <div
+        aria-hidden
+        className="pointer-events-none absolute"
         style={{
-          left: cx - LIVE_ACTIVE.ax * LIVE_SCALE,
-          top: cy - LIVE_ACTIVE.ay * LIVE_SCALE,
-          width: LIVE_ACTIVE.w * LIVE_SCALE,
-          height: LIVE_ACTIVE.h * LIVE_SCALE,
-          opacity: launching ? 1 : 0,
-          ...fade,
+          left: cx - LIVE_RIV.ax * LIVE_RIV_SCALE,
+          top: cy - LIVE_RIV.ay * LIVE_RIV_SCALE,
+          width: LIVE_PLATFORM.width * LIVE_RIV_SCALE,
+          height: LIVE_PLATFORM.height * LIVE_RIV_SCALE,
         }}
-      />
+      >
+        <RiveComponent className="h-full w-full" />
+      </div>
       <button
         type="button"
         onClick={onLaunch}
@@ -574,6 +553,7 @@ export function HomeScreen({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [viewH, setViewH] = useState(STAGE_H);
+  const [boxW, setBoxW] = useState(STAGE_W);
   const [done, setDone] = useState(0);
   const [launching, setLaunching] = useState(false);
   const startLevel = () => setLaunching(true);
@@ -587,6 +567,7 @@ export function HomeScreen({
       const next = Math.min(width / STAGE_W, height / STAGE_H, MAX_SCALE);
       setScale(next);
       setViewH(height / next);
+      setBoxW(width);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -604,20 +585,23 @@ export function HomeScreen({
           ref={scrollerRef}
           className="scrollbar-none absolute inset-0 overflow-x-hidden overflow-y-auto overscroll-contain"
         >
-          <div
-            className="relative mx-auto"
-            style={{ width: STAGE_W * scale, height: WORLD_H * scale }}
-          >
+          <div className="relative w-full" style={{ height: WORLD_H * scale }}>
             {/* Backdrop: faint isometric tiles, repeated down the whole path
-                so it scrolls with it. */}
+                so it scrolls with it. It spans the full viewport width (not
+                just the centred stage column), each tile keeping the stage's
+                390:640 shape, so it fills tablets and desktops too. */}
             <div
               aria-hidden
               className="pointer-events-none absolute inset-0 bg-repeat-y [filter:brightness(0.95)] dark:[filter:invert(1)_hue-rotate(180deg)_brightness(2.5)] dark:mix-blend-screen"
               style={{
                 backgroundImage: "url(/images/level-bg.png)",
-                backgroundSize: `${STAGE_W * scale}px ${BG_TILE_H * scale}px`,
+                backgroundSize: `${boxW}px ${(boxW * BG_TILE_H) / STAGE_W}px`,
               }}
             />
+            <div
+              className="relative mx-auto"
+              style={{ width: STAGE_W * scale, height: WORLD_H * scale }}
+            >
             <div
               className="absolute left-0 top-0 origin-top-left"
               style={{ width: STAGE_W, height: WORLD_H, transform: `scale(${scale})` }}
@@ -683,6 +667,7 @@ export function HomeScreen({
                 <HomeHex />
               </motion.button>
             </div>
+            </div>
           </div>
         </div>
 
@@ -692,26 +677,32 @@ export function HomeScreen({
           className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-transparent to-transparent dark:from-[#0f1f26] dark:from-[90%]"
           style={{ height: 246 * scale }}
         >
+          {/* Streak + gems: pinned to the screen's own left and right edges
+            (not the centred stage column), each chip scaled with the layout. */}
+          <motion.div
+            className="pointer-events-auto absolute inset-x-0 flex items-center justify-between"
+            style={{ top: 14 * scale, paddingInline: 16 * scale }}
+            {...reveal(0)}
+          >
+            <div style={{ transform: `scale(${scale})`, transformOrigin: "left center" }}>
+              <StatChip>
+                <FlameIcon />
+                <span className="text-base font-semibold leading-[1.4] text-[#FF8D42]">4</span>
+              </StatChip>
+            </div>
+            <div style={{ transform: `scale(${scale})`, transformOrigin: "right center" }}>
+              <StatChip>
+                <GemIcon />
+                <span className="text-base font-semibold leading-[1.4] text-[#3683D3]">373</span>
+              </StatChip>
+            </div>
+          </motion.div>
+
           <div
             className="absolute left-1/2 top-0 origin-top"
             style={{ width: STAGE_W, height: 246, transform: `translateX(-50%) scale(${scale})` }}
           >
-          {/* Streak + gems */}
-          <motion.div
-            className="pointer-events-auto absolute left-4 top-[14px] flex w-[358px] items-center justify-between"
-            {...reveal(0)}
-          >
-            <StatChip>
-              <FlameIcon />
-              <span className="text-base font-semibold leading-[1.4] text-[#FF8D42]">4</span>
-            </StatChip>
-            <StatChip>
-              <GemIcon />
-              <span className="text-base font-semibold leading-[1.4] text-[#3683D3]">373</span>
-            </StatChip>
-          </motion.div>
-
-          {/* After the stats row, which spans the width, so it sits on top */}
+          {/* After the stats row, so it sits on top */}
           <ThemeSwitch />
           <ProgressDebug
             done={done}

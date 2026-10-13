@@ -23,6 +23,22 @@ const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
 export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 
 /**
+ * The home screen's live platform (`live-box-animate-2.riv`): the slab Hex
+ * stands on, with its ripples. Its "Artboard 2" is 177x107; played with no
+ * state machine, "Start" runs once when the screen loads and "Repeat" then
+ * loops. (The same file also carries the Hex artboards, which this screen
+ * doesn't use.)
+ */
+export const LIVE_PLATFORM = {
+  src: "/animations/live-box-animate-2.riv",
+  artboard: "Artboard 2",
+  start: "Start",
+  loop: "Repeat",
+  width: 177,
+  height: 107,
+} as const;
+
+/**
  * The `.riv` for every Robu instance in the module 1 instructions-intro
  * flows — both the current branch's own (`src/components/instructions-intro`)
  * and its `-himanshu` counterpart (used by `/module1/review` and
