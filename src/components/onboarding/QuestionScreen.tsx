@@ -91,17 +91,18 @@ export function QuestionScreen(props: QuestionScreenProps) {
         layout={props.zoxLayout === "row" ? "row" : "stacked"}
         showFox={tiles || hexMode !== "reactions"}
         foxMode={tiles || hexMode === "onboarding" ? "onboarding" : "tablet"}
+        hex={
+          hexMode === "reactions" ? (
+            <ReactionsHex
+              key={reactionsArtboard}
+              artboard={reactionsArtboard}
+              className="h-full w-full"
+              typing={typing}
+              selectedOption={selectedOption}
+            />
+          ) : undefined
+        }
       />
-
-      {hexMode === "reactions" && (
-        <ReactionsHex
-          key={reactionsArtboard}
-          artboard={reactionsArtboard}
-          className="mx-auto aspect-[390/171] w-full max-w-[24rem] shrink-0"
-          typing={typing}
-          selectedOption={selectedOption}
-        />
-      )}
 
       <motion.div
         key={questionId}

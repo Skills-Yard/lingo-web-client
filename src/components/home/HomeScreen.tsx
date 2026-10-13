@@ -3,7 +3,7 @@
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Poppins } from "next/font/google";
 import { motion } from "framer-motion";
-import { Layout, Fit, Alignment, EventType, type Event as RiveEvent } from "@rive-app/canvas";
+import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { Code2, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
@@ -165,28 +165,24 @@ type Launch = { launching: boolean; onLaunch: () => void };
 
 const LIVE_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
-/** The live slab: "Start" plays once when it loads, then "Repeat" loops, so
- * the platform feels alive. It keeps animating after a tap too, while Hex
- * jumps onto it. */
+/** The live slab: `Path_SM` plays on load and its `activate` trigger fires
+ * once, so the platform builds itself. It keeps animating after a tap too,
+ * while Hex jumps onto it. */
 function LivePlatform({ cx, cy, onLaunch }: { cx: number; cy: number } & Launch) {
   const { rive, RiveComponent } = useRive({
     src: LIVE_PLATFORM.src,
     artboard: LIVE_PLATFORM.artboard,
-    animations: LIVE_PLATFORM.start,
+    stateMachines: LIVE_PLATFORM.stateMachine,
     autoplay: true,
     layout: LIVE_LAYOUT,
   });
 
   useEffect(() => {
     if (!rive) return;
-    const onStop = (event: RiveEvent) => {
-      const stopped = event.data;
-      if (Array.isArray(stopped) && stopped.includes(LIVE_PLATFORM.start)) {
-        rive.play(LIVE_PLATFORM.loop);
-      }
-    };
-    rive.on(EventType.Stop, onStop);
-    return () => rive.off(EventType.Stop, onStop);
+    const instance = rive.viewModelByName(LIVE_PLATFORM.viewModel)?.defaultInstance();
+    if (!instance) return;
+    rive.bindViewModelInstance(instance);
+    instance.trigger(LIVE_PLATFORM.activateTrigger)?.trigger();
   }, [rive]);
 
   return (

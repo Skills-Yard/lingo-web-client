@@ -23,17 +23,17 @@ const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
 export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 
 /**
- * The home screen's live platform (`live-box-animate-2.riv`): the slab Hex
- * stands on, with its ripples. Its "Artboard 2" is 177x107; played with no
- * state machine, "Start" runs once when the screen loads and "Repeat" then
- * loops. (The same file also carries the Hex artboards, which this screen
- * doesn't use.)
+ * The home screen's live platform (`pathBuilding.riv`): the slab Hex stands
+ * on. Its "PathBuilding" artboard plays the `Path_SM` state machine;
+ * firing the `activate` trigger on its `PathBuilding` view model starts the
+ * animation.
  */
 export const LIVE_PLATFORM = {
-  src: "/animations/live-box-animate-2.riv",
-  artboard: "Artboard 2",
-  start: "Start",
-  loop: "Repeat",
+  src: "/animations/pathBuilding.riv",
+  artboard: "PathBuilding",
+  stateMachine: "Path_SM",
+  viewModel: "PathBuilding",
+  activateTrigger: "activate",
   width: 177,
   height: 107,
 } as const;
@@ -195,13 +195,11 @@ export const randomHexTalkTrigger = (previous?: HexTalkTrigger | null): HexTalkT
 };
 
 /**
- * Reactions — the "6.1 and 5.1" (superpower level) and "6.1 and 5.1 2" (Have
- * you worked with code) artboards in `hex.riv`. `Reactions_SM` reacts
+ * Reactions — the "6.1 and 5.1 2" artboard in `hex.riv`, used by both grid
+ * questions (superpower level, worked with code). `Reactions_SM` reacts
  * to the picked option: set `option` (1-4) and fire `select`.
  */
-export const REACTIONS_ARTBOARD = "6.1 and 5.1";
-/** The second reactions artboard — same `Reactions_SM`, `option` and `select`. */
-export const REACTIONS_ARTBOARD_2 = "6.1 and 5.1 2";
+export const REACTIONS_ARTBOARD = "6.1 and 5.1 2";
 export const REACTIONS_STATE_MACHINE = "Reactions_SM";
 export const REACTIONS_OPTION = "option";
 export const REACTIONS_SELECT_TRIGGER = "select";

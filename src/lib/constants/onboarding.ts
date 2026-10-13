@@ -2,7 +2,6 @@ import type { LucideIcon } from "lucide-react";
 import {
   HEX_SCENE,
   REACTIONS_ARTBOARD,
-  REACTIONS_ARTBOARD_2,
   type HexScene,
 } from "@/lib/rive/runtime";
 
@@ -568,7 +567,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     options: EXPERIENCE_OPTIONS,
     answerKey: "experience",
     hexMode: "reactions",
-    reactionsArtboard: REACTIONS_ARTBOARD_2,
+    reactionsArtboard: REACTIONS_ARTBOARD,
     voiceover: ["/audios/HYW_Ques.m4a", "/audios/HYW_Options.m4a"],
     cta: "Continue",
   },
@@ -673,7 +672,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: LEARNING_TIME_OPTIONS,
     answerKey: "learningTime",
-    hexMode: "onboarding",
+    hexMode: "reactions",
+    reactionsArtboard: REACTIONS_ARTBOARD,
     cta: "Continue",
   },
   {

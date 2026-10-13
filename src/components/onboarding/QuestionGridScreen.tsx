@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { Poppins } from "next/font/google";
 import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption } from "@/lib/constants/onboarding";
 import { optionCardClass } from "./optionCard";
+
+const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
 // Grid options without their own `image` get an icon in the picture panel
 // instead — no matching artwork exists for those yet ("No", and the later

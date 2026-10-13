@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
@@ -59,6 +60,9 @@ interface QuestionHeadingProps {
   /** "onboarding": the fox plays Hex's `Onboarding` state machine (see
    * OnboardingQuestionHex) instead of the tablet poses. */
   foxMode?: "tablet" | "onboarding";
+  /** Replaces the fox in its slot — the reactions artboard on the grid
+   * questions that have one. */
+  hex?: ReactNode;
 }
 
 /**
@@ -104,6 +108,7 @@ export function QuestionHeading({
   layout = "stacked",
   showFox = true,
   foxMode = "tablet",
+  hex,
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
@@ -114,7 +119,11 @@ export function QuestionHeading({
 
   return (
     <div className="flex shrink-0 items-center justify-center gap-3 pt-2 sm:pt-3">
-      {showFox && (
+      {hex ? (
+        <div aria-hidden className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28">
+          {hex}
+        </div>
+      ) : showFox && (
         <div aria-hidden className="relative shrink-0">
           {foxMode === "onboarding" ? (
             <OnboardingQuestionHex

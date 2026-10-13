@@ -10,11 +10,13 @@ import {
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
 
-const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+// Cover: the artboard is wide (390x171) and this sits in a square slot beside
+// the heading, so Hex fills it rather than shrinking to its width.
+const LAYOUT = new Layout({ fit: Fit.Cover, alignment: Alignment.Center });
 
 /**
  * Hex between the question and its options ("superpower level", "Have you
- * worked with code"): the "6.1 and 5.1" artboard's `Reactions_SM`. On each
+ * worked with code"): the "6.1 and 5.1 2" artboard's `Reactions_SM`. On each
  * pick it sets `option` to the picked option (1-4) and fires `select`.
  */
 export function ReactionsHex({
