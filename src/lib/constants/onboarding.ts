@@ -199,25 +199,25 @@ export const EXPERIENCE_OPTIONS: OnboardingGridOption[] = [
     id: "none",
     label: "No experience",
     illustration: "books",
-    image: "/images/screen-02/02-1.png",
+    image: "/images/screen-02/02-1-new.png",
   },
   {
     id: "little",
     label: "A little exposure",
     illustration: "mobile",
-    image: "/images/screen-02/02-2.png",
+    image: "/images/screen-02/02-2-new.png",
   },
   {
     id: "hands-on",
     label: "Hands-on",
     illustration: "chart",
-    image: "/images/screen-02/02-3.png",
+    image: "/images/screen-02/02-3-new.png",
   },
   {
     id: "professional",
     label: "Professional",
     illustration: "trophy",
-    image: "/images/screen-02/02-4.png",
+    image: "/images/screen-02/02-4-new.png",
   },
 ];
 
