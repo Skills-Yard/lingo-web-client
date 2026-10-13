@@ -195,11 +195,13 @@ export const randomHexTalkTrigger = (previous?: HexTalkTrigger | null): HexTalkT
 };
 
 /**
- * Reactions — the "6.1 and 5.1" artboard in `hex.riv`, used by the "Have you
- * worked with code" and "superpower level" questions. `Reactions_SM` reacts
+ * Reactions — the "6.1 and 5.1" (superpower level) and "6.1 and 5.1 2" (Have
+ * you worked with code) artboards in `hex.riv`. `Reactions_SM` reacts
  * to the picked option: set `option` (1-4) and fire `select`.
  */
 export const REACTIONS_ARTBOARD = "6.1 and 5.1";
+/** The second reactions artboard — same `Reactions_SM`, `option` and `select`. */
+export const REACTIONS_ARTBOARD_2 = "6.1 and 5.1 2";
 export const REACTIONS_STATE_MACHINE = "Reactions_SM";
 export const REACTIONS_OPTION = "option";
 export const REACTIONS_SELECT_TRIGGER = "select";

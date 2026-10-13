@@ -26,6 +26,8 @@ type QuestionScreenProps = {
   muted?: boolean;
   /** How Zox reacts — see OnboardingStep's `hexMode`. */
   hexMode?: QuestionHexMode;
+  /** Artboard for `hexMode: "reactions"` — defaults to the first one. */
+  reactionsArtboard?: string;
   /** "row": Zox beside the heading — see QuestionHeading. */
   zoxLayout?: "row";
   className?: string;
@@ -56,6 +58,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
     voiceover,
     muted = false,
     hexMode,
+    reactionsArtboard,
     className,
   } = props;
 
@@ -92,6 +95,8 @@ export function QuestionScreen(props: QuestionScreenProps) {
 
       {hexMode === "reactions" && (
         <ReactionsHex
+          key={reactionsArtboard}
+          artboard={reactionsArtboard}
           className="mx-auto aspect-[390/171] w-full max-w-[24rem] shrink-0"
           typing={typing}
           selectedOption={selectedOption}

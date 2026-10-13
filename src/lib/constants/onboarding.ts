@@ -1,5 +1,10 @@
 import type { LucideIcon } from "lucide-react";
-import { HEX_SCENE, type HexScene } from "@/lib/rive/runtime";
+import {
+  HEX_SCENE,
+  REACTIONS_ARTBOARD,
+  REACTIONS_ARTBOARD_2,
+  type HexScene,
+} from "@/lib/rive/runtime";
 
 /** One highlighted (or plain) run of text — headings/bubbles are built from
  * a small array of these instead of a single string + one "highlight this
@@ -467,6 +472,8 @@ export type OnboardingStep =
       answerKey: keyof OnboardingAnswers;
       voiceover?: StepVoiceover;
       hexMode?: QuestionHexMode;
+      /** The artboard played for `hexMode: "reactions"`. */
+      reactionsArtboard?: string;
       cta: string;
     };
 
@@ -536,7 +543,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "question-grid",
     id: "pythonLevel",
-    zoxLayout: "row",
     heading: (a) => [
       { text: "What's your " },
       { text: languageForCareer(a.career), highlight: true },
@@ -546,14 +552,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: PYTHON_LEVEL_OPTIONS,
     answerKey: "pythonLevel",
-    hexMode: "onboarding",
+    hexMode: "reactions",
+    reactionsArtboard: REACTIONS_ARTBOARD,
     voiceover: ["/audios/WYP_Ques.m4a", "/audios/WYP_Options.m4a"],
     cta: "Continue",
   },
   {
     kind: "question-grid",
     id: "experience",
-    zoxLayout: "row",
     heading: () => [
       { text: "Have you " },
       { text: "worked", highlight: true },
@@ -561,7 +567,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: EXPERIENCE_OPTIONS,
     answerKey: "experience",
-    hexMode: "onboarding",
+    hexMode: "reactions",
+    reactionsArtboard: REACTIONS_ARTBOARD_2,
     voiceover: ["/audios/HYW_Ques.m4a", "/audios/HYW_Options.m4a"],
     cta: "Continue",
   },

@@ -352,6 +352,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                         : { kind: step.kind, options: step.options })}
                       selectedId={answers[step.answerKey] ?? null}
                       hexMode={step.hexMode}
+                      reactionsArtboard={step.kind === "question-grid" ? step.reactionsArtboard : undefined}
                       onSelect={(id) => {
                         setAnswer(step.answerKey, id);
                         setPickCount((n) => n + 1);
