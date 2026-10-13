@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { DialogueBubble } from "@/components/ui/DialogueBubble";
+import { ONBOARDING_TEXT_CLASS } from "./headingStyle";
 
 // The bubble pops in first — delayed so the screen's own crossfade (see
 // OnboardingFlow's SCREEN_TRANSITION) is mostly done — and the text and voice
@@ -128,7 +129,7 @@ export function OnboardingBubble({
         // pt-4/pb-4); on the other side the flat shadow still spills 3px past
         // the box, so "up" gets that much room below too.
         className={`max-w-[min(17rem,calc(100vw-3rem))] sm:max-w-sm [--bubble-fill:var(--background)] ${tail === "up" ? "pt-4 pb-0.75" : "pb-4"}`}
-        contentClassName="whitespace-pre-line text-balance px-3 py-3 text-center text-[16px] font-medium leading-tight text-black dark:text-white sm:px-6 sm:py-3.5"
+        contentClassName={`whitespace-pre-line text-balance px-3 py-3 text-center sm:px-6 sm:py-3.5 ${ONBOARDING_TEXT_CLASS}`}
       >
         <TypedText spans={spans} shown={shown} />
       </DialogueBubble>

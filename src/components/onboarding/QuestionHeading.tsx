@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
-import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
+import { ONBOARDING_QUESTION_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
 
@@ -63,6 +63,8 @@ interface QuestionHeadingProps {
   /** Replaces the fox in its slot — the reactions artboard on the grid
    * questions that have one. */
   hex?: ReactNode;
+  /** Text style of the heading — the 20px question style by default. */
+  headingClassName?: string;
 }
 
 /**
@@ -109,6 +111,7 @@ export function QuestionHeading({
   showFox = true,
   foxMode = "tablet",
   hex,
+  headingClassName = ONBOARDING_QUESTION_CLASS,
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
@@ -118,7 +121,7 @@ export function QuestionHeading({
   });
 
   return (
-    <div className="flex shrink-0 items-center justify-center gap-3 pt-2 sm:pt-3">
+    <div className={`flex shrink-0 items-center justify-center gap-3 ${ONBOARDING_TOP_OFFSET_CLASS}`}>
       {hex ? (
         <div aria-hidden className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28">
           {hex}
@@ -143,7 +146,7 @@ export function QuestionHeading({
           )}
         </div>
       )}
-      <h1 className={`max-w-60 text-left sm:max-w-72 ${ONBOARDING_HEADING_CLASS}`}>
+      <h1 className={`max-w-60 text-left sm:max-w-72 ${headingClassName}`}>
         {parts.map(({ span, cut }, i) => (
           <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
         ))}

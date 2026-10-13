@@ -303,29 +303,27 @@ function careerMindBubble(a: OnboardingAnswers): TextSpan[] {
       return [
         { text: "Good, you're not starting from zero. We'll build toward " },
         career,
-        { text: " from here." },
+        { text: "." },
       ];
     case "hands-on-coder":
       return [
-        { text: "Nice, we'll skip the basics and get you into real " },
+        { text: "Nice! We'll skip the basics and go straight to real " },
         career,
         { text: " work." },
       ];
     case "professional":
       return [
-        {
-          text: "Got it, we'll go deep and sharpen your skills specifically for ",
-        },
+        { text: "Got it. We'll go deep and sharpen your " },
         career,
-        { text: "." },
+        { text: " skills." },
       ];
     default:
       return [
-        { text: "Perfect starting point. We'll build your " },
+        { text: "Perfect start! We'll build your " },
         { text: `${languageForCareer(a.career)} foundation`, highlight: true },
-        { text: " with " },
+        { text: " for " },
         career,
-        { text: " in mind." },
+        { text: "." },
       ];
   }
 }
@@ -480,7 +478,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "fox-message",
     id: "greeting",
-    bubble: () => [{ text: "Hey! I am hex,\nyour skills buddy" }],
+    bubble: () => [{ text: "Hey! I'm Hex,\nyour skills buddy" }],
     hexBeat: "hi",
     voiceover: ["/audios/text-1.mpeg"],
     typeSpeedMs: 70,
@@ -491,7 +489,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "ready-check",
     heading: () => [
       {
-        text: "Before your first lesson, a few quick questions to personalize your path.",
+        text: "A few quick questions to personalize your path.",
       },
     ],
     headingPlacement: "bottom",
@@ -527,9 +525,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     bubble: (a) => [
       { text: "Good news: your " },
       { text: `${careerLabel(a)} path`, highlight: true },
-      { text: " journey runs on " },
+      { text: " runs on " },
       { text: languageForCareer(a.career), highlight: true },
-      { text: ". One of the most in-demand languages." },
+      { text: ", a top in-demand language." },
     ],
     voiceover: (a) => {
       const src = a.career ? GOOD_NEWS_AUDIO[a.career] : undefined;
@@ -588,7 +586,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "foundation",
     bubble: () => [
       {
-        text: "Smart, a strong foundation makes everything after this easier. Starting from ",
+        text: "Smart! A strong base makes everything easier. Starting at ",
       },
       { text: "Module 1", highlight: true },
       { text: "." },
@@ -653,7 +651,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "pace-great",
     bubble: (a) => [
       {
-        text: "GREAT!\nAt this pace, you'll finish your first 3 lessons toward ",
+        text: "GREAT!\nAt this pace you'll finish 3 lessons toward ",
       },
       { text: careerLabel(a), highlight: true },
       { text: " this week." },
@@ -666,9 +664,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "learningTime",
     zoxLayout: "row",
     heading: (a) => [
-      { text: "What is the " },
-      { text: "best time", highlight: true },
-      { text: ` in a day for you to learn ${careerLabel(a)}?` },
+      { text: "Best " },
+      { text: "time", highlight: true },
+      { text: ` of day to learn ${careerLabel(a)}?` },
     ],
     options: LEARNING_TIME_OPTIONS,
     answerKey: "learningTime",
@@ -688,7 +686,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     heading: () => [
       { text: "Let’s keep your " },
       { text: "coding streak", highlight: true },
-      { text: " going! Stay one tap away from your next lesson." },
+      { text: " going! Stay one tap from your next lesson." },
     ],
     image: "/images/codingStreak/codingStreak-3.png",
     cta: "Continue",
@@ -698,7 +696,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "three-months",
     bubble: (a) => [
       {
-        text: "In 3 months, you could be well past the basics and building real ",
+        text: "In 3 months you could be building real ",
       },
       { text: careerLabel(a), highlight: true },
       { text: " projects on your own." },

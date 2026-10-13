@@ -5,7 +5,7 @@ import type { TextSpan } from "@/lib/constants/onboarding";
 import { TIME_SLIDER } from "@/lib/constants/onboarding";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
-import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
+import { ONBOARDING_QUESTION_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
 
 // The dial, drawn in the Figma frame's own coordinates (390 wide): an arc of a
 // circle centred below the drawing, swept ±SWEEP_DEG either side of straight
@@ -132,9 +132,9 @@ export function TimeSliderScreen({
 
   return (
     <div
-      className={`flex min-h-0 flex-col items-center px-4 ${className ?? ""}`}
+      className={`flex min-h-0 flex-col items-center px-4 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}
     >
-      <h1 className={`mx-auto mt-[clamp(4px,4.5vh,40px)] w-full max-w-[350px] shrink-0 text-left ${ONBOARDING_HEADING_CLASS}`}>
+      <h1 className={`mx-auto w-full max-w-[350px] shrink-0 text-left ${ONBOARDING_QUESTION_CLASS}`}>
         {heading.map((span, i) => (
           <span key={i} className={span.highlight ? "text-brand-gradient" : undefined}>
             {span.text}

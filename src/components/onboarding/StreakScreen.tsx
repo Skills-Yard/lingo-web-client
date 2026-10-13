@@ -3,6 +3,7 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { QuestionHeading } from "./QuestionHeading";
+import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
 
 const CARD_DELAY_S = 0.3;
 const CARD_IN = { type: "spring", stiffness: 260, damping: 26 } as const;
@@ -26,7 +27,12 @@ export function StreakScreen({ heading, image, className }: StreakScreenProps) {
 
   return (
     <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
-      <QuestionHeading heading={heading} spoken={1} talking={false} />
+      <QuestionHeading
+        heading={heading}
+        spoken={1}
+        talking={false}
+        headingClassName={ONBOARDING_HEADING_CLASS}
+      />
 
       <div className="relative mt-5 min-h-0 flex-1 overflow-hidden">
         <motion.img

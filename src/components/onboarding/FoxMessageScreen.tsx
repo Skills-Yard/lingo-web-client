@@ -6,7 +6,7 @@ import { Sparkle } from "lucide-react";
 import type { HexOnboardingBeat, TextSpan } from "@/lib/constants/onboarding";
 import type { HexScene as HexSceneConfig } from "@/lib/rive/runtime";
 import { FoxSlot } from "./foxStage";
-import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
+import { ONBOARDING_HEADING_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
 import { HexScene } from "./robu/HexScene";
 import { OnboardingBubble, TypedText, spansLength } from "./OnboardingBubble";
 import { useVoiceover } from "./useVoiceover";
@@ -273,10 +273,18 @@ export function FoxMessageScreen({
   }
 
   return (
-    <div className={`flex min-h-0 flex-col px-6 ${className ?? ""}`}>
-      {headingOnTop && <div className="mt-[3dvh] shrink-0 self-center">{headingBlock}</div>}
+    <div className={`flex min-h-0 flex-col px-6 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}>
+      {headingOnTop && <div className="shrink-0 self-center">{headingBlock}</div>}
 
       <div ref={stageRef} className="relative min-h-0 flex-1">
+        {/* The bubble hangs from the top line shared by every screen and
+            grows downward, so its top edge is the same whatever its text. */}
+        {!headingOnTop && (
+          <div ref={aboveRef} className="absolute top-0 left-1/2 z-10 w-max -translate-x-1/2">
+            {bubbleEl("down")}
+          </div>
+        )}
+
         <motion.div
           ref={foxRef}
           className="absolute left-1/2 -translate-x-1/2"
@@ -286,14 +294,6 @@ export function FoxMessageScreen({
           animate={{ y: -lift }}
           transition={reduceMotion ? { duration: 0 } : LIFT}
         >
-          {/* Above the fox: the bubble (tail down) — unless the heading is
-              on top, in which case the bubble goes below instead. */}
-          {!headingOnTop && (
-            <div ref={aboveRef} className="absolute bottom-full left-1/2 w-max -translate-x-1/2 pb-2">
-              {bubbleEl("down")}
-            </div>
-          )}
-
           <FoxSlot
             greet={greet}
             talking={talking}

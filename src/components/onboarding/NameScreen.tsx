@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { DialogueBubble } from "@/components/ui/DialogueBubble";
 import { FoxSlot } from "./foxStage";
+import { ONBOARDING_TEXT_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
 
 interface NameScreenProps {
   prompt: string;
@@ -31,19 +32,19 @@ export function NameScreen({ prompt, value, onChange, onSubmit, className }: Nam
   }, []);
 
   return (
-    <div className={`flex min-h-0 flex-col items-center px-6 ${className ?? ""}`}>
+    <div className={`flex min-h-0 flex-col items-center px-6 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}>
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}
-        className="mt-[6dvh] shrink-0"
+        className="shrink-0"
       >
         <DialogueBubble
           tail="down"
           className="w-[min(17rem,calc(100vw-3rem))] pb-4 [--bubble-fill:var(--background)]"
-          contentClassName="flex flex-col items-center gap-2 px-4 py-3 text-black dark:text-white"
+          contentClassName={`flex flex-col items-center gap-2 px-4 py-3 ${ONBOARDING_TEXT_CLASS}`}
         >
-          <label htmlFor="onboarding-name" className="text-center text-[16px] font-medium leading-tight">
+          <label htmlFor="onboarding-name" className="text-center">
             {prompt}
           </label>
           <input
@@ -58,7 +59,7 @@ export function NameScreen({ prompt, value, onChange, onSubmit, className }: Nam
             onKeyDown={(e) => {
               if (e.key === "Enter" && value.trim()) onSubmit();
             }}
-            className="w-full border-0 border-b border-dashed border-primary bg-transparent pb-1 text-center text-[16px] font-medium text-black caret-primary outline-none dark:text-white"
+            className={`w-full border-0 border-b border-dashed border-primary bg-transparent pb-1 text-center caret-primary outline-none ${ONBOARDING_TEXT_CLASS}`}
           />
         </DialogueBubble>
       </motion.div>

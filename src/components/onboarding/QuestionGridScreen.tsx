@@ -69,13 +69,13 @@ export function QuestionGridOptions({
             // Figma "Group 94" (138x150): the picture over a 43.65px label
             // strip, straight on the card (no tinted panel). Light: the
             // card's own khaki bottom edge from optionCardClass. Dark: each
-            // segment draws its own #818185 stroke, the picture on #0F1F26
-            // and the label on 20% white, per the dark-mode spec.
+            // segment draws its own stroke (#818185 idle, #00B8A9 selected),
+            // the picture on #0F1F26 and the label on 20% white.
             className={`flex h-[150px] w-[138px] flex-col overflow-hidden text-center ${optionCardClass(selected, spotlight, true)}`}
           >
             <span
-              className={`flex min-h-0 w-full flex-1 items-center justify-center ${
-                lit ? "" : "dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 dark:border-[#818185] dark:bg-[#0F1F26] dark:p-2.5"
+              className={`flex min-h-0 w-full flex-1 items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 dark:bg-[#0F1F26] dark:p-2.5 ${
+                lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >
               {option.image ? (
@@ -91,8 +91,8 @@ export function QuestionGridOptions({
               )}
             </span>
             <span
-              className={`${poppins.className} flex h-[43.65px] w-full shrink-0 items-center justify-center px-2 text-balance text-[14px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white ${
-                lit ? "" : "dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] dark:border-[#818185] dark:bg-white/20"
+              className={`${poppins.className} flex h-[43.65px] w-full shrink-0 items-center justify-center px-2 text-balance text-[14px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] dark:bg-white/20 ${
+                lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >
               {option.label}
