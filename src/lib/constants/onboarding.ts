@@ -474,7 +474,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "fox-message",
     id: "greeting",
-    bubble: () => [{ text: "Hey! I am Zox,\nyour skills buddy" }],
+    bubble: () => [{ text: "Hey! I am hex,\nyour skills buddy" }],
     hexBeat: "hi",
     voiceover: ["/audios/text-1.mpeg"],
     typeSpeedMs: 70,
