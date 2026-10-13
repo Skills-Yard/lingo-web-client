@@ -6,6 +6,7 @@ import { Sparkle } from "lucide-react";
 import type { HexOnboardingBeat, TextSpan } from "@/lib/constants/onboarding";
 import type { HexScene as HexSceneConfig } from "@/lib/rive/runtime";
 import { FoxSlot } from "./foxStage";
+import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
 import { HexScene } from "./robu/HexScene";
 import { OnboardingBubble, TypedText, spansLength } from "./OnboardingBubble";
 import { useVoiceover } from "./useVoiceover";
@@ -187,7 +188,7 @@ export function FoxMessageScreen({
 
   const headingBlock = heading && (
     <div className="relative flex shrink-0 items-start gap-1.5">
-      <h1 className="max-w-[min(20rem,calc(100vw-3rem))] text-center text-[16px] font-medium leading-snug text-[#1A1C22] dark:text-white">
+      <h1 className={`max-w-[min(20rem,calc(100vw-3rem))] text-center ${ONBOARDING_HEADING_CLASS}`}>
         {typesHeading ? (
           <TypedText spans={heading} shown={headingShown} />
         ) : (

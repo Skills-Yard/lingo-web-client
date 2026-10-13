@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useReducedMotion } from "framer-motion";
 import { NOTIFY_ASPECT } from "@/lib/rive/runtime";
 import { NotifyHex } from "./robu/NotifyHex";
+import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
 
 const VIBRATION_DELAY_S = 0.65;
 /** Two short pulses — reads as a notification arriving. */
@@ -44,7 +45,7 @@ export function NotificationPermissionScreen({
 
   return (
     <div className={`flex flex-col items-center px-6 ${className ?? ""}`}>
-      <h1 className="mt-[5dvh] max-w-xs shrink-0 text-center text-xl font-semibold leading-snug text-[#2C2C2C] sm:text-2xl dark:text-white">
+      <h1 className={`mt-[5dvh] max-w-xs shrink-0 text-center ${ONBOARDING_HEADING_CLASS}`}>
         {heading}
       </h1>
 

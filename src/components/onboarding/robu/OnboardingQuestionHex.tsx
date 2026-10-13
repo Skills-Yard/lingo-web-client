@@ -9,6 +9,7 @@ import {
   HEX_TIME_COUNT,
   randomHexTalkTrigger,
   type HexTalkTrigger,
+  type HexOnboardingTrigger,
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
 
@@ -43,6 +44,7 @@ export function OnboardingQuestionHex({
   speaking = false,
   questionSpoken = 1,
   spokenOption = -1,
+  restTrigger = HEX_ONBOARDING_TRIGGER.showQuestion,
   minutes,
 }: {
   className?: string;
@@ -59,6 +61,9 @@ export function OnboardingQuestionHex({
   questionSpoken?: number;
   /** Index of the option the voice is reading right now, or -1. */
   spokenOption?: number;
+  /** Fired wherever `showQuestion` would be (on arrival, after the voice) —
+   * `idle` on the time-commitment dial. */
+  restTrigger?: HexOnboardingTrigger;
   /** The time-commitment dial's picked minutes. */
   minutes?: number;
 }) {
@@ -72,8 +77,8 @@ export function OnboardingQuestionHex({
   // Declared before the trigger effects below, so `showQuestion` goes out first.
   useEffect(() => {
     readingOption.current = null;
-    if (ready) fireNow(HEX_ONBOARDING_TRIGGER.showQuestion);
-  }, [ready, screenId, fireNow]);
+    if (ready) fireNow(restTrigger);
+  }, [ready, screenId, fireNow, restTrigger]);
 
   // `minutes` has to be in place before `counting` flips, so Hex counts to
   // the picked value rather than the previous one.
@@ -105,17 +110,17 @@ export function OnboardingQuestionHex({
         return;
       }
       shownFor.current = screenId;
-      if (picked) fireNow(HEX_ONBOARDING_TRIGGER.showQuestion);
-      else fireTrigger(HEX_ONBOARDING_TRIGGER.showQuestion);
+      if (picked) fireNow(restTrigger);
+      else fireTrigger(restTrigger);
     } else if (picked && readingOption.current !== null) {
-      fireNow(HEX_ONBOARDING_TRIGGER.showQuestion);
+      fireNow(restTrigger);
     }
     if (!picked) return;
     firedFor.current = typing;
     readingOption.current = null;
     // Queued, so it lands just after `showQuestion`.
     fireTrigger(HEX_ONBOARDING_TRIGGER.selectOption);
-  }, [ready, screenId, typing, speaking, questionSpoken, fireTrigger, fireNow, talk]);
+  }, [ready, screenId, typing, speaking, questionSpoken, fireTrigger, fireNow, talk, restTrigger]);
 
   // After the effect above, so each option's talk queues behind `showQuestion`.
   const talkedOption = useRef<string | null>(null);
@@ -125,7 +130,7 @@ export function OnboardingQuestionHex({
       // Read to the end (a pick mid-way is handled above and clears this).
       if (readingOption.current === null) return;
       readingOption.current = null;
-      fireTrigger(HEX_ONBOARDING_TRIGGER.showQuestion);
+      fireTrigger(restTrigger);
       return;
     }
     const key = `${screenId}:${spokenOption}`;
@@ -133,7 +138,7 @@ export function OnboardingQuestionHex({
     talkedOption.current = key;
     readingOption.current = spokenOption;
     talk();
-  }, [ready, screenId, spokenOption, talk, fireTrigger]);
+  }, [ready, screenId, spokenOption, talk, fireTrigger, restTrigger]);
 
   return (
     <motion.div

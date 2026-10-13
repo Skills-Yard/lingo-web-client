@@ -1,14 +1,13 @@
 "use client";
 
-import { Inter } from "next/font/google";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
+import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
 
 // Question headings: Inter 600, 20px.
-const inter = Inter({ subsets: ["latin"], weight: ["600", "700"] });
 
 /**
  * How far through its own clip (0..1) the question text has been spoken:
@@ -88,48 +87,6 @@ function KaraokeSpan({
   );
 }
 
-/** The career question's row (Figma "Frame 31"): Hex on the left, the
- * question beside him, with the same karaoke fill-in as QuestionHeading. */
-export function QuestionTilesHeading({
-  heading,
-  spoken,
-  talking,
-  typing,
-  screenId,
-  spokenOption,
-}: Pick<
-  QuestionHeadingProps,
-  "heading" | "spoken" | "talking" | "typing" | "screenId" | "spokenOption"
->) {
-  const total = spansLength(heading);
-  const lit = spoken >= 1 ? total : Math.floor(spoken * total);
-  return (
-    // Figma: a 358px row, Hex 137.56x100.36, 12px gap, then a 213px heading
-    // in 20px Inter 600 at 134%. It sits 26px below the header's buttons.
-    <div className="mx-auto flex w-full max-w-[358px] shrink-0 items-center gap-3 pt-[18px]">
-      <div aria-hidden className="h-[100.36px] w-[137.56px] shrink-0">
-        <OnboardingQuestionHex
-          className="h-full w-full"
-          typing={typing ?? 0}
-          screenId={screenId ?? ""}
-          speaking={talking && spoken < 1}
-          questionSpoken={spoken}
-          spokenOption={spokenOption}
-        />
-      </div>
-      <h1 className={`${inter.className} w-[213px] min-w-0 text-[20px] font-semibold leading-[1.34] text-[#444444] dark:text-white`}>
-        {heading.map((span, i) => {
-          const start = spansLength(heading.slice(0, i));
-          const cut = Math.max(0, Math.min(span.text.length, lit - start));
-          return (
-            <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
-          );
-        })}
-      </h1>
-    </div>
-  );
-}
-
 /**
  * Zox (with his tablet) + question row at the top of both question
  * screens. While the
@@ -177,7 +134,7 @@ export function QuestionHeading({
           )}
         </div>
       )}
-      <h1 className="max-w-60 text-[20px] font-medium leading-snug text-[#1A1C22] sm:max-w-72 dark:text-white">
+      <h1 className={`max-w-60 text-left sm:max-w-72 ${ONBOARDING_HEADING_CLASS}`}>
         {parts.map(({ span, cut }, i) => (
           <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
         ))}

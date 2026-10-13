@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Poppins } from "next/font/google";
 import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption } from "@/lib/constants/onboarding";
 import { optionCardClass } from "./optionCard";
@@ -17,7 +16,6 @@ const ILLUSTRATIONS: Record<OnboardingGridOption["illustration"], { icon: Lucide
 };
 
 // The Figma label type: Poppins 500, 16px / 140%.
-const poppins = Poppins({ subsets: ["latin"], weight: "500" });
 
 interface QuestionGridOptionsProps {
   options: OnboardingGridOption[];
