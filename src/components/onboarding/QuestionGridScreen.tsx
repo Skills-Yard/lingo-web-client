@@ -16,9 +16,6 @@ const ILLUSTRATIONS: Record<OnboardingGridOption["illustration"], { icon: Lucide
   trophy: { icon: Trophy, fg: "text-[#D69A1F]" },
 };
 
-// Picture-panel tints, in the Figma option order (blue, peach, lilac, mint).
-const PANEL_BG = ["#E5EFFD", "#FFF3DE", "#EFEAFC", "#ECF7ED"] as const;
-
 // The Figma label type: Poppins 500, 16px / 140%.
 const poppins = Poppins({ subsets: ["latin"], weight: "500" });
 
@@ -61,20 +58,24 @@ export function QuestionGridOptions({
       {options.map((option, i) => {
         const selected = option.id === selectedId;
         const spotlight = !selected && i === spokenOption;
+        const lit = selected || spotlight;
         const { icon: Icon, fg } = ILLUSTRATIONS[option.illustration];
         return (
           <button
             key={option.id}
             type="button"
             onClick={() => onPick(option.id)}
-            // Figma "Group 94": a 169x189 tile — a light-blue 134px picture
-            // panel over a white 55px label strip (the card's own khaki
-            // bottom edge from optionCardClass underneath).
-            className={`flex h-[150px] w-[138px] flex-col overflow-hidden text-center ${optionCardClass(selected, spotlight)}`}
+            // Figma "Group 94" (138x150): the picture over a 43.65px label
+            // strip, straight on the card (no tinted panel). Light: the
+            // card's own khaki bottom edge from optionCardClass. Dark: each
+            // segment draws its own #818185 stroke, the picture on #0F1F26
+            // and the label on 20% white, per the dark-mode spec.
+            className={`flex h-[150px] w-[138px] flex-col overflow-hidden text-center ${optionCardClass(selected, spotlight, true)}`}
           >
             <span
-              className="relative flex min-h-0 w-full flex-1 items-center justify-center"
-              style={{ background: PANEL_BG[i % PANEL_BG.length] }}
+              className={`flex min-h-0 w-full flex-1 items-center justify-center ${
+                lit ? "" : "dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 dark:border-[#818185] dark:bg-[#0F1F26] dark:p-2.5"
+              }`}
             >
               {option.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -82,14 +83,16 @@ export function QuestionGridOptions({
                   src={option.image}
                   alt=""
                   draggable={false}
-                  className="absolute inset-0 h-full w-full object-cover"
+                  className="h-[calc(100%-1.25rem)] w-[calc(100%-1.25rem)] object-contain dark:h-[74px] dark:w-[80px]"
                 />
               ) : (
                 <Icon className={`h-14 w-14 ${fg}`} strokeWidth={1.75} />
               )}
             </span>
             <span
-              className={`${poppins.className} flex h-[43.65px] w-full shrink-0 items-center justify-center px-2 text-balance text-[14px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white`}
+              className={`${poppins.className} flex h-[43.65px] w-full shrink-0 items-center justify-center px-2 text-balance text-[14px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white ${
+                lit ? "" : "dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] dark:border-[#818185] dark:bg-white/20"
+              }`}
             >
               {option.label}
             </span>
