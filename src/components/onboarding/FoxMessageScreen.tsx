@@ -24,17 +24,15 @@ const SCREEN_SETTLE_MS = 400;
 // hangs off its top and the heading off its bottom, instead of all three
 // being centered as a group (which moved the fox whenever the text length
 // changed).
-const FOX_MAX_REM = 25;
-const FOX_MAX_DVH = 52;
+// Same size as Hex on the name screen (NameScreen: min(15rem, 30dvh)).
+const FOX_MAX_REM = 15;
+const FOX_MAX_DVH = 30;
 const FOX_SIZE = `min(${FOX_MAX_REM}rem, ${FOX_MAX_DVH}dvh)`;
 const FOX_HALF = `min(${FOX_MAX_REM / 2}rem, ${FOX_MAX_DVH / 2}dvh)`;
-const FOX_CENTER = 0.67;
-/** On short ("cut") viewports the fox sits a little higher, closer to the
- * bubble — the bubble itself stays where it is. */
-const SHORT_SCREEN_PX = 700;
-const FOX_CENTER_SHORT = 0.62;
-const foxCenterFor = (viewportHeight: number) =>
-  viewportHeight < SHORT_SCREEN_PX ? FOX_CENTER_SHORT : FOX_CENTER;
+const FOX_CENTER = 0.5;
+/** Hex is always centred; the bubble's bottom edge sits this far above his
+ * artboard and the bubble grows upward with its text. */
+const BUBBLE_GAP_PX = 8;
 /** The fox never shrinks below this (px) to make room for text below. */
 const FOX_MIN_PX = 128;
 /** Breathing room kept between the text and the edges of that space. */
@@ -238,7 +236,7 @@ export function FoxMessageScreen({
       const belowHeight = belowRef.current?.offsetHeight ?? 0;
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
       const size = Math.min(FOX_MAX_REM * rem, (FOX_MAX_DVH / 100) * window.innerHeight);
-      const foxCenter = foxCenterFor(window.innerHeight);
+      const foxCenter = FOX_CENTER;
       setCenter(foxCenter);
       const top = foxCenter * stageHeight - size / 2;
 
@@ -289,7 +287,13 @@ export function FoxMessageScreen({
         {/* The bubble hangs from the top line shared by every screen and
             grows downward, so its top edge is the same whatever its text. */}
         {!headingOnTop && (
-          <div ref={aboveRef} className="absolute top-0 left-1/2 z-10 w-max -translate-x-1/2">
+          <div
+            ref={aboveRef}
+            className="absolute left-1/2 z-10 w-max -translate-x-1/2"
+            style={{
+              bottom: `calc(${(1 - center) * 100}% + ${shrunk ? `${shrunk.size / 2}px` : FOX_HALF} + ${BUBBLE_GAP_PX}px)`,
+            }}
+          >
             {bubbleEl("down")}
           </div>
         )}
