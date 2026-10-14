@@ -178,6 +178,10 @@ export const HEX_ONBOARDING_TRIGGER = {
  * the picked value, then turn `counting` on to play Hex's count. */
 export const HEX_TIME_COUNT = { minutes: "minutes", counting: "counting" } as const;
 
+/** The boolean on every Hex view model that switches the rig's colours:
+ * `true` for the dark theme, `false` for light. */
+export const HEX_DARK_THEME = "darkTheme";
+
 export type HexOnboardingTrigger =
   (typeof HEX_ONBOARDING_TRIGGER)[keyof typeof HEX_ONBOARDING_TRIGGER];
 
@@ -187,6 +191,12 @@ export type HexOnboardingTrigger =
 export const HEX_TALK_TRIGGERS = ["talk", "talk2", "talk3"] as const;
 
 export type HexTalkTrigger = (typeof HEX_TALK_TRIGGERS)[number];
+
+/** Fired the moment a talk ends, before whichever trigger follows it. */
+export const HEX_STOP_TALK_TRIGGER = "stopTalk";
+
+export const isHexTalkTrigger = (name: string): boolean =>
+  (HEX_TALK_TRIGGERS as readonly string[]).includes(name);
 
 /** A random talk trigger — never `previous`, so back-to-back lines differ. */
 export const randomHexTalkTrigger = (previous?: HexTalkTrigger | null): HexTalkTrigger => {

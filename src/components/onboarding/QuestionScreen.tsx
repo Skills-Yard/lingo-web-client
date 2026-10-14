@@ -91,11 +91,11 @@ export function QuestionScreen(props: QuestionScreenProps) {
     <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
       {scene && (
         // Full-width, top-aligned under the header (pt-3 clears the progress
-        // bar and buttons). Height follows the artboard's 260:267 ratio so the
+        // bar and buttons). Height follows the artboard's 390:267 ratio so the
         // scene always fills the full screen width (Fit.FitWidth).
         <div
           aria-hidden
-          className="relative -mx-4 mt-3 aspect-260/267 shrink-0 overflow-hidden"
+          className="relative -mx-4 mt-3 aspect-390/267 shrink-0 overflow-hidden"
         >
           <div className="absolute inset-0">
             <DayNightHex
@@ -158,6 +158,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
             selectedId={selectedId}
             spokenOption={spokenOption}
             onPick={pick}
+            compact={scene}
           />
         )}
       </motion.div>

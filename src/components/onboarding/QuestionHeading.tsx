@@ -124,7 +124,9 @@ export function QuestionHeading({
   });
 
   return (
-    <div className={`flex shrink-0 items-center justify-center gap-3 ${ONBOARDING_TOP_OFFSET_CLASS}`}>
+    // Under a scene the heading hangs off the artboard's bottom edge with a
+    // short, fixed gap rather than the usual header offset.
+    <div className={`flex shrink-0 items-center justify-center gap-3 ${wide ? "pt-3" : ONBOARDING_TOP_OFFSET_CLASS}`}>
       {hex ? (
         <div aria-hidden className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28">
           {hex}

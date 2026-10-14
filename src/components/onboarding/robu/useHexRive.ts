@@ -8,7 +8,11 @@ import {
   HEX_RIVE_SRC,
   HEX_ARTBOARD,
   HEX_VIEW_MODEL,
+  HEX_STOP_TALK_TRIGGER,
+  HEX_DARK_THEME,
+  isHexTalkTrigger,
 } from "@/lib/rive/runtime";
+import { useTheme } from "@/context/ThemeContext";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -35,6 +39,7 @@ export function useHexRive(
   artboard: string = HEX_ARTBOARD,
   viewModel: string = HEX_VIEW_MODEL,
 ) {
+  const { theme } = useTheme();
   const { rive, RiveComponent } = useRive({
     src: HEX_RIVE_SRC,
     artboard,
@@ -57,12 +62,23 @@ export function useHexRive(
 
   const queue = useRef<string[]>([]);
   const gapTimer = useRef<number | undefined>(undefined);
+  // True from a talk trigger until the `stopTalk` that ends it.
+  const talking = useRef(false);
   const drain = useCallback(() => {
-    const next = queue.current.shift();
+    const next = queue.current[0];
     if (next === undefined) {
       gapTimer.current = undefined;
       return;
     }
+    // Anything but another talk ends the talk first, ahead of that trigger.
+    if (talking.current && !isHexTalkTrigger(next)) {
+      talking.current = false;
+      viewModelInstance?.trigger(HEX_STOP_TALK_TRIGGER)?.trigger();
+      gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);
+      return;
+    }
+    queue.current.shift();
+    if (isHexTalkTrigger(next)) talking.current = true;
     viewModelInstance?.trigger(next)?.trigger();
     gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);
   }, [viewModelInstance]);
@@ -83,6 +99,7 @@ export function useHexRive(
     if (!rive) return;
     window.clearTimeout(gapTimer.current);
     queue.current = [];
+    talking.current = false;
     const playing = rive.playingStateMachineNames;
     if (playing.length > 0) rive.stop(playing);
     if (state && rive.stateMachineNames.includes(state)) rive.play(state);
@@ -105,6 +122,7 @@ export function useHexRive(
       window.clearTimeout(gapTimer.current);
       gapTimer.current = undefined;
       queue.current = [];
+      talking.current = false;
     },
     [viewModelInstance],
   );
@@ -124,6 +142,12 @@ export function useHexRive(
     },
     [viewModelInstance],
   );
+
+  // Keeps the rig's `darkTheme` flag in step with the site theme. Skipped
+  // silently on view models that don't expose it.
+  useEffect(() => {
+    setBoolean(HEX_DARK_THEME, theme === "dark");
+  }, [setBoolean, theme]);
 
   return {
     rive,

@@ -7,6 +7,7 @@ import {
   REACTIONS_STATE_MACHINE,
   REACTIONS_OPTION,
   REACTIONS_SELECT_TRIGGER,
+  HEX_ONBOARDING_TRIGGER,
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
 
@@ -61,12 +62,15 @@ export function ReactionsHex({
 
   // The same canvas carries over to the next question, so send the machine
   // back to its entry state rather than leaving the last pick's reaction up.
-  const lastQuestionId = useRef(questionId);
+  // Every new screen (including the first) starts with `idle`, ahead of any
+  // other trigger.
+  const idledFor = useRef<string | null>(null);
   useEffect(() => {
-    if (!ready || questionId === lastQuestionId.current) return;
-    lastQuestionId.current = questionId;
-    reset();
-  }, [ready, questionId, reset]);
+    if (!ready || idledFor.current === questionId) return;
+    if (idledFor.current !== null) reset();
+    idledFor.current = questionId;
+    fireTrigger(HEX_ONBOARDING_TRIGGER.idle);
+  }, [ready, questionId, reset, fireTrigger]);
 
   return (
     <div aria-hidden className={className}>

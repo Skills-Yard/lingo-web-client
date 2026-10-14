@@ -18,6 +18,8 @@ const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 // Same entrance as ZoxTabFox: fades in and slides up into his spot.
 const SLIDE_FROM_PX = 28;
 const ENTER = { duration: 0.45, ease: [0.22, 1, 0.36, 1] } as const;
+// Lets the 0 land (and the entrance play) before the count to the default starts.
+const ENTER_COUNT_DELAY_MS = 450;
 
 /**
  * Hex on a question screen, playing the `Onboarding` state machine:
@@ -82,10 +84,30 @@ export function OnboardingQuestionHex({
 
   // `minutes` has to be in place before `counting` flips, so Hex counts to
   // the picked value rather than the previous one.
+  // On arrival it starts from 0 and counts up to the default, instead of
+  // just showing it.
+  const countedIn = useRef(false);
   useEffect(() => {
     if (!ready || minutes === undefined) return;
-    setNumber(HEX_TIME_COUNT.minutes, minutes);
-    setBoolean(HEX_TIME_COUNT.counting, true);
+    if (countedIn.current) {
+      setNumber(HEX_TIME_COUNT.minutes, minutes);
+      setBoolean(HEX_TIME_COUNT.counting, true);
+      return;
+    }
+    countedIn.current = true;
+    setNumber(HEX_TIME_COUNT.minutes, 0);
+    setBoolean(HEX_TIME_COUNT.counting, false);
+    let fired = false;
+    const timer = setTimeout(() => {
+      fired = true;
+      setNumber(HEX_TIME_COUNT.minutes, minutes);
+      setBoolean(HEX_TIME_COUNT.counting, true);
+    }, ENTER_COUNT_DELAY_MS);
+    return () => {
+      clearTimeout(timer);
+      // Cleaned up before it fired (strict-mode remount): run the intro again.
+      if (!fired) countedIn.current = false;
+    };
   }, [ready, minutes, setNumber, setBoolean]);
 
   const talkedFor = useRef<string | null>(null);
