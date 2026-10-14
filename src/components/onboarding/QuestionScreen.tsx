@@ -95,7 +95,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
         // Scaled down on shorter screens so the heading, options and CTA all
         // fit without scrolling.
         <div aria-hidden className="relative -mx-4 h-[min(240px,28dvh)] shrink-0 overflow-hidden">
-          <div className="absolute left-1/2 top-0 aspect-[457/303] h-full -translate-x-1/2">
+          <div className="absolute inset-0">
             <DayNightHex
               className="h-full w-full"
               typing={typing}

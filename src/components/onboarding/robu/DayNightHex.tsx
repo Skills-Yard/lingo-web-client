@@ -10,7 +10,9 @@ import {
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
 
-const LAYOUT = new Layout({ fit: Fit.Cover, alignment: Alignment.Center });
+// Contain: the whole scene (sun/moon at the top, Hex at the bottom) stays in
+// view rather than being cropped to the slot.
+const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 /**
  * The "DayNight" artboard's `DayNight_SM`: picking Morning / Afternoon /
