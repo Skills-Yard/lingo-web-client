@@ -239,13 +239,13 @@ export const HEX_TYPING_MS = 2200;
 export const HEX_FIDGET_MS = 2500;
 
 /**
- * Splash — the "Splash Screen v2" artboard in `hex.riv` (same file as Hex). It
+ * Splash — the "Splash Screen" artboard in `hex.riv` (same file as Hex). It
  * plays the `Splash_SM` state machine, data-bound to the `Splash_VM` view
  * model; firing that view model's `showSignUpScreen` trigger animates the
  * sign-up screen in.
  */
 export const SPLASH_RIVE_SRC = HEX_RIVE_SRC;
-export const SPLASH_ARTBOARD = "Splash Screen v2";
+export const SPLASH_ARTBOARD = "Splash Screen";
 export const SPLASH_STATE_MACHINE = "Splash_SM";
 export const SPLASH_VIEW_MODEL = "Splash_VM";
 export const SPLASH_SHOW_SIGNUP_TRIGGER = "showSignUpScreen";

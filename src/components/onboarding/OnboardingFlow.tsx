@@ -457,12 +457,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className="pointer-events-none absolute inset-0 z-0"
         >
           <OnboardingSplash
-            // Brand green for the splash, then see-through from the sign-up
-            // screen on, so the page colour and the grid show behind it.
+            // The theme background (white / #0F1F26) for the splash, then
+            // see-through from the sign-up screen on, so the page colour and
+            // the grid show behind it.
             className={`relative h-full w-full transition-colors duration-500 ${
-              index === -2
-                ? "bg-gradient-to-b from-[#00E5B5] to-[#1385B3]"
-                : "bg-transparent"
+              index === -2 ? "bg-background" : "bg-transparent"
             }`}
             bottomInset={footerHeight}
             showSignUpWordmark={index === -1}
