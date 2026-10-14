@@ -22,12 +22,15 @@ const LAYOUT = new Layout({ fit: Fit.Cover, alignment: Alignment.Center });
 export function ReactionsHex({
   className,
   artboard = REACTIONS_ARTBOARD,
+  stateMachine = REACTIONS_STATE_MACHINE,
   typing,
   selectedOption,
 }: {
   className?: string;
   /** Which reactions artboard to play. */
   artboard?: string;
+  /** The artboard's state machine. */
+  stateMachine?: string;
   /** Set anew (`Date.now()`) on every option pick. */
   typing: number;
   /** 1-based index of the picked option, 0 for none. */
@@ -35,7 +38,7 @@ export function ReactionsHex({
 }) {
   const { RiveComponent, ready, fireTrigger, setNumber } = useHexRive(
     LAYOUT,
-    REACTIONS_STATE_MACHINE,
+    stateMachine,
     artboard,
   );
 

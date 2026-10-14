@@ -134,7 +134,7 @@ export function TimeSliderScreen({
     <div
       className={`flex min-h-0 flex-col items-center px-4 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}
     >
-      <h1 className={`mx-auto w-full max-w-[350px] shrink-0 text-left ${ONBOARDING_QUESTION_CLASS}`}>
+      <h1 className={`mx-auto w-full max-w-72 shrink-0 text-center ${ONBOARDING_QUESTION_CLASS}`}>
         {heading.map((span, i) => (
           <span key={i} className={span.highlight ? "text-brand-gradient" : undefined}>
             {span.text}
@@ -279,6 +279,14 @@ export function TimeSliderScreen({
           </g>
         </svg>
       </div>
+
+      <p className="mt-4 flex w-full max-w-72 shrink-0 items-center justify-center gap-3 rounded-lg bg-[#EFF9FA] px-2 py-4.5 text-base font-medium leading-[1.34] text-[#1A1C22] dark:bg-white/5 dark:text-white">
+        <svg aria-hidden viewBox="0 0 24 24" className="h-8.25 w-8.25 shrink-0 fill-[#00B8A9]">
+          <path d="M9 3l1.6 4.4L15 9l-4.4 1.6L9 15l-1.6-4.4L3 9l4.4-1.6L9 3z" />
+          <path d="M18 12l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5z" />
+        </svg>
+        <span className="w-52">Even {minutes} minutes a day can build a great habit!</span>
+      </p>
       </div>
     </div>
   );

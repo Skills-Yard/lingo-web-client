@@ -65,6 +65,8 @@ interface QuestionHeadingProps {
   hex?: ReactNode;
   /** Text style of the heading — the 20px question style by default. */
   headingClassName?: string;
+  /** Full-width (335px) heading with nothing beside it — under a scene. */
+  wide?: boolean;
 }
 
 /**
@@ -112,6 +114,7 @@ export function QuestionHeading({
   foxMode = "tablet",
   hex,
   headingClassName = ONBOARDING_QUESTION_CLASS,
+  wide = false,
 }: QuestionHeadingProps) {
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
@@ -146,7 +149,7 @@ export function QuestionHeading({
           )}
         </div>
       )}
-      <h1 className={`max-w-60 text-left sm:max-w-72 ${headingClassName}`}>
+      <h1 className={`${wide ? "w-full max-w-[335px]" : "max-w-60 sm:max-w-72"} text-left ${headingClassName}`}>
         {parts.map(({ span, cut }, i) => (
           <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
         ))}

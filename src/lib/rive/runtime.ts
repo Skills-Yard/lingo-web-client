@@ -205,6 +205,23 @@ export const REACTIONS_OPTION = "option";
 export const REACTIONS_SELECT_TRIGGER = "select";
 
 /**
+ * Day / night — the "DayNight" artboard in `hex.riv`, the best-time-of-day
+ * question's scene (city skyline, sun and Hex). `daynight_sm` takes the same
+ * `option` (1-4) + `select` inputs as the reactions artboard.
+ */
+export const DAYNIGHT_ARTBOARD = "DayNight";
+export const DAYNIGHT_STATE_MACHINE = "DayNight_SM";
+/** The artboard's view model: one trigger per time of day, played on pick. */
+export const DAYNIGHT_VIEW_MODEL = "DayNight";
+/** Learning-time option id -> `DAYNIGHT_VIEW_MODEL` trigger. */
+export const DAYNIGHT_TRIGGERS: Record<string, string> = {
+  morning: "morning",
+  afternoon: "noon",
+  evening: "evening",
+  night: "night",
+};
+
+/**
  * Full-screen Hex scenes in `hex.riv` — an artboard the size of the screen,
  * played in place of the flow's fox (see OnboardingStep's `hexScene`).
  * "09": Hex's "onboarding complete" moment, one-shot, no inputs.

@@ -14,6 +14,8 @@ import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHe
 import { QuestionListOptions } from "./QuestionListScreen";
 import { QuestionGridOptions } from "./QuestionGridScreen";
 import { ReactionsHex } from "./robu/ReactionsHex";
+import { DayNightHex } from "./robu/DayNightHex";
+import { DAYNIGHT_ARTBOARD } from "@/lib/rive/runtime";
 
 type QuestionScreenProps = {
   /** Changes with each question; the options fade in anew when it does. */
@@ -28,6 +30,8 @@ type QuestionScreenProps = {
   hexMode?: QuestionHexMode;
   /** Artboard for `hexMode: "reactions"` — defaults to the first one. */
   reactionsArtboard?: string;
+  /** State machine of that artboard — defaults to `Reactions_SM`. */
+  reactionsStateMachine?: string;
   /** "row": Zox beside the heading — see QuestionHeading. */
   zoxLayout?: "row";
   className?: string;
@@ -59,6 +63,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
     muted = false,
     hexMode,
     reactionsArtboard,
+    reactionsStateMachine,
     className,
   } = props;
 
@@ -78,8 +83,30 @@ export function QuestionScreen(props: QuestionScreenProps) {
     onSelect(id);
   };
 
+  // The day/night question is a full-width scene above the heading rather
+  // than a Hex beside it.
+  const scene = hexMode === "reactions" && reactionsArtboard === DAYNIGHT_ARTBOARD;
+
   return (
     <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
+      {scene && (
+        // Figma "image 247": 457x303, centred on the 390px screen (the
+        // sides crop), heading right under it.
+        // Scaled down on shorter screens so the heading, options and CTA all
+        // fit without scrolling.
+        <div aria-hidden className="relative -mx-4 h-[min(240px,28dvh)] shrink-0 overflow-hidden">
+          <div className="absolute left-1/2 top-0 aspect-[457/303] h-full -translate-x-1/2">
+            <DayNightHex
+              className="h-full w-full"
+              typing={typing}
+              selectedId={selectedId}
+            />
+          </div>
+          {/* Figma "Rectangle 182": the page colour curving over the scene's
+            bottom edge. */}
+          <div className="absolute inset-x-[-48px] bottom-0 hidden h-6 rounded-t-[123px_24px] bg-background dark:block" />
+        </div>
+      )}
       {/* Same Hex-beside-heading row on every question, tiles included. */}
       <QuestionHeading
         heading={heading}
@@ -87,15 +114,17 @@ export function QuestionScreen(props: QuestionScreenProps) {
         talking={voice.playing}
         typing={typing}
         screenId={questionId}
+        wide={scene}
         spokenOption={spokenOption}
         layout={props.zoxLayout === "row" ? "row" : "stacked"}
         showFox={tiles || hexMode !== "reactions"}
         foxMode={tiles || hexMode === "onboarding" ? "onboarding" : "tablet"}
         hex={
-          hexMode === "reactions" ? (
+          hexMode === "reactions" && !scene ? (
             <ReactionsHex
               key={reactionsArtboard}
               artboard={reactionsArtboard}
+              stateMachine={reactionsStateMachine}
               className="h-full w-full"
               typing={typing}
               selectedOption={selectedOption}

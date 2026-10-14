@@ -2,6 +2,8 @@ import type { LucideIcon } from "lucide-react";
 import {
   HEX_SCENE,
   REACTIONS_ARTBOARD,
+  DAYNIGHT_ARTBOARD,
+  DAYNIGHT_STATE_MACHINE,
   type HexScene,
 } from "@/lib/rive/runtime";
 
@@ -471,6 +473,8 @@ export type OnboardingStep =
       hexMode?: QuestionHexMode;
       /** The artboard played for `hexMode: "reactions"`. */
       reactionsArtboard?: string;
+      /** State machine of that artboard (default `Reactions_SM`). */
+      reactionsStateMachine?: string;
       cta: string;
     };
 
@@ -671,7 +675,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     options: LEARNING_TIME_OPTIONS,
     answerKey: "learningTime",
     hexMode: "reactions",
-    reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsArtboard: DAYNIGHT_ARTBOARD,
+    reactionsStateMachine: DAYNIGHT_STATE_MACHINE,
     cta: "Continue",
   },
   {
