@@ -10,9 +10,10 @@ import {
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
 
-// Contain: the whole scene (sun/moon at the top, Hex at the bottom) stays in
-// view rather than being cropped to the slot.
-const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+// FitWidth, pinned to the top: the scene always spans the full screen width and
+// sits flush under the header. The slot's aspect ratio matches the artboard, so
+// nothing is cropped.
+const LAYOUT = new Layout({ fit: Fit.FitWidth, alignment: Alignment.TopCenter });
 
 /**
  * The "DayNight" artboard's `DayNight_SM`: picking Morning / Afternoon /

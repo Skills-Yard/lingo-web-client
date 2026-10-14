@@ -25,6 +25,7 @@ export function ReactionsHex({
   stateMachine = REACTIONS_STATE_MACHINE,
   typing,
   selectedOption,
+  questionId,
 }: {
   className?: string;
   /** Which reactions artboard to play. */
@@ -35,8 +36,10 @@ export function ReactionsHex({
   typing: number;
   /** 1-based index of the picked option, 0 for none. */
   selectedOption: number;
+  /** Changes with each question; the state machine returns to its default. */
+  questionId: string;
 }) {
-  const { RiveComponent, ready, fireTrigger, setNumber } = useHexRive(
+  const { RiveComponent, ready, fireTrigger, setNumber, reset } = useHexRive(
     LAYOUT,
     stateMachine,
     artboard,
@@ -55,6 +58,15 @@ export function ReactionsHex({
     lastTyping.current = typing;
     react();
   }, [ready, typing, react]);
+
+  // The same canvas carries over to the next question, so send the machine
+  // back to its entry state rather than leaving the last pick's reaction up.
+  const lastQuestionId = useRef(questionId);
+  useEffect(() => {
+    if (!ready || questionId === lastQuestionId.current) return;
+    lastQuestionId.current = questionId;
+    reset();
+  }, [ready, questionId, reset]);
 
   return (
     <div aria-hidden className={className}>

@@ -13,6 +13,8 @@ interface QuestionListOptionsProps {
   /** Index of the option the voice is reading right now, or -1. */
   spokenOption: number;
   onPick: (id: string) => void;
+  /** Shorter tiles, for the day/night question. */
+  compact?: boolean;
 }
 
 /**
@@ -28,6 +30,7 @@ export function QuestionListOptions({
   selectedId,
   spokenOption,
   onPick,
+  compact,
 }: QuestionListOptionsProps) {
   // If the options scroll (short phones), keep the one being read in view.
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -53,6 +56,7 @@ export function QuestionListOptions({
         selectedId={selectedId}
         spokenOption={spokenOption}
         onPick={onPick}
+        compact={compact}
       />
     );
   }

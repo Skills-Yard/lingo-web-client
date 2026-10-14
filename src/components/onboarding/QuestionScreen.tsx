@@ -90,11 +90,13 @@ export function QuestionScreen(props: QuestionScreenProps) {
   return (
     <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
       {scene && (
-        // Figma "image 247": 457x303, centred on the 390px screen (the
-        // sides crop), heading right under it.
-        // Scaled down on shorter screens so the heading, options and CTA all
-        // fit without scrolling.
-        <div aria-hidden className="relative -mx-4 h-[min(240px,28dvh)] shrink-0 overflow-hidden">
+        // Full-width, top-aligned under the header (pt-3 clears the progress
+        // bar and buttons). Height follows the artboard's 260:267 ratio so the
+        // scene always fills the full screen width (Fit.FitWidth).
+        <div
+          aria-hidden
+          className="relative -mx-4 mt-3 aspect-260/267 shrink-0 overflow-hidden"
+        >
           <div className="absolute inset-0">
             <DayNightHex
               className="h-full w-full"
@@ -128,6 +130,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
               className="h-full w-full"
               typing={typing}
               selectedOption={selectedOption}
+              questionId={questionId}
             />
           ) : undefined
         }
@@ -147,6 +150,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
             selectedId={selectedId}
             spokenOption={spokenOption}
             onPick={pick}
+            compact={scene}
           />
         ) : (
           <QuestionGridOptions
