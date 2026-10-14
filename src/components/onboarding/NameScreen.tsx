@@ -18,6 +18,9 @@ interface NameScreenProps {
 /** Wait for the screen's crossfade before raising the keyboard. */
 const FOCUS_DELAY_MS = 450;
 
+/** Hex's size — the same as on every bubble screen (FoxMessageScreen). */
+const FOX_SIZE = "min(15rem, 30dvh)";
+
 /**
  * "What should I call you?": the question sits in Zox's speech bubble, with
  * the text field as the bubble's second line (a dashed underline, as in the
@@ -33,11 +36,15 @@ export function NameScreen({ prompt, value, onChange, onSubmit, className }: Nam
 
   return (
     <div className={`flex min-h-0 flex-col items-center px-6 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}>
+      {/* Same layout as the other bubble screens: Hex centred, the bubble's
+        bottom edge a fixed gap above him, growing upward. */}
+      <div className="relative min-h-0 w-full flex-1">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}
-        className="shrink-0"
+        className="absolute left-1/2 z-10 w-max -translate-x-1/2"
+        style={{ bottom: `calc(50% + ${FOX_SIZE} / 2 + 8px)` }}
       >
         <DialogueBubble
           tail="down"
@@ -64,12 +71,11 @@ export function NameScreen({ prompt, value, onChange, onSubmit, className }: Nam
         </DialogueBubble>
       </motion.div>
 
-      <div className="relative min-h-0 w-full flex-1">
         <FoxSlot
           beat="showQuestion"
           beatDue
-          className="absolute left-1/2 top-[6dvh] aspect-square -translate-x-1/2"
-          style={{ height: "min(15rem, 30dvh)" }}
+          className="absolute left-1/2 top-1/2 aspect-square -translate-x-1/2 -translate-y-1/2"
+          style={{ height: FOX_SIZE }}
         />
       </div>
     </div>
