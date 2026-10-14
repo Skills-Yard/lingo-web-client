@@ -44,11 +44,17 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
               length and grows to this one's. */}
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
             <motion.div
-              className="h-full rounded-full bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3]"
+              className="relative h-full rounded-full bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3]"
               initial={{ width: `${((progress.step - 1) / progress.total) * 100}%` }}
               animate={{ width: `${(progress.step / progress.total) * 100}%` }}
               transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-            />
+            >
+              {/* Glossy shine: a soft light stripe along the top of the fill. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-x-1.5 top-[1.5px] h-[2px] rounded-full bg-white/45"
+              />
+            </motion.div>
           </div>
         </div>
       )}

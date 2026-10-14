@@ -77,7 +77,7 @@ export function QuestionGridOptions({
             className={`flex flex-col overflow-hidden ${three ? "h-[130px] w-[108px]" : "h-[150px] w-[138px]"} text-center ${optionCardClass(selected, spotlight, true)}`}
           >
             <span
-              className={`flex min-h-0 w-full flex-1 items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 dark:bg-[#0F1F26] dark:p-2.5 ${
+              className={`flex min-h-0 w-full flex-1 items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 dark:p-2.5 ${
                 lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >
@@ -94,7 +94,7 @@ export function QuestionGridOptions({
               )}
             </span>
             <span
-              className={`${poppins.className} flex w-full shrink-0 items-center justify-center px-2 text-balance ${three ? "h-[40px] text-[12px]" : "h-[43.65px] text-[14px]"} font-medium leading-[1.3] text-[#2C2C2C] dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] dark:bg-[#3F4C51]${
+              className={`${poppins.className} flex w-full shrink-0 items-center justify-center px-2 text-balance ${three ? "h-[40px] text-[12px]" : "h-[43.65px] text-[14px]"} font-medium leading-[1.3] text-[#2C2C2C] dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] dark:bg-white/20 ${
                 lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >
