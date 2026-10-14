@@ -50,12 +50,15 @@ export function QuestionGridOptions({
     });
   }, [spokenOption]);
 
+  // More than four options: three cards per row (narrower, same design).
+  const three = options.length > 4;
+
   return (
     // `auto-rows-max` keeps each row the full tile height: on short screens
     // auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
     // over the gap into the next row. Now the gap is always gap-y-3 and the
     // grid scrolls instead.
-    <div ref={optionsRef} className="scrollbar-none mx-auto mt-4 grid w-full max-w-[306px] min-h-0 flex-1 grid-cols-[138px_138px] auto-rows-max content-start justify-between gap-y-[29px] overflow-y-auto px-0 pt-1 pb-2 sm:mt-5">
+    <div ref={optionsRef} className={`scrollbar-none mx-auto mt-4 grid w-full ${three ? "max-w-[358px] grid-cols-[repeat(3,minmax(0,108px))] gap-y-6" : "max-w-[306px] grid-cols-[138px_138px] gap-y-[29px]"} min-h-0 flex-1 auto-rows-max content-start justify-between overflow-y-auto px-0 pt-1 pb-2 sm:mt-5`}>
       {options.map((option, i) => {
         const selected = option.id === selectedId;
         const spotlight = !selected && i === spokenOption;
@@ -70,11 +73,11 @@ export function QuestionGridOptions({
             // strip, straight on the card (no tinted panel). Light: the
             // card's own khaki bottom edge from optionCardClass. Dark: each
             // segment draws its own stroke (#818185 idle, #00B8A9 selected),
-            // the picture on #0F1F26 and the label on 20% white.
-            className={`flex h-[150px] w-[138px] flex-col overflow-hidden text-center ${optionCardClass(selected, spotlight, true)}`}
+            // the picture with no fill and the label on 20% white.
+            className={`flex flex-col overflow-hidden ${three ? "h-[130px] w-[108px]" : "h-[150px] w-[138px]"} text-center ${optionCardClass(selected, spotlight, true)}`}
           >
             <span
-              className={`flex min-h-0 w-full flex-1 items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 dark:bg-[#0F1F26] dark:p-2.5 ${
+              className={`flex min-h-0 w-full flex-1 items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 dark:p-2.5 ${
                 lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >
@@ -91,7 +94,7 @@ export function QuestionGridOptions({
               )}
             </span>
             <span
-              className={`${poppins.className} flex h-[43.65px] w-full shrink-0 items-center justify-center px-2 text-balance text-[14px] font-medium leading-[1.4] text-[#2C2C2C] dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] dark:bg-white/20 ${
+              className={`${poppins.className} flex w-full shrink-0 items-center justify-center px-2 text-balance ${three ? "h-[40px] text-[12px]" : "h-[43.65px] text-[14px]"} font-medium leading-[1.3] text-[#2C2C2C] dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] dark:bg-white/20 ${
                 lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >

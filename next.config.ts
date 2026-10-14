@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
     "172.25.48.1",
     "172.17.48.1",
     "9f84-103-95-120-2.ngrok-free.app",
+    "1b9e-103-95-123-190.ngrok-free.app",
   ],
 };
 

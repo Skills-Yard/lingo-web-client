@@ -168,25 +168,25 @@ export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
     id: "morning",
     label: "Morning",
     illustration: "books",
-    image: "/images/screen-06/06-1.png",
+    image: "/images/screen-06/06-1-new.png",
   },
   {
     id: "afternoon",
     label: "Afternoon",
     illustration: "mobile",
-    image: "/images/screen-06/06-2.png",
+    image: "/images/screen-06/06-2-new.png",
   },
   {
     id: "evening",
     label: "Evening",
     illustration: "chart",
-    image: "/images/screen-06/06-3.png",
+    image: "/images/screen-06/06-3-new.png",
   },
   {
     id: "night",
     label: "Night",
     illustration: "trophy",
-    image: "/images/screen-06/06-4.png",
+    image: "/images/screen-06/06-4-new.png",
   },
 ];
 
@@ -198,25 +198,25 @@ export const EXPERIENCE_OPTIONS: OnboardingGridOption[] = [
     id: "none",
     label: "No experience",
     illustration: "books",
-    image: "/images/screen-02/02-1-new.png",
+    image: "/images/screen-03/03-1-new.png",
   },
   {
     id: "little",
     label: "A little exposure",
     illustration: "mobile",
-    image: "/images/screen-02/02-2-new.png",
+    image: "/images/screen-03/03-2-new.png",
   },
   {
     id: "hands-on",
     label: "Hands-on",
     illustration: "chart",
-    image: "/images/screen-02/02-3-new.png",
+    image: "/images/screen-03/03-3-new.png",
   },
   {
     id: "professional",
     label: "Professional",
     illustration: "trophy",
-    image: "/images/screen-02/02-4-new.png",
+    image: "/images/screen-03/03-4-new.png",
   },
 ];
 
@@ -225,25 +225,25 @@ export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
     id: "never",
     label: "Never used",
     illustration: "books",
-    image: "/images/screen-03/03-1.png",
+    image: "/images/screen-02/02-1-new.png",
   },
   {
     id: "basics",
     label: "Know the basics",
     illustration: "mobile",
-    image: "/images/screen-03/03-2.png",
+    image: "/images/screen-02/02-2-new.png",
   },
   {
     id: "hands-on-coder",
     label: "Hands-on coder",
     illustration: "chart",
-    image: "/images/screen-03/03-3.png",
+    image: "/images/screen-02/02-3-new.png",
   },
   {
     id: "professional",
     label: "Professional",
     illustration: "trophy",
-    image: "/images/screen-03/03-4.png",
+    image: "/images/screen-02/02-4-new.png",
   },
 ];
 

@@ -29,6 +29,12 @@ const FOX_MAX_DVH = 52;
 const FOX_SIZE = `min(${FOX_MAX_REM}rem, ${FOX_MAX_DVH}dvh)`;
 const FOX_HALF = `min(${FOX_MAX_REM / 2}rem, ${FOX_MAX_DVH / 2}dvh)`;
 const FOX_CENTER = 0.67;
+/** On short ("cut") viewports the fox sits a little higher, closer to the
+ * bubble — the bubble itself stays where it is. */
+const SHORT_SCREEN_PX = 700;
+const FOX_CENTER_SHORT = 0.62;
+const foxCenterFor = (viewportHeight: number) =>
+  viewportHeight < SHORT_SCREEN_PX ? FOX_CENTER_SHORT : FOX_CENTER;
 /** The fox never shrinks below this (px) to make room for text below. */
 const FOX_MIN_PX = 128;
 /** Breathing room kept between the text and the edges of that space. */
@@ -217,6 +223,7 @@ export function FoxMessageScreen({
   const aboveRef = useRef<HTMLDivElement>(null);
   const belowRef = useRef<HTMLDivElement>(null);
   const [lift, setLift] = useState(0);
+  const [center, setCenter] = useState(FOX_CENTER);
   const [shrunk, setShrunk] = useState<{ size: number; top: number } | null>(null);
   useEffect(() => {
     const stage = stageRef.current;
@@ -231,7 +238,9 @@ export function FoxMessageScreen({
       const belowHeight = belowRef.current?.offsetHeight ?? 0;
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
       const size = Math.min(FOX_MAX_REM * rem, (FOX_MAX_DVH / 100) * window.innerHeight);
-      const top = FOX_CENTER * stageHeight - size / 2;
+      const foxCenter = foxCenterFor(window.innerHeight);
+      setCenter(foxCenter);
+      const top = foxCenter * stageHeight - size / 2;
 
       const overflow = top + size + belowHeight + EDGE_GAP_PX - stageHeight;
       const room = Math.max(0, top - aboveHeight - EDGE_GAP_PX);
@@ -289,7 +298,7 @@ export function FoxMessageScreen({
           ref={foxRef}
           className="absolute left-1/2 -translate-x-1/2"
           style={{
-            top: shrunk ? shrunk.top : `calc(${FOX_CENTER * 100}% - ${FOX_HALF})`,
+            top: shrunk ? shrunk.top : `calc(${center * 100}% - ${FOX_HALF})`,
           }}
           animate={{ y: -lift }}
           transition={reduceMotion ? { duration: 0 } : LIFT}

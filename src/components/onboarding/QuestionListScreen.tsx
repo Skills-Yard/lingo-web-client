@@ -3,10 +3,11 @@
 import { useEffect, useRef } from "react";
 import type { OnboardingListOption } from "@/lib/constants/onboarding";
 import { optionCardClass } from "./optionCard";
+import { QuestionGridOptions } from "./QuestionGridScreen";
 
 interface QuestionListOptionsProps {
   options: OnboardingListOption[];
-  /** "tiles": a 3-column grid of icon-over-label tiles instead of rows. */
+  /** "tiles": the picture-card grid (see QuestionGridOptions) instead of rows. */
   variant?: "tiles";
   selectedId: string | null;
   /** Index of the option the voice is reading right now, or -1. */
@@ -38,58 +39,21 @@ export function QuestionListOptions({
     });
   }, [spokenOption]);
 
+  // The career question: the same illustrated 2-column cards as the other
+  // picture questions (experience, Python level, time of day).
   if (variant === "tiles") {
     return (
-      // The scroll area spans the screen's full width (-mx-4 px-4) so the
-      // tiles' soft shadow isn't clipped at the sides; inside it, the Figma
-      // grid: 358px wide, three 108px columns spread edge to edge, rows 24px
-      // apart, starting 37px below the heading row.
-      <div className="scrollbar-none -mx-4 mt-[33px] min-h-0 flex-1 overflow-y-auto px-4 pt-1 pb-3">
-        <div ref={optionsRef} className="mx-auto grid w-full max-w-[358px] grid-cols-[repeat(3,minmax(0,108px))] auto-rows-max justify-between gap-x-[9px] gap-y-6">
-          {options.map((option, i) => {
-            const selected = option.id === selectedId;
-            const spotlight = !selected && i === spokenOption;
-            const imageSize = option.imageSize ?? { width: 54, height: 55 };
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => onPick(option.id)}
-                // Figma "Frame 128": 108x118, 18px padding, 5px gap, #F7F8FA
-                // with a 6px khaki bottom edge. Selected swaps the edge for
-                // the brand colour and adds a 3px ring (box-shadow, so the
-                // content never shifts). A `compact` tile (one-line label,
-                // e.g. DevOps) is 8px/18px padded and top-aligned.
-                className={`box-border flex h-[118px] flex-col items-center gap-[5px] rounded-[8px] border-0 border-b-[6px] bg-[#F7F8FA] text-center transition-[box-shadow,border-color,scale] duration-200 active:scale-[0.97] dark:bg-[#15181E] ${
-                  option.compact ? "justify-start px-[18px] py-2" : "justify-center p-[18px]"
-                } ${
-                  selected || spotlight
-                    ? "border-b-primary shadow-[0_0_0_3px_var(--color-primary),1px_1px_9.4px_rgba(0,184,169,0.7)]"
-                    : "border-b-[#BDBA99] shadow-[1px_1px_9.4px_rgba(0,0,0,0.16)] dark:border-b-[#2A2E37]"
-                }`}
-              >
-                {option.image && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={option.image}
-                    alt=""
-                    draggable={false}
-                    style={imageSize}
-                    className="shrink-0 object-contain"
-                  />
-                )}
-                <span
-                  className={`text-[14px] font-medium text-[#444444] dark:text-white ${
-                    option.wideLabel ? "w-[94px] shrink-0" : "self-stretch"
-                  } ${option.compact ? "leading-[1.24]" : "leading-[1.28]"}`}
-                >
-                  {option.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
+      <QuestionGridOptions
+        options={options.map(({ id, label, image }) => ({
+          id,
+          label,
+          image,
+          illustration: "books",
+        }))}
+        selectedId={selectedId}
+        spokenOption={spokenOption}
+        onPick={onPick}
+      />
     );
   }
 
