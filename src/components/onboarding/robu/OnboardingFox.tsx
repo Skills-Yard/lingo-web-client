@@ -88,16 +88,16 @@ interface OnboardingFoxProps {
   screenKey?: string | null;
 }
 
-/** `showQuestion` at once whenever the `Onboarding` machine lands on a new screen. */
-function useShowQuestionOnNewScreen(
-  fireNow: (name: string) => void,
+/** Restarts the `Onboarding` machine from idle whenever it lands on a new screen. */
+function useResetOnNewScreen(
+  reset: () => void,
   ready: boolean,
   onboarding: boolean,
   screenKey: string | null,
 ) {
   useEffect(() => {
-    if (ready && onboarding) fireNow(HEX_ONBOARDING_TRIGGER.showQuestion);
-  }, [fireNow, ready, onboarding, screenKey]);
+    if (ready && onboarding) reset();
+  }, [reset, ready, onboarding, screenKey]);
 }
 
 /** `showQuestion` once per new `questionKey`, `selectOption` on each pick. */
@@ -184,13 +184,13 @@ export function OnboardingFox({
   else if (waving) state = HEX_STATE.hello;
   else if (excited) state = HEX_STATE.excited;
 
-  const { RiveComponent, ready, fireTrigger, fireNow } = useHexRive(LAYOUT, state);
-  // Before the hooks below, so `showQuestion` goes out ahead of the screen's
-  // triggers. Not on "Are you ready?", which goes straight to its `ready`.
-  useShowQuestionOnNewScreen(
-    fireNow,
+  const { RiveComponent, ready, fireTrigger, reset } = useHexRive(LAYOUT, state);
+  // Before the hooks below, so the machine is back at idle ahead of the
+  // screen's triggers.
+  useResetOnNewScreen(
+    reset,
     ready,
-    state === HEX_STATE.onboarding && beat !== "ready",
+    state === HEX_STATE.onboarding,
     screenKey,
   );
   useOnboardingBeat(fireTrigger, ready, beat, beatKey, talkKey, tapCount);

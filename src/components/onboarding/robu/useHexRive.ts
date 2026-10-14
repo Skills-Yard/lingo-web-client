@@ -57,23 +57,38 @@ export function useHexRive(
 
   const queue = useRef<string[]>([]);
   const gapTimer = useRef<number | undefined>(undefined);
+  const drain = useCallback(() => {
+    const next = queue.current.shift();
+    if (next === undefined) {
+      gapTimer.current = undefined;
+      return;
+    }
+    viewModelInstance?.trigger(next)?.trigger();
+    gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);
+  }, [viewModelInstance]);
+
   const fireTrigger = useCallback(
     (name: string) => {
       queue.current.push(name);
       if (gapTimer.current !== undefined) return;
-      const drain = () => {
-        const next = queue.current.shift();
-        if (next === undefined) {
-          gapTimer.current = undefined;
-          return;
-        }
-        viewModelInstance?.trigger(next)?.trigger();
-        gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);
-      };
       drain();
     },
-    [viewModelInstance],
+    [drain],
   );
+
+  // Drops queued triggers and restarts the playing machine from its entry
+  // state (idle). Triggers fired afterwards wait one gap, so the machine has
+  // settled into idle before the first one lands.
+  const reset = useCallback(() => {
+    if (!rive) return;
+    window.clearTimeout(gapTimer.current);
+    queue.current = [];
+    const playing = rive.playingStateMachineNames;
+    if (playing.length > 0) rive.stop(playing);
+    if (state && rive.stateMachineNames.includes(state)) rive.play(state);
+    if (viewModelInstance) rive.bindViewModelInstance(viewModelInstance);
+    gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);
+  }, [rive, state, viewModelInstance, drain]);
 
   const fireNow = useCallback(
     (name: string) => {
@@ -116,6 +131,7 @@ export function useHexRive(
     ready: viewModelInstance !== null,
     fireTrigger,
     fireNow,
+    reset,
     setNumber,
     setBoolean,
   };

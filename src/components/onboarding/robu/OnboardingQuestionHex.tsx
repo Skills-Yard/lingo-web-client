@@ -67,18 +67,18 @@ export function OnboardingQuestionHex({
   /** The time-commitment dial's picked minutes. */
   minutes?: number;
 }) {
-  const { RiveComponent, ready, fireTrigger, fireNow, setNumber, setBoolean } = useHexRive(
+  const { RiveComponent, ready, fireTrigger, fireNow, reset, setNumber, setBoolean } = useHexRive(
     LAYOUT,
     HEX_STATE.onboarding,
   );
 
   // Set while the options are being read out.
   const readingOption = useRef<number | null>(null);
-  // Declared before the trigger effects below, so `showQuestion` goes out first.
+  // Declared before the trigger effects below, so the machine is back at idle first.
   useEffect(() => {
     readingOption.current = null;
-    if (ready) fireNow(restTrigger);
-  }, [ready, screenId, fireNow, restTrigger]);
+    if (ready) reset();
+  }, [ready, screenId, reset]);
 
   // `minutes` has to be in place before `counting` flips, so Hex counts to
   // the picked value rather than the previous one.

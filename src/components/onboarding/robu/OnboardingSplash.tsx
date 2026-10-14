@@ -23,10 +23,9 @@ import {
 // requires it for any non-variable Google font.
 const fascinate = Fascinate({ subsets: ["latin"], weight: "400" });
 
-// The "Lingo" wordmark (Figma): Fascinate 60px / 100%, filled with
-// the brand gradient. `bg-clip-text` only paints inside the box, and at 100%
-// line height the "g" hangs out of it — the padding keeps it filled.
-const WORDMARK_CLASS = `${fascinate.className} bg-[linear-gradient(98.77deg,#02DBB5_1.83%,#1289B3_113.52%)] bg-clip-text px-[0.05em] pt-[0.05em] pb-[0.2em] text-center text-[60px] leading-none text-transparent`;
+// The "Lingo" wordmark (Figma): Fascinate 60px / 100%, #444444 in light
+// theme and #E8E8E8 in dark.
+const WORDMARK_CLASS = `${fascinate.className} px-[0.05em] pt-[0.05em] pb-[0.2em] text-center text-[60px] leading-none text-[#444444] dark:text-[#E8E8E8]`;
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
