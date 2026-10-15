@@ -36,6 +36,13 @@ interface QuestionGridOptionsProps {
  * for the other shape (career/motivation, a vertical list). The question row
  * above them (Zox + heading) belongs to QuestionScreen.
  */
+// The day/night cards (design "Group 94"): pastel panel over a white label
+// strip with a khaki bottom edge — the edge turns green when picked.
+const compactCardClass = (selected: boolean, spotlight: boolean) =>
+  `rounded-[5.8px] transition-[scale,translate,outline-color] duration-200 ease-out active:translate-y-[2px] ${
+    selected || spotlight ? "[&>span:last-child]:border-b-primary" : ""
+  } ${spotlight ? "scale-[1.04]" : ""} ${selected ? "outline-2 outline-primary dark:outline-0" : ""}`;
+
 export function QuestionGridOptions({
   options,
   selectedId,
@@ -79,10 +86,11 @@ export function QuestionGridOptions({
             // card's own khaki bottom edge from optionCardClass. Dark: each
             // segment draws its own stroke (#818185 idle, #00B8A9 selected),
             // the picture with no fill and the label on 20% white.
-            className={`flex flex-col overflow-hidden w-full min-w-0 ${compact ? "aspect-139/109" : three ? "aspect-108/130" : "aspect-138/150"} text-center ${optionCardClass(selected, spotlight, true)}`}
+            style={option.tint ? ({ "--tint": option.tint } as React.CSSProperties) : undefined}
+            className={`flex flex-col overflow-hidden w-full min-w-0 ${compact ? "aspect-139/109" : three ? "aspect-108/130" : "aspect-138/150"} text-center ${compact ? compactCardClass(selected, spotlight) : optionCardClass(selected, spotlight, true)}`}
           >
             <span
-              className={`flex min-h-0 w-full flex-1 items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 ${compact ? "dark:bg-[#0F1F26] dark:p-[7px]" : "dark:p-2.5"} ${
+              className={`flex min-h-0 w-full items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 ${compact ? "h-[60.55%] flex-none rounded-t-[5.8px] bg-(--tint) p-[7.25px] dark:rounded-t-[8px] dark:bg-[#0F1F26] dark:p-[7px]" : "flex-1 dark:p-2.5"} ${
                 lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >
@@ -92,14 +100,15 @@ export function QuestionGridOptions({
                   src={option.image}
                   alt=""
                   draggable={false}
-                  className={`h-[calc(100%-1.25rem)] w-[calc(100%-1.25rem)] object-contain ${compact ? "dark:h-[43px] dark:w-[42px]" : "dark:h-[74px] dark:w-[80px]"}`}
+                  style={compact && option.imageSize ? { width: option.imageSize[0], height: option.imageSize[1] } : undefined}
+                  className={`${compact ? "max-h-full max-w-full" : "h-[calc(100%-1.25rem)] w-[calc(100%-1.25rem)]"} object-contain ${compact ? "dark:h-[43px] dark:w-[42px]" : "dark:h-[74px] dark:w-[80px]"}`}
                 />
               ) : (
                 <Icon className={`h-14 w-14 ${fg}`} strokeWidth={1.75} />
               )}
             </span>
             <span
-              className={`${poppins.className} flex w-full shrink-0 items-center justify-center px-2 text-balance ${three ? "h-[40px] text-[12px]" : compact ? "h-[44px] text-[14px]" : "h-[43.65px] text-[14px]"} font-medium ${compact ? "leading-[1.4]" : "leading-[1.3]"} text-[#2C2C2C] dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] ${compact ? "dark:bg-[#3F4C51]" : "dark:bg-white/20"} ${
+              className={`${poppins.className} flex w-full shrink-0 items-center justify-center px-2 text-balance ${three ? "h-[40px] text-[12px]" : compact ? "min-h-0 flex-1 text-[14px]" : "h-[43.65px] text-[14px]"} font-medium ${compact ? "leading-[1.4]" : "leading-[1.3]"} ${compact ? "text-[#444444] bg-white rounded-b-[5.8px] border-b-[4.35px] border-b-[#BDBA99] dark:rounded-b-[8px]" : "text-[#2C2C2C]"} dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] ${compact ? "dark:bg-[#3F4C51]" : "dark:bg-white/20"} ${
                 lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >

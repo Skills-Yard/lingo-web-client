@@ -64,6 +64,10 @@ export interface OnboardingGridOption {
   /** A full-bleed picture for the tile's top panel (drawn at the panel's
    * own 169:134 shape) — takes the place of the `illustration` icon. */
   image?: string;
+  /** Pastel fill behind the picture on the compact (day/night) cards. */
+  tint?: string;
+  /** Picture box (px) on the compact cards, as laid out in the design. */
+  imageSize?: readonly [number, number];
 }
 
 export const CAREER_OPTIONS: OnboardingListOption[] = [
@@ -171,24 +175,32 @@ export const LEARNING_TIME_OPTIONS: OnboardingGridOption[] = [
     label: "Morning",
     illustration: "books",
     image: "/images/screen-06/06-1-v2.png",
+    tint: "#E5EFFD",
+    imageSize: [47, 42],
   },
   {
     id: "afternoon",
     label: "Afternoon",
     illustration: "mobile",
     image: "/images/screen-06/06-2-v2.png",
+    tint: "#FFF3DE",
+    imageSize: [49, 38],
   },
   {
     id: "evening",
     label: "Evening",
     illustration: "chart",
     image: "/images/screen-06/06-3-v2.png",
+    tint: "#EFEAFC",
+    imageSize: [46, 31],
   },
   {
     id: "night",
     label: "Night",
     illustration: "trophy",
     image: "/images/screen-06/06-4-v2.png",
+    tint: "#ECF7ED",
+    imageSize: [40, 41],
   },
 ];
 

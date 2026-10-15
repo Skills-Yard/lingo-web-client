@@ -13,4 +13,4 @@ export const ONBOARDING_QUESTION_CLASS = `text-balance text-[20px] font-semibold
 
 /** The gap between the header and a screen's first element (heading or
  * bubble) — the same on every screen, so they all start on one top line. */
-export const ONBOARDING_TOP_OFFSET_CLASS = "pt-4";
+export const ONBOARDING_TOP_OFFSET_CLASS = "pt-0";
