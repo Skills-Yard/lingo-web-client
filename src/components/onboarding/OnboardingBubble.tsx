@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { DialogueBubble } from "@/components/ui/DialogueBubble";
@@ -11,6 +11,14 @@ import { ONBOARDING_TEXT_CLASS } from "./headingStyle";
 // only start once that entrance has finished (see `onEntered`).
 const BUBBLE_IN_DELAY_S = 0.25;
 const BUBBLE_IN = { type: "spring", stiffness: 420, damping: 26 } as const;
+
+/** The most lines a bubble's text may wrap to; it widens instead. */
+const MAX_LINES = 3;
+/** Widening steps, and the widest a bubble may get (still inside the screen). */
+const WIDEN_STEP_PX = 8;
+const MAX_WIDTH_PX = 448;
+/** Side margin the bubble keeps from the screen's edges (px). */
+const SCREEN_MARGIN_PX = 48;
 
 export function spansLength(spans: TextSpan[]): number {
   return spans.reduce((n, span) => n + span.text.length, 0);
@@ -111,10 +119,40 @@ export function OnboardingBubble({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entered, reduceMotion, show]);
 
+  // Keeps the text to MAX_LINES: starting from the bubble's usual max width,
+  // it widens (up to the screen) until the full text — which TypedText lays
+  // out from the first frame — fits. Its bottom edge and tail never move;
+  // only the width changes.
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLSpanElement>(null);
+  const text = spans.map((span) => span.text).join("");
+  useLayoutEffect(() => {
+    const fit = () => {
+      const wrapper = wrapperRef.current;
+      const textEl = textRef.current;
+      if (!wrapper || !textEl) return;
+      wrapper.style.maxWidth = "";
+      const lineHeight = parseFloat(getComputedStyle(textEl).lineHeight);
+      if (!lineHeight) return;
+      const lines = () => Math.round(textEl.offsetHeight / lineHeight);
+      if (lines() <= MAX_LINES) return;
+      const cap = Math.min(MAX_WIDTH_PX, window.innerWidth - SCREEN_MARGIN_PX);
+      let width = wrapper.getBoundingClientRect().width;
+      while (lines() > MAX_LINES && width < cap) {
+        width = Math.min(cap, width + WIDEN_STEP_PX);
+        wrapper.style.maxWidth = `${width}px`;
+      }
+    };
+    fit();
+    window.addEventListener("resize", fit);
+    return () => window.removeEventListener("resize", fit);
+  }, [text]);
+
   const hidden = { opacity: 0, scale: 0.6, y: tail === "down" ? 12 : -12 };
   return (
     <motion.div
-      className={`inline-block ${className ?? ""}`}
+      ref={wrapperRef}
+      className={`inline-block max-w-[min(17rem,calc(100vw-3rem))] sm:max-w-sm ${className ?? ""}`}
       style={{ transformOrigin: tail === "down" ? "50% 100%" : "50% 0%" }}
       initial={reduceMotion && show ? false : hidden}
       animate={show ? { opacity: 1, scale: 1, y: 0 } : hidden}
@@ -128,10 +166,12 @@ export function OnboardingBubble({
         // The tail overhangs the wrapper on its own side (16px, hence
         // pt-4/pb-4); on the other side the flat shadow still spills 3px past
         // the box, so "up" gets that much room below too.
-        className={`max-w-[min(17rem,calc(100vw-3rem))] sm:max-w-sm [--bubble-fill:var(--background)] ${tail === "up" ? "pt-4 pb-0.75" : "pb-4"}`}
+        className={`[--bubble-fill:var(--background)] ${tail === "up" ? "pt-4 pb-0.75" : "pb-4"}`}
         contentClassName={`whitespace-pre-line text-balance px-3 py-3 text-center sm:px-6 sm:py-3.5 ${ONBOARDING_TEXT_CLASS}`}
       >
-        <TypedText spans={spans} shown={shown} />
+        <span ref={textRef} className="block">
+          <TypedText spans={spans} shown={shown} />
+        </span>
       </DialogueBubble>
     </motion.div>
   );

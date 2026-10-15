@@ -309,23 +309,24 @@ function careerMindBubble(a: OnboardingAnswers): TextSpan[] {
       ];
     case "hands-on-coder":
       return [
-        { text: "Nice! We'll skip the basics and go straight to real " },
+        { text: "Nice! We'll skip the basics and get you into real " },
         career,
         { text: " work." },
       ];
     case "professional":
       return [
-        { text: "Got it. We'll go deep and sharpen your " },
+        {
+          text: "Got it. We'll go deep and sharpen your skills specifically for",
+        },
         career,
-        { text: " skills." },
       ];
     default:
       return [
-        { text: "Perfect start! We'll build your " },
+        { text: "Perfect starting point! We'll build your " },
         { text: `${languageForCareer(a.career)} foundation`, highlight: true },
-        { text: " for " },
+        { text: " with " },
         career,
-        { text: "." },
+        { text: " in mind." },
       ];
   }
 }
@@ -527,10 +528,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "good-news",
     bubble: (a) => [
       { text: "Good news: your " },
-      { text: `${careerLabel(a)} path`, highlight: true },
+      { text: `${careerLabel(a)} journey`, highlight: true },
       { text: " runs on " },
       { text: languageForCareer(a.career), highlight: true },
-      { text: ", a top in-demand language." },
+      { text: ", one of the most in-demand languages." },
     ],
     voiceover: (a) => {
       const src = a.career ? GOOD_NEWS_AUDIO[a.career] : undefined;

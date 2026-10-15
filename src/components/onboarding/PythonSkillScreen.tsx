@@ -7,7 +7,7 @@ const SKILL_LEVELS = [
   { id: "never", label: "Never used", icon: "placeholder-never" },
   { id: "basics", label: "Know the basics", icon: "placeholder-basics" },
   { id: "hands-on", label: "Hands-on coder", icon: "placeholder-handson" },
-  { id: "pro", label: "Professional", icon: "placeholder-pro" },
+  { id: "pro", label: "Advanced", icon: "placeholder-pro" },
 ];
 
 export function PythonSkillScreen({ onNext, onBack }: { onNext?: () => void; onBack?: () => void }) {
