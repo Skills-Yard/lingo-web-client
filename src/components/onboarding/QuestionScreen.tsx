@@ -128,9 +128,6 @@ export function QuestionScreen(props: QuestionScreenProps) {
               selectedId={selectedId}
             />
           </div>
-          {/* Figma "Rectangle 182": the page colour curving over the scene's
-            bottom edge. */}
-          <div className="absolute inset-x-[-48px] bottom-0 hidden h-6 rounded-t-[123px_24px] bg-background dark:block" />
         </div>
       )}
       {/* Same Hex-beside-heading row on every question, tiles included. */}
@@ -141,6 +138,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
         typing={typing}
         screenId={questionId}
         wide={scene}
+        stackOnMobile={tiles}
         spokenOption={spokenOption}
         layout={props.zoxLayout === "row" ? "row" : "stacked"}
         showFox={tiles || hexMode !== "reactions"}

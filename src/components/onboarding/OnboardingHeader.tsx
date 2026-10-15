@@ -11,7 +11,7 @@ const WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
 
 /** Back, light/dark and sound share one look — same size, same weight. */
 const ICON_BUTTON =
-  "w-10 h-10 flex items-center justify-center rounded-full text-[#1A1C22]/70 hover:bg-black/5 transition-all active:scale-95 cursor-pointer dark:text-white/70 dark:hover:bg-white/10";
+  "w-[39px] h-[39px] flex items-center justify-center rounded-md border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
 
 interface OnboardingHeaderProps {
   onBack: () => void;
@@ -40,16 +40,22 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
     if (progress) lastShownStep = progress.step;
   }, [progress]);
   return (
-    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 py-5 select-none">
-      <button type="button" onClick={onBack} className={`shrink-0 ${ICON_BUTTON}`} aria-label="Back">
-        <ChevronLeft className="w-5 h-5" />
+    // Fixed 107px box, placed from the top edge: page count at 51px, bar at
+    // 81px, and the 39px buttons centred on the bar (67.5px).
+    <header className="relative h-[107px] shrink-0 select-none">
+      <button
+        type="button"
+        onClick={onBack}
+        className={`absolute top-[67.5px] left-4 ${ICON_BUTTON}`}
+        aria-label="Back"
+      >
+        <ChevronLeft className="w-5 h-5" strokeWidth={1.4} />
       </button>
 
       {progress && (
-        <div className="relative flex-1 px-0 md:mx-auto md:max-w-sm">
-          {/* Sits above the bar without taking layout space, so the bar
-              itself is what centres on the icons. */}
-          <p className="absolute bottom-full left-0 mb-1 text-xs font-semibold tabular-nums text-[#2C2C2C] dark:text-white">
+        <>
+          {/* Page count: centred between the buttons, 51px from the top. */}
+          <p className="absolute top-[51px] left-1/2 -translate-x-1/2 text-sm leading-[14px] font-medium tabular-nums text-[#2C2C2C] dark:text-white">
             <span className="bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] bg-clip-text text-transparent">
               {String(progress.step).padStart(2, "0")}
             </span>
@@ -58,7 +64,7 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
           {/* One continuous track. Each question's header mounts fresh with
               its screen, so the fill starts at the previous question's
               length and grows to this one's. */}
-          <div className="h-3 w-full overflow-hidden rounded-full bg-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:bg-white/15">
+          <div className="absolute left-[67px] right-[114px] top-[81px] h-3 overflow-hidden rounded-full bg-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:bg-white/15">
             {/* The fill keeps a flat right edge while unfinished — it only
                 rounds off once the bar is full. */}
             <motion.div
@@ -89,10 +95,10 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
               />
             </motion.div>
           </div>
-        </div>
+        </>
       )}
 
-      <div className="flex shrink-0 items-center">
+      <div className="absolute top-[67.5px] right-4 flex items-center gap-2">
         {/* Light/dark switch — the site's own theme (see ThemeContext),
             wiped in diagonally from the top-right corner. */}
         <button
