@@ -46,8 +46,10 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
       </button>
 
       {progress && (
-        <div className="flex-1 px-0 md:mx-auto md:max-w-sm">
-          <p className="mb-1 text-xs font-semibold tabular-nums text-[#2C2C2C] dark:text-white">
+        <div className="relative flex-1 px-0 md:mx-auto md:max-w-sm">
+          {/* Sits above the bar without taking layout space, so the bar
+              itself is what centres on the icons. */}
+          <p className="absolute bottom-full left-0 mb-1 text-xs font-semibold tabular-nums text-[#2C2C2C] dark:text-white">
             <span className="bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] bg-clip-text text-transparent">
               {String(progress.step).padStart(2, "0")}
             </span>
