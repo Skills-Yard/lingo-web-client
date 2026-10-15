@@ -126,7 +126,7 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   {
     id: "switching-careers",
-    label: "Switching careers into tech",
+    label: "Switching careers ",
     image: "/images/screen-04/04-new-1.png",
   },
   {
@@ -255,7 +255,7 @@ export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
   },
   {
     id: "professional",
-    label: "Professional",
+    label: "Advanced",
     illustration: "trophy",
     image: "/images/screen-02/02-4-new.png",
   },
@@ -435,6 +435,7 @@ export type OnboardingStep =
       kind: "notification-permission";
       id: string;
       heading: string;
+      voiceover?: StepVoiceover;
       cta: string;
     }
   | {
@@ -442,6 +443,7 @@ export type OnboardingStep =
       id: string;
       /** The bubble's question, above the text field. */
       prompt: string;
+      voiceover?: StepVoiceover;
       cta: string;
     }
   | {
@@ -449,6 +451,7 @@ export type OnboardingStep =
       id: string;
       heading: (answers: OnboardingAnswers) => TextSpan[];
       answerKey: keyof OnboardingAnswers;
+      voiceover?: StepVoiceover;
       cta: string;
     }
   | {
@@ -457,6 +460,7 @@ export type OnboardingStep =
       heading: (answers: OnboardingAnswers) => TextSpan[];
       /** The home-screen mockup with the streak widget. */
       image: string;
+      voiceover?: StepVoiceover;
       cta: string;
     }
   | {
@@ -472,6 +476,12 @@ export type OnboardingStep =
       answerKey: keyof OnboardingAnswers;
       voiceover?: StepVoiceover;
       hexMode?: QuestionHexMode;
+      /** The artboard played for `hexMode: "reactions"`. */
+      reactionsArtboard?: string;
+      /** State machine of that artboard (default `Reactions_SM`). */
+      reactionsStateMachine?: string;
+      /** `screen` value set on the reactions artboard's data. */
+      reactionsScreen?: number;
       cta: string;
     }
   | {
@@ -488,6 +498,8 @@ export type OnboardingStep =
       reactionsArtboard?: string;
       /** State machine of that artboard (default `Reactions_SM`). */
       reactionsStateMachine?: string;
+      /** `screen` value set on the reactions artboard's data. */
+      reactionsScreen?: number;
       cta: string;
     };
 
@@ -528,7 +540,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: CAREER_OPTIONS,
     answerKey: "career",
-    hexMode: "onboarding",
+    hexMode: "reactions",
+    reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 2,
     voiceover: ["/audios/chasing.mp3", "/audios/screen-1-options.mpeg"],
     cta: "Continue",
   },
@@ -537,8 +551,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "good-news",
     bubble: (a) => [
       { text: "Good news: your " },
-      { text: `${careerLabel(a)} journey`, highlight: true },
-      { text: " runs on " },
+      { text: `${careerLabel(a)}`, highlight: true },
+      { text: " journey runs on " },
       { text: languageForCareer(a.career), highlight: true },
       { text: ", one of the most in-demand languages." },
     ],
@@ -564,6 +578,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     answerKey: "pythonLevel",
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 0,
     voiceover: ["/audios/WYP_Ques.m4a", "/audios/WYP_Options.m4a"],
     cta: "Continue",
   },
@@ -579,6 +594,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     answerKey: "experience",
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 0,
     voiceover: ["/audios/HYW_Ques.m4a", "/audios/HYW_Options.m4a"],
     cta: "Continue",
   },
@@ -609,6 +625,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "name-input",
     id: "name",
     prompt: "What should I call you?",
+    voiceover: ["/audios/call-u.mp3"],
     cta: "Continue",
   },
   {
@@ -623,6 +640,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     options: MOTIVATION_OPTIONS,
     answerKey: "motivation",
     hexMode: "onboarding",
+    voiceover: ["/audios/wish-to-achive.m4a", "/audios/wish-to-achive-option.mp3"],
     cta: "Continue",
   },
   {
@@ -631,9 +649,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     heading: (a) => [
       { text: "How much " },
       { text: "time", highlight: true },
-      { text: ` can you give ${careerLabel(a)} each day?` },
+      { text: " can you dedicate to learning each day?" },
     ],
     answerKey: "timeCommitment",
+    voiceover: ["/audios/HMT_Ques.m4a"],
     cta: "Continue",
   },
   {
@@ -650,23 +669,26 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: DAYNIGHT_ARTBOARD,
     reactionsStateMachine: DAYNIGHT_STATE_MACHINE,
+    voiceover: ["/audios/best_time_Ques.m4a", "/audios/best_time_Option.m4a"],
     cta: "Continue",
   },
   {
     kind: "notification-permission",
     id: "notifications",
     heading: "Get notified when it’s time to learn.",
+    voiceover: ["/audios/notified.mp3"],
     cta: "Allow Notifications",
   },
   {
     kind: "streak",
     id: "streak",
     heading: () => [
-      { text: "Let’s keep your " },
-      { text: "coding streak", highlight: true },
-      { text: " going! Stay one tap from your next lesson." },
+      { text: "Stay " },
+      { text: "one tap away", highlight: true },
+      { text: " from your next lesson." },
     ],
     image: "/images/codingStreak/codingStreak-3.png",
+    voiceover: ["/audios/stay.mp3"],
     cta: "Continue",
   },
   {
@@ -674,12 +696,13 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "three-months",
     bubble: (a) => [
       {
-        text: "In 3 months you could be building real ",
+        text: "In 3 months you will be building real ",
       },
       { text: careerLabel(a), highlight: true },
       { text: " projects on your own." },
     ],
     hexBeat: "showQuestion",
+    voiceover: ["/audios/3-month.mp3"],
     cta: "Yes!",
   },
   {
@@ -692,7 +715,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: STARTING_POINT_OPTIONS,
     answerKey: "startingPoint",
-    hexMode: "onboarding",
+    hexMode: "reactions",
+    reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 3,
     cta: "Continue",
   },
 ];

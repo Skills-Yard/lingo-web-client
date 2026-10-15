@@ -6,6 +6,8 @@ import { TIME_SLIDER } from "@/lib/constants/onboarding";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
 import { ONBOARDING_QUESTION_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
+import { KaraokeSpans, questionSpoken } from "./QuestionHeading";
+import { useVoiceover, useVoiceoverGate } from "./useVoiceover";
 
 // The dial, drawn in the Figma frame's own coordinates (390 wide): an arc of a
 // circle centred below the drawing, swept ±SWEEP_DEG either side of straight
@@ -58,6 +60,13 @@ interface TimeSliderScreenProps {
   heading: TextSpan[];
   minutes: number;
   onChange: (minutes: number) => void;
+  /** Read out as the screen appears; the heading fills in with it. */
+  voiceover?: readonly string[];
+  /** Called once the voiceover has finished (or failed to play). */
+  onVoiceoverDone?: () => void;
+  /** Bumped by the Skip link: cuts the voice off. */
+  skipCount?: number;
+  muted?: boolean;
   className?: string;
 }
 
@@ -69,8 +78,15 @@ export function TimeSliderScreen({
   heading,
   minutes,
   onChange,
+  voiceover,
+  onVoiceoverDone,
+  skipCount = 0,
+  muted = false,
   className,
 }: TimeSliderScreenProps) {
+  const voice = useVoiceover(voiceover, true, muted);
+  useVoiceoverGate(voice, onVoiceoverDone, skipCount);
+  const spoken = questionSpoken(voice, !!voiceover?.length);
   const svgRef = useRef<SVGSVGElement>(null);
   // Where the knob is drawn, in (fractional) minutes.
   const [shown, setShown] = useState(minutes);
@@ -135,11 +151,7 @@ export function TimeSliderScreen({
       className={`flex min-h-0 flex-col items-center px-4 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}
     >
       <h1 className={`mx-auto w-full max-w-72 shrink-0 text-center ${ONBOARDING_QUESTION_CLASS}`}>
-        {heading.map((span, i) => (
-          <span key={i} className={span.highlight ? "text-brand-gradient" : undefined}>
-            {span.text}
-          </span>
-        ))}
+        <KaraokeSpans spans={heading} spoken={spoken} />
       </h1>
 
       <div aria-hidden className="mt-2 flex shrink-0 flex-col items-center">

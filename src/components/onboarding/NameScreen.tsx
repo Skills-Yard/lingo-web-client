@@ -5,6 +5,8 @@ import { motion } from "framer-motion";
 import { DialogueBubble } from "@/components/ui/DialogueBubble";
 import { FoxSlot } from "./foxStage";
 import { ONBOARDING_TEXT_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
+import { KaraokeSpans, questionSpoken } from "./QuestionHeading";
+import { useVoiceover, useVoiceoverGate } from "./useVoiceover";
 
 interface NameScreenProps {
   prompt: string;
@@ -12,6 +14,13 @@ interface NameScreenProps {
   onChange: (value: string) => void;
   /** Enter on the keyboard — moves on when there's a name. */
   onSubmit: () => void;
+  /** Read out as the screen appears; the prompt fills in with it. */
+  voiceover?: readonly string[];
+  /** Called once the voiceover has finished (or failed to play). */
+  onVoiceoverDone?: () => void;
+  /** Bumped by the Skip link: cuts the voice off. */
+  skipCount?: number;
+  muted?: boolean;
   className?: string;
 }
 
@@ -27,11 +36,39 @@ const FOX_SIZE = "min(15rem, 30dvh)";
  * reference), and Zox below it. The field takes focus on arrival so the
  * keyboard opens straight away.
  */
-export function NameScreen({ prompt, value, onChange, onSubmit, className }: NameScreenProps) {
+export function NameScreen({
+  prompt,
+  value,
+  onChange,
+  onSubmit,
+  voiceover,
+  onVoiceoverDone,
+  skipCount = 0,
+  muted = false,
+  className,
+}: NameScreenProps) {
+  const voice = useVoiceover(voiceover, true, muted);
+  useVoiceoverGate(voice, onVoiceoverDone, skipCount);
+  const spoken = questionSpoken(voice, !!voiceover?.length);
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
     const timer = window.setTimeout(() => inputRef.current?.focus(), FOCUS_DELAY_MS);
     return () => window.clearTimeout(timer);
+  }, []);
+
+  // Browser autofill (the blue field) can fill the input without a React
+  // change event, which left "Continue" disabled with a name showing. So the
+  // DOM value is checked against the state until the user leaves.
+  const valueRef = useRef(value);
+  valueRef.current = value;
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      const typed = inputRef.current?.value ?? "";
+      if (typed !== valueRef.current) onChangeRef.current(typed);
+    }, 250);
+    return () => window.clearInterval(timer);
   }, []);
 
   return (
@@ -52,7 +89,7 @@ export function NameScreen({ prompt, value, onChange, onSubmit, className }: Nam
           contentClassName={`flex flex-col items-center gap-2 px-4 py-3 ${ONBOARDING_TEXT_CLASS}`}
         >
           <label htmlFor="onboarding-name" className="text-center">
-            {prompt}
+            <KaraokeSpans spans={[{ text: prompt }]} spoken={spoken} />
           </label>
           <input
             id="onboarding-name"
@@ -60,7 +97,9 @@ export function NameScreen({ prompt, value, onChange, onSubmit, className }: Nam
             type="text"
             value={value}
             maxLength={30}
-            autoComplete="given-name"
+            autoComplete="off"
+            data-1p-ignore
+            data-lpignore="true"
             enterKeyHint="done"
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => {
@@ -74,6 +113,7 @@ export function NameScreen({ prompt, value, onChange, onSubmit, className }: Nam
         <FoxSlot
           beat="showQuestion"
           beatDue
+          talking={voice.playing && spoken < 1}
           className="absolute left-1/2 top-1/2 aspect-square -translate-x-1/2 -translate-y-1/2"
           style={{ height: FOX_SIZE }}
         />

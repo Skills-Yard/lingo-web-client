@@ -174,3 +174,27 @@ export function useVoiceover(
     },
   };
 }
+
+/**
+ * Wires a voiceover to the flow's "wait for the voice" gate: calls `onDone`
+ * once it has finished (or failed to play), and cuts it off when the Skip
+ * link bumps `skipCount`. For screens that play a voice but have no fox
+ * message / question component to do this for them.
+ */
+export function useVoiceoverGate(voice: Voiceover, onDone?: () => void, skipCount = 0) {
+  const onDoneRef = useRef(onDone);
+  useEffect(() => {
+    onDoneRef.current = onDone;
+  });
+  useEffect(() => {
+    if (isVoiceoverSettled(voice.status)) onDoneRef.current?.();
+  }, [voice.status]);
+  const lastSkipCount = useRef(skipCount);
+  useEffect(() => {
+    if (skipCount === lastSkipCount.current) return;
+    lastSkipCount.current = skipCount;
+    voice.stop();
+    // `voice` is a fresh object each render; only a new skip should run this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipCount]);
+}

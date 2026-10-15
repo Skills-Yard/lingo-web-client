@@ -5,6 +5,8 @@ import { useReducedMotion } from "framer-motion";
 import { NOTIFY_ASPECT } from "@/lib/rive/runtime";
 import { NotifyHex } from "./robu/NotifyHex";
 import { ONBOARDING_HEADING_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
+import { KaraokeSpans, questionSpoken } from "./QuestionHeading";
+import { useVoiceover, useVoiceoverGate } from "./useVoiceover";
 
 const VIBRATION_DELAY_S = 0.65;
 /** Two short pulses — reads as a notification arriving. */
@@ -12,6 +14,13 @@ const VIBRATION_PATTERN = [40, 60, 40];
 
 interface NotificationPermissionScreenProps {
   heading: string;
+  /** Read out as the screen appears; the heading fills in with it. */
+  voiceover?: readonly string[];
+  /** Called once the voiceover has finished (or failed to play). */
+  onVoiceoverDone?: () => void;
+  /** Bumped by the Skip link: cuts the voice off. */
+  skipCount?: number;
+  muted?: boolean;
   className?: string;
 }
 
@@ -25,9 +34,16 @@ interface NotificationPermissionScreenProps {
  */
 export function NotificationPermissionScreen({
   heading,
+  voiceover,
+  onVoiceoverDone,
+  skipCount = 0,
+  muted = false,
   className,
 }: NotificationPermissionScreenProps) {
   const reduceMotion = useReducedMotion();
+  const voice = useVoiceover(voiceover, true, muted);
+  useVoiceoverGate(voice, onVoiceoverDone, skipCount);
+  const spoken = questionSpoken(voice, !!voiceover?.length);
 
   // Buzz as the popup lands. Android browsers support this; iOS Safari has
   // no Vibration API, so it's a silent no-op there.
@@ -46,7 +62,7 @@ export function NotificationPermissionScreen({
   return (
     <div className={`flex flex-col items-center px-6 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}>
       <h1 className={`max-w-xs shrink-0 text-center ${ONBOARDING_HEADING_CLASS}`}>
-        {heading}
+        <KaraokeSpans spans={[{ text: heading }]} spoken={spoken} />
       </h1>
 
       <div className="flex min-h-0 w-full flex-1 items-center justify-center">

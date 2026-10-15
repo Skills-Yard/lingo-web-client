@@ -6,6 +6,7 @@ import {
   REACTIONS_ARTBOARD,
   REACTIONS_STATE_MACHINE,
   REACTIONS_OPTION,
+  REACTIONS_SCREEN,
   REACTIONS_SELECT_TRIGGER,
   HEX_ONBOARDING_TRIGGER,
   randomHexTalkTrigger,
@@ -33,6 +34,7 @@ export function ReactionsHex({
   className,
   artboard = REACTIONS_ARTBOARD,
   stateMachine = REACTIONS_STATE_MACHINE,
+  screen,
   typing,
   selectedOption,
   questionId,
@@ -45,6 +47,8 @@ export function ReactionsHex({
   artboard?: string;
   /** The artboard's state machine. */
   stateMachine?: string;
+  /** Value of the artboard's `screen` number for this question. */
+  screen?: number;
   /** Set anew (`Date.now()`) on every option pick. */
   typing: number;
   /** 1-based index of the picked option, 0 for none. */
@@ -81,9 +85,10 @@ export function ReactionsHex({
       talking.current = false;
       fireNow(HEX_ONBOARDING_TRIGGER.idle);
     }
+    if (screen !== undefined) setNumber(REACTIONS_SCREEN, screen);
     setNumber(REACTIONS_OPTION, selectedOption);
     fireTrigger(REACTIONS_SELECT_TRIGGER);
-  }, [selectedOption, setNumber, fireTrigger, fireNow]);
+  }, [screen, selectedOption, setNumber, fireTrigger, fireNow]);
 
   // Only picks made while he's showing — never one from before he appeared.
   const lastTyping = useRef(typing);
@@ -103,8 +108,9 @@ export function ReactionsHex({
     if (idledFor.current !== null) reset();
     talking.current = false;
     idledFor.current = questionId;
+    if (screen !== undefined) setNumber(REACTIONS_SCREEN, screen);
     fireTrigger(HEX_ONBOARDING_TRIGGER.idle);
-  }, [ready, questionId, reset, fireTrigger]);
+  }, [ready, questionId, screen, reset, setNumber, fireTrigger]);
 
   // After the idle effect, so a question's talk queues behind its `idle`.
   const talkedFor = useRef<string | null>(null);

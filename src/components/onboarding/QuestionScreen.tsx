@@ -37,6 +37,8 @@ type QuestionScreenProps = {
   reactionsArtboard?: string;
   /** State machine of that artboard — defaults to `Reactions_SM`. */
   reactionsStateMachine?: string;
+  /** `screen` value set on that artboard's data for this question. */
+  reactionsScreen?: number;
   /** "row": Zox beside the heading — see QuestionHeading. */
   zoxLayout?: "row";
   className?: string;
@@ -71,6 +73,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
     hexMode,
     reactionsArtboard,
     reactionsStateMachine,
+    reactionsScreen,
     className,
   } = props;
 
@@ -141,7 +144,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
         stackOnMobile={tiles}
         spokenOption={spokenOption}
         layout={props.zoxLayout === "row" ? "row" : "stacked"}
-        showFox={tiles || hexMode !== "reactions"}
+        showFox={hexMode !== "reactions"}
         foxMode={tiles || hexMode === "onboarding" ? "onboarding" : "tablet"}
         hex={
           hexMode === "reactions" && !scene ? (
@@ -149,6 +152,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
               key={reactionsArtboard}
               artboard={reactionsArtboard}
               stateMachine={reactionsStateMachine}
+              screen={reactionsScreen}
               className="h-full w-full"
               typing={typing}
               selectedOption={selectedOption}

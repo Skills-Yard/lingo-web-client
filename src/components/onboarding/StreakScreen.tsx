@@ -2,7 +2,8 @@
 
 import { motion, useReducedMotion } from "framer-motion";
 import type { TextSpan } from "@/lib/constants/onboarding";
-import { QuestionHeading } from "./QuestionHeading";
+import { QuestionHeading, questionSpoken } from "./QuestionHeading";
+import { useVoiceover, useVoiceoverGate } from "./useVoiceover";
 import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
 
 const CARD_DELAY_S = 0.3;
@@ -12,6 +13,13 @@ interface StreakScreenProps {
   heading: TextSpan[];
   /** The home-screen mockup with the streak widget (public/images/codingStreak). */
   image: string;
+  /** Read out as the screen appears; the heading fills in with it. */
+  voiceover?: readonly string[];
+  /** Called once the voiceover has finished (or failed to play). */
+  onVoiceoverDone?: () => void;
+  /** Bumped by the Skip link: cuts the voice off. */
+  skipCount?: number;
+  muted?: boolean;
   className?: string;
 }
 
@@ -22,15 +30,25 @@ interface StreakScreenProps {
  * than the space left above the CTA, its (empty) bottom is cropped behind a
  * soft fade instead of shrinking the widget.
  */
-export function StreakScreen({ heading, image, className }: StreakScreenProps) {
+export function StreakScreen({
+  heading,
+  image,
+  voiceover,
+  onVoiceoverDone,
+  skipCount = 0,
+  muted = false,
+  className,
+}: StreakScreenProps) {
   const reduceMotion = useReducedMotion();
+  const voice = useVoiceover(voiceover, true, muted);
+  useVoiceoverGate(voice, onVoiceoverDone, skipCount);
 
   return (
     <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
       <QuestionHeading
         heading={heading}
-        spoken={1}
-        talking={false}
+        spoken={questionSpoken(voice, !!voiceover?.length)}
+        talking={voice.playing}
         screenId="streak"
         foxMode="onboarding"
         headingClassName={ONBOARDING_HEADING_CLASS}

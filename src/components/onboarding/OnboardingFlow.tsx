@@ -329,6 +329,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <NotificationPermissionScreen
                       className="flex-1"
                       heading={step.heading}
+                      voiceover={resolveVoiceover(step.voiceover, answers)}
+                      onVoiceoverDone={() => setVoicedStepId(step.id)}
+                      skipCount={skipCount}
+                      muted={muted}
                     />
                   )}
 
@@ -336,6 +340,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <NameScreen
                       className="flex-1"
                       prompt={step.prompt}
+                      voiceover={resolveVoiceover(step.voiceover, answers)}
+                      onVoiceoverDone={() => setVoicedStepId(step.id)}
+                      skipCount={skipCount}
+                      muted={muted}
                       value={answers.name ?? ""}
                       onChange={(name) => setAnswer("name", name)}
                       onSubmit={goNext}
@@ -346,13 +354,25 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     <TimeSliderScreen
                       className="flex-1"
                       heading={step.heading(answers)}
+                      voiceover={resolveVoiceover(step.voiceover, answers)}
+                      onVoiceoverDone={() => setVoicedStepId(step.id)}
+                      skipCount={skipCount}
+                      muted={muted}
                       minutes={Number(answers.timeCommitment ?? TIME_SLIDER.initial)}
                       onChange={(minutes) => setAnswer("timeCommitment", String(minutes))}
                     />
                   )}
 
                   {step.kind === "streak" && (
-                    <StreakScreen className="flex-1" heading={step.heading(answers)} image={step.image} />
+                    <StreakScreen
+                      className="flex-1"
+                      heading={step.heading(answers)}
+                      image={step.image}
+                      voiceover={resolveVoiceover(step.voiceover, answers)}
+                      onVoiceoverDone={() => setVoicedStepId(step.id)}
+                      skipCount={skipCount}
+                      muted={muted}
+                    />
                   )}
 
                   {/* One element for list and grid questions alike, so a
@@ -368,8 +388,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                         : { kind: step.kind, options: step.options })}
                       selectedId={answers[step.answerKey] ?? null}
                       hexMode={step.hexMode}
-                      reactionsArtboard={step.kind === "question-grid" ? step.reactionsArtboard : undefined}
-                      reactionsStateMachine={step.kind === "question-grid" ? step.reactionsStateMachine : undefined}
+                      reactionsArtboard={step.reactionsArtboard}
+                      reactionsStateMachine={step.reactionsStateMachine}
+                      reactionsScreen={step.reactionsScreen}
                       onSelect={(id) => {
                         setAnswer(step.answerKey, id);
                         setPickCount((n) => n + 1);

@@ -99,6 +99,25 @@ function KaraokeSpan({
 }
 
 /**
+ * A text that fills in karaoke-style as it's spoken: `spoken` (0..1, see
+ * questionSpoken) of it at full strength, the rest faded. For screens that
+ * show their own text instead of the Zox + question row.
+ */
+export function KaraokeSpans({ spans, spoken }: { spans: TextSpan[]; spoken: number }) {
+  const total = spansLength(spans);
+  const lit = spoken >= 1 ? total : Math.floor(spoken * total);
+  return (
+    <>
+      {spans.map((span, i) => {
+        const start = spansLength(spans.slice(0, i));
+        const cut = Math.max(0, Math.min(span.text.length, lit - start));
+        return <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />;
+      })}
+    </>
+  );
+}
+
+/**
  * Zox (with his tablet) + question row at the top of both question
  * screens. While the
  * question is being read out, its text fills in karaoke-style: the part
