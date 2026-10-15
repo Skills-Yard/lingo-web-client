@@ -500,7 +500,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     sparkle: true,
     excite: true,
     hexBeat: "ready",
-    voiceover: ["/audios/text-2-screen.mpeg", "/audios/ready.m4a"],
+    voiceover: ["/audios/text-2-screen.m4a", "/audios/ready.m4a"],
     voiceReads: "heading",
     bubble: () => [{ text: "Are you ready?" }],
     cta: "Yes!",
