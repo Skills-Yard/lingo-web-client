@@ -123,27 +123,27 @@ export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   {
     id: "switching-careers",
     label: "Switching careers into tech",
-    image: "/images/screen-04/04-1.png",
+    image: "/images/screen-04/04-nobg-1.png",
   },
   {
     id: "first-tech-job",
     label: "Landing my first job",
-    image: "/images/screen-04/04-2.png",
+    image: "/images/screen-04/04-nobg-2.png",
   },
   {
     id: "promotion",
     label: "Leveling up / Promotion",
-    image: "/images/screen-04/04-3.png",
+    image: "/images/screen-04/04-nobg-3.png",
   },
   {
     id: "personal-project",
     label: "Personal project",
-    image: "/images/screen-04/04-4.png",
+    image: "/images/screen-04/04-nobg-4.png",
   },
   {
     id: "freelance",
     label: "Freelance",
-    image: "/images/screen-04/04-5.png",
+    image: "/images/screen-04/04-nobg-5.png",
   },
 ];
 

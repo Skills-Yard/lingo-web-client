@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ChevronLeft, Moon, Sun, Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
@@ -22,9 +23,22 @@ interface OnboardingHeaderProps {
   onToggleMuted: () => void;
 }
 
+// The step the progress bar last showed. Each screen mounts a fresh header,
+// so this is what lets the fill start from where it was — growing when the
+// user moves forward, shrinking back when they return to an earlier question.
+let lastShownStep: number | null = null;
+
 export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: OnboardingHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
+  const [fromStep] = useState(() => {
+    if (!progress) return null;
+    return lastShownStep ?? progress.step - 1;
+  });
+  // Questions share one screen, so this header can outlive a step change.
+  useEffect(() => {
+    if (progress) lastShownStep = progress.step;
+  }, [progress]);
   return (
     <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 pt-3 pb-2 select-none">
       <button type="button" onClick={onBack} className={`shrink-0 ${ICON_BUTTON}`} aria-label="Back">
@@ -42,17 +56,34 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
           {/* One continuous track. Each question's header mounts fresh with
               its screen, so the fill starts at the previous question's
               length and grows to this one's. */}
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
+          <div className="h-3 w-full overflow-hidden rounded-full bg-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:bg-white/15">
+            {/* The fill keeps a flat right edge while unfinished — it only
+                rounds off once the bar is full. */}
             <motion.div
-              className="relative h-full rounded-full bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3]"
-              initial={{ width: `${((progress.step - 1) / progress.total) * 100}%` }}
+              className={`relative h-full overflow-hidden rounded-l-full bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] shadow-[0_0_10px_rgba(0,184,169,0.55)] ${
+                progress.step >= progress.total ? "rounded-r-full" : ""
+              }`}
+              initial={{ width: `${((fromStep ?? progress.step - 1) / progress.total) * 100}%` }}
               animate={{ width: `${(progress.step / progress.total) * 100}%` }}
-              transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
             >
               {/* Glossy shine: a soft light stripe along the top of the fill. */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-x-1.5 top-[1.5px] h-[2px] rounded-full bg-white/45"
+                className="pointer-events-none absolute inset-x-1.5 top-0.5 h-0.75 rounded-full bg-white/50"
+              />
+              {/* Sweeping highlight that loops across the fill. */}
+              <motion.span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 w-1/3 bg-linear-to-r from-transparent via-white/40 to-transparent"
+                initial={{ x: "-120%" }}
+                animate={{ x: "380%" }}
+                transition={{ duration: 1.8, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.8 }}
+              />
+              {/* Bright leading edge. */}
+              <span
+                aria-hidden
+                className="pointer-events-none absolute inset-y-0 right-0 w-0.75 bg-white/70"
               />
             </motion.div>
           </div>
