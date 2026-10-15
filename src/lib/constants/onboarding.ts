@@ -122,7 +122,7 @@ export const CAREER_OPTIONS: OnboardingListOption[] = [
 export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   {
     id: "switching-careers",
-    label: "Switching careers into tech",
+    label: "Switching careers ",
     image: "/images/screen-04/04-new-1.png",
   },
   {
@@ -423,6 +423,7 @@ export type OnboardingStep =
       kind: "notification-permission";
       id: string;
       heading: string;
+      voiceover?: StepVoiceover;
       cta: string;
     }
   | {
@@ -430,6 +431,7 @@ export type OnboardingStep =
       id: string;
       /** The bubble's question, above the text field. */
       prompt: string;
+      voiceover?: StepVoiceover;
       cta: string;
     }
   | {
@@ -437,6 +439,7 @@ export type OnboardingStep =
       id: string;
       heading: (answers: OnboardingAnswers) => TextSpan[];
       answerKey: keyof OnboardingAnswers;
+      voiceover?: StepVoiceover;
       cta: string;
     }
   | {
@@ -445,6 +448,7 @@ export type OnboardingStep =
       heading: (answers: OnboardingAnswers) => TextSpan[];
       /** The home-screen mockup with the streak widget. */
       image: string;
+      voiceover?: StepVoiceover;
       cta: string;
     }
   | {
@@ -597,6 +601,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "name-input",
     id: "name",
     prompt: "What should I call you?",
+    voiceover: ["/audios/call-u.mp3"],
     cta: "Continue",
   },
   {
@@ -611,6 +616,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     options: MOTIVATION_OPTIONS,
     answerKey: "motivation",
     hexMode: "onboarding",
+    voiceover: ["/audios/wish-to-achive.m4a", "/audios/wish-to-achive-option.mp3"],
     cta: "Continue",
   },
   {
@@ -619,9 +625,10 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     heading: (a) => [
       { text: "How much " },
       { text: "time", highlight: true },
-      { text: ` can you give ${careerLabel(a)} each day?` },
+      { text: " can you dedicate to learning each day?" },
     ],
     answerKey: "timeCommitment",
+    voiceover: ["/audios/HMT_Ques.m4a"],
     cta: "Continue",
   },
   {
@@ -638,12 +645,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: DAYNIGHT_ARTBOARD,
     reactionsStateMachine: DAYNIGHT_STATE_MACHINE,
+    voiceover: ["/audios/best_time_Ques.m4a", "/audios/best_time_Option.m4a"],
     cta: "Continue",
   },
   {
     kind: "notification-permission",
     id: "notifications",
     heading: "Get notified when it’s time to learn.",
+    voiceover: ["/audios/notified.mp3"],
     cta: "Allow Notifications",
   },
   {
@@ -655,6 +664,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: " from your next lesson." },
     ],
     image: "/images/codingStreak/codingStreak-3.png",
+    voiceover: ["/audios/stay.mp3"],
     cta: "Continue",
   },
   {
@@ -668,6 +678,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: " projects on your own." },
     ],
     hexBeat: "showQuestion",
+    voiceover: ["/audios/3-month.mp3"],
     cta: "Yes!",
   },
   {
