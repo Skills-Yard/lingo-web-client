@@ -71,7 +71,10 @@ export function useHexRive(
       return;
     }
     // Anything but another talk ends the talk first, ahead of that trigger.
-    if (talking.current && !isHexTalkTrigger(next)) {
+    if (next === HEX_STOP_TALK_TRIGGER) {
+      // Already the end of the talk: no second `stopTalk` ahead of it.
+      talking.current = false;
+    } else if (talking.current && !isHexTalkTrigger(next)) {
       talking.current = false;
       viewModelInstance?.trigger(HEX_STOP_TALK_TRIGGER)?.trigger();
       gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);

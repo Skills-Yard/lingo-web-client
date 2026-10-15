@@ -84,7 +84,9 @@ export function TimeSliderScreen({
   muted = false,
   className,
 }: TimeSliderScreenProps) {
-  const voice = useVoiceover(voiceover, true, muted);
+  // Touching the dial cuts the voice (and with it Hex's talk) at once.
+  const [interacted, setInteracted] = useState(0);
+  const voice = useVoiceover(voiceover, true, muted, interacted > 0);
   useVoiceoverGate(voice, onVoiceoverDone, skipCount);
   const spoken = questionSpoken(voice, !!voiceover?.length);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -132,6 +134,7 @@ export function TimeSliderScreen({
   };
   const release = () => glideTo(snappedRef.current);
   const nudge = (next: number) => {
+    setInteracted(Date.now());
     snappedRef.current = next;
     onChange(next);
     glideTo(next);
@@ -162,6 +165,9 @@ export function TimeSliderScreen({
           typing={0}
           restTrigger={HEX_ONBOARDING_TRIGGER.idle}
           minutes={minutes}
+          speaking={voice.playing}
+          questionSpoken={spoken}
+          interacted={interacted}
         />
       </div>
 
@@ -184,6 +190,7 @@ export function TimeSliderScreen({
           tabIndex={0}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
+            setInteracted(Date.now());
             setFromPointer(e.clientX, e.clientY);
           }}
           onPointerMove={(e) => {
