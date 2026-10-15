@@ -212,6 +212,8 @@ export const randomHexTalkTrigger = (previous?: HexTalkTrigger | null): HexTalkT
 export const REACTIONS_ARTBOARD = "6.1 and 5.1 2";
 export const REACTIONS_STATE_MACHINE = "Reactions_SM";
 export const REACTIONS_OPTION = "option";
+/** Number on the artboard's data that picks which question's reactions play. */
+export const REACTIONS_SCREEN = "screen";
 export const REACTIONS_SELECT_TRIGGER = "select";
 
 /**

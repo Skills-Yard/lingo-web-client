@@ -460,6 +460,12 @@ export type OnboardingStep =
       answerKey: keyof OnboardingAnswers;
       voiceover?: StepVoiceover;
       hexMode?: QuestionHexMode;
+      /** The artboard played for `hexMode: "reactions"`. */
+      reactionsArtboard?: string;
+      /** State machine of that artboard (default `Reactions_SM`). */
+      reactionsStateMachine?: string;
+      /** `screen` value set on the reactions artboard's data. */
+      reactionsScreen?: number;
       cta: string;
     }
   | {
@@ -476,6 +482,8 @@ export type OnboardingStep =
       reactionsArtboard?: string;
       /** State machine of that artboard (default `Reactions_SM`). */
       reactionsStateMachine?: string;
+      /** `screen` value set on the reactions artboard's data. */
+      reactionsScreen?: number;
       cta: string;
     };
 
@@ -516,7 +524,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: CAREER_OPTIONS,
     answerKey: "career",
-    hexMode: "onboarding",
+    hexMode: "reactions",
+    reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 2,
     voiceover: ["/audios/chasing.mp3", "/audios/screen-1-options.mpeg"],
     cta: "Continue",
   },
@@ -552,6 +562,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     answerKey: "pythonLevel",
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 0,
     voiceover: ["/audios/WYP_Ques.m4a", "/audios/WYP_Options.m4a"],
     cta: "Continue",
   },
@@ -567,6 +578,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     answerKey: "experience",
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 0,
     voiceover: ["/audios/HYW_Ques.m4a", "/audios/HYW_Options.m4a"],
     cta: "Continue",
   },
@@ -610,7 +622,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: MOTIVATION_OPTIONS,
     answerKey: "motivation",
-    hexMode: "onboarding",
+    hexMode: "reactions",
+    reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 1,
     cta: "Continue",
   },
   {
@@ -680,7 +694,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: STARTING_POINT_OPTIONS,
     answerKey: "startingPoint",
-    hexMode: "onboarding",
+    hexMode: "reactions",
+    reactionsArtboard: REACTIONS_ARTBOARD,
+    reactionsScreen: 3,
     cta: "Continue",
   },
 ];
