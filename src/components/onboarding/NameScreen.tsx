@@ -74,14 +74,15 @@ export function NameScreen({
   return (
     <div className={`flex min-h-0 flex-col items-center px-6 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}>
       {/* Same layout as the other bubble screens: Hex centred, the bubble's
-        bottom edge a fixed gap above him, growing upward. */}
+        top edge 146px from the top of the screen (the
+        header is 107px), growing downward. */}
       <div className="relative min-h-0 w-full flex-1">
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1], delay: 0.25 }}
         className="absolute left-1/2 z-10 w-max -translate-x-1/2"
-        style={{ bottom: `calc(50% + ${FOX_SIZE} / 2 + 8px)` }}
+        style={{ top: 39 }}
       >
         <DialogueBubble
           tail="down"

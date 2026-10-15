@@ -30,9 +30,10 @@ const FOX_MAX_DVH = 30;
 const FOX_SIZE = `min(${FOX_MAX_REM}rem, ${FOX_MAX_DVH}dvh)`;
 const FOX_HALF = `min(${FOX_MAX_REM / 2}rem, ${FOX_MAX_DVH / 2}dvh)`;
 const FOX_CENTER = 0.5;
-/** Hex is always centred; the bubble's bottom edge sits this far above his
- * artboard and the bubble grows upward with its text. */
-const BUBBLE_GAP_PX = 8;
+/** Every bubble's top edge sits 146px from the top of the screen — the
+ * header is 107px, so this far into the stage — and the bubble grows
+ * downward with its text. */
+const BUBBLE_TOP_PX = 39;
 /** The fox never shrinks below this (px) to make room for text below. */
 const FOX_MIN_PX = 128;
 /** Breathing room kept between the text and the edges of that space. */
@@ -269,7 +270,8 @@ export function FoxMessageScreen({
       // fox's usual size is worked out here rather than read back, so a
       // shrunk fox doesn't feed into its own measurement.
       const stageHeight = stage.clientHeight;
-      const aboveHeight = aboveRef.current?.offsetHeight ?? 0;
+      const aboveEl = aboveRef.current;
+      const aboveHeight = aboveEl ? BUBBLE_TOP_PX + aboveEl.offsetHeight : 0;
       const belowHeight = belowRef.current?.offsetHeight ?? 0;
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
       const size = Math.min(FOX_MAX_REM * rem, (FOX_MAX_DVH / 100) * window.innerHeight);
@@ -327,9 +329,7 @@ export function FoxMessageScreen({
           <div
             ref={aboveRef}
             className="absolute left-1/2 z-10 w-max -translate-x-1/2"
-            style={{
-              bottom: `calc(${(1 - center) * 100}% + ${shrunk ? `${shrunk.size / 2}px` : FOX_HALF} + ${BUBBLE_GAP_PX}px)`,
-            }}
+            style={{ top: BUBBLE_TOP_PX }}
           >
             {bubbleEl("down")}
           </div>

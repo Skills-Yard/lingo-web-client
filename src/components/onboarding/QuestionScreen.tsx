@@ -141,7 +141,6 @@ export function QuestionScreen(props: QuestionScreenProps) {
         typing={typing}
         screenId={questionId}
         wide={scene}
-        stackOnMobile={tiles}
         spokenOption={spokenOption}
         layout={props.zoxLayout === "row" ? "row" : "stacked"}
         showFox={hexMode !== "reactions"}

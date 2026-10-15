@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
-import { ONBOARDING_QUESTION_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
+import { ONBOARDING_QUESTION_CLASS } from "./headingStyle";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
 
@@ -67,9 +67,6 @@ interface QuestionHeadingProps {
   headingClassName?: string;
   /** Full-width (335px) heading with nothing beside it — under a scene. */
   wide?: boolean;
-  /** Career question on phones: a bigger fox beside the question, sitting
-   * 116px from the top. */
-  stackOnMobile?: boolean;
 }
 
 /**
@@ -137,8 +134,11 @@ export function QuestionHeading({
   hex,
   headingClassName = ONBOARDING_QUESTION_CLASS,
   wide = false,
-  stackOnMobile = false,
 }: QuestionHeadingProps) {
+  // Every question row (career, reactions artboards, list questions) shares
+  // the same big fox and spacing. The list questions' own Hex artboard draws
+  // smaller inside its box than the reactions one, so its box is larger.
+  const big = !wide;
   const total = spansLength(heading);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
   const parts = heading.map((span, i) => {
@@ -149,45 +149,41 @@ export function QuestionHeading({
   return (
     // Under a scene the heading hangs off the artboard's bottom edge with a
     // short, fixed gap rather than the usual header offset.
-    <div className={`flex shrink-0 ${wide ? "items-center justify-center" : "items-center justify-start"} gap-2 ${stackOnMobile ? "max-sm:pt-[9px]" : ""} ${wide ? "pt-3" : stackOnMobile ? "sm:pt-0" : ONBOARDING_TOP_OFFSET_CLASS}`}>
-      {hex ? (
-        <div aria-hidden className="relative h-24 w-24 shrink-0 sm:h-28 sm:w-28">
-          {hex}
-        </div>
-      ) : showFox && (
-        // The fox's artboard has empty margins, so the slot beside the
-        // question is a fixed box narrower than the fox: it draws bigger than
-        // the slot (anchored to its left edge, so the row keeps the screen's 16px side margin) and the question overlaps the empty space.
-        // Resizing the fox therefore never moves the question.
+    <div className={`flex shrink-0 ${wide ? "items-center justify-center" : "items-center justify-start"} gap-2 ${wide ? "pt-3" : "max-sm:pt-[9px] sm:pt-0"}`}>
+      {(hex || showFox) && (
+        // The artboard has empty margins, so the slot beside the question is
+        // a fixed box narrower than the fox: it draws bigger than the slot
+        // (anchored to its top-left, so a bigger fox grows downward and the
+        // row keeps the screen's 16px side margin) and the question overlaps
+        // the empty space. Resizing the fox therefore never moves the question.
         <div
           aria-hidden
           className={`relative shrink-0 ${
-            stackOnMobile ? "h-[8.5rem] w-[6.2rem]" : "h-[6rem] w-[4.5rem]"
+            big ? (hex ? "h-[7.5rem] w-[5rem]" : "h-[7.25rem] w-[5.75rem]") : "h-[6rem] w-[4.5rem]"
           } sm:h-[7rem] sm:w-[5.5rem]`}
         >
-          {/* Anchored to the slot's top-left: a bigger fox grows downward,
-              and the slot's height pushes everything below it down. */}
           <div
             className={`absolute left-0 ${
-              stackOnMobile ? "-top-6 h-[11rem] w-[11rem]" : "top-0 h-[6rem] w-[6rem]"
+              big ? (hex ? "-top-3 h-[9rem] w-[9rem]" : "-top-8 h-[10.5rem] w-[10.5rem]") : "top-0 h-[6rem] w-[6rem]"
             } sm:top-0 sm:h-[7rem] sm:w-[7rem]`}
           >
-            {foxMode === "onboarding" ? (
-              <OnboardingQuestionHex
-                className="h-full w-full"
-                typing={typing ?? 0}
-                screenId={screenId ?? ""}
-                speaking={talking && spoken < 1}
-                questionSpoken={spoken}
-                spokenOption={spokenOption}
-              />
-            ) : (
-              <ZoxTabFox className="h-full w-full" typing={typing} screenId={screenId} />
-            )}
+            {hex ??
+              (foxMode === "onboarding" ? (
+                <OnboardingQuestionHex
+                  className="h-full w-full"
+                  typing={typing ?? 0}
+                  screenId={screenId ?? ""}
+                  speaking={talking && spoken < 1}
+                  questionSpoken={spoken}
+                  spokenOption={spokenOption}
+                />
+              ) : (
+                <ZoxTabFox className="h-full w-full" typing={typing} screenId={screenId} />
+              ))}
           </div>
         </div>
       )}
-      <h1 className={`relative z-10 ${wide ? "w-full max-w-[335px] text-center" : "min-w-0 flex-1 pl-14 text-left"} ${headingClassName}`}>
+      <h1 className={`relative z-10 ${wide ? "w-full max-w-[335px] text-center" : "min-w-0 flex-1 pl-16 text-left"} ${headingClassName}`}>
         {parts.map(({ span, cut }, i) => (
           <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
         ))}
