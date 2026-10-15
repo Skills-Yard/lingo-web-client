@@ -26,13 +26,13 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
   const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
   return (
-    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 pt-3 pb-2 select-none">
+    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 py-5 select-none">
       <button type="button" onClick={onBack} className={`shrink-0 ${ICON_BUTTON}`} aria-label="Back">
         <ChevronLeft className="w-5 h-5" />
       </button>
 
       {progress && (
-        <div className="flex-1 px-2 md:mx-auto md:max-w-xs">
+        <div className="flex-1 px-0 md:mx-auto md:max-w-sm">
           <p className="mb-1 text-xs font-semibold tabular-nums text-[#2C2C2C] dark:text-white">
             <span className="bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] bg-clip-text text-transparent">
               {String(progress.step).padStart(2, "0")}
@@ -42,7 +42,7 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
           {/* One continuous track. Each question's header mounts fresh with
               its screen, so the fill starts at the previous question's
               length and grows to this one's. */}
-          <div className="h-1.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-black/10 dark:bg-white/15">
             <motion.div
               className="relative h-full rounded-full bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3]"
               initial={{ width: `${((progress.step - 1) / progress.total) * 100}%` }}
@@ -52,7 +52,7 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
               {/* Glossy shine: a soft light stripe along the top of the fill. */}
               <span
                 aria-hidden
-                className="pointer-events-none absolute inset-x-1.5 top-[1.5px] h-[2px] rounded-full bg-white/45"
+                className="pointer-events-none absolute inset-x-1.5 top-1/2 -translate-y-1/2 h-0.5 rounded-full bg-white/45"
               />
             </motion.div>
           </div>
