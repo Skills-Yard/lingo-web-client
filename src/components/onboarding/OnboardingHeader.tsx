@@ -40,13 +40,13 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
     if (progress) lastShownStep = progress.step;
   }, [progress]);
   return (
-    // Fixed 107px box, placed from the top edge: page count at 51px, bar at
-    // 81px, and the 39px buttons centred on the bar (67.5px).
-    <header className="relative h-[107px] shrink-0 select-none">
+    // Fixed 83px box, placed from the top edge: page count at 27px, bar at
+    // 57px, and the 39px buttons centred on the bar (43.5px).
+    <header className="relative h-[83px] shrink-0 select-none">
       <button
         type="button"
         onClick={onBack}
-        className={`absolute top-[67.5px] left-4 ${ICON_BUTTON}`}
+        className={`absolute top-[43.5px] left-4 ${ICON_BUTTON}`}
         aria-label="Back"
       >
         <ChevronLeft className="w-5 h-5" strokeWidth={1.4} />
@@ -54,8 +54,8 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
 
       {progress && (
         <>
-          {/* Page count: centred between the buttons, 51px from the top. */}
-          <p className="absolute top-[51px] left-1/2 -translate-x-1/2 text-sm leading-[14px] font-medium tabular-nums text-[#2C2C2C] dark:text-white">
+          {/* Page count: centred between the buttons, 27px from the top. */}
+          <p className="absolute top-[27px] left-1/2 -translate-x-1/2 text-sm leading-[14px] font-medium tabular-nums text-[#2C2C2C] dark:text-white">
             <span className="bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] bg-clip-text text-transparent">
               {String(progress.step).padStart(2, "0")}
             </span>
@@ -64,7 +64,7 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
           {/* One continuous track. Each question's header mounts fresh with
               its screen, so the fill starts at the previous question's
               length and grows to this one's. */}
-          <div className="absolute left-[67px] right-[114px] top-[81px] h-3 overflow-hidden rounded-full bg-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:bg-white/15">
+          <div className="absolute left-[67px] right-[114px] top-[57px] h-3 overflow-hidden rounded-full bg-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:bg-white/15">
             {/* The fill keeps a flat right edge while unfinished — it only
                 rounds off once the bar is full. */}
             <motion.div
@@ -88,17 +88,20 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
                 animate={{ x: "380%" }}
                 transition={{ duration: 1.8, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.8 }}
               />
-              {/* Bright leading edge. */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 right-0 w-0.75 bg-white/70"
-              />
+              {/* Bright leading edge — dropped once the bar is full, where it
+                  would read as a gap before the track's end. */}
+              {progress.step < progress.total && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-y-0 right-0 w-0.75 bg-white/70"
+                />
+              )}
             </motion.div>
           </div>
         </>
       )}
 
-      <div className="absolute top-[67.5px] right-4 flex items-center gap-2">
+      <div className="absolute top-[43.5px] right-4 flex items-center gap-2">
         {/* Light/dark switch — the site's own theme (see ThemeContext),
             wiped in diagonally from the top-right corner. */}
         <button

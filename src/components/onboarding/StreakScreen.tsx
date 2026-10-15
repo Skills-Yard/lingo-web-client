@@ -4,7 +4,6 @@ import { motion, useReducedMotion } from "framer-motion";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { QuestionHeading, questionSpoken } from "./QuestionHeading";
 import { useVoiceover, useVoiceoverGate } from "./useVoiceover";
-import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
 
 const CARD_DELAY_S = 0.3;
 const CARD_IN = { type: "spring", stiffness: 260, damping: 26 } as const;
@@ -51,7 +50,6 @@ export function StreakScreen({
         talking={voice.playing}
         screenId="streak"
         foxMode="onboarding"
-        headingClassName={ONBOARDING_HEADING_CLASS}
       />
 
       <div className="relative mt-5 min-h-0 flex-1 overflow-hidden">
