@@ -54,6 +54,8 @@ export function QuestionGridOptions({
   }, [spokenOption]);
 
   // More than four options: three cards per row (narrower, same design).
+  // Columns are fluid with a fixed gap and aspect ratio, so on narrow screens
+  // the cards shrink together instead of colliding.
   const three = options.length > 4;
 
   return (
@@ -61,7 +63,7 @@ export function QuestionGridOptions({
     // auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
     // over the gap into the next row. Now the gap is always gap-y-3 and the
     // grid scrolls instead.
-    <div ref={optionsRef} className={`scrollbar-none mx-auto ${compact ? "mt-3.5" : "mt-4 sm:mt-5"} grid w-full ${compact ? "max-w-[313px] grid-cols-[139px_139px] gap-y-4" : three ? "max-w-[374px] grid-cols-[repeat(3,minmax(0,108px))] gap-y-6" : "max-w-[322px] grid-cols-[138px_138px] gap-y-[29px]"} min-h-0 flex-1 auto-rows-max content-start justify-between overflow-y-auto px-2 pt-1 pb-2`}>
+    <div ref={optionsRef} className={`scrollbar-none mx-auto ${compact ? "mt-3.5" : "mt-4 sm:mt-5"} grid w-full ${compact ? "max-w-[313px] grid-cols-2 gap-x-[19px] gap-y-4" : three ? "max-w-[374px] grid-cols-3 gap-x-[17px] gap-y-6" : "max-w-[322px] grid-cols-2 gap-x-[30px] gap-y-[29px]"} min-h-0 flex-1 auto-rows-max content-start overflow-y-auto px-2 pt-1 pb-2`}>
       {options.map((option, i) => {
         const selected = option.id === selectedId;
         const spotlight = !selected && i === spokenOption;
@@ -77,7 +79,7 @@ export function QuestionGridOptions({
             // card's own khaki bottom edge from optionCardClass. Dark: each
             // segment draws its own stroke (#818185 idle, #00B8A9 selected),
             // the picture with no fill and the label on 20% white.
-            className={`flex flex-col overflow-hidden ${compact ? "h-[109px] w-[139px]" : three ? "h-[130px] w-[108px]" : "h-[150px] w-[138px]"} text-center ${optionCardClass(selected, spotlight, true)}`}
+            className={`flex flex-col overflow-hidden w-full min-w-0 ${compact ? "aspect-139/109" : three ? "aspect-108/130" : "aspect-138/150"} text-center ${optionCardClass(selected, spotlight, true)}`}
           >
             <span
               className={`flex min-h-0 w-full flex-1 items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 ${compact ? "dark:bg-[#0F1F26] dark:p-[7px]" : "dark:p-2.5"} ${
