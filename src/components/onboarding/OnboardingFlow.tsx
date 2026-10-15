@@ -39,6 +39,9 @@ const QUESTION_NUMBER: Record<string, number> = {};
   }
 }
 
+/** Whether the Skip link shows on voiced screens — hidden for now. */
+const SHOW_SKIP = false;
+
 const BOT_HOVER_SRC = "/audios/bot hovering 3.mp3.mpeg";
 
 /** How many questions the progress bar counts ("N of QUESTION_COUNT"). */
@@ -86,6 +89,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // The sign-up buttons wait for the sign-up animation to finish (reported by
   // the splash canvas, which detects it at runtime).
   const [signUpSettled, setSignUpSettled] = useState(false);
+  // The step whose voiceover has finished. The CTA stays inactive on a
+  // voiced screen until then; goTo clears it so a revisit waits again.
+  const [voicedStepId, setVoicedStepId] = useState<string | null>(null);
+  // Bumped by the Skip link; the voiced screens watch it.
+  const [skipCount, setSkipCount] = useState(0);
   const previousIndexRef = useRef(index);
   useEffect(() => {
     if (index === -1 && previousIndexRef.current >= 0) setSignUpReplays((n) => n + 1);
@@ -169,6 +177,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         [target.answerKey]: prev[target.answerKey] ?? String(TIME_SLIDER.initial),
       }));
     }
+    setVoicedStepId(null);
     setIndex(next);
   };
 
@@ -210,8 +219,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // The one CTA for the whole flow (see the footer below): its label,
   // enabled state and action follow whichever screen is current.
   const ctaLabel = step ? step.cta : "Get Started";
+  const stepVoiceover =
+    step && "voiceover" in step ? resolveVoiceover(step.voiceover, answers) : undefined;
+  const hasStepVoiceover = !!stepVoiceover?.length;
+  const awaitingVoiceover = !!step && hasStepVoiceover && voicedStepId !== step.id;
   const ctaDisabled =
     index < -1 ||
+    awaitingVoiceover ||
     (step?.kind === "name-input" && !answers.name?.trim()) ||
     ((step?.kind === "question-list" || step?.kind === "question-grid") &&
       !answers[step.answerKey]);
@@ -298,7 +312,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       sparkle={step.sparkle}
                       bubble={step.bubble(answers)}
                       greet={step.greet}
-                      voiceover={resolveVoiceover(step.voiceover, answers)}
+                      voiceover={stepVoiceover}
+                      onVoiceoverDone={() => setVoicedStepId(step.id)}
+                      skipCount={skipCount}
                       voiceReadsHeading={step.voiceReadsHeading}
                       voiceReads={step.voiceReads}
                       typeSpeedMs={step.typeSpeedMs}
@@ -358,7 +374,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                         setAnswer(step.answerKey, id);
                         setPickCount((n) => n + 1);
                       }}
-                      voiceover={resolveVoiceover(step.voiceover, answers)}
+                      voiceover={stepVoiceover}
+                      onVoiceoverDone={() => setVoicedStepId(step.id)}
+                      skipCount={skipCount}
                       muted={muted}
                       zoxLayout={step.zoxLayout}
                     />
@@ -367,6 +385,28 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* Skip sits at the top right, just under the header (80px: its
+            py-5 padding plus the 40px icon buttons), over the screens. It
+            lives out here so it doesn't fade with each screen. */}
+          <div className="pointer-events-none absolute inset-x-0 top-20 z-20 mx-auto flex w-full max-w-md justify-end px-4">
+            <AnimatePresence>
+              {SHOW_SKIP && awaitingVoiceover && (
+                <motion.button
+                  key="skip"
+                  type="button"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={SCREEN_TRANSITION}
+                  onClick={() => setSkipCount((n) => n + 1)}
+                  className="pointer-events-auto cursor-pointer px-2 py-1 text-sm font-medium text-[#666666] underline underline-offset-4 sm:text-base dark:text-white/70"
+                >
+                  Skip
+                </motion.button>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
         {/* The CTA lives here, outside the screen transitions, so it never
@@ -471,7 +511,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             onComplete={showSignUp}
           />
         </motion.div>
-
       </main>
     </FoxStageProvider>
   );

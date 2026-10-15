@@ -587,19 +587,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     kind: "fox-message",
-    id: "foundation",
-    bubble: () => [
-      {
-        text: "Smart! A strong base makes everything easier. Starting at ",
-      },
-      { text: "Module 1", highlight: true },
-      { text: "." },
-    ],
-    hexBeat: "showQuestion",
-    cta: "Yes!",
-  },
-  {
-    kind: "fox-message",
     id: "all-set",
     bubble: () => [
       { text: "ALL SET!\nYour " },
@@ -608,16 +595,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     hexScene: HEX_SCENE.onboardingComplete,
     cta: "Continue",
-  },
-  {
-    kind: "fox-message",
-    id: "module-1",
-    bubble: () => [
-      { text: "Your first stop:\n" },
-      { text: "Module 1", highlight: true },
-    ],
-    hexBeat: "showQuestion",
-    cta: "Next",
   },
   {
     kind: "name-input",
@@ -649,19 +626,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     answerKey: "timeCommitment",
     cta: "Continue",
-  },
-  {
-    kind: "fox-message",
-    id: "pace-great",
-    bubble: (a) => [
-      {
-        text: "GREAT!\nAt this pace you'll finish 3 lessons toward ",
-      },
-      { text: careerLabel(a), highlight: true },
-      { text: " this week." },
-    ],
-    hexBeat: "showQuestion",
-    cta: "Yes!",
   },
   {
     kind: "question-grid",

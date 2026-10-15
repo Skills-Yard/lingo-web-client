@@ -132,7 +132,7 @@ export function Button3D({
         disabled={disabled}
         style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}
         className={`relative block border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-          disabled ? "cursor-not-allowed opacity-60 grayscale" : "cursor-pointer"
+          disabled ? "cursor-not-allowed grayscale" : "cursor-pointer"
         } ${className ?? ""}`}
         {...rest}
         onClick={handleClick}
@@ -164,7 +164,7 @@ export function Button3D({
       disabled={disabled}
       style={{ transform: TILT_TRANSFORM }}
       className={`group relative block border-0 bg-transparent p-0 text-left outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-        disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
+        disabled ? "cursor-not-allowed" : "cursor-pointer"
       } ${className ?? ""}`}
       {...rest}
       onClick={handleClick}

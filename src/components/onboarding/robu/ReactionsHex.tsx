@@ -8,6 +8,8 @@ import {
   REACTIONS_OPTION,
   REACTIONS_SELECT_TRIGGER,
   HEX_ONBOARDING_TRIGGER,
+  randomHexTalkTrigger,
+  type HexTalkTrigger,
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
 
@@ -19,6 +21,13 @@ const LAYOUT = new Layout({ fit: Fit.Cover, alignment: Alignment.Center });
  * Hex between the question and its options ("superpower level", "Have you
  * worked with code"): the "6.1 and 5.1 2" artboard's `Reactions_SM`. On each
  * pick it sets `option` to the picked option (1-4) and fires `select`.
+ *
+ * While the voiceover reads the question (`speaking`) he talks — a random
+ * `talk`/`talk2`/`talk3` — and again for each option as it is read
+ * (`spokenOption`, never repeating the last). Once the question or the last
+ * option has been read he returns to `idle`; a pick mid-voice does the same
+ * at once, ahead of `select`. useHexRive puts a `stopTalk` ahead of any
+ * non-talk trigger that follows a talk, so each of those ends the talk first.
  */
 export function ReactionsHex({
   className,
@@ -27,6 +36,9 @@ export function ReactionsHex({
   typing,
   selectedOption,
   questionId,
+  speaking = false,
+  questionSpoken = 1,
+  spokenOption = -1,
 }: {
   className?: string;
   /** Which reactions artboard to play. */
@@ -39,18 +51,39 @@ export function ReactionsHex({
   selectedOption: number;
   /** Changes with each question; the state machine returns to its default. */
   questionId: string;
+  /** The question's voiceover is playing. */
+  speaking?: boolean;
+  /** 0..1 — how much of the question has been read; 1 once it has (or with
+   * no voice). */
+  questionSpoken?: number;
+  /** Index of the option the voice is reading right now, or -1. */
+  spokenOption?: number;
 }) {
-  const { RiveComponent, ready, fireTrigger, setNumber, reset } = useHexRive(
+  const { RiveComponent, ready, fireTrigger, fireNow, setNumber, reset } = useHexRive(
     LAYOUT,
     stateMachine,
     artboard,
   );
 
+  // True from a talk trigger until the idle that ends it.
+  const talking = useRef(false);
+  const lastTalk = useRef<HexTalkTrigger | null>(null);
+  const talk = useCallback(() => {
+    lastTalk.current = randomHexTalkTrigger(lastTalk.current);
+    talking.current = true;
+    fireTrigger(lastTalk.current);
+  }, [fireTrigger]);
+
   const react = useCallback(() => {
     if (!selectedOption) return;
+    // A pick cuts any talk short: idle (behind its stopTalk) goes first.
+    if (talking.current) {
+      talking.current = false;
+      fireNow(HEX_ONBOARDING_TRIGGER.idle);
+    }
     setNumber(REACTIONS_OPTION, selectedOption);
     fireTrigger(REACTIONS_SELECT_TRIGGER);
-  }, [selectedOption, setNumber, fireTrigger]);
+  }, [selectedOption, setNumber, fireTrigger, fireNow]);
 
   // Only picks made while he's showing — never one from before he appeared.
   const lastTyping = useRef(typing);
@@ -68,9 +101,38 @@ export function ReactionsHex({
   useEffect(() => {
     if (!ready || idledFor.current === questionId) return;
     if (idledFor.current !== null) reset();
+    talking.current = false;
     idledFor.current = questionId;
     fireTrigger(HEX_ONBOARDING_TRIGGER.idle);
   }, [ready, questionId, reset, fireTrigger]);
+
+  // After the idle effect, so a question's talk queues behind its `idle`.
+  const talkedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || idledFor.current !== questionId) return;
+    if (speaking && questionSpoken < 1 && talkedFor.current !== questionId) {
+      talkedFor.current = questionId;
+      talk();
+    }
+  }, [ready, questionId, speaking, questionSpoken, talk]);
+
+  const talkedOption = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || idledFor.current !== questionId) return;
+    if (spokenOption < 0) return;
+    const key = `${questionId}:${spokenOption}`;
+    if (talkedOption.current === key) return;
+    talkedOption.current = key;
+    talk();
+  }, [ready, questionId, spokenOption, talk]);
+
+  // Back to idle once the question — or the last option — has been read.
+  useEffect(() => {
+    if (!ready || !talking.current) return;
+    if (questionSpoken < 1 || spokenOption >= 0) return;
+    talking.current = false;
+    fireTrigger(HEX_ONBOARDING_TRIGGER.idle);
+  }, [ready, questionSpoken, spokenOption, fireTrigger]);
 
   return (
     <div aria-hidden className={className}>

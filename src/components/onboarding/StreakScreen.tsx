@@ -17,7 +17,7 @@ interface StreakScreenProps {
 
 /**
  * "Keep your coding streak going": the same fox + text row the question
- * screens use, over a phone-home-screen mockup showing Lingo's streak
+ * screens use (Hex on the `Onboarding` state machine, like the greeting), over a phone-home-screen mockup showing Lingo's streak
  * widget. The mockup rises in once the screen has faded in; if it's taller
  * than the space left above the CTA, its (empty) bottom is cropped behind a
  * soft fade instead of shrinking the widget.
@@ -31,6 +31,8 @@ export function StreakScreen({ heading, image, className }: StreakScreenProps) {
         heading={heading}
         spoken={1}
         talking={false}
+        screenId="streak"
+        foxMode="onboarding"
         headingClassName={ONBOARDING_HEADING_CLASS}
       />
 

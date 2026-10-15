@@ -9,7 +9,7 @@ import { FoxSlot } from "./foxStage";
 import { ONBOARDING_HEADING_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
 import { HexScene } from "./robu/HexScene";
 import { OnboardingBubble, TypedText, spansLength } from "./OnboardingBubble";
-import { useVoiceover } from "./useVoiceover";
+import { isVoiceoverSettled, useVoiceover } from "./useVoiceover";
 
 /** Typing speed for screens with no voice (or whose voice couldn't play). */
 const TYPE_SPEED_MS = 30;
@@ -74,6 +74,11 @@ interface FoxMessageScreenProps {
   /** Type at this fixed ms-per-character instead of following the voice; the
    * mouth then moves only while the text types, not for the whole clip. */
   typeSpeedMs?: number;
+  /** Called once the voiceover has finished (or failed to play). */
+  onVoiceoverDone?: () => void;
+  /** Bumped by the parent's Skip link: cuts the voice off and shows all the
+   * text at once. */
+  skipCount?: number;
   muted?: boolean;
   className?: string;
 }
@@ -99,6 +104,8 @@ export function FoxMessageScreen({
   voiceReadsHeading = true,
   voiceReads = "all",
   typeSpeedMs,
+  onVoiceoverDone,
+  skipCount = 0,
   muted = false,
   className,
 }: FoxMessageScreenProps) {
@@ -125,6 +132,15 @@ export function FoxMessageScreen({
 
   const voice = useVoiceover(voiceover, headingFirst ? screenIn : bubbleIn, muted);
   const synced = hasVoice && voice.status !== "failed" && typeSpeedMs === undefined;
+  // Keyed on status alone, so a stale "done" left over from the previous
+  // voiceover can't re-fire it.
+  const onVoiceoverDoneRef = useRef(onVoiceoverDone);
+  useEffect(() => {
+    onVoiceoverDoneRef.current = onVoiceoverDone;
+  });
+  useEffect(() => {
+    if (isVoiceoverSettled(voice.status)) onVoiceoverDoneRef.current?.();
+  }, [voice.status]);
   const voiceShown = (length: number) =>
     voice.status === "done" ? length : Math.floor(voice.progress * length);
 
@@ -144,6 +160,17 @@ export function FoxMessageScreen({
       : bubbleLen + headingLen;
   const typingStarted = headingFirst ? (synced ? bubbleIn : screenIn) : bubbleIn;
   const [ticks, setTicks] = useState(0);
+  // Compared against the count at mount, so a skip made on an earlier
+  // screen doesn't skip this one.
+  const lastSkipCount = useRef(skipCount);
+  useEffect(() => {
+    if (skipCount === lastSkipCount.current) return;
+    lastSkipCount.current = skipCount;
+    voice.stop();
+    setTicks(unsyncedLen);
+    // `voice` is a fresh object each render; only a new skip should run this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipCount]);
   // On a heading-first screen whose voice couldn't play, the heading types
   // at the normal speed, then the bubble pops in and types at the quick one.
   const onBubble = headingFirst && (synced || ticks >= headingLen);

@@ -7,6 +7,11 @@ const STOP_FADE_MS = 250;
 
 export type VoiceoverStatus = "idle" | "playing" | "done" | "failed";
 
+/** A voice that has ended — or couldn't play at all, so nothing is left to
+ * wait for. */
+export const isVoiceoverSettled = (status: VoiceoverStatus) =>
+  status === "done" || status === "failed";
+
 export interface Voiceover {
   status: VoiceoverStatus;
   /** True only while a clip is audibly advancing — drives the fox's mouth. */
@@ -161,6 +166,11 @@ export function useVoiceover(
     progress: status === "done" ? 1 : (position.clip + position.t) / count,
     clip: position.clip,
     clipProgress: position.t,
-    stop: () => stopRef.current?.(),
+    stop: () => {
+      // Also valid before the clip has started: it then never will.
+      stoppedRef.current = true;
+      if (stopRef.current) stopRef.current();
+      else setStatus("done");
+    },
   };
 }

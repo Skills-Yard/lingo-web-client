@@ -77,7 +77,7 @@ export function ExperienceSelectionScreen({ onNext, onBack, careerTitle = "Softw
         <button 
           onClick={onNext}
           disabled={!selected}
-          className="w-full py-4 rounded-xl font-bold text-white bg-[#01A17F] disabled:opacity-50 transition-all flex items-center justify-center overflow-hidden relative"
+          className="w-full py-4 rounded-xl font-bold text-white bg-[#01A17F] disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all flex items-center justify-center overflow-hidden relative"
         >
           {/* Subtle stripe effect */}
           <div className="absolute inset-0 opacity-20 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.3)_25%,rgba(255,255,255,0.3)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.3)_75%,rgba(255,255,255,0.3)_100%)] bg-[length:20px_20px]"></div>

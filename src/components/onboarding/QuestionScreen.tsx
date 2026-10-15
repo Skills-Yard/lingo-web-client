@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import type {
   OnboardingGridOption,
@@ -9,7 +9,7 @@ import type {
   TextSpan,
 } from "@/lib/constants/onboarding";
 import { playClickSound } from "./clickSound";
-import { useVoiceover } from "./useVoiceover";
+import { isVoiceoverSettled, useVoiceover } from "./useVoiceover";
 import { QuestionHeading, questionSpoken, spokenOptionIndex } from "./QuestionHeading";
 import { QuestionListOptions } from "./QuestionListScreen";
 import { QuestionGridOptions } from "./QuestionGridScreen";
@@ -25,6 +25,11 @@ type QuestionScreenProps = {
   onSelect: (id: string) => void;
   /** Question (then options) voiceover, played as the screen appears. */
   voiceover?: readonly string[];
+  /** Called once the voiceover has finished (or failed to play). */
+  onVoiceoverDone?: () => void;
+  /** Bumped by the parent's Skip link: cuts the voice off and shows the
+   * question and options as read. */
+  skipCount?: number;
   muted?: boolean;
   /** How Zox reacts — see OnboardingStep's `hexMode`. */
   hexMode?: QuestionHexMode;
@@ -60,6 +65,8 @@ export function QuestionScreen(props: QuestionScreenProps) {
     selectedId,
     onSelect,
     voiceover,
+    onVoiceoverDone,
+    skipCount = 0,
     muted = false,
     hexMode,
     reactionsArtboard,
@@ -68,6 +75,23 @@ export function QuestionScreen(props: QuestionScreenProps) {
   } = props;
 
   const voice = useVoiceover(voiceover, true, muted, selectedId !== null);
+  // Keyed on status alone, so a stale "done" left over from the previous
+  // question's voiceover can't re-fire it.
+  const onVoiceoverDoneRef = useRef(onVoiceoverDone);
+  useEffect(() => {
+    onVoiceoverDoneRef.current = onVoiceoverDone;
+  });
+  useEffect(() => {
+    if (isVoiceoverSettled(voice.status)) onVoiceoverDoneRef.current?.();
+  }, [voice.status]);
+  const lastSkipCount = useRef(skipCount);
+  useEffect(() => {
+    if (skipCount === lastSkipCount.current) return;
+    lastSkipCount.current = skipCount;
+    voice.stop();
+    // `voice` is a fresh object each render; only a new skip should run this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [skipCount]);
   const spokenQuestion = questionSpoken(voice, !!voiceover?.length);
   const spokenOption = spokenOptionIndex(voice, props.options.length);
 
@@ -131,6 +155,9 @@ export function QuestionScreen(props: QuestionScreenProps) {
               typing={typing}
               selectedOption={selectedOption}
               questionId={questionId}
+              speaking={voice.playing}
+              questionSpoken={spokenQuestion}
+              spokenOption={spokenOption}
             />
           ) : undefined
         }
