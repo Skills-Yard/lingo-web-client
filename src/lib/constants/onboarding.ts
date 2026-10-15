@@ -243,7 +243,7 @@ export const PYTHON_LEVEL_OPTIONS: OnboardingGridOption[] = [
   },
   {
     id: "professional",
-    label: "Professional",
+    label: "Advanced",
     illustration: "trophy",
     image: "/images/screen-02/02-4-new.png",
   },
@@ -525,8 +525,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "good-news",
     bubble: (a) => [
       { text: "Good news: your " },
-      { text: `${careerLabel(a)} journey`, highlight: true },
-      { text: " runs on " },
+      { text: `${careerLabel(a)}`, highlight: true },
+      { text: " journey runs on " },
       { text: languageForCareer(a.career), highlight: true },
       { text: ", one of the most in-demand languages." },
     ],
@@ -650,9 +650,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "streak",
     id: "streak",
     heading: () => [
-      { text: "Let’s keep your " },
-      { text: "coding streak", highlight: true },
-      { text: " going! Stay one tap from your next lesson." },
+      { text: "Stay " },
+      { text: "one tap away", highlight: true },
+      { text: " from your next lesson." },
     ],
     image: "/images/codingStreak/codingStreak-3.png",
     cta: "Continue",
@@ -662,7 +662,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "three-months",
     bubble: (a) => [
       {
-        text: "In 3 months you could be building real ",
+        text: "In 3 months you will be building real ",
       },
       { text: careerLabel(a), highlight: true },
       { text: " projects on your own." },
