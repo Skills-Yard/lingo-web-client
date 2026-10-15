@@ -28,7 +28,7 @@ export function optionCardClass(selected: boolean, spotlight = false, flatDark =
   const litDark = flatDark ? flatDarkCard : "dark:bg-[#0F2921]";
   const state = lit
     ? `border-primary bg-[#F2FBF8] shadow-[0_5px_0_#008566,0_8px_14px_rgba(1,161,127,0.18)] active:shadow-[0_2px_0_#008566,0_4px_8px_rgba(1,161,127,0.14)] ${litDark}`
-    : `border-black/4 border-b-[#BDBA99] shadow-[0_5px_0_#BDBA99,0_8px_14px_rgba(0,0,0,0.06)] active:shadow-[0_2px_0_#BDBA99,0_4px_8px_rgba(0,0,0,0.05)] ${idleDark}`;
+    : `${flatDark ? "border-black/15" : "border-black/4"} border-b-[#BDBA99] shadow-[0_5px_0_#BDBA99,0_8px_14px_rgba(0,0,0,0.06)] active:shadow-[0_2px_0_#BDBA99,0_4px_8px_rgba(0,0,0,0.05)] ${idleDark}`;
   return `rounded-[8px] border bg-white transition-[scale,translate,box-shadow,background-color,border-color] duration-200 ease-out active:translate-y-[3px] ${
     spotlight ? "scale-[1.04]" : ""
   } ${state}`;

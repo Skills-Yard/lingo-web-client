@@ -396,9 +396,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </motion.div>
             <motion.div
               initial={false}
-              animate={{ height: index <= -1 || onNotificationScreen ? 40 : 8 }}
+              animate={{ height: onNotificationScreen ? 40 : index <= -1 ? 68 : 8 }}
               transition={SCREEN_TRANSITION}
-              className="flex items-center justify-center"
+              className="flex items-start justify-center pt-2"
             >
               <AnimatePresence>
                 {index === -1 && signUpSettled && (
@@ -408,7 +408,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                     transition={SCREEN_TRANSITION}
-                    className="text-center text-sm text-[#666666] sm:text-base"
+                    className="text-center text-sm text-[#666666] sm:text-xl"
                   >
                     Already have an account?{" "}
                     {/* No login route exists yet, so this is inert for now. */}

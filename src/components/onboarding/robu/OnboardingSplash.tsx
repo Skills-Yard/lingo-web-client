@@ -189,33 +189,24 @@ export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmar
         <RiveComponent className="h-full w-full" />
       </div>
 
-      {/* The wordmark is always laid out (it sets the room kept above the
-        artboard). "Welcome to" and the tagline hug it on the splash only. */}
-      <div
+      {/* The wordmark block is always laid out (it sets the room kept above
+        the artboard) but only visible from the second (sign-up) screen on. */}
+      <motion.div
         ref={signUpWordmarkRef}
+        initial={false}
+        animate={{ opacity: showSignUpWordmark ? 1 : 0 }}
+        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="pointer-events-none absolute inset-x-0 z-10 mx-auto w-max"
         style={{ top: Math.max(WORDMARK_TOP_PX, artboardTop - WORDMARK_GAP_PX - signUpWordmarkHeight) }}
       >
-        <motion.p
-          initial={false}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className={`${SPLASH_TEXT_CLASS} text-center text-[14px] font-medium`}
-        >
-          Welcome to
-        </motion.p>
+        <p className={`${SPLASH_TEXT_CLASS} text-center text-[14px] font-medium`}>Welcome to</p>
         <h1 className={WORDMARK_CLASS}>Lingo</h1>
-        <motion.p
-          initial={false}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-          className={`${SPLASH_TEXT_CLASS} text-center text-[13px] font-medium`}
-        >
+        <p className={`${SPLASH_TEXT_CLASS} text-center text-[13px] font-medium`}>
           All your learnings
           <br />
           in one place.
-        </motion.p>
-      </div>
+        </p>
+      </motion.div>
     </div>
   );
 }
