@@ -484,8 +484,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "greeting",
     bubble: () => [{ text: "Hey! I'm Hex,\nyour skills buddy" }],
     hexBeat: "hi",
-    voiceover: ["/audios/text-1.mpeg"],
-    typeSpeedMs: 70,
+    voiceover: ["/audios/hey.mp3"],
     cta: "Continue",
   },
   {
@@ -500,7 +499,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     sparkle: true,
     excite: true,
     hexBeat: "ready",
-    voiceover: ["/audios/text-2-screen.mpeg"],
+    voiceover: ["/audios/text-2-screen.mpeg", "/audios/ready.m4a"],
     voiceReads: "heading",
     bubble: () => [{ text: "Are you ready?" }],
     cta: "Yes!",
@@ -518,7 +517,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     answerKey: "career",
     hexMode: "onboarding",
     voiceover: [
-      "/audios/screen-1-question.mpeg",
+      "/audios/chasing.mp3",
       "/audios/screen-1-options.mpeg",
     ],
     cta: "Continue",

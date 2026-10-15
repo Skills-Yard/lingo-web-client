@@ -188,8 +188,18 @@ export function FoxMessageScreen({
     headingShown = headingLen;
     bubbleShown = bubbleLen;
   } else if (headingFirst) {
-    headingShown = synced ? voiceShown(headingLen) : Math.min(ticks, headingLen);
-    bubbleShown = synced ? ticks : Math.max(0, ticks - headingLen);
+    // A second clip is the bubble's own line ("Are you ready?"): the heading
+    // follows the first clip and the bubble types along with the second.
+    const bubbleHasClip = synced && (voiceover?.length ?? 0) > 1;
+    if (bubbleHasClip) {
+      const done = voice.status === "done";
+      const clipShown = (length: number) => Math.floor(voice.clipProgress * length);
+      headingShown = done || voice.clip >= 1 ? headingLen : clipShown(headingLen);
+      bubbleShown = done ? bubbleLen : voice.clip >= 1 ? clipShown(bubbleLen) : 0;
+    } else {
+      headingShown = synced ? voiceShown(headingLen) : Math.min(ticks, headingLen);
+      bubbleShown = synced ? ticks : Math.max(0, ticks - headingLen);
+    }
   } else {
     // Reading order: a heading above the fox is read before the bubble, one
     // below it after.
