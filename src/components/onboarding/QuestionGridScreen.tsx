@@ -61,7 +61,7 @@ export function QuestionGridOptions({
     // auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
     // over the gap into the next row. Now the gap is always gap-y-3 and the
     // grid scrolls instead.
-    <div ref={optionsRef} className={`scrollbar-none mx-auto ${compact ? "mt-3.5" : "mt-4 sm:mt-5"} grid w-full ${compact ? "max-w-[297px] grid-cols-[139px_139px] gap-y-4" : three ? "max-w-[358px] grid-cols-[repeat(3,minmax(0,108px))] gap-y-6" : "max-w-[306px] grid-cols-[138px_138px] gap-y-[29px]"} min-h-0 flex-1 auto-rows-max content-start justify-between overflow-y-auto px-0 pt-1 pb-2`}>
+    <div ref={optionsRef} className={`scrollbar-none mx-auto ${compact ? "mt-3.5" : "mt-4 sm:mt-5"} grid w-full ${compact ? "max-w-[313px] grid-cols-[139px_139px] gap-y-4" : three ? "max-w-[374px] grid-cols-[repeat(3,minmax(0,108px))] gap-y-6" : "max-w-[322px] grid-cols-[138px_138px] gap-y-[29px]"} min-h-0 flex-1 auto-rows-max content-start justify-between overflow-y-auto px-2 pt-1 pb-2`}>
       {options.map((option, i) => {
         const selected = option.id === selectedId;
         const spotlight = !selected && i === spokenOption;

@@ -27,6 +27,9 @@ const fascinate = Fascinate({ subsets: ["latin"], weight: "400" });
 // theme and #E8E8E8 in dark.
 const WORDMARK_CLASS = `${fascinate.className} px-[0.05em] pt-[0.05em] pb-[0.2em] text-center text-[60px] leading-none text-[#444444] dark:text-[#E8E8E8]`;
 
+// "Welcome to" / tagline around the wordmark on the splash — same #444444.
+const SPLASH_TEXT_CLASS = "whitespace-nowrap leading-tight text-[#444444] dark:text-[#E8E8E8]";
+
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
 
@@ -44,6 +47,8 @@ const LAYOUT_ABOVE_FOOTER = new Layout({ fit: Fit.Contain, alignment: Alignment.
 
 // The sign-up wordmark sits this far below the top edge at the least, and
 // this far above the artboard (Hex is at the artboard's very top).
+// The whole stack ("Welcome to", wordmark, tagline) is measured, so the
+// artboard always fits below it and no text is hidden.
 const WORDMARK_TOP_PX = 16;
 const WORDMARK_GAP_PX = 8;
 
@@ -184,19 +189,33 @@ export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmar
         <RiveComponent className="h-full w-full" />
       </div>
 
-      {/* Always laid out (it sets the room kept above the artboard), shown
-        only on the sign-up screen. */}
-      <motion.h1
+      {/* The wordmark is always laid out (it sets the room kept above the
+        artboard). "Welcome to" and the tagline hug it on the splash only. */}
+      <div
         ref={signUpWordmarkRef}
-        aria-hidden={!showSignUpWordmark}
-        initial={false}
-        animate={{ opacity: showSignUpWordmark ? 1 : 0 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className={`${WORDMARK_CLASS} pointer-events-none absolute inset-x-0 z-10 mx-auto w-max`}
+        className="pointer-events-none absolute inset-x-0 z-10 mx-auto w-max"
         style={{ top: Math.max(WORDMARK_TOP_PX, artboardTop - WORDMARK_GAP_PX - signUpWordmarkHeight) }}
       >
-        Lingo
-      </motion.h1>
+        <motion.p
+          initial={false}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className={`${SPLASH_TEXT_CLASS} text-center text-[14px] font-medium`}
+        >
+          Welcome to
+        </motion.p>
+        <h1 className={WORDMARK_CLASS}>Lingo</h1>
+        <motion.p
+          initial={false}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+          className={`${SPLASH_TEXT_CLASS} text-center text-[13px] font-medium`}
+        >
+          All your learnings
+          <br />
+          in one place.
+        </motion.p>
+      </div>
     </div>
   );
 }

@@ -40,13 +40,13 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
     if (progress) lastShownStep = progress.step;
   }, [progress]);
   return (
-    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 pt-3 pb-2 select-none">
+    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 py-5 select-none">
       <button type="button" onClick={onBack} className={`shrink-0 ${ICON_BUTTON}`} aria-label="Back">
         <ChevronLeft className="w-5 h-5" />
       </button>
 
       {progress && (
-        <div className="flex-1 px-2 md:mx-auto md:max-w-xs">
+        <div className="flex-1 px-0 md:mx-auto md:max-w-sm">
           <p className="mb-1 text-xs font-semibold tabular-nums text-[#2C2C2C] dark:text-white">
             <span className="bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] bg-clip-text text-transparent">
               {String(progress.step).padStart(2, "0")}
