@@ -696,13 +696,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "question-list",
     id: "startingPoint",
-    heading: (a) => [
+    heading: () => [
       { text: "How do you want to begin your " },
-      { text: careerLabel(a), highlight: true },
-      { text: " path?" },
+      { text: "path", highlight: true },
+      { text: "?" },
     ],
     options: STARTING_POINT_OPTIONS,
     answerKey: "startingPoint",
+    voiceover: ["/audios/path.mp3", "/audios/path-option.mp3"],
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 3,
