@@ -316,7 +316,7 @@ function careerMindBubble(a: OnboardingAnswers): TextSpan[] {
     case "professional":
       return [
         {
-          text: "Got it. We'll go deep and sharpen your skills specifically for",
+          text: "Got it. We'll go deep and sharpen your skills specifically for ",
         },
         career,
       ];
@@ -517,10 +517,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     options: CAREER_OPTIONS,
     answerKey: "career",
     hexMode: "onboarding",
-    voiceover: [
-      "/audios/chasing.mp3",
-      "/audios/screen-1-options.mpeg",
-    ],
+    voiceover: ["/audios/chasing.mp3", "/audios/screen-1-options.mpeg"],
     cta: "Continue",
   },
   {
@@ -632,9 +629,9 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "learningTime",
     zoxLayout: "row",
     heading: (a) => [
-      { text: "Best " },
+      { text: "What is the best " },
       { text: "time", highlight: true },
-      { text: ` of day to learn ${careerLabel(a)}?` },
+      { text: ` in a day for you to learn?` },
     ],
     options: LEARNING_TIME_OPTIONS,
     answerKey: "learningTime",

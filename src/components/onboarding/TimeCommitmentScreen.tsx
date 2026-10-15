@@ -45,7 +45,7 @@ export function TimeCommitmentScreen({ onNext, onBack, careerTitle = "Software E
             <Image src="/images/fox.png" alt="Fox mascot" width={64} height={64} className="object-contain" />
           </div>
           <h1 className="text-xl font-semibold leading-snug">
-            How much time can you give <span className="text-[#01A17F]">{careerTitle}</span> each day?
+            How much time can you dedicate each day?
           </h1>
         </div>
 
