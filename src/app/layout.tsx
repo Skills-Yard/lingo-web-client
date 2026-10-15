@@ -1,7 +1,8 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { FullscreenOnFirstTap } from "@/components/FullscreenOnFirstTap";
 
 const poppins = Poppins({
   variable: "--font-app-poppins",
@@ -17,6 +18,19 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Lingo - Instructions Intro",
   description: "The instructions introduction flow: how a programmer thinks about instructions.",
+  appleWebApp: {
+    capable: true,
+    title: "Lingo",
+    statusBarStyle: "black-translucent",
+  },
+  other: { "mobile-web-app-capable": "yes" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#090c13",
 };
 
 export default function RootLayout({
@@ -32,6 +46,7 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
+        <FullscreenOnFirstTap />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
