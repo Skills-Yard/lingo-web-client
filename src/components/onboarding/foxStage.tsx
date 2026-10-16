@@ -14,7 +14,7 @@ import {
 import { animate, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 import type { HexOnboardingBeat } from "@/lib/constants/onboarding";
 import { OnboardingFox } from "./robu/OnboardingFox";
-import { HexExitContext, type HexExitRequest } from "./robu/hexExit";
+import { HexEntryStyleContext, HexExitContext, type HexExitRequest } from "./robu/hexExit";
 
 /**
  * One fox for the whole onboarding flow. Screens don't render their own fox;
@@ -76,15 +76,19 @@ export function useFoxStage() {
 export function FoxStageProvider({
   stage,
   exitRequest = null,
+  entryStyle = null,
   children,
 }: {
   stage: FoxStage;
   exitRequest?: HexExitRequest | null;
+  entryStyle?: number | null;
   children: React.ReactNode;
 }) {
   return (
     <FoxStageContext.Provider value={stage}>
-      <HexExitContext.Provider value={exitRequest}>{children}</HexExitContext.Provider>
+      <HexExitContext.Provider value={exitRequest}>
+        <HexEntryStyleContext.Provider value={entryStyle}>{children}</HexEntryStyleContext.Provider>
+      </HexExitContext.Provider>
     </FoxStageContext.Provider>
   );
 }

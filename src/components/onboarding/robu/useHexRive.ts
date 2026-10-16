@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import type { Layout } from "@rive-app/canvas";
 import {
@@ -15,6 +15,7 @@ import {
   isHexTalkTrigger,
 } from "@/lib/rive/runtime";
 import { useTheme } from "@/context/ThemeContext";
+import { HexEntryStyleContext } from "./hexExit";
 
 // Register the same-origin WASM URLs before the first canvas mounts.
 configureRiveRuntime();
@@ -47,6 +48,9 @@ export function useHexRive(
   entryKey: string | null = null,
 ) {
   const { theme } = useTheme();
+  const entryStyle = useContext(HexEntryStyleContext) ?? HEX_ENTER_STYLE.style;
+  const entryStyleRef = useRef(entryStyle);
+  entryStyleRef.current = entryStyle;
   const { rive, RiveComponent } = useRive({
     src: HEX_RIVE_SRC,
     artboard,
@@ -113,7 +117,7 @@ export function useHexRive(
     }
     enteringRef.current = true;
     const style = viewModelInstance.number(HEX_ENTER_STYLE.property);
-    if (style) style.value = HEX_ENTER_STYLE.style;
+    if (style) style.value = entryStyleRef.current;
     fireTrigger(HEX_ONBOARDING_TRIGGER.enter);
     enterTimer.current = window.setTimeout(() => {
       enteringRef.current = false;

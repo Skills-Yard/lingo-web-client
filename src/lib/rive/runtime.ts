@@ -186,6 +186,16 @@ export const HEX_EXIT_MS = 1500;
  * fired, and the screen's own triggers follow it. */
 export const HEX_ENTER_STYLE = { property: "entryStyle", style: 7 } as const;
 
+/** Screens that enter with a different `entryStyle` (by step id); a list picks
+ * one of its values at random on each visit. */
+export const HEX_ENTRY_STYLE_BY_STEP: Readonly<Record<string, number | readonly number[]>> = {
+  "ready-check": 5,
+  career: [3, 4],
+  "good-news": 1,
+  "all-set": 0,
+  notifications: 2,
+};
+
 /** The time-commitment screen's dial on `HEX_VIEW_MODEL`: set `minutes` to
  * the picked value, then turn `counting` on to play Hex's count. */
 export const HEX_TIME_COUNT = { minutes: "minutes", counting: "counting" } as const;

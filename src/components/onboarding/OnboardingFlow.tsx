@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ONBOARDING_STEPS,
@@ -18,7 +18,7 @@ import { StreakScreen } from "./StreakScreen";
 import { NameScreen } from "./NameScreen";
 import { TimeSliderScreen } from "./TimeSliderScreen";
 import type { HexExitRequest } from "./robu/hexExit";
-import { HEX_EXIT_MS } from "@/lib/rive/runtime";
+import { HEX_ENTER_STYLE, HEX_ENTRY_STYLE_BY_STEP, HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { HexBackground } from "./robu/HexBackground";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
@@ -185,6 +185,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   // Leaving any screen with a Hex: he plays his exit first (right going on, left
   // going back), then the flow moves.
+  // The entryStyle this screen's Hex enters with; picked once per visit.
+  const stepId = index >= 0 ? ONBOARDING_STEPS[index]?.id : undefined;
+  const entryStyle = useMemo(() => {
+    const style = (stepId ? HEX_ENTRY_STYLE_BY_STEP[stepId] : undefined) ?? HEX_ENTER_STYLE.style;
+    if (typeof style === "number") return style;
+    return style[Math.floor(Math.random() * style.length)] ?? HEX_ENTER_STYLE.style;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepId, index]);
   const [exitRequest, setExitRequest] = useState<HexExitRequest | null>(null);
   const exitingRef = useRef(false);
   const [exiting, setExiting] = useState(false);
@@ -273,7 +281,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // taller than the visible area and the page scrolled. `dvh` tracks the
   // actually-visible height, so every screen fits on one screen.
   return (
-    <FoxStageProvider stage={foxStage} exitRequest={exitRequest}>
+    <FoxStageProvider stage={foxStage} exitRequest={exitRequest} entryStyle={entryStyle}>
       <main
         ref={mainRef}
         className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background"

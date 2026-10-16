@@ -12,6 +12,9 @@ export type HexExitRequest = {
 /** Set by OnboardingFlow when the user leaves a screen; every Hex on screen reacts. */
 export const HexExitContext = createContext<HexExitRequest | null>(null);
 
+/** The `entryStyle` the current screen's Hex enters with (see `HEX_ENTRY_STYLE_BY_STEP`). */
+export const HexEntryStyleContext = createContext<number | null>(null);
+
 /** Fires the current exit trigger once per new request. A Hex whose view model
  * has no such trigger ignores it. */
 export function useHexExit(fireTrigger: (name: string) => void, ready: boolean) {
