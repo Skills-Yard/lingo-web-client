@@ -136,6 +136,15 @@ export function QuestionScreen(props: QuestionScreenProps) {
           </div>
         </div>
       )}
+      {/* Under a scene, the question + options sit on a panel with curved top
+        corners that overlaps the scene's bottom edge. */}
+      <div
+        className={`flex min-h-0 flex-1 flex-col ${
+          scene
+            ? "relative z-10 -mx-4 -mt-6 rounded-t-[24px] bg-white px-4 pt-6 dark:bg-background"
+            : ""
+        }`}
+      >
       {/* Same Hex-beside-heading row on every question, tiles included. */}
       <QuestionHeading
         heading={heading}
@@ -193,6 +202,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
           />
         )}
       </motion.div>
+      </div>
 
     </div>
   );

@@ -28,12 +28,16 @@ const SCREEN_SETTLE_MS = 400;
 const FOX_MAX_REM = 15;
 const FOX_MAX_DVH = 30;
 const FOX_SIZE = `min(${FOX_MAX_REM}rem, ${FOX_MAX_DVH}dvh)`;
-const FOX_HALF = `min(${FOX_MAX_REM / 2}rem, ${FOX_MAX_DVH / 2}dvh)`;
-const FOX_CENTER = 0.5;
-/** Every bubble's top edge sits 146px from the top of the screen — the
+/** Every bubble's top edge sits 200px from the top of the screen — the
  * header is 107px, so this far into the stage — and the bubble grows
  * downward with its text. */
-const BUBBLE_TOP_PX = 39;
+const BUBBLE_TOP_PX = 93;
+/** The text below Hex ends this far (px) above the bottom of the screen. */
+const BELOW_TEXT_BOTTOM_PX = 200;
+/** Gap between the bubble's bottom edge and the fox's top edge. */
+const FOX_BUBBLE_GAP_PX = -68;
+/** Fox's top edge where there's no bubble above it (heading on top). */
+const FOX_TOP_PX = 223;
 /** The fox never shrinks below this (px) to make room for text below. */
 const FOX_MIN_PX = 128;
 /** Breathing room kept between the text and the edges of that space. */
@@ -259,7 +263,8 @@ export function FoxMessageScreen({
   const aboveRef = useRef<HTMLDivElement>(null);
   const belowRef = useRef<HTMLDivElement>(null);
   const [lift, setLift] = useState(0);
-  const [center, setCenter] = useState(FOX_CENTER);
+  const [foxTop, setFoxTop] = useState(FOX_TOP_PX);
+  const [belowBottom, setBelowBottom] = useState(BELOW_TEXT_BOTTOM_PX);
   const [shrunk, setShrunk] = useState<{ size: number; top: number } | null>(null);
   useEffect(() => {
     const stage = stageRef.current;
@@ -272,12 +277,17 @@ export function FoxMessageScreen({
       const stageHeight = stage.clientHeight;
       const aboveEl = aboveRef.current;
       const aboveHeight = aboveEl ? BUBBLE_TOP_PX + aboveEl.offsetHeight : 0;
-      const belowHeight = belowRef.current?.offsetHeight ?? 0;
+      // The text below is pinned to the bottom, so it no longer pushes Hex.
+      const belowHeight = 0;
+      // Stage bottom is above the footer; measure it to land at 200px from
+      // the bottom of the screen.
+      const footerHeight = window.innerHeight - stage.getBoundingClientRect().bottom;
+      setBelowBottom(Math.max(0, BELOW_TEXT_BOTTOM_PX - footerHeight));
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
       const size = Math.min(FOX_MAX_REM * rem, (FOX_MAX_DVH / 100) * window.innerHeight);
-      const foxCenter = FOX_CENTER;
-      setCenter(foxCenter);
-      const top = foxCenter * stageHeight - size / 2;
+      // Hex sits just under the bubble, whatever its height.
+      const top = aboveEl ? aboveHeight + FOX_BUBBLE_GAP_PX : FOX_TOP_PX;
+      setFoxTop(top);
 
       const overflow = top + size + belowHeight + EDGE_GAP_PX - stageHeight;
       const room = Math.max(0, top - aboveHeight - EDGE_GAP_PX);
@@ -339,7 +349,7 @@ export function FoxMessageScreen({
           ref={foxRef}
           className="absolute left-1/2 -translate-x-1/2"
           style={{
-            top: shrunk ? shrunk.top : `calc(${center * 100}% - ${FOX_HALF})`,
+            top: shrunk ? shrunk.top : foxTop,
           }}
           animate={{ y: -lift }}
           transition={reduceMotion ? { duration: 0 } : LIFT}
@@ -352,19 +362,25 @@ export function FoxMessageScreen({
             beatDue={beatDue}
             speaking={speaking}
             tappable
-            className="aspect-square"
+            // Scaled visually only (transforms don't affect layout), so the
+            // bubble and heading stay exactly where they are.
+            className="aspect-square origin-top scale-125"
             style={{ height: shrunk ? shrunk.size : FOX_SIZE }}
           />
 
-          {(headingOnTop || headingBelow) && (
-            <div
-              ref={belowRef}
-              className="absolute top-full left-1/2 flex w-max max-w-[calc(100vw-3rem)] -translate-x-1/2 justify-center pt-8"
-            >
-              {headingOnTop ? bubbleEl("up") : headingBlock}
-            </div>
-          )}
         </motion.div>
+
+        {/* The text below Hex is pinned to the bottom of the screen
+            (BELOW_TEXT_BOTTOM_PX up from its edge), not hung off the fox. */}
+        {(headingOnTop || headingBelow) && (
+          <div
+            ref={belowRef}
+            className="absolute left-1/2 flex w-max max-w-[calc(100vw-3rem)] -translate-x-1/2 justify-center"
+            style={{ bottom: belowBottom }}
+          >
+            {headingOnTop ? bubbleEl("up") : headingBlock}
+          </div>
+        )}
       </div>
     </div>
   );
