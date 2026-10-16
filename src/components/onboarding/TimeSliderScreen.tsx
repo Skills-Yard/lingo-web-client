@@ -41,7 +41,14 @@ const GLIDE_MS = 220;
 const TOOLTIP_W = 81;
 const TOOLTIP_H = 36;
 
-const toRad = (deg: number) => (deg * Math.PI) / 180;
+const VIBRATE_MS = 12;
+// A short tick each time the dial lands on a new step. Browsers without the
+// Vibration API (iOS Safari, desktop) simply skip it.
+const buzz = () => {
+  if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(VIBRATE_MS);
+};
+
+const toRad =(deg: number) => (deg * Math.PI) / 180;
 const valueToDeg = (value: number) =>
   -SWEEP_DEG + (value / TIME_SLIDER.max) * 2 * SWEEP_DEG;
 const pointAt = (deg: number, radius: number) => ({
@@ -130,11 +137,15 @@ export function TimeSliderScreen({
     showAt(raw);
     const snapped = clamp(Math.round(raw / STEP) * STEP, STEP, TIME_SLIDER.max);
     snappedRef.current = snapped;
-    if (snapped !== minutes) onChange(snapped);
+    if (snapped !== minutes) {
+      buzz();
+      onChange(snapped);
+    }
   };
   const release = () => glideTo(snappedRef.current);
   const nudge = (next: number) => {
     setInteracted(Date.now());
+    buzz();
     snappedRef.current = next;
     onChange(next);
     glideTo(next);
