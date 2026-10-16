@@ -158,6 +158,11 @@ export const HEX_VIEW_MODEL = "Onboarding";
 export const HEX_ONBOARDING_TRIGGER = {
   /** Resting — the time-commitment screen's stand-in for `showQuestion`. */
   idle: "idle",
+  /** Greeting screen: Hex enters, fired before `hi` (after `entryStyle` is set). */
+  enter: "enter",
+  /** Leaving the greeting screen forward (Continue) / backward (Back). */
+  exitLeft: "exitLeft",
+  exitRight: "exitRight",
   /** Greeting screen. */
   hi: "hi",
   /** "Are you ready?" screen. */
@@ -173,6 +178,13 @@ export const HEX_ONBOARDING_TRIGGER = {
   /** A tap on Hex. */
   tap: "tap",
 } as const;
+
+/** The number on `HEX_VIEW_MODEL` picking Hex's entrance style, and the value
+ * the greeting screen sets before firing `enter`. */
+/** How long Hex's exit plays before the flow moves to the next screen. */
+export const HEX_EXIT_MS = 1000;
+
+export const HEX_ENTER_STYLE = { property: "entryStyle", greeting: 7 } as const;
 
 /** The time-commitment screen's dial on `HEX_VIEW_MODEL`: set `minutes` to
  * the picked value, then turn `counting` on to play Hex's count. */

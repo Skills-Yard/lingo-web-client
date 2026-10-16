@@ -13,7 +13,7 @@ import {
 } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
 import type { HexOnboardingBeat } from "@/lib/constants/onboarding";
-import { OnboardingFox } from "./robu/OnboardingFox";
+import { OnboardingFox, type HexExitRequest } from "./robu/OnboardingFox";
 
 /**
  * One fox for the whole onboarding flow. Screens don't render their own fox;
@@ -190,12 +190,14 @@ export function PersistentFox({
   slot,
   questionKey = null,
   pickCount = 0,
+  exitRequest = null,
 }: {
   containerRef: RefObject<HTMLElement | null>;
   slot: SlotInfo | null;
   /** See OnboardingFox's `questionKey` / `pickCount`. */
   questionKey?: string | null;
   pickCount?: number;
+  exitRequest?: HexExitRequest | null;
 }) {
   const reduceMotion = useReducedMotion();
   const x = useSpring(0, GLIDE);
@@ -311,6 +313,7 @@ export function PersistentFox({
         pickCount={pickCount}
         screenKey={questionKey ?? slot?.id ?? null}
         tapCount={tapCount}
+        exitRequest={exitRequest}
       />
     </motion.div>
   );

@@ -7,6 +7,7 @@ import {
   HEX_HELLO_MS,
   HEX_TAP_MS,
   HEX_ONBOARDING_TRIGGER,
+  HEX_ENTER_STYLE,
   randomHexTalkTrigger,
   type HexState,
 } from "@/lib/rive/runtime";
@@ -16,6 +17,30 @@ import { useHexRive } from "./useHexRive";
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 const GREETING_DELAY_MS = 400;
+
+/** How long `enter` plays before the Hi screen's talk / `hi` may fire. */
+const ENTER_HERO_MS = 2100;
+
+/** On the Hi screen: sets `entryStyle` to 7, fires `enter` first, then reports true once
+ * `ENTER_HERO_MS` has passed — every other trigger waits for it. Screens
+ * without a `hi` beat are always through. */
+function useEnterHero(
+  fireTrigger: (name: string) => void,
+  setNumber: (name: string, value: number) => void,
+  ready: boolean,
+  beat: HexOnboardingBeat | null,
+) {
+  const needsEntrance = beat === "hi";
+  const [entered, setEntered] = useState(false);
+  useEffect(() => {
+    if (!ready || !needsEntrance) return;
+    setNumber(HEX_ENTER_STYLE.property, HEX_ENTER_STYLE.greeting);
+    fireTrigger(HEX_ONBOARDING_TRIGGER.enter);
+    const timer = window.setTimeout(() => setEntered(true), ENTER_HERO_MS);
+    return () => window.clearTimeout(timer);
+  }, [fireTrigger, setNumber, ready, needsEntrance]);
+  return !needsEntrance || entered;
+}
 
 /**
  * Plays "HEX-Happy_Jump" for `HEX_TAP_MS` every time `tapCount` goes up — the
@@ -54,7 +79,29 @@ function useHello(greet: boolean) {
   return waving;
 }
 
+export type HexExitRequest = {
+  direction: "exitLeft" | "exitRight";
+  /** Changes with every request, so the same direction can fire twice. */
+  key: number;
+};
+
+/** Fires the requested exit trigger once per new `request.key`. */
+function useExit(
+  fireTrigger: (name: string) => void,
+  ready: boolean,
+  request: HexExitRequest | null,
+) {
+  const firedKey = useRef<number | null>(null);
+  useEffect(() => {
+    if (!ready || !request || firedKey.current === request.key) return;
+    firedKey.current = request.key;
+    fireTrigger(HEX_ONBOARDING_TRIGGER[request.direction]);
+  }, [fireTrigger, ready, request]);
+}
+
 interface OnboardingFoxProps {
+  /** Leaving the Hi screen: fires `exitLeft` / `exitRight` on the machine. */
+  exitRequest?: HexExitRequest | null;
   className?: string;
   style?: CSSProperties;
   /** Waves hello shortly after mounting — only the "Hey! I am Zox" greeting
@@ -174,6 +221,7 @@ export function OnboardingFox({
   questionKey = null,
   pickCount = 0,
   screenKey = null,
+  exitRequest = null,
 }: OnboardingFoxProps) {
   const waving = useHello(greet);
   const tapping = useTapping(tapCount, greet || !!beat);
@@ -184,7 +232,7 @@ export function OnboardingFox({
   else if (waving) state = HEX_STATE.hello;
   else if (excited) state = HEX_STATE.excited;
 
-  const { RiveComponent, ready, fireTrigger, reset } = useHexRive(LAYOUT, state);
+  const { RiveComponent, ready, fireTrigger, reset, setNumber } = useHexRive(LAYOUT, state);
   // Before the hooks below, so the machine is back at idle ahead of the
   // screen's triggers.
   useResetOnNewScreen(
@@ -193,8 +241,10 @@ export function OnboardingFox({
     state === HEX_STATE.onboarding,
     screenKey,
   );
-  useOnboardingBeat(fireTrigger, ready, beat, beatKey, talkKey, tapCount);
+  const heroEntered = useEnterHero(fireTrigger, setNumber, ready, beat);
+  useOnboardingBeat(fireTrigger, ready && heroEntered, beat, beatKey, talkKey, tapCount);
   useOnboardingQuestion(fireTrigger, ready, questionKey, pickCount);
+  useExit(fireTrigger, ready, exitRequest);
 
   return (
     <div className={`relative ${className ?? ""}`} style={style}>

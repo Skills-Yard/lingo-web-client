@@ -17,6 +17,8 @@ import { QuestionScreen } from "./QuestionScreen";
 import { StreakScreen } from "./StreakScreen";
 import { NameScreen } from "./NameScreen";
 import { TimeSliderScreen } from "./TimeSliderScreen";
+import type { HexExitRequest } from "./robu/OnboardingFox";
+import { HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { HexBackground } from "./robu/HexBackground";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
@@ -181,6 +183,27 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setIndex(next);
   };
 
+  // Leaving the Hi screen: Hex plays his exit first (left going on, right
+  // going back), then the flow moves.
+  const [exitRequest, setExitRequest] = useState<HexExitRequest | null>(null);
+  const exitingRef = useRef(false);
+  const [exiting, setExiting] = useState(false);
+  useEffect(() => {
+    exitingRef.current = false;
+    setExiting(false);
+  }, [index]);
+  const afterHexExit = (direction: HexExitRequest["direction"], proceed: () => void) => {
+    if (!step || step.kind !== "fox-message" || step.hexBeat !== "hi") {
+      proceed();
+      return;
+    }
+    if (exitingRef.current) return;
+    exitingRef.current = true;
+    setExiting(true);
+    setExitRequest((prev) => ({ direction, key: (prev?.key ?? 0) + 1 }));
+    window.setTimeout(proceed, HEX_EXIT_MS);
+  };
+
   const goNext = () => {
     if (index >= ONBOARDING_STEPS.length - 1) {
       onComplete?.(answers);
@@ -194,7 +217,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const showSignUp = () => setIndex((current) => (current === -2 ? -1 : current));
 
   const goBack = () => {
-    goTo(Math.max(-1, index - 1));
+    afterHexExit("exitRight", () => goTo(Math.max(-1, index - 1)));
   };
 
   const setAnswer = (key: keyof OnboardingAnswers, value: string) =>
@@ -225,6 +248,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const awaitingVoiceover = !!step && hasStepVoiceover && voicedStepId !== step.id;
   const ctaDisabled =
     index < -1 ||
+    exiting ||
     awaitingVoiceover ||
     (step?.kind === "name-input" && !answers.name?.trim()) ||
     ((step?.kind === "question-list" || step?.kind === "question-grid") &&
@@ -237,7 +261,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const onNotificationScreen = step?.kind === "notification-permission";
   const handleCta = () => {
     if (onNotificationScreen) requestNotifications();
-    goNext();
+    afterHexExit("exitLeft", goNext);
   };
 
   // The CTA fades out on the splash and until the sign-up animation has
@@ -505,6 +529,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           slot={foxOnScreen ? foxSlot : null}
           questionKey={isQuestion && step.hexMode === "onboarding" ? step.id : null}
           pickCount={pickCount}
+          exitRequest={exitRequest}
         />
 
         {/* The splash/sign-up canvas stays mounted for the whole flow, so going
