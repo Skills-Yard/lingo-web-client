@@ -2,7 +2,7 @@
 
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Poppins } from "next/font/google";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { Code2, Moon, Sun } from "lucide-react";
@@ -10,6 +10,7 @@ import { useTheme } from "@/context/ThemeContext";
 import { HEX_STATE, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { BottomNav, type HomeTab } from "./BottomNav";
+import { LevelStartPopup } from "./LevelStartPopup";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
@@ -133,6 +134,9 @@ const HOP_S = 0.42;
 const HOP_HEIGHT = 70;
 const HEX_PERCH = 37;
 
+/** The lesson the live platform opens, shown in its popup. */
+const LIVE_LESSON = { title: "How Programmers Think", xp: 50 } as const;
+
 const useHomeId = () => useId().replace(/:/g, "");
 
 /** The platform artwork (public/images/platforms): a slab with its own
@@ -202,6 +206,7 @@ function LivePlatform({ cx, cy, onLaunch }: { cx: number; cy: number } & Launch)
       <button
         type="button"
         onClick={onLaunch}
+        data-level-popup
         aria-label="Start level"
         className="absolute"
         style={{ left: cx - 50, top: cy - 32, width: 100, height: 64 }}
@@ -552,8 +557,31 @@ export function HomeScreen({
   const [boxW, setBoxW] = useState(STAGE_W);
   const [done, setDone] = useState(0);
   const [launching, setLaunching] = useState(false);
-  const startLevel = () => setLaunching(true);
-  const launch: Launch = { launching, onLaunch: startLevel };
+  const [popupOpen, setPopupOpen] = useState(false);
+  // Tapping the live platform (or Hex) sends Hex hopping onto it and opens
+  // its popup; Start goes on to the lesson. Dismissing the popup sends Hex
+  // back to his spot.
+  const openPopup = () => {
+    setLaunching(true);
+    setPopupOpen(true);
+  };
+  const closePopup = () => {
+    setPopupOpen(false);
+    setLaunching(false);
+  };
+  const launch: Launch = { launching, onLaunch: openPopup };
+
+  // A tap anywhere outside the popup (and the platform/Hex that open it)
+  // closes it.
+  useEffect(() => {
+    if (!popupOpen) return;
+    const close = (e: PointerEvent) => {
+      if (e.target instanceof Element && e.target.closest("[data-level-popup]")) return;
+      closePopup();
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [popupOpen]);
 
   useEffect(() => {
     const box = boxRef.current;
@@ -641,7 +669,8 @@ export function HomeScreen({
                 room: platform on the right -> Hex on the left, and back. */}
               <motion.button
                 type="button"
-                onClick={startLevel}
+                onClick={openPopup}
+                data-level-popup
                 aria-label="Start level"
                 className="absolute"
                 style={{ left: CURRENT.x + HEX_SIDE * HEX_OFFSET_X - 55, top: CURRENT.y - 55, width: 110, height: 110 }}
@@ -656,12 +685,25 @@ export function HomeScreen({
                         x: { duration: HOP_S, ease: "easeInOut" },
                         y: { duration: HOP_S, times: [0, 0.5, 1], ease: ["easeOut", "easeIn"] },
                       }
-                    : { duration: 0 }
+                    : { duration: 0.3, ease: "easeInOut" }
                 }
-                onAnimationComplete={() => launching && onStart?.()}
               >
                 <HomeHex />
               </motion.button>
+
+              <AnimatePresence>
+                {popupOpen && (
+                  <LevelStartPopup
+                    cx={CURRENT.x}
+                    cy={CURRENT.y}
+                    stageWidth={STAGE_W}
+                    title={LIVE_LESSON.title}
+                    xp={LIVE_LESSON.xp}
+                    onStart={() => onStart?.()}
+                    delay={HOP_S}
+                  />
+                )}
+              </AnimatePresence>
             </div>
             </div>
           </div>
