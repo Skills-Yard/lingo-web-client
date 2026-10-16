@@ -14,8 +14,12 @@ interface LevelOneShellProps {
   /** 1-based screen number, shown in the progress bar. */
   step: number;
   onContinue?: () => void;
+  /** Defaults to the browser Back. */
+  onBack?: () => void;
   /** Greys out Continue until the learner has answered. */
   ctaDisabled?: boolean;
+  /** Label of the main button (default "Continue"). */
+  ctaLabel?: string;
   /** Content between the header and the Continue button. */
   children: ReactNode;
   /** Rendered over everything (popups). */
@@ -23,7 +27,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, ctaDisabled, children, overlay }: LevelOneShellProps) {
+export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, setMuted] = useState(false);
 
@@ -31,7 +35,7 @@ export function LevelOneShell({ step, onContinue, ctaDisabled, children, overlay
     <main className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background">
       <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col">
         <OnboardingHeader
-          onBack={() => router.back()}
+          onBack={onBack ?? (() => router.back())}
           progress={{ step, total: LEVEL_ONE_STEPS }}
           muted={muted}
           onToggleMuted={() => setMuted((m) => !m)}
@@ -48,7 +52,7 @@ export function LevelOneShell({ step, onContinue, ctaDisabled, children, overlay
           disabled={ctaDisabled}
           className="w-full"
         >
-          Continue
+          {ctaLabel}
         </Button3D>
       </div>
 

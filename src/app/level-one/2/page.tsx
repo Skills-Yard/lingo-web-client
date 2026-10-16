@@ -1,6 +1,6 @@
-import { TeacherSaysScreen } from "@/components/level-one/TeacherSaysScreen";
+import { TeacherFlow } from "@/components/level-one/TeacherFlow";
 
-/** Level 1, screen 2 — the teacher's instruction. */
+/** Level 1, screens 2 and 3 — the teacher says something, then the quiz. */
 export default function LevelOneTeacherPage() {
-  return <TeacherSaysScreen />;
+  return <TeacherFlow />;
 }
