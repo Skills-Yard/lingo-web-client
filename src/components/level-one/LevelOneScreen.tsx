@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Target, X } from "lucide-react";
 import { BoxLottie } from "@/components/instructions-intro/BoxLottie";
+import { Alignment, Fit, Layout } from "@rive-app/canvas";
+import { HEX_STATE } from "@/lib/rive/runtime";
+import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { LevelOneShell } from "./LevelOneShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
 
@@ -19,6 +22,14 @@ const REVEAL = {
 
 const BRAND_GRADIENT = "bg-linear-to-b from-[#00B8A9] to-[#1187B2] bg-clip-text text-transparent";
 
+const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+
+/** Hex resting in his idle loop. */
+function IdleHex() {
+  const { RiveComponent } = useHexRive(HEX_LAYOUT, HEX_STATE.idle);
+  return <RiveComponent className="h-full w-full" />;
+}
+
 /**
  * `/level-one` — the first screen of Module 1: "Before we write code, let's
  * learn how programmers think", with a tap-to-reveal card whose modal explains
@@ -31,6 +42,7 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
   return (
     <LevelOneShell
       step={1}
+      onBack={() => router.push("/level")}
       onContinue={onContinue ?? (() => router.push("/level-one/2"))}
       overlay={
         <AnimatePresence>
@@ -41,13 +53,19 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
       {/* Positions follow the 390x844 design frame: illustration at 103px
         (20px under the 83px header), heading 13px under it, card 32px under
         the heading. */}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src="/images/level-one/programmer.png"
-        alt=""
-        draggable={false}
-        className="mt-5 h-[258px] w-[310px] max-w-full shrink-0 object-contain"
-      />
+      {/* The picture has no robot of its own: Hex floats where it used to be. */}
+      <div className="relative mt-5 h-[258px] w-[310px] max-w-full shrink-0">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/level-one/programmer.png"
+          alt=""
+          draggable={false}
+          className="h-full w-full object-contain"
+        />
+        <div aria-hidden className="pointer-events-none absolute -top-2 -right-3 h-[110px] w-[110px]">
+          <IdleHex />
+        </div>
+      </div>
 
       <h1 className="relative mt-[13px] h-24 w-[264px] shrink-0 translate-x-[3px] text-[24px] leading-[1.34] font-semibold text-[#444444] dark:text-white">
         Before we write code, let’s learn how <span className="text-brand-gradient">programmer think.</span>
@@ -76,7 +94,7 @@ function RevealCard({ onOpen }: { onOpen: () => void }) {
         playClickSound();
         onOpen();
       }}
-      className="group relative mt-8 block h-[176px] w-[318px] max-w-full shrink-0 cursor-pointer text-left transition-transform active:scale-[0.98]"
+      className="group relative mt-[68px] block h-[176px] w-[318px] max-w-full shrink-0 cursor-pointer text-left transition-transform active:scale-[0.98]"
       aria-label={`Tap to reveal about ${REVEAL.subject}`}
     >
       <span aria-hidden className="absolute top-1/2 left-1/2 h-[169px] w-[312px] -translate-x-[calc(50%+8px)] -translate-y-[calc(50%+22px)] rotate-[8deg] rounded-[10px] bg-[#E7F0F8] dark:bg-white/5" />

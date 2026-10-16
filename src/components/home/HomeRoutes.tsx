@@ -25,7 +25,10 @@ const subscribeNever = () => () => {};
 
 /** `/level` — the learner's path. */
 export function LevelRoute() {
-  return <HomeScreen onNavigate={useTabNavigation()} />;
+  const router = useRouter();
+  return (
+    <HomeScreen onNavigate={useTabNavigation()} onStart={() => router.push("/level-one")} />
+  );
 }
 
 /** `/profile` — the learner's profile; "Redo onboarding" goes back to `/`. */

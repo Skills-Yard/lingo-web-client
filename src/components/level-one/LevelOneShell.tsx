@@ -34,12 +34,17 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
   return (
     <main className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background">
       <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col">
-        <OnboardingHeader
-          onBack={onBack ?? (() => router.back())}
-          progress={{ step, total: LEVEL_ONE_STEPS }}
-          muted={muted}
-          onToggleMuted={() => setMuted((m) => !m)}
-        />
+        {/* The header sits 24px lower than the shared one, putting the page
+          count 51px from the top; the negative margin keeps the content
+          below exactly where it was. */}
+        <div className="relative z-10 -mb-6 pt-6">
+          <OnboardingHeader
+            onBack={onBack ?? (() => router.back())}
+            progress={{ step, total: LEVEL_ONE_STEPS }}
+            muted={muted}
+            onToggleMuted={() => setMuted((m) => !m)}
+          />
+        </div>
         <div className="scrollbar-none flex min-h-0 flex-1 flex-col items-center overflow-y-auto px-4 pb-4">
           {children}
         </div>

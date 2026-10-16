@@ -97,9 +97,10 @@ export function TeacherFlow() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-10 w-full shrink-0 bg-linear-to-r from-[#00B8A9] from-0% to-[#1387B3] to-[33%] bg-clip-text text-center text-[24px] leading-[1.34] font-semibold text-transparent"
+            // The progress bar ends 93px from the top; 26px below it (119px), 32px tall.
+            className="mt-9 h-8 w-full shrink-0 text-center text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white"
           >
-            What teacher is doing?
+            <span className="text-[#00B8A9]">What</span> teacher is doing?
           </motion.h1>
         ) : (
           <motion.h1
@@ -108,9 +109,9 @@ export function TeacherFlow() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="mt-1 flex shrink-0 flex-col items-center text-center"
+            className="mt-9 flex shrink-0 flex-col items-center text-center"
           >
-            <span className="text-brand-gradient text-[20px] leading-[1.34] font-semibold">Let Suppose</span>
+            <span className="text-[20px] leading-[1.34] font-semibold text-[#00B8A9]">Let Suppose</span>
             <span className="text-[32px] leading-[1.25] font-bold text-[#2C2C2C] dark:text-white">Teacher Says</span>
           </motion.h1>
         )}
