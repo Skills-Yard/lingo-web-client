@@ -17,7 +17,7 @@ import { QuestionScreen } from "./QuestionScreen";
 import { StreakScreen } from "./StreakScreen";
 import { NameScreen } from "./NameScreen";
 import { TimeSliderScreen } from "./TimeSliderScreen";
-import type { HexExitRequest } from "./robu/OnboardingFox";
+import type { HexExitRequest } from "./robu/hexExit";
 import { HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { HexBackground } from "./robu/HexBackground";
@@ -183,7 +183,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setIndex(next);
   };
 
-  // Leaving the Hi screen: Hex plays his exit first (left going on, right
+  // Leaving any screen with a Hex: he plays his exit first (left going on, right
   // going back), then the flow moves.
   const [exitRequest, setExitRequest] = useState<HexExitRequest | null>(null);
   const exitingRef = useRef(false);
@@ -193,7 +193,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setExiting(false);
   }, [index]);
   const afterHexExit = (direction: HexExitRequest["direction"], proceed: () => void) => {
-    if (!step || step.kind !== "fox-message" || step.hexBeat !== "hi") {
+    if (!step) {
       proceed();
       return;
     }
@@ -273,7 +273,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // taller than the visible area and the page scrolled. `dvh` tracks the
   // actually-visible height, so every screen fits on one screen.
   return (
-    <FoxStageProvider stage={foxStage}>
+    <FoxStageProvider stage={foxStage} exitRequest={exitRequest}>
       <main
         ref={mainRef}
         className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background"
@@ -529,7 +529,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           slot={foxOnScreen ? foxSlot : null}
           questionKey={isQuestion && step.hexMode === "onboarding" ? step.id : null}
           pickCount={pickCount}
-          exitRequest={exitRequest}
         />
 
         {/* The splash/sign-up canvas stays mounted for the whole flow, so going

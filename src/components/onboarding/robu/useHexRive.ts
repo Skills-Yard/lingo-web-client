@@ -10,6 +10,8 @@ import {
   HEX_VIEW_MODEL,
   HEX_STOP_TALK_TRIGGER,
   HEX_DARK_THEME,
+  HEX_ENTER_STYLE,
+  HEX_ONBOARDING_TRIGGER,
   isHexTalkTrigger,
 } from "@/lib/rive/runtime";
 import { useTheme } from "@/context/ThemeContext";
@@ -32,12 +34,17 @@ const TRIGGER_GAP_MS = 150;
  * `fireTrigger` / `setNumber` / `setBoolean` drive it. Triggers are queued
  * and spaced `TRIGGER_GAP_MS` apart; `fireNow` drops what's still queued and
  * fires its trigger at once, so whatever is fired after it follows it.
+ *
+ * With an `entryKey`, every new key plays Hex's entrance: `entryStyle` is set,
+ * and `enter` fires first; whatever the screen fires next (talk, its beat)
+ * follows it straight away.
  */
 export function useHexRive(
   layout: Layout,
   state: string | null,
   artboard: string = HEX_ARTBOARD,
   viewModel: string = HEX_VIEW_MODEL,
+  entryKey: string | null = null,
 ) {
   const { theme } = useTheme();
   const { rive, RiveComponent } = useRive({
@@ -95,6 +102,25 @@ export function useHexRive(
     [drain],
   );
 
+  const enteringRef = useRef(false);
+  const enterTimer = useRef<number | undefined>(undefined);
+
+  useEffect(() => {
+    window.clearTimeout(enterTimer.current);
+    if (!entryKey || !viewModelInstance) {
+      enteringRef.current = false;
+      return;
+    }
+    enteringRef.current = true;
+    const style = viewModelInstance.number(HEX_ENTER_STYLE.property);
+    if (style) style.value = HEX_ENTER_STYLE.style;
+    fireTrigger(HEX_ONBOARDING_TRIGGER.enter);
+    enterTimer.current = window.setTimeout(() => {
+      enteringRef.current = false;
+    }, TRIGGER_GAP_MS);
+    return () => window.clearTimeout(enterTimer.current);
+  }, [entryKey, viewModelInstance, fireTrigger]);
+
   // Drops queued triggers and restarts the playing machine from its entry
   // state (idle). Triggers fired afterwards wait one gap, so the machine has
   // settled into idle before the first one lands.
@@ -103,6 +129,8 @@ export function useHexRive(
     window.clearTimeout(gapTimer.current);
     queue.current = [];
     talking.current = false;
+    // A restart mid-entrance must not swallow the `enter` just fired.
+    if (enteringRef.current) queue.current = [HEX_ONBOARDING_TRIGGER.enter];
     const playing = rive.playingStateMachineNames;
     if (playing.length > 0) rive.stop(playing);
     if (state && rive.stateMachineNames.includes(state)) rive.play(state);

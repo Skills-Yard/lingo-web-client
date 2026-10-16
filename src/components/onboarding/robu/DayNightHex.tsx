@@ -12,6 +12,7 @@ import {
   type HexTalkTrigger,
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
+import { useHexExit } from "./hexExit";
 
 // FitWidth, pinned to the top: the scene always spans the full screen width and
 // sits flush under the header. The slot's aspect ratio matches the artboard, so
@@ -51,6 +52,7 @@ export function DayNightHex({
     DAYNIGHT_ARTBOARD,
     DAYNIGHT_VIEW_MODEL,
   );
+  useHexExit(fireTrigger, ready);
 
   const talking = useRef(false);
   const lastTalk = useRef<HexTalkTrigger | null>(null);

@@ -179,12 +179,12 @@ export const HEX_ONBOARDING_TRIGGER = {
   tap: "tap",
 } as const;
 
-/** The number on `HEX_VIEW_MODEL` picking Hex's entrance style, and the value
- * the greeting screen sets before firing `enter`. */
 /** How long Hex's exit plays before the flow moves to the next screen. */
-export const HEX_EXIT_MS = 1000;
+export const HEX_EXIT_MS = 1500;
 
-export const HEX_ENTER_STYLE = { property: "entryStyle", greeting: 7 } as const;
+/** Every screen opens the same way: `entryStyle` is set to `style`, `enter` is
+ * fired, and the screen's own triggers follow it. */
+export const HEX_ENTER_STYLE = { property: "entryStyle", style: 7 } as const;
 
 /** The time-commitment screen's dial on `HEX_VIEW_MODEL`: set `minutes` to
  * the picked value, then turn `counting` on to play Hex's count. */
