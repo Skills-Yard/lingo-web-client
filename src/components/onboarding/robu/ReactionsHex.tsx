@@ -13,6 +13,7 @@ import {
   type HexTalkTrigger,
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
+import { useHexExit } from "./hexExit";
 
 // Cover: the artboard is wide (390x171) and this sits in a square slot beside
 // the heading, so Hex fills it rather than shrinking to its width.
@@ -67,7 +68,10 @@ export function ReactionsHex({
     LAYOUT,
     stateMachine,
     artboard,
+    undefined,
+    questionId,
   );
+  useHexExit(fireTrigger, ready);
 
   // True from a talk trigger until the idle that ends it.
   const talking = useRef(false);

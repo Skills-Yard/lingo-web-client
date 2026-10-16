@@ -9,6 +9,7 @@ import {
   NOTIFY_TRIGGER,
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
+import { useHexExit } from "./hexExit";
 
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
@@ -27,6 +28,7 @@ export function NotifyHex({ className, style }: { className?: string; style?: CS
     NOTIFY_ARTBOARD,
     NOTIFY_VIEW_MODEL,
   );
+  useHexExit(fireTrigger, ready);
 
   useEffect(() => {
     if (!ready) return;

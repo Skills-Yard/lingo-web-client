@@ -12,6 +12,7 @@ import {
   type HexOnboardingTrigger,
 } from "@/lib/rive/runtime";
 import { useHexRive } from "./useHexRive";
+import { useHexExit } from "./hexExit";
 
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
@@ -75,7 +76,11 @@ export function OnboardingQuestionHex({
   const { RiveComponent, ready, fireTrigger, fireNow, reset, setNumber, setBoolean } = useHexRive(
     LAYOUT,
     HEX_STATE.onboarding,
+    undefined,
+    undefined,
+    screenId,
   );
+  useHexExit(fireTrigger, ready);
 
   // Set while the options are being read out.
   const readingOption = useRef<number | null>(null);

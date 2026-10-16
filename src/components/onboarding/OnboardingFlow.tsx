@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   ONBOARDING_STEPS,
@@ -17,8 +17,8 @@ import { QuestionScreen } from "./QuestionScreen";
 import { StreakScreen } from "./StreakScreen";
 import { NameScreen } from "./NameScreen";
 import { TimeSliderScreen } from "./TimeSliderScreen";
-import type { HexExitRequest } from "./robu/OnboardingFox";
-import { HEX_EXIT_MS } from "@/lib/rive/runtime";
+import type { HexExitRequest } from "./robu/hexExit";
+import { HEX_ENTER_STYLE, HEX_ENTRY_STYLE_BY_STEP, HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { HexBackground } from "./robu/HexBackground";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
@@ -183,8 +183,16 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setIndex(next);
   };
 
-  // Leaving the Hi screen: Hex plays his exit first (left going on, right
+  // Leaving any screen with a Hex: he plays his exit first (right going on, left
   // going back), then the flow moves.
+  // The entryStyle this screen's Hex enters with; picked once per visit.
+  const stepId = index >= 0 ? ONBOARDING_STEPS[index]?.id : undefined;
+  const entryStyle = useMemo(() => {
+    const style = (stepId ? HEX_ENTRY_STYLE_BY_STEP[stepId] : undefined) ?? HEX_ENTER_STYLE.style;
+    if (typeof style === "number") return style;
+    return style[Math.floor(Math.random() * style.length)] ?? HEX_ENTER_STYLE.style;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stepId, index]);
   const [exitRequest, setExitRequest] = useState<HexExitRequest | null>(null);
   const exitingRef = useRef(false);
   const [exiting, setExiting] = useState(false);
@@ -193,7 +201,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setExiting(false);
   }, [index]);
   const afterHexExit = (direction: HexExitRequest["direction"], proceed: () => void) => {
-    if (!step || step.kind !== "fox-message" || step.hexBeat !== "hi") {
+    if (!step) {
       proceed();
       return;
     }
@@ -217,7 +225,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const showSignUp = () => setIndex((current) => (current === -2 ? -1 : current));
 
   const goBack = () => {
-    afterHexExit("exitRight", () => goTo(Math.max(-1, index - 1)));
+    afterHexExit("exitLeft", () => goTo(Math.max(-1, index - 1)));
   };
 
   const setAnswer = (key: keyof OnboardingAnswers, value: string) =>
@@ -261,7 +269,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const onNotificationScreen = step?.kind === "notification-permission";
   const handleCta = () => {
     if (onNotificationScreen) requestNotifications();
-    afterHexExit("exitLeft", goNext);
+    afterHexExit("exitRight", goNext);
   };
 
   // The CTA fades out on the splash and until the sign-up animation has
@@ -273,7 +281,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // taller than the visible area and the page scrolled. `dvh` tracks the
   // actually-visible height, so every screen fits on one screen.
   return (
-    <FoxStageProvider stage={foxStage}>
+    <FoxStageProvider stage={foxStage} exitRequest={exitRequest} entryStyle={entryStyle}>
       <main
         ref={mainRef}
         className="onboarding-light relative flex h-dvh w-full flex-col overflow-hidden bg-white dark:bg-background"
@@ -529,7 +537,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           slot={foxOnScreen ? foxSlot : null}
           questionKey={isQuestion && step.hexMode === "onboarding" ? step.id : null}
           pickCount={pickCount}
-          exitRequest={exitRequest}
         />
 
         {/* The splash/sign-up canvas stays mounted for the whole flow, so going
