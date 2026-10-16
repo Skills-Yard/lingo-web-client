@@ -165,6 +165,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   // Every question opens with nothing selected — including when coming back
   // to it — so its answer is cleared on the way in.
   const goTo = (next: number) => {
+    arrivedBackRef.current = next < index;
     // Hide the sign-up buttons right away on the way back, before its
     // animation replays.
     if (next === -1) setSignUpSettled(false);
@@ -185,12 +186,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   // Leaving any screen with a Hex: he plays his exit first (right going on, left
   // going back), then the flow moves.
-  // The entryStyle this screen's Hex enters with; picked once per visit.
+  const arrivedBackRef = useRef(false);
+  // The entryStyle this screen's Hex enters with; some depend on whether the
+  // user arrived via Continue or Back.
   const stepId = index >= 0 ? ONBOARDING_STEPS[index]?.id : undefined;
   const entryStyle = useMemo(() => {
     const style = (stepId ? HEX_ENTRY_STYLE_BY_STEP[stepId] : undefined) ?? HEX_ENTER_STYLE.style;
     if (typeof style === "number") return style;
-    return style[Math.floor(Math.random() * style.length)] ?? HEX_ENTER_STYLE.style;
+    return arrivedBackRef.current ? style.back : style.forward;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stepId, index]);
   const [exitRequest, setExitRequest] = useState<HexExitRequest | null>(null);

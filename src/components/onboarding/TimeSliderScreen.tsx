@@ -168,9 +168,9 @@ export function TimeSliderScreen({
         <KaraokeSpans spans={heading} spoken={spoken} />
       </h1>
 
-      <div aria-hidden className="mt-2 flex shrink-0 flex-col items-center">
+      <div aria-hidden className="-mx-4 mt-2 flex w-[calc(100%+2rem)] shrink-0 flex-col items-center">
         <OnboardingQuestionHex
-          className="h-48 w-48"
+          className="h-48 w-full"
           screenId="timeCommitment"
           // No `selectOption` here: changing the minutes only drives his count.
           typing={0}

@@ -186,14 +186,29 @@ export const HEX_EXIT_MS = 1500;
  * fired, and the screen's own triggers follow it. */
 export const HEX_ENTER_STYLE = { property: "entryStyle", style: 7 } as const;
 
-/** Screens that enter with a different `entryStyle` (by step id); a list picks
- * one of its values at random on each visit. */
-export const HEX_ENTRY_STYLE_BY_STEP: Readonly<Record<string, number | readonly number[]>> = {
-  "ready-check": 5,
-  career: [3, 4],
+/** An `entryStyle` that depends on how the user arrived: via Continue
+ * (`forward`) or via Back (`back`). */
+export type HexDirectionalEntryStyle = { readonly forward: number; readonly back: number };
+const FORWARD_3_BACK_4: HexDirectionalEntryStyle = { forward: 3, back: 4 };
+
+/** Screens that enter with a different `entryStyle`, by step id. */
+export const HEX_ENTRY_STYLE_BY_STEP: Readonly<Record<string, number | HexDirectionalEntryStyle>> = {
+  greeting: 5,
+  "ready-check": 7,
+  career: FORWARD_3_BACK_4,
   "good-news": 1,
+  pythonLevel: FORWARD_3_BACK_4,
+  experience: FORWARD_3_BACK_4,
+  "starting-point": FORWARD_3_BACK_4,
   "all-set": 0,
+  name: 7,
+  motivation: FORWARD_3_BACK_4,
+  timeCommitment: FORWARD_3_BACK_4,
+  learningTime: 7,
   notifications: 2,
+  streak: FORWARD_3_BACK_4,
+  "three-months": 5,
+  startingPoint: FORWARD_3_BACK_4,
 };
 
 /** The time-commitment screen's dial on `HEX_VIEW_MODEL`: set `minutes` to

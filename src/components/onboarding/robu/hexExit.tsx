@@ -19,7 +19,9 @@ export const HexEntryStyleContext = createContext<number | null>(null);
  * has no such trigger ignores it. */
 export function useHexExit(fireTrigger: (name: string) => void, ready: boolean) {
   const request = useContext(HexExitContext);
-  const firedKey = useRef<number | null>(null);
+  // Starts at the request already in force: a Hex mounting on the next screen
+  // must not replay the exit that took the user there.
+  const firedKey = useRef<number | null>(request?.key ?? null);
   useEffect(() => {
     if (!ready || !request || firedKey.current === request.key) return;
     firedKey.current = request.key;

@@ -362,6 +362,7 @@ export function FoxMessageScreen({
             beatDue={beatDue}
             speaking={speaking}
             tappable
+            fullWidth
             // Scaled visually only (transforms don't affect layout), so the
             // bubble and heading stay exactly where they are.
             className="aspect-square origin-top scale-125"

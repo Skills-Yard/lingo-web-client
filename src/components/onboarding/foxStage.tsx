@@ -41,6 +41,7 @@ interface SlotInfo {
   beat: HexOnboardingBeat | null;
   beatDue: boolean;
   speaking: boolean;
+  fullWidth: boolean;
 }
 
 interface FoxStage {
@@ -122,6 +123,9 @@ interface FoxSlotProps {
   /** With `beat`: the screen's voiceover is playing, so Hex fires `talk`
    * first — the beat follows once `beatDue`. */
   speaking?: boolean;
+  /** Widens the fox's canvas to the full screen width (same height), so the
+   * artboard isn't clipped to the fox's own box. */
+  fullWidth?: boolean;
 }
 
 /** Where the fox should stand on this screen — sized like the fox itself. */
@@ -138,6 +142,7 @@ export function FoxSlot({
   beat,
   beatDue = false,
   speaking = false,
+  fullWidth = false,
 }: FoxSlotProps) {
   const ref = useRef<HTMLDivElement>(null);
   const id = useId();
@@ -157,8 +162,23 @@ export function FoxSlot({
       beat: beat ?? null,
       beatDue,
       speaking,
+      fullWidth,
     });
-  }, [stage, id, talking, greet, excited, laptop, typing, hidden, tappable, beat, beatDue, speaking]);
+  }, [
+    stage,
+    id,
+    talking,
+    greet,
+    excited,
+    laptop,
+    typing,
+    hidden,
+    tappable,
+    beat,
+    beatDue,
+    speaking,
+    fullWidth,
+  ]);
   useEffect(() => () => stage?.unregister(id), [stage, id]);
 
   // Outside the flow (no stage), just draw a fox in place.
@@ -219,6 +239,8 @@ export function PersistentFox({
   const y = useSpring(0, GLIDE);
   const scale = useSpring(1, GLIDE);
   const opacity = useMotionValue(0);
+  // The canvas width in base units: BASE_SIZE, or wider on a `fullWidth` slot.
+  const width = useMotionValue(BASE_SIZE);
   const shown = useRef(false);
   /** Invisible, but resting at a hidden slot's spot (see above). */
   const parked = useRef(false);
@@ -256,13 +278,19 @@ export function PersistentFox({
         const tx = r.left - c.left;
         const ty = r.top - c.top;
         const ts = r.width / BASE_SIZE;
+        // A full-width slot: the canvas spans the container's width (same
+        // height), so its left edge sits at the container's.
+        const fullWidth = slot.fullWidth;
+        const canvasWidth = fullWidth ? c.width / ts : BASE_SIZE;
+        if (Math.abs(width.get() - canvasWidth) > 1) width.jump(canvasWidth);
+        const left = fullWidth ? 0 : tx;
         const move = (glide: boolean) => {
           if (glide && !reduceMotion) {
-            x.set(tx);
+            x.set(left);
             y.set(ty);
             scale.set(ts);
           } else {
-            x.jump(tx);
+            x.jump(left);
             y.jump(ty);
             scale.jump(ts);
           }
@@ -306,13 +334,13 @@ export function PersistentFox({
     };
     frame = window.requestAnimationFrame(tick);
     return () => window.cancelAnimationFrame(frame);
-  }, [containerRef, slot, reduceMotion, x, y, scale, opacity]);
+  }, [containerRef, slot, reduceMotion, x, y, scale, opacity, width]);
 
   return (
     <motion.div
       aria-hidden
       className="pointer-events-none absolute top-0 left-0 z-[5] origin-top-left"
-      style={{ x, y, scale, opacity, width: BASE_SIZE, height: BASE_SIZE }}
+      style={{ x, y, scale, opacity, width, height: BASE_SIZE }}
     >
       <OnboardingFox
         className="h-full w-full"
