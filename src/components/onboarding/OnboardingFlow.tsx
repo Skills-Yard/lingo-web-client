@@ -183,7 +183,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     setIndex(next);
   };
 
-  // Leaving any screen with a Hex: he plays his exit first (left going on, right
+  // Leaving any screen with a Hex: he plays his exit first (right going on, left
   // going back), then the flow moves.
   const [exitRequest, setExitRequest] = useState<HexExitRequest | null>(null);
   const exitingRef = useRef(false);
@@ -217,7 +217,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const showSignUp = () => setIndex((current) => (current === -2 ? -1 : current));
 
   const goBack = () => {
-    afterHexExit("exitRight", () => goTo(Math.max(-1, index - 1)));
+    afterHexExit("exitLeft", () => goTo(Math.max(-1, index - 1)));
   };
 
   const setAnswer = (key: keyof OnboardingAnswers, value: string) =>
@@ -261,7 +261,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const onNotificationScreen = step?.kind === "notification-permission";
   const handleCta = () => {
     if (onNotificationScreen) requestNotifications();
-    afterHexExit("exitLeft", goNext);
+    afterHexExit("exitRight", goNext);
   };
 
   // The CTA fades out on the splash and until the sign-up animation has
