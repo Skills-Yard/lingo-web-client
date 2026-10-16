@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { useReducedMotion } from "framer-motion";
 import { NOTIFY_ASPECT } from "@/lib/rive/runtime";
 import { NotifyHex } from "./robu/NotifyHex";
-import { ONBOARDING_HEADING_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
+import { ONBOARDING_QUESTION_CLASS } from "./headingStyle";
 import { KaraokeSpans, questionSpoken } from "./QuestionHeading";
 import { useVoiceover, useVoiceoverGate } from "./useVoiceover";
 
@@ -60,10 +60,14 @@ export function NotificationPermissionScreen({
   }, [reduceMotion]);
 
   return (
-    <div className={`flex flex-col items-center px-6 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}>
-      <h1 className={`max-w-xs shrink-0 text-center ${ONBOARDING_HEADING_CLASS}`}>
-        <KaraokeSpans spans={[{ text: heading }]} spoken={spoken} />
-      </h1>
+    <div className={`flex flex-col items-center px-6 ${className ?? ""}`}>
+      {/* Same box as the question rows' fox slot, so the heading sits at the
+          same height as on the other question screens. */}
+      <div className="flex shrink-0 items-center max-sm:h-[7.25rem] max-sm:pt-[9px] sm:h-[7rem]">
+        <h1 className={`max-w-[min(20rem,calc(100vw-3rem))] text-center ${ONBOARDING_QUESTION_CLASS}`}>
+          <KaraokeSpans spans={[{ text: heading }]} spoken={spoken} />
+        </h1>
+      </div>
 
       <div className="flex min-h-0 w-full flex-1 items-center justify-center">
         <NotifyHex

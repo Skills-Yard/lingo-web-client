@@ -129,6 +129,9 @@ export function QuestionScreen(props: QuestionScreenProps) {
               className="h-full w-full"
               typing={typing}
               selectedId={selectedId}
+              speaking={voice.playing}
+              questionSpoken={spokenQuestion}
+              spokenOption={spokenOption}
             />
           </div>
         </div>

@@ -48,6 +48,7 @@ export function OnboardingQuestionHex({
   spokenOption = -1,
   restTrigger = HEX_ONBOARDING_TRIGGER.showQuestion,
   minutes,
+  interacted = 0,
 }: {
   className?: string;
   /** Set anew (`Date.now()`) on every option pick. */
@@ -68,6 +69,8 @@ export function OnboardingQuestionHex({
   restTrigger?: HexOnboardingTrigger;
   /** The time-commitment dial's picked minutes. */
   minutes?: number;
+  /** Set anew (`Date.now()`) whenever the dial is touched; cuts his talk. */
+  interacted?: number;
 }) {
   const { RiveComponent, ready, fireTrigger, fireNow, reset, setNumber, setBoolean } = useHexRive(
     LAYOUT,
@@ -86,29 +89,35 @@ export function OnboardingQuestionHex({
   // the picked value rather than the previous one.
   // On arrival it starts from 0 and counts up to the default, instead of
   // just showing it.
-  const countedIn = useRef(false);
+  // He talks first (the voiceover), and only once that's over shows the
+  // default. Touching the dial cuts the talk at once and counts right away.
+  const introDone = useRef(false);
+  const handledInteraction = useRef(0);
   useEffect(() => {
     if (!ready || minutes === undefined) return;
-    if (countedIn.current) {
+    const interactedNow = !!interacted && handledInteraction.current !== interacted;
+    if (interactedNow) {
+      handledInteraction.current = interacted;
+      fireNow(restTrigger);
+    }
+    const showMinutes = () => {
       setNumber(HEX_TIME_COUNT.minutes, minutes);
       setBoolean(HEX_TIME_COUNT.counting, true);
+    };
+    if (introDone.current || interactedNow) {
+      introDone.current = true;
+      showMinutes();
       return;
     }
-    countedIn.current = true;
     setNumber(HEX_TIME_COUNT.minutes, 0);
     setBoolean(HEX_TIME_COUNT.counting, false);
-    let fired = false;
+    if (questionSpoken < 1) return;
     const timer = setTimeout(() => {
-      fired = true;
-      setNumber(HEX_TIME_COUNT.minutes, minutes);
-      setBoolean(HEX_TIME_COUNT.counting, true);
+      introDone.current = true;
+      showMinutes();
     }, ENTER_COUNT_DELAY_MS);
-    return () => {
-      clearTimeout(timer);
-      // Cleaned up before it fired (strict-mode remount): run the intro again.
-      if (!fired) countedIn.current = false;
-    };
-  }, [ready, minutes, setNumber, setBoolean]);
+    return () => clearTimeout(timer);
+  }, [ready, minutes, interacted, questionSpoken, restTrigger, fireNow, setNumber, setBoolean]);
 
   const talkedFor = useRef<string | null>(null);
   const lastTalk = useRef<HexTalkTrigger | null>(null);

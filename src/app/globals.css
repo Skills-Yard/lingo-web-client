@@ -150,6 +150,18 @@ body {
 
 html {
   scroll-behavior: smooth;
+  /* No pull-to-refresh / rubber-band bounce — keeps the app feeling native. */
+  overscroll-behavior: none;
+}
+
+/* Mobile's `100vh` ignores the collapsing URL bar, so full-height screens
+   spill past the viewport; use dynamic viewport units instead. */
+.h-screen {
+  height: 100dvh;
+}
+
+.min-h-screen {
+  min-height: 100dvh;
 }
 
 @layer base {

@@ -5,7 +5,7 @@ import type { TextSpan } from "@/lib/constants/onboarding";
 import { TIME_SLIDER } from "@/lib/constants/onboarding";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
-import { ONBOARDING_QUESTION_CLASS, ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
+import { ONBOARDING_TOP_OFFSET_CLASS } from "./headingStyle";
 import { KaraokeSpans, questionSpoken } from "./QuestionHeading";
 import { useVoiceover, useVoiceoverGate } from "./useVoiceover";
 
@@ -84,7 +84,9 @@ export function TimeSliderScreen({
   muted = false,
   className,
 }: TimeSliderScreenProps) {
-  const voice = useVoiceover(voiceover, true, muted);
+  // Touching the dial cuts the voice (and with it Hex's talk) at once.
+  const [interacted, setInteracted] = useState(0);
+  const voice = useVoiceover(voiceover, true, muted, interacted > 0);
   useVoiceoverGate(voice, onVoiceoverDone, skipCount);
   const spoken = questionSpoken(voice, !!voiceover?.length);
   const svgRef = useRef<SVGSVGElement>(null);
@@ -132,6 +134,7 @@ export function TimeSliderScreen({
   };
   const release = () => glideTo(snappedRef.current);
   const nudge = (next: number) => {
+    setInteracted(Date.now());
     snappedRef.current = next;
     onChange(next);
     glideTo(next);
@@ -150,7 +153,7 @@ export function TimeSliderScreen({
     <div
       className={`flex min-h-0 flex-col items-center px-4 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}
     >
-      <h1 className={`mx-auto w-full max-w-72 shrink-0 text-center ${ONBOARDING_QUESTION_CLASS}`}>
+      <h1 className="mx-auto mt-8 w-full max-w-72 shrink-0 text-left text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
         <KaraokeSpans spans={heading} spoken={spoken} />
       </h1>
 
@@ -162,6 +165,9 @@ export function TimeSliderScreen({
           typing={0}
           restTrigger={HEX_ONBOARDING_TRIGGER.idle}
           minutes={minutes}
+          speaking={voice.playing}
+          questionSpoken={spoken}
+          interacted={interacted}
         />
       </div>
 
@@ -184,6 +190,7 @@ export function TimeSliderScreen({
           tabIndex={0}
           onPointerDown={(e) => {
             e.currentTarget.setPointerCapture(e.pointerId);
+            setInteracted(Date.now());
             setFromPointer(e.clientX, e.clientY);
           }}
           onPointerMove={(e) => {
@@ -217,6 +224,20 @@ export function TimeSliderScreen({
               <stop offset="0" stopColor="#1386B3" />
               <stop offset="1" stopColor="#01B8A9" />
             </linearGradient>
+            <linearGradient id="dial-sweep" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0" stopColor="white" stopOpacity="0" />
+              <stop offset="0.5" stopColor="white" stopOpacity="0.55" />
+              <stop offset="1" stopColor="white" stopOpacity="0" />
+            </linearGradient>
+            <mask id="dial-fill-mask" maskUnits="userSpaceOnUse" x={0} y={0} width={400} height={700}>
+              <path
+                d={arcPath(-SWEEP_DEG, knobDeg)}
+                fill="none"
+                stroke="white"
+                strokeWidth={TRACK_WIDTH}
+                strokeLinecap="round"
+              />
+            </mask>
           </defs>
 
           <path
@@ -234,6 +255,29 @@ export function TimeSliderScreen({
             strokeWidth={TRACK_WIDTH}
             strokeLinecap="round"
           />
+          {/* Same glossy shine as the top progress bar, clipped to the fill:
+              a soft stripe along the outer edge plus a highlight that sweeps
+              across and loops. */}
+          <g mask="url(#dial-fill-mask)" pointerEvents="none">
+            <path
+              d={arcPath(-SWEEP_DEG + 1.5, Math.max(knobDeg - 1.5, -SWEEP_DEG + 1.5))}
+              transform={`translate(${CX} ${CY}) scale(${(RADIUS + 5) / RADIUS}) translate(${-CX} ${-CY})`}
+              fill="none"
+              stroke="white"
+              strokeOpacity={0.5}
+              strokeWidth={2.5}
+              strokeLinecap="round"
+            />
+            <rect x={0} y={0} width={90} height={700} fill="url(#dial-sweep)">
+              <animate
+                attributeName="x"
+                values="-90;-90;380;380"
+                keyTimes="0;0.05;0.7;1"
+                dur="2.6s"
+                repeatCount="indefinite"
+              />
+            </rect>
+          </g>
 
           {/* A tick per minute inside the track; every fifth is longer. */}
           {Array.from({ length: TIME_SLIDER.max + 1 }, (_, value) => {

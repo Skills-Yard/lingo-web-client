@@ -3,8 +3,8 @@
 import { motion, useReducedMotion } from "framer-motion";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { QuestionHeading, questionSpoken } from "./QuestionHeading";
+import { StreakWidgetHex } from "./robu/StreakWidgetHex";
 import { useVoiceover, useVoiceoverGate } from "./useVoiceover";
-import { ONBOARDING_HEADING_CLASS } from "./headingStyle";
 
 const CARD_DELAY_S = 0.3;
 const CARD_IN = { type: "spring", stiffness: 260, damping: 26 } as const;
@@ -51,19 +51,24 @@ export function StreakScreen({
         talking={voice.playing}
         screenId="streak"
         foxMode="onboarding"
-        headingClassName={ONBOARDING_HEADING_CLASS}
       />
 
       <div className="relative mt-5 min-h-0 flex-1 overflow-hidden">
-        <motion.img
-          src={image}
-          alt="Lingo's streak widget on your home screen"
-          draggable={false}
-          className="absolute top-0 left-1/2 h-auto w-[min(100%,21rem)] -translate-x-1/2 select-none"
+        <motion.div
+          className="absolute top-0 left-1/2 w-[min(100%,21rem)] -translate-x-1/2"
           initial={reduceMotion ? false : { opacity: 0, y: 28, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ ...CARD_IN, delay: CARD_DELAY_S }}
-        />
+        >
+          <img
+            src={image}
+            alt="Lingo's streak widget on your home screen"
+            draggable={false}
+            className="h-auto w-full select-none"
+          />
+          {/* The mockup's empty area (left of the app tiles) holds Hex's widget. */}
+          <StreakWidgetHex className="absolute top-[12%] left-[6%] h-[48%] w-[60%]" />
+        </motion.div>
         <div
           aria-hidden
           className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-white to-transparent dark:from-background"

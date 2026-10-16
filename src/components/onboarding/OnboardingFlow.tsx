@@ -457,9 +457,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </motion.div>
             <motion.div
               initial={false}
-              animate={{ height: onNotificationScreen ? 40 : index <= -1 ? 68 : 8 }}
+              animate={{ height: onNotificationScreen ? 48 : index <= -1 ? 68 : 8 }}
               transition={SCREEN_TRANSITION}
-              className="flex items-start justify-center pt-2"
+              className={`flex items-start justify-center ${onNotificationScreen ? "pt-0" : "pt-2"}`}
             >
               <AnimatePresence>
                 {index === -1 && signUpSettled && (
@@ -490,7 +490,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                       playClickSound();
                       goNext();
                     }}
-                    className="px-4 py-2 text-sm font-medium text-[#666666] sm:text-base dark:text-white/70"
+                    className="px-4 pb-2 pt-0 text-sm font-medium text-[#666666] sm:text-base dark:text-white/70"
                   >
                     Don&apos;t Allow
                   </motion.button>

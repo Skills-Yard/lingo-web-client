@@ -262,6 +262,10 @@ export const NOTIFY_TRIGGER = { show: "show", hide: "hide" } as const;
 /** The artboard's size, for laying out the canvas at its own aspect. */
 export const NOTIFY_ASPECT = 390 / 360;
 
+/** Hex's home-screen widget — "HEX_Widget" in `hex.riv`, played by `Widget_SM`. */
+export const WIDGET_ARTBOARD = "HEX_Widget";
+export const WIDGET_STATE_MACHINE = "Widget_SM";
+
 export const HEX_HELLO_MS = 3000;
 export const HEX_TAP_MS = 1400;
 export const HEX_TYPING_MS = 2200;
