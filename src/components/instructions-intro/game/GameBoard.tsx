@@ -25,6 +25,10 @@ interface GameBoardProps {
    * the platform doesn't register the player tile as his anchor at all
    * (GameBoardScreen still owns it, up in the header). */
   robuJoinedGame: boolean;
+  /** Drops the card border (the Level 1 screen). */
+  borderless?: boolean;
+  /** Pinned to the card's bottom-right corner (the Level 1 play button). */
+  corner?: React.ReactNode;
 }
 
 export function GameBoard({
@@ -41,11 +45,13 @@ export function GameBoard({
   triggerSound,
   registerAnchor,
   robuJoinedGame,
+  borderless,
+  corner,
 }: GameBoardProps) {
   const stepsLeft = commands.filter((c) => c === null).length;
 
   return (
-    <div className="relative w-full bg-white dark:bg-[#111722] border border-slate-200 dark:border-[#1e293b] shadow-xs rounded-3xl p-3.5 mb-2 flex flex-col items-center transition-colors">
+    <div className={`relative w-full bg-white dark:bg-[#111722] ${borderless ? "" : "border border-slate-200 dark:border-[#1e293b] "}shadow-xs rounded-3xl p-3.5 mb-2 flex flex-col items-center transition-colors`}>
       <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10 pointer-events-none">
         <span
           className={`pointer-events-auto text-white font-black text-[10px] px-3 py-1 rounded-full shadow-xs ${
@@ -59,7 +65,7 @@ export function GameBoard({
             type="button"
             onClick={fillHint}
             disabled={isPlaying}
-            className="flex items-center gap-1 bg-slate-50 hover:bg-amber-50 dark:bg-[#182232] dark:hover:bg-amber-950/40 text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 text-[11px] font-bold px-3 py-1 rounded-xl border border-slate-200 dark:border-[#22365a] hover:border-amber-300 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            className={`flex items-center gap-1 bg-slate-50 hover:bg-amber-50 dark:bg-[#182232] dark:hover:bg-amber-950/40 text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 text-[11px] font-bold px-3 py-1 rounded-xl ${borderless ? "" : "border border-slate-200 dark:border-[#22365a] hover:border-amber-300"} shadow-xs transition-all cursor-pointer disabled:opacity-50`}
           >
             💡 Hint
           </button>
@@ -69,10 +75,10 @@ export function GameBoard({
               triggerSound("tap");
               setSoundEnabled(!soundEnabled);
             }}
-            className={`w-8 h-8 flex items-center justify-center rounded-xl border shadow-xs transition-all cursor-pointer ${
+            className={`w-8 h-8 flex items-center justify-center rounded-xl ${borderless ? "" : "border"} shadow-xs transition-all cursor-pointer ${
               soundEnabled
-                ? "bg-white dark:bg-[#182232] border-slate-200 dark:border-[#22365a] text-slate-700 dark:text-slate-200"
-                : "bg-slate-100 dark:bg-[#182232]/50 border-slate-300 dark:border-slate-800 text-slate-400"
+                ? `bg-white dark:bg-[#182232] ${borderless ? "" : "border-slate-200 dark:border-[#22365a]"} text-slate-700 dark:text-slate-200`
+                : `bg-slate-100 dark:bg-[#182232]/50 ${borderless ? "" : "border-slate-300 dark:border-slate-800"} text-slate-400`
             }`}
           >
             {soundEnabled ? "🔊" : "🔇"}
@@ -102,6 +108,7 @@ export function GameBoard({
           />
         )}
       </div>
+      {corner && <div className="absolute right-3 bottom-3 z-20 flex items-center gap-2">{corner}</div>}
     </div>
   );
 }

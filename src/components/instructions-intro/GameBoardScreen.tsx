@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check, Play, RotateCcw, X } from "lucide-react";
 import type { GameSlide } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
 import { lesson1Level } from "../../utils/data/levels";
@@ -35,6 +35,12 @@ interface GameBoardScreenProps {
    * here. Once he leaves, the header's bubble expands to the full row since
    * there's no icon left to share it with. */
   registerAnchor: (el: HTMLDivElement | null) => void;
+  /** Drops the borders on the board, slots and actions cards. */
+  borderless?: boolean;
+  /** Time between two commands of a run (default 700ms). */
+  stepMs?: number;
+  /** Fired once a run has ended, whether it reached the flag or not. */
+  onFinishedChange?: (finished: boolean) => void;
 }
 
 const LEVEL = lesson1Level;
@@ -48,6 +54,9 @@ export function GameBoardScreen({
   onSolvedChange,
   instantSpeech,
   registerAnchor,
+  borderless,
+  stepMs,
+  onFinishedChange,
 }: GameBoardScreenProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const triggerSound = useSound(soundEnabled);
@@ -89,12 +98,18 @@ export function GameBoardScreen({
     level: LEVEL,
     gameState,
     triggerSound,
+    stepMs,
   });
 
   // Latch: once solved, stay solved so "Continue" stays available even after a reset.
   useEffect(() => {
     if (success === true) onSolvedChange(true);
   }, [success, onSolvedChange]);
+
+  // Same latch for "a run has ended", right or wrong.
+  useEffect(() => {
+    if (success !== null) onFinishedChange?.(true);
+  }, [success, onFinishedChange]);
 
   return (
     <div className="flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center">
@@ -161,26 +176,70 @@ export function GameBoardScreen({
             triggerSound={triggerSound}
             registerAnchor={registerAnchor}
             robuJoinedGame={robuJoinedGame}
+            borderless={borderless}
+            corner={
+              borderless ? (
+                <>
+                  <ProgramSlots
+                    commands={commands}
+                    isPlaying={isPlaying}
+                    success={success}
+                    executingStep={executingStep}
+                    removeCommand={removeCommand}
+                    borderless
+                    compact
+                  />
+                  <button
+                    type="button"
+                    aria-label="Reset"
+                    onClick={() => {
+                      triggerSound("tap");
+                      resetLevel();
+                    }}
+                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-transform active:scale-90 dark:bg-white/10 dark:text-slate-200"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Run program"
+                    disabled={isPlaying || success !== null || !commands.some((c) => c !== null)}
+                    onClick={runSequence}
+                    className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-md transition-transform active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    {isPlaying ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                    ) : (
+                      <Play className="h-5 w-5 fill-current" />
+                    )}
+                  </button>
+                </>
+              ) : undefined
+            }
           />
         </div>
 
         {/* ── Right column — program slots, actions and run controls ── */}
         <div className="flex flex-col gap-3 lg:order-2 lg:w-100 lg:shrink-0">
-          <ProgramSlots
-            commands={commands}
-            isPlaying={isPlaying}
-            success={success}
-            executingStep={executingStep}
-            removeCommand={removeCommand}
-          />
+          {!borderless && (
+            <ProgramSlots
+              commands={commands}
+              isPlaying={isPlaying}
+              success={success}
+              executingStep={executingStep}
+              removeCommand={removeCommand}
+            />
+          )}
 
           <CommandPalette
             level={LEVEL}
             isPlaying={isPlaying}
             success={success}
             addCommand={addCommand}
+            borderless={borderless}
           />
 
+          {!borderless && (
           <GameFooter
             isPlaying={isPlaying}
             success={success}
@@ -189,15 +248,25 @@ export function GameBoardScreen({
             resetLevel={resetLevel}
             triggerSound={triggerSound}
           />
+          )}
         </div>
       </div>
 
       {/* ── Inline result banner (no CompletionModal in the intro flow) ── */}
       {success !== null && (
-        <div
-          className="w-full rounded-[8px] p-3.5 flex items-start gap-2.5 animate-pop-in"
+        <motion.div
+          // Level 1: a sheet that slides up from the bottom, over whatever is
+          // in the way, parked above Continue so nothing is scrolled out of view.
+          className={
+            borderless
+              ? "fixed inset-x-4 bottom-34 z-40 mx-auto flex max-w-[358px] items-start gap-2.5 rounded-lg bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)] dark:bg-[#1E2028]"
+              : "w-full rounded-[8px] p-3.5 flex items-start gap-2.5 animate-pop-in"
+          }
+          initial={borderless ? { y: 220, opacity: 0 } : false}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 260, damping: 28 }}
           style={{
-            background:
+            backgroundImage:
               success === true
                 ? "linear-gradient(180deg, rgba(1,161,127,0.16) 0%, rgba(255,255,255,0) 98.7%)"
                 : "linear-gradient(180deg, rgba(225,29,72,0.16) 0%, rgba(255,255,255,0) 98.7%)",
@@ -238,7 +307,7 @@ export function GameBoardScreen({
                 : `${failureMsg} Tap Reset and try again.`}
             </p>
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Confetti overlay on win */}

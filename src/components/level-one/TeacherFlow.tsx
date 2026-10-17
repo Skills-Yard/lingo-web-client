@@ -4,9 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { Confetti } from "./Confetti";
 import { LevelOneShell } from "./LevelOneShell";
 
-type Step = "says" | "quiz";
+export type Step = "says" | "quiz";
 
 const CORRECT_ID = "giving";
 
@@ -20,16 +21,21 @@ const OPTIONS = [
 const IMAGE_WIDTH: Record<Step, number> = { says: 346, quiz: 358 };
 const IMAGE_HEIGHT: Record<Step, number> = { says: 346, quiz: 296 };
 const IMAGE_GAP: Record<Step, number> = { says: 48, quiz: 18 };
-type OptionState = "idle" | "selected" | "correct" | "wrong";
+export type OptionState = "idle" | "selected" | "correct" | "wrong";
 
 /** After Check, the right answer is always green, and a wrong pick red. */
-const optionState = (id: string, selectedId: string | null, checked: boolean): OptionState => {
-  if (checked && id === CORRECT_ID) return "correct";
+export const optionState = (
+  id: string,
+  selectedId: string | null,
+  checked: boolean,
+  correctId: string = CORRECT_ID,
+): OptionState => {
+  if (checked && id === correctId) return "correct";
   if (checked && id === selectedId) return "wrong";
   return id === selectedId ? "selected" : "idle";
 };
 
-const LOOKS: Record<OptionState, { edge: string; card: string; radio: string; dot: string }> = {
+export const LOOKS: Record<OptionState, { edge: string; card: string; radio: string; dot: string }> = {
   idle: {
     edge: "border-[#BDBA99]",
     card: "border-black/4 bg-white dark:border-white/6 dark:bg-[#15181E]",
@@ -63,9 +69,9 @@ const MORPH = { duration: 0.6, ease: [0.22, 1, 0.36, 1] } as const;
  * then "What teacher is doing?"). Both are one screen with a step, so the
  * picture can animate between them instead of remounting.
  */
-export function TeacherFlow() {
+export function TeacherFlow({ initialStep = "says" }: { initialStep?: Step }) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>("says");
+  const [step, setStep] = useState<Step>(initialStep);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Once checked, the answer is locked and the right/wrong marks show.
   const [checked, setChecked] = useState(false);
@@ -77,7 +83,7 @@ export function TeacherFlow() {
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
       onBack={() => {
-        if (!quiz) return router.back();
+        if (!quiz) return router.push("/level-one");
         // Coming back to the quiz later starts it fresh.
         setSelectedId(null);
         setChecked(false);
@@ -183,6 +189,7 @@ export function TeacherFlow() {
           </motion.div>
         )}
       </AnimatePresence>
+      <Confetti active={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>
   );
 }

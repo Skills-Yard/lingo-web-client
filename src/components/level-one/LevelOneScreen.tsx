@@ -54,7 +54,7 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
         (20px under the 83px header), heading 13px under it, card 32px under
         the heading. */}
       {/* The picture has no robot of its own: Hex floats where it used to be. */}
-      <div className="relative mt-9 h-[258px] w-[310px] max-w-full shrink-0">
+      <div className="relative mt-9 h-[232px] w-[279px] max-w-full shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/level-one/programmer.png"
@@ -62,17 +62,17 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
           draggable={false}
           className="h-full w-full object-contain"
         />
-        <div aria-hidden className="pointer-events-none absolute -top-2 -right-3 h-[110px] w-[110px]">
+        <div aria-hidden className="pointer-events-none absolute -top-2 -right-3 h-[100px] w-[100px]">
           <IdleHex />
         </div>
       </div>
 
-      <h1 className="relative mt-[13px] h-24 w-[264px] shrink-0 translate-x-[3px] text-[24px] leading-[1.34] font-semibold text-[#444444] dark:text-white">
+      <h1 className="relative mt-[13px] h-[84px] w-[231px] shrink-0 translate-x-[3px] text-[21px] leading-[1.34] font-semibold text-[#444444] dark:text-white">
         Before we write code, let’s learn how <span className="text-brand-gradient">programmer think.</span>
         <svg
           aria-hidden
           viewBox="0 0 14 16"
-          className="absolute top-[52px] left-[210px] h-4 w-3.5 fill-none stroke-[#1187B2]"
+          className="absolute top-[45px] left-[184px] h-4 w-3.5 fill-none stroke-[#1187B2]"
           strokeWidth="1.4"
           strokeLinecap="round"
         >
@@ -159,7 +159,7 @@ function RevealSheet({ onClose }: { onClose: () => void }) {
           if (info.offset.y > DISMISS_OFFSET || info.velocity.y > DISMISS_VELOCITY) onClose();
         }}
         onClick={(e) => e.stopPropagation()}
-        className="relative flex h-[58dvh] min-h-[460px] max-h-dvh w-full touch-none flex-col items-center overflow-hidden rounded-t-[32px] bg-white pt-6 pb-8 text-center dark:bg-[#1E2028]"
+        className="relative flex h-[58%] min-h-[460px] max-h-full w-full touch-none flex-col items-center overflow-hidden rounded-t-[32px] bg-white pt-6 pb-8 text-center dark:bg-[#1E2028]"
       >
         <button
           type="button"
@@ -171,7 +171,7 @@ function RevealSheet({ onClose }: { onClose: () => void }) {
           <X className="h-5 w-5" strokeWidth={1.4} />
         </button>
 
-        <span className="block h-[min(150px,18dvh)] aspect-square shrink-0">
+        <span className="block h-[150px] aspect-square shrink-0">
           <BoxLottie loop={false} className="h-full w-full" />
         </span>
 

@@ -11,10 +11,13 @@ export function useGameExecution({
   level,
   gameState,
   triggerSound,
+  stepMs = 700,
 }: {
   level: LevelConfig;
   gameState: GameState;
   triggerSound: (type: "tap" | "step" | "pickup" | "win" | "lose" | "hint") => void;
+  /** Time between two commands of a run. */
+  stepMs?: number;
 }) {
   const {
     commands,
@@ -158,7 +161,7 @@ export function useGameExecution({
             setIsPlaying(false);
           }, 600);
         }
-      }, (idx + 1) * 700);
+      }, (idx + 1) * stepMs);
       executionTimerRef.current.push(t);
     });
   }, [
@@ -167,6 +170,7 @@ export function useGameExecution({
     commands,
     level,
     triggerSound,
+    stepMs,
     setExecutingStep,
     setFailureMsg,
     setSuccess,
