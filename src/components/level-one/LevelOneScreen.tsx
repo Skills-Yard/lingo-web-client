@@ -50,11 +50,11 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
         </AnimatePresence>
       }
     >
-      {/* Positions follow the 390x844 design frame: illustration at 103px
+      {/* Positions follow the 390x844 design frame: illustration 36px under the progress bar (as the question on the other screens)
         (20px under the 83px header), heading 13px under it, card 32px under
         the heading. */}
       {/* The picture has no robot of its own: Hex floats where it used to be. */}
-      <div className="relative mt-5 h-[258px] w-[310px] max-w-full shrink-0">
+      <div className="relative mt-9 h-[258px] w-[310px] max-w-full shrink-0">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/level-one/programmer.png"

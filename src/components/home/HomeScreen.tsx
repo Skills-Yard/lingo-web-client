@@ -7,10 +7,13 @@ import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { Code2, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-import { HEX_STATE, LIVE_PLATFORM } from "@/lib/rive/runtime";
+import { configureRiveRuntime, HEX_STATE, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { BottomNav, type HomeTab } from "./BottomNav";
+import { LevelBackground } from "./LevelBackground";
 import { LevelStartPopup } from "./LevelStartPopup";
+
+configureRiveRuntime();
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
@@ -66,8 +69,6 @@ const tailGap = (level: number) =>
 const FIRST_LEVEL_Y = 323;
 /** Room below the last level for the bottom nav + a breath. */
 const WORLD_BOTTOM_PAD = 200;
-/** Height of one repeat of the backdrop picture (world px). */
-const BG_TILE_H = 640;
 
 type Point = { x: number; y: number };
 
@@ -614,14 +615,7 @@ export function HomeScreen({
                 so it scrolls with it. It spans the full viewport width (not
                 just the centred stage column), each tile keeping the stage's
                 390:640 shape, so it fills tablets and desktops too. */}
-            <div
-              aria-hidden
-              className="pointer-events-none absolute inset-0 bg-repeat-y [filter:brightness(0.95)] dark:[filter:invert(1)_hue-rotate(180deg)_brightness(2.5)] dark:mix-blend-screen"
-              style={{
-                backgroundImage: "url(/images/level-bg.png)",
-                backgroundSize: `${boxW}px ${(boxW * BG_TILE_H) / STAGE_W}px`,
-              }}
-            />
+            <LevelBackground width={boxW} height={WORLD_H * scale} />
             <div
               className="relative mx-auto"
               style={{ width: STAGE_W * scale, height: WORLD_H * scale }}
@@ -712,7 +706,7 @@ export function HomeScreen({
         {/* Header + module card: pinned to the top of the screen, over the
           path. The fade lets the scrolling path slide under them. */}
         <div
-          className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-transparent to-transparent dark:from-[#0f1f26] dark:from-[90%]"
+          className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-transparent to-transparent"
           style={{ height: 246 * scale }}
         >
           {/* Streak + gems: pinned to the screen's own left and right edges
@@ -772,7 +766,7 @@ export function HomeScreen({
 
         {/* Mobile nav: pinned to the bottom of the screen. */}
         <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-transparent to-transparent dark:from-[#0a171d] dark:from-[35%]"
+          className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-transparent to-transparent"
           style={{ height: 128 * scale }}
         >
           <div

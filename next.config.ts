@@ -11,6 +11,7 @@ const nextConfig: NextConfig = {
     "1b9e-103-95-123-190.ngrok-free.app",
     "d44b-43-248-238-184.ngrok-free.app",
     "3154-103-216-89-37.ngrok-free.app",
+    "fac9-45-115-5-36.ngrok-free.app",
   ],
 };
 

@@ -303,6 +303,15 @@ export const NOTIFY_ASPECT = 390 / 360;
 export const WIDGET_ARTBOARD = "HEX_Widget";
 export const WIDGET_STATE_MACHINE = "Widget_SM";
 
+/** The level screen's background (`ModuleBackground.riv`): its default
+ * artboard plays "State Machine 1" and is repeated down the page. */
+export const LEVEL_BACKGROUND = {
+  src: "/animations/LevelModuleBackground6.riv",
+  stateMachine: "State Machine 1",
+  /** Used until the artboard's real size is read. */
+  fallbackAspect: 390 / 640,
+} as const;
+
 export const HEX_HELLO_MS = 3000;
 export const HEX_TAP_MS = 1400;
 export const HEX_TYPING_MS = 2200;
