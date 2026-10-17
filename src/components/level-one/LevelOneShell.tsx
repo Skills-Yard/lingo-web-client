@@ -93,7 +93,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         </div>
       </div>
 
-      <div className="mx-auto w-full max-w-[390px] shrink-0 px-4 pb-9">
+      <div className="relative z-10 mx-auto w-full max-w-[390px] shrink-0 px-4 pb-9">
         <Button3D
           onClick={() => onContinue?.()}
           onPress={playClickSound}
