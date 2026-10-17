@@ -6,7 +6,7 @@ import {
   DAYNIGHT_ARTBOARD,
   DAYNIGHT_STATE_MACHINE,
   DAYNIGHT_TRIGGERS,
-  DAYNIGHT_VIEW_MODEL,
+  DAYNIGHT_ENTRY_STYLE,
   HEX_STOP_TALK_TRIGGER,
   randomHexTalkTrigger,
   type HexTalkTrigger,
@@ -50,7 +50,9 @@ export function DayNightHex({
     LAYOUT,
     DAYNIGHT_STATE_MACHINE,
     DAYNIGHT_ARTBOARD,
-    DAYNIGHT_VIEW_MODEL,
+    undefined,
+    "daynight",
+    DAYNIGHT_ENTRY_STYLE,
   );
   useHexExit(fireTrigger, ready);
 

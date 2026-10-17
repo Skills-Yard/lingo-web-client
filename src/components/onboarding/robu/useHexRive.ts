@@ -46,9 +46,11 @@ export function useHexRive(
   artboard: string = HEX_ARTBOARD,
   viewModel: string = HEX_VIEW_MODEL,
   entryKey: string | null = null,
+  entryStyleOverride: number | null = null,
 ) {
   const { theme } = useTheme();
-  const entryStyle = useContext(HexEntryStyleContext) ?? HEX_ENTER_STYLE.style;
+  const contextEntryStyle = useContext(HexEntryStyleContext);
+  const entryStyle = entryStyleOverride ?? contextEntryStyle ?? HEX_ENTER_STYLE.style;
   const entryStyleRef = useRef(entryStyle);
   entryStyleRef.current = entryStyle;
   const { rive, RiveComponent } = useRive({

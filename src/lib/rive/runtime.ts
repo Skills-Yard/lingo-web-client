@@ -196,7 +196,7 @@ export const HEX_ENTRY_STYLE_BY_STEP: Readonly<Record<string, number | HexDirect
   greeting: 5,
   "ready-check": 7,
   career: FORWARD_3_BACK_4,
-  "good-news": 1,
+  "good-news": 6,
   pythonLevel: FORWARD_3_BACK_4,
   experience: FORWARD_3_BACK_4,
   "starting-point": FORWARD_3_BACK_4,
@@ -260,9 +260,10 @@ export const REACTIONS_SELECT_TRIGGER = "select";
  */
 export const DAYNIGHT_ARTBOARD = "DayNight";
 export const DAYNIGHT_STATE_MACHINE = "DayNight_SM";
-/** The artboard's view model: one trigger per time of day, played on pick. */
-export const DAYNIGHT_VIEW_MODEL = "DayNight";
-/** Learning-time option id -> `DAYNIGHT_VIEW_MODEL` trigger. */
+/** The `entryStyle` the day / night artboard enters with. */
+export const DAYNIGHT_ENTRY_STYLE = 6;
+/** Learning-time option id -> trigger on the `Onboarding` view model, which
+ * is the artboard's own (it carries the entry / exit / talk triggers too). */
 export const DAYNIGHT_TRIGGERS: Record<string, string> = {
   morning: "morning",
   afternoon: "noon",
