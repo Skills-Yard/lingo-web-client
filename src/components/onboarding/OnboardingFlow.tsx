@@ -252,8 +252,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
   // Question screens advance the bar; fox-message (dialogue box) screens show
   // it too, held at however many questions have been answered so far.
-  const progressStep =
-    questionNumber ?? (step?.kind === "fox-message" ? QUESTIONS_BEFORE[step.id] : undefined);
+  // The opening "Hey!" and "Are you ready?" screens have no progress bar yet.
+  const noProgress = step?.id === "greeting" || step?.id === "ready-check";
+  const progressStep = noProgress
+    ? undefined
+    : (questionNumber ?? (step?.kind === "fox-message" ? QUESTIONS_BEFORE[step.id] : undefined));
   const progress =
     progressStep !== undefined ? { step: progressStep, total: QUESTION_COUNT } : undefined;
 
