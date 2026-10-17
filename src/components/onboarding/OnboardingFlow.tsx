@@ -32,9 +32,13 @@ import { Button3D } from "@/components/ui/Button3D";
 // progress bar, which only advances on question screens, not the
 // fox-message/notification connector screens between them.
 const QUESTION_NUMBER: Record<string, number> = {};
+// How many questions come before each step — what the bar shows on the
+// dialogue-box screens, which don't advance it themselves.
+const QUESTIONS_BEFORE: Record<string, number> = {};
 {
   let n = 0;
   for (const step of ONBOARDING_STEPS) {
+    QUESTIONS_BEFORE[step.id] = n;
     if (step.kind === "question-list" || step.kind === "question-grid" || step.kind === "time-slider") {
       n += 1;
       QUESTION_NUMBER[step.id] = n;
@@ -304,9 +308,15 @@ export function OnboardingFlow({
     step?.kind === "name-input";
   const isQuestion = step?.kind === "question-list" || step?.kind === "question-grid";
   const questionNumber = step ? QUESTION_NUMBER[step.id] : undefined;
-  const progress = questionNumber
-    ? { step: questionNumber, total: QUESTION_COUNT }
-    : undefined;
+  // Question screens advance the bar; fox-message (dialogue box) screens show
+  // it too, held at however many questions have been answered so far.
+  // The opening "Hey!" and "Are you ready?" screens have no progress bar yet.
+  const noProgress = step?.id === "greeting" || step?.id === "ready-check";
+  const progressStep = noProgress
+    ? undefined
+    : (questionNumber ?? (step?.kind === "fox-message" ? QUESTIONS_BEFORE[step.id] : undefined));
+  const progress =
+    progressStep !== undefined ? { step: progressStep, total: QUESTION_COUNT } : undefined;
 
   // The one CTA for the whole flow (see the footer below): its label,
   // enabled state and action follow whichever screen is current.

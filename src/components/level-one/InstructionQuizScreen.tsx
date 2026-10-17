@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { optionDropIn } from "@/components/onboarding/optionCard";
 import { HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { Confetti } from "./Confetti";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
@@ -59,7 +60,12 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         </AnimatePresence>
       }
     >
-      <div className="mt-9 flex w-full max-w-[358px] shrink-0 items-center gap-3">
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+        className="mt-9 flex w-full max-w-[358px] shrink-0 items-center gap-3"
+      >
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-lg bg-[#04ACAB]/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/level-one/q-badge.png" alt="Question" draggable={false} className="h-[26px] w-[30px] object-contain" />
@@ -67,7 +73,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         <h1 className="text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
           What are <span className="text-[#00B8A9]">instructions</span> known as?
         </h1>
-      </div>
+      </motion.div>
 
       {/* Hex leaves (exit right) when the answer is checked, the space closes
         up behind him, and he enters again in the feedback panel. */}
@@ -89,13 +95,17 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       </AnimatePresence>
 
       <div className="mt-5 flex w-full max-w-[358px] shrink-0 flex-col gap-[18px]">
-        {OPTIONS.map((option) => {
+        {OPTIONS.map((option, i) => {
           const state = optionState(option.id, selectedId, checked, CORRECT_ID);
           const look = LOOKS[state];
           return (
             // The khaki bottom edge is the wrapper's 6px border; the card sits
             // flat on top of it and turns green/red with the result.
-            <div key={option.id} className={`rounded-sm border-b-[6px] transition-colors ${look.edge}`}>
+            <motion.div
+              key={option.id}
+              {...optionDropIn(i)}
+              className={`rounded-sm border-b-[6px] transition-colors ${look.edge}`}
+            >
               <button
                 type="button"
                 disabled={checked}
@@ -120,7 +130,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                   <span className={`h-full w-full rounded-full transition-[scale,background-color] duration-200 ${look.dot}`} />
                 </span>
               </button>
-            </div>
+            </motion.div>
           );
         })}
       </div>

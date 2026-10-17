@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import type {
   OnboardingGridOption,
   OnboardingListOption,
@@ -176,13 +175,9 @@ export function QuestionScreen(props: QuestionScreenProps) {
         }
       />
 
-      <motion.div
-        key={questionId}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-        className="flex min-h-0 flex-1 flex-col"
-      >
+      {/* Keyed so each new question's options mount afresh and replay their
+        own staggered drop-in (see the option components). */}
+      <div key={questionId} className="flex min-h-0 flex-1 flex-col">
         {props.kind === "question-list" ? (
           <QuestionListOptions
             options={props.options}
@@ -201,7 +196,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
             compact={scene}
           />
         )}
-      </motion.div>
+      </div>
       </div>
 
     </div>

@@ -18,6 +18,13 @@
  * (Tailwind v4's scale/translate utilities set the individual `scale` and
  * `translate` properties, hence those — not `transform` — in the transition.)
  */
+/** Drop-in for option `index`: each fades down from above, one after another. */
+export const optionDropIn = (index: number) => ({
+  initial: { opacity: 0, y: -20 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.45, delay: 0.2 + index * 0.1, ease: [0.22, 1, 0.36, 1] as const },
+});
+
 export function optionCardClass(selected: boolean, spotlight = false, flatDark = false): string {
   const lit = selected || spotlight;
   const flatDarkCard =

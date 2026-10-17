@@ -4,7 +4,8 @@ import { useEffect, useRef } from "react";
 import { Poppins } from "next/font/google";
 import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption } from "@/lib/constants/onboarding";
-import { optionCardClass } from "./optionCard";
+import { motion } from "framer-motion";
+import { optionCardClass, optionDropIn } from "./optionCard";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
@@ -70,17 +71,18 @@ export function QuestionGridOptions({
     // auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
     // over the gap into the next row. Now the gap is always gap-y-3 and the
     // grid scrolls instead.
-    <div ref={optionsRef} className={`scrollbar-none mx-auto ${compact ? "mt-3.5" : "mt-4 sm:mt-5"} grid w-full ${compact ? "max-w-[313px] grid-cols-2 gap-x-[19px] gap-y-4" : three ? "max-w-[374px] grid-cols-3 gap-x-[17px] gap-y-6" : "max-w-[322px] grid-cols-2 gap-x-[30px] gap-y-[29px]"} min-h-0 flex-1 auto-rows-max content-start overflow-y-auto px-2 pt-1 pb-2`}>
+    <div ref={optionsRef} className={`scrollbar-none mx-auto ${compact ? "-mt-1.5" : "-mt-1 sm:mt-0"} grid w-full ${compact ? "max-w-[313px] grid-cols-2 gap-x-[19px] gap-y-4" : three ? "max-w-[374px] grid-cols-3 gap-x-[17px] gap-y-6" : "max-w-[322px] grid-cols-2 gap-x-[30px] gap-y-[29px]"} min-h-0 flex-1 auto-rows-max content-start overflow-y-auto px-2 pt-6 pb-2`}>
       {options.map((option, i) => {
         const selected = option.id === selectedId;
         const spotlight = !selected && i === spokenOption;
         const lit = selected || spotlight;
         const { icon: Icon, fg } = ILLUSTRATIONS[option.illustration];
         return (
-          <button
+          <motion.button
             key={option.id}
             type="button"
             onClick={() => onPick(option.id)}
+            {...optionDropIn(i)}
             // Figma "Group 94" (138x150): the picture over a 43.65px label
             // strip, straight on the card (no tinted panel). Light: the
             // card's own khaki bottom edge from optionCardClass. Dark: each
@@ -114,7 +116,7 @@ export function QuestionGridOptions({
             >
               {option.label}
             </span>
-          </button>
+          </motion.button>
         );
       })}
     </div>
