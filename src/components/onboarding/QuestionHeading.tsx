@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { ZoxTabFox } from "./robu/ZoxTabFox";
 import { OnboardingQuestionHex } from "./robu/OnboardingQuestionHex";
@@ -183,11 +184,19 @@ export function QuestionHeading({
           </div>
         </div>
       )}
-      <h1 className={`relative z-10 ${wide ? "w-full max-w-[335px] text-center" : "min-w-0 flex-1 pl-16 text-left"} ${headingClassName}`}>
+      {/* Keyed on the question so only the text re-animates (fades in from
+        above); the fox beside it stays mounted. */}
+      <motion.h1
+        key={screenId}
+        initial={{ opacity: 0, y: -24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className={`relative z-10 ${wide ? "w-full max-w-[335px] text-center" : "min-w-0 flex-1 pl-16 text-left"} ${headingClassName}`}
+      >
         {parts.map(({ span, cut }, i) => (
           <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />
         ))}
-      </h1>
+      </motion.h1>
     </div>
   );
 }

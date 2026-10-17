@@ -2,7 +2,8 @@
 
 import { useEffect, useRef } from "react";
 import type { OnboardingListOption } from "@/lib/constants/onboarding";
-import { optionCardClass } from "./optionCard";
+import { motion } from "framer-motion";
+import { optionCardClass, optionDropIn } from "./optionCard";
 import { QuestionGridOptions } from "./QuestionGridScreen";
 
 interface QuestionListOptionsProps {
@@ -67,7 +68,7 @@ export function QuestionListOptions({
     // always stays fully on screen.
     <div
       ref={optionsRef}
-      className="scrollbar-none mt-2 flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto -mx-2.5 px-3 pt-1 pb-2 sm:mt-3 sm:gap-3.5"
+      className="scrollbar-none flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto -mx-2.5 px-3 pt-6 pb-2 -mt-4 sm:-mt-3 sm:gap-3.5"
     >
       {options.map((option, i) => {
         const selected = option.id === selectedId;
@@ -75,10 +76,11 @@ export function QuestionListOptions({
         const lit = selected || spotlight;
         const Icon = option.icon;
         return (
-          <button
+          <motion.button
             key={option.id}
             type="button"
             onClick={() => onPick(option.id)}
+            {...optionDropIn(i)}
             className={`flex min-h-12 w-full shrink-0 items-center gap-3 px-3.5 py-1.5 text-left ${optionCardClass(selected, spotlight)}`}
           >
             {option.image ? (
@@ -105,7 +107,7 @@ export function QuestionListOptions({
             <span className="text-[16px] font-medium text-[#1A1C22] dark:text-white">
               {option.label}
             </span>
-          </button>
+          </motion.button>
         );
       })}
     </div>

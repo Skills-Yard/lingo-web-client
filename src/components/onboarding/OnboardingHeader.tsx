@@ -54,13 +54,6 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
 
       {progress && (
         <>
-          {/* Page count: centred between the buttons, 27px from the top. */}
-          <p className="absolute top-[27px] left-1/2 -translate-x-1/2 text-sm leading-[14px] font-medium tabular-nums text-[#2C2C2C] dark:text-white">
-            <span className="bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] bg-clip-text text-transparent">
-              {String(progress.step).padStart(2, "0")}
-            </span>
-            /{String(progress.total).padStart(2, "0")}
-          </p>
           {/* One continuous track. Each question's header mounts fresh with
               its screen, so the fill starts at the previous question's
               length and grows to this one's. */}
