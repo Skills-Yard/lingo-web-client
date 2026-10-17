@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-import { HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { Confetti } from "./Confetti";
-import { FeedbackPanel, OnboardingHex, PANEL_HEX_DELAY_MS } from "./FeedbackPanel";
+import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
 import { LevelOneShell } from "./LevelOneShell";
 import { LOOKS, optionState } from "./TeacherFlow";
 
 const CORRECT_ID = "command";
+/** How long Hex's exit takes before the result panel comes up. */
+const EXIT_DONE_MS = HEX_EXIT_MS;
 
 const OPTIONS = [
   { id: "statement", icon: "/images/level-one/statement.png", title: "Statement" },
@@ -27,18 +29,13 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
-  // Hex has finished leaving (exit right) and the space closes; the panel's
-  // Hex enters a little earlier than that.
+  // Hex has finished leaving (exit right): the space closes and only now does
+  // the result panel come up, with Hex entering in it.
   const [hexGone, setHexGone] = useState(false);
-  const [panelHexIn, setPanelHexIn] = useState(false);
   useEffect(() => {
     if (!checked) return;
-    const gone = window.setTimeout(() => setHexGone(true), HEX_EXIT_MS);
-    const enter = window.setTimeout(() => setPanelHexIn(true), PANEL_HEX_DELAY_MS);
-    return () => {
-      window.clearTimeout(gone);
-      window.clearTimeout(enter);
-    };
+    const timer = window.setTimeout(() => setHexGone(true), EXIT_DONE_MS);
+    return () => window.clearTimeout(timer);
   }, [checked]);
 
   return (
@@ -53,8 +50,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       }}
       overlay={
         <AnimatePresence>
-          {checked && (
-            <FeedbackPanel key="feedback" correct={selectedId === CORRECT_ID} hexIn={panelHexIn}>
+          {hexGone && (
+            <FeedbackPanel key="feedback" correct={selectedId === CORRECT_ID} hexIn>
               {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
               {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>
             </FeedbackPanel>

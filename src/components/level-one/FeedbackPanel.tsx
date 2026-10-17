@@ -17,7 +17,7 @@ const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center })
 /** The `entryStyle` (0-7) Hex enters with; any of them works. */
 const ENTRY_STYLE = 7;
 /** The panel's Hex enters this long after Check, while the first is still leaving. */
-export const PANEL_HEX_DELAY_MS = 450;
+export const PANEL_HEX_DELAY_MS = 100;
 
 /**
  * Hex, played the onboarding way: the `Onboarding` machine, entering with
@@ -80,7 +80,7 @@ export function FeedbackPanel({
       initial={{ y: "100%" }}
       animate={{ y: 0 }}
       exit={{ y: "100%" }}
-      transition={{ type: "spring", stiffness: 240, damping: 30 }}
+      transition={{ type: "spring", stiffness: 360, damping: 32 }}
       className={`absolute inset-x-0 bottom-0 z-0 rounded-t-[28px] px-5 pt-5 pb-[144px] ${look.panel}`}
     >
       <div className="mx-auto flex w-full max-w-[358px] items-center justify-between gap-2">

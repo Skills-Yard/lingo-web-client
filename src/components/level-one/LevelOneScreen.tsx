@@ -5,9 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Target, X } from "lucide-react";
 import { BoxLottie } from "@/components/instructions-intro/BoxLottie";
-import { Alignment, Fit, Layout } from "@rive-app/canvas";
-import { HEX_STATE } from "@/lib/rive/runtime";
-import { useHexRive } from "@/components/onboarding/robu/useHexRive";
+import { OnboardingHex } from "./FeedbackPanel";
 import { LevelOneShell } from "./LevelOneShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
 
@@ -21,14 +19,6 @@ const REVEAL = {
 } as const;
 
 const BRAND_GRADIENT = "bg-linear-to-b from-[#00B8A9] to-[#1187B2] bg-clip-text text-transparent";
-
-const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
-
-/** Hex resting in his idle loop. */
-function IdleHex() {
-  const { RiveComponent } = useHexRive(HEX_LAYOUT, HEX_STATE.idle);
-  return <RiveComponent className="h-full w-full" />;
-}
 
 /**
  * `/level-one` — the first screen of Module 1: "Before we write code, let's
@@ -63,7 +53,7 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
           className="h-full w-full object-contain"
         />
         <div aria-hidden className="pointer-events-none absolute -top-2 -right-3 h-[100px] w-[100px]">
-          <IdleHex />
+          <OnboardingHex entryKey="level-one" />
         </div>
       </div>
 

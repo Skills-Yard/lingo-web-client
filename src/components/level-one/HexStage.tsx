@@ -2,9 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { motion } from "framer-motion";
-import { Alignment, Fit, Layout } from "@rive-app/canvas";
-import { HEX_STATE } from "@/lib/rive/runtime";
-import { useHexRive } from "@/components/onboarding/robu/useHexRive";
+import { OnboardingHex } from "./FeedbackPanel";
 
 type Rect = { x: number; y: number; width: number; height: number };
 
@@ -20,14 +18,6 @@ const WALK_TRANSITION = { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const };
 
 /** Hex's slow, soft trip from one spot to another (header -> platform). */
 const PLACE_TRANSITION = { duration: 1.4, ease: [0.45, 0, 0.2, 1] as const };
-
-const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
-
-/** Hex resting in his idle loop. */
-function IdleHex() {
-  const { RiveComponent } = useHexRive(HEX_LAYOUT, HEX_STATE.idle);
-  return <RiveComponent className="h-full w-full" />;
-}
 
 /**
  * The one Hex for a screen that has a game board: it measures whichever
@@ -96,7 +86,7 @@ export function HexStage({
       }}
       transition={placing ? PLACE_TRANSITION : WALK_TRANSITION}
     >
-      <IdleHex />
+      <OnboardingHex entryKey="game" />
     </motion.div>
   );
 }

@@ -4,19 +4,9 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
-import { Alignment, Fit, Layout } from "@rive-app/canvas";
-import { HEX_STATE } from "@/lib/rive/runtime";
-import { useHexRive } from "@/components/onboarding/robu/useHexRive";
+import { OnboardingHex } from "./FeedbackPanel";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { LevelOneShell } from "./LevelOneShell";
-
-const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
-
-/** Hex resting in his idle loop. */
-function IdleHex() {
-  const { RiveComponent } = useHexRive(HEX_LAYOUT, HEX_STATE.idle);
-  return <RiveComponent className="h-full w-full" />;
-}
 
 /**
  * `/level-one/6` — "So, giving instruction is same as giving commands." with
@@ -43,7 +33,7 @@ export function OpenItScreen({ onContinue }: { onContinue?: () => void }) {
       </h1>
 
       <div aria-hidden className="pointer-events-none mt-1 mr-2 h-[150px] w-[180px] shrink-0 self-end">
-        <IdleHex />
+        <OnboardingHex entryKey="open-it" />
       </div>
 
       <button
@@ -115,7 +105,7 @@ function GemPopup({ onClose }: { onClose: () => void }) {
 
         <div className="relative mt-3 flex h-[44px] w-full items-center">
           <div aria-hidden className="pointer-events-none absolute -bottom-4 -left-3 h-[104px] w-[116px]">
-            <IdleHex />
+            <OnboardingHex entryKey="popup" />
           </div>
           <div aria-hidden className="ml-auto flex w-[170px] items-center gap-2">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1386B3" strokeWidth="1.6" strokeLinejoin="round">
