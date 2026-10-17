@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { Confetti } from "./Confetti";
-import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
+import { FeedbackPanel, OnboardingHex, PANEL_HEX_DELAY_MS } from "./FeedbackPanel";
 import { LevelOneShell } from "./LevelOneShell";
 import { LOOKS, optionState } from "./TeacherFlow";
 
@@ -17,8 +17,6 @@ const OPTIONS = [
   { id: "command", icon: "/images/level-one/command.png", title: "Command" },
   { id: "question", icon: "/images/level-one/question.png", title: "Question" },
 ] as const;
-
-const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 /**
  * `/level-one/5` — "What are instructions known as?": a single-answer quiz

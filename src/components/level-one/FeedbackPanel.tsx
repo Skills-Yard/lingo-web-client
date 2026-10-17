@@ -17,7 +17,7 @@ const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center })
 /** The `entryStyle` (0-7) Hex enters with; any of them works. */
 const ENTRY_STYLE = 7;
 /** The panel's Hex enters this long after Check, while the first is still leaving. */
-const PANEL_HEX_DELAY_MS = 450;
+export const PANEL_HEX_DELAY_MS = 450;
 
 /**
  * Hex, played the onboarding way: the `Onboarding` machine, entering with

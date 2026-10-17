@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { Confetti } from "./Confetti";
+import { FeedbackPanel, PANEL_HEX_DELAY_MS } from "./FeedbackPanel";
 import { LevelOneShell } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
@@ -76,6 +77,16 @@ export function TeacherFlow({ initialStep = "says" }: { initialStep?: Step }) {
   // Once checked, the answer is locked and the right/wrong marks show.
   const [checked, setChecked] = useState(false);
   const quiz = step === "quiz";
+  // Hex enters the result panel a beat after Check.
+  const [panelHexIn, setPanelHexIn] = useState(false);
+  useEffect(() => {
+    if (!checked) {
+      setPanelHexIn(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setPanelHexIn(true), PANEL_HEX_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [checked]);
 
   return (
     <LevelOneShell
@@ -89,6 +100,15 @@ export function TeacherFlow({ initialStep = "says" }: { initialStep?: Step }) {
         setChecked(false);
         setStep("says");
       }}
+      overlay={
+        <AnimatePresence>
+          {quiz && checked && (
+            <FeedbackPanel key="feedback" correct={selectedId === CORRECT_ID} hexIn={panelHexIn}>
+              {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}The teacher is giving an <b>instruction.</b>
+            </FeedbackPanel>
+          )}
+        </AnimatePresence>
+      }
       onContinue={() => {
         if (!quiz) setStep("quiz");
         else if (!checked) setChecked(true);
@@ -189,6 +209,8 @@ export function TeacherFlow({ initialStep = "says" }: { initialStep?: Step }) {
           </motion.div>
         )}
       </AnimatePresence>
+      {/* Room for the result panel, so the options can scroll above it. */}
+      {checked && <div aria-hidden className="h-[130px] shrink-0" />}
       <Confetti active={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>
   );
