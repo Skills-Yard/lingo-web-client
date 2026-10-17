@@ -121,7 +121,7 @@ export function RobuMascot({
     layout: LAYOUT,
     // See BASE_ANIMATIONS/STATE_MACHINE above for why these are mutually
     // exclusive rather than both always passed.
-    ...(skipIntro ? { animations: BASE_ANIMATIONS } : { stateMachines: STATE_MACHINE }),
+    ...(skipIntro ? { animations: BASE_ANIMATIONS } : { stateMachine: STATE_MACHINE }),
   });
 
   useEffect(() => {

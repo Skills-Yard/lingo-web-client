@@ -5,7 +5,6 @@ import { useRive } from "@rive-app/react-canvas";
 import type { Layout } from "@rive-app/canvas";
 import {
   configureRiveRuntime,
-  HEX_RIVE_SRC,
   HEX_ARTBOARD,
   HEX_VIEW_MODEL,
   HEX_STOP_TALK_TRIGGER,
@@ -14,6 +13,7 @@ import {
   HEX_ONBOARDING_TRIGGER,
   isHexTalkTrigger,
 } from "@/lib/rive/runtime";
+import { hexRiveSource } from "@/lib/rive/hexFile";
 import { useTheme } from "@/context/ThemeContext";
 import { HexEntryStyleContext } from "./hexExit";
 
@@ -54,7 +54,7 @@ export function useHexRive(
   const entryStyleRef = useRef(entryStyle);
   entryStyleRef.current = entryStyle;
   const { rive, RiveComponent } = useRive({
-    src: HEX_RIVE_SRC,
+    ...hexRiveSource(),
     artboard,
     autoplay: false,
     layout,
@@ -68,7 +68,7 @@ export function useHexRive(
   useEffect(() => {
     if (!rive) return;
     const playing = rive.playingStateMachineNames;
-    if (playing.length > 0) rive.stop(playing);
+    playing.forEach((name) => rive.stop(name));
     if (state && rive.stateMachineNames.includes(state)) rive.play(state);
     if (viewModelInstance) rive.bindViewModelInstance(viewModelInstance);
   }, [rive, state, viewModelInstance]);
@@ -138,7 +138,7 @@ export function useHexRive(
     // A restart mid-entrance must not swallow the `enter` just fired.
     if (enteringRef.current) queue.current = [HEX_ONBOARDING_TRIGGER.enter];
     const playing = rive.playingStateMachineNames;
-    if (playing.length > 0) rive.stop(playing);
+    playing.forEach((name) => rive.stop(name));
     if (state && rive.stateMachineNames.includes(state)) rive.play(state);
     if (viewModelInstance) rive.bindViewModelInstance(viewModelInstance);
     gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);

@@ -600,7 +600,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   },
   {
     kind: "fox-message",
-    id: "starting-point",
+    id: "building-path",
     heading: () => [{ text: "Building Career Path..." }],
     headingPlacement: "bottom",
     sparkle: true,

@@ -12,12 +12,12 @@ import { motion } from "framer-motion";
 import { Fascinate } from "next/font/google";
 import {
   configureRiveRuntime,
-  SPLASH_RIVE_SRC,
   SPLASH_ARTBOARD,
   SPLASH_STATE_MACHINE,
   SPLASH_VIEW_MODEL,
   SPLASH_SHOW_SIGNUP_TRIGGER,
 } from "@/lib/rive/runtime";
+import { hexRiveSource } from "@/lib/rive/hexFile";
 
 // Fascinate only ships one weight (400) — passed explicitly since next/font
 // requires it for any non-variable Google font.
@@ -61,6 +61,10 @@ interface OnboardingSplashProps {
    * for it is kept above the artboard on the splash too, so Hex doesn't
    * move between the two. */
   showSignUpWordmark?: boolean;
+  /** The flow was opened on a later screen (a `?step=` link): skip the
+   * splash and go straight to the sign-up animation. `onComplete` is then
+   * never called. */
+  startOnSignUp?: boolean;
   /** Changing this (after mount) replays the sign-up animations — used when
    * the user navigates back to the sign-up screen. */
   replayKey?: number;
@@ -79,11 +83,12 @@ interface OnboardingSplashProps {
  * fires the view model's `showSignUpScreen` trigger and hands over to the
  * sign-up screen.
  */
-export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmark = false, replayKey = 0, onSignUpSettled, onComplete }: OnboardingSplashProps) {
+export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmark = false, startOnSignUp = false, replayKey = 0, onSignUpSettled, onComplete }: OnboardingSplashProps) {
   const { rive, RiveComponent } = useRive({
-    src: SPLASH_RIVE_SRC,
+    // `SPLASH_RIVE_SRC` is `hex.riv`, so it loads from the same preloaded bytes.
+    ...hexRiveSource(),
     artboard: SPLASH_ARTBOARD,
-    stateMachines: SPLASH_STATE_MACHINE,
+    stateMachine: SPLASH_STATE_MACHINE,
     autoplay: true,
     layout: LAYOUT_FIT_WIDTH,
   });
@@ -168,13 +173,22 @@ export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmar
   fireSignUpRef.current = fireSignUp;
   useEffect(() => () => window.clearTimeout(settleTimerRef.current), []);
 
+  // The splash only starts playing once the file has loaded, and the trigger
+  // needs the view model, so the timer counts from then, not from mount.
+  const splashLoaded = viewModelInstance !== null;
   useEffect(() => {
+    if (startOnSignUp || !splashLoaded) return;
     const timer = window.setTimeout(() => {
       fireSignUpRef.current();
       onCompleteRef.current();
     }, SPLASH_DURATION_MS);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [startOnSignUp, splashLoaded]);
+
+  // No splash: fire the sign-up trigger as soon as the view model can take it.
+  useEffect(() => {
+    if (startOnSignUp && splashLoaded) fireSignUpRef.current();
+  }, [startOnSignUp, splashLoaded]);
 
   // Back on the sign-up screen: fire the trigger again on the artboard as it
   // was left (no restart), so what plays after the trigger plays once more.

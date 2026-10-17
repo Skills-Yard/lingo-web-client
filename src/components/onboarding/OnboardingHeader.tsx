@@ -2,14 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Moon, Sun, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useFullscreen } from "@/hooks/useFullscreen";
 
 /** The theme switch's wipe colours — each theme's onboarding background
  * (`--background` in globals.css, `.onboarding-light` and its dark override). */
 const WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
 
-/** Back, light/dark and sound share one look — same size, same weight. */
+/** Back, full screen, light/dark and sound share one look — same size, same weight. */
 const ICON_BUTTON =
   "w-[39px] h-[39px] flex items-center justify-center rounded-md border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
 
@@ -31,6 +32,7 @@ let lastShownStep: number | null = null;
 export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: OnboardingHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
+  const fullscreen = useFullscreen();
   const [fromStep] = useState(() => {
     if (!progress) return null;
     return lastShownStep ?? progress.step - 1;
@@ -63,8 +65,9 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
           </p>
           {/* One continuous track. Each question's header mounts fresh with
               its screen, so the fill starts at the previous question's
-              length and grows to this one's. */}
-          <div className="absolute left-[67px] right-[114px] top-[57px] h-3 overflow-hidden rounded-full bg-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:bg-white/15">
+              length and grows to this one's. It ends 12px short of the
+              right-hand buttons — three of them when full screen is offered. */}
+          <div className={`absolute left-[67px] ${fullscreen.available ? "right-[161px]" : "right-[114px]"} top-[57px] h-3 overflow-hidden rounded-full bg-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:bg-white/15`}>
             {/* The fill keeps a flat right edge while unfinished — it only
                 rounds off once the bar is full. */}
             <motion.div
@@ -102,6 +105,18 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
       )}
 
       <div className="absolute top-[43.5px] right-4 flex items-center gap-2">
+        {/* Hidden where it can't do anything (iPhone Safari, installed PWA).
+            Leads the group so light/dark and sound keep their places. */}
+        {fullscreen.available && (
+          <button
+            type="button"
+            onClick={fullscreen.toggle}
+            className={ICON_BUTTON}
+            aria-label={fullscreen.active ? "Exit full screen" : "Enter full screen"}
+          >
+            {fullscreen.active ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+          </button>
+        )}
         {/* Light/dark switch — the site's own theme (see ThemeContext),
             wiped in diagonally from the top-right corner. */}
         <button

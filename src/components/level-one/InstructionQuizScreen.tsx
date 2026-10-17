@@ -7,7 +7,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { Confetti } from "./Confetti";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
-import { LevelOneShell } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 import { LOOKS, optionState } from "./TeacherFlow";
 
 const CORRECT_ID = "command";
@@ -21,7 +21,7 @@ const OPTIONS = [
 ] as const;
 
 /**
- * `/level-one/5` — "What are instructions known as?": a single-answer quiz
+ * `/module?level=1&step=5` — "What are instructions known as?": a single-answer quiz
  * with Hex between the question and the options. Check locks the answer and
  * marks it right (green) or wrong (red); Continue follows.
  */
@@ -43,10 +43,10 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       step={5}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
-      onBack={() => router.push("/level-one/4")}
+      onBack={() => router.push(levelOneHref(4))}
       onContinue={() => {
         if (!checked) setChecked(true);
-        else (onContinue ?? (() => router.push("/level-one/6")))();
+        else (onContinue ?? (() => router.push(levelOneHref(6))))();
       }}
       overlay={
         <AnimatePresence>

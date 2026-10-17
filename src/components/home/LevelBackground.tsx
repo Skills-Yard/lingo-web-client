@@ -16,7 +16,8 @@ type TileProps = {
 function Tile({ aspect, onAspect }: TileProps) {
   const { rive, RiveComponent } = useRive({
     src: LEVEL_BACKGROUND.src,
-    stateMachines: LEVEL_BACKGROUND.stateMachine,
+    artboard: LEVEL_BACKGROUND.artboard,
+    stateMachine: LEVEL_BACKGROUND.stateMachine,
     autoplay: true,
     layout: LAYOUT,
   });
@@ -36,7 +37,7 @@ function Tile({ aspect, onAspect }: TileProps) {
 }
 
 /**
- * The level screen's backdrop: `ModuleBackground.riv` repeated top to bottom
+ * The level screen's backdrop: `hex.riv`'s "ModuleBackground 2" repeated top to bottom
  * to cover `height`, every copy playing its state machine. Fills a `relative`
  * parent, behind its content.
  */

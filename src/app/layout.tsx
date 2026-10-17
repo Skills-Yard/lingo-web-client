@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { FullscreenOnFirstTap } from "@/components/FullscreenOnFirstTap";
 
 const poppins = Poppins({
   variable: "--font-app-poppins",
@@ -46,7 +45,6 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
-        <FullscreenOnFirstTap />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>

@@ -8,7 +8,7 @@ import {
 } from "@/lib/constants/instructionsIntro";
 import { GameBoardScreen } from "@/components/instructions-intro/GameBoardScreen";
 import { HexStage } from "./HexStage";
-import { LevelOneShell } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
 /** Time per command — quicker than the old intro's 700ms. */
 const STEP_MS = 400;
@@ -18,7 +18,7 @@ const GAME_SLIDE = INSTRUCTIONS_INTRO_SLIDES.find(
 );
 
 /**
- * `/level-one/7` — the game board screen from the instructions intro, as it
+ * `/module?level=1&step=7` — the game board screen from the instructions intro, as it
  * was: the same board, program slots, actions and Run/Reset controls, with
  * Hex (HexStage) walking the grid as the player piece.
  * Finishing a run (right or wrong) unlocks Continue.
@@ -38,7 +38,7 @@ export function MoveHexScreen() {
       step={7}
       flush
       ctaDisabled={!finished}
-      onBack={() => router.push("/level-one/6")}
+      onBack={() => router.push(levelOneHref(6))}
       onContinue={() => router.push("/level")}
     >
       {/* Hex is positioned against this box, so it must wrap the

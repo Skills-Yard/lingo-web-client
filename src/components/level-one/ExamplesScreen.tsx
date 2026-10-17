@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { LevelOneShell } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
 const EXAMPLES = [
   { id: "parent", src: "/images/level-one/example-parent.png", label: "Parent eats the food" },
@@ -34,7 +34,7 @@ const slotOf = (index: number, active: number) => {
 };
 
 /**
- * `/level-one/4` — "Some examples of instruction": a looping carousel of
+ * `/module?level=1&step=4` — "Some examples of instruction": a looping carousel of
  * example cards. The active card is centred with its neighbours peeking in
  * from each side; swipe, tap a neighbour or use the arrow keys to move.
  */
@@ -62,8 +62,8 @@ export function ExamplesScreen({ onContinue }: { onContinue?: () => void }) {
   return (
     <LevelOneShell
       step={4}
-      onBack={() => router.push("/level-one/2?step=quiz")}
-      onContinue={onContinue ?? (() => router.push("/level-one/5"))}
+      onBack={() => router.push(levelOneHref(3))}
+      onContinue={onContinue ?? (() => router.push(levelOneHref(5)))}
     >
       <h1 className="mt-9 w-[264px] shrink-0 text-center text-[24px] leading-[1.34] font-semibold text-[#444444] dark:text-white">
         Some <span className="text-brand-gradient">examples</span> of instruction

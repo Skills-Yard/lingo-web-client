@@ -177,7 +177,7 @@ function LivePlatform({ cx, cy, onLaunch }: { cx: number; cy: number } & Launch)
   const { rive, RiveComponent } = useRive({
     src: LIVE_PLATFORM.src,
     artboard: LIVE_PLATFORM.artboard,
-    stateMachines: LIVE_PLATFORM.stateMachine,
+    stateMachine: LIVE_PLATFORM.stateMachine,
     autoplay: true,
     layout: LIVE_LAYOUT,
   });

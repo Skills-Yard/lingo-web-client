@@ -6,10 +6,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X } from "lucide-react";
 import { OnboardingHex } from "./FeedbackPanel";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { LevelOneShell } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
 /**
- * `/level-one/6` — "So, giving instruction is same as giving commands." with
+ * `/module?level=1&step=6` — "So, giving instruction is same as giving commands." with
  * Hex beside the heading and a tap-to-open "Open it" card. Opening it shows
  * the "Congratulations! 1 Gem" popup.
  */
@@ -20,8 +20,8 @@ export function OpenItScreen({ onContinue }: { onContinue?: () => void }) {
   return (
     <LevelOneShell
       step={6}
-      onBack={() => router.push("/level-one/5")}
-      onContinue={onContinue ?? (() => router.push("/level-one/7"))}
+      onBack={() => router.push(levelOneHref(5))}
+      onContinue={onContinue ?? (() => router.push(levelOneHref(7)))}
       overlay={
         <AnimatePresence>
           {popupOpen && <GemPopup onClose={() => setPopupOpen(false)} />}

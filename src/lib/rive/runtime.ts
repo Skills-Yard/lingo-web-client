@@ -188,18 +188,23 @@ export const HEX_ENTER_STYLE = { property: "entryStyle", style: 7 } as const;
 
 /** An `entryStyle` that depends on how the user arrived: via Continue
  * (`forward`) or via Back (`back`). */
-export type HexDirectionalEntryStyle = { readonly forward: number; readonly back: number };
+export type HexDirectionalEntryStyle = {
+  readonly forward: number;
+  readonly back: number;
+};
 const FORWARD_3_BACK_4: HexDirectionalEntryStyle = { forward: 3, back: 4 };
 
 /** Screens that enter with a different `entryStyle`, by step id. */
-export const HEX_ENTRY_STYLE_BY_STEP: Readonly<Record<string, number | HexDirectionalEntryStyle>> = {
+export const HEX_ENTRY_STYLE_BY_STEP: Readonly<
+  Record<string, number | HexDirectionalEntryStyle>
+> = {
   greeting: 5,
   "ready-check": 7,
   career: FORWARD_3_BACK_4,
   "good-news": 6,
   pythonLevel: FORWARD_3_BACK_4,
   experience: FORWARD_3_BACK_4,
-  "starting-point": FORWARD_3_BACK_4,
+  "building-path": FORWARD_3_BACK_4,
   "all-set": 0,
   name: 7,
   motivation: FORWARD_3_BACK_4,
@@ -213,7 +218,10 @@ export const HEX_ENTRY_STYLE_BY_STEP: Readonly<Record<string, number | HexDirect
 
 /** The time-commitment screen's dial on `HEX_VIEW_MODEL`: set `minutes` to
  * the picked value, then turn `counting` on to play Hex's count. */
-export const HEX_TIME_COUNT = { minutes: "minutes", counting: "counting" } as const;
+export const HEX_TIME_COUNT = {
+  minutes: "minutes",
+  counting: "counting",
+} as const;
 
 /** The boolean on every Hex view model that switches the rig's colours:
  * `true` for the dark theme, `false` for light. */
@@ -236,7 +244,9 @@ export const isHexTalkTrigger = (name: string): boolean =>
   (HEX_TALK_TRIGGERS as readonly string[]).includes(name);
 
 /** A random talk trigger — never `previous`, so back-to-back lines differ. */
-export const randomHexTalkTrigger = (previous?: HexTalkTrigger | null): HexTalkTrigger => {
+export const randomHexTalkTrigger = (
+  previous?: HexTalkTrigger | null,
+): HexTalkTrigger => {
   const choices = HEX_TALK_TRIGGERS.filter((trigger) => trigger !== previous);
   return choices[Math.floor(Math.random() * choices.length)] ?? "talk";
 };
@@ -284,7 +294,10 @@ export type HexScene = (typeof HEX_SCENE)[keyof typeof HEX_SCENE];
 
 /** The onboarding flow's animated background — a transparent grid with
  * pulses (`BG_PULSES`, looping, no inputs) laid over the page colour. */
-export const HEX_BACKGROUND = { artboard: "BG_Grid", stateMachine: "BG_SM" } as const;
+export const HEX_BACKGROUND = {
+  artboard: "BG_Grid",
+  stateMachine: "BG_SM",
+} as const;
 
 /**
  * Notify — the "HEX_Notify" artboard in `hex.riv` (390x360), the notification
@@ -304,13 +317,14 @@ export const NOTIFY_ASPECT = 390 / 360;
 export const WIDGET_ARTBOARD = "HEX_Widget";
 export const WIDGET_STATE_MACHINE = "Widget_SM";
 
-/** The level screen's background (`ModuleBackground.riv`): its default
- * artboard plays "State Machine 1" and is repeated down the page. */
+/** The level screen's background — the "ModuleBackground 2" artboard in
+ * `hex.riv`, playing "State Machine 1" and repeated down the page. */
 export const LEVEL_BACKGROUND = {
-  src: "/animations/LevelModuleBackground6.riv",
+  src: HEX_RIVE_SRC,
+  artboard: "ModuleBackground 2",
   stateMachine: "State Machine 1",
   /** Used until the artboard's real size is read. */
-  fallbackAspect: 390 / 640,
+  fallbackAspect: 390 / 844,
 } as const;
 
 export const HEX_HELLO_MS = 3000;

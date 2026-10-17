@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { Confetti } from "./Confetti";
 import { FeedbackPanel, PANEL_HEX_DELAY_MS } from "./FeedbackPanel";
-import { LevelOneShell } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
 
@@ -66,17 +66,33 @@ export const LOOKS: Record<OptionState, { edge: string; card: string; radio: str
 const MORPH = { duration: 0.6, ease: [0.22, 1, 0.36, 1] } as const;
 
 /**
- * `/level-one/2` and the quiz that follows it ("Let Suppose / Teacher Says",
- * then "What teacher is doing?"). Both are one screen with a step, so the
- * picture can animate between them instead of remounting.
+ * Level 1's screens 2 and 3 ("Let Suppose / Teacher Says", then "What
+ * teacher is doing?"). Both are one screen with a step, so the picture can
+ * animate between them instead of remounting. `step` is the URL's: a tap
+ * moves the screen at once and the URL follows; the browser's Back/Forward
+ * move the URL, and the screen follows that.
  */
-export function TeacherFlow({ initialStep = "says" }: { initialStep?: Step }) {
+export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
   const router = useRouter();
-  const [step, setStep] = useState<Step>(initialStep);
+  const [step, setStep] = useState<Step>(urlStep);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Once checked, the answer is locked and the right/wrong marks show.
   const [checked, setChecked] = useState(false);
   const quiz = step === "quiz";
+
+  const show = (next: Step) => {
+    // Coming back to the quiz later starts it fresh.
+    if (next === "says") {
+      setSelectedId(null);
+      setChecked(false);
+    }
+    setStep(next);
+  };
+  const [lastUrlStep, setLastUrlStep] = useState(urlStep);
+  if (urlStep !== lastUrlStep) {
+    setLastUrlStep(urlStep);
+    if (urlStep !== step) show(urlStep);
+  }
   // Hex enters the result panel a beat after Check.
   const [panelHexIn, setPanelHexIn] = useState(false);
   useEffect(() => {
@@ -94,11 +110,9 @@ export function TeacherFlow({ initialStep = "says" }: { initialStep?: Step }) {
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
       onBack={() => {
-        if (!quiz) return router.push("/level-one");
-        // Coming back to the quiz later starts it fresh.
-        setSelectedId(null);
-        setChecked(false);
-        setStep("says");
+        if (!quiz) return router.push(levelOneHref(1));
+        show("says");
+        router.push(levelOneHref(2));
       }}
       overlay={
         <AnimatePresence>
@@ -110,9 +124,11 @@ export function TeacherFlow({ initialStep = "says" }: { initialStep?: Step }) {
         </AnimatePresence>
       }
       onContinue={() => {
-        if (!quiz) setStep("quiz");
-        else if (!checked) setChecked(true);
-        else router.push("/level-one/4");
+        if (!quiz) {
+          show("quiz");
+          router.push(levelOneHref(3));
+        } else if (!checked) setChecked(true);
+        else router.push(levelOneHref(4));
       }}
     >
       <AnimatePresence mode="wait" initial={false}>

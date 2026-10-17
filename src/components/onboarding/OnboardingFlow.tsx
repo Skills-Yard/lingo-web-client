@@ -7,6 +7,7 @@ import {
   TIME_SLIDER,
   resolveVoiceover,
   type OnboardingAnswers,
+  type OnboardingStep,
 } from "@/lib/constants/onboarding";
 import { PreLoginScreen } from "./PreLoginScreen";
 import { OnboardingSplash } from "./robu/OnboardingSplash";
@@ -41,13 +42,49 @@ const QUESTION_NUMBER: Record<string, number> = {};
   }
 }
 
-/** Whether the Skip link shows on voiced screens — hidden for now. */
-const SHOW_SKIP = false;
-
 const BOT_HOVER_SRC = "/audios/bot hovering 3.mp3.mpeg";
 
 /** How many questions the progress bar counts ("N of QUESTION_COUNT"). */
 const QUESTION_COUNT = Object.keys(QUESTION_NUMBER).length;
+
+/** `?step=` of the sign-up screen; the splash has none. */
+const SIGN_UP_STEP = "sign-up";
+
+/** A step's `?step=` name: its id in kebab-case (`pythonLevel` -> `python-level`). */
+const stepName = (id: string) => id.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+
+/** The `index` a `?step=` name opens on — the splash when it names no screen. */
+function indexOfStep(name: string | undefined): number {
+  if (name === SIGN_UP_STEP) return -1;
+  const index = ONBOARDING_STEPS.findIndex((step) => stepName(step.id) === name);
+  return index >= 0 ? index : -2;
+}
+
+/** The `?step=` name of `index` (undefined for the splash). */
+function stepNameAt(index: number): string | undefined {
+  if (index === -1) return SIGN_UP_STEP;
+  const step = ONBOARDING_STEPS[index];
+  return step ? stepName(step.id) : undefined;
+}
+
+/** Every question opens with nothing selected — including when coming back
+ * to it — so its answer is cleared on the way in. The dial starts on its
+ * default so "Continue" is live straight away. */
+function answersOnArrival(
+  answers: OnboardingAnswers,
+  step: OnboardingStep | undefined,
+): OnboardingAnswers {
+  if (step?.kind === "question-list" || step?.kind === "question-grid") {
+    return { ...answers, [step.answerKey]: undefined };
+  }
+  if (step?.kind === "time-slider") {
+    return {
+      ...answers,
+      [step.answerKey]: answers[step.answerKey] ?? String(TIME_SLIDER.initial),
+    };
+  }
+  return answers;
+}
 
 // Every screen swap in this flow (splash -> pre-login -> each question) uses
 // this same crossfade — `mode="sync"` on the AnimatePresence below lets the
@@ -57,6 +94,17 @@ const QUESTION_COUNT = Object.keys(QUESTION_NUMBER).length;
 const SCREEN_TRANSITION = { duration: 0.4, ease: [0.22, 1, 0.36, 1] as const };
 
 interface OnboardingFlowProps {
+  /** The screen to open on, by `?step=` name: "sign-up", or a step's id in
+   * kebab-case ("career", "python-level"). Anything else opens the splash. */
+  initialStep?: string;
+  /** Answers from earlier in the session, so screens that quote them (e.g.
+   * "good-news") still can when opened directly. */
+  initialAnswers?: OnboardingAnswers;
+  /** Called with each screen's `?step=` name as it shows (undefined for the
+   * splash), so the caller can put it in the URL. */
+  onStepChange?: (step: string | undefined) => void;
+  /** Called with the answers whenever one changes. */
+  onAnswersChange?: (answers: OnboardingAnswers) => void;
   /** Fired after the last question's "Continue" — nothing past this point
    * exists in the reference design yet, so the caller decides what (if
    * anything) comes next. */
@@ -69,7 +117,9 @@ interface OnboardingFlowProps {
  * PreLoginScreen, `0..ONBOARDING_STEPS.length-1` indexes into the steps
  * array. A plain `useState` index (not routing) — same "one component owns
  * the whole walkthrough" shape instructions-intro's own InstructionsIntroFlow
- * uses. Going back from PreLoginScreen doesn't return to the splash — same
+ * uses; the caller mirrors it in the URL (`onStepChange`) without remounting
+ * anything, and can open on any screen (`initialStep`). Going back from
+ * PreLoginScreen doesn't return to the splash — same
  * one-shot-entrance reasoning instructions-intro's own RobuSplash uses (see
  * its doc comment): it's Robu's boot-up moment, not a screen to revisit.
  *
@@ -77,9 +127,29 @@ interface OnboardingFlowProps {
  * `AnimatePresence` rather than as separate early-returned `<main>`s — that
  * was a plain unmount/mount swap with no transition at all between them.
  */
-export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
-  const [index, setIndex] = useState(-2);
-  const [answers, setAnswers] = useState<OnboardingAnswers>({});
+export function OnboardingFlow({
+  initialStep,
+  initialAnswers = {},
+  onStepChange,
+  onAnswersChange,
+  onComplete,
+}: OnboardingFlowProps) {
+  const [startIndex] = useState(() => indexOfStep(initialStep));
+  const [index, setIndex] = useState(startIndex);
+  const [answers, setAnswers] = useState<OnboardingAnswers>(() =>
+    answersOnArrival(initialAnswers, ONBOARDING_STEPS[startIndex]),
+  );
+
+  // Only a new screen / new answers should report; the callbacks' identity
+  // doesn't matter.
+  useEffect(() => {
+    onStepChange?.(stepNameAt(index));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index]);
+  useEffect(() => {
+    onAnswersChange?.(answers);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answers]);
   const [muted, setMuted] = useState(false);
   // Counts option picks, so the persistent Hex can react to each one.
   const [pickCount, setPickCount] = useState(0);
@@ -162,24 +232,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     if (hoverAudioRef.current) hoverAudioRef.current.muted = muted;
   }, [muted]);
 
-  // Every question opens with nothing selected — including when coming back
-  // to it — so its answer is cleared on the way in.
   const goTo = (next: number) => {
     arrivedBackRef.current = next < index;
     // Hide the sign-up buttons right away on the way back, before its
     // animation replays.
     if (next === -1) setSignUpSettled(false);
-    const target = ONBOARDING_STEPS[next];
-    if (target && (target.kind === "question-list" || target.kind === "question-grid")) {
-      setAnswers((prev) => ({ ...prev, [target.answerKey]: undefined }));
-    }
-    // The dial starts on its default so "Continue" is live straight away.
-    if (target?.kind === "time-slider") {
-      setAnswers((prev) => ({
-        ...prev,
-        [target.answerKey]: prev[target.answerKey] ?? String(TIME_SLIDER.initial),
-      }));
-    }
+    setAnswers((prev) => answersOnArrival(prev, ONBOARDING_STEPS[next]));
     setVoicedStepId(null);
     setIndex(next);
   };
@@ -257,6 +315,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     step && "voiceover" in step ? resolveVoiceover(step.voiceover, answers) : undefined;
   const hasStepVoiceover = !!stepVoiceover?.length;
   const awaitingVoiceover = !!step && hasStepVoiceover && voicedStepId !== step.id;
+  // Screens where Hex talks in a speech bubble: while he talks, Skip stands
+  // in for the CTA, and the CTA takes its place once the voice is done.
+  const onBubbleScreen =
+    (step?.kind === "fox-message" && !step.hexScene) || step?.kind === "name-input";
+  const showSkip = onBubbleScreen && awaitingVoiceover;
   const ctaDisabled =
     index < -1 ||
     exiting ||
@@ -275,9 +338,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     afterHexExit("exitRight", goNext);
   };
 
-  // The CTA fades out on the splash and until the sign-up animation has
-  // settled — it keeps its space, so the layout doesn't jump as it goes.
-  const hideCta = index === -2 || (index === -1 && !signUpSettled);
+  // The CTA fades out on the splash, until the sign-up animation has
+  // settled, and while Skip stands in for it — it keeps its space, so the
+  // layout doesn't jump as it goes.
+  const hideCta = index === -2 || (index === -1 && !signUpSettled) || showSkip;
 
   // `h-dvh`, not `h-screen`: on mobile, 100vh is the height with the
   // browser's address bar hidden, so whenever the bar is showing the flow ran
@@ -441,28 +505,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Skip sits at the top right, just under the header (80px: its
-            py-5 padding plus the 40px icon buttons), over the screens. It
-            lives out here so it doesn't fade with each screen. */}
-          <div className="pointer-events-none absolute inset-x-0 top-20 z-20 mx-auto flex w-full max-w-md justify-end px-4">
-            <AnimatePresence>
-              {SHOW_SKIP && awaitingVoiceover && (
-                <motion.button
-                  key="skip"
-                  type="button"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={SCREEN_TRANSITION}
-                  onClick={() => setSkipCount((n) => n + 1)}
-                  className="pointer-events-auto cursor-pointer px-2 py-1 text-sm font-medium text-[#666666] underline underline-offset-4 sm:text-base dark:text-white/70"
-                >
-                  Skip
-                </motion.button>
-              )}
-            </AnimatePresence>
-          </div>
         </div>
 
         {/* The CTA lives here, outside the screen transitions, so it never
@@ -473,23 +515,50 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           button sits near the bottom edge. */}
         <div ref={footerRef} className="relative z-10 shrink-0">
           <div className="mx-auto w-full max-w-[24rem] px-4">
-            <motion.div
-              initial={false}
-              animate={{ opacity: hideCta ? 0 : 1 }}
-              transition={SCREEN_TRANSITION}
-              aria-hidden={hideCta}
-              inert={hideCta}
-              className={hideCta ? "pointer-events-none" : undefined}
-            >
-              <Button3D
-                onClick={handleCta}
-                onPress={playClickSound}
-                disabled={ctaDisabled || hideCta}
-                className="w-full"
+            <div className="relative">
+              <motion.div
+                initial={false}
+                animate={{ opacity: hideCta ? 0 : 1 }}
+                transition={SCREEN_TRANSITION}
+                aria-hidden={hideCta}
+                inert={hideCta}
+                className={hideCta ? "pointer-events-none" : undefined}
               >
-                {ctaLabel}
-              </Button3D>
-            </motion.div>
+                <Button3D
+                  onClick={handleCta}
+                  onPress={playClickSound}
+                  disabled={ctaDisabled || hideCta}
+                  className="w-full"
+                >
+                  {ctaLabel}
+                </Button3D>
+              </motion.div>
+              {/* Skip sits over the CTA's (faded-out) box, so the two swap in
+                place without the footer changing height. */}
+              <AnimatePresence>
+                {showSkip && (
+                  <motion.div
+                    key="skip"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={SCREEN_TRANSITION}
+                    className="pointer-events-none absolute inset-0 flex items-center justify-center"
+                  >
+                    <button
+                      type="button"
+                      onClick={() => {
+                        playClickSound();
+                        setSkipCount((n) => n + 1);
+                      }}
+                      className="pointer-events-auto cursor-pointer px-4 py-3 text-sm font-medium text-[#666666] underline underline-offset-4 sm:text-base dark:text-white/70"
+                    >
+                      Skip
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
             <motion.div
               initial={false}
               animate={{ height: onNotificationScreen ? 48 : index <= -1 ? 68 : 8 }}
@@ -562,6 +631,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             }`}
             bottomInset={footerHeight}
             showSignUpWordmark={index === -1}
+            startOnSignUp={startIndex > -2}
             replayKey={signUpReplays}
             onSignUpSettled={setSignUpSettled}
             onComplete={showSignUp}

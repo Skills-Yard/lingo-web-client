@@ -3,6 +3,7 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
+import { moduleHref, onboardingHref } from "@/lib/routes";
 import type { HomeTab } from "./BottomNav";
 import { HomeScreen } from "./HomeScreen";
 import { ProfileScreen } from "./ProfileScreen";
@@ -27,11 +28,11 @@ const subscribeNever = () => () => {};
 export function LevelRoute() {
   const router = useRouter();
   return (
-    <HomeScreen onNavigate={useTabNavigation()} onStart={() => router.push("/level-one")} />
+    <HomeScreen onNavigate={useTabNavigation()} onStart={() => router.push(moduleHref(1, 1))} />
   );
 }
 
-/** `/profile` — the learner's profile; "Redo onboarding" goes back to `/`. */
+/** `/profile` — the learner's profile; "Redo onboarding" goes back to `/onboarding`. */
 export function ProfileRoute() {
   const router = useRouter();
   const navigate = useTabNavigation();
@@ -45,7 +46,7 @@ export function ProfileRoute() {
     <ProfileScreen
       answers={answers}
       onNavigate={navigate}
-      onRestartOnboarding={() => router.push("/")}
+      onRestartOnboarding={() => router.push(onboardingHref())}
     />
   );
 }

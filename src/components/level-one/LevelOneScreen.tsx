@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Target, X } from "lucide-react";
 import { BoxLottie } from "@/components/instructions-intro/BoxLottie";
 import { OnboardingHex } from "./FeedbackPanel";
-import { LevelOneShell } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
 
 const REVEAL = {
@@ -21,7 +21,7 @@ const REVEAL = {
 const BRAND_GRADIENT = "bg-linear-to-b from-[#00B8A9] to-[#1187B2] bg-clip-text text-transparent";
 
 /**
- * `/level-one` — the first screen of Module 1: "Before we write code, let's
+ * `/module?level=1&step=1` — the first screen of Module 1: "Before we write code, let's
  * learn how programmers think", with a tap-to-reveal card whose modal explains
  * what a programmer is.
  */
@@ -33,7 +33,7 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
     <LevelOneShell
       step={1}
       onBack={() => router.push("/level")}
-      onContinue={onContinue ?? (() => router.push("/level-one/2"))}
+      onContinue={onContinue ?? (() => router.push(levelOneHref(2)))}
       overlay={
         <AnimatePresence>
           {modalOpen && <RevealSheet onClose={() => setModalOpen(false)} />}
