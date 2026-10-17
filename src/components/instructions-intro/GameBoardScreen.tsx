@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, Play, RotateCcw, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import type { GameSlide } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
 import { lesson1Level } from "../../utils/data/levels";
@@ -11,13 +11,14 @@ import { GameBoard } from "./game/GameBoard";
 import { ProgramSlots } from "./game/ProgramSlots";
 import { CommandPalette } from "./game/CommandPalette";
 import { GameFooter } from "./game/GameFooter";
+import { MovesBar } from "./game/MovesBar";
 import { SpeechBubble } from "./SpeechBubble";
 import {
   RobuAnchor,
   ROBU_DEFAULT_SIZE,
   ROBU_TRAILING_GAP_PULL,
 } from "./RobuAnchor";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 
 interface GameBoardScreenProps {
   slide: GameSlide;
@@ -45,6 +46,36 @@ interface GameBoardScreenProps {
 
 const LEVEL = lesson1Level;
 
+/** The Level 1 heading, in the pieces that are typed (the accent is teal). */
+const HEADING_TEXT_PARTS = [
+  { text: "Let’s give some ", accent: false },
+  { text: "command", accent: true },
+  { text: " to Hex", accent: false },
+] as const;
+/** Each part with the number of letters typed before it. */
+const HEADING_PARTS = HEADING_TEXT_PARTS.map((part, i) => ({
+  ...part,
+  offset: HEADING_TEXT_PARTS.slice(0, i).reduce((n, p) => n + p.text.length, 0),
+}));
+/** The heading as words of letters (each letter keeps its place in the whole
+ * text, for typing and for the stagger), so a word never breaks across lines. */
+const HEADING_WORDS = (() => {
+  const words: { char: string; accent: boolean; index: number }[][] = [[]];
+  let index = 0;
+  for (const part of HEADING_TEXT_PARTS) {
+    for (const char of part.text) {
+      if (char === " ") words.push([]);
+      else words[words.length - 1].push({ char, accent: part.accent, index });
+      index += 1;
+    }
+  }
+  return words.filter((word) => word.length > 0);
+})();
+const HEADING_LENGTH = HEADING_TEXT_PARTS.reduce((n, part) => n + part.text.length, 0);
+const TYPE_MS = 45;
+/** Pause between the heading finishing and the game starting. */
+const START_DELAY_MS = 500;
+
 // How long Robu stands at the header (like every other screen's arrival)
 // before he glides down into the board and becomes the player piece.
 const JOIN_GAME_DELAY_MS = 1000;
@@ -65,13 +96,46 @@ export function GameBoardScreen({
   // then true for the rest of this screen's life. Reset on remount only
   // (slide change), not on any other re-render.
   const [robuJoinedGame, setRobuJoinedGame] = useState(false);
+  // Level 1 (`borderless`): the board stays greyed out and locked while the
+  // heading types itself; a beat after it's done the game starts by itself
+  // and the character goes onto the platform.
+  const [ready, setReady] = useState(false);
+  const locked = borderless && !ready;
+
+  // The Level 1 heading types itself in.
+  const reducedMotion = useReducedMotion();
+  const [typed, setTyped] = useState(0);
+  const typedAll = typed >= HEADING_LENGTH;
   useEffect(() => {
+    if (!borderless || !typedAll) return;
+    const timer = window.setTimeout(() => {
+      setReady(true);
+      setRobuJoinedGame(true);
+    }, START_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [borderless, typedAll]);
+  useEffect(() => {
+    if (!borderless) return;
+    if (reducedMotion) {
+      setTyped(HEADING_LENGTH);
+      return;
+    }
+    const timer = window.setInterval(() => {
+      setTyped((n) => {
+        if (n + 1 >= HEADING_LENGTH) window.clearInterval(timer);
+        return n + 1;
+      });
+    }, TYPE_MS);
+    return () => window.clearInterval(timer);
+  }, [borderless, reducedMotion]);
+  useEffect(() => {
+    if (borderless) return;
     const t = window.setTimeout(
       () => setRobuJoinedGame(true),
       JOIN_GAME_DELAY_MS,
     );
     return () => window.clearTimeout(t);
-  }, []);
+  }, [borderless]);
 
   const gameState = useGameState(
     LEVEL,
@@ -112,12 +176,45 @@ export function GameBoardScreen({
   }, [success, onFinishedChange]);
 
   return (
-    <div className="flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center">
+    <div className={`flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center ${borderless ? "min-h-full flex-1" : ""}`}>
       {/* ── Header — Robu stands here for the first beat (same arrival every
           other screen gets), then leaves for the board once he joins the
           game; his icon un-reserves that space the instant he does, so the
           bubble/description expand to the full row on their own — nothing
           else here needs to change to make room. ── */}
+      {borderless && (
+        <div className="-mb-5 flex h-[74px] items-start pl-1">
+          {/* The heading sits over Hex's box (it's above him). */}
+          <h1 className="relative z-30 mt-[5px] min-w-0 flex-1 text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
+            {HEADING_WORDS.map((word, w) => (
+              <span key={w}>
+                {w > 0 && " "}
+                <span className="inline-block whitespace-nowrap">
+                  {word.map(({ char, accent, index }) => (
+                    // Typed in one letter at a time; hidden letters keep their
+                    // room, so nothing moves while typing.
+                    <span
+                      key={index}
+                      className={`inline-block ${accent ? "text-[#04ACAB]" : ""} ${index < typed ? "opacity-100" : "opacity-0"}`}
+                    >
+                      {char}
+                    </span>
+                  ))}
+                </span>
+              </span>
+            ))}
+          </h1>
+          {/* Hex stands here until Start. His box is big, but the negative
+            margins make it take little room, so he overlaps what's around
+            him. */}
+          {robuJoinedGame ? (
+            <div aria-hidden className="-my-12 -ml-20 h-[170px] w-[190px] shrink-0" />
+          ) : (
+            <RobuAnchor registerAnchor={registerAnchor} className="-my-12 -ml-20 h-[170px] w-[190px] shrink-0" />
+          )}
+        </div>
+      )}
+      {!borderless && (
       <div className="flex-col items-center justify-center gap-3 md:justify-start">
         <motion.div
           layout
@@ -157,11 +254,16 @@ export function GameBoardScreen({
           )}
         </div>
       </div>
+      )}
 
       {/* Board on the left, controls on the right (stacked on small screens). */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-center lg:gap-6">
+      <div className={`flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-center lg:gap-6 ${borderless ? "flex-1" : ""}`}>
         {/* ── Left column — the game board ── */}
-        <div className="lg:order-1 lg:w-105 lg:shrink-0">
+        <div className="relative lg:order-1 lg:w-105 lg:shrink-0">
+          <div
+            inert={locked}
+            className={`transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+          >
           <GameBoard
             level={LEVEL}
             commands={commands}
@@ -177,50 +279,27 @@ export function GameBoardScreen({
             registerAnchor={registerAnchor}
             robuJoinedGame={robuJoinedGame}
             borderless={borderless}
-            corner={
-              borderless ? (
-                <>
-                  <ProgramSlots
-                    commands={commands}
-                    isPlaying={isPlaying}
-                    success={success}
-                    executingStep={executingStep}
-                    removeCommand={removeCommand}
-                    borderless
-                    compact
-                  />
-                  <button
-                    type="button"
-                    aria-label="Reset"
-                    onClick={() => {
-                      triggerSound("tap");
-                      resetLevel();
-                    }}
-                    className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-transform active:scale-90 dark:bg-white/10 dark:text-slate-200"
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Run program"
-                    disabled={isPlaying || success !== null || !commands.some((c) => c !== null)}
-                    onClick={runSequence}
-                    className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-md transition-transform active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {isPlaying ? (
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <Play className="h-5 w-5 fill-current" />
-                    )}
-                  </button>
-                </>
-              ) : undefined
-            }
           />
+          {borderless && (
+            <MovesBar
+              commands={commands}
+              isPlaying={isPlaying}
+              success={success}
+              executingStep={executingStep}
+              removeCommand={removeCommand}
+              runSequence={runSequence}
+              resetLevel={resetLevel}
+              triggerSound={triggerSound}
+            />
+          )}
+          </div>
         </div>
 
         {/* ── Right column — program slots, actions and run controls ── */}
-        <div className="flex flex-col gap-3 lg:order-2 lg:w-100 lg:shrink-0">
+        <div
+          inert={locked}
+          className={`flex flex-col gap-3 lg:order-2 lg:w-100 lg:shrink-0 ${borderless ? "mt-auto" : ""} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+        >
           {!borderless && (
             <ProgramSlots
               commands={commands}
@@ -237,6 +316,7 @@ export function GameBoardScreen({
             success={success}
             addCommand={addCommand}
             borderless={borderless}
+            selected={commands.findLast((c) => c !== null) ?? null}
           />
 
           {!borderless && (

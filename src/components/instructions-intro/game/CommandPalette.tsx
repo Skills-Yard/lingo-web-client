@@ -13,6 +13,8 @@ interface CommandPaletteProps {
   addCommand: (type: CommandType) => void;
   /** Drops the card border (the Level 1 screen). */
   borderless?: boolean;
+  /** The move to show highlighted (Level 1: the last one added). */
+  selected?: CommandType | null;
 }
 
 /** The Level 1 screen's buttons: no pick-up, two by two, in this order. */
@@ -23,27 +25,42 @@ const TILE_ORDER: readonly { type: CommandType; Icon: LucideIcon }[] = [
   { type: "right", Icon: CornerUpRight },
 ];
 
-export function CommandPalette({ level, isPlaying, success, addCommand, borderless }: CommandPaletteProps) {
+export function CommandPalette({ level, isPlaying, success, addCommand, borderless, selected }: CommandPaletteProps) {
   if (borderless) {
     return (
-      <div className="grid w-full grid-cols-2 gap-x-3 gap-y-2.5 px-1 select-none">
-        {TILE_ORDER.map(({ type, Icon }) => (
-          <button
-            key={type}
-            type="button"
-            onClick={() => addCommand(type)}
-            disabled={isPlaying || success !== null}
-            // The mint bottom edge is the 5px border; the card sits on it.
-            className="flex h-[66px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border border-b-[5px] border-[#D4EEE6] bg-white shadow-[0_1px_8px_-4px_rgba(0,0,0,0.2)] transition-transform active:scale-95 disabled:cursor-default disabled:opacity-60 dark:border-[#1F4A44] dark:bg-[#15181E]"
-          >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#3F3F3F] text-white dark:bg-white/20">
-              <Icon className="h-4 w-4" strokeWidth={2.6} />
-            </span>
-            <span className="text-[13px] leading-none font-medium text-[#2C2C2C] dark:text-white">
-              {COMMAND_DETAILS[type].label}
-            </span>
-          </button>
-        ))}
+      <div className="mx-auto grid w-fit grid-cols-[131px_131px] gap-x-3.5 gap-y-2.5 select-none">
+        {TILE_ORDER.map(({ type, Icon }) => {
+          // The last move added keeps the highlighted look.
+          const chosen = type === selected;
+          return (
+            <button
+              key={type}
+              type="button"
+              onClick={() => addCommand(type)}
+              disabled={isPlaying || success !== null}
+              className={`flex h-[84px] w-[131px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[8px] border px-3 pt-2.5 pb-2 transition-all active:scale-95 disabled:cursor-default ${
+                chosen
+                  ? "border-[#444444] border-b-2 bg-[linear-gradient(112.32deg,#49C1AE_10.64%,#02B1AA_82.74%)]"
+                  : "border-[#CEE8DF] border-b-[6px] bg-white disabled:opacity-60 dark:border-[#1F4A44] dark:bg-[#15181E]"
+              }`}
+            >
+              <span
+                className={`flex size-9 shrink-0 items-center justify-center rounded-full ${
+                  chosen ? "bg-white text-[#36BDAD]" : "bg-[linear-gradient(180deg,#06A788,#2AD2BC)] text-white"
+                }`}
+              >
+                <Icon className="h-[18px] w-[18px]" strokeWidth={2.8} />
+              </span>
+              <span
+                className={`shrink-0 text-[14px] leading-[1.4] font-medium ${
+                  chosen ? "text-white" : "text-[#444444] dark:text-white"
+                }`}
+              >
+                {COMMAND_DETAILS[type].label}
+              </span>
+            </button>
+          );
+        })}
       </div>
     );
   }

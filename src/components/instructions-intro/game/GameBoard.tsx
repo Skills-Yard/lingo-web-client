@@ -51,7 +51,14 @@ export function GameBoard({
   const stepsLeft = commands.filter((c) => c === null).length;
 
   return (
-    <div className={`relative w-full bg-white dark:bg-[#111722] ${borderless ? "" : "border border-slate-200 dark:border-[#1e293b] "}shadow-xs rounded-3xl p-3.5 mb-2 flex flex-col items-center transition-colors`}>
+    <div
+      className={`relative w-full flex flex-col items-center transition-colors ${
+        borderless
+          ? // Level 1: no card chrome and no padding below, so what follows sits close.
+            "px-3.5 pt-1"
+          : "bg-white dark:bg-[#111722] border border-slate-200 dark:border-[#1e293b] shadow-xs rounded-3xl p-3.5 mb-2"
+      }`}
+    >
       <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10 pointer-events-none">
         <span
           className={`pointer-events-auto text-white font-black text-[10px] px-3 py-1 rounded-full shadow-xs ${
@@ -86,7 +93,7 @@ export function GameBoard({
         </div>
       </div>
 
-      <div className="w-full flex items-center justify-center py-4 overflow-visible relative">
+      <div className={`w-full flex items-center justify-center overflow-visible relative ${borderless ? "pt-2 pb-0" : "py-4"}`}>
         {level.isDemo ? (
           <DemoPlatform
             playerPos={playerPos}

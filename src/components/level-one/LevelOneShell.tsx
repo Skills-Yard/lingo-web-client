@@ -27,12 +27,14 @@ interface LevelOneShellProps {
   ctaLabel?: string;
   /** Content between the header and the Continue button. */
   children: ReactNode;
+  /** Drops the padding under the content, so it runs right down to Continue. */
+  flush?: boolean;
   /** Rendered over everything (popups). */
   overlay?: ReactNode;
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay }: LevelOneShellProps) {
+export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, setMuted] = useState(false);
   const mainRef = useRef<HTMLElement>(null);
@@ -85,7 +87,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         {/* The scroller spans the device, so a child can run edge to edge;
           the rest of the content stays in the centred column. */}
         <div className="scrollbar-none min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-          <div className="mx-auto flex min-h-full w-full max-w-[390px] flex-col items-center px-4 pb-4">
+          <div className={`mx-auto flex min-h-full w-full max-w-[390px] flex-col items-center px-4 ${flush ? "pb-0" : "pb-4"}`}>
             {children}
           </div>
         </div>

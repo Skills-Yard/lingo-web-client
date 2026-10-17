@@ -1,6 +1,6 @@
 "use client";
 
-import { useLayoutEffect, useState, type RefObject } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type RefObject } from "react";
 import { motion } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { HEX_STATE } from "@/lib/rive/runtime";
@@ -17,6 +17,9 @@ const NUDGE_RIGHT = 0.06;
 
 /** Hex's glide between tiles — shorter than a run's step, so he arrives before the next one. */
 const WALK_TRANSITION = { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const };
+
+/** Hex's slow, soft trip from one spot to another (header -> platform). */
+const PLACE_TRANSITION = { duration: 1.4, ease: [0.45, 0, 0.2, 1] as const };
 
 const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
@@ -40,6 +43,21 @@ export function HexStage({
   containerRef: RefObject<HTMLDivElement | null>;
 }) {
   const [rect, setRect] = useState<Rect | null>(null);
+  // A new anchor (not just the same one moving a tile) means he is being
+  // placed somewhere new, which plays slowly.
+  const [placing, setPlacing] = useState(false);
+  const hadAnchor = useRef(false);
+
+  useEffect(() => {
+    if (!anchorEl) return;
+    if (!hadAnchor.current) {
+      hadAnchor.current = true;
+      return;
+    }
+    setPlacing(true);
+    const timer = window.setTimeout(() => setPlacing(false), PLACE_TRANSITION.duration * 1000 + 100);
+    return () => window.clearTimeout(timer);
+  }, [anchorEl]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -76,7 +94,7 @@ export function HexStage({
         width: rect.width * SIZE,
         height: rect.height * SIZE,
       }}
-      transition={WALK_TRANSITION}
+      transition={placing ? PLACE_TRANSITION : WALK_TRANSITION}
     >
       <IdleHex />
     </motion.div>
