@@ -9,7 +9,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
 /**
- * `/module?level=1&step=6` — "So, giving instruction is same as giving commands." with
+ * `/module?level=1&step=7` — "So, giving instruction is same as giving commands." with
  * Hex beside the heading and a tap-to-open "Open it" card. Opening it shows
  * the "Congratulations! 1 Gem" popup.
  */
@@ -19,9 +19,9 @@ export function OpenItScreen({ onContinue }: { onContinue?: () => void }) {
 
   return (
     <LevelOneShell
-      step={6}
-      onBack={() => router.push(levelOneHref(5))}
-      onContinue={onContinue ?? (() => router.push(levelOneHref(7)))}
+      step={7}
+      onBack={() => router.push(levelOneHref(6))}
+      onContinue={onContinue ?? (() => router.push(levelOneHref(8)))}
       overlay={
         <AnimatePresence>
           {popupOpen && <GemPopup onClose={() => setPopupOpen(false)} />}
@@ -33,7 +33,7 @@ export function OpenItScreen({ onContinue }: { onContinue?: () => void }) {
       </h1>
 
       <div aria-hidden className="pointer-events-none mt-1 mr-2 h-[150px] w-[180px] shrink-0 self-end">
-        <OnboardingHex entryKey="open-it" />
+        <OnboardingHex entryKey="open-it" entryStyle={5} />
       </div>
 
       <button

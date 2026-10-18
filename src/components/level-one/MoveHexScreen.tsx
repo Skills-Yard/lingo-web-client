@@ -18,7 +18,7 @@ const GAME_SLIDE = INSTRUCTIONS_INTRO_SLIDES.find(
 );
 
 /**
- * `/module?level=1&step=7` — the game board screen from the instructions intro, as it
+ * `/module?level=1&step=8` — the game board screen from the instructions intro, as it
  * was: the same board, program slots, actions and Run/Reset controls, with
  * Hex (HexStage) walking the grid as the player piece.
  * Finishing a run (right or wrong) unlocks Continue.
@@ -35,10 +35,10 @@ export function MoveHexScreen() {
 
   return (
     <LevelOneShell
-      step={7}
+      step={8}
       flush
       ctaDisabled={!finished}
-      onBack={() => router.push(levelOneHref(6))}
+      onBack={() => router.push(levelOneHref(7))}
       onContinue={() => router.push("/level")}
     >
       {/* Hex is positioned against this box, so it must wrap the

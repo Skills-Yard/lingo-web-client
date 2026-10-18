@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Button3D } from "@/components/ui/Button3D";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { useVoiceover } from "@/components/onboarding/useVoiceover";
 import { moduleHref } from "@/lib/routes";
+import { LevelVoiceContext } from "./LevelVoice";
 
 /** The Figma frame every Level 1 screen is laid out in. */
 const FRAME_W = 390;
@@ -14,7 +16,7 @@ const FRAME_H = 844;
 const MAX_SCALE = 1.5;
 
 /** Screens in Level 1 (the progress bar's total). */
-export const LEVEL_ONE_STEPS = 7;
+export const LEVEL_ONE_STEPS = 8;
 
 /** Level 1's `step`th screen (1-based) — `/module?level=1&step=N`. */
 export const levelOneHref = (step: number) => moduleHref(1, step);
@@ -35,12 +37,19 @@ interface LevelOneShellProps {
   flush?: boolean;
   /** Rendered over everything (popups). */
   overlay?: ReactNode;
+  /** Clips played back-to-back once the screen opens; Hex talks meanwhile. */
+  voiceover?: readonly string[];
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush }: LevelOneShellProps) {
+export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, setMuted] = useState(false);
+  const voice = useVoiceover(voiceover, true, muted);
+  const levelVoice = useMemo(
+    () => ({ speaking: voice.playing, clip: Math.max(0, voice.clip) }),
+    [voice.playing, voice.clip],
+  );
   const mainRef = useRef<HTMLElement>(null);
   // The screen is laid out as the 390x844 frame and scaled as one piece, so
   // it looks the same (same proportions) on every device. The stage is
@@ -62,6 +71,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
   }, []);
 
   return (
+    <LevelVoiceContext.Provider value={levelVoice}>
     <main
       ref={mainRef}
       className="onboarding-light relative h-dvh w-full overflow-hidden bg-white dark:bg-background"
@@ -84,6 +94,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
           <OnboardingHeader
             onBack={onBack ?? (() => router.back())}
             progress={{ step, total: LEVEL_ONE_STEPS }}
+            showCount
             muted={muted}
             onToggleMuted={() => setMuted((m) => !m)}
           />
@@ -111,5 +122,6 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
       {overlay}
       </div>
     </main>
+    </LevelVoiceContext.Provider>
   );
 }

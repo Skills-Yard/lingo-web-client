@@ -1,27 +1,37 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { Confetti } from "./Confetti";
-import { FeedbackPanel, PANEL_HEX_DELAY_MS } from "./FeedbackPanel";
+import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
 
 const CORRECT_ID = "giving";
 
+const SAYS_AUDIO = ["/audios/screen_3_audio.mpeg"];
+/** The question, then each option with an "or" between them. */
+const QUIZ_AUDIO = [
+  "/audios/screen_4/screen_4_audio_trim.m4a",
+  "/audios/screen_4/screen_4_audio_opt1.m4a",
+  "/audios/screen_4/screen_4_audio_OR.m4a",
+  "/audios/screen_4/screen_4_audio_opt2.m4a",
+];
+
 const OPTIONS = [
-  { id: "asking", icon: "/images/level-one/asking-question.png", title: "Asking Question", text: "Teacher is asking a question to the class." },
-  { id: "giving", icon: "/images/level-one/giving-instruction.png", title: "Giving Instruction", text: "Teacher is giving an instruction to the class." },
+  { id: "asking", icon: "/images/level-one/asking-question.png", title: "Asking Question", tint: "bg-[#F6F4FE] dark:bg-[#1B1830]", text: "Teacher is asking a question to the class." },
+  { id: "giving", icon: "/images/level-one/giving-instruction.png", title: "Giving Instruction", tint: "bg-[#FFF9F0] dark:bg-[#2A2218]", text: "Teacher is giving an instruction to the class." },
 ] as const;
 
 // The teacher picture is one element across both screens: on the quiz it is
 // cropped from the bottom and moves up, to make room for the options.
-const IMAGE_WIDTH: Record<Step, number> = { says: 346, quiz: 358 };
-const IMAGE_HEIGHT: Record<Step, number> = { says: 346, quiz: 296 };
-const IMAGE_GAP: Record<Step, number> = { says: 48, quiz: 18 };
+const IMAGE_GAP: Record<Step, number> = { says: 48, quiz: 12 };
+// Frame top 163 + 240 = 403, which leaves 24px above the options at 427.
+const IMAGE_HEIGHT: Record<Step, number> = { says: 346, quiz: 240 };
 export type OptionState = "idle" | "selected" | "correct" | "wrong";
 
 /** After Check, the right answer is always green, and a wrong pick red. */
@@ -63,7 +73,9 @@ export const LOOKS: Record<OptionState, { edge: string; card: string; radio: str
   },
 };
 
-const MORPH = { duration: 0.6, ease: [0.22, 1, 0.36, 1] } as const;
+const MORPH = { duration: 0.8, ease: [0.65, 0, 0.35, 1] } as const;
+/** Heading box heights: two lines on "Teacher Says", one on the quiz. */
+const TITLE_HEIGHT: Record<Step, number> = { says: 67, quiz: 32 };
 
 /**
  * Level 1's screens 2 and 3 ("Let Suppose / Teacher Says", then "What
@@ -93,20 +105,12 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
     setLastUrlStep(urlStep);
     if (urlStep !== step) show(urlStep);
   }
-  // Hex enters the result panel a beat after Check.
-  const [panelHexIn, setPanelHexIn] = useState(false);
-  useEffect(() => {
-    if (!checked) {
-      setPanelHexIn(false);
-      return;
-    }
-    const timer = window.setTimeout(() => setPanelHexIn(true), PANEL_HEX_DELAY_MS);
-    return () => window.clearTimeout(timer);
-  }, [checked]);
 
   return (
     <LevelOneShell
       step={quiz ? 3 : 2}
+      // The quiz's question and options are read once, until it is checked.
+      voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
       onBack={() => {
@@ -115,13 +119,16 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         router.push(levelOneHref(2));
       }}
       overlay={
-        <AnimatePresence>
-          {quiz && checked && (
-            <FeedbackPanel key="feedback" correct={selectedId === CORRECT_ID} hexIn={panelHexIn}>
+        <>
+          {quiz && (
+            <FeedbackPanel key="feedback" correct={selectedId === CORRECT_ID} open={checked}
+              hexIn={checked}
+              hexCue={selectedId === CORRECT_ID ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            >
               {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}The teacher is giving an <b>instruction.</b>
             </FeedbackPanel>
           )}
-        </AnimatePresence>
+        </>
       }
       onContinue={() => {
         if (!quiz) {
@@ -131,43 +138,75 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         else router.push(levelOneHref(4));
       }}
     >
-      <AnimatePresence mode="wait" initial={false}>
-        {quiz ? (
-          <motion.h1
-            key="quiz"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            // The progress bar ends 93px from the top; 26px below it (119px), 32px tall.
-            className="mt-9 h-8 w-full shrink-0 text-center text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white"
-          >
-            <span className="text-[#00B8A9]">What</span> teacher is doing?
-          </motion.h1>
-        ) : (
-          <motion.h1
-            key="says"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="mt-9 flex shrink-0 flex-col items-center text-center"
-          >
-            <span className="text-[20px] leading-[1.34] font-semibold text-[#00B8A9]">Let Suppose</span>
-            <span className="text-[32px] leading-[1.25] font-bold text-[#2C2C2C] dark:text-white">Teacher Says</span>
-          </motion.h1>
-        )}
-      </AnimatePresence>
-
-      <motion.img
-        src="/images/level-one/teacher.png"
-        alt="A teacher saying: Open your notebook"
-        draggable={false}
+      {/* The heading box resizes with the picture, so nothing jumps when the
+        two headings swap: they cross-fade inside it while it animates. */}
+      <motion.div
         initial={false}
-        animate={{ width: IMAGE_WIDTH[step], height: IMAGE_HEIGHT[step], marginTop: IMAGE_GAP[step] }}
+        animate={{ height: TITLE_HEIGHT[step] }}
         transition={MORPH}
-        className="max-w-full shrink-0 rounded-lg object-cover object-top"
-      />
+        className="relative mt-9 w-full shrink-0"
+      >
+        <AnimatePresence initial={false}>
+          {quiz ? (
+            <motion.h1
+              key="quiz"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-x-0 top-0 text-center text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white"
+            >
+              <span className="text-[#00B8A9]">What</span> teacher is doing?
+            </motion.h1>
+          ) : (
+            <motion.h1
+              key="says"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="absolute inset-x-0 top-0 flex flex-col items-center text-center"
+            >
+              <span className="text-[20px] leading-[1.34] font-semibold text-[#00B8A9]">Let Suppose</span>
+              <span className="text-[32px] leading-[1.25] font-bold text-[#2C2C2C] dark:text-white">Teacher Says</span>
+            </motion.h1>
+          )}
+        </AnimatePresence>
+      </motion.div>
+
+      {/* The picture keeps its width and its place from the top across both
+        screens; on the quiz it is cropped from the bottom and moves up to
+        make room for the options. Hex stands at its bottom left on the
+        first screen only. */}
+      <motion.div
+        initial={false}
+        animate={{ marginTop: IMAGE_GAP[step], height: IMAGE_HEIGHT[step] }}
+        transition={MORPH}
+        className="relative w-full shrink-0 overflow-hidden rounded-lg"
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/level-one/teacher.png"
+          alt="A teacher saying: Open your notebook"
+          draggable={false}
+          className="h-[346px] w-full rounded-lg object-cover object-top"
+        />
+        <AnimatePresence>
+          {!quiz && (
+            <motion.div
+              key="hex"
+              aria-hidden
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="pointer-events-none absolute bottom-0 left-0 h-[130px] w-[130px]"
+            >
+              <OnboardingHex entryKey="teacher" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
 
       <AnimatePresence>
         {quiz && (
@@ -176,50 +215,37 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
-            transition={{ duration: 0.4, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="mt-5 flex w-full max-w-[358px] shrink-0 flex-col gap-[18px]"
+            transition={{ duration: 0.4, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            // 24px below the cropped picture.
+            className="mt-6 flex w-full shrink-0 items-start gap-[19px]"
           >
             {OPTIONS.map((option) => {
               const state = optionState(option.id, selectedId, checked);
-              const look = LOOKS[state];
               return (
-                // The khaki bottom edge is the wrapper's 6px border; the card
-                // sits flat on top of it. It turns green/red with the result.
-                <div
+                <button
                   key={option.id}
-                  className={`rounded-sm border-b-[6px] transition-colors ${look.edge}`}
+                  type="button"
+                  disabled={checked}
+                  onClick={() => {
+                    playClickSound();
+                    setSelectedId(option.id);
+                  }}
+                  aria-pressed={state === "selected"}
+                  className={`flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-lg border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-colors ${
+                    state === "idle" ? `border-transparent ${option.tint}` : LOOKS[state].card
+                  }`}
                 >
-                  <button
-                    type="button"
-                    disabled={checked}
-                    onClick={() => {
-                      playClickSound();
-                      setSelectedId(option.id);
-                    }}
-                    aria-pressed={state === "selected"}
-                    className={`flex h-[78px] w-full items-center justify-between gap-[15px] rounded-t-lg border px-4 py-2.5 text-left shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] transition-colors ${look.card}`}
-                  >
-                    <span className="flex items-center gap-3.5">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={option.icon} alt="" draggable={false} className="h-[57px] w-[61px] shrink-0 object-contain" />
-                      <span className="flex w-[185px] flex-col gap-2">
-                        <span className="text-[16px] leading-none font-medium text-[#2C2C2C] dark:text-white">
-                          {option.title}
-                        </span>
-                        <span className="text-[12px] leading-[1.4] font-medium text-[#666666] dark:text-white/70">
-                          {option.text}
-                        </span>
-                      </span>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={option.icon} alt="" draggable={false} className="h-[60px] w-[60px] shrink-0 object-contain" />
+                  <span className="flex w-[142px] flex-col items-center gap-3">
+                    <span className="text-[16px] leading-none font-medium text-[#444444] dark:text-white">
+                      {option.title}
                     </span>
-                    {/* Ring with a filled dot inside, padded away from the edge. */}
-                    <span
-                      aria-hidden
-                      className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full p-1 transition-colors ${look.radio}`}
-                    >
-                      <span className={`h-full w-full rounded-full transition-[scale,background-color] duration-200 ${look.dot}`} />
+                    <span className="w-[111px] text-center text-[12px] leading-[1.4] font-medium text-[#666666] dark:text-white/70">
+                      {option.text}
                     </span>
-                  </button>
-                </div>
+                  </span>
+                </button>
               );
             })}
           </motion.div>

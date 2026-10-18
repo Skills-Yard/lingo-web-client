@@ -4,12 +4,22 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
+import { useLevelVoice } from "./LevelVoice";
 
 const EXAMPLES = [
   { id: "parent", src: "/images/level-one/example-parent.png", label: "Parent eats the food" },
   { id: "coach", src: "/images/level-one/example-coach.png", label: "Coach gives a command" },
   { id: "traffic", src: "/images/level-one/example-traffic.png", label: "Traffic signal says stop" },
 ] as const;
+
+/** The heading, then two lines for each example, in the cards' order. */
+const VOICEOVER = [
+  "/audios/screen_5/screen5_heading_audio.m4a",
+  ...["parent", "coach", "traffic"].flatMap((name) => [
+    `/audios/screen_5/screen5_${name}_left_audio.m4a`,
+    `/audios/screen_5/screen5_${name}_right_audio.m4a`,
+  ]),
+];
 
 const CARD_WIDTH = 215;
 /** The cards are 661x1174 / 599x1064 — about 1:1.78. */
@@ -40,31 +50,51 @@ const slotOf = (index: number, active: number) => {
  */
 export function ExamplesScreen({ onContinue }: { onContinue?: () => void }) {
   const router = useRouter();
+
+  return (
+    <LevelOneShell
+      step={4}
+      voiceover={VOICEOVER}
+      onBack={() => router.push(levelOneHref(3))}
+      onContinue={onContinue ?? (() => router.push(levelOneHref(5)))}
+    >
+      <ExamplesCarousel />
+    </LevelOneShell>
+  );
+}
+
+function ExamplesCarousel() {
   const [active, setActive] = useState(0);
   // Auto-play stops while the learner is touching the carousel, and every
   // move (auto or manual) restarts the countdown.
   const [holding, setHolding] = useState(false);
   const reducedMotion = useReducedMotion();
+  // While the voice reads an example's two lines, that card is the centred
+  // one, and the carousel does not move on by itself.
+  const { speaking, clip } = useLevelVoice();
+  const narrated = speaking && clip > 0 ? Math.floor((clip - 1) / 2) : null;
+
+  const [lastNarrated, setLastNarrated] = useState(narrated);
+  if (narrated !== lastNarrated) {
+    setLastNarrated(narrated);
+    if (narrated !== null) setActive(narrated);
+  }
 
   useEffect(() => {
-    if (holding) return;
+    if (holding || speaking) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const timer = window.setTimeout(
       () => setActive((current) => (current + 1) % EXAMPLES.length),
       AUTO_ADVANCE_MS,
     );
     return () => window.clearTimeout(timer);
-  }, [active, holding]);
+  }, [active, holding, speaking]);
 
   const go = (direction: 1 | -1) =>
     setActive((current) => (current + direction + EXAMPLES.length) % EXAMPLES.length);
 
   return (
-    <LevelOneShell
-      step={4}
-      onBack={() => router.push(levelOneHref(3))}
-      onContinue={onContinue ?? (() => router.push(levelOneHref(5)))}
-    >
+    <>
       <h1 className="mt-9 w-[264px] shrink-0 text-center text-[24px] leading-[1.34] font-semibold text-[#444444] dark:text-white">
         Some <span className="text-brand-gradient">examples</span> of instruction
       </h1>
@@ -174,6 +204,6 @@ export function ExamplesScreen({ onContinue }: { onContinue?: () => void }) {
         </div>
       </div>
       </div>
-    </LevelOneShell>
+    </>
   );
 }
