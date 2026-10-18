@@ -9,6 +9,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { useVoiceover } from "@/components/onboarding/useVoiceover";
 import { moduleHref } from "@/lib/routes";
 import { LevelVoiceContext } from "./LevelVoice";
+import { useLevelMuted } from "./levelMuted";
 
 /** The Figma frame every Level 1 screen is laid out in. */
 const FRAME_W = 390;
@@ -44,7 +45,7 @@ interface LevelOneShellProps {
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
 export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover }: LevelOneShellProps) {
   const router = useRouter();
-  const [muted, setMuted] = useState(false);
+  const [muted, toggleMuted] = useLevelMuted();
   const voice = useVoiceover(voiceover, true, muted);
   const levelVoice = useMemo(
     () => ({ speaking: voice.playing, clip: Math.max(0, voice.clip) }),
@@ -96,7 +97,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
             progress={{ step, total: LEVEL_ONE_STEPS }}
             showCount
             muted={muted}
-            onToggleMuted={() => setMuted((m) => !m)}
+            onToggleMuted={toggleMuted}
           />
         </div>
         {/* The scroller spans the device, so a child can run edge to edge;
