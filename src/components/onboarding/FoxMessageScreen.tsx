@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Sparkle } from "lucide-react";
 import type { HexOnboardingBeat, TextSpan } from "@/lib/constants/onboarding";
@@ -24,18 +24,22 @@ const SCREEN_SETTLE_MS = 400;
 // hangs off its top and the heading off its bottom, instead of all three
 // being centered as a group (which moved the fox whenever the text length
 // changed).
-// Same size as Hex on the name screen (NameScreen: min(15rem, 30dvh)).
-const FOX_MAX_REM = 15;
-const FOX_MAX_DVH = 30;
+// Same size as Hex on the name screen (NameScreen: min(12.5rem, 25dvh)).
+const FOX_MAX_REM = 12.5;
+const FOX_MAX_DVH = 25;
 const FOX_SIZE = `min(${FOX_MAX_REM}rem, ${FOX_MAX_DVH}dvh)`;
-/** Every bubble's top edge sits 200px from the top of the screen — the
- * header is 107px, so this far into the stage — and the bubble grows
- * downward with its text. */
-const BUBBLE_TOP_PX = 93;
-/** The text below Hex ends this far (px) above the bottom of the screen. */
+/** Hex is drawn this much bigger than its slot (the slot's `scale-125`). */
+const FOX_VISUAL_SCALE = 1.25;
+/** The text below Hex ends this far (px) above the bottom of the screen — at
+ * most; short screens use BELOW_TEXT_BOTTOM_MAX_VH of their height instead. */
 const BELOW_TEXT_BOTTOM_PX = 200;
-/** Gap between the bubble's bottom edge and the fox's top edge. */
-const FOX_BUBBLE_GAP_PX = -68;
+const BELOW_TEXT_BOTTOM_MAX_VH = 26;
+/** How far the bubble's bottom edge dips below the fox's top edge, as a share
+ * of the fox's size (the bubble's tail sits in the empty space above Hex's
+ * head). 48px at a 240px Hex. */
+const FOX_BUBBLE_OVERLAP = 48 / 240;
+/** The bubble never gets closer than this (px) to the top of the stage. */
+const BUBBLE_MIN_TOP_PX = 4;
 /** Fox's top edge where there's no bubble above it (heading on top). */
 const FOX_TOP_PX = 223;
 /** The fox never shrinks below this (px) to make room for text below. */
@@ -265,8 +269,9 @@ export function FoxMessageScreen({
   const [lift, setLift] = useState(0);
   const [foxTop, setFoxTop] = useState(FOX_TOP_PX);
   const [belowBottom, setBelowBottom] = useState(BELOW_TEXT_BOTTOM_PX);
+  const [bubbleBottom, setBubbleBottom] = useState(FOX_TOP_PX);
   const [shrunk, setShrunk] = useState<{ size: number; top: number } | null>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const stage = stageRef.current;
     const fox = foxRef.current;
     if (!stage || !fox) return;
@@ -276,18 +281,35 @@ export function FoxMessageScreen({
       // shrunk fox doesn't feed into its own measurement.
       const stageHeight = stage.clientHeight;
       const aboveEl = aboveRef.current;
-      const aboveHeight = aboveEl ? BUBBLE_TOP_PX + aboveEl.offsetHeight : 0;
-      // The text below is pinned to the bottom, so it no longer pushes Hex.
+      // The bubble hangs off Hex's fixed spot (growing upward), so it never
+      // pushes Hex around.
+      const aboveHeight = 0;
+      // The text below is pinned to the bottom, so it doesn't push Hex.
       const belowHeight = 0;
       // Stage bottom is above the footer; measure it to land at 200px from
       // the bottom of the screen.
       const footerHeight = window.innerHeight - stage.getBoundingClientRect().bottom;
-      setBelowBottom(Math.max(0, BELOW_TEXT_BOTTOM_PX - footerHeight));
+      const belowBottomPx = Math.min(
+        BELOW_TEXT_BOTTOM_PX,
+        (BELOW_TEXT_BOTTOM_MAX_VH / 100) * window.innerHeight,
+      );
+      setBelowBottom(Math.max(0, belowBottomPx - footerHeight));
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
       const size = Math.min(FOX_MAX_REM * rem, (FOX_MAX_DVH / 100) * window.innerHeight);
-      // Hex sits just under the bubble, whatever its height.
-      const top = aboveEl ? aboveHeight + FOX_BUBBLE_GAP_PX : FOX_TOP_PX;
+      // Hex's visual center sits at the vertical center of the screen.
+      const overlap = size * FOX_BUBBLE_OVERLAP;
+      // On a short screen the bubble would run off the top: Hex steps down
+      // just enough to keep it in.
+      const top = aboveEl
+        ? Math.max(
+            window.innerHeight / 2 -
+              stage.getBoundingClientRect().top -
+              (size * FOX_VISUAL_SCALE) / 2,
+            aboveEl.offsetHeight + BUBBLE_MIN_TOP_PX - overlap,
+          )
+        : FOX_TOP_PX;
       setFoxTop(top);
+      setBubbleBottom(top + overlap);
 
       const overflow = top + size + belowHeight + EDGE_GAP_PX - stageHeight;
       const room = Math.max(0, top - aboveHeight - EDGE_GAP_PX);
@@ -295,7 +317,9 @@ export function FoxMessageScreen({
       const stillOver = overflow - up;
       if (stillOver > 0) {
         setLift(0);
-        setShrunk({ size: Math.max(FOX_MIN_PX, size - stillOver), top: top - up });
+        const shrunkSize = Math.max(FOX_MIN_PX, size - stillOver);
+        setShrunk({ size: shrunkSize, top: top - up });
+        setBubbleBottom(top - up + shrunkSize * FOX_BUBBLE_OVERLAP);
       } else {
         setLift(up);
         setShrunk(null);
@@ -333,13 +357,14 @@ export function FoxMessageScreen({
       {headingOnTop && <div className="shrink-0 self-center">{headingBlock}</div>}
 
       <div ref={stageRef} className="relative min-h-0 flex-1">
-        {/* The bubble hangs from the top line shared by every screen and
-            grows downward, so its top edge is the same whatever its text. */}
+        {/* The bubble's bottom edge (tail) sits a fixed distance above Hex
+            and it grows upward with its text, so it hugs Hex whatever its
+            size while Hex stays put. */}
         {!headingOnTop && (
           <div
             ref={aboveRef}
-            className="absolute left-1/2 z-10 w-max -translate-x-1/2"
-            style={{ top: BUBBLE_TOP_PX }}
+            className="absolute left-1/2 z-10 w-max -translate-x-1/2 -translate-y-full"
+            style={{ top: bubbleBottom }}
           >
             {bubbleEl("down")}
           </div>
