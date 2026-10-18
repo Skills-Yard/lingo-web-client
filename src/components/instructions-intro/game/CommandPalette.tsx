@@ -28,7 +28,7 @@ const TILE_ORDER: readonly { type: CommandType; Icon: LucideIcon }[] = [
 export function CommandPalette({ level, isPlaying, success, addCommand, borderless, selected }: CommandPaletteProps) {
   if (borderless) {
     return (
-      <div className="mx-auto grid w-fit grid-cols-[131px_131px] gap-x-3.5 gap-y-2.5 select-none">
+      <div className="mx-auto grid w-fit grid-cols-[131px_131px] gap-x-3.5 gap-y-3 select-none">
         {TILE_ORDER.map(({ type, Icon }) => {
           // The last move added keeps the highlighted look.
           const chosen = type === selected;
@@ -38,7 +38,7 @@ export function CommandPalette({ level, isPlaying, success, addCommand, borderle
               type="button"
               onClick={() => addCommand(type)}
               disabled={isPlaying || success !== null}
-              className={`flex h-[84px] w-[131px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[8px] border px-3 pt-2.5 pb-2 transition-all active:scale-95 disabled:cursor-default ${
+              className={`flex h-[84px] w-[131px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border p-3 transition-all active:scale-95 disabled:cursor-default ${
                 chosen
                   ? "border-[#444444] border-b-2 bg-[linear-gradient(112.32deg,#49C1AE_10.64%,#02B1AA_82.74%)]"
                   : "border-[#CEE8DF] border-b-[6px] bg-white disabled:opacity-60 dark:border-[#1F4A44] dark:bg-[#15181E]"
@@ -52,7 +52,7 @@ export function CommandPalette({ level, isPlaying, success, addCommand, borderle
                 <Icon className="h-[18px] w-[18px]" strokeWidth={2.8} />
               </span>
               <span
-                className={`shrink-0 text-[14px] leading-[1.4] font-medium ${
+                className={`shrink-0 font-[Inter,sans-serif] text-[14px] leading-[1.4] font-medium ${
                   chosen ? "text-white" : "text-[#444444] dark:text-white"
                 }`}
               >

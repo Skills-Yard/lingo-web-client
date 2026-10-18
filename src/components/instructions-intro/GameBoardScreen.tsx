@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, X } from "lucide-react";
+import { Check, Move, X } from "lucide-react";
 import type { GameSlide } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
 import { lesson1Level } from "../../utils/data/levels";
@@ -183,7 +183,7 @@ export function GameBoardScreen({
           bubble/description expand to the full row on their own — nothing
           else here needs to change to make room. ── */}
       {borderless && (
-        <div className="-mb-5 flex h-[74px] items-start pl-1">
+        <div className="-mb-7 flex h-[74px] items-start pl-1">
           {/* The heading sits over Hex's box (it's above him). */}
           <h1 className="relative z-30 mt-[5px] min-w-0 flex-1 text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
             {HEADING_WORDS.map((word, w) => (
@@ -257,9 +257,9 @@ export function GameBoardScreen({
       )}
 
       {/* Board on the left, controls on the right (stacked on small screens). */}
-      <div className={`flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-center lg:gap-6 ${borderless ? "flex-1" : ""}`}>
+      <div className={`flex flex-col lg:flex-row lg:items-start lg:justify-center lg:gap-6 ${borderless ? "flex-1 gap-0" : "gap-3"}`}>
         {/* ── Left column — the game board ── */}
-        <div className="relative lg:order-1 lg:w-105 lg:shrink-0">
+        <div className={`relative lg:order-1 lg:w-105 lg:shrink-0 ${borderless ? "-mb-5" : ""}`}>
           <div
             inert={locked}
             className={`transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
@@ -280,6 +280,22 @@ export function GameBoardScreen({
             robuJoinedGame={robuJoinedGame}
             borderless={borderless}
           />
+          </div>
+        </div>
+
+        {/* ── Right column — program slots, actions and run controls ── */}
+        <div
+          inert={locked}
+          className={`flex flex-col gap-3 lg:order-2 lg:w-100 lg:shrink-0 ${borderless ? "relative z-10 -mx-4 mt-auto items-center gap-3 rounded-t-[38px] bg-white pb-1 dark:bg-background" : ""} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+        >
+          {borderless && (
+            <div className="mb-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-[#F7F2FF] px-3 dark:bg-white/6">
+              <Move className="h-[22px] w-[22px] text-[#B286FD]" strokeWidth={2} />
+              <span className="text-[12px] leading-[18px] font-medium text-[#2C2C2C] dark:text-white">
+                Tap any option to preview Hex’s movement.
+              </span>
+            </div>
+          )}
           {borderless && (
             <MovesBar
               commands={commands}
@@ -292,14 +308,7 @@ export function GameBoardScreen({
               triggerSound={triggerSound}
             />
           )}
-          </div>
-        </div>
 
-        {/* ── Right column — program slots, actions and run controls ── */}
-        <div
-          inert={locked}
-          className={`flex flex-col gap-3 lg:order-2 lg:w-100 lg:shrink-0 ${borderless ? "mt-auto" : ""} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
-        >
           {!borderless && (
             <ProgramSlots
               commands={commands}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Play } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { DialogueBubble } from "@/components/ui/DialogueBubble";
 import { OnboardingHex } from "./FeedbackPanel";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
@@ -49,15 +50,15 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
         >
           <OnboardingHex entryKey="video" leaving={leaving} exit="exitLeft" />
         </div>
-        <div className="relative mt-3 flex h-[77px] w-[151px] shrink-0 items-center rounded-lg bg-white px-3 drop-shadow-[1px_1px_12.8px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
-          <span
-            aria-hidden
-            className="absolute top-1/2 -left-1.5 h-3 w-3 -translate-y-1/2 rotate-45 bg-white dark:bg-[#15181E]"
-          />
-          <span className="relative text-[16px] leading-[1.34] font-semibold text-[#444444] dark:text-white">
+        <DialogueBubble
+          tail="left"
+          className="relative mt-3 ml-6 w-[175px] shrink-0 [--bubble-fill:var(--background)] [--bubble-shadow:#128CB3]"
+          contentClassName={`flex h-[75px] items-center justify-center px-3 text-center text-[16px] leading-[1.34] font-semibold text-[#444444] dark:text-white`}
+        >
+          <span className="w-[122px] text-balance">
             What are <span className="text-[#0A9EAE]">instructions</span>?
           </span>
-        </div>
+        </DialogueBubble>
       </div>
 
       <div className="relative h-[282px] w-full shrink-0">

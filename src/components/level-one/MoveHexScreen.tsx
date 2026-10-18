@@ -43,7 +43,7 @@ export function MoveHexScreen() {
     >
       {/* Hex is positioned against this box, so it must wrap the
         screen he walks around in. */}
-      <div ref={stageRef} className="relative mt-9 flex w-full flex-1 flex-col">
+      <div ref={stageRef} className="relative mt-4 flex w-full flex-1 flex-col">
         <HexStage anchorEl={anchorEl} containerRef={stageRef} />
         <GameBoardScreen
           slide={GAME_SLIDE}

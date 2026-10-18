@@ -41,7 +41,7 @@ const TAIL_RIGHT = TAIL_CENTER + TAIL_HALF_WIDTH;
 interface DialogueBubbleProps {
   children: ReactNode;
   /** "down" (tail hangs off the bottom edge) or "up" (off the top edge). */
-  tail?: "down" | "up";
+  tail?: "down" | "up" | "left";
   /** Where along that edge the tail sits — centered, or tucked in near one
    * end (just past the rounded corner) for a bubble whose speaker stands off
    * to that side. */
@@ -86,6 +86,8 @@ export function DialogueBubble({
   contentClassName,
 }: DialogueBubbleProps) {
   const up = tail === "up";
+  const left = tail === "left";
+
 
   // Off-center tails sit just past the rounded corner (so the notch lands on
   // the box's flat edge, not on the curve). The SVG is positioned against the
@@ -99,10 +101,45 @@ export function DialogueBubble({
         ? { right: tailInset }
         : undefined;
 
+  // The same V, turned to hang off the box's left edge, vertically centered:
+  // rotated about the tail's base point, which sits on that edge.
+  const tailGraphic = (
+    <svg
+      aria-hidden
+      width={TAIL_WIDTH}
+      height={TAIL_HEIGHT}
+      viewBox={`0 0 ${TAIL_WIDTH} ${TAIL_HEIGHT}`}
+      className={`absolute overflow-visible ${
+        left
+          ? "top-0 left-0 origin-top-left"
+          : `${tailAlign === "center" ? "left-1/2 -translate-x-1/2" : ""} ${
+              up ? "bottom-full scale-y-[-1]" : "top-full"
+            }`
+      }`}
+      style={left ? { transform: `rotate(90deg) translateX(${-TAIL_CENTER}px)` } : tailPosition}
+    >
+      {/* Erases the border between the tail's legs (and the sliver of
+          it just inside them), leaving the notch open to the box. */}
+      <polygon
+        style={{ fill: FILL }}
+        points={`${TAIL_LEFT},-1 ${TAIL_LEFT},${TAIL_BASE_Y} ${TAIL_CENTER},${TAIL_TIP_Y} ${TAIL_RIGHT},${TAIL_BASE_Y} ${TAIL_RIGHT},-1`}
+      />
+      {/* The V itself, with a short run of border on either side so its
+          outline joins the box's border with no seam. */}
+      <path
+        fill="none"
+        stroke={TAIL_STROKE[left ? "center" : tailAlign]}
+        strokeWidth={STROKE_WIDTH}
+        strokeLinejoin="miter"
+        d={`M0 ${TAIL_BASE_Y}H${TAIL_LEFT}L${TAIL_CENTER} ${TAIL_TIP_Y}L${TAIL_RIGHT} ${TAIL_BASE_Y}H${TAIL_WIDTH}`}
+      />
+    </svg>
+  );
+
   return (
     <div
       className={`relative ${className ?? ""}`}
-      style={{ filter: `drop-shadow(0 ${SHADOW_OFFSET}px 0 ${SHADOW_COLOR})` }}
+      style={{ filter: `drop-shadow(0 ${SHADOW_OFFSET}px 0 var(--bubble-shadow, ${SHADOW_COLOR}))` }}
     >
       <div
         className={`relative ${contentClassName ?? ""}`}
@@ -122,32 +159,7 @@ export function DialogueBubble({
 
         {/* Positioned against the box's padding edge, i.e. right on the inner
             side of its border — where the tail's y=0 is defined to be. */}
-        <svg
-          aria-hidden
-          width={TAIL_WIDTH}
-          height={TAIL_HEIGHT}
-          viewBox={`0 0 ${TAIL_WIDTH} ${TAIL_HEIGHT}`}
-          className={`absolute overflow-visible ${
-            tailAlign === "center" ? "left-1/2 -translate-x-1/2" : ""
-          } ${up ? "bottom-full scale-y-[-1]" : "top-full"}`}
-          style={tailPosition}
-        >
-          {/* Erases the border between the tail's legs (and the sliver of
-              it just inside them), leaving the notch open to the box. */}
-          <polygon
-            style={{ fill: FILL }}
-            points={`${TAIL_LEFT},-1 ${TAIL_LEFT},${TAIL_BASE_Y} ${TAIL_CENTER},${TAIL_TIP_Y} ${TAIL_RIGHT},${TAIL_BASE_Y} ${TAIL_RIGHT},-1`}
-          />
-          {/* The V itself, with a short run of border on either side so its
-              outline joins the box's border with no seam. */}
-          <path
-            fill="none"
-            stroke={TAIL_STROKE[tailAlign]}
-            strokeWidth={STROKE_WIDTH}
-            strokeLinejoin="miter"
-            d={`M0 ${TAIL_BASE_Y}H${TAIL_LEFT}L${TAIL_CENTER} ${TAIL_TIP_Y}L${TAIL_RIGHT} ${TAIL_BASE_Y}H${TAIL_WIDTH}`}
-          />
-        </svg>
+        {left ? <div className="absolute top-1/2 left-0 h-0 w-0">{tailGraphic}</div> : tailGraphic}
       </div>
     </div>
   );

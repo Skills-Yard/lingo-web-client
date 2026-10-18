@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { Check, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
@@ -10,19 +11,25 @@ import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
-import { LOOKS, optionState } from "./TeacherFlow";
+import { optionState } from "./TeacherFlow";
 
 const CORRECT_ID = "command";
 /** The `entryStyle` Hex enters with here (set before the entrance trigger). */
 const HEX_ENTRY_STYLE = 6;
 
 const OPTIONS = [
-  { id: "statement", icon: "/images/level-one/statement.png", title: "Statement" },
-  { id: "command", icon: "/images/level-one/command.png", title: "Command" },
-  { id: "question", icon: "/images/level-one/question.png", title: "Question" },
+  { id: "statement", icon: "/images/level-one/statement.png", title: "Statement", tint: "bg-[#F6F4FE]", iconSize: "h-9 w-[31px]" },
+  { id: "command", icon: "/images/level-one/command.png", title: "Command", tint: "bg-[#FFF4F6]", iconSize: "h-8 w-[26px]" },
+  { id: "question", icon: "/images/level-one/question.png", title: "Question", tint: "bg-[#FFF5EE]", iconSize: "h-[31px] w-[38px]" },
 ] as const;
 
-const QUIZ_AUDIO = ["/audios/screen_6_audio.mpeg"];
+/** The card's 4px outline: white at rest, coloured once picked / marked. */
+const OUTLINE = {
+  idle: "border-white dark:border-white/10",
+  selected: "border-primary",
+  correct: "border-primary",
+  wrong: "border-[#E5484D]",
+} as const;
 
 /**
  * `/module?level=1&step=6` — "What are instructions known as?": a single-answer quiz
@@ -42,7 +49,6 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   return (
     <LevelOneShell
       step={6}
-      voiceover={QUIZ_AUDIO}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
       onBack={() => router.push(levelOneHref(5))}
@@ -95,19 +101,15 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         transition={{ type: "spring", stiffness: 70, damping: 18 }}
       />
 
-      <div className="mt-5 flex w-full max-w-[358px] shrink-0 flex-col gap-[18px]">
-        {OPTIONS.map((option, i) => {
-          const state = optionState(option.id, selectedId, checked, CORRECT_ID);
-          const look = LOOKS[state];
-          return (
-            // The khaki bottom edge is the wrapper's 6px border; the card sits
-            // flat on top of it and turns green/red with the result.
-            <motion.div
-              key={option.id}
-              {...optionDropIn(i)}
-              className={`rounded-sm border-b-[6px] transition-colors ${look.edge}`}
-            >
-              <button
+      <div className="relative mt-5 w-full max-w-[359px] shrink-0">
+        <div aria-hidden className="absolute inset-x-[30px] top-[17px] bottom-[8px] bg-[#0CA9B4]/10 blur-[23.7px]" />
+        <div className="relative flex flex-col gap-[23px]">
+          {OPTIONS.map((option, i) => {
+            const state = optionState(option.id, selectedId, checked, CORRECT_ID);
+            return (
+              <motion.button
+                key={option.id}
+                {...optionDropIn(i)}
                 type="button"
                 disabled={checked}
                 onClick={() => {
@@ -115,25 +117,27 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                   setSelectedId(option.id);
                 }}
                 aria-pressed={state === "selected"}
-                className={`flex h-[62px] w-full items-center justify-between gap-[15px] rounded-t-lg border px-4 py-2 text-left shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] transition-colors ${look.card}`}
+                className={`relative flex h-[89px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[26px] border-4 transition-colors dark:bg-[#15181E] ${option.tint} ${OUTLINE[state]}`}
               >
-                <span className="flex items-center gap-3.5">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={option.icon} alt="" draggable={false} className="h-[46px] w-[46px] shrink-0 object-contain" />
-                  <span className="text-[16px] leading-none font-medium text-[#2C2C2C] dark:text-white">
-                    {option.title}
-                  </span>
-                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={option.icon} alt="" draggable={false} className={`shrink-0 object-contain ${option.iconSize}`} />
+                <span className="text-[16px] leading-none font-medium text-[#2C2C2C] dark:text-white">{option.title}</span>
                 <span
                   aria-hidden
-                  className={`flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-full p-1 transition-colors ${look.radio}`}
+                  className={`absolute top-1/2 right-4 flex h-[26px] w-[26px] -translate-y-1/2 items-center justify-center rounded-full transition-[scale,opacity] duration-200 ${
+                    state === "idle" ? "scale-0 opacity-0" : "scale-100 opacity-100"
+                  } ${state === "wrong" ? "bg-[#E5484D]" : "bg-linear-to-b from-[#00B8A9] to-[#1287B3]"}`}
                 >
-                  <span className={`h-full w-full rounded-full transition-[scale,background-color] duration-200 ${look.dot}`} />
+                  {state === "wrong" ? (
+                    <X className="h-4 w-4 text-white" strokeWidth={3} />
+                  ) : (
+                    <Check className="h-4 w-4 text-white" strokeWidth={3} />
+                  )}
                 </span>
-              </button>
-            </motion.div>
-          );
-        })}
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
       <Confetti active={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>

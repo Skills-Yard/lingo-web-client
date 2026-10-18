@@ -94,7 +94,8 @@ export function useVoiceover(
     let index = 0;
     let frame = 0;
 
-    // A src may end in `#end=<seconds>` to play only the start of its clip.
+    // A src may end in `#end=<seconds>` to play only the start of its clip, or
+    // `#start=<seconds>,<seconds>` to play just that stretch of it.
     let clipEnd = Infinity;
 
     const tick = () => {
@@ -117,9 +118,14 @@ export function useVoiceover(
         setStatus("done");
         return;
       }
-      const [file, fragment] = queue[index++].split("#end=");
-      clipEnd = fragment ? Number(fragment) : Infinity;
+      const [file, fragment] = queue[index++].split("#");
+      const range = /^start=([\d.]+),([\d.]+)$/.exec(fragment ?? "");
+      const clipStart = range ? Number(range[1]) : 0;
+      clipEnd = range ? Number(range[2]) : fragment?.startsWith("end=") ? Number(fragment.slice(4)) : Infinity;
       audio.src = file;
+      if (clipStart > 0) {
+        audio.addEventListener("loadedmetadata", () => (audio.currentTime = clipStart), { once: true });
+      }
       audio
         .play()
         .then(() => {

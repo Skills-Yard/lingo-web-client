@@ -72,9 +72,10 @@ interface QuestionHeadingProps {
 
 /**
  * One span of a heading: the first `cut` characters at full strength, the rest
- * faded. A highlighted span's gradient is on each part itself rather than on
- * a wrapper — a wrapper's `background-clip: text` ignores the faded child's
- * opacity and would paint it at full strength.
+ * faded. The gradient is only on the part already spoken. The faded remainder
+ * is a plain mid-teal at low opacity instead: Safari paints `background-clip:
+ * text` through the glyphs at full strength whatever the element's opacity, so
+ * a gradient remainder would already show in full before it is spoken.
  */
 function KaraokeSpan({
   text,
@@ -85,12 +86,15 @@ function KaraokeSpan({
   cut: number;
   highlight?: boolean;
 }) {
-  const color = highlight ? "text-brand-gradient" : "";
   return (
     <>
-      <span className={color}>{text.slice(0, cut)}</span>
+      {cut > 0 && (
+        <span className={highlight ? "text-brand-gradient" : undefined}>{text.slice(0, cut)}</span>
+      )}
       {cut < text.length && (
-        <span className={`${color} opacity-35 transition-opacity`}>{text.slice(cut)}</span>
+        <span className={`${highlight ? "text-[#0a9eae]" : ""} opacity-35 transition-opacity`}>
+          {text.slice(cut)}
+        </span>
       )}
     </>
   );
