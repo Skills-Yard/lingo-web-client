@@ -28,7 +28,7 @@ interface NameScreenProps {
 const FOCUS_DELAY_MS = 450;
 
 /** Hex's size — the same as on every bubble screen (FoxMessageScreen). */
-const FOX_SIZE = "min(15rem, 30dvh)";
+const FOX_SIZE = "min(12.5rem, 25dvh)";
 
 /**
  * "What should I call you?": the question sits in Zox's speech bubble, with

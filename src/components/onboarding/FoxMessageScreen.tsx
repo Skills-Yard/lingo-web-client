@@ -24,9 +24,9 @@ const SCREEN_SETTLE_MS = 400;
 // hangs off its top and the heading off its bottom, instead of all three
 // being centered as a group (which moved the fox whenever the text length
 // changed).
-// Same size as Hex on the name screen (NameScreen: min(15rem, 30dvh)).
-const FOX_MAX_REM = 15;
-const FOX_MAX_DVH = 30;
+// Same size as Hex on the name screen (NameScreen: min(12.5rem, 25dvh)).
+const FOX_MAX_REM = 12.5;
+const FOX_MAX_DVH = 25;
 const FOX_SIZE = `min(${FOX_MAX_REM}rem, ${FOX_MAX_DVH}dvh)`;
 /** Hex is drawn this much bigger than its slot (the slot's `scale-125`). */
 const FOX_VISUAL_SCALE = 1.25;
@@ -36,8 +36,8 @@ const BELOW_TEXT_BOTTOM_PX = 200;
 const BELOW_TEXT_BOTTOM_MAX_VH = 26;
 /** How far the bubble's bottom edge dips below the fox's top edge, as a share
  * of the fox's size (the bubble's tail sits in the empty space above Hex's
- * head). 68px at the biggest Hex (240px). */
-const FOX_BUBBLE_OVERLAP = 68 / 240;
+ * head). 48px at a 240px Hex. */
+const FOX_BUBBLE_OVERLAP = 48 / 240;
 /** The bubble never gets closer than this (px) to the top of the stage. */
 const BUBBLE_MIN_TOP_PX = 4;
 /** Fox's top edge where there's no bubble above it (heading on top). */
