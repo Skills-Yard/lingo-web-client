@@ -133,9 +133,37 @@ export function useVoiceover(
           frame = window.requestAnimationFrame(tick);
         })
         .catch(() => {
-          if (!cancelled) setStatus("failed");
+          // Pausing for a hidden tab aborts a still-loading play(); that's
+          // resumed on return, not a failure.
+          if (!cancelled && !pausedForHidden) setStatus("failed");
         });
     };
+
+    // Don't keep talking from a background tab / minimized window.
+    let pausedForHidden = false;
+    const onVisibilityChange = () => {
+      if (cancelled) return;
+      if (document.hidden) {
+        if (audio.paused) return;
+        pausedForHidden = true;
+        window.cancelAnimationFrame(frame);
+        audio.pause();
+      } else if (pausedForHidden) {
+        pausedForHidden = false;
+        audio
+          .play()
+          .then(() => {
+            if (cancelled) return;
+            setStatus("playing");
+            window.cancelAnimationFrame(frame);
+            frame = window.requestAnimationFrame(tick);
+          })
+          .catch(() => {
+            if (!cancelled) setStatus("failed");
+          });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
 
     let fadeFrame = 0;
     stopRef.current = () => {
@@ -160,6 +188,7 @@ export function useVoiceover(
     return () => {
       stopRef.current = () => {};
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibilityChange);
       stopRef.current = null;
       window.cancelAnimationFrame(frame);
       window.cancelAnimationFrame(fadeFrame);
