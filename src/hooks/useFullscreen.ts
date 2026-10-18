@@ -8,14 +8,23 @@ type LockableOrientation = ScreenOrientation & {
 
 /** "unavailable": no Fullscreen API (iPhone Safari) or already chromeless as
  * an installed PWA — there's nothing for a toggle to do. */
-type FullscreenState = "unavailable" | "off" | "on";
+type FullscreenState = "unavailable" | "off" | "on" | "ios";
+
+/** iPhone/iPad Safari has no Fullscreen API for pages; its button opens the
+ * "Add to Home Screen" guide instead (see InstallHint). */
+export const SHOW_INSTALL_GUIDE_EVENT = "lingo:show-install-guide";
 
 const CHROMELESS_DISPLAY_MODES = ["(display-mode: fullscreen)", "(display-mode: standalone)"];
 
-const isStandalone = () =>
+export const isIosDevice = () => {
+  const ua = navigator.userAgent;
+  return /iPhone|iPad|iPod/.test(ua) || (ua.includes("Mac") && navigator.maxTouchPoints > 1);
+};
+
+export const isStandalone = () =>
   CHROMELESS_DISPLAY_MODES.some((query) => window.matchMedia(query).matches);
 
-async function enterFullscreen() {
+export async function enterFullscreen() {
   if (document.fullscreenElement) return;
   try {
     await document.documentElement.requestFullscreen({ navigationUI: "hide" });
@@ -26,6 +35,10 @@ async function enterFullscreen() {
 }
 
 function toggleFullscreen() {
+  if (getSnapshot() === "ios") {
+    window.dispatchEvent(new Event(SHOW_INSTALL_GUIDE_EVENT));
+    return;
+  }
   if (!document.fullscreenElement) return enterFullscreen();
   return document.exitFullscreen().catch(() => {
     // Already left (Esc, back gesture) between the tap and this call.
@@ -37,7 +50,8 @@ function toggleFullscreen() {
 // otherwise hide the toggle exactly when it's needed to exit.
 function getSnapshot(): FullscreenState {
   if (document.fullscreenElement) return "on";
-  if (!document.fullscreenEnabled || isStandalone()) return "unavailable";
+  if (isStandalone()) return "unavailable";
+  if (!document.fullscreenEnabled) return isIosDevice() ? "ios" : "unavailable";
   return "off";
 }
 

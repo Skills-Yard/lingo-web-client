@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
     "192.168.1.131",
     "172.25.48.1",
     "172.17.48.1",
+    "192.168.1.111",
     "renounce-vowel-country.ngrok-free.dev",
   ],
 };

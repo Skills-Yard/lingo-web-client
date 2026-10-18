@@ -38,12 +38,16 @@ interface LevelOneShellProps {
   flush?: boolean;
   /** Rendered over everything (popups). */
   overlay?: ReactNode;
+  /** Shrinks the whole frame a little further if the content is taller than
+   * the screen has room for (other browsers lay text out a few px taller),
+   * so the screen never scrolls. */
+  fit?: boolean;
   /** Clips played back-to-back once the screen opens; Hex talks meanwhile. */
   voiceover?: readonly string[];
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover }: LevelOneShellProps) {
+export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
@@ -58,34 +62,66 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
   // stretched to fill whatever the frame's shape leaves over.
   const [stage, setStage] = useState<{ scale: number; width: number; height: number } | null>(null);
 
+  const scrollerRef = useRef<HTMLDivElement>(null);
+  // With `fit`: the stage height (frame px) the content was found to need.
+  const needRef = useRef(0);
+
   useEffect(() => {
     const main = mainRef.current;
     if (!main) return;
     const measure = () => {
-      const { width, height } = main.getBoundingClientRect();
-      const scale = Math.min(width / FRAME_W, height / FRAME_H, MAX_SCALE);
+      // Installed (full screen) the notch / home bar are padding, not room.
+      const rect = main.getBoundingClientRect();
+      const inset = getComputedStyle(main);
+      const width = rect.width;
+      const height = rect.height - parseFloat(inset.paddingTop) - parseFloat(inset.paddingBottom);
+      const base = Math.min(width / FRAME_W, height / FRAME_H, MAX_SCALE);
+      const scale = fit && needRef.current > FRAME_H ? Math.min(base, height / needRef.current) : base;
       setStage({ scale, width: width / scale, height: height / scale });
     };
+    // Content taller than its room: remember how tall the stage must be.
+    const check = () => {
+      const scroller = scrollerRef.current;
+      if (!fit || !scroller) return;
+      const over = scroller.scrollHeight - scroller.clientHeight;
+      if (over > 1) {
+        needRef.current = Math.max(needRef.current, (scroller.parentElement?.parentElement?.getBoundingClientRect().height ?? 0) / (stageScaleRef.current || 1) + over);
+        measure();
+      }
+    };
     measure();
-    const observer = new ResizeObserver(measure);
+    const observer = new ResizeObserver(() => {
+      measure();
+      check();
+    });
     observer.observe(main);
-    return () => observer.disconnect();
-  }, []);
+    if (scrollerRef.current?.firstElementChild) observer.observe(scrollerRef.current.firstElementChild);
+    void document.fonts?.ready.then(check);
+    const settle = window.setTimeout(check, 400);
+    return () => {
+      observer.disconnect();
+      window.clearTimeout(settle);
+    };
+  }, [fit]);
+  const stageScaleRef = useRef(1);
+  stageScaleRef.current = stage?.scale ?? 1;
 
   return (
     <LevelVoiceContext.Provider value={levelVoice}>
     <main
       ref={mainRef}
-      className="onboarding-light relative h-dvh w-full overflow-hidden bg-white dark:bg-background"
+      className="onboarding-light relative h-dvh w-full overflow-hidden bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] dark:bg-background"
     >
       <div
-        className="absolute top-0 left-0 flex origin-top-left flex-col"
+        className="absolute left-0 flex origin-top-left flex-col"
         style={{
+          top: "env(safe-area-inset-top)",
           width: stage?.width,
           height: stage?.height,
           transform: `scale(${stage?.scale ?? 1})`,
           visibility: stage ? "visible" : "hidden",
           "--stage-w": `${stage?.width ?? FRAME_W}px`,
+          "--stage-h": `${stage?.height ?? FRAME_H}px`,
         } as React.CSSProperties}
       >
       <div className="flex min-h-0 w-full flex-1 flex-col">
@@ -103,7 +139,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         </div>
         {/* The scroller spans the device, so a child can run edge to edge;
           the rest of the content stays in the centred column. */}
-        <div className="scrollbar-none min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        <div ref={scrollerRef} className="scrollbar-none min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
           <div className={`mx-auto flex min-h-full w-full max-w-[390px] flex-col items-center px-4 ${flush ? "pb-0" : "pb-4"}`}>
             {children}
           </div>

@@ -60,7 +60,10 @@ export function HexStage({
     const measure = () => {
       const a = anchorEl.getBoundingClientRect();
       const c = container.getBoundingClientRect();
-      const next = { x: a.left - c.left, y: a.top - c.top, width: a.width, height: a.height };
+      // The shell scales its whole stage, so screen px are divided back
+      // into the container's own (unscaled) px.
+      const k = container.offsetWidth > 0 ? c.width / container.offsetWidth : 1;
+      const next = { x: (a.left - c.left) / k, y: (a.top - c.top) / k, width: a.width / k, height: a.height / k };
       const key = `${next.x}|${next.y}|${next.width}|${next.height}`;
       if (key !== lastKey) {
         lastKey = key;

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AutoFullscreen } from "@/components/pwa/AutoFullscreen";
+import { InstallHint } from "@/components/pwa/InstallHint";
 
 const poppins = Poppins({
   variable: "--font-app-poppins",
@@ -22,7 +24,8 @@ export const metadata: Metadata = {
     title: "Lingo",
     statusBarStyle: "black-translucent",
   },
-  other: { "mobile-web-app-capable": "yes" },
+  other: { "mobile-web-app-capable": "yes", "apple-mobile-web-app-capable": "yes" },
+  icons: { apple: "/icon-192.png" },
 };
 
 export const viewport: Viewport = {
@@ -46,6 +49,8 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
         <ThemeProvider>{children}</ThemeProvider>
+        <InstallHint />
+        <AutoFullscreen />
       </body>
     </html>
   );

@@ -80,6 +80,10 @@ const START_DELAY_MS = 500;
 // before he glides down into the board and becomes the player piece.
 const JOIN_GAME_DELAY_MS = 1000;
 
+/** Hex's header slot: top / right / width as ratios of the screen. */
+const HEX_SLOT_CLASS =
+  "absolute top-[calc(var(--stage-h)*-0.057)] right-[1%] aspect-[190/170] w-[48.7%] shrink-0";
+
 export function GameBoardScreen({
   slide,
   onSolvedChange,
@@ -183,9 +187,9 @@ export function GameBoardScreen({
           bubble/description expand to the full row on their own — nothing
           else here needs to change to make room. ── */}
       {borderless && (
-        <div className="-mb-7 flex h-[74px] items-start pl-1">
+        <div className="relative mb-[calc(var(--stage-h)*-0.033)] flex h-[74px] items-start pl-1">
           {/* The heading sits over Hex's box (it's above him). */}
-          <h1 className="relative z-30 mt-[5px] min-w-0 flex-1 text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
+          <h1 className="relative z-30 mt-[5px] w-[72%] min-w-0 text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
             {HEADING_WORDS.map((word, w) => (
               <span key={w}>
                 {w > 0 && " "}
@@ -207,10 +211,12 @@ export function GameBoardScreen({
           {/* Hex stands here until Start. His box is big, but the negative
             margins make it take little room, so he overlaps what's around
             him. */}
+          {/* Placed from the row's top and right edge, all in ratios of the
+            screen, so he sits in the same spot on every device. */}
           {robuJoinedGame ? (
-            <div aria-hidden className="-my-12 -ml-20 h-[170px] w-[190px] shrink-0" />
+            <div aria-hidden className={HEX_SLOT_CLASS} />
           ) : (
-            <RobuAnchor registerAnchor={registerAnchor} className="-my-12 -ml-20 h-[170px] w-[190px] shrink-0" />
+            <RobuAnchor registerAnchor={registerAnchor} className={HEX_SLOT_CLASS} />
           )}
         </div>
       )}
@@ -259,7 +265,7 @@ export function GameBoardScreen({
       {/* Board on the left, controls on the right (stacked on small screens). */}
       <div className={`flex flex-col lg:flex-row lg:items-start lg:justify-center lg:gap-6 ${borderless ? "flex-1 gap-0" : "gap-3"}`}>
         {/* ── Left column — the game board ── */}
-        <div className={`relative lg:order-1 lg:w-105 lg:shrink-0 ${borderless ? "-mb-5" : ""}`}>
+        <div className={`relative lg:order-1 lg:w-105 lg:shrink-0 ${borderless ? "mb-[calc(var(--stage-h)*-0.033)]" : ""}`}>
           <div
             inert={locked}
             className={`transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
@@ -286,10 +292,10 @@ export function GameBoardScreen({
         {/* ── Right column — program slots, actions and run controls ── */}
         <div
           inert={locked}
-          className={`flex flex-col gap-3 lg:order-2 lg:w-100 lg:shrink-0 ${borderless ? "relative z-10 -mx-4 mt-auto items-center gap-3 rounded-t-[38px] bg-white pb-1 dark:bg-background" : ""} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+          className={`flex flex-col lg:order-2 lg:w-100 lg:shrink-0 ${borderless ? "relative z-10 -mx-4 mt-auto items-center rounded-t-[38px] bg-white dark:bg-background" : "gap-3"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
         >
           {borderless && (
-            <div className="mb-2 flex h-9 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-[#F7F2FF] px-3 dark:bg-white/6">
+            <div className="flex h-9 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-[#F7F2FF] px-3 dark:bg-white/6">
               <Move className="h-[22px] w-[22px] text-[#B286FD]" strokeWidth={2} />
               <span className="text-[12px] leading-[18px] font-medium text-[#2C2C2C] dark:text-white">
                 Tap any option to preview Hex’s movement.

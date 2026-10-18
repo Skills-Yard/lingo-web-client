@@ -37,13 +37,14 @@ export function MoveHexScreen() {
     <LevelOneShell
       step={8}
       flush
+      fit
       ctaDisabled={!finished}
       onBack={() => router.push(levelOneHref(7))}
       onContinue={() => router.push("/level")}
     >
       {/* Hex is positioned against this box, so it must wrap the
         screen he walks around in. */}
-      <div ref={stageRef} className="relative mt-4 flex w-full flex-1 flex-col">
+      <div ref={stageRef} className="relative mt-[calc(var(--stage-h)*0.045)] flex w-full flex-1 flex-col">
         <HexStage anchorEl={anchorEl} containerRef={stageRef} />
         <GameBoardScreen
           slide={GAME_SLIDE}

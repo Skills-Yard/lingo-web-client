@@ -41,7 +41,7 @@ export function MovesBar({
   const canRun = !isPlaying && success === null && commands.some((c) => c !== null);
 
   return (
-    <div className="mx-auto flex h-11 w-full max-w-[358px] items-center gap-2 rounded bg-[#F4F6F8]/20 px-3 shadow-[inset_0_1px_13.1px_rgba(0,0,0,0.25)] select-none dark:bg-white/8">
+    <div className="mx-auto mt-2 mb-3.5 flex h-11 w-full max-w-[358px] items-center gap-2 rounded bg-[#F4F6F8]/20 px-3 shadow-[inset_0_1px_13.1px_rgba(0,0,0,0.25)] select-none dark:bg-white/8">
       <span className="font-[Inter,sans-serif] text-[14px] leading-5 font-bold text-[#666666] dark:text-white/60">MOVES</span>
 
       <div className="flex items-center gap-1.5">
