@@ -5,8 +5,9 @@ import { Poppins } from "next/font/google";
 import { AnimatePresence, motion } from "framer-motion";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
-import { Code2, Moon, Sun } from "lucide-react";
+import { Code2, Maximize, Minimize, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
+import { useFullscreen } from "@/hooks/useFullscreen";
 import { configureRiveRuntime, HEX_STATE, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { BottomNav, type HomeTab } from "./BottomNav";
@@ -301,7 +302,7 @@ const CARD_X = 16;
 const CARD_W = 357;
 const CARD_FULL_H = 158;
 const CARD_COMPACT_H = 78;
-const CARD_TOP_Y = 62;
+const CARD_TOP_Y = 99;
 /** How far each card queued behind the front one peeks out (px), and how
  * much narrower it is, so the stack reads as a pile. */
 const STACK_PEEK = 10;
@@ -452,7 +453,7 @@ function ProgressDebug({
 }) {
   const btn = "h-7 px-1.5 text-[10px] font-semibold leading-none transition-opacity disabled:opacity-35";
   return (
-    <div className="pointer-events-auto absolute left-[84px] top-[18px] flex overflow-hidden rounded-full border border-black/8 bg-white/60 text-[#5D4CFE] dark:border-white/10 dark:bg-white/5 dark:text-[#A99FFF]">
+    <div className="pointer-events-auto absolute left-[84px] top-[55px] flex overflow-hidden rounded-full border border-black/8 bg-white/60 text-[#5D4CFE] dark:border-white/10 dark:bg-white/5 dark:text-[#A99FFF]">
       <button type="button" className={btn} onClick={onComplete} disabled={done >= MODULES.length}>
         Done
       </button>
@@ -467,7 +468,7 @@ function ProgressDebug({
 function StatChip({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`flex h-9 items-center gap-1.5 rounded-lg border border-black/8 bg-white/60 px-3 dark:border-white/10 dark:bg-white/5 ${className ?? ""}`}
+      className={`flex h-9 items-center gap-1.5 rounded-lg border border-black/8 bg-white px-3 dark:border-white/10 dark:bg-[#1c3039] ${className ?? ""}`}
     >
       {children}
     </div>
@@ -518,7 +519,7 @@ function ThemeSwitch() {
       type="button"
       onClick={() => toggleTheme(THEME_WIPE)}
       aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      className="pointer-events-auto absolute left-1/2 top-[14px] flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-black/8 bg-white/60 text-[#1A1C22]/70 transition-transform active:scale-95 dark:border-white/10 dark:bg-white/5 dark:text-amber-400"
+      className="pointer-events-auto absolute left-1/2 top-[51px] flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-black/8 bg-white text-[#1A1C22]/70 transition-transform active:scale-95 dark:border-white/10 dark:bg-[#1c3039] dark:text-amber-400"
       {...reveal(0)}
     >
       {dark ? (
@@ -526,6 +527,24 @@ function ThemeSwitch() {
       ) : (
         <Moon key="moon" className="h-5 w-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
       )}
+    </motion.button>
+  );
+}
+
+/** Full screen toggle, right beside the theme switch. Hidden where it can't
+ * do anything (iPhone Safari, installed PWA). */
+function FullscreenSwitch() {
+  const { available, active, toggle } = useFullscreen();
+  if (!available) return null;
+  return (
+    <motion.button
+      type="button"
+      onClick={toggle}
+      aria-label={active ? "Exit full screen" : "Enter full screen"}
+      className="pointer-events-auto absolute left-[calc(50%+26px)] top-[51px] flex h-9 w-9 items-center justify-center rounded-full border border-black/8 bg-white text-[#1A1C22]/70 transition-transform active:scale-95 dark:border-white/10 dark:bg-[#1c3039] dark:text-white/70"
+      {...reveal(0)}
+    >
+      {active ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
     </motion.button>
   );
 }
@@ -707,13 +726,13 @@ export function HomeScreen({
           path. The fade lets the scrolling path slide under them. */}
         <div
           className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-transparent to-transparent"
-          style={{ height: 246 * scale }}
+          style={{ height: 283 * scale }}
         >
           {/* Streak + gems: pinned to the screen's own left and right edges
             (not the centred stage column), each chip scaled with the layout. */}
           <motion.div
             className="pointer-events-auto absolute inset-x-0 flex items-center justify-between"
-            style={{ top: 14 * scale, paddingInline: 16 * scale }}
+            style={{ top: 51 * scale, paddingInline: 16 * scale }}
             {...reveal(0)}
           >
             <div style={{ transform: `scale(${scale})`, transformOrigin: "left center" }}>
@@ -732,10 +751,11 @@ export function HomeScreen({
 
           <div
             className="absolute left-1/2 top-0 origin-top"
-            style={{ width: STAGE_W, height: 246, transform: `translateX(-50%) scale(${scale})` }}
+            style={{ width: STAGE_W, height: 283, transform: `translateX(-50%) scale(${scale})` }}
           >
           {/* After the stats row, so it sits on top */}
           <ThemeSwitch />
+          <FullscreenSwitch />
           <ProgressDebug
             done={done}
             onComplete={() => setDone((d) => Math.min(d + 1, MODULES.length))}

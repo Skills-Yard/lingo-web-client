@@ -29,41 +29,33 @@ export function spansLength(spans: TextSpan[]): number {
  * first frame, with the first `shown` characters visible and the rest just
  * transparent — so its box is already at its final size and every line
  * already wraps where it will end up. Typing only reveals letters in place.
- * The caret sits at the boundary while typing, as a zero-width inline so it
- * never affects wrapping either.
  */
 export function TypedText({ spans, shown }: { spans: TextSpan[]; shown: number }) {
-  const total = spansLength(spans);
   const starts = spans.map((_, i) => spansLength(spans.slice(0, i)));
   return (
     <>
       {spans.map((span, i) => {
         const start = starts[i];
-        const end = start + span.text.length;
         const cut = Math.max(0, Math.min(span.text.length, shown - start));
-        const caretHere = shown > 0 && shown < total && shown >= start && shown < end;
         return (
-          <span key={i} className={span.highlight ? "text-brand-gradient" : undefined}>
-            {span.text.slice(0, cut)}
-            {caretHere && <Caret />}
+          <span key={i}>
+            {/* Only the typed letters sit inside the gradient: iOS Safari
+              paints `background-clip: text` through every glyph in the
+              element, hidden ones included, so an untyped remainder in here
+              would already show. */}
+            {cut > 0 && (
+              <span className={span.highlight ? "text-brand-gradient" : undefined}>
+                {span.text.slice(0, cut)}
+              </span>
+            )}
             {cut < span.text.length && (
-              // `invisible`, not `text-transparent`: inside the gradient text a
-              // transparent colour still shows the gradient (background-clip
-              // paints every glyph), which would show the untyped letters.
+              // Outside the gradient, so `invisible` holds its place.
               <span className="invisible">{span.text.slice(cut)}</span>
             )}
           </span>
         );
       })}
     </>
-  );
-}
-
-function Caret() {
-  return (
-    <span aria-hidden className="relative">
-      <span className="absolute left-0 top-1/2 h-[1em] w-0.5 -translate-y-1/2 animate-pulse bg-primary" />
-    </span>
   );
 }
 

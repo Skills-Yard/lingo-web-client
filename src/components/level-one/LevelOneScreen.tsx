@@ -18,6 +18,9 @@ const REVEAL = {
   remember: "Great code starts with a great way of thinking.",
 } as const;
 
+const INTRO_AUDIO = "/audios/screen_2_audio.mpeg";
+const REVEAL_AUDIO = "/audios/screen_2_box.mpeg";
+
 const BRAND_GRADIENT = "bg-linear-to-b from-[#00B8A9] to-[#1187B2] bg-clip-text text-transparent";
 
 /**
@@ -28,10 +31,14 @@ const BRAND_GRADIENT = "bg-linear-to-b from-[#00B8A9] to-[#1187B2] bg-clip-text 
 export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
   const router = useRouter();
   const [modalOpen, setModalOpen] = useState(false);
+  const [introPlayed, setIntroPlayed] = useState(false);
 
   return (
     <LevelOneShell
       step={1}
+      // The title line first; the card's popup has its own clip, and closing
+      // it does not bring the title line back.
+      voiceover={modalOpen ? [REVEAL_AUDIO] : introPlayed ? undefined : [INTRO_AUDIO]}
       onBack={() => router.push("/level")}
       onContinue={onContinue ?? (() => router.push(levelOneHref(2)))}
       overlay={
@@ -70,7 +77,12 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
         </svg>
       </h1>
 
-      <RevealCard onOpen={() => setModalOpen(true)} />
+      <RevealCard
+        onOpen={() => {
+          setIntroPlayed(true);
+          setModalOpen(true);
+        }}
+      />
     </LevelOneShell>
   );
 }

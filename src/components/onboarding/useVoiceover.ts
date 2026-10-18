@@ -94,8 +94,16 @@ export function useVoiceover(
     let index = 0;
     let frame = 0;
 
+    // A src may end in `#end=<seconds>` to play only the start of its clip.
+    let clipEnd = Infinity;
+
     const tick = () => {
       if (cancelled) return;
+      if (audio.currentTime >= clipEnd) {
+        audio.pause();
+        playNext();
+        return;
+      }
       const t = audio.duration > 0 ? Math.min(1, audio.currentTime / audio.duration) : 0;
       setPosition({ clip: index - 1, t });
       frame = window.requestAnimationFrame(tick);
@@ -109,7 +117,9 @@ export function useVoiceover(
         setStatus("done");
         return;
       }
-      audio.src = queue[index++];
+      const [file, fragment] = queue[index++].split("#end=");
+      clipEnd = fragment ? Number(fragment) : Infinity;
+      audio.src = file;
       audio
         .play()
         .then(() => {

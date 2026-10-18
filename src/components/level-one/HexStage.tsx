@@ -90,3 +90,78 @@ export function HexStage({
     </motion.div>
   );
 }
+
+/** Hex's trip from one slot to another (question -> result panel). */
+// A spring, not a tween: the target moves while he travels (the panel is still
+// sliding up), and a spring keeps its velocity through that where a timed
+// tween would restart every frame.
+const GLIDE_TRANSITION = { type: "spring", stiffness: 70, damping: 18, mass: 1, restDelta: 0.5, restSpeed: 2 } as const;
+
+/**
+ * One Hex that stays on screen and glides from slot to slot: it fills
+ * whichever of `fromEl` / `toEl` is current, re-measured every frame so it
+ * keeps pace with a slot that is itself sliding (the result panel). The
+ * `containerRef` box lives inside the shell's scaled stage, so measurements
+ * are divided by that scale.
+ */
+export function HexGlide({
+  fromEl,
+  toEl,
+  moved,
+  arrivedCue = null,
+  enter,
+  entryStyle,
+  containerRef,
+}: {
+  fromEl: HTMLDivElement | null;
+  toEl: HTMLDivElement | null;
+  /** True once Hex should be in `toEl`. */
+  moved: boolean;
+  /** A trigger Hex plays once he has reached `toEl`. */
+  arrivedCue?: string | null;
+  /** The trigger that plays his entrance. */
+  enter?: string;
+  /** The `entryStyle` he enters with. */
+  entryStyle?: number;
+  containerRef: RefObject<HTMLDivElement | null>;
+}) {
+  const [rect, setRect] = useState<Rect | null>(null);
+  const [arrived, setArrived] = useState(false);
+  const target = moved && toEl ? toEl : fromEl;
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!target || !container) return;
+    let rafId: number;
+    let lastKey = "";
+    const measure = () => {
+      const a = target.getBoundingClientRect();
+      const c = container.getBoundingClientRect();
+      const k = container.offsetWidth ? c.width / container.offsetWidth : 1;
+      const next = { x: (a.left - c.left) / k, y: (a.top - c.top) / k, width: a.width / k, height: a.height / k };
+      const key = `${next.x}|${next.y}|${next.width}|${next.height}`;
+      if (key !== lastKey) {
+        lastKey = key;
+        setRect(next);
+      }
+      rafId = requestAnimationFrame(measure);
+    };
+    rafId = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(rafId);
+  }, [target, containerRef]);
+
+  if (!rect) return null;
+
+  return (
+    <motion.div
+      aria-hidden
+      className="pointer-events-none absolute top-0 left-0"
+      initial={false}
+      animate={{ x: rect.x, y: rect.y, width: rect.width, height: rect.height }}
+      transition={GLIDE_TRANSITION}
+      onAnimationComplete={() => setArrived(moved)}
+    >
+      <OnboardingHex entryKey="quiz" enter={enter} entryStyle={entryStyle} cue={arrived ? arrivedCue : null} />
+    </motion.div>
+  );
+}

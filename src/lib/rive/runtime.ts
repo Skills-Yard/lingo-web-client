@@ -158,8 +158,14 @@ export const HEX_VIEW_MODEL = "Onboarding";
 export const HEX_ONBOARDING_TRIGGER = {
   /** Resting — the time-commitment screen's stand-in for `showQuestion`. */
   idle: "idle",
+  /** Ambient idle flourish — fired on a loop wherever Hex has nothing else to do. */
+  idleAmbient: "idle5a",
+  /** Thumbs up — Hex approving a right answer. */
+  continueThumb: "continueThumb",
   /** Greeting screen: Hex enters, fired before `hi` (after `entryStyle` is set). */
   enter: "enter",
+  /** An entrance that zooms Hex in — fired in place of `enter`. */
+  enterZoom: "enterZoom",
   /** Leaving the greeting screen forward (Continue) / backward (Back). */
   exitLeft: "exitLeft",
   exitRight: "exitRight",

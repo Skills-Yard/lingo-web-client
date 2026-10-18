@@ -47,6 +47,7 @@ export function useHexRive(
   viewModel: string = HEX_VIEW_MODEL,
   entryKey: string | null = null,
   entryStyleOverride: number | null = null,
+  enterTrigger: string = HEX_ONBOARDING_TRIGGER.enter,
 ) {
   const { theme } = useTheme();
   const contextEntryStyle = useContext(HexEntryStyleContext);
@@ -120,12 +121,12 @@ export function useHexRive(
     enteringRef.current = true;
     const style = viewModelInstance.number(HEX_ENTER_STYLE.property);
     if (style) style.value = entryStyleRef.current;
-    fireTrigger(HEX_ONBOARDING_TRIGGER.enter);
+    fireTrigger(enterTrigger);
     enterTimer.current = window.setTimeout(() => {
       enteringRef.current = false;
     }, TRIGGER_GAP_MS);
     return () => window.clearTimeout(enterTimer.current);
-  }, [entryKey, viewModelInstance, fireTrigger]);
+  }, [entryKey, viewModelInstance, fireTrigger, enterTrigger]);
 
   // Drops queued triggers and restarts the playing machine from its entry
   // state (idle). Triggers fired afterwards wait one gap, so the machine has
@@ -136,13 +137,13 @@ export function useHexRive(
     queue.current = [];
     talking.current = false;
     // A restart mid-entrance must not swallow the `enter` just fired.
-    if (enteringRef.current) queue.current = [HEX_ONBOARDING_TRIGGER.enter];
+    if (enteringRef.current) queue.current = [enterTrigger];
     const playing = rive.playingStateMachineNames;
     playing.forEach((name) => rive.stop(name));
     if (state && rive.stateMachineNames.includes(state)) rive.play(state);
     if (viewModelInstance) rive.bindViewModelInstance(viewModelInstance);
     gapTimer.current = window.setTimeout(drain, TRIGGER_GAP_MS);
-  }, [rive, state, viewModelInstance, drain]);
+  }, [rive, state, viewModelInstance, drain, enterTrigger]);
 
   const fireNow = useCallback(
     (name: string) => {

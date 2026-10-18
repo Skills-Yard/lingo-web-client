@@ -20,6 +20,8 @@ interface OnboardingHeaderProps {
    * connector screens between them (foxy intro, ready-check, notification
    * permission) don't — there's nothing to show progress *of* there. */
   progress?: { step: number; total: number };
+  /** Shows "step/total" above the bar. */
+  showCount?: boolean;
   muted: boolean;
   onToggleMuted: () => void;
 }
@@ -29,7 +31,7 @@ interface OnboardingHeaderProps {
 // user moves forward, shrinking back when they return to an earlier question.
 let lastShownStep: number | null = null;
 
-export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: OnboardingHeaderProps) {
+export function OnboardingHeader({ onBack, progress, showCount, muted, onToggleMuted }: OnboardingHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
   const fullscreen = useFullscreen();
@@ -56,6 +58,12 @@ export function OnboardingHeader({ onBack, progress, muted, onToggleMuted }: Onb
 
       {progress && (
         <>
+          {showCount && (
+            <span className="absolute top-[27px] left-1/2 -translate-x-1/2 text-[14px] leading-none font-medium whitespace-nowrap text-[#888888] tabular-nums dark:text-white/60">
+              <span className="text-[#00B8A9]">{String(progress.step).padStart(2, "0")}</span>/
+              {String(progress.total).padStart(2, "0")}
+            </span>
+          )}
           {/* One continuous track. Each question's header mounts fresh with
               its screen, so the fill starts at the previous question's
               length and grows to this one's. It ends 12px short of the
