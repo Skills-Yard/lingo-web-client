@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Button3D } from "@/components/ui/Button3D";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
-import { playClickSound } from "@/components/onboarding/clickSound";
+import { playClickSound, setClickSoundMuted } from "@/components/onboarding/clickSound";
 import { useVoiceover } from "@/components/onboarding/useVoiceover";
 import { moduleHref } from "@/lib/routes";
 import { LevelVoiceContext } from "./LevelVoice";
@@ -46,6 +46,7 @@ interface LevelOneShellProps {
 export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
+  useEffect(() => setClickSoundMuted(muted), [muted]);
   const voice = useVoiceover(voiceover, true, muted);
   const levelVoice = useMemo(
     () => ({ speaking: voice.playing, clip: Math.max(0, voice.clip) }),
