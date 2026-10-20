@@ -212,6 +212,9 @@ const HIDE_FADE = { duration: 0.25, delay: 0.3 } as const;
 /** Leaving a hidden slot: how long the screen's own fox gets to leave
  * before this one reappears and glides on. */
 const UNHIDE_DELAY_MS = 350;
+/** How long after an exit request Hex stays visible — his exit plays within
+ * this, then he is hidden until the next screen's slot (see HEX_EXIT_MS). */
+const HEX_EXIT_VISIBLE_MS = 750;
 
 /**
  * The flow's one fox. Every frame it reads the current slot's on-screen box
@@ -267,12 +270,34 @@ export function PersistentFox({
     return () => window.removeEventListener("pointerdown", onPointerDown);
   }, [slot]);
 
+  // Once Hex has played his exit he must not show up again on the screen
+  // being left (the machine falls back to idle before the flow moves on): he
+  // is faded out after the exit, and stays gone until the next slot arrives.
+  const exitRequest = useContext(HexExitContext);
+  const exited = useRef(false);
+  useEffect(() => {
+    exited.current = false;
+  }, [slot?.id]);
+  useEffect(() => {
+    if (!exitRequest) return;
+    const timer = window.setTimeout(() => {
+      exited.current = true;
+      animate(opacity, 0, { duration: 0.15 });
+    }, HEX_EXIT_VISIBLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [exitRequest, opacity]);
+
   useEffect(() => {
     let frame = 0;
     const tick = () => {
       const container = containerRef.current;
       const el = slot?.ref.current;
-      if (container && slot && el) {
+      if (exited.current) {
+        // Parked out of sight until a new slot resets `exited`.
+        shown.current = false;
+        parked.current = false;
+        unhideAt.current = null;
+      } else if (container && slot && el) {
         const c = container.getBoundingClientRect();
         const r = el.getBoundingClientRect();
         const tx = r.left - c.left;

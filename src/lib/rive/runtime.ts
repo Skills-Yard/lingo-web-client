@@ -186,7 +186,7 @@ export const HEX_ONBOARDING_TRIGGER = {
 } as const;
 
 /** How long Hex's exit plays before the flow moves to the next screen. */
-export const HEX_EXIT_MS = 1500;
+export const HEX_EXIT_MS = 1000;
 
 /** Every screen opens the same way: `entryStyle` is set to `style`, `enter` is
  * fired, and the screen's own triggers follow it. */
