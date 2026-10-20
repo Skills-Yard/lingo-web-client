@@ -45,7 +45,7 @@ export function InstallHint() {
     >
       <Share className="h-5 w-5 shrink-0 text-[#2AD2BC]" />
       <span className="min-w-0 flex-1">
-        Full screen ke liye: Share <b>→ Add to Home Screen</b>, phir Lingo ko wahin se kholo.
+        For full screen: tap Share <b>→ Add to Home Screen</b>, then open Lingo from your home screen.
       </span>
       <button type="button" aria-label="Close tip" onClick={dismiss} className="shrink-0 p-1">
         <X className="h-4 w-4" />
