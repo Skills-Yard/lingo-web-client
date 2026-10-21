@@ -58,7 +58,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         if (!checked) {
           setChecked(true);
           setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
-        } else (onContinue ?? (() => router.push(levelOneHref(7))))();
+        } else (onContinue ?? (() => router.push(levelOneRewardHref())))();
       }}
       overlay={
         <div ref={glideRef} className="pointer-events-none absolute inset-0">

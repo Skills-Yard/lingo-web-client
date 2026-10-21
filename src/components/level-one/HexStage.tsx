@@ -137,6 +137,14 @@ export function HexGlide({
   const [rect, setRect] = useState<Rect | null>(null);
   const [arrived, setArrived] = useState(false);
   const target = moved && toEl ? toEl : fromEl;
+  // Once he has left and faded he is taken off the screen, so the canvas is
+  // not left resizing as his slot closes.
+  const [gone, setGone] = useState(false);
+  useEffect(() => {
+    if (!leaving) return;
+    const timer = window.setTimeout(() => setGone(true), (LEAVE_FADE_DELAY_S + 0.3) * 1000);
+    return () => window.clearTimeout(timer);
+  }, [leaving]);
 
   useLayoutEffect(() => {
     const container = containerRef.current;
@@ -159,7 +167,8 @@ export function HexGlide({
     return () => cancelAnimationFrame(rafId);
   }, [target, containerRef]);
 
-  if (!rect) return null;
+  // A slot with no size (closed) has no room to draw him in.
+  if (!rect || gone || rect.width < 1 || rect.height < 1) return null;
 
   return (
     <motion.div
