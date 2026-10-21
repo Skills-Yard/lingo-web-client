@@ -14,13 +14,8 @@ export type Step = "says" | "quiz";
 const CORRECT_ID = "giving";
 
 const SAYS_AUDIO = ["/audios/screen_3_audio.mpeg"];
-/** The question, then each option with an "or" between them. */
-const QUIZ_AUDIO = [
-  "/audios/screen_4/screen_4_audio_trim.m4a",
-  "/audios/screen_4/screen_4_audio_opt1.m4a",
-  "/audios/screen_4/screen_4_audio_OR.m4a",
-  "/audios/screen_4/screen_4_audio_opt2.m4a",
-];
+/** Just the question; the options are not read out. */
+const QUIZ_AUDIO = ["/audios/screen_4/screen_4_audio_trim.m4a"];
 
 const OPTIONS = [
   { id: "asking", icon: "/images/level-one/asking-question.png", title: "Asking Question", tint: "bg-[#F6F4FE] dark:bg-[#1B1830]", text: "Teacher is asking a question to the class." },
@@ -32,6 +27,9 @@ const OPTIONS = [
 const IMAGE_GAP: Record<Step, number> = { says: 48, quiz: 12 };
 // Frame top 163 + 240 = 403, which leaves 24px above the options at 427.
 const IMAGE_HEIGHT: Record<Step, number> = { says: 346, quiz: 240 };
+// After Check the picture is cropped further, so the options ride up and stay
+// clear of the result panel that slides in over the bottom ~290px.
+const CHECKED_IMAGE_HEIGHT = 110;
 export type OptionState = "idle" | "selected" | "correct" | "wrong";
 
 /** After Check, the right answer is always green, and a wrong pick red. */
@@ -109,7 +107,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
   return (
     <LevelOneShell
       step={quiz ? 3 : 2}
-      // The quiz's question and options are read once, until it is checked.
+      // The quiz's question is read once, until it is checked.
       voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
@@ -180,7 +178,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         first screen only. */}
       <motion.div
         initial={false}
-        animate={{ marginTop: IMAGE_GAP[step], height: IMAGE_HEIGHT[step] }}
+        animate={{ marginTop: IMAGE_GAP[step], height: checked ? CHECKED_IMAGE_HEIGHT : IMAGE_HEIGHT[step] }}
         transition={MORPH}
         className="relative w-full shrink-0 overflow-hidden rounded-lg"
       >
@@ -212,18 +210,24 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         {quiz && (
           <motion.div
             key="options"
-            initial={{ opacity: 0, y: 24 }}
+            initial={{ opacity: 0, y: 90 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 24 }}
-            transition={{ duration: 0.4, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            exit={{ opacity: 0, y: 24, transition: { duration: 0.25 } }}
+            transition={{
+              opacity: { duration: 0.3, delay: 0.3 },
+              y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
+            }}
             // 24px below the cropped picture.
             className="mt-6 flex w-full shrink-0 items-start gap-[19px]"
           >
             {OPTIONS.map((option) => {
               const state = optionState(option.id, selectedId, checked);
               return (
-                <button
+                <motion.button
                   key={option.id}
+                  animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
+                  whileTap={{ scale: 0.96 }}
+                  transition={{ duration: 0.4, ease: "easeOut" }}
                   type="button"
                   disabled={checked}
                   onClick={() => {
@@ -231,7 +235,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}
-                  className={`flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-lg border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-colors ${
+                  className={`flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[12px] border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-colors ${
                     state === "idle" ? `border-transparent ${option.tint}` : LOOKS[state].card
                   }`}
                 >
@@ -245,14 +249,12 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                       {option.text}
                     </span>
                   </span>
-                </button>
+                </motion.button>
               );
             })}
           </motion.div>
         )}
       </AnimatePresence>
-      {/* Room for the result panel, so the options can scroll above it. */}
-      {checked && <div aria-hidden className="h-[130px] shrink-0" />}
       <Confetti active={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>
   );

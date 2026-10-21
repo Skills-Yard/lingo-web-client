@@ -18,12 +18,32 @@
  * (Tailwind v4's scale/translate utilities set the individual `scale` and
  * `translate` properties, hence those — not `transform` — in the transition.)
  */
-/** Drop-in for option `index`: each fades down from above, one after another. */
-export const optionDropIn = (index: number) => ({
-  initial: { opacity: 0, y: -20 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.45, delay: 0.2 + index * 0.1, ease: [0.22, 1, 0.36, 1] as const },
-});
+/**
+ * Entrance and pick motion for an option: all options float up from below
+ * together and settle once, like landing on a surface, and a pick gives the
+ * card a quick squash-and-pop. The delay applies to the entrance only.
+ */
+export const optionDropIn = (selected = false, leaving = false, leaveDelay = 0) => {
+  const delay = 0.3;
+  // Leaving: the entrance in reverse, quickly, once Hex has finished leaving.
+  if (leaving)
+    return {
+      initial: { opacity: 0, y: 90 },
+      animate: { opacity: 0, y: 90, scale: 1 },
+      whileTap: undefined,
+      transition: { duration: 0.4, ease: [0.5, 0, 1, 1] as const, delay: leaveDelay },
+    };
+  return {
+    initial: { opacity: 0, y: 90 },
+    animate: { opacity: 1, y: 0, scale: selected ? [1, 0.95, 1.05, 1] : 1 },
+    whileTap: { scale: 0.96 },
+    transition: {
+      opacity: { duration: 0.3, delay },
+      y: { type: "spring" as const, stiffness: 110, damping: 13, delay },
+      scale: { duration: 0.4, ease: "easeOut" as const },
+    },
+  };
+};
 
 export function optionCardClass(selected: boolean, spotlight = false, flatDark = false): string {
   const lit = selected || spotlight;

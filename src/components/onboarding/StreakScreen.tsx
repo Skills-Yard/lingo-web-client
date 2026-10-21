@@ -21,6 +21,10 @@ interface StreakScreenProps {
   skipCount?: number;
   muted?: boolean;
   className?: string;
+  /** The user is leaving: the heading and card float back out. */
+  exiting?: boolean;
+  /** Seconds to hold them before they leave: when Hex has finished leaving. */
+  exitDelay?: number;
 }
 
 /**
@@ -38,6 +42,8 @@ export function StreakScreen({
   skipCount = 0,
   muted = false,
   className,
+  exiting = false,
+  exitDelay = 0,
 }: StreakScreenProps) {
   const reduceMotion = useReducedMotion();
   const voice = useVoiceover(voiceover, true, muted);
@@ -51,14 +57,20 @@ export function StreakScreen({
         talking={voice.playing}
         screenId="streak"
         foxMode="onboarding"
+        leaving={exiting}
+        leaveDelay={exitDelay}
       />
 
       <div className="relative mt-5 min-h-0 flex-1 overflow-hidden">
         <motion.div
           className="absolute top-0 left-1/2 w-[min(100%,21rem)] -translate-x-1/2"
           initial={reduceMotion ? false : { opacity: 0, y: 28, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ ...CARD_IN, delay: CARD_DELAY_S }}
+          animate={exiting ? { opacity: 0, y: 90, scale: 1 } : { opacity: 1, y: 0, scale: 1 }}
+          transition={
+            exiting
+              ? { duration: 0.4, ease: [0.5, 0, 1, 1], delay: exitDelay }
+              : { ...CARD_IN, delay: CARD_DELAY_S }
+          }
         >
           <img
             src={image}

@@ -29,7 +29,7 @@ interface OnboardingHeaderProps {
 // The step the progress bar last showed. Each screen mounts a fresh header,
 // so this is what lets the fill start from where it was — growing when the
 // user moves forward, shrinking back when they return to an earlier question.
-let lastShownStep: number | null = null;
+let lastShown: { step: number; total: number } | null = null;
 
 export function OnboardingHeader({ onBack, progress, showCount, muted, onToggleMuted }: OnboardingHeaderProps) {
   const { theme, toggleTheme } = useTheme();
@@ -37,11 +37,12 @@ export function OnboardingHeader({ onBack, progress, showCount, muted, onToggleM
   const fullscreen = useFullscreen();
   const [fromStep] = useState(() => {
     if (!progress) return null;
-    return lastShownStep ?? progress.step - 1;
+    // A different total (another flow) means the old fill isn't comparable.
+    return lastShown && lastShown.total === progress.total ? lastShown.step : progress.step - 1;
   });
   // Questions share one screen, so this header can outlive a step change.
   useEffect(() => {
-    if (progress) lastShownStep = progress.step;
+    if (progress) lastShown = { step: progress.step, total: progress.total };
   }, [progress]);
   return (
     // Fixed 83px box, placed from the top edge: page count at 27px, bar at
@@ -77,7 +78,7 @@ export function OnboardingHeader({ onBack, progress, showCount, muted, onToggleM
               }`}
               initial={{ width: `${((fromStep ?? progress.step - 1) / progress.total) * 100}%` }}
               animate={{ width: `${(progress.step / progress.total) * 100}%` }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+              transition={{ duration: 1.2, ease: [0.33, 1, 0.68, 1], delay: 0.15 }}
             >
               {/* Glossy shine: a soft light stripe along the top of the fill. */}
               <span

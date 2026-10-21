@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
@@ -10,7 +10,7 @@ import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
-import { LevelOneShell, levelOneHref } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref, levelOneRewardHref } from "./LevelOneShell";
 import { optionState } from "./TeacherFlow";
 
 const CORRECT_ID = "command";
@@ -20,15 +20,15 @@ const HEX_ENTRY_STYLE = 6;
 const OPTIONS = [
   { id: "statement", icon: "/images/level-one/statement.png", title: "Statement", tint: "bg-[#F6F4FE]", iconSize: "h-9 w-[31px]" },
   { id: "command", icon: "/images/level-one/command.png", title: "Command", tint: "bg-[#FFF4F6]", iconSize: "h-8 w-[26px]" },
-  { id: "question", icon: "/images/level-one/question.png", title: "Question", tint: "bg-[#FFF5EE]", iconSize: "h-[31px] w-[38px]" },
+  { id: "question", icon: "/images/level-one/question.png", title: "Question", tint: "bg-[#FFF9F0]", iconSize: "h-[31px] w-[38px]" },
 ] as const;
 
-/** The card's 4px outline: white at rest, coloured once picked / marked. */
-const OUTLINE = {
-  idle: "border-white dark:border-white/10",
-  selected: "border-primary",
-  correct: "border-primary",
-  wrong: "border-[#E5484D]",
+/** The card's 4px bottom edge and fill: tinted at rest, coloured once picked / marked. */
+const LOOK = {
+  idle: "border-[#BDBA99]",
+  selected: "border-[#008566] bg-[#F2FBF8]! dark:bg-[#0F2921]!",
+  correct: "border-[#008566] bg-[#F2FBF8]! dark:bg-[#0F2921]!",
+  wrong: "border-[#B3261E] bg-[#FFF1F1]! dark:bg-[#2A1517]!",
 } as const;
 
 /**
@@ -54,7 +54,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       onBack={() => router.push(levelOneHref(5))}
       onContinue={() => {
         if (!checked) setChecked(true);
-        else (onContinue ?? (() => router.push(levelOneHref(7))))();
+        else (onContinue ?? (() => router.push(levelOneRewardHref())))();
       }}
       overlay={
         <div ref={glideRef} className="pointer-events-none absolute inset-0">
@@ -75,10 +75,13 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       }
     >
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
+        initial={{ opacity: 0, y: -60 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-        className="mt-9 flex w-full max-w-[358px] shrink-0 items-center gap-3"
+        transition={{
+          opacity: { duration: 0.3, delay: 0.3 },
+          y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
+        }}
+        className="mt-9 flex w-full shrink-0 items-center gap-3"
       >
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-lg bg-[#04ACAB]/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -101,15 +104,14 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         transition={{ type: "spring", stiffness: 70, damping: 18 }}
       />
 
-      <div className="relative mt-5 w-full max-w-[359px] shrink-0">
-        <div aria-hidden className="absolute inset-x-[30px] top-[17px] bottom-[8px] bg-[#0CA9B4]/10 blur-[23.7px]" />
+      <div className="relative mt-5 w-full shrink-0">
         <div className="relative flex flex-col gap-[23px]">
           {OPTIONS.map((option, i) => {
             const state = optionState(option.id, selectedId, checked, CORRECT_ID);
             return (
               <motion.button
                 key={option.id}
-                {...optionDropIn(i)}
+                {...optionDropIn(state === "selected")}
                 type="button"
                 disabled={checked}
                 onClick={() => {
@@ -117,22 +119,18 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                   setSelectedId(option.id);
                 }}
                 aria-pressed={state === "selected"}
-                className={`relative flex h-[89px] w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-[26px] border-4 transition-colors dark:bg-[#15181E] ${option.tint} ${OUTLINE[state]}`}
+                className={`relative flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] transition-colors dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={option.icon} alt="" draggable={false} className={`shrink-0 object-contain ${option.iconSize}`} />
                 <span className="text-[16px] leading-none font-medium text-[#2C2C2C] dark:text-white">{option.title}</span>
                 <span
                   aria-hidden
-                  className={`absolute top-1/2 right-4 flex h-[26px] w-[26px] -translate-y-1/2 items-center justify-center rounded-full transition-[scale,opacity] duration-200 ${
-                    state === "idle" ? "scale-0 opacity-0" : "scale-100 opacity-100"
-                  } ${state === "wrong" ? "bg-[#E5484D]" : "bg-linear-to-b from-[#00B8A9] to-[#1287B3]"}`}
+                  className={`absolute top-1/2 right-4 flex h-[26px] w-[26px] -translate-y-1/2 items-center justify-center rounded-full bg-[#E5484D] transition-[scale,opacity] duration-200 ${
+                    state === "wrong" ? "scale-100 opacity-100" : "scale-0 opacity-0"
+                  }`}
                 >
-                  {state === "wrong" ? (
-                    <X className="h-4 w-4 text-white" strokeWidth={3} />
-                  ) : (
-                    <Check className="h-4 w-4 text-white" strokeWidth={3} />
-                  )}
+                  <X className="h-4 w-4 text-white" strokeWidth={3} />
                 </span>
               </motion.button>
             );

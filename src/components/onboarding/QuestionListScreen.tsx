@@ -16,6 +16,10 @@ interface QuestionListOptionsProps {
   onPick: (id: string) => void;
   /** Shorter tiles, for the day/night question. */
   compact?: boolean;
+  /** The screen is being left: options float back down and out. */
+  leaving?: boolean;
+  /** Seconds to hold the options before they leave. */
+  leaveDelay?: number;
 }
 
 /**
@@ -32,6 +36,8 @@ export function QuestionListOptions({
   spokenOption,
   onPick,
   compact,
+  leaving,
+  leaveDelay,
 }: QuestionListOptionsProps) {
   // If the options scroll (short phones), keep the one being read in view.
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -58,6 +64,8 @@ export function QuestionListOptions({
         spokenOption={spokenOption}
         onPick={onPick}
         compact={compact}
+        leaving={leaving}
+        leaveDelay={leaveDelay}
       />
     );
   }
@@ -80,7 +88,7 @@ export function QuestionListOptions({
             key={option.id}
             type="button"
             onClick={() => onPick(option.id)}
-            {...optionDropIn(i)}
+            {...optionDropIn(selected, leaving, leaveDelay)}
             className={`flex min-h-12 w-full shrink-0 items-center gap-3 px-3.5 py-1.5 text-left ${optionCardClass(selected, spotlight)}`}
           >
             {option.image ? (
