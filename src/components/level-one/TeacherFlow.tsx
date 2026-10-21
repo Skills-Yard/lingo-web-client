@@ -7,7 +7,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { FeedbackPanel } from "./FeedbackPanel";
+import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { TeacherSpeech } from "./TeacherSpeech";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
@@ -209,8 +209,9 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               opacity: { duration: 0.3, delay: 0.3 },
               y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
             }}
-            // 24px below the cropped picture.
-            className="mt-6 flex w-full shrink-0 items-start gap-[19px]"
+            // 24px below the cropped picture; 56 once "+10 XP" floats above a card.
+            style={{ marginTop: checked && selectedId === CORRECT_ID ? 56 : 24 }}
+            className="flex w-full shrink-0 items-start gap-[19px] transition-[margin-top] duration-300"
           >
             {OPTIONS.map((option) => {
               const state = optionState(option.id, selectedId, checked);
@@ -227,10 +228,11 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}
-                  className={`flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[12px] border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-colors ${
+                  className={`relative flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[12px] border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-colors ${
                     state === "idle" ? `border-transparent ${option.tint}` : LOOKS[state].card
                   }`}
                 >
+                  <XpPop show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={option.icon} alt="" draggable={false} className="h-[60px] w-[60px] shrink-0 object-contain" />
                   <span className="flex w-[142px] flex-col items-center gap-3">

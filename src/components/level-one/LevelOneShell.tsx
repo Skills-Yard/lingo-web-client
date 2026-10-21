@@ -43,6 +43,8 @@ interface LevelOneShellProps {
   children: ReactNode;
   /** Drops the padding under the content, so it runs right down to Continue. */
   flush?: boolean;
+  /** A soft blue wash fading down from the top, behind everything. */
+  wash?: boolean;
   /** Rendered over everything (popups). */
   overlay?: ReactNode;
   /** Shrinks the whole frame a little further if the content is taller than
@@ -56,7 +58,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer }: LevelOneShellProps) {
+export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
@@ -123,6 +125,15 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
       ref={mainRef}
       className="onboarding-light relative h-dvh w-full overflow-hidden bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] dark:bg-background"
     >
+      {/* Pinned to the screen's own top and full width (not the stage's), so it
+        reaches the very top edge, behind the status bar too. */}
+      {wash && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute top-0 left-0 w-full bg-[linear-gradient(180deg,#E3ECFF_0%,rgba(227,236,255,0)_100%)] dark:bg-[linear-gradient(180deg,rgba(47,128,237,0.22)_0%,rgba(47,128,237,0)_100%)]"
+          style={{ height: `calc(env(safe-area-inset-top) + ${420 * (stage?.scale ?? 1)}px)` }}
+        />
+      )}
       <div
         className="absolute left-0 flex origin-top-left flex-col"
         style={{

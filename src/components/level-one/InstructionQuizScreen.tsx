@@ -9,7 +9,7 @@ import { optionDropIn } from "@/components/onboarding/optionCard";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { FeedbackPanel } from "./FeedbackPanel";
+import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
 import { LevelOneShell, levelOneHref, levelOneRewardHref } from "./LevelOneShell";
 import { optionState } from "./TeacherFlow";
@@ -50,6 +50,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   return (
     <LevelOneShell
       step={7}
+      wash
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
@@ -124,6 +125,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                 aria-pressed={state === "selected"}
                 className={`relative flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] transition-colors dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
               >
+                <XpPop inside show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={option.icon} alt="" draggable={false} className={`shrink-0 object-contain ${option.iconSize}`} />
                 <span className="text-[16px] leading-none font-medium text-[#2C2C2C] dark:text-white">{option.title}</span>

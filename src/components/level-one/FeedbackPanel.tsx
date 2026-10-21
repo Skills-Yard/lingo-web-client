@@ -2,7 +2,7 @@
 
 import { HexBleed, HEX_BLEED } from "@/components/onboarding/robu/HexBleed";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, X } from "lucide-react";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import {
@@ -115,22 +115,42 @@ export function OnboardingHex({
 
 const FEEDBACK = {
   correct: {
-    title: "Correct, you got it!",
-    panel: "bg-[#E3F6F3] dark:bg-[#0F2B28]",
-    accent: "text-[#04ACAB]",
+    title: "Correct! +10 XP",
+    panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
     bold: "[&_b]:text-[#04ACAB]",
     badge: "bg-[#04ACAB]",
     Icon: Check,
   },
   wrong: {
     title: "Not quite, try to remember!",
-    panel: "bg-[#FDEAEA] dark:bg-[#2E1517]",
-    accent: "text-[#E5484D]",
+    panel: "border-[#F2A9AB] bg-[#FDEAEA] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
     bold: "[&_b]:text-[#E5484D]",
     badge: "bg-[#E5484D]",
     Icon: X,
   },
 } as const;
+
+/** The "+10 XP" that pops up on the right answer's card: above it, or with
+ * `inside`, at its right end. */
+export function XpPop({ show, inside = false }: { show: boolean; inside?: boolean }) {
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.span
+          initial={{ opacity: 0, scale: 0.7 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ type: "spring", stiffness: 220, damping: 14, delay: 0.15 }}
+          className={`pointer-events-none absolute z-10 text-[18px] leading-6 font-bold whitespace-nowrap text-[#F5A623] ${
+            inside ? "top-1/2 right-4 -translate-y-1/2" : "-top-8 left-1/2 -translate-x-1/2"
+          }`}
+        >
+          +10 XP
+        </motion.span>
+      )}
+    </AnimatePresence>
+  );
+}
 
 /**
  * The result sheet: slides up from the bottom behind Continue, with the check
@@ -175,27 +195,25 @@ export function FeedbackPanel({
       initial={{ y: "100%" }}
       animate={{ y: open ? 0 : "100%" }}
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
-      className={`absolute inset-x-0 bottom-0 z-0 rounded-t-[28px] px-4 pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
+      className={`absolute inset-x-0 bottom-0 z-0 rounded-t-[28px] border-[1.5px] border-b-0 px-4 pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
     >
-      <div className="mx-auto flex w-full items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2.5">
-            <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-white ${look.badge}`}>
-              <Icon className="size-4" strokeWidth={3.2} />
-            </span>
-            <h2 className={`text-[18px] leading-tight font-semibold ${look.accent}`}>{look.title}</h2>
-          </div>
-          <p className={`mt-2 max-w-[210px] text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.bold}`}>
-            {children}
-          </p>
-        </div>
-        <div ref={hexSlot} aria-hidden className="pointer-events-none -my-1 h-[120px] w-[130px] shrink-0">
+      <div className="mx-auto flex w-full items-center gap-3">
+        <div ref={hexSlot} aria-hidden className="pointer-events-none -my-4 h-[112px] w-[120px] shrink-0">
           {!hexSlot && <OnboardingHex
               entryKey={enterNow ? "feedback" : null}
               cue={enterNow ? hexCue : null}
               cueDelayMs={ENTER_SETTLE_MS}
             />}
         </div>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[18px] leading-tight font-bold text-[#1F2A44] dark:text-white">{look.title}</h2>
+          <p className={`mt-1 text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.bold}`}>
+            {children}
+          </p>
+        </div>
+        <span className={`flex size-8 shrink-0 items-center justify-center self-start rounded-full text-white ${look.badge}`}>
+          <Icon className="size-[18px]" strokeWidth={3.2} />
+        </span>
       </div>
     </motion.div>
   );

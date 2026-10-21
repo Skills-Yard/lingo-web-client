@@ -54,6 +54,7 @@ export function ExamplesScreen({ onContinue }: { onContinue?: () => void }) {
   return (
     <LevelOneShell
       step={5}
+      ctaLabel="Continue to video"
       voiceover={VOICEOVER}
       onBack={() => router.push(levelOneHref(4))}
       onContinue={onContinue ?? (() => router.push(levelOneHref(6)))}
