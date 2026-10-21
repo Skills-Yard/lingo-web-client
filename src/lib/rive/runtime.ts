@@ -185,6 +185,9 @@ export const HEX_ONBOARDING_TRIGGER = {
 /** How long Hex's exit plays before the flow moves to the next screen. */
 export const HEX_EXIT_MS = 700;
 
+/** Same, for the `exitBottom` exit used by the day / night scene. */
+export const HEX_EXIT_BOTTOM_MS = 700;
+
 /** Every screen opens the same way: `entryStyle` is set to `style`, `enter` is
  * fired, and the screen's own triggers follow it. */
 export const HEX_ENTER_STYLE = { property: "entryStyle", style: 7 } as const;
