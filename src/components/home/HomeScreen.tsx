@@ -1,15 +1,24 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Poppins } from "next/font/google";
 import { AnimatePresence, motion } from "framer-motion";
-import { Layout, Fit, Alignment } from "@rive-app/canvas";
+import { Layout, Fit, Alignment, type Rive } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { Code2, Maximize, Minimize, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
-import { configureRiveRuntime, HEX_STATE, LIVE_PLATFORM } from "@/lib/rive/runtime";
-import { useHexRive } from "@/components/onboarding/robu/useHexRive";
+import { configureRiveRuntime, LIVE_PLATFORM } from "@/lib/rive/runtime";
+import { hexRiveSource } from "@/lib/rive/hexFile";
 import { BottomNav, type HomeTab } from "./BottomNav";
 import { LevelBackground } from "./LevelBackground";
 import { LevelStartPopup } from "./LevelStartPopup";
@@ -36,8 +45,6 @@ type PlatformSpec = {
   /** Top-face centre, in world px. */
   cx: number;
   cy: number;
-  /** Big or small slab artwork — see isBigSlab. */
-  big: boolean;
 };
 
 const LEVEL_COUNT = 100;
@@ -90,11 +97,6 @@ const WORLD_H = LEVEL_POINTS[LEVEL_COUNT - 1].y + WORLD_BOTTOM_PAD;
 
 const levelCenter = (level: number): Point => LEVEL_POINTS[level - 1];
 
-/** Slab size per level: only the live fifth is big; the done ones before it
- * and every locked one after it are the small slab (the big locked art is
- * unused for now). */
-const isBigSlab = (level: number) => level === CURRENT_LEVEL;
-
 const PLATFORMS: PlatformSpec[] = Array.from({ length: LEVEL_COUNT }, (_, n) => {
   const level = n + 1;
   const { x, y } = levelCenter(level);
@@ -104,7 +106,6 @@ const PLATFORMS: PlatformSpec[] = Array.from({ length: LEVEL_COUNT }, (_, n) => 
     state: level < CURRENT_LEVEL ? "done" : level === CURRENT_LEVEL ? "current" : "locked",
     cx: x,
     cy: y,
-    big: isBigSlab(level),
   };
 });
 
@@ -127,73 +128,205 @@ const CENTERS = Array.from({ length: LEVEL_COUNT }, (_, n) => levelCenter(n + 1)
 const PURPLE_PATH = curveThrough(CENTERS.slice(0, CURRENT_LEVEL));
 const GRAY_PATH = curveThrough(CENTERS.slice(CURRENT_LEVEL - 1));
 const CURRENT = levelCenter(CURRENT_LEVEL);
-/** -1: Hex stands left of the live platform, 1: right of it. */
-const HEX_SIDE = CURRENT.x > STAGE_W / 2 ? -1 : 1;
-const HEX_OFFSET_X = 155;
-/** Hex's hop onto the live platform: how long, how high the arc, and how far
- * up he ends (so he stands on the top face). */
+/** How long `startLesson` plays before the flow moves on to the lesson. */
+const START_LESSON_MS = 1000;
+
+/** How long the popup waits before it appears after a tap. */
 const HOP_S = 0.42;
-const HOP_HEIGHT = 70;
-const HEX_PERCH = 37;
 
 /** The lesson the live platform opens, shown in its popup. */
 const LIVE_LESSON = { title: "How Programmers Think", xp: 50 } as const;
 
 const useHomeId = () => useId().replace(/:/g, "");
 
-/** The platform artwork (public/images/platforms): a slab with its own
- * reflection, the tick or padlock baked in. `ax`/`ay` are the centre of the
- * slab's top face in the picture, which is what gets pinned to the level. */
-const ART = {
-  unlocked: {
-    big: { src: "/images/platforms/unlocked-big.png", w: 461, h: 420, ax: 226, ay: 100 },
-    small: { src: "/images/platforms/unlocked-small.png", w: 383, h: 354, ax: 190, ay: 98 },
-  },
-  locked: {
-    small: { src: "/images/platforms/locked-small.png", w: 444, h: 423, ax: 219, ay: 114 },
-  },
-} as const;
-
 /** The slab Hex stands on is `LIVE_PLATFORM`'s rive, drawn at `LIVE_RIV_SCALE`
  * world px per artboard px so the slab comes out the size of the old artwork.
  * `ax`/`ay` are the centre of its top face in artboard px, which is what gets
  * pinned to the level. */
-const LIVE_RIV_SCALE = 1.02;
-const LIVE_RIV = { ax: 86.7, ay: 23.4 } as const;
-/** Picture px -> world px: a big slab comes out ~96px wide. */
-const ART_SCALE = 0.364;
+const LIVE_RIV_SCALE = 1;
+const LIVE_RIV = { ax: 47, ay: 22 } as const;
 
 /** Only the first screenful animates in / floats; the rest just sits there,
  * so fifty platforms don't mean fifty running animations. */
 const ANIMATED_LEVELS = 9;
 
-type Launch = { launching: boolean; onLaunch: () => void };
+/** What the current block's artboard lets the screen do to it. */
+type BlockController = { letsGo: () => void; exitLetsGo: () => void; startLesson: () => void };
 
-const LIVE_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+type Launch = { onLaunch: () => void; controllerRef: MutableRefObject<BlockController | null> };
 
-/** The live slab: `Path_SM` plays on load and its `activate` trigger fires
- * once, so the platform builds itself. It keeps animating after a tap too,
- * while Hex jumps onto it. */
-function LivePlatform({ cx, cy, onLaunch }: { cx: number; cy: number } & Launch) {
-  const { rive, RiveComponent } = useRive({
-    src: LIVE_PLATFORM.src,
+/** The current block sits nearer the left or the right screen edge; that
+ * picks its `pathState` and which `letsGoFrom…` trigger it plays. */
+const CURRENT_SIDE = CURRENT.x < STAGE_W / 2 ? "left" : "right";
+const CURRENT_PATH_STATE = CURRENT_SIDE === "left" ? 3 : 2;
+/** The `entryStyle` the current block enters with. */
+const CURRENT_ENTRY_STYLE = 6;
+
+/** The artboard is drawn at `LIVE_RIV_SCALE` world px per artboard px inside
+ * a canvas that is bigger than it, so animations can spill past its edges
+ * without being clipped. The current block's canvas is a full screen tall and
+ * wide enough to reach both screen edges, so its animations can play anywhere;
+ * every other block only gets `BLEED` artboard px of room on each side. */
+const BLEED = 80;
+
+const artboardCentre = (cx: number, cy: number): Point => ({
+  x: cx + (LIVE_PLATFORM.width / 2 - LIVE_RIV.ax) * LIVE_RIV_SCALE,
+  y: cy + (LIVE_PLATFORM.height / 2 - LIVE_RIV.ay) * LIVE_RIV_SCALE,
+});
+
+/** Where the artboard sits inside its canvas, as fractions of the canvas. */
+type ArtboardFrame = { x0: number; y0: number; x1: number; y1: number };
+
+const canvasBox = (cx: number, cy: number, fullScreen: boolean) => {
+  const centre = artboardCentre(cx, cy);
+  const artW = LIVE_PLATFORM.width * LIVE_RIV_SCALE;
+  const artH = LIVE_PLATFORM.height * LIVE_RIV_SCALE;
+  const halfWidth = fullScreen ? Math.max(centre.x, STAGE_W - centre.x) : artW / 2 + BLEED * LIVE_RIV_SCALE;
+  const halfHeight = fullScreen ? STAGE_H / 2 : artH / 2 + BLEED * LIVE_RIV_SCALE;
+  const x0 = (halfWidth - artW / 2) / (halfWidth * 2);
+  const y0 = (halfHeight - artH / 2) / (halfHeight * 2);
+  return {
+    style: {
+      left: centre.x - halfWidth,
+      top: centre.y - halfHeight,
+      width: halfWidth * 2,
+      height: halfHeight * 2,
+    },
+    frame: { x0, y0, x1: 1 - x0, y1: 1 - y0 } satisfies ArtboardFrame,
+  };
+};
+
+/** Rive resets its layout frame to the whole canvas on every resize, so the
+ * artboard's frame is put back after each one. The artboard `Contain`s inside
+ * it; the rest of the canvas stays free for animations to spill into. */
+const useArtboardFrame = (rive: Rive | null, canvas: HTMLCanvasElement | null, frame: ArtboardFrame) => {
+  useEffect(() => {
+    if (!rive || !canvas) return;
+    const resizeToCanvas = rive.resizeToCanvas.bind(rive);
+    const applyFrame = () => {
+      const { width, height } = canvas;
+      const layout = new Layout({
+        fit: Fit.Contain,
+        alignment: Alignment.Center,
+        minX: frame.x0 * width,
+        minY: frame.y0 * height,
+        maxX: frame.x1 * width,
+        maxY: frame.y1 * height,
+      });
+      Object.assign(rive, { layout });
+    };
+    Object.assign(rive, {
+      resizeToCanvas: () => {
+        resizeToCanvas();
+        applyFrame();
+      },
+    });
+    applyFrame();
+    return () => {
+      Object.assign(rive, { resizeToCanvas });
+    };
+  }, [rive, canvas, frame]);
+};
+
+/** How far past the screen a block is still kept alive, so it is already
+ * running by the time it scrolls into view. */
+const MOUNT_MARGIN = "300px 0px";
+
+/** True while `ref`'s element is on (or near) the screen. */
+function useNearViewport(ref: RefObject<HTMLElement | null>): boolean {
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(([entry]) => setNear(entry.isIntersecting), {
+      rootMargin: MOUNT_MARGIN,
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [ref]);
+  return near;
+}
+
+/** The artboard's `pathState` data: 0 for a lesson not done yet, 1 for a
+ * finished one, `CURRENT_PATH_STATE` for the current one. */
+const pathStateOf = (level: number): number =>
+  level < CURRENT_LEVEL ? 1 : level === CURRENT_LEVEL ? CURRENT_PATH_STATE : 0;
+
+function PathBlockCanvas({
+  pathState,
+  frame,
+  controllerRef,
+}: {
+  pathState: number;
+  frame: ArtboardFrame;
+  /** Given only to the current block: it enters, then takes the screen's taps. */
+  controllerRef?: MutableRefObject<BlockController | null>;
+}) {
+  const { rive, canvas, RiveComponent } = useRive({
+    ...hexRiveSource(),
     artboard: LIVE_PLATFORM.artboard,
     stateMachine: LIVE_PLATFORM.stateMachine,
     autoplay: true,
-    layout: LIVE_LAYOUT,
+    autoBind: true,
+    layout: new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
   });
+  useArtboardFrame(rive, canvas, frame);
 
   useEffect(() => {
-    if (!rive) return;
-    const instance = rive.viewModelByName(LIVE_PLATFORM.viewModel)?.defaultInstance();
-    if (!instance) return;
-    rive.bindViewModelInstance(instance);
-    instance.trigger(LIVE_PLATFORM.activateTrigger)?.trigger();
-  }, [rive]);
+    const instance = rive?.viewModelInstance;
+    if (!rive || !instance) return;
+    const pathStateProperty = instance.number("pathState");
+    if (pathStateProperty) pathStateProperty.value = pathState;
+    if (!controllerRef) return;
+
+    const entryStyle = instance.number("entryStyle");
+    if (entryStyle) entryStyle.value = CURRENT_ENTRY_STYLE;
+    instance.trigger("enter")?.trigger();
+
+    controllerRef.current = {
+      letsGo: () => {
+        const letsGo = instance.boolean("letsGo");
+        if (letsGo) letsGo.value = true;
+        instance.trigger(CURRENT_SIDE === "left" ? "letsGoFromRight": "letsGoFromLeft")?.trigger();
+      },
+      exitLetsGo: () => instance.trigger("exitLetsGo")?.trigger(),
+      startLesson: () => instance.trigger("startLesson")?.trigger(),
+    };
+    return () => {
+      controllerRef.current = null;
+    };
+  }, [rive, pathState, controllerRef]);
+
+  return <RiveComponent className="h-full w-full" />;
+}
+
+/** Every path block is the same "PathBuilding" artboard in `hex.riv`, playing
+ * its default state machine, so all blocks share one size. Only blocks near
+ * the screen get a Rive canvas; the rest are empty boxes that mount one as
+ * they scroll close and drop it again when they leave. Only the current
+ * level's block can be tapped to start it. */
+function PathBlock({
+  cx,
+  cy,
+  pathState,
+  onLaunch,
+  controllerRef,
+}: {
+  cx: number;
+  cy: number;
+  pathState: number;
+  onLaunch?: () => void;
+  controllerRef?: MutableRefObject<BlockController | null>;
+}) {
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const near = useNearViewport(sentinelRef);
+  const box = useMemo(() => canvasBox(cx, cy, !!controllerRef), [cx, cy, controllerRef]);
 
   return (
     <>
+      {/* The artboard's own footprint: what decides whether the block is near. */}
       <div
+        ref={sentinelRef}
         aria-hidden
         className="pointer-events-none absolute"
         style={{
@@ -202,44 +335,36 @@ function LivePlatform({ cx, cy, onLaunch }: { cx: number; cy: number } & Launch)
           width: LIVE_PLATFORM.width * LIVE_RIV_SCALE,
           height: LIVE_PLATFORM.height * LIVE_RIV_SCALE,
         }}
-      >
-        <RiveComponent className="h-full w-full" />
-      </div>
-      <button
-        type="button"
-        onClick={onLaunch}
-        data-level-popup
-        aria-label="Start level"
-        className="absolute"
-        style={{ left: cx - 50, top: cy - 32, width: 100, height: 64 }}
       />
+      {near && (
+        <div aria-hidden className="pointer-events-none absolute" style={box.style}>
+          <PathBlockCanvas pathState={pathState} frame={box.frame} controllerRef={controllerRef} />
+        </div>
+      )}
+      {onLaunch && (
+        <button
+          type="button"
+          onClick={onLaunch}
+          data-level-popup
+          aria-label="Start level"
+          className="absolute"
+          style={{ left: cx - 76, top: cy - 52, width: 152, height: 104 }}
+        />
+      )}
     </>
   );
 }
 
 function PlatformArt({ spec, launch }: { spec: PlatformSpec; launch: Launch }) {
-  const { state, big, cx, cy } = spec;
-  if (state === "current") {
-    // The platform under Hex: the live slab with its rippling rings.
-    return <LivePlatform cx={cx} cy={cy} {...launch} />;
-  }
-  const art = state === "done" ? ART.unlocked[big ? "big" : "small"] : ART.locked.small;
+  const { state, level, cx, cy } = spec;
   return (
-    <>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={art.src}
-        alt=""
-        draggable={false}
-        className="absolute max-w-none select-none"
-        style={{
-          left: cx - art.ax * ART_SCALE,
-          top: cy - art.ay * ART_SCALE,
-          width: art.w * ART_SCALE,
-          height: art.h * ART_SCALE,
-        }}
-      />
-    </>
+    <PathBlock
+      cx={cx}
+      cy={cy}
+      pathState={pathStateOf(level)}
+      onLaunch={state === "current" ? launch.onLaunch : undefined}
+      controllerRef={state === "current" ? launch.controllerRef : undefined}
+    />
   );
 }
 
@@ -266,13 +391,6 @@ function PlatformNode({ spec, launch }: { spec: PlatformSpec; launch: Launch }) 
       </motion.div>
     </motion.div>
   );
-}
-
-const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
-
-function HomeHex() {
-  const { RiveComponent } = useHexRive(HEX_LAYOUT, HEX_STATE.idle);
-  return <RiveComponent className="h-full w-full" />;
 }
 
 /** The module's Python badge (the picture carries its own glow, so it is
@@ -576,20 +694,28 @@ export function HomeScreen({
   const [viewH, setViewH] = useState(STAGE_H);
   const [boxW, setBoxW] = useState(STAGE_W);
   const [done, setDone] = useState(0);
-  const [launching, setLaunching] = useState(false);
   const [popupOpen, setPopupOpen] = useState(false);
-  // Tapping the live platform (or Hex) sends Hex hopping onto it and opens
-  // its popup; Start goes on to the lesson. Dismissing the popup sends Hex
-  // back to his spot.
+  const currentBlock = useRef<BlockController | null>(null);
+  // Tapping the current block plays its "lets go" and opens its popup; Start
+  // plays `startLesson` and goes on to the lesson.
   const openPopup = () => {
-    setLaunching(true);
+    currentBlock.current?.letsGo();
     setPopupOpen(true);
   };
+  const startTimer = useRef<number | undefined>(undefined);
+  // Deselecting the block (a tap elsewhere) plays `exitLetsGo`, unless the
+  // lesson is already starting.
   const closePopup = () => {
     setPopupOpen(false);
-    setLaunching(false);
+    if (startTimer.current === undefined) currentBlock.current?.exitLetsGo();
   };
-  const launch: Launch = { launching, onLaunch: openPopup };
+  const startLesson = () => {
+    if (startTimer.current !== undefined) return;
+    currentBlock.current?.startLesson();
+    startTimer.current = window.setTimeout(() => onStart?.(), START_LESSON_MS);
+  };
+  useEffect(() => () => window.clearTimeout(startTimer.current), []);
+  const launch: Launch = { onLaunch: openPopup, controllerRef: currentBlock };
 
   // A tap anywhere outside the popup (and the platform/Hex that open it)
   // closes it.
@@ -678,32 +804,6 @@ export function HomeScreen({
                 <PlatformNode key={spec.id} spec={spec} launch={launch} />
               ))}
 
-              {/* Hex stands beside the live platform, on the side with more
-                room: platform on the right -> Hex on the left, and back. */}
-              <motion.button
-                type="button"
-                onClick={openPopup}
-                data-level-popup
-                aria-label="Start level"
-                className="absolute"
-                style={{ left: CURRENT.x + HEX_SIDE * HEX_OFFSET_X - 55, top: CURRENT.y - 55, width: 110, height: 110 }}
-                animate={
-                  launching
-                    ? { x: -HEX_SIDE * HEX_OFFSET_X, y: [0, -HOP_HEIGHT, -HEX_PERCH] }
-                    : { x: 0, y: 0 }
-                }
-                transition={
-                  launching
-                    ? {
-                        x: { duration: HOP_S, ease: "easeInOut" },
-                        y: { duration: HOP_S, times: [0, 0.5, 1], ease: ["easeOut", "easeIn"] },
-                      }
-                    : { duration: 0.3, ease: "easeInOut" }
-                }
-              >
-                <HomeHex />
-              </motion.button>
-
               <AnimatePresence>
                 {popupOpen && (
                   <LevelStartPopup
@@ -712,7 +812,7 @@ export function HomeScreen({
                     stageWidth={STAGE_W}
                     title={LIVE_LESSON.title}
                     xp={LIVE_LESSON.xp}
-                    onStart={() => onStart?.()}
+                    onStart={startLesson}
                     delay={HOP_S}
                   />
                 )}
