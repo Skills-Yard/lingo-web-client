@@ -41,7 +41,10 @@ export function RiveProgressBar({ value, from, answer = null, className = "" }: 
 
   // Widen the artboard so its track isn't clipped (see PROGRESS_BAR).
   useEffect(() => {
-    if (rive) Object.assign(rive, { artboardWidth: PROGRESS_BAR.artboardWidth });
+    if (rive) Object.assign(rive, {
+      artboardWidth: PROGRESS_BAR.artboardWidth,
+      artboardHeight: PROGRESS_BAR.artboardHeight,
+    });
   }, [rive]);
 
   // The fill the bar last showed. A change of `value` is tweened from here

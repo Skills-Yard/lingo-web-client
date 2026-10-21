@@ -58,6 +58,7 @@ export const getProgressBarHost = (): Host => {
       const rive = created.rive;
       if (!rive) return;
       rive.artboardWidth = PROGRESS_BAR.artboardWidth;
+      rive.artboardHeight = PROGRESS_BAR.artboardHeight;
       rive.resizeDrawingSurfaceToCanvas();
       created.aspect = PROGRESS_BAR.artboardWidth / PROGRESS_BAR.artboardHeight;
       created.loaded = true;

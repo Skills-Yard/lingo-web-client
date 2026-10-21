@@ -339,12 +339,14 @@ export const PROGRESS_BAR = {
   artboard: "LESSON_ProgressBar",
   stateMachine: "ProgressBar_SM",
   property: "progress",
-  /** The artboard is 350 wide, but its track starts 21px in and is 350 long,
-   * so Rive clips the right end off. Drawing it 21px wider each side (392)
-   * shows the whole rounded track. Drop this once the artboard itself is
-   * widened in the .riv. */
-  artboardWidth: 392,
-  artboardHeight: 20,
+  /** The artboard is 350x20, but its track starts 21px in and is 350 long, and
+   * the bar's effects reach past the artboard edge, where Rive clips them.
+   * Drawing the artboard bigger shows them: 10px of bleed past the track on
+   * the right and below it (a runtime can only grow an artboard right and
+   * down, so the top and left keep what the artboard already has). Drop this
+   * once the artboard itself is enlarged in the .riv. */
+  artboardWidth: 381,
+  artboardHeight: 30,
   /** Number on the view model; held at `comboValue` for `comboHoldMs` whenever the fill changes. */
   comboProperty: "combo",
   comboValue: 3,

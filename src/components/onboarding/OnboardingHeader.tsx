@@ -71,7 +71,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className="absolute left-[67px] right-[114px] top-[63px] -translate-y-1/2"
+            className="absolute left-[67px] right-[114px] top-[63px] -translate-y-1/3"
           />
         </>
       )}
