@@ -19,7 +19,6 @@ import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { configureRiveRuntime, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import { hexRiveSource } from "@/lib/rive/hexFile";
-import { BottomNav, type HomeTab } from "./BottomNav";
 import { LevelBackground } from "./LevelBackground";
 import { LevelStartPopup } from "./LevelStartPopup";
 
@@ -683,10 +682,8 @@ const reveal = (delay: number) => ({
  */
 export function HomeScreen({
   onStart,
-  onNavigate,
 }: {
   onStart?: () => void;
-  onNavigate?: (tab: HomeTab) => void;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
@@ -881,22 +878,6 @@ export function HomeScreen({
                 compact={i < done}
               />
             ))}
-          </div>
-        </div>
-
-        {/* Mobile nav: pinned to the bottom of the screen. */}
-        <div
-          className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-transparent to-transparent"
-          style={{ height: 128 * scale }}
-        >
-          <div
-            className="absolute bottom-0 left-1/2 origin-bottom"
-            style={{ width: STAGE_W, height: 128, transform: `translateX(-50%) scale(${scale})` }}
-          >
-          {/* Bottom nav */}
-          <div className="absolute left-4 top-[32px] w-[358px]">
-            <BottomNav active="home" onNavigate={onNavigate} />
-          </div>
           </div>
         </div>
       </div>

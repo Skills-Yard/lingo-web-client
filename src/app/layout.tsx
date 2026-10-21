@@ -2,12 +2,13 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { AutoFullscreen } from "@/components/pwa/AutoFullscreen";
 import { InstallHint } from "@/components/pwa/InstallHint";
 
 const poppins = Poppins({
   variable: "--font-app-poppins",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
@@ -49,6 +50,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
         <ThemeProvider>{children}</ThemeProvider>
         <InstallHint />
+        <AutoFullscreen />
       </body>
     </html>
   );

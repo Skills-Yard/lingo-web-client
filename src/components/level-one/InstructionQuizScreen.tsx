@@ -32,7 +32,7 @@ const LOOK = {
 } as const;
 
 /**
- * `/module?level=1&step=6` — "What are instructions known as?": a single-answer quiz
+ * `/module?level=1&step=7` — "What are instructions known as?": a single-answer quiz
  * with Hex between the question and the options. Check locks the answer and
  * marks it right (green) or wrong (red); Continue follows.
  */
@@ -40,18 +40,17 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
-  // Hex is never replaced: one Hex sits in the question's slot and, on Check,
-  // glides into the result panel's slot as the panel comes up.
+  // Hex sits in the question's slot and leaves as soon as an option is picked;
+  // on Check the result panel brings its own Hex, entering inside it.
   const glideRef = useRef<HTMLDivElement>(null);
   const [questionSlot, setQuestionSlot] = useState<HTMLDivElement | null>(null);
-  const [panelSlot, setPanelSlot] = useState<HTMLDivElement | null>(null);
 
   return (
     <LevelOneShell
-      step={6}
+      step={7}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
-      onBack={() => router.push(levelOneHref(5))}
+      onBack={() => router.push(levelOneHref(6))}
       onContinue={() => {
         if (!checked) setChecked(true);
         else (onContinue ?? (() => router.push(levelOneRewardHref())))();
@@ -63,13 +62,12 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
             correct={selectedId === CORRECT_ID}
             open={checked}
             hexIn={checked}
-            hexSlot={setPanelSlot}
+            hexCue={selectedId === CORRECT_ID ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
           >
             {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
             {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>
           </FeedbackPanel>
-          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={panelSlot} moved={checked}
-            arrivedCue={selectedId === CORRECT_ID ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} leaving={selectedId !== null}
             containerRef={glideRef} />
         </div>
       }
@@ -93,8 +91,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       </motion.div>
 
       {/* Hex's spot: the Hex itself is drawn by the overlay's HexGlide, which
-        moves it into the result panel on Check; the slot then closes and the
-        options slide up into its space. */}
+        sends him off when an option is picked; on Check the slot closes and
+        the options slide up into its space. */}
       <motion.div
         ref={setQuestionSlot}
         aria-hidden

@@ -8,7 +8,7 @@ import {
 } from "@/lib/constants/instructionsIntro";
 import { GameBoardScreen } from "@/components/instructions-intro/GameBoardScreen";
 import { HexStage } from "./HexStage";
-import { LevelOneShell, levelOneHref } from "./LevelOneShell";
+import { LevelOneShell, levelOneCompleteHref, levelOneHref } from "./LevelOneShell";
 
 /** Time per command — quicker than the old intro's 700ms. */
 const STEP_MS = 400;
@@ -35,12 +35,12 @@ export function MoveHexScreen() {
 
   return (
     <LevelOneShell
-      step={7}
+      step={8}
       flush
       fit
       ctaDisabled={!finished}
-      onBack={() => router.push(levelOneHref(6))}
-      onContinue={() => router.push("/level")}
+      onBack={() => router.push(levelOneHref(7))}
+      onContinue={() => router.push(levelOneCompleteHref())}
     >
       {/* Hex is positioned against this box, so it must wrap the
         screen he walks around in. */}

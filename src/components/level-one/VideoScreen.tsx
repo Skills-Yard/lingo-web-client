@@ -17,7 +17,7 @@ const EXIT_MS = 700;
 const VIDEO_AUDIO = ["/audios/screen_6_audio.mpeg#end=2.15"];
 
 /**
- * `/module?level=1&step=5` — "What are instructions?": Hex asks, and a short
+ * `/module?level=1&step=6` — "What are instructions?": Hex asks, and a short
  * video (thumbnail, duration, caption) answers it.
  */
 export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
@@ -26,14 +26,14 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
 
   return (
     <LevelOneShell
-      step={5}
+      step={6}
       voiceover={VIDEO_AUDIO}
-      onBack={() => router.push(levelOneHref(4))}
+      onBack={() => router.push(levelOneHref(5))}
       ctaDisabled={leaving}
       onContinue={() => {
         // Hex leaves first, then the next screen opens.
         setLeaving(true);
-        window.setTimeout(() => (onContinue ?? (() => router.push(levelOneHref(6))))(), EXIT_MS);
+        window.setTimeout(() => (onContinue ?? (() => router.push(levelOneHref(7))))(), EXIT_MS);
       }}
     >
       {/* Hex and his question: 32px under the header, 20px above the video. */}

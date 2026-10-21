@@ -94,6 +94,9 @@ export function HexStage({
   );
 }
 
+/** After his exit animation has played, whatever is left of him fades out. */
+export const LEAVE_FADE_DELAY_S = 0.8;
+
 /** Hex's trip from one slot to another (question -> result panel). */
 // A spring, not a tween: the target moves while he travels (the panel is still
 // sliding up), and a spring keeps its velocity through that where a timed
@@ -109,23 +112,26 @@ const GLIDE_TRANSITION = { type: "spring", stiffness: 70, damping: 18, mass: 1, 
  */
 export function HexGlide({
   fromEl,
-  toEl,
-  moved,
+  toEl = null,
+  moved = false,
   arrivedCue = null,
   enter,
   entryStyle,
+  leaving = false,
   containerRef,
 }: {
   fromEl: HTMLDivElement | null;
-  toEl: HTMLDivElement | null;
+  toEl?: HTMLDivElement | null;
   /** True once Hex should be in `toEl`. */
-  moved: boolean;
+  moved?: boolean;
   /** A trigger Hex plays once he has reached `toEl`. */
   arrivedCue?: string | null;
   /** The trigger that plays his entrance. */
   enter?: string;
   /** The `entryStyle` he enters with. */
   entryStyle?: number;
+  /** Hex leaves the screen (and stays gone). */
+  leaving?: boolean;
   containerRef: RefObject<HTMLDivElement | null>;
 }) {
   const [rect, setRect] = useState<Rect | null>(null);
@@ -160,11 +166,11 @@ export function HexGlide({
       aria-hidden
       className="pointer-events-none absolute top-0 left-0 z-30"
       initial={false}
-      animate={{ x: rect.x, y: rect.y, width: rect.width, height: rect.height }}
-      transition={GLIDE_TRANSITION}
+      animate={{ x: rect.x, y: rect.y, width: rect.width, height: rect.height, opacity: leaving ? 0 : 1 }}
+      transition={{ default: GLIDE_TRANSITION, opacity: leaving ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0 } }}
       onAnimationComplete={() => setArrived(moved)}
     >
-      <OnboardingHex entryKey="quiz" enter={enter} entryStyle={entryStyle} cue={arrived ? arrivedCue : null} />
+      <OnboardingHex entryKey="quiz" enter={enter} entryStyle={entryStyle} leaving={leaving} cue={arrived ? arrivedCue : null} />
     </motion.div>
   );
 }

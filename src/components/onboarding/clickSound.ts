@@ -27,6 +27,11 @@ export function setClickSoundMuted(value: boolean): void {
   muted = value;
 }
 
+/** Whether the sound toggle is off — for sounds of a screen's own. */
+export function isClickSoundMuted(): boolean {
+  return muted;
+}
+
 /** The tap feedback for answer options and the CTA buttons. */
 export function playClickSound(): void {
   if (muted) return;

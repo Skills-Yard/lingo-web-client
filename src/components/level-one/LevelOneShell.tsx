@@ -17,13 +17,16 @@ const FRAME_H = 844;
 const MAX_SCALE = 1.5;
 
 /** Screens in Level 1 (the progress bar's total). */
-export const LEVEL_ONE_STEPS = 7;
+export const LEVEL_ONE_STEPS = 9;
 
 /** Level 1's `step`th screen (1-based) — `/module?level=1&step=N`. */
 export const levelOneHref = (step: number) => moduleHref(1, step);
 
-/** The reward screen between 6 and 7, not one of the numbered screens. */
+/** The reward screen between 7 and 8, not one of the numbered screens. */
 export const levelOneRewardHref = () => moduleHref(1, "reward");
+
+/** "Lesson complete!", after the last numbered screen. */
+export const levelOneCompleteHref = () => moduleHref(1, "complete");
 
 interface LevelOneShellProps {
   /** 1-based screen number, shown in the progress bar. */
@@ -130,10 +133,10 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         } as React.CSSProperties}
       >
       <div className="flex min-h-0 w-full flex-1 flex-col">
-        {/* The header sits 24px lower than the shared one, putting the page
-          count 51px from the top; the negative margin keeps the content
+        {/* The header sits 9px lower than the shared one, putting the page
+          count 36px from the top; the negative margin keeps the content
           below exactly where it was. */}
-        <div className="relative z-10 mx-auto -mb-6 w-full pt-6">
+        <div className="relative z-10 mx-auto -mb-[9px] w-full pt-[9px]">
           <OnboardingHeader
             onBack={onBack ?? (() => router.back())}
             progress={{ step, total: LEVEL_ONE_STEPS }}

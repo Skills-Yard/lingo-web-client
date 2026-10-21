@@ -6,7 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
+import { FeedbackPanel } from "./FeedbackPanel";
+import { TeacherSpeech } from "./TeacherSpeech";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
@@ -26,7 +27,7 @@ const OPTIONS = [
 // cropped from the bottom and moves up, to make room for the options.
 const IMAGE_GAP: Record<Step, number> = { says: 48, quiz: 12 };
 // Frame top 163 + 240 = 403, which leaves 24px above the options at 427.
-const IMAGE_HEIGHT: Record<Step, number> = { says: 346, quiz: 240 };
+const IMAGE_HEIGHT: Record<Step, number> = { says: 358, quiz: 240 };
 // After Check the picture is cropped further, so the options ride up and stay
 // clear of the result panel that slides in over the bottom ~290px.
 const CHECKED_IMAGE_HEIGHT = 110;
@@ -106,15 +107,15 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
 
   return (
     <LevelOneShell
-      step={quiz ? 3 : 2}
+      step={quiz ? 4 : 3}
       // The quiz's question is read once, until it is checked.
       voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
       onBack={() => {
-        if (!quiz) return router.push(levelOneHref(1));
+        if (!quiz) return router.push(levelOneHref(2));
         show("says");
-        router.push(levelOneHref(2));
+        router.push(levelOneHref(3));
       }}
       overlay={
         <>
@@ -131,9 +132,9 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       onContinue={() => {
         if (!quiz) {
           show("quiz");
-          router.push(levelOneHref(3));
+          router.push(levelOneHref(4));
         } else if (!checked) setChecked(true);
-        else router.push(levelOneHref(4));
+        else router.push(levelOneHref(5));
       }}
     >
       {/* The heading box resizes with the picture, so nothing jumps when the
@@ -174,36 +175,25 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
 
       {/* The picture keeps its width and its place from the top across both
         screens; on the quiz it is cropped from the bottom and moves up to
-        make room for the options. Hex stands at its bottom left on the
-        first screen only. */}
+        make room for the options. Hex and the teacher's speech bubble sit over
+        it on both screens (TeacherSpeech), until the answer is checked and
+        the result panel brings its own Hex. */}
       <motion.div
         initial={false}
         animate={{ marginTop: IMAGE_GAP[step], height: checked ? CHECKED_IMAGE_HEIGHT : IMAGE_HEIGHT[step] }}
         transition={MORPH}
-        className="relative w-full shrink-0 overflow-hidden rounded-lg"
+        className="relative w-full shrink-0"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/images/level-one/teacher.png"
-          alt="A teacher saying: Open your notebook"
-          draggable={false}
-          className="h-[346px] w-full rounded-lg object-cover object-top"
-        />
-        <AnimatePresence>
-          {!quiz && (
-            <motion.div
-              key="hex"
-              aria-hidden
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="pointer-events-none absolute bottom-0 left-0 h-[130px] w-[130px]"
-            >
-              <OnboardingHex entryKey="teacher" />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="absolute inset-0 overflow-hidden rounded-lg">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/level-one/teacher-says.png"
+            alt="A teacher saying: Open your notebook"
+            draggable={false}
+            className="h-[358px] w-full rounded-lg object-cover object-top"
+          />
+        </div>
+        <AnimatePresence>{!checked && <TeacherSpeech key="speech" hexAway={selectedId !== null} />}</AnimatePresence>
       </motion.div>
 
       <AnimatePresence>

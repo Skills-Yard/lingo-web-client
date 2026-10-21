@@ -1,13 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Nunito } from "next/font/google";
 import { motion } from "framer-motion";
 import { Heart, MessageCircle, Share2 } from "lucide-react";
 import { TOP_BAR_BOTTOM } from "./HomeStage";
 import { FEED, STORIES, type Poll, type Post, type StoryRing } from "./feedData";
-
-const nunito = Nunito({ subsets: ["latin"], weight: ["400", "600", "800"] });
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const GREEN = "#01A17F";
@@ -185,7 +182,7 @@ export function FeedScreen() {
   return (
     <main
       style={{ top: TOP_BAR_BOTTOM }}
-      className={`${nunito.className} scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
+      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
     >
       <div
         className="mx-auto w-full max-w-[430px] px-4 pt-1"

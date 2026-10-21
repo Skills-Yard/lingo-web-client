@@ -44,7 +44,7 @@ const slotOf = (index: number, active: number) => {
 };
 
 /**
- * `/module?level=1&step=4` — "Some examples of instruction": a looping carousel of
+ * `/module?level=1&step=5` — "Some examples of instruction": a looping carousel of
  * example cards. The active card is centred with its neighbours peeking in
  * from each side; swipe, tap a neighbour or use the arrow keys to move.
  */
@@ -53,10 +53,10 @@ export function ExamplesScreen({ onContinue }: { onContinue?: () => void }) {
 
   return (
     <LevelOneShell
-      step={4}
+      step={5}
       voiceover={VOICEOVER}
-      onBack={() => router.push(levelOneHref(3))}
-      onContinue={onContinue ?? (() => router.push(levelOneHref(5)))}
+      onBack={() => router.push(levelOneHref(4))}
+      onContinue={onContinue ?? (() => router.push(levelOneHref(6)))}
     >
       <ExamplesCarousel />
     </LevelOneShell>

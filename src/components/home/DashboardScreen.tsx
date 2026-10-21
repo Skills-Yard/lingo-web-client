@@ -6,7 +6,7 @@ import { Check, ChartNoAxesColumn, ChevronRight, Flame, Star } from "lucide-reac
 import { GlossButton } from "./GlossButton";
 import { HexAvatar } from "./HexAvatar";
 import { TOP_BAR_BOTTOM } from "./HomeStage";
-import { fredoka, HEADING, nunito } from "./homeFonts";
+import { HEADING } from "./homeFonts";
 import { LEARNER_STATS } from "./learnerStats";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -29,10 +29,10 @@ const reveal = (delay: number) => ({
   transition: { duration: 0.5, ease: EASE, delay },
 });
 
-type StatSpec = {
+export type StatSpec = {
   id: string;
   label: string;
-  value: string;
+  value: ReactNode;
   background: string;
   shadow: string;
   /** The overline's colour; the value and icon use `accent`. */
@@ -74,7 +74,7 @@ const STATS: readonly StatSpec[] = [
   },
 ];
 
-function StatCard({ stat }: { stat: StatSpec }) {
+export function StatCard({ stat }: { stat: StatSpec }) {
   return (
     <div
       className="flex h-[89px] min-w-0 flex-1 flex-col rounded-[18px] px-[3px] pb-[7px]"
@@ -144,7 +144,7 @@ export function DashboardScreen({ name = "Alex" }: { name?: string }) {
   return (
     <main
       style={{ top: TOP_BAR_BOTTOM }}
-      className={`${nunito.className} ${fredoka.variable} scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
+      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
     >
       <div className="mx-auto w-full max-w-[430px] px-4 pt-1" style={{ paddingBottom: NAV_CLEARANCE }}>
         <motion.header {...reveal(0)} className="flex items-center gap-3">

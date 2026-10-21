@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { GlossButton } from "./GlossButton";
 import { TOP_BAR_BOTTOM } from "./HomeStage";
-import { fredoka, HEADING, nunito } from "./homeFonts";
+import { HEADING } from "./homeFonts";
 
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -139,7 +139,7 @@ export function EventsScreen() {
   return (
     <main
       style={{ top: TOP_BAR_BOTTOM }}
-      className={`${nunito.className} ${fredoka.variable} scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
+      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
     >
       <div className="mx-auto w-full max-w-[430px] px-4 pt-1" style={{ paddingBottom: NAV_CLEARANCE }}>
         <motion.h1 {...reveal(0)} className="text-2xl font-extrabold leading-tight">

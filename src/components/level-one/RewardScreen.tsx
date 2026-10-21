@@ -11,13 +11,13 @@ import { levelOneHref } from "./LevelOneShell";
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
 /** The Figma frame this screen is laid out in. */
-const FRAME_W = 390;
-const FRAME_H = 844;
+export const FRAME_W = 390;
+export const FRAME_H = 844;
 const MAX_SCALE = 1.5;
 
-const FLOAT_IN = { type: "spring", stiffness: 110, damping: 13 } as const;
+export const FLOAT_IN = { type: "spring", stiffness: 110, damping: 13 } as const;
 
-const useFrameScale = () => {
+export const useFrameScale = () => {
   const [scale, setScale] = useState<number | null>(null);
   useLayoutEffect(() => {
     const measure = () => setScale(Math.min(window.innerWidth / FRAME_W, window.innerHeight / FRAME_H, MAX_SCALE));
@@ -29,9 +29,9 @@ const useFrameScale = () => {
 };
 
 /**
- * `/module?level=1&step=reward` — between screens 6 and 7 and not counted in
+ * `/module?level=1&step=reward` — between screens 7 and 8 and not counted in
  * the 8: a closed gift ("Tap for reward!") that, once tapped, opens to "You
- * Got 5 gems, 24 coins" with a Claim button that goes on to screen 7.
+ * Got 5 gems, 24 coins" with a Claim button that goes on to screen 8.
  */
 export function RewardScreen({ onContinue }: { onContinue?: () => void }) {
   const router = useRouter();
@@ -55,7 +55,7 @@ export function RewardScreen({ onContinue }: { onContinue?: () => void }) {
           type="button"
           onClick={() => {
             playClickSound();
-            router.push(levelOneHref(6));
+            router.push(levelOneHref(7));
           }}
           aria-label="Back"
           className="absolute top-[51px] left-4 z-10 flex h-[39px] w-[39px] cursor-pointer items-center justify-center rounded-md border border-black/8 text-[#444444] transition-transform active:scale-95"
@@ -72,7 +72,7 @@ export function RewardScreen({ onContinue }: { onContinue?: () => void }) {
 
         <AnimatePresence mode="wait" initial={false}>
           {opened ? (
-            <Reward key="reward" onClaim={onContinue ?? (() => router.push(levelOneHref(7)))} />
+            <Reward key="reward" onClaim={onContinue ?? (() => router.push(levelOneHref(8)))} />
           ) : (
             <Gift key="gift" onOpen={() => setOpened(true)} />
           )}
@@ -209,19 +209,21 @@ function Reward({ onClaim }: { onClaim: () => void }) {
       >
         <button
           type="button"
+          aria-label="Claim Instantly"
           onClick={() => {
             playClickSound();
             onClaim();
           }}
-          className="absolute bottom-[163px] left-1/2 h-[59px] w-[213px] -translate-x-1/2 cursor-pointer rounded-[20px] bg-[linear-gradient(180deg,#FDE953_-8.73%,#FFD509_34.86%,#FDB226_109.52%)] text-[18px] font-semibold text-white shadow-[1px_1px_16px_3px_rgba(0,0,0,0.15)] transition-transform active:scale-[0.96]"
+          // The picture is the button plus its sparkles; sized so the button
+          // itself is 213px wide, in the place the old one sat.
+          className="absolute bottom-[144px] left-1/2 h-[98px] w-[257px] -translate-x-1/2 cursor-pointer transition-transform active:scale-[0.96]"
         >
-          Claim Instantly
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/images/level-one/claim-button.png" alt="" draggable={false} className="h-full w-full select-none" />
         </button>
         <p className="absolute top-[711px] left-1/2 -translate-x-1/2 text-center text-[12px] leading-[1.4] font-medium whitespace-nowrap text-[#666666]">
           Reward added instantly.
         </p>
-        <Sparkle className="top-[672px] left-[68px] h-[25px] w-[22px]" />
-        <Sparkle className="top-[613px] left-[297px] h-[15px] w-[13px]" />
       </motion.div>
     </motion.div>
   );

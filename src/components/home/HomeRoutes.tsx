@@ -33,7 +33,7 @@ const subscribeNever = () => () => {};
 export function LevelRoute() {
   const router = useRouter();
   return (
-    <HomeScreen onNavigate={useTabNavigation()} onStart={() => router.push(moduleHref(1, 1))} />
+    <HomeScreen onStart={() => router.push(moduleHref(1, 1))} />
   );
 }
 

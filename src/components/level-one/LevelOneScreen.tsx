@@ -21,7 +21,7 @@ const FLIP_SPRING = {
 } as const;
 
 /**
- * `/module?level=1&step=1` — the first screen of Module 1: "Before we write code,
+ * `/module?level=1&step=2` — the second screen of Module 1: "Before we write code,
  * let's learn how programmers think", a card that flips (tap, or swipe) to
  * "Programmer is a problem solver."
  */
@@ -38,14 +38,14 @@ export function LevelOneScreen({ onContinue }: { onContinue?: () => void }) {
 
   return (
     <LevelOneShell
-      step={1}
+      step={2}
       // The title line first; the back of the card has its own clip, and
       // flipping back does not bring the title line back.
       voiceover={
         flipped ? [REVEAL_AUDIO] : introPlayed ? undefined : [INTRO_AUDIO]
       }
-      onBack={() => router.push("/level")}
-      onContinue={onContinue ?? (() => router.push(levelOneHref(2)))}
+      onBack={() => router.push(levelOneHref(1))}
+      onContinue={onContinue ?? (() => router.push(levelOneHref(3)))}
     >
       <FlipCard flipped={flipped} onFlip={flip} />
     </LevelOneShell>
