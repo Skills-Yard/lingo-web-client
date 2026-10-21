@@ -60,7 +60,7 @@ export const getProgressBarHost = (): Host => {
     onLoad: () => {
       const rive = created.rive;
       if (!rive) return;
-      applyCanvasBleed(rive, canvas, bleed);
+      applyCanvasBleed(rive, canvas, bleed, PROGRESS_BAR.trackInset);
       rive.resizeDrawingSurfaceToCanvas();
       const { minX, maxX, minY, maxY } = rive.bounds;
       if (maxY > minY) created.aspect = (maxX - minX) / (maxY - minY);

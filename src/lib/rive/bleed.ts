@@ -10,19 +10,29 @@ import { Alignment, Fit, Layout, type Rive } from "@rive-app/canvas";
  * is left free for those extras. Rive resets its frame to the whole canvas on
  * every resize, so it is put back after each one. Returns the cleanup.
  */
-export const applyCanvasBleed = (rive: Rive, canvas: HTMLCanvasElement, bleed: number): (() => void) => {
+export const applyCanvasBleed = (
+  rive: Rive,
+  canvas: HTMLCanvasElement,
+  bleed: number,
+  /** Artboard px the content starts in from the artboard's left edge; the
+   * artboard is drawn that far to the left, so the content fills the slot. */
+  contentInset = 0,
+): (() => void) => {
   const resizeToCanvas = rive.resizeToCanvas.bind(rive);
   const applyFrame = () => {
     const { width, height, clientWidth } = canvas;
     if (!clientWidth) return;
     const pad = bleed * (width / clientWidth);
+    const { minX, maxX } = rive.bounds;
+    const scale = (width - 2 * pad) / (maxX - minX);
+    const left = pad - contentInset * scale;
     Object.assign(rive, {
       layout: new Layout({
         fit: Fit.Contain,
-        alignment: Alignment.Center,
-        minX: pad,
+        alignment: Alignment.TopLeft,
+        minX: left,
         minY: pad,
-        maxX: width - pad,
+        maxX: left + width - 2 * pad,
         maxY: height - pad,
       }),
     });

@@ -342,6 +342,10 @@ export const PROGRESS_BAR = {
   /** CSS px of room around the bar for the effects that stray past its
    * artboard (see `applyCanvasBleed`). */
   bleed: 10,
+  /** The track starts this many artboard px in from the artboard's left edge
+   * (and so overruns its right edge by as much). The bar is drawn shifted
+   * left by it, so the track itself fills the slot. */
+  trackInset: 21,
   /** Number on the view model; held at `comboValue` for `comboHoldMs` whenever the fill changes. */
   comboProperty: "combo",
   comboValue: 3,

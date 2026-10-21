@@ -54,7 +54,7 @@ export function RiveProgressBar({ value, from, answer = null, className = "" }: 
   // past the artboard aren't clipped.
   useEffect(() => {
     if (!rive || !canvas) return;
-    return applyCanvasBleed(rive, canvas, bleed);
+    return applyCanvasBleed(rive, canvas, bleed, PROGRESS_BAR.trackInset);
   }, [rive, canvas]);
 
   // The fill the bar last showed. A change of `value` is tweened from here
