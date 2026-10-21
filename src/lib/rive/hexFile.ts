@@ -23,7 +23,7 @@ const listeners = new Set<() => void>();
 
 /** Size of `hex.riv`, used when the server doesn't report a usable length
  * (compressed responses stream more bytes than `Content-Length` counts). */
-const ESTIMATED_BYTES = 5_926_000;
+const ESTIMATED_BYTES = 5_958_848;
 /** Downloading is 95% of the bar; parsing the file fills the rest. */
 const DOWNLOAD_SHARE = 0.95;
 
