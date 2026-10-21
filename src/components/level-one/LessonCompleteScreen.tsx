@@ -1,284 +1,67 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
-import { Check, Clock, Star } from "lucide-react";
+import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { Button3D } from "@/components/ui/Button3D";
-import { StatCard, type StatSpec } from "@/components/home/DashboardScreen";
-import { LEARNER_STATS } from "@/components/home/learnerStats";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { Confetti } from "./Confetti";
-import { OnboardingHex } from "./FeedbackPanel";
-import { playCompleteChime, playCountTick, playLinePop } from "./lessonCompleteSound";
-import { FLOAT_IN, FRAME_H, FRAME_W, useFrameScale } from "./RewardScreen";
+import { useHexRive } from "@/components/onboarding/robu/useHexRive";
+import { LESSON_COMPLETE } from "@/lib/rive/runtime";
 
-type Stage = 1 | 2 | 3;
-const LAST_STAGE: Stage = 3;
-
-const COUNT_MS = 900;
-/** Counting ticks sound no more often than this. */
-const TICK_EVERY_MS = 60;
-/** The seconds the lesson took, shown as m:ss. */
+/** The lesson's results, shown by the artboard. */
+const LESSON_XP = 40;
+const LESSON_ACCURACY = 92;
+/** The seconds the lesson took. */
 const LESSON_SECONDS = 222;
-const BATTERY_REWARD = 2;
+
+const LAYOUT = new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
 
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
-/** `0` up to `to` (eased) over `COUNT_MS`, starting `delay` seconds from now, with a tick as it climbs. */
-const useCountUp = (to: number, delay: number, ticking = true) => {
-  const [value, setValue] = useState(0);
-  useEffect(() => {
-    let frame = 0;
-    let lastTick = 0;
-    let shown = 0;
-    const start = performance.now() + delay * 1000;
-    const step = (now: number) => {
-      const t = Math.min(Math.max((now - start) / COUNT_MS, 0), 1);
-      const next = Math.round(to * (1 - (1 - t) ** 3));
-      if (next !== shown) {
-        shown = next;
-        setValue(next);
-        if (ticking && now - lastTick >= TICK_EVERY_MS) {
-          lastTick = now;
-          playCountTick(Math.min(next, 20));
-        }
-      }
-      if (t < 1) frame = requestAnimationFrame(step);
-    };
-    frame = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(frame);
-  }, [to, delay, ticking]);
-  return value;
-};
-
-function CountUp({ to, delay, format = String }: { to: number; delay: number; format?: (value: number) => string }) {
-  return <>{format(useCountUp(to, delay))}</>;
-}
-
-/** One line of the screen: floats up into place `delay` seconds in, with a pop. */
-function Line({ delay, className, children }: { delay: number; className: string; children: ReactNode }) {
-  useEffect(() => {
-    const timer = window.setTimeout(playLinePop, delay * 1000);
-    return () => window.clearTimeout(timer);
-  }, [delay]);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ ...FLOAT_IN, delay }}
-      className={`absolute ${className}`}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-/** Where the title and Hex sit (px from the frame's top) on each screen. */
-const TITLE_TOP: Record<Stage, number> = { 1: 290, 2: 278, 3: 230 };
-const HEX_TOP: Record<Stage, number> = { 1: 130, 2: 100, 3: 357 };
-/** On the third screen he is smaller and sits right on top of the battery card. */
-const HEX_SCALE: Record<Stage, number> = { 1: 1, 2: 1, 3: 0.72 };
-const SHIFT = { type: "spring", stiffness: 110, damping: 15 } as const;
-
-/** "Lesson complete!": one title for all three screens, bouncing whenever the screen changes. */
-function Title({ stage }: { stage: Stage }) {
-  const bounce = useAnimationControls();
-  useEffect(() => {
-    if (stage > 1) void bounce.start({ scale: [1, 1.16, 0.96, 1], transition: { duration: 0.5 } });
-  }, [stage, bounce]);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: TITLE_TOP[1] + 50 }}
-      animate={{ opacity: 1, y: TITLE_TOP[stage] }}
-      transition={{ ...FLOAT_IN, delay: stage === 1 ? 0.9 : 0, y: stage === 1 ? { ...FLOAT_IN, delay: 0.9 } : SHIFT }}
-      className="absolute inset-x-0 top-0 z-10 text-center"
-    >
-      <motion.h1 animate={bounce} className="text-[24px] leading-8 font-semibold text-[#01A17F]">
-        Lesson complete!
-      </motion.h1>
-    </motion.div>
-  );
-}
-
-/** Hex: one Hex for all three screens, jumping when the screen changes, and
- * ending up small on top of the battery card. */
-function ScreenHex({ stage }: { stage: Stage }) {
-  const jump = useAnimationControls();
-  useEffect(() => {
-    if (stage > 1) void jump.start({ y: [0, -34, 0], transition: { duration: 0.55, ease: "easeOut" } });
-  }, [stage, jump]);
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: HEX_TOP[1] + 50 }}
-      animate={{ opacity: 1, y: HEX_TOP[stage], scale: HEX_SCALE[stage] }}
-      transition={{
-        opacity: { ...FLOAT_IN, delay: 0.1 },
-        y: stage === 1 ? { ...FLOAT_IN, delay: 0.1 } : SHIFT,
-      }}
-      aria-hidden
-      className="pointer-events-none absolute top-0 left-1/2 h-[150px] w-[180px] -translate-x-1/2"
-    >
-      <motion.div animate={jump} className="h-full w-full">
-        <OnboardingHex entryKey="lesson-complete" cue={HEX_ONBOARDING_TRIGGER.celebrate} cueDelayMs={600} />
-      </motion.div>
-    </motion.div>
-  );
-}
-
-const STATS: readonly StatSpec[] = [
-  {
-    id: "xp",
-    label: "Total XP",
-    value: <>+<CountUp to={40} delay={0.7} /></>,
-    background: "#FFC342",
-    shadow: "0 6px 14px rgba(255,195,66,0.22)",
-    labelColor: "#5A3E00",
-    accent: "#F5B301",
-    icon: <Star className="h-[22px] w-[22px] fill-[#F5B301] text-[#F5B301]" strokeWidth={1.5} />,
-  },
-  {
-    id: "accuracy",
-    label: "Accuracy",
-    value: <><CountUp to={92} delay={1.3} />%</>,
-    background: "#01A17F",
-    shadow: "0 6px 14px rgba(1,161,127,0.22)",
-    labelColor: "#FFFFFF",
-    accent: "#01A17F",
-    icon: <Check className="h-[22px] w-[22px] text-[#01A17F]" strokeWidth={2.4} />,
-  },
-  {
-    id: "time",
-    label: "Time",
-    value: <CountUp to={LESSON_SECONDS} delay={1.9} format={formatTime} />,
-    background: "#2F80ED",
-    shadow: "0 6px 14px rgba(47,128,237,0.22)",
-    labelColor: "#FFFFFF",
-    accent: "#2F80ED",
-    icon: <Clock className="h-[22px] w-[22px] text-[#2F80ED]" strokeWidth={2.2} />,
-  },
-];
-const STAT_CARD_DELAYS = [0.6, 1.2, 1.8] as const;
-
-/** Stage 2: the lesson's XP, accuracy and time, one card after another. */
-function StatsStage() {
-  return (
-    <>
-      <div className="absolute inset-x-4 top-[500px] flex gap-2">
-        {STATS.map((stat, i) => (
-          <motion.div
-            key={stat.id}
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ ...FLOAT_IN, delay: STAT_CARD_DELAYS[i] }}
-            className="flex min-w-0 flex-1"
-          >
-            <PopOnArrival delay={STAT_CARD_DELAYS[i] ?? 0} />
-            <StatCard stat={stat} />
-          </motion.div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-/** Plays the line pop for something that animates by itself, `delay` seconds in. */
-function PopOnArrival({ delay }: { delay: number }) {
-  useEffect(() => {
-    const timer = window.setTimeout(playLinePop, delay * 1000);
-    return () => window.clearTimeout(timer);
-  }, [delay]);
-  return null;
-}
-
-/** Stage 3: the battery refill, "+2" counting up under Hex. */
-function BatteryStage({ onGain }: { onGain: (gained: number) => void }) {
-  const gained = useCountUp(BATTERY_REWARD, 0.8);
-  useEffect(() => onGain(gained), [gained, onGain]);
-  return (
-    <>
-      <Line delay={0.6} className="top-[480px] left-1/2 -translate-x-1/2">
-        <div className="flex h-[56px] w-[96px] items-center justify-center rounded-[14px] border-[3px] border-[#FFB36B] bg-[#F78FC0] shadow-[0_6px_14px_rgba(247,143,192,0.3)]">
-          <span className="text-[26px] leading-none font-semibold text-white tabular-nums">+{gained}</span>
-        </div>
-      </Line>
-    </>
-  );
-}
-
-/** The battery in the corner: it fills as the reward counts up. */
-function BatteryChip({ gained }: { gained: number }) {
-  return (
-    <div className="absolute top-[51px] right-4 z-10 flex h-8 items-center gap-1.5 rounded-full border border-black/8 bg-white py-1 pr-3 pl-1.5 shadow-sm">
-      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#E9F5F0]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/stats/battery.png" alt="" draggable={false} className="h-[14px] w-[14px] select-none object-contain" />
-      </span>
-      <span className="text-[14px] leading-none font-semibold text-[#01A17F] tabular-nums">
-        {LEARNER_STATS.battery.current + gained}
-      </span>
-    </div>
-  );
-}
-
 /**
- * `/module?level=1&step=complete` — after the last screen: "Lesson complete!".
- * Three screens in turn (Continue steps through them). The title stays through
- * all three, bouncing on each change, and so does Hex,
- * jumping on the change, and ends up on top of the battery card. Each screen's lines float up
- * one by one with a sound: the XP / accuracy / time cards, each counting up;
- * then the battery refill, "+2", counting up as the corner chip fills.
+ * `/module?level=1&step=complete` — "Lesson complete!": the "LESSON_Complete"
+ * Rive artboard. Once it is ready, its `xp`, `accuracy` and `time` are set and
+ * its `play` trigger fired. Each value is written as a number, or as display
+ * text (`+40`, `92%`, `3:42`) if the artboard declares that property as a string.
  */
 export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }) {
   const router = useRouter();
-  const scale = useFrameScale();
-  const [stage, setStage] = useState<Stage>(1);
-  const [gained, setGained] = useState(0);
+  const { rive, RiveComponent, ready, fireTrigger } = useHexRive(
+    LAYOUT,
+    LESSON_COMPLETE.stateMachine,
+    LESSON_COMPLETE.artboard,
+    LESSON_COMPLETE.viewModel,
+  );
 
   useEffect(() => {
-    if (stage === 1) playCompleteChime();
-    else playLinePop();
-  }, [stage]);
-
-  const next = () => {
-    if (stage < LAST_STAGE) setStage((stage + 1) as Stage);
-    else (onContinue ?? (() => router.push("/level")))();
-  };
+    const instance = rive?.viewModelInstance;
+    if (!ready || !instance) return;
+    const set = (name: string, value: number, text: string) => {
+      const number = instance.number(name);
+      if (number) number.value = value;
+      else {
+        const string = instance.string(name);
+        if (string) string.value = text;
+      }
+    };
+    set(LESSON_COMPLETE.xpProperty, LESSON_XP, `+${LESSON_XP}`);
+    set(LESSON_COMPLETE.accuracyProperty, LESSON_ACCURACY, `${LESSON_ACCURACY}%`);
+    set(LESSON_COMPLETE.timeProperty, LESSON_SECONDS, formatTime(LESSON_SECONDS));
+    fireTrigger(LESSON_COMPLETE.playTrigger);
+  }, [rive, ready, fireTrigger]);
 
   return (
     <main className="onboarding-light relative h-dvh w-full overflow-hidden bg-white">
-      <div
-        className="absolute top-1/2 left-1/2 origin-center"
-        style={{
-          width: FRAME_W,
-          height: FRAME_H,
-          transform: `translate(-50%, -50%) scale(${scale ?? 1})`,
-          visibility: scale === null ? "hidden" : "visible",
-        }}
-      >
-        <BatteryChip gained={gained} />
-        <ScreenHex stage={stage} />
-        <Title stage={stage} />
-
-        <AnimatePresence mode="wait" initial={false}>
-          <motion.div
-            key={stage}
-            className="absolute inset-0"
-            exit={{ opacity: 0, transition: { duration: 0.2 } }}
-          >
-            {stage === 2 && <StatsStage />}
-            {stage === 3 && <BatteryStage onGain={setGained} />}
-          </motion.div>
-        </AnimatePresence>
-
-        <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-9">
-          <Button3D onClick={next} onPress={playClickSound} className="w-full">
-            Continue
-          </Button3D>
-        </div>
+      <RiveComponent aria-hidden className="absolute inset-0 h-full w-full" />
+      <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-9">
+        <Button3D
+          onClick={onContinue ?? (() => router.push("/level"))}
+          onPress={playClickSound}
+          className="w-full"
+        >
+          Continue
+        </Button3D>
       </div>
-      <Confetti active={stage === 1 || stage === 3} />
     </main>
   );
 }
