@@ -10,6 +10,7 @@ import {
 } from "@/lib/rive/runtime";
 import { INSTRUCTIONS_INTRO_SLIDES } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
+import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { IntroHeader } from "./IntroHeader";
 import { IntroFooter, type PrimaryState } from "./IntroFooter";
 import { CoverScreen } from "./CoverScreen";
@@ -62,6 +63,10 @@ export function InstructionsIntroFlow({
   const [boxTapped, setBoxTapped] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const triggerSound = useSound(true);
+  // The last answer checked, for the header bar's correct / wrong reaction.
+  const [answer, setAnswer] = useState<AnswerResult | null>(null);
+  const reportAnswer = (correct: boolean) =>
+    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
 
   // The single, persistent Robu mascot (see RobuStage) — every screen just
   // registers where it currently belongs; only one anchor is ever mounted at
@@ -243,6 +248,7 @@ export function InstructionsIntroFlow({
       if (selected === null) return;
       setChecked(true);
       triggerSound(isCorrect ? "win" : "lose");
+      reportAnswer(isCorrect);
       return;
     }
     if (isQuiz && checked && !isCorrect) {
@@ -255,6 +261,7 @@ export function InstructionsIntroFlow({
       if (selectedQuestionnaireId === null) return;
       setChecked(true);
       triggerSound(questionnaireIsCorrect ? "win" : "lose");
+      reportAnswer(questionnaireIsCorrect);
       return;
     }
     if (isQuestionnaire && checked && !questionnaireIsCorrect) {
@@ -333,6 +340,7 @@ export function InstructionsIntroFlow({
         <IntroHeader
           stepNumber={stepNumber}
           stepTotal={total}
+          answer={answer}
           bookmarked={bookmarked}
           onBack={goBack}
           onToggleBookmark={() => setBookmarked((b) => !b)}

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel } from "./FeedbackPanel";
@@ -90,6 +91,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
   // Once checked, the answer is locked and the right/wrong marks show.
   const [checked, setChecked] = useState(false);
   const quiz = step === "quiz";
+  const [answer, setAnswer] = useState<AnswerResult | null>(null);
 
   const show = (next: Step) => {
     // Coming back to the quiz later starts it fresh.

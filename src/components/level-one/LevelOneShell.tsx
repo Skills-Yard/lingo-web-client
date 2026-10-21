@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Button3D } from "@/components/ui/Button3D";
+import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { playClickSound, setClickSoundMuted } from "@/components/onboarding/clickSound";
 import { useVoiceover } from "@/components/onboarding/useVoiceover";
@@ -50,10 +51,12 @@ interface LevelOneShellProps {
   fit?: boolean;
   /** Clips played back-to-back once the screen opens; Hex talks meanwhile. */
   voiceover?: readonly string[];
+  /** The latest checked answer — plays the progress bar's correct / wrong reaction. */
+  answer?: AnswerResult | null;
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit }: LevelOneShellProps) {
+export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
@@ -140,6 +143,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
           <OnboardingHeader
             onBack={onBack ?? (() => router.back())}
             progress={{ step, total: LEVEL_ONE_STEPS }}
+            answer={answer}
             showCount
             muted={muted}
             onToggleMuted={toggleMuted}

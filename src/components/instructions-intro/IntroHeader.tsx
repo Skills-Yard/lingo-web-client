@@ -1,9 +1,12 @@
 import { ChevronLeft, Bookmark } from "lucide-react";
+import { RiveProgressBar, type AnswerResult } from "@/components/ui/RiveProgressBar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface IntroHeaderProps {
   stepNumber: number;
   stepTotal: number;
+  /** The latest checked answer — plays the bar's correct / wrong reaction. */
+  answer?: AnswerResult | null;
   bookmarked: boolean;
   onBack: () => void;
   onToggleBookmark: () => void;
@@ -12,6 +15,7 @@ interface IntroHeaderProps {
 export function IntroHeader({
   stepNumber,
   stepTotal,
+  answer,
   bookmarked,
   onBack,
   onToggleBookmark,
@@ -35,16 +39,11 @@ export function IntroHeader({
             / {String(stepTotal).padStart(2, "0")}
           </span>
         </div>
-        <div className="w-full flex gap-1">
-          {Array.from({ length: stepTotal }).map((_, i) => (
-            <div
-              key={i}
-              className={`h-1.5 rounded-full grow transition-all duration-300 ${
-                i < stepNumber ? "bg-primary" : "bg-muted"
-              }`}
-            />
-          ))}
-        </div>
+        <RiveProgressBar
+          value={(stepNumber / stepTotal) * 100}
+          answer={answer}
+          className="w-full"
+        />
       </div>
 
       <div className="flex items-center gap-1.5">

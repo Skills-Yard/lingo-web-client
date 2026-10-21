@@ -183,9 +183,10 @@ export const HEX_ONBOARDING_TRIGGER = {
 } as const;
 
 /** How long Hex's exit plays before the flow moves to the next screen. */
-export const HEX_EXIT_MS = 1000;
-/** The day / night scene's exit through the bottom runs longer. */
-export const HEX_EXIT_BOTTOM_MS = 1600;
+export const HEX_EXIT_MS = 700;
+
+/** Same, for the `exitBottom` exit used by the day / night scene. */
+export const HEX_EXIT_BOTTOM_MS = 700;
 
 /** Every screen opens the same way: `entryStyle` is set to `style`, `enter` is
  * fired, and the screen's own triggers follow it. */
@@ -330,6 +331,17 @@ export const LEVEL_BACKGROUND = {
   stateMachine: "State Machine 1",
   /** Used until the artboard's real size is read. */
   fallbackAspect: 390 / 844,
+} as const;
+
+/** The lesson progress bar — "LESSON_ProgressBar" in `hex.riv`, played by
+ * `ProgressBar_SM`; its `progress` property is the fill in percent (0-100). */
+export const PROGRESS_BAR = {
+  artboard: "LESSON_ProgressBar",
+  stateMachine: "ProgressBar_SM",
+  property: "progress",
+  /** Triggers on the view model, fired when an answer is checked. */
+  correctTrigger: "correct",
+  wrongTrigger: "wrong",
 } as const;
 
 export const HEX_HELLO_MS = 3000;

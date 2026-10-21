@@ -6,6 +6,7 @@ import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
+import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel } from "./FeedbackPanel";
@@ -40,6 +41,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
+  const [answer, setAnswer] = useState<AnswerResult | null>(null);
   // Hex sits in the question's slot and leaves as soon as an option is picked;
   // on Check the result panel brings its own Hex, entering inside it.
   const glideRef = useRef<HTMLDivElement>(null);
@@ -48,12 +50,15 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   return (
     <LevelOneShell
       step={7}
+      answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
       onBack={() => router.push(levelOneHref(6))}
       onContinue={() => {
-        if (!checked) setChecked(true);
-        else (onContinue ?? (() => router.push(levelOneRewardHref())))();
+        if (!checked) {
+          setChecked(true);
+          setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
+        } else (onContinue ?? (() => router.push(levelOneHref(7))))();
       }}
       overlay={
         <div ref={glideRef} className="pointer-events-none absolute inset-0">

@@ -18,6 +18,7 @@ import { Code2, Maximize, Minimize, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { configureRiveRuntime, LIVE_PLATFORM } from "@/lib/rive/runtime";
+import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
 import { hexRiveSource } from "@/lib/rive/hexFile";
 import { LevelBackground } from "./LevelBackground";
 import { LevelStartPopup } from "./LevelStartPopup";
@@ -471,7 +472,7 @@ function ModuleCard({
   place: CardPlace;
   compact: boolean;
 }) {
-  const fill = (progress / LESSONS_PER_MODULE) * 128;
+  const percent = (progress / LESSONS_PER_MODULE) * 100;
   const fade = { duration: 0.2 };
   return (
     <motion.div
@@ -501,14 +502,7 @@ function ModuleCard({
             <span className="w-[101px] shrink-0 text-xs font-medium leading-[18px]">
               {progress}/{LESSONS_PER_MODULE} completed
             </span>
-            <span className="relative h-2 w-32 overflow-hidden rounded-full bg-black/8 dark:bg-white/15">
-              <motion.span
-                className="absolute inset-y-0 left-0 rounded-full bg-[#5D4CFE]"
-                initial={false}
-                animate={{ width: fill }}
-                transition={{ duration: 0.6, ease: EASE }}
-              />
-            </span>
+            <RiveProgressBar value={percent} className="w-32 shrink-0" />
           </div>
         </div>
         <motion.div
@@ -540,9 +534,7 @@ function ModuleCard({
             <span className="w-[101px] shrink-0 text-xs font-medium leading-[18px]">
               {progress}/{LESSONS_PER_MODULE} completed
             </span>
-            <span className="relative h-2 w-32 overflow-hidden rounded-full bg-black/8 dark:bg-white/15">
-              <span className="absolute inset-y-0 left-0 rounded-full bg-[#5D4CFE]" style={{ width: fill }} />
-            </span>
+            <RiveProgressBar value={percent} className="w-32 shrink-0" />
           </div>
         </div>
         {/* eslint-disable-next-line @next/next/no-img-element */}
