@@ -38,7 +38,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
   const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
   const fullscreen = useFullscreen();
-  const [fromStep] = useState(() => (progress ? (lastShownStep ?? progress.step - 1) : null));
+  const [fromStep] = useState(() => (progress ? (lastShown?.step ?? progress.step - 1) : null));
   useEffect(() => {
     if (progress) lastShown = { step: progress.step, total: progress.total };
   }, [progress]);
