@@ -29,6 +29,10 @@ interface QuestionGridOptionsProps {
   onPick: (id: string) => void;
   /** The day/night question's shorter 139x109 cards (Figma "Frame 211"). */
   compact?: boolean;
+  /** The screen is being left: options float back down and out. */
+  leaving?: boolean;
+  /** Seconds to hold the options before they leave. */
+  leaveDelay?: number;
 }
 
 /**
@@ -50,6 +54,8 @@ export function QuestionGridOptions({
   spokenOption,
   onPick,
   compact = false,
+  leaving = false,
+  leaveDelay = 0,
 }: QuestionGridOptionsProps) {
   // If the options scroll (short phones), keep the one being read in view.
   const optionsRef = useRef<HTMLDivElement>(null);
@@ -82,7 +88,7 @@ export function QuestionGridOptions({
             key={option.id}
             type="button"
             onClick={() => onPick(option.id)}
-            {...optionDropIn(i)}
+            {...optionDropIn(selected, leaving, leaveDelay)}
             // Figma "Group 94" (138x150): the picture over a 43.65px label
             // strip, straight on the card (no tinted panel). Light: the
             // card's own khaki bottom edge from optionCardClass. Dark: each

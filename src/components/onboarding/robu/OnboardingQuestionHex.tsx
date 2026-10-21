@@ -1,5 +1,6 @@
 "use client";
 
+import { HexBleed, HEX_BLEED } from "./HexBleed";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { motion } from "framer-motion";
@@ -79,6 +80,9 @@ export function OnboardingQuestionHex({
     undefined,
     undefined,
     screenId,
+    null,
+    undefined,
+    HEX_BLEED,
   );
   useHexExit(fireTrigger, ready);
 
@@ -184,7 +188,7 @@ export function OnboardingQuestionHex({
       animate={{ opacity: 1, y: 0 }}
       transition={ENTER}
     >
-      <RiveComponent className="h-full w-full" />
+      <HexBleed Canvas={RiveComponent} />
     </motion.div>
   );
 }

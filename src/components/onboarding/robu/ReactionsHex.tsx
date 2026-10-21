@@ -1,5 +1,6 @@
 "use client";
 
+import { HexBleed, HEX_BLEED } from "./HexBleed";
 import { useCallback, useEffect, useRef } from "react";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import {
@@ -70,6 +71,9 @@ export function ReactionsHex({
     artboard,
     undefined,
     questionId,
+    null,
+    undefined,
+    HEX_BLEED,
   );
   useHexExit(fireTrigger, ready);
 
@@ -146,7 +150,7 @@ export function ReactionsHex({
 
   return (
     <div aria-hidden className={className}>
-      <RiveComponent className="h-full w-full" />
+      <HexBleed Canvas={RiveComponent} />
     </div>
   );
 }

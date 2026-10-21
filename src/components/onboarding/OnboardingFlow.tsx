@@ -19,7 +19,7 @@ import { StreakScreen } from "./StreakScreen";
 import { NameScreen } from "./NameScreen";
 import { TimeSliderScreen } from "./TimeSliderScreen";
 import type { HexExitRequest } from "./robu/hexExit";
-import { HEX_ENTER_STYLE, HEX_ENTRY_STYLE_BY_STEP, HEX_EXIT_MS } from "@/lib/rive/runtime";
+import { HEX_ENTER_STYLE, HEX_ENTRY_STYLE_BY_STEP, HEX_EXIT_BOTTOM_MS, HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { HexBackground } from "./robu/HexBackground";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
@@ -265,6 +265,10 @@ export function OnboardingFlow({
     exitingRef.current = false;
     setExiting(false);
   }, [index]);
+  // The day / night scene's Hex leaves through the bottom either way.
+  const exitDirection = (side: "exitLeft" | "exitRight"): HexExitRequest["direction"] =>
+    stepId === "learningTime" ? "exitBottom" : side;
+  const exitMs = exitRequest?.direction === "exitBottom" ? HEX_EXIT_BOTTOM_MS : HEX_EXIT_MS;
   const afterHexExit = (direction: HexExitRequest["direction"], proceed: () => void) => {
     if (!step) {
       proceed();
@@ -274,7 +278,7 @@ export function OnboardingFlow({
     exitingRef.current = true;
     setExiting(true);
     setExitRequest((prev) => ({ direction, key: (prev?.key ?? 0) + 1 }));
-    window.setTimeout(proceed, HEX_EXIT_MS);
+    window.setTimeout(proceed, direction === "exitBottom" ? HEX_EXIT_BOTTOM_MS : HEX_EXIT_MS);
   };
 
   const goNext = () => {
@@ -290,7 +294,7 @@ export function OnboardingFlow({
   const showSignUp = () => setIndex((current) => (current === -2 ? -1 : current));
 
   const goBack = () => {
-    afterHexExit("exitLeft", () => goTo(Math.max(-1, index - 1)));
+    afterHexExit(exitDirection("exitLeft"), () => goTo(Math.max(-1, index - 1)));
   };
 
   const setAnswer = (key: keyof OnboardingAnswers, value: string) =>
@@ -345,7 +349,7 @@ export function OnboardingFlow({
   const onNotificationScreen = step?.kind === "notification-permission";
   const handleCta = () => {
     if (onNotificationScreen) requestNotifications();
-    afterHexExit("exitRight", goNext);
+    afterHexExit(exitDirection("exitRight"), goNext);
   };
 
   // The CTA fades out on the splash, until the sign-up animation has
@@ -406,12 +410,8 @@ export function OnboardingFlow({
                 {/* Phone-width column, centered on tablets/desktops so options
                   don't stretch across a wide screen. */}
                 <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col">
-                  <OnboardingHeader
-                    onBack={goBack}
-                    progress={progress}
-                    muted={muted}
-                    onToggleMuted={() => setMuted((m) => !m)}
-                  />
+                  {/* Room for the persistent header drawn above the screens. */}
+                  <div aria-hidden className="h-[83px] shrink-0" />
 
                   {step.kind === "fox-message" && (
                     <FoxMessageScreen
@@ -477,6 +477,8 @@ export function OnboardingFlow({
                       className="flex-1"
                       heading={step.heading(answers)}
                       image={step.image}
+                      exiting={exiting}
+                      exitDelay={0}
                       voiceover={resolveVoiceover(step.voiceover, answers)}
                       onVoiceoverDone={() => setVoicedStepId(step.id)}
                       skipCount={skipCount}
@@ -509,12 +511,36 @@ export function OnboardingFlow({
                       skipCount={skipCount}
                       muted={muted}
                       zoxLayout={step.zoxLayout}
+                      exiting={exiting}
+                      exitDelay={(exitMs - 400) / 1000}
                     />
                   )}
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
+
+          {/* The header lives outside the screen crossfades, so it (and its
+            progress bar) is already there when the next screen arrives and
+            the bar only moves from the previous step to this one. */}
+          {step && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              // On the streak screen the header leaves with Hex's exit.
+              animate={{ opacity: exiting && step.kind === "streak" ? 0 : 1 }}
+              transition={{ duration: exiting ? 0.4 : 0.2 }}
+              className="pointer-events-none absolute inset-x-0 top-0 z-20"
+            >
+              <div className="pointer-events-auto mx-auto w-full max-w-md">
+                <OnboardingHeader
+                  onBack={goBack}
+                  progress={progress}
+                  muted={muted}
+                  onToggleMuted={() => setMuted((m) => !m)}
+                />
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* The CTA lives here, outside the screen transitions, so it never

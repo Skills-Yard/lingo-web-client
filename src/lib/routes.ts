@@ -4,5 +4,5 @@ export const onboardingHref = (step?: string) =>
   step ? `/onboarding?step=${step}` : "/onboarding";
 
 /** `/module?level=&step=` — one screen of a level, both 1-based. */
-export const moduleHref = (level: number, step: number) =>
+export const moduleHref = (level: number, step: number | string) =>
   `/module?level=${level}&step=${step}`;

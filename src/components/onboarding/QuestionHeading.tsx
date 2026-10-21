@@ -68,6 +68,10 @@ interface QuestionHeadingProps {
   headingClassName?: string;
   /** Full-width (335px) heading with nothing beside it — under a scene. */
   wide?: boolean;
+  /** The screen is being left: the heading floats back up and out. */
+  leaving?: boolean;
+  /** Seconds to hold the heading before it leaves. */
+  leaveDelay?: number;
 }
 
 /**
@@ -139,6 +143,8 @@ export function QuestionHeading({
   hex,
   headingClassName = ONBOARDING_QUESTION_CLASS,
   wide = false,
+  leaving = false,
+  leaveDelay = 0,
 }: QuestionHeadingProps) {
   // Every question row (career, reactions artboards, list questions) shares
   // the same big fox and spacing. The list questions' own Hex artboard draws
@@ -163,7 +169,7 @@ export function QuestionHeading({
         // the empty space. Resizing the fox therefore never moves the question.
         <div
           aria-hidden
-          className={`relative shrink-0 ${
+          className={`relative z-20 shrink-0 ${
             big ? (hex ? "h-[7.5rem] w-[5rem]" : "h-[7.25rem] w-[5.75rem]") : "h-[6rem] w-[4.5rem]"
           } sm:h-[7rem] sm:w-[5.5rem]`}
         >
@@ -192,9 +198,12 @@ export function QuestionHeading({
         above); the fox beside it stays mounted. */}
       <motion.h1
         key={screenId}
-        initial={{ opacity: 0, y: -24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        initial={{ opacity: 0, y: -60 }}
+        animate={leaving ? { opacity: 0, y: -60 } : { opacity: 1, y: 0 }}
+        transition={leaving ? { duration: 0.4, ease: [0.5, 0, 1, 1], delay: leaveDelay } : {
+          opacity: { duration: 0.3, delay: 0.3 },
+          y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
+        }}
         className={`relative z-10 ${wide ? "w-full max-w-[335px] text-center" : "min-w-0 flex-1 pl-16 text-left"} ${headingClassName}`}
       >
         {parts.map(({ span, cut }, i) => (

@@ -71,7 +71,7 @@ export function NotificationPermissionScreen({
 
       <div className="flex min-h-0 w-full flex-1 items-center justify-center">
         <NotifyHex
-          className="w-full max-w-[24rem]"
+          className="w-full max-w-[24rem] -translate-y-24"
           // Sized by its own aspect, but never taller than the space left.
           style={{ aspectRatio: NOTIFY_ASPECT, maxHeight: "100%" }}
         />

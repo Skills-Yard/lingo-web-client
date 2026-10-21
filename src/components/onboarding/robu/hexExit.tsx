@@ -4,7 +4,7 @@ import { createContext, useContext, useEffect, useRef } from "react";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 
 export type HexExitRequest = {
-  direction: "exitLeft" | "exitRight";
+  direction: "exitLeft" | "exitRight" | "exitBottom";
   /** Changes with every request, so the same direction can fire twice. */
   key: number;
 };

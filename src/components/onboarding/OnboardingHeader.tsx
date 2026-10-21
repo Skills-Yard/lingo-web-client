@@ -32,7 +32,7 @@ interface OnboardingHeaderProps {
 // The step the progress bar last showed. Each screen mounts a fresh header,
 // so this is what lets the fill start from where it was — growing when the
 // user moves forward, shrinking back when they return to an earlier question.
-let lastShownStep: number | null = null;
+let lastShown: { step: number; total: number } | null = null;
 
 export function OnboardingHeader({ onBack, progress, answer, showCount, muted, onToggleMuted }: OnboardingHeaderProps) {
   const { theme, toggleTheme } = useTheme();
@@ -40,7 +40,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
   const fullscreen = useFullscreen();
   const [fromStep] = useState(() => (progress ? (lastShownStep ?? progress.step - 1) : null));
   useEffect(() => {
-    if (progress) lastShownStep = progress.step;
+    if (progress) lastShown = { step: progress.step, total: progress.total };
   }, [progress]);
   return (
     // Fixed 83px box, placed from the top edge: page count at 27px, bar at

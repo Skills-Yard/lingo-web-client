@@ -48,6 +48,7 @@ export function useHexRive(
   entryKey: string | null = null,
   entryStyleOverride: number | null = null,
   enterTrigger: string = HEX_ONBOARDING_TRIGGER.enter,
+  bleed?: { x: number; y: number },
 ) {
   const { theme } = useTheme();
   const contextEntryStyle = useContext(HexEntryStyleContext);
@@ -60,6 +61,29 @@ export function useHexRive(
     autoplay: false,
     layout,
   });
+
+  // The canvas reaches `bleed` past Hex's box (see HexBleed); the artboard
+  // is fitted into the box itself. Rive resets its layout bounds to the whole
+  // canvas on every resize, so that step is wrapped to inset them again.
+  useEffect(() => {
+    if (!rive || !bleed) return;
+    const target = rive as unknown as { resizeToCanvas: () => void; canvas: HTMLCanvasElement };
+    const original = target.resizeToCanvas.bind(rive);
+    const inset = () => {
+      original();
+      const dpr = rive.devicePixelRatioUsed || window.devicePixelRatio || 1;
+      const padX = bleed.x * dpr;
+      const padY = bleed.y * dpr;
+      const { width, height } = target.canvas;
+      if (width <= padX * 2 || height <= padY * 2) return;
+      rive.layout = rive.layout.copyWith({ minX: padX, minY: padY, maxX: width - padX, maxY: height - padY });
+    };
+    target.resizeToCanvas = inset;
+    rive.resizeDrawingSurfaceToCanvas();
+    return () => {
+      target.resizeToCanvas = original;
+    };
+  }, [rive, bleed]);
 
   const viewModelInstance = useMemo(
     () => rive?.viewModelByName(viewModel)?.defaultInstance() ?? null,

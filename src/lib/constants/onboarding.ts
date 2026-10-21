@@ -543,7 +543,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 2,
-    voiceover: ["/audios/chasing.mp3", "/audios/screen-1-options.mpeg"],
+    voiceover: ["/audios/chasing.mp3"],
     cta: "Continue",
   },
   {
@@ -579,7 +579,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 0,
-    voiceover: ["/audios/WYP_Ques.m4a", "/audios/WYP_Options.m4a"],
+    voiceover: ["/audios/WYP_Ques.m4a"],
     cta: "Continue",
   },
   {
@@ -595,7 +595,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 0,
-    voiceover: ["/audios/HYW_Ques.m4a", "/audios/HYW_Options.m4a"],
+    voiceover: ["/audios/HYW_Ques.m4a"],
     cta: "Continue",
   },
   {
@@ -642,7 +642,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 1,
-    voiceover: ["/audios/wish-to-achive.m4a", "/audios/wish-to-achive-option.mp3"],
+    voiceover: ["/audios/wish-to-achive.m4a"],
     cta: "Continue",
   },
   {
@@ -671,7 +671,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: DAYNIGHT_ARTBOARD,
     reactionsStateMachine: DAYNIGHT_STATE_MACHINE,
-    voiceover: ["/audios/best_time_Ques.m4a", "/audios/best_time_Option.m4a"],
+    voiceover: ["/audios/best_time_Ques.m4a"],
     cta: "Continue",
   },
   {
@@ -717,7 +717,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: STARTING_POINT_OPTIONS,
     answerKey: "startingPoint",
-    voiceover: ["/audios/path.mp3", "/audios/path-option.mp3"],
+    voiceover: ["/audios/path.mp3"],
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 3,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Button3D } from "@/components/ui/Button3D";
@@ -18,10 +18,13 @@ const FRAME_H = 844;
 const MAX_SCALE = 1.5;
 
 /** Screens in Level 1 (the progress bar's total). */
-export const LEVEL_ONE_STEPS = 8;
+export const LEVEL_ONE_STEPS = 7;
 
 /** Level 1's `step`th screen (1-based) — `/module?level=1&step=N`. */
 export const levelOneHref = (step: number) => moduleHref(1, step);
+
+/** The reward screen between 6 and 7, not one of the numbered screens. */
+export const levelOneRewardHref = () => moduleHref(1, "reward");
 
 interface LevelOneShellProps {
   /** 1-based screen number, shown in the progress bar. */
@@ -69,7 +72,9 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
   // With `fit`: the stage height (frame px) the content was found to need.
   const needRef = useRef(0);
 
-  useEffect(() => {
+  // Layout effect: the stage is measured before first paint, so the header
+  // (and its bar) is on screen from the very first frame.
+  useLayoutEffect(() => {
     const main = mainRef.current;
     if (!main) return;
     const measure = () => {
@@ -131,7 +136,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         {/* The header sits 24px lower than the shared one, putting the page
           count 51px from the top; the negative margin keeps the content
           below exactly where it was. */}
-        <div className="relative z-10 mx-auto -mb-6 w-full max-w-[390px] pt-6">
+        <div className="relative z-10 mx-auto -mb-6 w-full pt-6">
           <OnboardingHeader
             onBack={onBack ?? (() => router.back())}
             progress={{ step, total: LEVEL_ONE_STEPS }}
@@ -144,13 +149,13 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         {/* The scroller spans the device, so a child can run edge to edge;
           the rest of the content stays in the centred column. */}
         <div ref={scrollerRef} className="scrollbar-none min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-          <div className={`mx-auto flex min-h-full w-full max-w-[390px] flex-col items-center px-4 ${flush ? "pb-0" : "pb-4"}`}>
+          <div className={`mx-auto flex min-h-full w-full flex-col items-center px-4 ${flush ? "pb-0" : "pb-4"}`}>
             {children}
           </div>
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto w-full max-w-[390px] shrink-0 px-4 pb-9">
+      <div className="relative z-10 mx-auto w-full shrink-0 px-4 pb-9">
         <Button3D
           onClick={() => onContinue?.()}
           onPress={playClickSound}

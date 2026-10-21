@@ -1,5 +1,6 @@
 "use client";
 
+import { HexBleed, HEX_BLEED } from "@/components/onboarding/robu/HexBleed";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Check, X } from "lucide-react";
@@ -63,6 +64,7 @@ export function OnboardingHex({
     entryKey,
     entryStyle,
     enter,
+    HEX_BLEED,
   );
   // While the screen's voiceover plays he talks — a random `talk`/`talk2`/
   // `talk3` per clip — and `stopTalk` follows once it ends.
@@ -107,7 +109,7 @@ export function OnboardingHex({
     const timer = window.setTimeout(() => fireNow(cue), cueDelayMs);
     return () => window.clearTimeout(timer);
   }, [ready, cue, cueDelayMs, fireNow]);
-  return <RiveComponent className="h-full w-full" />;
+  return <HexBleed Canvas={RiveComponent} />;
 }
 
 
@@ -173,9 +175,9 @@ export function FeedbackPanel({
       initial={{ y: "100%" }}
       animate={{ y: open ? 0 : "100%" }}
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
-      className={`absolute inset-x-0 bottom-0 z-0 rounded-t-[28px] px-5 pt-5 pb-[144px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
+      className={`absolute inset-x-0 bottom-0 z-0 rounded-t-[28px] px-4 pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
     >
-      <div className="mx-auto flex w-full max-w-[358px] items-center justify-between gap-2">
+      <div className="mx-auto flex w-full items-center justify-between gap-2">
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
             <span className={`flex size-7 shrink-0 items-center justify-center rounded-full text-white ${look.badge}`}>

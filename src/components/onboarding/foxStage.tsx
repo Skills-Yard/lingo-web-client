@@ -214,7 +214,7 @@ const HIDE_FADE = { duration: 0.25, delay: 0.3 } as const;
 const UNHIDE_DELAY_MS = 350;
 /** How long after an exit request Hex stays visible — his exit plays within
  * this, then he is hidden until the next screen's slot (see HEX_EXIT_MS). */
-const HEX_EXIT_VISIBLE_MS = 650;
+const HEX_EXIT_VISIBLE_MS = 550;
 
 /**
  * The flow's one fox. Every frame it reads the current slot's on-screen box
