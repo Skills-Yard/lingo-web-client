@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useAnimationControls } from "framer-motion";
 import { Check, Clock, Star } from "lucide-react";
 import { Button3D } from "@/components/ui/Button3D";
 import { StatCard, type StatSpec } from "@/components/home/DashboardScreen";
@@ -75,29 +75,63 @@ function Line({ delay, className, children }: { delay: number; className: string
   );
 }
 
-const Title = ({ delay, top }: { delay: number; top: number }) => (
-  <Line delay={delay} className="inset-x-0 text-center" >
-    <h1 style={{ marginTop: top }} className="text-[24px] leading-8 font-semibold text-[#01A17F]">
-      Lesson complete!
-    </h1>
-  </Line>
-);
+/** Where the title and Hex sit (px from the frame's top) on each screen. */
+const TITLE_TOP: Record<Stage, number> = { 1: 290, 2: 278, 3: 230 };
+const HEX_TOP: Record<Stage, number> = { 1: 130, 2: 100, 3: 357 };
+/** On the third screen he is smaller and sits right on top of the battery card. */
+const HEX_SCALE: Record<Stage, number> = { 1: 1, 2: 1, 3: 0.72 };
+const SHIFT = { type: "spring", stiffness: 110, damping: 15 } as const;
 
-const HexSpot = ({ delay, className, stage, celebrate }: { delay: number; className: string; stage: Stage; celebrate?: boolean }) => (
-  <Line delay={delay} className={className}>
-    <OnboardingHex
-      entryKey={`lesson-complete-${stage}`}
-      cue={celebrate ? HEX_ONBOARDING_TRIGGER.celebrate : null}
-      cueDelayMs={600}
-    />
-  </Line>
-);
+/** "Lesson complete!": one title for all three screens, bouncing whenever the screen changes. */
+function Title({ stage }: { stage: Stage }) {
+  const bounce = useAnimationControls();
+  useEffect(() => {
+    if (stage > 1) void bounce.start({ scale: [1, 1.16, 0.96, 1], transition: { duration: 0.5 } });
+  }, [stage, bounce]);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: TITLE_TOP[1] + 50 }}
+      animate={{ opacity: 1, y: TITLE_TOP[stage] }}
+      transition={{ ...FLOAT_IN, delay: stage === 1 ? 0.9 : 0, y: stage === 1 ? { ...FLOAT_IN, delay: 0.9 } : SHIFT }}
+      className="absolute inset-x-0 top-0 z-10 text-center"
+    >
+      <motion.h1 animate={bounce} className="text-[24px] leading-8 font-semibold text-[#01A17F]">
+        Lesson complete!
+      </motion.h1>
+    </motion.div>
+  );
+}
+
+/** Hex: one Hex for all three screens, jumping when the screen changes, and
+ * ending up small on top of the battery card. */
+function ScreenHex({ stage }: { stage: Stage }) {
+  const jump = useAnimationControls();
+  useEffect(() => {
+    if (stage > 1) void jump.start({ y: [0, -34, 0], transition: { duration: 0.55, ease: "easeOut" } });
+  }, [stage, jump]);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: HEX_TOP[1] + 50 }}
+      animate={{ opacity: 1, y: HEX_TOP[stage], scale: HEX_SCALE[stage] }}
+      transition={{
+        opacity: { ...FLOAT_IN, delay: 0.1 },
+        y: stage === 1 ? { ...FLOAT_IN, delay: 0.1 } : SHIFT,
+      }}
+      aria-hidden
+      className="pointer-events-none absolute top-0 left-1/2 h-[150px] w-[180px] -translate-x-1/2"
+    >
+      <motion.div animate={jump} className="h-full w-full">
+        <OnboardingHex entryKey="lesson-complete" cue={HEX_ONBOARDING_TRIGGER.celebrate} cueDelayMs={600} />
+      </motion.div>
+    </motion.div>
+  );
+}
 
 const STATS: readonly StatSpec[] = [
   {
     id: "xp",
     label: "Total XP",
-    value: <>+<CountUp to={40} delay={1.1} /></>,
+    value: <>+<CountUp to={40} delay={0.7} /></>,
     background: "#FFC342",
     shadow: "0 6px 14px rgba(255,195,66,0.22)",
     labelColor: "#5A3E00",
@@ -107,7 +141,7 @@ const STATS: readonly StatSpec[] = [
   {
     id: "accuracy",
     label: "Accuracy",
-    value: <><CountUp to={92} delay={1.7} />%</>,
+    value: <><CountUp to={92} delay={1.3} />%</>,
     background: "#01A17F",
     shadow: "0 6px 14px rgba(1,161,127,0.22)",
     labelColor: "#FFFFFF",
@@ -117,7 +151,7 @@ const STATS: readonly StatSpec[] = [
   {
     id: "time",
     label: "Time",
-    value: <CountUp to={LESSON_SECONDS} delay={2.3} format={formatTime} />,
+    value: <CountUp to={LESSON_SECONDS} delay={1.9} format={formatTime} />,
     background: "#2F80ED",
     shadow: "0 6px 14px rgba(47,128,237,0.22)",
     labelColor: "#FFFFFF",
@@ -125,24 +159,12 @@ const STATS: readonly StatSpec[] = [
     icon: <Clock className="h-[22px] w-[22px] text-[#2F80ED]" strokeWidth={2.2} />,
   },
 ];
-const STAT_CARD_DELAYS = [1, 1.6, 2.2] as const;
-
-/** Stage 1: Hex with his star eyes, "Lesson complete!". */
-function CompleteStage() {
-  return (
-    <>
-      <HexSpot delay={0.1} stage={1} celebrate className="top-[130px] left-1/2 h-[160px] w-[190px] -translate-x-1/2" />
-      <Title delay={0.9} top={290} />
-    </>
-  );
-}
+const STAT_CARD_DELAYS = [0.6, 1.2, 1.8] as const;
 
 /** Stage 2: the lesson's XP, accuracy and time, one card after another. */
 function StatsStage() {
   return (
     <>
-      <HexSpot delay={0.1} stage={2} className="top-[100px] left-1/2 h-[150px] w-[180px] -translate-x-1/2" />
-      <Title delay={0.5} top={278} />
       <div className="absolute inset-x-4 top-[500px] flex gap-2">
         {STATS.map((stat, i) => (
           <motion.div
@@ -172,13 +194,11 @@ function PopOnArrival({ delay }: { delay: number }) {
 
 /** Stage 3: the battery refill, "+2" counting up under Hex. */
 function BatteryStage({ onGain }: { onGain: (gained: number) => void }) {
-  const gained = useCountUp(BATTERY_REWARD, 1.6);
+  const gained = useCountUp(BATTERY_REWARD, 0.8);
   useEffect(() => onGain(gained), [gained, onGain]);
   return (
     <>
-      <Title delay={0.2} top={230} />
-      <HexSpot delay={0.8} stage={3} className="top-[380px] left-1/2 h-[110px] w-[130px] -translate-x-1/2" />
-      <Line delay={1.4} className="top-[490px] left-1/2 -translate-x-1/2">
+      <Line delay={0.6} className="top-[480px] left-1/2 -translate-x-1/2">
         <div className="flex h-[56px] w-[96px] items-center justify-center rounded-[14px] border-[3px] border-[#FFB36B] bg-[#F78FC0] shadow-[0_6px_14px_rgba(247,143,192,0.3)]">
           <span className="text-[26px] leading-none font-semibold text-white tabular-nums">+{gained}</span>
         </div>
@@ -204,10 +224,11 @@ function BatteryChip({ gained }: { gained: number }) {
 
 /**
  * `/module?level=1&step=complete` — after the last screen: "Lesson complete!".
- * Three screens in turn (Continue steps through them), each showing its lines
- * one by one with a floating entrance and a sound: Hex and the title; the
- * XP / accuracy / time cards, each counting up; and the battery refill, "+2",
- * counting up as the corner chip fills.
+ * Three screens in turn (Continue steps through them). The title stays through
+ * all three, bouncing on each change, and so does Hex,
+ * jumping on the change, and ends up on top of the battery card. Each screen's lines float up
+ * one by one with a sound: the XP / accuracy / time cards, each counting up;
+ * then the battery refill, "+2", counting up as the corner chip fills.
  */
 export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }) {
   const router = useRouter();
@@ -217,6 +238,7 @@ export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }
 
   useEffect(() => {
     if (stage === 1) playCompleteChime();
+    else playLinePop();
   }, [stage]);
 
   const next = () => {
@@ -236,6 +258,8 @@ export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }
         }}
       >
         <BatteryChip gained={gained} />
+        <ScreenHex stage={stage} />
+        <Title stage={stage} />
 
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -243,7 +267,6 @@ export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }
             className="absolute inset-0"
             exit={{ opacity: 0, transition: { duration: 0.2 } }}
           >
-            {stage === 1 && <CompleteStage />}
             {stage === 2 && <StatsStage />}
             {stage === 3 && <BatteryStage onGain={setGained} />}
           </motion.div>
