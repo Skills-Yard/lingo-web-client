@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
 import { ChevronLeft, Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
 
 /** The theme switch's wipe colours — each theme's onboarding background
  * (`--background` in globals.css, `.onboarding-light` and its dark override). */
@@ -20,6 +21,8 @@ interface OnboardingHeaderProps {
    * connector screens between them (foxy intro, ready-check, notification
    * permission) don't — there's nothing to show progress *of* there. */
   progress?: { step: number; total: number };
+  /** The latest checked answer — plays the bar's correct / wrong reaction. */
+  answer?: AnswerResult | null;
   /** Shows "step/total" above the bar. */
   showCount?: boolean;
   muted: boolean;
@@ -31,15 +34,11 @@ interface OnboardingHeaderProps {
 // user moves forward, shrinking back when they return to an earlier question.
 let lastShownStep: number | null = null;
 
-export function OnboardingHeader({ onBack, progress, showCount, muted, onToggleMuted }: OnboardingHeaderProps) {
+export function OnboardingHeader({ onBack, progress, answer, showCount, muted, onToggleMuted }: OnboardingHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
   const fullscreen = useFullscreen();
-  const [fromStep] = useState(() => {
-    if (!progress) return null;
-    return lastShownStep ?? progress.step - 1;
-  });
-  // Questions share one screen, so this header can outlive a step change.
+  const [fromStep] = useState(() => (progress ? (lastShownStep ?? progress.step - 1) : null));
   useEffect(() => {
     if (progress) lastShownStep = progress.step;
   }, [progress]);
@@ -64,44 +63,15 @@ export function OnboardingHeader({ onBack, progress, showCount, muted, onToggleM
               {String(progress.total).padStart(2, "0")}
             </span>
           )}
-          {/* One continuous track. Each question's header mounts fresh with
-              its screen, so the fill starts at the previous question's
-              length and grows to this one's. It ends 12px short of the
-              right-hand buttons — three of them when full screen is offered. */}
-          <div className={`absolute left-[67px] ${fullscreen.available ? "right-[161px]" : "right-[114px]"} top-[57px] h-3 overflow-hidden rounded-full bg-black/10 shadow-[inset_0_1px_2px_rgba(0,0,0,0.12)] dark:bg-white/15`}>
-            {/* The fill keeps a flat right edge while unfinished — it only
-                rounds off once the bar is full. */}
-            <motion.div
-              className={`relative h-full overflow-hidden rounded-l-full bg-linear-to-r from-[#00B8A9] via-[#0A9EAE] to-[#1287B3] shadow-[0_0_10px_rgba(0,184,169,0.55)] ${
-                progress.step >= progress.total ? "rounded-r-full" : ""
-              }`}
-              initial={{ width: `${((fromStep ?? progress.step - 1) / progress.total) * 100}%` }}
-              animate={{ width: `${(progress.step / progress.total) * 100}%` }}
-              transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
-            >
-              {/* Glossy shine: a soft light stripe along the top of the fill. */}
-              <span
-                aria-hidden
-                className="pointer-events-none absolute inset-x-1.5 top-0.5 h-0.75 rounded-full bg-white/50"
-              />
-              {/* Sweeping highlight that loops across the fill. */}
-              <motion.span
-                aria-hidden
-                className="pointer-events-none absolute inset-y-0 w-1/3 bg-linear-to-r from-transparent via-white/40 to-transparent"
-                initial={{ x: "-120%" }}
-                animate={{ x: "380%" }}
-                transition={{ duration: 1.8, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.8 }}
-              />
-              {/* Bright leading edge — dropped once the bar is full, where it
-                  would read as a gap before the track's end. */}
-              {progress.step < progress.total && (
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute inset-y-0 right-0 w-0.75 bg-white/70"
-                />
-              )}
-            </motion.div>
-          </div>
+          {/* Rive draws the bar; it animates to the new fill itself. It ends
+              12px short of the right-hand buttons — three of them when full
+              screen is offered. */}
+          <PersistentProgressBar
+            value={(progress.step / progress.total) * 100}
+            from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
+            answer={answer}
+            className={`absolute left-[67px] ${fullscreen.available ? "right-[161px]" : "right-[114px]"} top-[63px] -translate-y-1/2`}
+          />
         </>
       )}
 

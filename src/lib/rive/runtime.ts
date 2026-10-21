@@ -328,6 +328,17 @@ export const LEVEL_BACKGROUND = {
   fallbackAspect: 390 / 844,
 } as const;
 
+/** The lesson progress bar — "LESSON_ProgressBar" in `hex.riv`, played by
+ * `ProgressBar_SM`; its `progress` property is the fill in percent (0-100). */
+export const PROGRESS_BAR = {
+  artboard: "LESSON_ProgressBar",
+  stateMachine: "ProgressBar_SM",
+  property: "progress",
+  /** Triggers on the view model, fired when an answer is checked. */
+  correctTrigger: "correct",
+  wrongTrigger: "wrong",
+} as const;
+
 export const HEX_HELLO_MS = 3000;
 export const HEX_TAP_MS = 1400;
 export const HEX_TYPING_MS = 2200;

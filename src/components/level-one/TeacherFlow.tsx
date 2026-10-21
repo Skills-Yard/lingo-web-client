@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
@@ -91,6 +92,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
   // Once checked, the answer is locked and the right/wrong marks show.
   const [checked, setChecked] = useState(false);
   const quiz = step === "quiz";
+  const [answer, setAnswer] = useState<AnswerResult | null>(null);
 
   const show = (next: Step) => {
     // Coming back to the quiz later starts it fresh.
@@ -109,6 +111,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
   return (
     <LevelOneShell
       step={quiz ? 3 : 2}
+      answer={answer}
       // The quiz's question and options are read once, until it is checked.
       voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
@@ -134,7 +137,10 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         if (!quiz) {
           show("quiz");
           router.push(levelOneHref(3));
-        } else if (!checked) setChecked(true);
+        } else if (!checked) {
+          setChecked(true);
+          setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
+        }
         else router.push(levelOneHref(4));
       }}
     >
