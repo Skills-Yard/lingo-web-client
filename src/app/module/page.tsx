@@ -3,7 +3,7 @@ import { ExamplesScreen } from "@/components/level-one/ExamplesScreen";
 import { InstructionQuizScreen } from "@/components/level-one/InstructionQuizScreen";
 import { LevelOneScreen } from "@/components/level-one/LevelOneScreen";
 import { MoveHexScreen } from "@/components/level-one/MoveHexScreen";
-import { OpenItScreen } from "@/components/level-one/OpenItScreen";
+import { RewardScreen } from "@/components/level-one/RewardScreen";
 import { TeacherFlow } from "@/components/level-one/TeacherFlow";
 import { VideoScreen } from "@/components/level-one/VideoScreen";
 
@@ -28,11 +28,11 @@ function levelOneScreen(step: string) {
     // "What are instructions known as?"
     case "6":
       return <InstructionQuizScreen />;
-    // "Giving instruction is same as giving commands".
-    case "7":
-      return <OpenItScreen />;
+    // The gift after the quiz; not counted in the 8.
+    case "reward":
+      return <RewardScreen />;
     // "Let's give some command to Mini": the board.
-    case "8":
+    case "7":
       return <MoveHexScreen />;
     default:
       return null;
@@ -40,7 +40,7 @@ function levelOneScreen(step: string) {
 }
 
 /**
- * A module's screens: `/module?level=1&step=1` … `step=8` (both default to
+ * A module's screens: `/module?level=1&step=1` … `step=7` (both default to
  * 1). Only Level 1 exists so far.
  */
 export default async function ModulePage({

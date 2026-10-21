@@ -158,7 +158,7 @@ export function HexGlide({
   return (
     <motion.div
       aria-hidden
-      className="pointer-events-none absolute top-0 left-0"
+      className="pointer-events-none absolute top-0 left-0 z-30"
       initial={false}
       animate={{ x: rect.x, y: rect.y, width: rect.width, height: rect.height }}
       transition={GLIDE_TRANSITION}

@@ -23,19 +23,14 @@ const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
 export const REWARD_RIVE_SRC = "/animations/mera_updated_box.riv";
 
 /**
- * The home screen's live platform (`pathBuilding.riv`): the slab Hex stands
- * on. Its "PathBuilding" artboard plays the `Path_SM` state machine;
- * firing the `activate` trigger on its `PathBuilding` view model starts the
- * animation.
+ * The home screen's live platform: the slab Hex stands on. It is the
+ * "PathBuilding" artboard in `hex.riv`, playing `PathBuilding_SM` on load.
  */
 export const LIVE_PLATFORM = {
-  src: "/animations/pathBuilding.riv",
   artboard: "PathBuilding",
-  stateMachine: "Path_SM",
-  viewModel: "PathBuilding",
-  activateTrigger: "activate",
-  width: 177,
-  height: 107,
+  stateMachine: "PathBuilding_SM",
+  width: 88,
+  height: 54,
 } as const;
 
 /**
@@ -169,6 +164,8 @@ export const HEX_ONBOARDING_TRIGGER = {
   /** Leaving the greeting screen forward (Continue) / backward (Back). */
   exitLeft: "exitLeft",
   exitRight: "exitRight",
+  /** Leaving straight down (the day / night screen). */
+  exitBottom: "exitBottom",
   /** Greeting screen. */
   hi: "hi",
   /** "Are you ready?" screen. */

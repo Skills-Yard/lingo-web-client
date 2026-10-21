@@ -5,7 +5,12 @@ import { useRouter } from "next/navigation";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
 import { moduleHref, onboardingHref } from "@/lib/routes";
 import type { HomeTab } from "./BottomNav";
+import { CareerDetailScreen } from "./CareerDetailScreen";
+import { careerById } from "./careersData";
+import { CareersScreen } from "./CareersScreen";
+import { DashboardScreen } from "./DashboardScreen";
 import { HomeScreen } from "./HomeScreen";
+import { MainHomeScreen } from "./MainHomeScreen";
 import { ProfileScreen } from "./ProfileScreen";
 
 /** Nav tabs that have a page; the others are inert for now. */
@@ -30,6 +35,45 @@ export function LevelRoute() {
   return (
     <HomeScreen onNavigate={useTabNavigation()} onStart={() => router.push(moduleHref(1, 1))} />
   );
+}
+
+/** `/home` — the main home; Continue resumes the learner's path. */
+export function MainHomeRoute() {
+  const router = useRouter();
+  const json = useSyncExternalStore(subscribeNever, readOnboardingAnswersJson, () => "");
+  const name = useMemo(() => parseOnboardingAnswers(json).name?.trim(), [json]);
+  return (
+    <MainHomeScreen
+      name={name || undefined}
+      onContinue={() => router.push("/level")}
+    />
+  );
+}
+
+/** `/careers/<id>` — one career; Start goes on to the level path. */
+export function CareerRoute({ id }: { id: string }) {
+  const router = useRouter();
+  const career = careerById(id);
+  if (!career) return null;
+  return (
+    <CareerDetailScreen
+      career={career}
+      onBack={() => router.push("/careers")}
+      onStart={() => router.push("/level")}
+    />
+  );
+}
+
+/** `/dashboard` — the dashboard tab, greeting the learner by their onboarding name. */
+export function DashboardRoute() {
+  const json = useSyncExternalStore(subscribeNever, readOnboardingAnswersJson, () => "");
+  const name = useMemo(() => parseOnboardingAnswers(json).name?.trim(), [json]);
+  return <DashboardScreen name={name || undefined} />;
+}
+
+/** `/careers` — the careers tab. */
+export function CareersRoute() {
+  return <CareersScreen />;
 }
 
 /** `/profile` — the learner's profile; "Redo onboarding" goes back to `/onboarding`. */

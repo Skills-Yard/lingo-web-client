@@ -23,7 +23,7 @@ const showStepInUrl = (step: string | undefined) =>
  * The onboarding at `/onboarding`. `?step=` opens it on any screen and
  * follows it as it moves, so a refresh stays put. Answers are kept for the
  * session as they're given, so a screen opened directly still quotes the
- * earlier ones. Finishing it lands on the level page.
+ * earlier ones. Finishing it lands on the home page.
  */
 export function AppFlow({ initialStep }: { initialStep?: string }) {
   const router = useRouter();
@@ -47,7 +47,7 @@ export function AppFlow({ initialStep }: { initialStep?: string }) {
       initialAnswers={parseOnboardingAnswers(savedAnswersJson)}
       onStepChange={showStepInUrl}
       onAnswersChange={saveOnboardingAnswers}
-      onComplete={() => router.push("/level")}
+      onComplete={() => router.push("/home")}
     />
   );
 }

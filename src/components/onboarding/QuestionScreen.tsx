@@ -41,6 +41,10 @@ type QuestionScreenProps = {
   /** "row": Zox beside the heading — see QuestionHeading. */
   zoxLayout?: "row";
   className?: string;
+  /** The user is leaving: the heading and options float back out. */
+  exiting?: boolean;
+  /** Seconds to hold them before they leave: when Hex has finished leaving. */
+  exitDelay?: number;
 } & (
   | { kind: "question-list"; options: OnboardingListOption[]; variant?: "tiles" }
   | { kind: "question-grid"; options: OnboardingGridOption[] }
@@ -74,6 +78,8 @@ export function QuestionScreen(props: QuestionScreenProps) {
     reactionsStateMachine,
     reactionsScreen,
     className,
+    exiting = false,
+    exitDelay = 0,
   } = props;
 
   const voice = useVoiceover(voiceover, true, muted, selectedId !== null);
@@ -152,6 +158,8 @@ export function QuestionScreen(props: QuestionScreenProps) {
         typing={typing}
         screenId={questionId}
         wide={scene}
+        leaving={exiting}
+        leaveDelay={exitDelay}
         spokenOption={spokenOption}
         layout={props.zoxLayout === "row" ? "row" : "stacked"}
         showFox={hexMode !== "reactions"}
@@ -186,6 +194,8 @@ export function QuestionScreen(props: QuestionScreenProps) {
             spokenOption={spokenOption}
             onPick={pick}
             compact={scene}
+            leaving={exiting}
+            leaveDelay={exitDelay}
           />
         ) : (
           <QuestionGridOptions
@@ -194,6 +204,8 @@ export function QuestionScreen(props: QuestionScreenProps) {
             spokenOption={spokenOption}
             onPick={pick}
             compact={scene}
+            leaving={exiting}
+            leaveDelay={exitDelay}
           />
         )}
       </div>

@@ -35,11 +35,11 @@ export function MoveHexScreen() {
 
   return (
     <LevelOneShell
-      step={8}
+      step={7}
       flush
       fit
       ctaDisabled={!finished}
-      onBack={() => router.push(levelOneHref(7))}
+      onBack={() => router.push(levelOneHref(6))}
       onContinue={() => router.push("/level")}
     >
       {/* Hex is positioned against this box, so it must wrap the
