@@ -57,9 +57,9 @@ export const getProgressBarHost = (): Host => {
     onLoad: () => {
       const rive = created.rive;
       if (!rive) return;
+      rive.artboardWidth = PROGRESS_BAR.artboardWidth;
       rive.resizeDrawingSurfaceToCanvas();
-      const { minX, maxX, minY, maxY } = rive.bounds;
-      if (maxY > minY) created.aspect = (maxX - minX) / (maxY - minY);
+      created.aspect = PROGRESS_BAR.artboardWidth / PROGRESS_BAR.artboardHeight;
       created.loaded = true;
       if (process.env.NODE_ENV !== "production") {
         console.info(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { hexRiveSource } from "@/lib/rive/hexFile";
@@ -8,8 +8,8 @@ import { PROGRESS_BAR } from "@/lib/rive/runtime";
 
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
-/** Until the artboard's real size is read. */
-const FALLBACK_ASPECT = 8;
+/** The bar's height follows from the width the caller gives it, so it is never stretched. */
+const ASPECT = PROGRESS_BAR.artboardWidth / PROGRESS_BAR.artboardHeight;
 const TWEEN_MS = 700;
 const TWEEN_DELAY_MS = 150;
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
@@ -30,7 +30,6 @@ type RiveProgressBarProps = {
 /** `hex.riv`'s "Lesson_Progressbar" artboard playing `progressBar_SM`, its
  * `progress` property set to `value`. Give it a width; the height follows the artboard. */
 export function RiveProgressBar({ value, from, answer = null, className = "" }: RiveProgressBarProps) {
-  const [aspect, setAspect] = useState(FALLBACK_ASPECT);
   const { rive, RiveComponent } = useRive({
     ...hexRiveSource(),
     artboard: PROGRESS_BAR.artboard,
@@ -40,12 +39,9 @@ export function RiveProgressBar({ value, from, answer = null, className = "" }: 
     layout: LAYOUT,
   });
 
-  // The artboard's own proportions set the bar's height from the width the
-  // caller gives it, so it is never stretched.
+  // Widen the artboard so its track isn't clipped (see PROGRESS_BAR).
   useEffect(() => {
-    if (!rive) return;
-    const { minX, maxX, minY, maxY } = rive.bounds;
-    if (maxY > minY) setAspect((maxX - minX) / (maxY - minY));
+    if (rive) Object.assign(rive, { artboardWidth: PROGRESS_BAR.artboardWidth });
   }, [rive]);
 
   // The fill the bar last showed. A change of `value` is tweened from here
@@ -86,7 +82,7 @@ export function RiveProgressBar({ value, from, answer = null, className = "" }: 
   }, [rive, answerId, answerCorrect]);
 
   return (
-    <div aria-hidden className={`pointer-events-none ${className}`} style={{ aspectRatio: aspect }}>
+    <div aria-hidden className={`pointer-events-none ${className}`} style={{ aspectRatio: ASPECT }}>
       <RiveComponent className="h-full w-full" />
     </div>
   );
