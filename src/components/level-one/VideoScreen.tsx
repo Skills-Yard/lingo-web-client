@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Play } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { DialogueBubble } from "@/components/ui/DialogueBubble";
 import { OnboardingHex } from "./FeedbackPanel";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
@@ -27,6 +26,7 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
   return (
     <LevelOneShell
       step={6}
+      wash
       voiceover={VIDEO_AUDIO}
       onBack={() => router.push(levelOneHref(5))}
       ctaDisabled={leaving}
@@ -36,7 +36,7 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
         window.setTimeout(() => (onContinue ?? (() => router.push(levelOneHref(7))))(), EXIT_MS);
       }}
     >
-      {/* Hex and his question: 32px under the header, 20px above the video. */}
+      {/* Hex and his question (plain heading text, as on the other screens): 32px under the header, 20px above the video. */}
       <div className="relative mt-8 mb-5 flex h-[95px] shrink-0 items-start justify-center gap-[15px]">
         {/* The row keeps Hex's 131px slot. His canvas is as wide as the screen
           (centred on the screen, then shifted so he stands on his slot), so
@@ -50,15 +50,9 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
         >
           <OnboardingHex entryKey="video" leaving={leaving} exit="exitLeft" />
         </div>
-        <DialogueBubble
-          tail="left"
-          className="relative mt-3 ml-6 w-[175px] shrink-0 [--bubble-fill:var(--background)] [--bubble-shadow:#128CB3]"
-          contentClassName={`flex h-[75px] items-center justify-center px-3 text-center text-[16px] leading-[1.34] font-semibold text-[#444444] dark:text-white`}
-        >
-          <span className="w-[122px] text-balance">
-            What are <span className="text-[#0A9EAE]">instructions</span>?
-          </span>
-        </DialogueBubble>
+        <h2 className="w-[175px] shrink-0 self-center text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
+          What are <span className="text-[#0A9EAE]">instructions</span>?
+        </h2>
       </div>
 
       <div className="relative h-[282px] w-full shrink-0">
