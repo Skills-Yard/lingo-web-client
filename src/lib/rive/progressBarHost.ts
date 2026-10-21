@@ -1,4 +1,5 @@
 import { Alignment, Fit, Layout, Rive, StateMachineInputType } from "@rive-app/canvas";
+import { applyCanvasBleed } from "./bleed";
 import { hexRiveSource } from "./hexFile";
 import { configureRiveRuntime, PROGRESS_BAR } from "./runtime";
 
@@ -40,9 +41,11 @@ export const getProgressBarHost = (): Host => {
   if (host) return host;
   configureRiveRuntime();
   const element = document.createElement("div");
-  element.style.cssText = "width:100%;height:100%";
+  element.style.cssText = "position:relative;width:100%;height:100%";
   const canvas = document.createElement("canvas");
-  canvas.style.cssText = "display:block;width:100%;height:100%";
+  // Bigger than the slot by the bleed on every side, so effects past the artboard show.
+  const { bleed } = PROGRESS_BAR;
+  canvas.style.cssText = `position:absolute;display:block;left:-${bleed}px;top:-${bleed}px;width:calc(100% + ${2 * bleed}px);height:calc(100% + ${2 * bleed}px)`;
   element.appendChild(canvas);
   const created: Host = { element, canvas, rive: null, aspect: FALLBACK_ASPECT, loaded: false };
   host = created;
@@ -57,10 +60,10 @@ export const getProgressBarHost = (): Host => {
     onLoad: () => {
       const rive = created.rive;
       if (!rive) return;
-      rive.artboardWidth = PROGRESS_BAR.artboardWidth;
-      rive.artboardHeight = PROGRESS_BAR.artboardHeight;
+      applyCanvasBleed(rive, canvas, bleed);
       rive.resizeDrawingSurfaceToCanvas();
-      created.aspect = PROGRESS_BAR.artboardWidth / PROGRESS_BAR.artboardHeight;
+      const { minX, maxX, minY, maxY } = rive.bounds;
+      if (maxY > minY) created.aspect = (maxX - minX) / (maxY - minY);
       created.loaded = true;
       if (process.env.NODE_ENV !== "production") {
         console.info(
