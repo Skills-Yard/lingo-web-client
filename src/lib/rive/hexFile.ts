@@ -36,7 +36,9 @@ const setProgress = (next: number) => {
 };
 
 const fetchHexRive = async (): Promise<ArrayBuffer> => {
-  const response = await fetch(HEX_RIVE_SRC);
+  // `no-cache` makes the browser revalidate with the server on every page load
+  // (a 304 reuses the cached bytes), so a redeployed file is never stale.
+  const response = await fetch(HEX_RIVE_SRC, { cache: "no-cache" });
   if (!response.ok) throw new Error(`${HEX_RIVE_SRC}: HTTP ${response.status}`);
   if (!response.body) return response.arrayBuffer();
 
