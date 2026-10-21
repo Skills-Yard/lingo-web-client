@@ -1,4 +1,5 @@
 import React from "react";
+import { Lightbulb } from "lucide-react";
 import { DemoPlatform } from "./DemoPlatform";
 import { Level1Platform } from "./Level1Platform";
 import { LevelConfig, CommandType, Position, Direction } from "../../../utils/types";
@@ -72,24 +73,32 @@ export function GameBoard({
             type="button"
             onClick={fillHint}
             disabled={isPlaying}
-            className={`flex items-center gap-1 bg-slate-50 hover:bg-amber-50 dark:bg-[#182232] dark:hover:bg-amber-950/40 text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 text-[11px] font-bold px-3 py-1 rounded-xl ${borderless ? "" : "border border-slate-200 dark:border-[#22365a] hover:border-amber-300"} shadow-xs transition-all cursor-pointer disabled:opacity-50`}
+            aria-label="Hint"
+            className={
+              borderless
+                ? // Level 1: just the bulb, where the sound button was.
+                  "flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF1BF] text-[#F5A300] shadow-[0_2px_6px_rgba(245,163,0,0.25)] transition-all cursor-pointer active:scale-95 disabled:opacity-50 dark:bg-amber-400/20 dark:text-amber-400"
+                : "flex items-center gap-1 bg-slate-50 hover:bg-amber-50 dark:bg-[#182232] dark:hover:bg-amber-950/40 text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 text-[11px] font-bold px-3 py-1 rounded-xl border border-slate-200 dark:border-[#22365a] hover:border-amber-300 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            }
           >
-            💡 Hint
+            {borderless ? <Lightbulb className="h-6 w-6" strokeWidth={2.2} /> : "💡 Hint"}
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              triggerSound("tap");
-              setSoundEnabled(!soundEnabled);
-            }}
-            className={`w-8 h-8 flex items-center justify-center rounded-xl ${borderless ? "" : "border"} shadow-xs transition-all cursor-pointer ${
-              soundEnabled
-                ? `bg-white dark:bg-[#182232] ${borderless ? "" : "border-slate-200 dark:border-[#22365a]"} text-slate-700 dark:text-slate-200`
-                : `bg-slate-100 dark:bg-[#182232]/50 ${borderless ? "" : "border-slate-300 dark:border-slate-800"} text-slate-400`
-            }`}
-          >
-            {soundEnabled ? "🔊" : "🔇"}
-          </button>
+          {!borderless && (
+            <button
+              type="button"
+              onClick={() => {
+                triggerSound("tap");
+                setSoundEnabled(!soundEnabled);
+              }}
+              className={`w-8 h-8 flex items-center justify-center rounded-xl border shadow-xs transition-all cursor-pointer ${
+                soundEnabled
+                  ? "bg-white dark:bg-[#182232] border-slate-200 dark:border-[#22365a] text-slate-700 dark:text-slate-200"
+                  : "bg-slate-100 dark:bg-[#182232]/50 border-slate-300 dark:border-slate-800 text-slate-400"
+              }`}
+            >
+              {soundEnabled ? "🔊" : "🔇"}
+            </button>
+          )}
         </div>
       </div>
 
