@@ -11,7 +11,7 @@ const ITEMS = [
   { id: "benefits", label: "Events", Icon: Crown },
   { id: "profile", label: "Dashboard", Icon: UserRound },
 ] as const satisfies readonly { id: HomeTab; label: string; Icon: typeof House }[];
-
+//check
 /** The floating nav shared by the home and profile screens: a 60px pill of
  * four tabs and, beside it, a round Feed button. Only Home and Dashboard
  * (the profile) have a screen yet; the rest are inert. */
