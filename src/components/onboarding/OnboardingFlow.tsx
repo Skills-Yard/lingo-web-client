@@ -555,7 +555,13 @@ export function OnboardingFlow({
             >
               <div
                 className="pointer-events-auto origin-top-left"
-                style={{ width: `${100 / headerScale}%`, transform: `scale(${headerScale})` }}
+                // Capped at 5xl (1024px) on screen, centred — the box is laid out
+                // at 1/scale of its on-screen size, so the cap is divided by it too.
+                style={{
+                  width: `min(${100 / headerScale}%, ${1024 / headerScale}px)`,
+                  marginLeft: "max(0px, calc((100% - 1024px) / 2))",
+                  transform: `scale(${headerScale})`,
+                }}
               >
                 <OnboardingHeader
                   onBack={goBack}

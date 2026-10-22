@@ -21,7 +21,7 @@ export function IntroHeader({
   onToggleBookmark,
 }: IntroHeaderProps) {
   return (
-    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 pt-4 pb-3 select-none">
+    <header className="shrink-0 flex items-center justify-between gap-2.5 px-4 pt-4 pb-3 select-none w-full mx-auto lg:max-w-7xl">
       <button
         onClick={onBack}
         className="w-10 h-10 flex items-center justify-center rounded-lg bg-card border border-border text-foreground hover:bg-surface-strong transition-all active:scale-95 cursor-pointer shadow-xs"
