@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { ChevronLeft, Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, Maximize, Minimize, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -9,7 +10,7 @@ import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
 
 /** The theme switch's wipe colours — each theme's onboarding background
  * (`--background` in globals.css, `.onboarding-light` and its dark override). */
-const WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
+export const WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
 
 /** Back, full screen, light/dark and sound share one look — same size, same weight. */
 const ICON_BUTTON =
@@ -25,8 +26,12 @@ interface OnboardingHeaderProps {
   answer?: AnswerResult | null;
   /** Shows "step/total" above the bar. */
   showCount?: boolean;
-  muted: boolean;
-  onToggleMuted: () => void;
+  /** Unused now: sound lives in the hidden dev panels. */
+  muted?: boolean;
+  onToggleMuted?: () => void;
+  /** The Level 1 header: no sound button, the light / dark switch moves up
+   * beside the full screen icon, and the battery sits right of the bar. */
+  level?: boolean;
 }
 
 // The step the progress bar last showed. Each screen mounts a fresh header,
@@ -34,10 +39,22 @@ interface OnboardingHeaderProps {
 // user moves forward, shrinking back when they return to an earlier question.
 let lastShown: { step: number; total: number } | null = null;
 
-export function OnboardingHeader({ onBack, progress, answer, showCount, muted, onToggleMuted }: OnboardingHeaderProps) {
+export function OnboardingHeader({ onBack, progress, answer, showCount, level }: OnboardingHeaderProps) {
   const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
   const fullscreen = useFullscreen();
+  // The Level 1 dev panel (opened from the battery) and its click-away.
+  const [panelOpen, setPanelOpen] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!panelOpen) return;
+    const close = (e: PointerEvent) => {
+      if (e.target instanceof Node && panelRef.current?.contains(e.target)) return;
+      setPanelOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [panelOpen]);
   const [fromStep] = useState(() => (progress ? (lastShown?.step ?? progress.step - 1) : null));
   useEffect(() => {
     if (progress) lastShown = { step: progress.step, total: progress.total };
@@ -50,7 +67,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
       <button
         type="button"
         onClick={onBack}
-        className={`absolute top-[43.5px] left-4 ${ICON_BUTTON}`}
+        className={`absolute left-4 ${level ? "top-[6px]" : "top-[43.5px]"} ${ICON_BUTTON}`}
         aria-label="Back"
       >
         <ChevronLeft className="w-5 h-5" strokeWidth={1.4} />
@@ -71,49 +88,65 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className="absolute left-[67px] right-[114px] top-[63px] mx-auto max-w-[480px] -translate-y-1/2"
+            className={`absolute left-[67px] mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] right-[67px]" : "top-[63px] right-4"}`}
           />
         </>
       )}
 
       {/* Hidden where it can't do anything (iPhone Safari, installed PWA).
           Sits in the top-right corner so the bar keeps one width either way. */}
-      {fullscreen.available && (
-        <button
-          type="button"
-          onClick={fullscreen.toggle}
-          className="absolute top-0.5 right-4 flex h-5 w-5 cursor-pointer items-center justify-center text-[#444444] transition-all active:scale-95 dark:text-white/70"
-          aria-label={fullscreen.active ? "Exit full screen" : "Enter full screen"}
-        >
-          {fullscreen.active ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-        </button>
+      {level && (
+        // The battery is also the way into a hidden dev panel: nothing about it
+        // looks pressable (no pointer, hover or focus ring).
+        <div ref={panelRef} className="absolute top-[6px] right-4">
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => setPanelOpen((open) => !open)}
+            className="flex h-[39px] w-[39px] cursor-default items-center justify-center rounded-md border border-black/8 outline-none select-none dark:border-white/15"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/level-one/battery.png" alt="" draggable={false} className="h-[15px] w-[30px] select-none" />
+          </button>
+          <AnimatePresence>
+            {panelOpen && (
+              <motion.div
+                role="dialog"
+                aria-label="Developer testing panel"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+                style={{ transformOrigin: "100% 0%" }}
+                className="absolute top-[45px] right-0 z-30 w-[220px] rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
+              >
+                <p className="text-[11px] leading-[15px] text-[#818185] dark:text-[#9FA19F]">
+                  For testing by devs only. Temporary.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => toggleTheme(WIPE)}
+                  className="mt-2.5 flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg bg-[#F7F8FA] px-3 text-[13px] font-medium text-[#2C2C2C] active:scale-[0.98] dark:bg-[#16262D] dark:text-white"
+                >
+                  {dark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
+                  {dark ? "Switch to light mode" : "Switch to dark mode"}
+                </button>
+                {fullscreen.available && (
+                  <button
+                    type="button"
+                    onClick={fullscreen.toggle}
+                    className="mt-2 flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg bg-[#F7F8FA] px-3 text-[13px] font-medium text-[#2C2C2C] active:scale-[0.98] dark:bg-[#16262D] dark:text-white"
+                  >
+                    {fullscreen.active ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                    {fullscreen.active ? "Exit full screen" : "Full screen"}
+                  </button>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       )}
 
-      <div className="absolute top-[43.5px] right-4 flex items-center gap-2">
-        {/* Light/dark switch and sound keep their places. */}
-        {/* Light/dark switch — the site's own theme (see ThemeContext),
-            wiped in diagonally from the top-right corner. */}
-        <button
-          type="button"
-          onClick={() => toggleTheme(WIPE)}
-          className={`${ICON_BUTTON} dark:text-amber-400`}
-          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {dark ? (
-            <Sun key="sun" className="w-5 h-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
-          ) : (
-            <Moon key="moon" className="w-5 h-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={onToggleMuted}
-          className={ICON_BUTTON}
-          aria-label={muted ? "Unmute" : "Mute"}
-        >
-          {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </button>
-      </div>
     </header>
   );
 }

@@ -47,8 +47,9 @@ interface LevelOneShellProps {
   children: ReactNode;
   /** Drops the padding under the content, so it runs right down to Continue. */
   flush?: boolean;
-  /** A soft blue wash fading down from the top, behind everything. */
-  wash?: boolean;
+  /** A soft blue wash fading down from the top, behind everything. "dark":
+   * only in dark mode (light mode stays plain). */
+  wash?: boolean | "dark";
   /** Rendered over everything (popups). */
   overlay?: ReactNode;
   /** Shrinks the whole frame a little further if the content is taller than
@@ -139,7 +140,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
       {wash && (
         <div
           aria-hidden
-          className="pointer-events-none absolute top-0 left-0 w-full bg-[linear-gradient(180deg,#E3ECFF_0%,rgba(227,236,255,0)_100%)] dark:bg-[linear-gradient(180deg,rgba(47,128,237,0.22)_0%,rgba(47,128,237,0)_100%)]"
+          className={`pointer-events-none absolute top-0 left-0 w-full ${wash === "dark" ? "" : "bg-[linear-gradient(180deg,#E3ECFF_0%,rgba(227,236,255,0)_100%)]"} dark:bg-[linear-gradient(180deg,rgba(27,43,64,0.9)_0%,rgba(27,43,64,0)_100%)]`}
           style={{ height: `calc(env(safe-area-inset-top) + ${420 * (stage?.scale ?? 1)}px)` }}
         />
       )}
@@ -157,11 +158,10 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         } as React.CSSProperties}
       >
       <div className="flex min-h-0 w-full flex-1 flex-col">
-        {/* The header sits 9px lower than the shared one, putting the page
-          count 36px from the top; the negative margin keeps the content
-          below exactly where it was. */}
+        {/* The header sits at the very top (it used to sit 9px lower, for the
+          page count), with the content below exactly where it was. */}
         <div
-          className="relative z-10 mx-auto -mb-[9px] w-full pt-[9px]"
+          className="relative z-10 mx-auto w-full"
           // 5xl on screen, like the onboarding header; the stage is scaled, so divide.
           style={{ maxWidth: HEADER_MAX_W / (stage?.scale ?? 1) }}
         >
@@ -169,7 +169,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
             onBack={onBack ?? (() => router.back())}
             progress={{ step, total: LEVEL_ONE_STEPS }}
             answer={answer}
-            showCount
+            level
             muted={muted}
             onToggleMuted={toggleMuted}
           />

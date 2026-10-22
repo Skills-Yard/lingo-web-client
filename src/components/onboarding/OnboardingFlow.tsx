@@ -22,6 +22,7 @@ import type { HexExitRequest } from "./robu/hexExit";
 import { HEX_ENTER_STYLE, HEX_ENTRY_STYLE_BY_STEP, HEX_EXIT_BOTTOM_MS, HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { HexBackground } from "./robu/HexBackground";
+import { DevPanel } from "./DevPanel";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
 import { Button3D } from "@/components/ui/Button3D";
 
@@ -705,6 +706,8 @@ export function OnboardingFlow({
             onComplete={showSignUp}
           />
         </motion.div>
+        {/* TEMPORARY dev panel: three taps on Hex open it (see DevPanel). */}
+        <DevPanel muted={muted} onToggleMuted={() => setMuted((m) => !m)} />
       </main>
     </FoxStageProvider>
   );
