@@ -7,6 +7,7 @@ import { Bell, ChartNoAxesColumn, CodeXml, Play, Plus } from "lucide-react";
 import { configureRiveRuntime, HEX_STATE } from "@/lib/rive/runtime";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { HomeStage } from "./HomeStage";
+import { DailyQuests, HappeningSoon, HexGreetingCard, ModulePath } from "./HomeSections";
 import { HomeStats } from "./HomeTopBar";
 
 configureRiveRuntime();
@@ -14,7 +15,7 @@ configureRiveRuntime();
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** Height of the content, in stage px; the stage and nav are HomeStage's. */
-const STAGE_H = 686;
+const STAGE_H = 1600;
 
 const TRACKS = [
   { id: "web", label: "Web Dev", Icon: CodeXml },
@@ -23,16 +24,79 @@ const TRACKS = [
 
 type TrackId = (typeof TRACKS)[number]["id"];
 
-const COURSE = {
-  title: "Python for Beginners",
-  module: "Module 1",
-  moduleName: "Programming Mindset",
-  upNext: "1.3",
-  lesson: "Symbols & Operators",
-  lessonMeta: "Video · 6 min · +20 XP",
-  done: 2,
-  total: 7,
-} as const;
+type Course = {
+  title: string;
+  module: string;
+  moduleName: string;
+  upNext: string;
+  lesson: string;
+  lessonMeta: string;
+  done: number;
+  total: number;
+  theme: CourseTheme;
+};
+
+/** A card's colours: its background and text, the icon and Continue button. */
+type CourseTheme = {
+  background: string;
+  ink: string;
+  muted: string;
+  /** The icon tile's glyph. */
+  accent: string;
+  /** The card's drop shadow. */
+  shadow?: string;
+  ringTrack: string;
+  ringStroke: string;
+  button: { background: string; ink: string; disc: string; play: string };
+};
+
+const BLUE_THEME: CourseTheme = {
+  background: "var(--h-course-bg)",
+  ink: "#FFFFFF",
+  muted: "rgba(255,255,255,0.75)",
+  accent: "#2A66DB",
+  shadow: "var(--h-course-shadow)",
+  ringTrack: "rgba(255,255,255,0.25)",
+  ringStroke: "#FFFFFF",
+  button: { background: "#FFFFFF", ink: "#444444", disc: "#4B93D7", play: "#FFFFFF" },
+};
+
+/** A light orange card: peach background, dark text, an orange Continue. */
+const ORANGE_THEME: CourseTheme = {
+  background: "linear-gradient(180deg,#FFF3E8 0%,#FFE6D2 100%)",
+  ink: "#2C2C2C",
+  muted: "rgba(68,68,68,0.7)",
+  accent: "#E5671C",
+  ringTrack: "rgba(255,141,66,0.25)",
+  ringStroke: "#FF8D42",
+  button: { background: "#FF8D42", ink: "#FFFFFF", disc: "#FFFFFF", play: "#FF8D42" },
+};
+
+/** The programs the learner is part-way through, most recent first. */
+const COURSES: readonly Course[] = [
+  {
+    title: "Python for Beginners",
+    module: "Module 1",
+    moduleName: "Programming Mindset",
+    upNext: "1.3",
+    lesson: "Symbols & Operators",
+    lessonMeta: "Video · 6 min · +20 XP",
+    done: 2,
+    total: 7,
+    theme: BLUE_THEME,
+  },
+  {
+    title: "HTML & CSS Basics",
+    module: "Module 1",
+    moduleName: "Building Pages",
+    upNext: "1.2",
+    lesson: "Tags & Elements",
+    lessonMeta: "Video · 5 min · +20 XP",
+    done: 1,
+    total: 6,
+    theme: ORANGE_THEME,
+  },
+];
 
 const reveal = (delay: number) => ({
   initial: { opacity: 0, y: 14 },
@@ -63,76 +127,86 @@ function HomeHex() {
   return <RiveComponent className="h-full w-full" />;
 }
 
-function ProgressRing({ done, total }: { done: number; total: number }) {
+function ProgressRing({ done, total, theme }: { done: number; total: number; theme: CourseTheme }) {
   const r = 26;
   const c = 2 * Math.PI * r;
   return (
-    <div className="relative h-[60px] w-[60px] shrink-0">
+    <div className="relative h-16 w-16 shrink-0">
       <svg viewBox="0 0 64 64" className="h-full w-full -rotate-90" aria-hidden>
-        <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth="5" />
+        <circle cx="32" cy="32" r={r} fill="none" stroke={theme.ringTrack} strokeWidth="5" />
         <circle
           cx="32"
           cy="32"
           r={r}
           fill="none"
-          stroke="white"
+          stroke={theme.ringStroke}
           strokeWidth="5"
           strokeLinecap="round"
           strokeDasharray={c}
           strokeDashoffset={c * (1 - done / total)}
         />
       </svg>
-      <div className="absolute inset-0 flex flex-col items-center justify-center leading-none text-white">
+      <div className="absolute inset-0 flex flex-col items-center justify-center leading-none" style={{ color: theme.ink }}>
         <span className="text-sm font-semibold">
           {done}/{total}
         </span>
-        <span className="mt-0.5 text-[9px] text-white/80">lessons</span>
+        <span className="mt-0.5 text-[9px]" style={{ color: theme.muted }}>
+          lessons
+        </span>
       </div>
     </div>
   );
 }
 
-function CourseCard({ onContinue }: { onContinue?: () => void }) {
+function CourseCard({ course, delay, onContinue }: { course: Course; delay: number; onContinue?: () => void }) {
+  const { theme } = course;
   return (
     <motion.section
-      {...reveal(0.35)}
-      className="relative overflow-hidden rounded-xl bg-[linear-gradient(180deg,#3762EB_0%,#2A66DB_55%,#4A8BF0_100%)] p-3.5 text-white"
+      {...reveal(delay)}
+      className="relative overflow-hidden rounded-2xl p-4"
+      style={{ background: theme.background, color: theme.ink, boxShadow: theme.shadow }}
     >
       <div className="flex items-center gap-2.5">
-        <span className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md bg-white text-[#2A66DB]">
+        <span
+          className="flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-md bg-white"
+          style={{ color: theme.accent }}
+        >
           <CodeXml className="h-[17px] w-[17px]" strokeWidth={2.4} />
         </span>
         <div className="flex min-w-0 flex-col leading-tight">
-          <h3 className="truncate text-[17px] font-semibold">{COURSE.title}</h3>
-          <p className="truncate text-[13px] text-white/75">
-            {COURSE.module} · {COURSE.moduleName}
+          <h3 className="truncate text-[18px] font-semibold">{course.title}</h3>
+          <p className="truncate text-[13px]" style={{ color: theme.muted }}>
+            {course.module} · {course.moduleName}
           </p>
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between gap-3">
+      <div className="mt-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-[11px] font-medium uppercase tracking-wide text-white/70">
-            Up next · {COURSE.upNext}
+          <p className="text-[11px] font-medium uppercase tracking-wide" style={{ color: theme.muted }}>
+            Up next · {course.upNext}
           </p>
-          <p className="mt-0.5 text-[22px] font-semibold leading-tight">{COURSE.lesson}</p>
-          <p className="mt-1 flex items-center gap-1.5 text-[13px] text-white/80">
-            <Play className="h-2.5 w-2.5 fill-white/80 text-white/80" />
-            {COURSE.lessonMeta}
+          <p className="mt-0.5 text-[23px] font-semibold leading-tight">{course.lesson}</p>
+          <p className="mt-1 flex items-center gap-1.5 text-[13px]" style={{ color: theme.muted }}>
+            <Play className="h-2.5 w-2.5 fill-current" />
+            {course.lessonMeta}
           </p>
         </div>
-        <ProgressRing done={COURSE.done} total={COURSE.total} />
+        <ProgressRing done={course.done} total={course.total} theme={theme} />
       </div>
 
       <button
         type="button"
         onClick={onContinue}
-        className="mt-3 flex h-11 w-[148px] items-center gap-2 rounded-full bg-white py-2 pl-2 pr-4 transition-transform active:scale-95"
+        className="mt-4 flex h-[46px] w-[154px] items-center gap-2 rounded-full py-2 pl-2 pr-4 transition-transform active:scale-95"
+        style={{ backgroundColor: theme.button.background }}
       >
-        <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#4B93D7]">
-          <Play className="ml-0.5 h-[13px] w-[13px] fill-white text-white" />
+        <span className="flex h-7 w-7 items-center justify-center rounded-full" style={{ backgroundColor: theme.button.disc }}>
+          <Play className="ml-0.5 h-[13px] w-[13px] fill-current" style={{ color: theme.button.play }} />
         </span>
-        <span className="text-base font-medium text-[#444444]">Continue</span>
+        <span className="text-base font-medium" style={{ color: theme.button.ink }}>
+          Continue
+        </span>
       </button>
     </motion.section>
   );
@@ -141,15 +215,19 @@ function CourseCard({ onContinue }: { onContinue?: () => void }) {
 /**
  * The learner's home, shown after onboarding: greeting and alerts, the track
  * switcher, stats, the featured track (Hex stands in the hero), and the course
- * to continue, with the floating nav at the bottom. Nothing scrolls: the whole
- * stage is scaled to fit the screen.
+ * to continue, Hex's mood, the daily quests, the module's path and what is
+ * happening soon, with the floating nav at the bottom. The page scrolls under
+ * the nav; the stage is scaled to the screen's width.
  */
 export function MainHomeScreen({
   name = "Learner",
   onContinue,
+  onProfile,
 }: {
   name?: string;
   onContinue?: () => void;
+  /** The avatar was tapped: open the profile. */
+  onProfile?: () => void;
 }) {
   const [track, setTrack] = useState<TrackId>("web");
   // Which way the content slides: towards the tab that was picked.
@@ -165,29 +243,34 @@ export function MainHomeScreen({
     () => "Hello",
   );
   return (
-    <HomeStage stageHeight={STAGE_H}>
-        <div className="flex h-full flex-col px-4">
+    <HomeStage stageHeight={STAGE_H} scroll>
+        <div className="flex flex-col px-4 pb-6">
           <motion.header {...reveal(0)} className="flex items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={onProfile}
+              aria-label="Open your profile"
+              className="flex min-w-0 items-center gap-3 text-left transition-opacity active:opacity-80"
+            >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src="/images/home/avatar.png"
                 alt="Profile"
                 draggable={false}
-                className="h-12 w-12 shrink-0 select-none rounded-[38px] bg-[#F9F8F6] object-cover"
+                className="h-12 w-12 shrink-0 select-none rounded-[38px] bg-[#F9F8F6] object-cover dark:bg-[#16262D]"
               />
               <div className="flex min-w-0 flex-col">
-                <span className="text-xs leading-4 text-[#818185]">{greeting},</span>
-                <span className="truncate text-lg font-semibold leading-6 text-[#444444]">{name}</span>
+                <span className="text-xs leading-4 text-[#818185] dark:text-[#9FA19F]">{greeting},</span>
+                <span className="truncate text-lg font-semibold leading-6 text-[#444444] dark:text-[#C8C7C5]">{name}</span>
               </div>
-            </div>
+            </button>
             <button
               type="button"
               aria-label="Notifications"
-              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-black/8"
+              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-black/8 dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#C8C7C5]"
             >
               <Bell className="h-[18px] w-[18px]" strokeWidth={1.6} />
-              <span className="absolute right-2 top-2 h-[6px] w-[6px] rounded-full bg-[#EF4444]" />
+              <span className="absolute right-2 top-2 h-[6px] w-[6px] rounded-full bg-[#EF4444] dark:bg-[#FF5A57]" />
             </button>
           </motion.header>
 
@@ -201,21 +284,21 @@ export function MainHomeScreen({
                   role="tab"
                   aria-selected={selected}
                   onClick={() => selectTrack(id)}
-                  className={`relative flex h-10 items-center justify-center gap-1.5 rounded-full border bg-[#F9F8F6] pl-1.5 pr-3.5 text-[13px] font-medium transition-colors duration-300 ${
-                    selected ? "border-transparent text-white" : "border-black/6 text-[#444444]"
+                  className={`relative flex h-10 items-center justify-center gap-1.5 rounded-full border bg-[#F9F8F6] dark:bg-[#16262D] dark:border-white/12 pl-1.5 pr-3.5 text-[13px] font-medium transition-colors duration-300 ${
+                    selected ? "border-transparent text-white dark:text-[#1A1C22]" : "border-black/6 text-[#444444] dark:text-[#C8C7C5]"
                   }`}
                 >
                   {/* One dark pill that slides (and resizes) from tab to tab. */}
                   {selected && (
                     <motion.span
                       layoutId="track-pill"
-                      className="absolute -inset-px rounded-full bg-[#444444]"
+                      className="absolute -inset-px rounded-full bg-[#444444] dark:bg-[#C8C7C5]"
                       transition={PILL_SPRING}
                     />
                   )}
                   <span
                     className={`relative flex h-6 w-6 items-center justify-center rounded-lg transition-colors duration-300 ${
-                      selected ? "bg-white text-[#444444]" : ""
+                      selected ? "bg-white text-[#444444] dark:bg-[#1A1C22] dark:text-[#C8C7C5]" : ""
                     }`}
                   >
                     <Icon className="h-4 w-4" strokeWidth={2} />
@@ -227,7 +310,7 @@ export function MainHomeScreen({
             <button
               type="button"
               aria-label="Add a track"
-              className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/6 bg-white"
+              className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-black/6 bg-white dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#C8C7C5]"
             >
               <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
             </button>
@@ -242,7 +325,7 @@ export function MainHomeScreen({
               <motion.h1
                 key={track}
                 {...slide(direction)}
-                className="text-[24px] font-semibold leading-tight text-[#2B2B2F]"
+                className="text-[24px] font-semibold leading-tight text-[#2B2B2F] dark:text-[#C8C7C5]"
               >
                 {track === "web" ? "Web Developer" : "Data Analyst"}
               </motion.h1>
@@ -269,14 +352,29 @@ export function MainHomeScreen({
           </motion.div>
 
           <motion.div {...reveal(0.26)} className="mt-3 flex items-center justify-between">
-            <h2 className="text-[18px] font-semibold leading-tight text-[#2B2B2F]">Continue where you left</h2>
-            <button type="button" className="text-xs font-medium text-[#5D4CFE]">
+            <h2 className="text-[18px] font-semibold leading-tight text-[#2B2B2F] dark:text-[#C8C7C5]">Continue where you left</h2>
+            <button type="button" className="text-xs font-medium text-[#5D4CFE] dark:text-[#8E82FF]">
               See path
             </button>
           </motion.div>
 
-          <div className="mt-2">
-            <CourseCard onContinue={onContinue} />
+          <div className="mt-3 flex flex-col gap-4">
+            {COURSES.map((course, i) => (
+              <CourseCard key={course.title} course={course} delay={0.3 + i * 0.05} onContinue={onContinue} />
+            ))}
+          </div>
+
+          <div className="mt-4">
+            <HexGreetingCard />
+          </div>
+          <div className="mt-6">
+            <DailyQuests />
+          </div>
+          <div className="mt-6">
+            <ModulePath />
+          </div>
+          <div className="mt-6">
+            <HappeningSoon />
           </div>
         </div>
     </HomeStage>

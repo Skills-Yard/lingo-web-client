@@ -36,6 +36,14 @@
   --card-glow-ring: rgba(1, 129, 95, 0.65);
   --card-glow-bloom: rgba(1, 161, 127, 0.55);
   --card-glow-shadow: rgba(0, 0, 0, 0.18);
+  /* The home section's inline-styled text and fills (see components/home). */
+  --h-ink: #2c2c2c;
+  --h-muted: #818185;
+  --h-poll-picked: #cdebe2;
+  --h-poll-bar: #e9ecf0;
+  --h-trophy-off: #edeef0;
+  --h-course-bg: linear-gradient(180deg, #3762eb 0%, #2a66db 55%, #4a8bf0 100%);
+  --h-course-shadow: none;
 }
 
 .dark,
@@ -65,6 +73,13 @@
   --card-glow-ring: rgba(1, 161, 127, 0.4);
   --card-glow-bloom: rgba(1, 161, 127, 0.35);
   --card-glow-shadow: rgba(0, 0, 0, 0);
+  --h-ink: #ffffff;
+  --h-muted: #9fa19f;
+  --h-poll-picked: #0f2921;
+  --h-poll-bar: #22262e;
+  --h-trophy-off: #22262e;
+  --h-course-bg: linear-gradient(135deg, #4b93f7 0%, #2d63e3 71.43%);
+  --h-course-shadow: 0 8px 20px rgba(45, 99, 227, 0.22);
 }
 
 /* The onboarding flow (src/components/onboarding) has its own light/dark

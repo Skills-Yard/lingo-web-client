@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "@/context/ThemeContext";
 
 export type HomeNavTab = "home" | "career" | "events" | "dashboard" | "feed";
 
@@ -19,7 +20,7 @@ const ICON = "h-[22px] w-[22px]";
  * white. The house is padded inside its viewBox so it sits in the middle of the
  * slot, as in the design. */
 function NavIcon({ id, src, active }: { id: HomeNavTab; src: string | null; active?: boolean }) {
-  const tone = `transition-colors duration-300 ${active ? "text-white" : "text-[#444444]"}`;
+  const tone = `transition-colors duration-300 ${active ? "text-white dark:text-[#1A1C22]" : "text-[#444444] dark:text-[#C8C7C5]"}`;
   if (id === "home") {
     return (
       <svg viewBox="-2.6 -2.6 29.2 29.2" className={`${ICON} ${tone}`} aria-hidden>
@@ -71,12 +72,20 @@ function NavIcon({ id, src, active }: { id: HomeNavTab; src: string | null; acti
       src={src ?? ""}
       alt=""
       draggable={false}
-      className={`${ICON} select-none object-contain transition-[filter] duration-300 ${active ? "brightness-0 invert" : ""}`}
+      className={`${ICON} select-none object-contain transition-[filter] duration-300 ${active ? "brightness-0 invert dark:invert-0" : "dark:opacity-80 dark:brightness-0 dark:invert"}`}
     />
   );
 }
 
-const SURFACE = "border border-black/10 shadow-[0_6px_20px_rgba(0,0,0,0.12)]";
+const SURFACE = "border border-black/10 shadow-[0_6px_20px_rgba(0,0,0,0.12)] dark:border-white/12 dark:shadow-[0_6px_20px_rgba(0,0,0,0.45)]";
+
+/** The active tab's disc in dark mode. */
+const ACTIVE_DARK = "dark:bg-[#C8C7C5]";
+
+/** How long the Feed button is held to switch the theme, and the fill's colour
+ * for each theme it switches to. */
+const HOLD_MS = 700;
+const FILL: Record<"light" | "dark", string> = { dark: "#0F1F26", light: "#FFFFFF" };
 
 /** The size the nav is drawn at; it is scaled as one piece to the width it is
  * given, so icons, labels and gaps keep their proportions on every screen. */
@@ -105,8 +114,32 @@ export function HomeNav({
     return () => observer.disconnect();
   }, []);
   const feedActive = active === "feed";
+  const { theme, toggleTheme } = useTheme();
+  // Holding Feed switches the theme: a circle of the colour it is switching to
+  // fills the button, and the theme changes once it is full. A tap, or a hold
+  // let go early, is just Feed.
+  const [holding, setHolding] = useState(false);
+  const [fillColor, setFillColor] = useState(FILL.dark);
+  const holdTimer = useRef(0);
+  const held = useRef(false);
+  useEffect(() => () => window.clearTimeout(holdTimer.current), []);
+  const startHold = (button: HTMLButtonElement) => {
+    held.current = false;
+    setFillColor(FILL[theme === "dark" ? "light" : "dark"]);
+    setHolding(true);
+    holdTimer.current = window.setTimeout(() => {
+      held.current = true;
+      const box = button.getBoundingClientRect();
+      toggleTheme({ x: box.left + box.width / 2, y: box.top + box.height / 2 });
+      setHolding(false);
+    }, HOLD_MS);
+  };
+  const endHold = () => {
+    window.clearTimeout(holdTimer.current);
+    setHolding(false);
+  };
   const activeIndex = TABS.findIndex((tab) => tab.id === active);
-  const feedInk = feedActive ? "bg-white" : "bg-[#444444]";
+  const feedInk = feedActive ? "bg-white dark:bg-[#1A1C22]" : "bg-[#444444] dark:bg-[#C8C7C5]";
   return (
     <div ref={boxRef} className="w-full">
     <div className="mx-auto" style={{ width: DESIGN_W * scale, height: DESIGN_H * scale }}>
@@ -114,13 +147,13 @@ export function HomeNav({
       className="flex h-[60px] w-[358px] origin-top-left items-center gap-4"
       style={{ transform: `scale(${scale})` }}
     >
-      <div className={`relative flex h-[60px] min-w-0 flex-1 items-center rounded-[56px] bg-white px-[21px] ${SURFACE}`}>
+      <div className={`relative flex h-[60px] min-w-0 flex-1 items-center rounded-[56px] bg-white px-[21px] dark:bg-[#1A1C22] ${SURFACE}`}>
         {/* The four tabs share the width in equal slots, so nothing reflows when
           the active one changes; the disc slides along behind them. */}
         <div className="relative flex h-12 w-full">
           <span
             aria-hidden
-            className="absolute top-0.5 h-11 w-11 rounded-full bg-[#444444] transition-[left] duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)]"
+            className={`absolute top-0.5 h-11 w-11 rounded-full bg-[#444444] ${ACTIVE_DARK} transition-[left] duration-[350ms] ease-[cubic-bezier(0.22,1,0.36,1)]`}
             style={{
               left: activeIndex < 0 ? undefined : `calc(${activeIndex * 25}% + (25% - 44px) / 2)`,
               opacity: activeIndex < 0 ? 0 : 1,
@@ -145,7 +178,7 @@ export function HomeNav({
                   <NavIcon id={id} src={src} active={isActive} />
                 </span>
                 <span
-                  className={`whitespace-nowrap text-[9px] font-medium leading-[13px] text-[#444444] transition-opacity duration-200 ${
+                  className={`whitespace-nowrap text-[9px] font-medium leading-[13px] text-[#444444] transition-opacity dark:text-[#C8C7C5] duration-200 ${
                     isActive ? "opacity-0" : "opacity-100"
                   }`}
                 >
@@ -158,25 +191,47 @@ export function HomeNav({
       </div>
       <button
         type="button"
-        onClick={() => onNavigate?.("feed")}
+        onClick={() => {
+          if (held.current) {
+            held.current = false;
+            return;
+          }
+          onNavigate?.("feed");
+        }}
+        onPointerDown={(e) => startHold(e.currentTarget)}
+        onPointerUp={endHold}
+        onPointerLeave={endHold}
+        onPointerCancel={endHold}
+        onContextMenu={(e) => e.preventDefault()}
         aria-current={feedActive ? "page" : undefined}
-        className={`flex h-[60px] w-[60px] shrink-0 flex-col items-center justify-center rounded-full transition-colors duration-300 ${SURFACE} ${
-          feedActive ? "bg-[#444444]" : "bg-white"
+        aria-label="Feed (hold to switch dark / light mode)"
+        className={`relative flex h-[60px] w-[60px] shrink-0 select-none flex-col items-center justify-center overflow-hidden rounded-full transition-colors duration-300 [-webkit-touch-callout:none] ${SURFACE} ${
+          feedActive ? `bg-[#444444] ${ACTIVE_DARK}` : "bg-white dark:bg-[#1A1C22]"
         }`}
       >
+        {/* The hold's fill: grows from the middle while held, drains when let go. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-20 rounded-full"
+          style={{
+            backgroundColor: fillColor,
+            transform: `scale(${holding ? 1.05 : 0})`,
+            transition: holding ? `transform ${HOLD_MS}ms linear` : "transform 220ms ease-out",
+          }}
+        />
         <span className="relative flex h-[22px] w-[22px] items-center justify-center">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/images/nav/feed-square.png"
             alt=""
             draggable={false}
-            className={`absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 select-none object-contain ${feedActive ? "brightness-0 invert" : ""}`}
+            className={`absolute left-1/2 top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 select-none object-contain ${feedActive ? "brightness-0 invert dark:invert-0" : "dark:opacity-80 dark:brightness-0 dark:invert"}`}
           />
           <span className={`absolute h-[1.5px] w-2.5 rounded-full transition-colors duration-300 ${feedInk}`} />
           <span className={`absolute h-2.5 w-[1.5px] rounded-full transition-colors duration-300 ${feedInk}`} />
         </span>
         <span
-          className={`text-[9px] font-medium leading-[13px] ${feedActive ? "text-white" : "text-[#444444]"}`}
+          className={`text-[9px] font-medium leading-[13px] ${feedActive ? "text-white dark:text-[#1A1C22]" : "text-[#444444] dark:text-[#C8C7C5]"}`}
         >
           Feed
         </span>

@@ -16,11 +16,11 @@ const reveal = (delay: number) => ({
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-black/8 bg-white py-2.5 leading-tight">
+    <div className="flex flex-1 flex-col items-center justify-center rounded-xl border border-black/8 bg-white py-2.5 leading-tight dark:border-white/12 dark:bg-[#1A1C22]">
       <span className="text-sm font-semibold" style={{ color: GREEN }}>
         {value}
       </span>
-      <span className="mt-0.5 text-[10px] text-[#7B7B80]">{label}</span>
+      <span className="mt-0.5 text-[10px] text-[#7B7B80] dark:text-[#9FA19F]">{label}</span>
     </div>
   );
 }
@@ -42,7 +42,7 @@ export function CareerDetailScreen({
   const [pickedSkill, setPickedSkill] = useState(career.skills[0]);
 
   return (
-    <main className="h-dvh w-full overflow-hidden bg-white font-[family-name:var(--font-app-poppins)] text-[#444444]">
+    <main className="h-dvh w-full overflow-hidden bg-white font-[family-name:var(--font-app-poppins)] text-[#444444] dark:bg-[#0F1F26] dark:text-white">
     <div className="relative mx-auto flex h-full w-full max-w-[430px] flex-col">
       <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto">
         {/* Back button 54px from the top, then a 6px gap to the picture. */}
@@ -51,9 +51,9 @@ export function CareerDetailScreen({
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="flex h-10 w-10 items-center justify-center rounded-[14px] border-[1.5px] border-b-[3px] border-[#DFE3E8] bg-white transition-transform active:scale-95"
+            className="flex h-10 w-10 items-center justify-center rounded-[14px] border-[1.5px] border-b-[3px] border-[#DFE3E8] bg-white transition-transform active:scale-95 dark:border-[#0B0D11] dark:bg-[#22262E]"
           >
-            <ChevronLeft className="h-[22px] w-[22px] text-[#444444]" strokeWidth={1.65} />
+            <ChevronLeft className="h-[22px] w-[22px] text-[#444444] dark:text-white" strokeWidth={1.65} />
           </button>
         </div>
 
@@ -69,7 +69,7 @@ export function CareerDetailScreen({
         </div>
 
         <div className="px-4 pb-40 pt-4">
-          <motion.h1 {...reveal(0.05)} className="text-[22px] font-semibold leading-tight text-[#2B2B2F]">
+          <motion.h1 {...reveal(0.05)} className="text-[22px] font-semibold leading-tight text-[#2B2B2F] dark:text-white">
             {career.title}
           </motion.h1>
 
@@ -79,7 +79,7 @@ export function CareerDetailScreen({
             <Stat value={String(career.skills.length)} label="Skills" />
           </motion.div>
 
-          <motion.h2 {...reveal(0.15)} className="mt-5 text-sm font-semibold text-[#2B2B2F]">
+          <motion.h2 {...reveal(0.15)} className="mt-5 text-sm font-semibold text-[#2B2B2F] dark:text-white">
             Skills you&apos;ll learn
           </motion.h2>
           <motion.div {...reveal(0.2)} className="mt-2.5 flex flex-wrap gap-2">
@@ -94,7 +94,7 @@ export function CareerDetailScreen({
                   className={`h-8 rounded-full border px-3.5 text-[13px] font-medium transition-colors duration-300 ${
                     selected
                       ? "border-transparent text-white"
-                      : "border-black/8 bg-[#F9F8F6] text-[#444444]"
+                      : "border-black/8 bg-[#F9F8F6] text-[#444444] dark:border-transparent dark:bg-[#16262D] dark:text-[#C8C7C5]"
                   }`}
                   style={selected ? { backgroundColor: GREEN } : undefined}
                 >
@@ -106,7 +106,7 @@ export function CareerDetailScreen({
         </div>
       </div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-10">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-[#0F1F26] dark:via-[#0F1F26]/90 px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-10">
         <div className="pointer-events-auto">
           <Button3D onClick={onStart} className="w-full">
             Start this career

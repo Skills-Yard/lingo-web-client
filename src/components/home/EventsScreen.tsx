@@ -9,8 +9,8 @@ import { HEADING } from "./homeFonts";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const GREEN = "#01A17F";
-const INK = "#2C2C2C";
-const MUTED = "#818185";
+const INK = "var(--h-ink)";
+const MUTED = "var(--h-muted)";
 
 /** Room under the list for the shared bottom nav: 60px nav + its 38px margin
  * and some air. */
@@ -41,7 +41,7 @@ const reveal = (delay: number) => ({
 
 function LiveCard() {
   return (
-    <section className="flex w-full flex-col items-start gap-2 rounded-[18px] bg-[#FDECEC] p-3.5">
+    <section className="flex w-full flex-col items-start gap-2 rounded-[18px] bg-[#FDECEC] p-3.5 dark:bg-[#2A1517]">
       <div className="flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full bg-[#D42421]" />
         <span className="text-xs font-extrabold uppercase leading-4 tracking-[1.2px] text-[#D42421]">
@@ -69,8 +69,8 @@ function EventRow({
   onToggle: () => void;
 }) {
   return (
-    <article className="flex w-full items-center gap-3 rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5">
-      <div className="flex h-[58px] w-10 shrink-0 flex-col items-center rounded-[12px] bg-[#E9F5F0] p-2">
+    <article className="flex w-full items-center gap-3 rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5 dark:border-white/12 dark:bg-[#1A1C22]">
+      <div className="flex h-[58px] w-10 shrink-0 flex-col items-center rounded-[12px] bg-[#E9F5F0] p-2 dark:bg-[#16262D]">
         <span className={`text-[21px] leading-7 tracking-[-0.1px] ${HEADING}`} style={{ color: GREEN }}>
           {event.day}
         </span>
@@ -92,7 +92,7 @@ function EventRow({
         aria-pressed={reminded}
         aria-label={reminded ? "Remove reminder" : "Remind me"}
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-[background-color,transform] duration-300 active:scale-90 ${
-          reminded ? "scale-110 bg-[#01A17F]" : "bg-[#F7F8FA]"
+          reminded ? "scale-110 bg-[#01A17F]" : "bg-[#F7F8FA] dark:bg-[#16262D]"
         }`}
       >
         {/* The bell is grey artwork; on the green button it turns white. */}
@@ -139,7 +139,7 @@ export function EventsScreen() {
   return (
     <main
       style={{ top: TOP_BAR_BOTTOM }}
-      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
+      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white`}
     >
       <div className="mx-auto w-full max-w-[430px] px-4 pt-1" style={{ paddingBottom: NAV_CLEARANCE }}>
         <motion.h1 {...reveal(0)} className="text-2xl font-extrabold leading-tight">
@@ -175,7 +175,7 @@ export function EventsScreen() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.3, ease: EASE }}
-            className="pointer-events-none fixed left-1/2 z-20 flex h-11 w-[300px] max-w-[calc(100vw-32px)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#2C2C2C] px-5 py-2.5"
+            className="pointer-events-none fixed left-1/2 z-20 flex h-11 w-[300px] max-w-[calc(100vw-32px)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#2C2C2C] px-5 py-2.5 dark:bg-[#22262E]"
             style={{ bottom: TOAST_ABOVE_NAV }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
