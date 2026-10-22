@@ -64,6 +64,7 @@ export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }
       </div>
       <div className="absolute inset-x-0 bottom-0 z-10 mx-auto px-4 pb-9" style={{ maxWidth: PHONE_MAX_W }}>
         <Button3D
+          riveVariant="module"
           onClick={onContinue ?? (() => router.push("/level"))}
           onPress={playClickSound}
           className="w-full"
