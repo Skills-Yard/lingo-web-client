@@ -37,6 +37,7 @@ export function ReactionsHex({
   artboard = REACTIONS_ARTBOARD,
   stateMachine = REACTIONS_STATE_MACHINE,
   screen,
+  optionOrder,
   typing,
   selectedOption,
   questionId,
@@ -51,6 +52,9 @@ export function ReactionsHex({
   stateMachine?: string;
   /** Value of the artboard's `screen` number for this question. */
   screen?: number;
+  /** Artboard option number for each picked option's position (1-based), when
+   * the artboard numbers them differently. */
+  optionOrder?: readonly number[];
   /** Set anew (`Date.now()`) on every option pick. */
   typing: number;
   /** 1-based index of the picked option, 0 for none. */
@@ -94,9 +98,9 @@ export function ReactionsHex({
       fireNow(HEX_ONBOARDING_TRIGGER.idle);
     }
     if (screen !== undefined) setNumber(REACTIONS_SCREEN, screen);
-    setNumber(REACTIONS_OPTION, selectedOption);
+    setNumber(REACTIONS_OPTION, optionOrder?.[selectedOption - 1] ?? selectedOption);
     fireTrigger(REACTIONS_SELECT_TRIGGER);
-  }, [screen, selectedOption, setNumber, fireTrigger, fireNow]);
+  }, [screen, optionOrder, selectedOption, setNumber, fireTrigger, fireNow]);
 
   // Only picks made while he's showing — never one from before he appeared.
   const lastTyping = useRef(typing);
