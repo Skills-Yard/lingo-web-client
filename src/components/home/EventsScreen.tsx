@@ -176,7 +176,7 @@ export function EventsScreen() {
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.3, ease: EASE }}
             className="pointer-events-none fixed left-1/2 z-20 flex h-11 w-[300px] max-w-[calc(100vw-32px)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#2C2C2C] px-5 py-2.5"
-            style={{ bottom: `calc(${TOAST_ABOVE_NAV}px + env(safe-area-inset-bottom))` }}
+            style={{ bottom: TOAST_ABOVE_NAV }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/feed/bell.png" alt="" draggable={false} className="h-[18px] w-[18px] brightness-0 invert" />
