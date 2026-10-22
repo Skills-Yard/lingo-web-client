@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { motion, useReducedMotion } from "framer-motion";
 import { House } from "lucide-react";
 import { HomeNav, type HomeNavTab } from "./HomeNav";
 import { HomeTopBar } from "./HomeTopBar";
@@ -27,6 +28,7 @@ const tabAt = (pathname: string): HomeNavTab | null =>
  */
 export function HomeShell({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const pathname = usePathname();
   const active = tabAt(pathname) ?? "home";
 
@@ -38,16 +40,20 @@ export function HomeShell({ children }: { children: ReactNode }) {
         // The level map has no nav: just a way back home, bottom left.
         <div
           className="pointer-events-none absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[430px] px-4"
-          style={{ paddingBottom: NAV_MARGIN }}
+          style={{ paddingBottom: NAV_MARGIN + 14 }}
         >
-          <button
+          {/* Floats: a slow bob, with its shadow breathing along with it. */}
+          <motion.button
             type="button"
             onClick={() => router.push("/home")}
             aria-label="Home"
-            className="pointer-events-auto flex h-12 w-12 items-center justify-center rounded-full border border-black/10 bg-white text-[#444444] shadow-[0_6px_20px_rgba(0,0,0,0.12)] transition-transform active:scale-95 dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#C8C7C5] dark:shadow-[0_6px_20px_rgba(0,0,0,0.45)]"
+            animate={reduceMotion ? undefined : { y: [0, -7, 0] }}
+            transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
+            whileTap={{ scale: 0.94 }}
+            className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full border border-black bg-[#1A1C22] text-white shadow-[0_10px_24px_rgba(0,0,0,0.25)] dark:border-white dark:bg-white dark:text-[#1A1C22] dark:shadow-[0_10px_24px_rgba(0,0,0,0.55)]"
           >
-            <House className="h-[22px] w-[22px]" strokeWidth={1.65} />
-          </button>
+            <House className="h-7 w-7" strokeWidth={1.65} />
+          </motion.button>
         </div>
       ) : (
         <div

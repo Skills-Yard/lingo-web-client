@@ -8,6 +8,7 @@ import { configureRiveRuntime, HEX_STATE } from "@/lib/rive/runtime";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { HomeStage } from "./HomeStage";
 import { DailyQuests, HappeningSoon, HexGreetingCard, ModulePath } from "./HomeSections";
+import { NotificationsPopup } from "./NotificationsPopup";
 import { HomeStats } from "./HomeTopBar";
 
 configureRiveRuntime();
@@ -230,6 +231,7 @@ export function MainHomeScreen({
   onProfile?: () => void;
 }) {
   const [track, setTrack] = useState<TrackId>("web");
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
   // Which way the content slides: towards the tab that was picked.
   const [direction, setDirection] = useState<1 | -1>(1);
   const selectTrack = (next: TrackId) => {
@@ -245,7 +247,7 @@ export function MainHomeScreen({
   return (
     <HomeStage stageHeight={STAGE_H} scroll>
         <div className="flex flex-col px-4 pb-6">
-          <motion.header {...reveal(0)} className="flex items-center justify-between gap-3">
+          <motion.header {...reveal(0)} className="relative z-20 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={onProfile}
@@ -264,14 +266,30 @@ export function MainHomeScreen({
                 <span className="truncate text-lg font-semibold leading-6 text-[#444444] dark:text-[#C8C7C5]">{name}</span>
               </div>
             </button>
-            <button
-              type="button"
-              aria-label="Notifications"
-              className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-[8px] border border-black/8 dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#C8C7C5]"
-            >
-              <Bell className="h-[18px] w-[18px]" strokeWidth={1.6} />
-              <span className="absolute right-2 top-2 h-[6px] w-[6px] rounded-full bg-[#EF4444] dark:bg-[#FF5A57]" />
-            </button>
+            <div className="relative shrink-0">
+              <button
+                type="button"
+                data-notifications-bell
+                aria-label="Notifications"
+                aria-expanded={notificationsOpen}
+                onClick={() => setNotificationsOpen((open) => !open)}
+                className={`relative flex h-9 w-9 items-center justify-center rounded-[8px] border transition-[background-color,border-color,color,transform] duration-300 active:scale-95 ${
+                  notificationsOpen
+                    ? "border-[#01A17F] bg-[#01A17F] text-white"
+                    : "border-black/8 dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#C8C7C5]"
+                }`}
+              >
+                <Bell className="h-[18px] w-[18px]" strokeWidth={1.6} />
+                <span
+                  className={`absolute right-2 top-2 h-[6px] w-[6px] rounded-full transition-colors duration-300 ${
+                    notificationsOpen ? "bg-white" : "bg-[#EF4444] dark:bg-[#FF5A57]"
+                  }`}
+                />
+              </button>
+              <AnimatePresence>
+                {notificationsOpen && <NotificationsPopup onClose={() => setNotificationsOpen(false)} />}
+              </AnimatePresence>
+            </div>
           </motion.header>
 
           <motion.div {...reveal(0.06)} className="mt-4 flex items-center gap-2" role="tablist">

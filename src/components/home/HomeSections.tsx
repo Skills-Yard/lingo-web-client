@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Bell, BookOpen, CodeXml, Trophy, Zap } from "lucide-react";
 import { HexAvatar } from "./HexAvatar";
+import { setReminder, useReminders } from "./reminders";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -174,10 +174,14 @@ export function ModulePath() {
   );
 }
 
+/** The live event the Happening soon card reminds about. */
+const LIVE_EVENT = { id: "live-python-qa", title: "Python Q&A with mentors", meta: "Live in 2h" } as const;
+
 /** What is coming up: the next live event and a career to explore. */
 export function HappeningSoon() {
   const router = useRouter();
-  const [reminded, setReminded] = useState(false);
+  // Kept in local storage, so the notifications list it too.
+  const reminded = useReminders().some((r) => r.id === LIVE_EVENT.id);
   return (
     <motion.section {...reveal(0.55)}>
       <SectionHead title="Happening soon" action="See all" onAction={() => router.push("/events")} />
@@ -191,7 +195,7 @@ export function HappeningSoon() {
           <p className="text-[11px] leading-[15px] text-[#818185] dark:text-[#9FA19F]">Events · free</p>
           <button
             type="button"
-            onClick={() => setReminded((v) => !v)}
+            onClick={() => setReminder(LIVE_EVENT, !reminded)}
             aria-pressed={reminded}
             className="mt-auto flex h-[27px] items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[11px] font-medium leading-[15px] text-[#444444] dark:bg-[#1A1C22] dark:text-[#C8C7C5]"
           >

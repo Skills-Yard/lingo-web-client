@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { GlossButton } from "./GlossButton";
 import { TOP_BAR_BOTTOM } from "./HomeStage";
 import { HEADING } from "./homeFonts";
+import { setReminder, useReminders } from "./reminders";
 
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -113,19 +114,16 @@ function EventRow({
  * shared top bar and above the shared bottom nav.
  */
 export function EventsScreen() {
-  const [reminders, setReminders] = useState<ReadonlySet<string>>(new Set());
+  // Kept in local storage, so the home's notifications list them too.
+  const stored = useReminders();
+  const reminders = new Set(stored.map((r) => r.id));
   const [toast, setToast] = useState<number | null>(null);
   const toastTimer = useRef<number>(0);
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
-  const toggleReminder = (id: string) => {
-    const turningOn = !reminders.has(id);
-    setReminders((prev) => {
-      const next = new Set(prev);
-      if (turningOn) next.add(id);
-      else next.delete(id);
-      return next;
-    });
+  const toggleReminder = (event: UpcomingEvent) => {
+    const turningOn = !reminders.has(event.id);
+    setReminder({ id: event.id, title: event.title, meta: `${event.day} ${event.month} · ${event.meta}` }, turningOn);
     window.clearTimeout(toastTimer.current);
     if (!turningOn) {
       setToast(null);
@@ -160,7 +158,7 @@ export function EventsScreen() {
               <EventRow
                 event={event}
                 reminded={reminders.has(event.id)}
-                onToggle={() => toggleReminder(event.id)}
+                onToggle={() => toggleReminder(event)}
               />
             </motion.div>
           ))}
