@@ -517,13 +517,14 @@ export function OnboardingFlow({
                       questionId={step.id}
                       heading={step.heading(answers)}
                       {...(step.kind === "question-list"
-                        ? { kind: step.kind, options: step.options, variant: step.variant }
+                        ? { kind: step.kind, options: step.options, variant: step.variant, roomy: step.roomy }
                         : { kind: step.kind, options: step.options })}
                       selectedId={answers[step.answerKey] ?? null}
                       hexMode={step.hexMode}
                       reactionsArtboard={step.reactionsArtboard}
                       reactionsStateMachine={step.reactionsStateMachine}
                       reactionsScreen={step.reactionsScreen}
+                      reactionsOptionOrder={step.kind === "question-grid" ? step.reactionsOptionOrder : undefined}
                       onSelect={(id) => {
                         setAnswer(step.answerKey, id);
                         setPickCount((n) => n + 1);

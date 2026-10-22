@@ -38,6 +38,8 @@ type QuestionScreenProps = {
   reactionsStateMachine?: string;
   /** `screen` value set on that artboard's data for this question. */
   reactionsScreen?: number;
+  /** Artboard option number for each picked option's position (1-based). */
+  reactionsOptionOrder?: readonly number[];
   /** "row": Zox beside the heading — see QuestionHeading. */
   zoxLayout?: "row";
   className?: string;
@@ -46,7 +48,7 @@ type QuestionScreenProps = {
   /** Seconds to hold them before they leave: when Hex has finished leaving. */
   exitDelay?: number;
 } & (
-  | { kind: "question-list"; options: OnboardingListOption[]; variant?: "tiles" }
+  | { kind: "question-list"; options: OnboardingListOption[]; variant?: "tiles"; roomy?: boolean }
   | { kind: "question-grid"; options: OnboardingGridOption[] }
 );
 
@@ -77,6 +79,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
     reactionsArtboard,
     reactionsStateMachine,
     reactionsScreen,
+    reactionsOptionOrder,
     className,
     exiting = false,
     exitDelay = 0,
@@ -171,6 +174,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
               artboard={reactionsArtboard}
               stateMachine={reactionsStateMachine}
               screen={reactionsScreen}
+              optionOrder={reactionsOptionOrder}
               className="h-full w-full"
               typing={typing}
               selectedOption={selectedOption}
@@ -190,6 +194,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
           <QuestionListOptions
             options={props.options}
             variant={props.variant}
+            roomy={props.roomy}
             selectedId={selectedId}
             spokenOption={spokenOption}
             onPick={pick}
