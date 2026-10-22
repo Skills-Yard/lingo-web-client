@@ -42,7 +42,8 @@ export function CareerDetailScreen({
   const [pickedSkill, setPickedSkill] = useState(career.skills[0]);
 
   return (
-    <main className="relative mx-auto flex h-dvh w-full max-w-[430px] flex-col overflow-hidden bg-white font-[family-name:var(--font-app-poppins)] text-[#444444]">
+    <main className="h-dvh w-full overflow-hidden bg-white font-[family-name:var(--font-app-poppins)] text-[#444444]">
+    <div className="relative mx-auto flex h-full w-full max-w-[430px] flex-col">
       <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto">
         {/* Back button 54px from the top, then a 6px gap to the picture. */}
         <div className="px-4 pt-[54px]">
@@ -112,6 +113,7 @@ export function CareerDetailScreen({
           </Button3D>
         </div>
       </div>
+    </div>
     </main>
   );
 }
