@@ -8,6 +8,7 @@ import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
+import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
@@ -87,16 +88,23 @@ const TITLE_HEIGHT: Record<Step, number> = { says: 67, quiz: 32 };
 export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>(urlStep);
+  // Opened straight on the quiz (a jump, or coming back from a later screen).
+  const [openedOnQuiz] = useState(urlStep === "quiz");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Once checked, the answer is locked and the right/wrong marks show.
   const [checked, setChecked] = useState(false);
   const quiz = step === "quiz";
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
+  const [hinted, setHinted] = useState(false);
+  // Once the hinted card has finished flipping, Hex floats over to it.
+  const [flipped, setFlipped] = useState(false);
 
   const show = (next: Step) => {
     // Coming back to the quiz later starts it fresh.
     if (next === "says") {
       setSelectedId(null);
+      setHinted(false);
+      setFlipped(false);
       setChecked(false);
     }
     setStep(next);
@@ -114,6 +122,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
+      hint={{ visible: quiz && !checked, onUse: () => setHinted(true) }}
       onBack={() => {
         if (!quiz) return router.push(levelOneHref(2));
         show("says");
@@ -195,7 +204,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             className="h-[358px] w-full rounded-lg object-cover object-top"
           />
         </div>
-        <AnimatePresence>{!checked && <TeacherSpeech key="speech" hexAway={selectedId !== null} />}</AnimatePresence>
+        <AnimatePresence>{!checked && <TeacherSpeech key="speech" hexAway={selectedId !== null} hexToCard={hinted && flipped} skipIntro={openedOnQuiz} />}</AnimatePresence>
       </motion.div>
 
       <AnimatePresence>
@@ -216,8 +225,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             {OPTIONS.map((option) => {
               const state = optionState(option.id, selectedId, checked);
               return (
+                <HintFloat key={option.id} className="flex min-w-0 flex-1" active={hinted && selectedId === null && option.id === CORRECT_ID} onFlipEnd={() => setFlipped(true)}>
                 <motion.button
-                  key={option.id}
                   animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
                   whileTap={{ scale: 0.96 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
@@ -228,9 +237,9 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}
-                  className={`relative flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[12px] border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-colors ${
+                  className={`relative flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[12px] border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[color,background-color,border-color,box-shadow] ${
                     state === "idle" ? `border-transparent ${option.tint}` : LOOKS[state].card
-                  }`}
+                  } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
                 >
                   <XpPop show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -244,6 +253,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     </span>
                   </span>
                 </motion.button>
+                </HintFloat>
               );
             })}
           </motion.div>

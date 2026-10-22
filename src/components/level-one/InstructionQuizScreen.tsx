@@ -11,6 +11,7 @@ import { Confetti } from "./Confetti";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
+import { FILL_S, HintFloat } from "./HintFloat";
 import { LevelOneShell, levelOneHref, levelOneRewardHref } from "./LevelOneShell";
 import { optionState } from "./TeacherFlow";
 
@@ -42,6 +43,10 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
+  const [hinted, setHinted] = useState(false);
+  // Once the hinted card has finished flipping, Hex floats over to it.
+  const [flipped, setFlipped] = useState(false);
+  const [hintSlot, setHintSlot] = useState<HTMLDivElement | null>(null);
   // Hex sits in the question's slot and leaves as soon as an option is picked;
   // on Check the result panel brings its own Hex, entering inside it.
   const glideRef = useRef<HTMLDivElement>(null);
@@ -54,6 +59,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
+      hint={{ visible: !checked, onUse: () => setHinted(true) }}
       onBack={() => router.push(levelOneHref(6))}
       onContinue={() => {
         if (!checked) {
@@ -73,7 +79,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
             {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
             {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>
           </FeedbackPanel>
-          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} leaving={selectedId !== null}
+          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} leaving={selectedId !== null}
             containerRef={glideRef} />
         </div>
       }
@@ -113,8 +119,12 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
           {OPTIONS.map((option, i) => {
             const state = optionState(option.id, selectedId, checked, CORRECT_ID);
             return (
+              <HintFloat key={option.id} className="relative w-full" spin={false} active={hinted && selectedId === null && option.id === CORRECT_ID} onFlipEnd={() => setFlipped(true)}>
+              {/* Where Hex lands: small, standing on the card's top edge. */}
+              {option.id === CORRECT_ID && (
+                <div ref={setHintSlot} aria-hidden className="pointer-events-none absolute -top-[58px] right-3 h-[72px] w-[72px]" />
+              )}
               <motion.button
-                key={option.id}
                 {...optionDropIn(state === "selected")}
                 type="button"
                 disabled={checked}
@@ -123,8 +133,16 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                   setSelectedId(option.id);
                 }}
                 aria-pressed={state === "selected"}
-                className={`relative flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] transition-colors dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
+                className={`relative isolate flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] transition-[color,background-color,border-color,box-shadow] dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
               >
+                {/* The hint's orange fill, wiped in from the left behind the content. */}
+                <motion.span
+                  aria-hidden
+                  initial={false}
+                  animate={{ clipPath: hinted && state === "idle" && option.id === CORRECT_ID ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
+                  transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
+                  className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit] bg-[#FFE7D1] dark:bg-[#33220F]"
+                />
                 <XpPop inside show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={option.icon} alt="" draggable={false} className={`shrink-0 object-contain ${option.iconSize}`} />
@@ -138,6 +156,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                   <X className="h-4 w-4 text-white" strokeWidth={3} />
                 </span>
               </motion.button>
+              </HintFloat>
             );
           })}
         </div>

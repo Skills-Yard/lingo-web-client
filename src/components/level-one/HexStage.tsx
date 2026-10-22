@@ -103,6 +103,9 @@ export const LEAVE_FADE_DELAY_S = 0.8;
 // tween would restart every frame.
 const GLIDE_TRANSITION = { type: "spring", stiffness: 70, damping: 18, mass: 1, restDelta: 0.5, restSpeed: 2 } as const;
 
+/** The quicker, better-damped glide to a hinted card, timed to land as its flip stops. */
+const HINT_GLIDE_TRANSITION = { type: "spring", stiffness: 170, damping: 24, mass: 0.9, restDelta: 0.5, restSpeed: 2 } as const;
+
 /**
  * One Hex that stays on screen and glides from slot to slot: it fills
  * whichever of `fromEl` / `toEl` is current, re-measured every frame so it
@@ -176,7 +179,7 @@ export function HexGlide({
       className="pointer-events-none absolute top-0 left-0 z-30"
       initial={false}
       animate={{ x: rect.x, y: rect.y, width: rect.width, height: rect.height, opacity: leaving ? 0 : 1 }}
-      transition={{ default: GLIDE_TRANSITION, opacity: leaving ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0 } }}
+      transition={{ default: moved ? HINT_GLIDE_TRANSITION : GLIDE_TRANSITION, opacity: leaving ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0 } }}
       onAnimationComplete={() => setArrived(moved)}
     >
       <OnboardingHex entryKey="quiz" enter={enter} entryStyle={entryStyle} leaving={leaving} cue={arrived ? arrivedCue : null} />

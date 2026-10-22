@@ -24,9 +24,14 @@ const HEX_SIZE = 130;
 const HEX_BELOW = { x: 114, y: 362 };
 const HEX_ENTER_FROM = { x: 114, y: 420 };
 const HEX_BESIDE = { x: 228, y: 84 };
+/** The hint: a smaller Hex standing on the top edge of the right-hand option
+ * card (which starts 264px down, with the picture cropped to 240px). */
+const HEX_AT_CARD = { x: 262, y: 198, scale: 80 / HEX_SIZE };
 /** Once next to the bubble he floats up and down. */
 const HEX_FLOAT = { y: [0, -7, 0] };
 const HEX_FLOAT_TRANSITION = { duration: 2.4, ease: "easeInOut", repeat: Infinity } as const;
+/** The quicker, better-damped trip to the hinted card, timed to land as its flip stops. */
+const HEX_HINT_MOVE = { type: "spring", stiffness: 170, damping: 24, mass: 0.9 } as const;
 const HEX_MOVE = { type: "spring", stiffness: 70, damping: 16, mass: 1 } as const;
 
 /** The characters of `text` shown so far, one more every `TYPE_STEP_MS` once `active`. */
@@ -50,9 +55,19 @@ const useTyped = (text: string, active: boolean) => {
  * introduces it; at "open your notebook" he comes up beside the teacher and the
  * line types itself into a speech bubble. Positioned over the picture's box.
  */
-export function TeacherSpeech({ hexAway = false }: { hexAway?: boolean }) {
+export function TeacherSpeech({
+  hexAway = false,
+  hexToCard = false,
+  skipIntro = false,
+}: {
+  hexAway?: boolean;
+  hexToCard?: boolean;
+  /** The screen was opened straight on the quiz: no voice intro to wait for,
+   * so Hex is already beside the bubble and the line types at once. */
+  skipIntro?: boolean;
+}) {
   const { speaking } = useLevelVoice();
-  const [cued, setCued] = useState(false);
+  const [cued, setCued] = useState(skipIntro);
   // Hex leaves when an option is picked. If he is asked back (the quiz starts
   // over) he is a fresh Hex, so the one that left is not reused.
   const [hexRun, setHexRun] = useState(0);
@@ -96,18 +111,19 @@ export function TeacherSpeech({ hexAway = false }: { hexAway?: boolean }) {
       <motion.div
         key={hexRun}
         aria-hidden
-        initial={{ opacity: 0, ...HEX_ENTER_FROM }}
+        initial={{ opacity: 0, ...(skipIntro ? HEX_BESIDE : HEX_ENTER_FROM) }}
         animate={{
           opacity: hexAway ? 0 : 1,
-          ...(cued ? HEX_BESIDE : HEX_BELOW),
+          ...(hexToCard ? HEX_AT_CARD : { ...(cued ? HEX_BESIDE : HEX_BELOW), scale: 1 }),
         }}
         exit={{ opacity: 0, transition: { duration: 0.2 } }}
         transition={{
           opacity: hexAway ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0.2 },
-          x: HEX_MOVE,
-          y: HEX_MOVE,
+          x: hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
+          y: hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
+          scale: hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
         }}
-        style={{ width: HEX_SIZE, height: HEX_SIZE }}
+        style={{ width: HEX_SIZE, height: HEX_SIZE, transformOrigin: "0 0" }}
         className="pointer-events-none absolute top-0 left-0 z-20"
       >
         <motion.div

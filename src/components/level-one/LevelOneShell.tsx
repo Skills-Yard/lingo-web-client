@@ -4,6 +4,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { Button3D } from "@/components/ui/Button3D";
+import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
+import { HintButton } from "./HintButton";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { playClickSound, setClickSoundMuted } from "@/components/onboarding/clickSound";
@@ -55,10 +57,15 @@ interface LevelOneShellProps {
   voiceover?: readonly string[];
   /** The latest checked answer — plays the progress bar's correct / wrong reaction. */
   answer?: AnswerResult | null;
+  /** Shows the hint button left of the main button; `visible` slides it in / out. */
+  hint?: { visible: boolean; onUse: () => void };
 }
 
+/** The badge count — fixed at 1 for now. */
+const HINTS_LEFT = 1;
+
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash }: LevelOneShellProps) {
+export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
@@ -170,14 +177,31 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
       </div>
 
       <div className="relative z-10 mx-auto w-full shrink-0 px-4 pb-9">
-        <Button3D
-          onClick={() => onContinue?.()}
-          onPress={playClickSound}
-          disabled={ctaDisabled}
-          className="w-full"
-        >
-          {ctaLabel}
-        </Button3D>
+        {/* Fixed at the full-width button's own ratio, so the row never changes
+          height while the hint slides in and the button narrows beside it. */}
+        <div className="flex w-full items-center" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
+          {hint && (
+            <HintButton
+              visible={hint.visible}
+              count={HINTS_LEFT}
+              onPress={() => {
+                playClickSound();
+                hint.onUse();
+              }}
+            />
+          )}
+          <Button3D
+            onClick={() => onContinue?.()}
+            onPress={playClickSound}
+            disabled={ctaDisabled}
+            className={`min-w-0 flex-1 ${hint ? "transition-[height] duration-500 ease-out" : ""}`}
+            // With the hint showing the button also drops in height (the art
+            // scales to fit), so it reads as smaller, not just narrower.
+            {...(hint && { style: { aspectRatio: "auto", height: hint.visible ? "74%" : "100%" } })}
+          >
+            {ctaLabel}
+          </Button3D>
+        </div>
       </div>
 
       {overlay}
