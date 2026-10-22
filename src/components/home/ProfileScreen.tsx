@@ -2,7 +2,9 @@
 
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ChevronLeft, Clock, Flag, Flame, Gem, RotateCcw, Sparkles, TrendingUp } from "lucide-react";
+import { ChevronLeft, Clock, Flag, Flame, Gem, Moon, RotateCcw, Sparkles, Sun, TrendingUp } from "lucide-react";
+import { useTheme } from "@/context/ThemeContext";
+import { WIPE } from "@/components/onboarding/OnboardingHeader";
 import {
   CAREER_OPTIONS,
   EXPERIENCE_OPTIONS,
@@ -67,6 +69,8 @@ export function ProfileScreen({
 }) {
   const name = answers.name?.trim() || "Learner";
   const career = labelOf(CAREER_OPTIONS, answers.career);
+  const { theme, toggleTheme } = useTheme();
+  const dark = theme === "dark";
 
   return (
     <main className="h-dvh w-full overflow-hidden bg-white font-[family-name:var(--font-app-poppins)] text-[#444444] dark:bg-[#0F1F26] dark:text-white">
@@ -116,6 +120,28 @@ export function ProfileScreen({
             ))}
           </ul>
         </motion.section>
+
+        <motion.button
+          {...rise(0.15)}
+          type="button"
+          role="switch"
+          aria-checked={dark}
+          onClick={() => toggleTheme(WIPE)}
+          className={`${CARD} flex h-14 shrink-0 items-center gap-3 px-4 text-left`}
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#FFF3DE] text-[#FF8D42] dark:bg-[#2A2550] dark:text-[#8E82FF]">
+            {dark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
+          </span>
+          <span className="min-w-0 flex-1 text-sm font-medium text-[#2C2C2C] dark:text-white">{dark ? "Dark mode" : "Light mode"}</span>
+          <span
+            aria-hidden
+            className={`relative h-6 w-11 shrink-0 rounded-full transition-colors duration-300 ${dark ? "bg-[#01A17F]" : "bg-[#D9DCE1]"}`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform duration-300 ${dark ? "translate-x-5" : ""}`}
+            />
+          </span>
+        </motion.button>
 
         <motion.div {...rise(0.18)} className="shrink-0 pt-2">
           <button
