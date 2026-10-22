@@ -156,7 +156,7 @@ export function ProfileScreen({
         </div>
 
         {/* Pinned nav, over a fade so content slides beneath it. */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[128px] items-end justify-center bg-gradient-to-t from-[#F4FFF6] from-[35%] to-transparent px-4 pb-9">
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex h-[128px] items-end justify-center bg-gradient-to-t from-[#F4FFF6] from-[35%] to-transparent px-4 pb-[38px]">
           <BottomNav active="profile" onNavigate={onNavigate} />
         </div>
       </div>

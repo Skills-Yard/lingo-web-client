@@ -35,7 +35,7 @@ export function HomeShell({ children }: { children: ReactNode }) {
       {pathname !== "/home" && pathname !== "/level" && <HomeTopBar />}
       <div
         className="pointer-events-none absolute inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[430px] px-3"
-        style={{ paddingBottom: `calc(${NAV_MARGIN}px + env(safe-area-inset-bottom))` }}
+        style={{ paddingBottom: NAV_MARGIN }}
       >
         <div className="pointer-events-auto">
           <HomeNav
