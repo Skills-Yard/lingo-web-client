@@ -820,8 +820,8 @@ export function HomeScreen({
           {/* Streak + gems: pinned to the screen's own left and right edges
             (not the centred stage column), each chip scaled with the layout. */}
           <motion.div
-            className="pointer-events-auto absolute inset-x-0 flex items-center justify-between"
-            style={{ top: 51 * scale, paddingInline: 16 * scale }}
+            className="pointer-events-auto absolute inset-x-0 mx-auto flex items-center justify-between"
+            style={{ top: 51 * scale, paddingInline: 16 * scale, maxWidth: 1024 }}
             {...reveal(0)}
           >
             <div style={{ transform: `scale(${scale})`, transformOrigin: "left center" }}>

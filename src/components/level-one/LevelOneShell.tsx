@@ -18,6 +18,8 @@ import { useLevelMuted } from "./levelMuted";
 const FRAME_W = 390;
 const FRAME_H = 844;
 const MAX_SCALE = 1.5;
+/** The header's widest on-screen width (px) — 5xl. */
+const HEADER_MAX_W = 1024;
 
 /** Screens in Level 1 (the progress bar's total). */
 export const LEVEL_ONE_STEPS = 9;
@@ -149,6 +151,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
           height: stage?.height,
           transform: `scale(${stage?.scale ?? 1})`,
           visibility: stage ? "visible" : "hidden",
+          "--stage-scale": stage?.scale ?? 1,
           "--stage-w": `${stage?.width ?? FRAME_W}px`,
           "--stage-h": `${stage?.height ?? FRAME_H}px`,
         } as React.CSSProperties}
@@ -157,7 +160,11 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         {/* The header sits 9px lower than the shared one, putting the page
           count 36px from the top; the negative margin keeps the content
           below exactly where it was. */}
-        <div className="relative z-10 mx-auto -mb-[9px] w-full pt-[9px]">
+        <div
+          className="relative z-10 mx-auto -mb-[9px] w-full pt-[9px]"
+          // 5xl on screen, like the onboarding header; the stage is scaled, so divide.
+          style={{ maxWidth: HEADER_MAX_W / (stage?.scale ?? 1) }}
+        >
           <OnboardingHeader
             onBack={onBack ?? (() => router.back())}
             progress={{ step, total: LEVEL_ONE_STEPS }}
@@ -170,13 +177,20 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         {/* The scroller spans the device, so a child can run edge to edge;
           the rest of the content stays in the centred column. */}
         <div ref={scrollerRef} className="scrollbar-none min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-          <div className={`mx-auto flex min-h-full w-full flex-col items-center px-4 ${flush ? "pb-0" : "pb-4"}`}>
+          {/* Phone width at most: on a desktop the content keeps its proportions
+            and sits in the middle instead of stretching across the screen. */}
+          <div
+            className={`mx-auto flex min-h-full w-full flex-col items-center px-4 ${flush ? "pb-0" : "pb-4"}`}
+            style={{ maxWidth: FRAME_W }}
+          >
             {children}
           </div>
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto w-full shrink-0 px-4 pb-9">
+      {/* Never wider than the 390px frame, so on a desktop the button keeps its
+        phone size and sits in the middle instead of stretching across. */}
+      <div className="relative z-10 mx-auto w-full shrink-0 px-4 pb-9" style={{ maxWidth: FRAME_W }}>
         {/* Fixed at the full-width button's own ratio, so the row never changes
           height while the hint slides in and the button narrows beside it. */}
         <div className="flex w-full items-center" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>

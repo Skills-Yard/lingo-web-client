@@ -14,7 +14,10 @@ const LESSON_ACCURACY = 92;
 /** The seconds the lesson took. */
 const LESSON_SECONDS = 222;
 
-const LAYOUT = new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
+/** The widest phone (px) — past it the screen stops growing. */
+const PHONE_MAX_W = 430;
+
+const LAYOUT =new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
 
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
@@ -52,8 +55,14 @@ export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }
 
   return (
     <main className="onboarding-light relative h-dvh w-full overflow-hidden bg-white">
-      <RiveComponent aria-hidden className="absolute inset-0 h-full w-full" />
-      <div className="absolute inset-x-0 bottom-0 z-10 px-4 pb-9">
+      {/* The artboard fits the width, so it is held to a phone's width: on a
+        desktop it stays the same size and sits in the middle. */}
+      {/* The cap is on this box, not on `RiveComponent`: it drops its `style`
+        whenever it has a `className`. */}
+      <div className="absolute inset-y-0 left-1/2 w-full -translate-x-1/2" style={{ maxWidth: PHONE_MAX_W }}>
+        <RiveComponent aria-hidden className="h-full w-full" />
+      </div>
+      <div className="absolute inset-x-0 bottom-0 z-10 mx-auto px-4 pb-9" style={{ maxWidth: PHONE_MAX_W }}>
         <Button3D
           onClick={onContinue ?? (() => router.push("/level"))}
           onPress={playClickSound}

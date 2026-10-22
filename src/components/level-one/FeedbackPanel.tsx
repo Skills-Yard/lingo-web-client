@@ -195,7 +195,9 @@ export function FeedbackPanel({
       initial={{ y: "100%" }}
       animate={{ y: open ? 0 : "100%" }}
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
-      className={`absolute inset-x-0 bottom-0 z-0 rounded-t-[28px] border-[1.5px] border-b-0 px-4 pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
+      // 5xl on screen, like the header; the stage is scaled, so divide.
+      style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}
+      className={`absolute inset-x-0 bottom-0 z-0 mx-auto rounded-t-[28px] border-[1.5px] border-b-0 px-4 pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
     >
       <div className="mx-auto flex w-full items-center gap-3">
         <div ref={hexSlot} aria-hidden className="pointer-events-none -my-4 h-[112px] w-[120px] shrink-0">
