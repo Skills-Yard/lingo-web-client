@@ -25,14 +25,10 @@ const VIEW_X = 20;
 const VIEW_Y = 385;
 const VIEW_W = 350;
 const VIEW_H = 205;
-// Labels sit below the track (inside the arc), at the spots Figma puts them.
-const LABELS = [
-  { value: 0, x: 36.5, y: 568 },
-  { value: 5, x: 112.5, y: 526 },
-  { value: 10, x: 195, y: 515 },
-  { value: 15, x: 275, y: 526 },
-  { value: 20, x: 350, y: 568 },
-] as const;
+// Labels sit inside the arc, on the radius through their tick, and turn with it
+// so each one stands along the meter's curve.
+const LABEL_VALUES = [0, 5, 10, 15, 20] as const;
+const LABEL_RADIUS = 188;
 const MAJOR_TICKS = [0, 5, 10, 15, 20];
 // The picked value is 5, 10, 15 or 20 — no in-between minutes. The knob
 // itself follows the finger freely and glides to the nearest step on release.
@@ -164,11 +160,11 @@ export function TimeSliderScreen({
     <div
       className={`flex min-h-0 flex-col items-center px-4 ${ONBOARDING_TOP_OFFSET_CLASS} ${className ?? ""}`}
     >
-      <h1 className="mx-auto mt-8 w-full max-w-72 shrink-0 text-left text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
+      <h1 className="mx-auto mt-3 w-full max-w-72 shrink-0 text-left text-[20px] font-semibold leading-[1.34] text-[#2C2C2C] dark:text-white">
         <KaraokeSpans spans={heading} spoken={spoken} />
       </h1>
 
-      <div aria-hidden className="-mx-4 mt-2 flex w-[calc(100%+2rem)] shrink-0 flex-col items-center">
+      <div aria-hidden className="-mx-4 mt-4 flex w-[calc(100%+2rem)] shrink-0 flex-col items-center">
         <OnboardingQuestionHex
           className="h-48 w-full"
           screenId="timeCommitment"
@@ -184,7 +180,7 @@ export function TimeSliderScreen({
 
       {/* The dial sits at the bottom of the screen, just above
           the Continue button; Hex stays up top. */}
-      <div className="mt-auto flex w-full min-h-0 shrink-0 flex-col items-center pb-3">
+      <div className="mt-auto flex w-full min-h-0 shrink-0 flex-col items-center pb-6">
       <div className="mt-[clamp(0px,1.5vh,12px)] w-full max-w-[350px] shrink-0 touch-none select-none">
         <svg
           ref={svgRef}
@@ -310,18 +306,23 @@ export function TimeSliderScreen({
             );
           })}
 
-          {LABELS.map(({ value, x, y }) => (
-            <text
-              key={value}
-              x={x}
-              y={y}
-              textAnchor="middle"
-              dominantBaseline="middle"
-              className="fill-black text-[24px] font-medium dark:fill-white"
-            >
-              {String(value).padStart(2, "0")}
-            </text>
-          ))}
+          {LABEL_VALUES.map((value) => {
+            const deg = valueToDeg(value);
+            const { x, y } = pointAt(deg, LABEL_RADIUS);
+            return (
+              <text
+                key={value}
+                x={x}
+                y={y}
+                transform={`rotate(${deg} ${x} ${y})`}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                className="fill-black text-[24px] font-medium dark:fill-white"
+              >
+                {String(value).padStart(2, "0")}
+              </text>
+            );
+          })}
 
           <g style={{ filter: "drop-shadow(1px 1px 6.4px rgba(0,0,0,0.25))" }}>
             <circle cx={knob.x} cy={knob.y} r={KNOB_OUTER_R} fill="white" />
@@ -347,12 +348,12 @@ export function TimeSliderScreen({
         </svg>
       </div>
 
-      <p className="mt-4 flex w-full max-w-72 shrink-0 items-center justify-center gap-3 rounded-lg bg-[#EFF9FA] px-2 py-4.5 text-base font-medium leading-[1.34] text-[#1A1C22] dark:bg-white/5 dark:text-white">
-        <svg aria-hidden viewBox="0 0 24 24" className="h-8.25 w-8.25 shrink-0 fill-[#00B8A9]">
+      <p className="mt-11 flex w-full max-w-72 shrink-0 items-center justify-center gap-2.5 rounded-lg bg-[#EFF9FA] px-2 py-3 text-sm font-medium leading-[1.34] text-[#1A1C22] dark:bg-white/5 dark:text-white">
+        <svg aria-hidden viewBox="0 0 24 24" className="h-6 w-6 shrink-0 fill-[#00B8A9]">
           <path d="M9 3l1.6 4.4L15 9l-4.4 1.6L9 15l-1.6-4.4L3 9l4.4-1.6L9 3z" />
           <path d="M18 12l1 2.5 2.5 1-2.5 1-1 2.5-1-2.5-2.5-1 2.5-1 1-2.5z" />
         </svg>
-        <span className="w-52">Even {minutes} minutes a day can build a great habit!</span>
+        <span className="w-48">Even {minutes} minutes a day can build a great habit!</span>
       </p>
       </div>
     </div>

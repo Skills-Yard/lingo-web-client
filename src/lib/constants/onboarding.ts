@@ -718,6 +718,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "question-list",
     id: "startingPoint",
+    zoxLayout: "row",
+    roomy: true,
     heading: () => [
       { text: "How do you want to begin your " },
       { text: "path", highlight: true },
