@@ -9,6 +9,7 @@ import {
   saveOnboardingAnswers,
 } from "@/lib/onboardingAnswers";
 import { onboardingHref } from "@/lib/routes";
+import { HexRiveLoading } from "@/components/rive/HexRiveLoading";
 import { useHexRiveStatus } from "@/lib/rive/hexFile";
 
 const subscribeNever = () => () => {};
@@ -39,7 +40,8 @@ export function AppFlow({ initialStep }: { initialStep?: string }) {
   // splash's timer) begins with the file already loaded. A failed preload
   // doesn't block: the canvases fetch the file themselves.
   const hexRiveStatus = useHexRiveStatus();
-  if (savedAnswersJson === null || hexRiveStatus === "loading") return null;
+  if (savedAnswersJson === null) return null;
+  if (hexRiveStatus === "loading") return <HexRiveLoading />;
 
   return (
     <OnboardingFlow

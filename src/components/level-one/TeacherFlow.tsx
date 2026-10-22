@@ -118,6 +118,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
   return (
     <LevelOneShell
       step={quiz ? 4 : 3}
+      answer={answer}
       // The quiz's question is read once, until it is checked.
       voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
@@ -144,7 +145,10 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         if (!quiz) {
           show("quiz");
           router.push(levelOneHref(4));
-        } else if (!checked) setChecked(true);
+        } else if (!checked) {
+          setChecked(true);
+          setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
+        }
         else router.push(levelOneHref(5));
       }}
     >

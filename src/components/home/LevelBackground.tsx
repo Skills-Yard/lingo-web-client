@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
+import { hexRiveSource } from "@/lib/rive/hexFile";
 import { LEVEL_BACKGROUND } from "@/lib/rive/runtime";
 
 const LAYOUT = new Layout({ fit: Fit.Fill, alignment: Alignment.TopCenter });
@@ -15,7 +16,7 @@ type TileProps = {
 /** One playing copy of the background. */
 function Tile({ aspect, onAspect }: TileProps) {
   const { rive, RiveComponent } = useRive({
-    src: LEVEL_BACKGROUND.src,
+    ...hexRiveSource(),
     artboard: LEVEL_BACKGROUND.artboard,
     stateMachine: LEVEL_BACKGROUND.stateMachine,
     autoplay: true,

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
+import { applyCanvasBleed } from "@/lib/rive/bleed";
 import { hexRiveSource } from "@/lib/rive/hexFile";
 import { PROGRESS_BAR } from "@/lib/rive/runtime";
 
@@ -10,6 +11,7 @@ const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 /** Until the artboard's real size is read. */
 const FALLBACK_ASPECT = 8;
+const { bleed } = PROGRESS_BAR;
 const TWEEN_MS = 700;
 const TWEEN_DELAY_MS = 150;
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
@@ -31,7 +33,7 @@ type RiveProgressBarProps = {
  * `progress` property set to `value`. Give it a width; the height follows the artboard. */
 export function RiveProgressBar({ value, from, answer = null, className = "" }: RiveProgressBarProps) {
   const [aspect, setAspect] = useState(FALLBACK_ASPECT);
-  const { rive, RiveComponent } = useRive({
+  const { rive, canvas, RiveComponent } = useRive({
     ...hexRiveSource(),
     artboard: PROGRESS_BAR.artboard,
     stateMachine: PROGRESS_BAR.stateMachine,
@@ -47,6 +49,13 @@ export function RiveProgressBar({ value, from, answer = null, className = "" }: 
     const { minX, maxX, minY, maxY } = rive.bounds;
     if (maxY > minY) setAspect((maxX - minX) / (maxY - minY));
   }, [rive]);
+
+  // The canvas is bigger than the bar by the bleed on every side, so effects
+  // past the artboard aren't clipped.
+  useEffect(() => {
+    if (!rive || !canvas) return;
+    return applyCanvasBleed(rive, canvas, bleed, PROGRESS_BAR.trackInset);
+  }, [rive, canvas]);
 
   // The fill the bar last showed. A change of `value` is tweened from here
   // (the property itself only jumps), so the fill visibly grows or shrinks.
@@ -86,8 +95,16 @@ export function RiveProgressBar({ value, from, answer = null, className = "" }: 
   }, [rive, answerId, answerCorrect]);
 
   return (
-    <div aria-hidden className={`pointer-events-none ${className}`} style={{ aspectRatio: aspect }}>
-      <RiveComponent className="h-full w-full" />
+    <div aria-hidden className={`pointer-events-none relative ${className}`} style={{ aspectRatio: aspect }}>
+      <RiveComponent
+        style={{
+          position: "absolute",
+          left: -bleed,
+          top: -bleed,
+          width: `calc(100% + ${2 * bleed}px)`,
+          height: `calc(100% + ${2 * bleed}px)`,
+        }}
+      />
     </div>
   );
 }

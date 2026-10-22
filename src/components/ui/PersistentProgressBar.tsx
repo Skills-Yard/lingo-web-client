@@ -2,13 +2,14 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
+  fireAnswer,
   getProgressBarHost,
   lastShownFill,
   progressBarVersion,
+  pulseCombo,
   subscribeProgressBar,
   writeProgress,
 } from "@/lib/rive/progressBarHost";
-import { PROGRESS_BAR } from "@/lib/rive/runtime";
 import type { AnswerResult } from "./RiveProgressBar";
 
 const TWEEN_MS = 700;
@@ -55,6 +56,7 @@ export function PersistentProgressBar({ value, from, answer = null, className = 
     const start = lastShownFill() ?? from ?? target;
     show(start);
     if (start === target) return;
+    pulseCombo();
     let frame = 0;
     const begin = performance.now() + TWEEN_DELAY_MS;
     const step = (now: number) => {
@@ -70,8 +72,7 @@ export function PersistentProgressBar({ value, from, answer = null, className = 
   const answerCorrect = answer?.correct;
   useEffect(() => {
     if (!rive || !loaded || answerId === undefined) return;
-    const name = answerCorrect ? PROGRESS_BAR.correctTrigger : PROGRESS_BAR.wrongTrigger;
-    rive.viewModelInstance?.trigger(name)?.trigger();
+    fireAnswer(answerCorrect ?? false);
   }, [rive, loaded, answerId, answerCorrect]);
 
   return (

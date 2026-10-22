@@ -44,7 +44,8 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
   }, [progress]);
   return (
     // Fixed 83px box, placed from the top edge: page count at 27px, bar at
-    // 57px, and the 39px buttons centred on the bar (43.5px).
+    // 63px, and the 39px buttons centred on the bar (43.5px). The bar always
+    // runs between back and the two right buttons — one width on every screen.
     <header className="relative h-[83px] shrink-0 select-none">
       <button
         type="button"
@@ -70,24 +71,26 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className={`absolute left-[67px] ${fullscreen.available ? "right-[161px]" : "right-[114px]"} top-[63px] -translate-y-1/2`}
+            className="absolute left-[67px] right-[114px] top-[63px] -translate-y-1/2"
           />
         </>
       )}
 
+      {/* Hidden where it can't do anything (iPhone Safari, installed PWA).
+          Sits in the top-right corner so the bar keeps one width either way. */}
+      {fullscreen.available && (
+        <button
+          type="button"
+          onClick={fullscreen.toggle}
+          className="absolute top-0.5 right-4 flex h-5 w-5 cursor-pointer items-center justify-center text-[#444444] transition-all active:scale-95 dark:text-white/70"
+          aria-label={fullscreen.active ? "Exit full screen" : "Enter full screen"}
+        >
+          {fullscreen.active ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+        </button>
+      )}
+
       <div className="absolute top-[43.5px] right-4 flex items-center gap-2">
-        {/* Hidden where it can't do anything (iPhone Safari, installed PWA).
-            Leads the group so light/dark and sound keep their places. */}
-        {fullscreen.available && (
-          <button
-            type="button"
-            onClick={fullscreen.toggle}
-            className={ICON_BUTTON}
-            aria-label={fullscreen.active ? "Exit full screen" : "Enter full screen"}
-          >
-            {fullscreen.active ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
-          </button>
-        )}
+        {/* Light/dark switch and sound keep their places. */}
         {/* Light/dark switch — the site's own theme (see ThemeContext),
             wiped in diagonally from the top-right corner. */}
         <button

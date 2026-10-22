@@ -339,9 +339,29 @@ export const PROGRESS_BAR = {
   artboard: "LESSON_ProgressBar",
   stateMachine: "ProgressBar_SM",
   property: "progress",
+  /** CSS px of room around the bar for the effects that stray past its
+   * artboard (see `applyCanvasBleed`). */
+  bleed: 10,
+  /** The track starts this many artboard px in from the artboard's left edge
+   * (and so overruns its right edge by as much). The bar is drawn shifted
+   * left by it, so the track itself fills the slot. */
+  trackInset: 21,
+  /** Number on the view model; held at `comboValue` for `comboHoldMs` whenever the fill changes. */
+  comboProperty: "combo",
+  comboValue: 3,
+  comboHoldMs: 1000,
   /** Triggers on the view model, fired when an answer is checked. */
   correctTrigger: "correct",
   wrongTrigger: "wrong",
+} as const;
+
+/** The reward screen's chest — "REWARD_Chest" in `hex.riv`, played by
+ * `RewardChest_SM`. Firing `open` on the `RewardChest` view model opens it. */
+export const REWARD_CHEST = {
+  artboard: "REWARD_Chest",
+  stateMachine: "RewardChest_SM",
+  viewModel: "RewardChest",
+  openTrigger: "open",
 } as const;
 
 export const HEX_HELLO_MS = 3000;
@@ -360,3 +380,16 @@ export const SPLASH_ARTBOARD = "Splash Screen";
 export const SPLASH_STATE_MACHINE = "Splash_SM";
 export const SPLASH_VIEW_MODEL = "Splash_VM";
 export const SPLASH_SHOW_SIGNUP_TRIGGER = "showSignUpScreen";
+
+/** The lesson-complete screen — "LESSON_Complete" in `hex.riv`, played by
+ * `LessonComplete_SM`. Set `xp`, `accuracy` and `time` on the `LessonComplete`
+ * view model, then fire `play`. */
+export const LESSON_COMPLETE = {
+  artboard: "LESSON_Complete",
+  stateMachine: "LessonComplete_SM",
+  viewModel: "LessonComplete",
+  xpProperty: "xp",
+  accuracyProperty: "accuracy",
+  timeProperty: "time",
+  playTrigger: "play",
+} as const;

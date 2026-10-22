@@ -25,6 +25,12 @@ import { HexBackground } from "./robu/HexBackground";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
 import { Button3D } from "@/components/ui/Button3D";
 
+/** The frame the module screens are laid out in, and its largest scale (see
+ * LevelOneShell) — the header borrows both so its size matches theirs. */
+const HEADER_FRAME_W = 390;
+const HEADER_FRAME_H = 844;
+const HEADER_MAX_SCALE = 1.5;
+
 // 1-indexed position of each question-kind step among *only* the question
 // steps, keyed by step id — e.g. `{ career: 1, experience: 2, ... }`. Built
 // once at module scope (the step list is static) rather than recomputed on
@@ -193,6 +199,22 @@ export function OnboardingFlow({
     return () => observer.disconnect();
   }, []);
   const { stage: foxStage, active: foxSlot } = useFoxStage();
+
+  // The header is drawn at the same scale as the module screens' (a 390x844
+  // frame fitted to the screen), so its buttons are the same size in both.
+  const [headerScale, setHeaderScale] = useState(1);
+  useEffect(() => {
+    const main = mainRef.current;
+    if (!main) return;
+    const measure = () => {
+      const { width, height } = main.getBoundingClientRect();
+      setHeaderScale(Math.min(width / HEADER_FRAME_W, height / HEADER_FRAME_H, HEADER_MAX_SCALE));
+    };
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(main);
+    return () => observer.disconnect();
+  }, []);
 
   // Option/CTA taps play a click (see clickSound) — warmed up once here so
   // the first tap isn't late, and silenced by the header's sound toggle.
@@ -531,7 +553,10 @@ export function OnboardingFlow({
               transition={{ duration: exiting ? 0.4 : 0.2 }}
               className="pointer-events-none absolute inset-x-0 top-0 z-20"
             >
-              <div className="pointer-events-auto mx-auto w-full max-w-md">
+              <div
+                className="pointer-events-auto origin-top-left"
+                style={{ width: `${100 / headerScale}%`, transform: `scale(${headerScale})` }}
+              >
                 <OnboardingHeader
                   onBack={goBack}
                   progress={progress}
