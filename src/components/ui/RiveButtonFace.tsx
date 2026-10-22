@@ -14,20 +14,20 @@ configureRiveRuntime();
  * "onboarding" variant is artboard "OnboardingButton" / "Onboarding_SM"; the
  * "module" variant is "ModuleButton" / "ModuleButton_SM" with `buttonState`
  * 4. Either way the bound view model's
- * `shine` and `click` triggers sweep the highlight and play the press. A text run
- * named `Text` carries the label. The file also holds other artboards, hence
- * the explicit `artboard` below.
+ * `shine` and `click` triggers sweep the highlight and play the press, and its
+ * `label` string drives the button's text. The file also holds other
+ * artboards, hence the explicit `artboard` below.
  */
-export const RIVE_BUTTON_SRC = "/animations/btn-click.riv?v=2";
+export const RIVE_BUTTON_SRC = "/animations/btn-click.riv?v=3";
 export const RIVE_BUTTON_W = 371;
 export const RIVE_BUTTON_H = 113;
 export type RiveButtonVariant = "onboarding" | "module";
-/** Both artboards share a `Button` view model (`shine`, `click`, `buttonState`). */
+/** Both artboards share a `Button` view model (`shine`, `click`, `buttonState`, `label`). */
 const VARIANTS: Record<RiveButtonVariant, { artboard: string; stateMachine: string; buttonState?: number }> = {
   onboarding: { artboard: "OnboardingButton", stateMachine: "Onboarding_SM" },
   module: { artboard: "ModuleButton", stateMachine: "ModuleButton_SM", buttonState: 4 },
 };
-const TEXT_RUN = "Text";
+const LABEL_PROPERTY = "label";
 const SHINE_TRIGGER = "shine";
 const CLICK_TRIGGER = "click";
 /** Same cadence the old CSS shine used (`animate-button-shine`, 5s). */
@@ -43,7 +43,7 @@ const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 const PLACEHOLDER_SRC = "/images/polygon-btn/default-btn.png";
 
 interface RiveButtonFaceProps {
-  /** Written into the `Text` run; `""` leaves the Rive text empty so
+  /** Written into the view model's `label`; `""` leaves the Rive text empty so
    * the caller can overlay richer content (e.g. an icon) in HTML instead. */
   label: string;
   /** Bumped by the caller on every click — each change plays the press clip. */
@@ -96,10 +96,11 @@ export function RiveButtonFace({ label, pressCount, shine, variant = "onboarding
   const [labelDrawn, setLabelDrawn] = useState(false);
 
   // Nothing is animating when the label changes, so redraw explicitly —
-  // setting the run's text alone doesn't repaint the canvas.
+  // setting the property alone doesn't repaint the canvas.
   useEffect(() => {
     if (!rive) return;
-    rive.setTextRunValue(TEXT_RUN, label);
+    const text = rive.viewModelInstance?.string(LABEL_PROPERTY);
+    if (text) text.value = label;
     rive.drawFrame();
     // drawFrame() paints on the next animation frame, so reveal after it.
     const raf = requestAnimationFrame(() => requestAnimationFrame(() => setLabelDrawn(true)));

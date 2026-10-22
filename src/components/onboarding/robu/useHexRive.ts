@@ -58,6 +58,10 @@ export function useHexRive(
   const { rive, RiveComponent } = useRive({
     ...hexRiveSource(),
     artboard,
+    // Only read when the canvas is created; later `state` changes are played
+    // by the effect below. Naming it here keeps Rive from defaulting to the
+    // artboard's first linear animation (deprecated, and warns).
+    stateMachine: state ?? undefined,
     autoplay: false,
     layout,
   });

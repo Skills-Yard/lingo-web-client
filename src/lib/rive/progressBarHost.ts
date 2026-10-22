@@ -1,4 +1,4 @@
-import { Alignment, Fit, Layout, Rive, StateMachineInputType } from "@rive-app/canvas";
+import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { applyCanvasBleed } from "./bleed";
 import { hexRiveSource } from "./hexFile";
 import { configureRiveRuntime, PROGRESS_BAR } from "./runtime";
@@ -69,8 +69,6 @@ export const getProgressBarHost = (): Host => {
         console.info(
           "[progress bar] view model properties:",
           rive.defaultViewModel()?.properties.map((property) => `${property.name}:${property.type}`),
-          "| state machine inputs:",
-          rive.stateMachineInputs(PROGRESS_BAR.stateMachine)?.map((input) => `${input.name}:${input.type}`),
         );
       }
       notify();
@@ -106,9 +104,8 @@ export const pulseCombo = () => {
 
 const RESULT_NAME = { correct: /correct|right|success|win/i, wrong: /wrong|incorrect|fail|lose|error/i } as const;
 
-/** Plays the bar's reaction to a checked answer. Looks for a trigger named for
- * the result (`correct` / `wrong`) on the view model, then on the state
- * machine's inputs, so either way of building the rig works. */
+/** Plays the bar's reaction to a checked answer. Looks on the view model for a
+ * trigger (or flag) named for the result (`correct` / `wrong`). */
 export const fireAnswer = (correct: boolean) => {
   const rive = host?.rive;
   if (!rive) return;
@@ -132,11 +129,5 @@ export const fireAnswer = (correct: boolean) => {
       return;
     }
   }
-  const input = rive.stateMachineInputs(PROGRESS_BAR.stateMachine)?.find((candidate) => matches(candidate.name));
-  if (input) {
-    if (input.type === StateMachineInputType.Trigger) input.fire();
-    else input.value = true;
-    return;
-  }
-  console.warn(`[progress bar] no "${exact}" trigger found on the view model or state machine`);
+  console.warn(`[progress bar] no "${exact}" trigger found on the view model`);
 };

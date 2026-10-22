@@ -63,14 +63,10 @@ export function RiveProgressBar({ value, from, answer = null, className = "" }: 
   useEffect(() => {
     if (!rive) return;
     const target = Math.min(100, Math.max(0, value));
-    const input = rive
-      .stateMachineInputs(PROGRESS_BAR.stateMachine)
-      ?.find((candidate) => candidate.name === PROGRESS_BAR.property);
     const show = (fill: number) => {
       shown.current = fill;
       const property = rive.viewModelInstance?.number(PROGRESS_BAR.property);
       if (property) property.value = fill;
-      else if (input) input.value = fill;
     };
     const start = shown.current;
     show(start);
