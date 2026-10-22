@@ -1,15 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
-import { useFullscreen } from "@/hooks/useFullscreen";
+import { ChevronLeft } from "lucide-react";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
+import { BatteryMenu } from "./BatteryMenu";
 
-/** The theme switch's wipe colours — each theme's onboarding background
- * (`--background` in globals.css, `.onboarding-light` and its dark override). */
-const WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
+export { WIPE } from "./themeWipe";
 
 /** Back, full screen, light/dark and sound share one look — same size, same weight. */
 const ICON_BUTTON =
@@ -25,8 +23,12 @@ interface OnboardingHeaderProps {
   answer?: AnswerResult | null;
   /** Shows "step/total" above the bar. */
   showCount?: boolean;
-  muted: boolean;
-  onToggleMuted: () => void;
+  /** Unused now: sound lives in the hidden dev panels. */
+  muted?: boolean;
+  onToggleMuted?: () => void;
+  /** The Level 1 header: no sound button, the light / dark switch moves up
+   * beside the full screen icon, and the battery sits right of the bar. */
+  level?: boolean;
 }
 
 // The step the progress bar last showed. Each screen mounts a fresh header,
@@ -34,10 +36,7 @@ interface OnboardingHeaderProps {
 // user moves forward, shrinking back when they return to an earlier question.
 let lastShown: { step: number; total: number } | null = null;
 
-export function OnboardingHeader({ onBack, progress, answer, showCount, muted, onToggleMuted }: OnboardingHeaderProps) {
-  const { theme, toggleTheme } = useTheme();
-  const dark = theme === "dark";
-  const fullscreen = useFullscreen();
+export function OnboardingHeader({ onBack, progress, answer, showCount, level }: OnboardingHeaderProps) {
   const [fromStep] = useState(() => (progress ? (lastShown?.step ?? progress.step - 1) : null));
   useEffect(() => {
     if (progress) lastShown = { step: progress.step, total: progress.total };
@@ -50,7 +49,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
       <button
         type="button"
         onClick={onBack}
-        className={`absolute top-[43.5px] left-4 ${ICON_BUTTON}`}
+        className={`absolute left-4 ${level ? "top-[6px]" : "top-[43.5px]"} ${ICON_BUTTON}`}
         aria-label="Back"
       >
         <ChevronLeft className="w-5 h-5" strokeWidth={1.4} />
@@ -65,55 +64,29 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, muted, o
             </span>
           )}
           {/* Rive draws the bar; it animates to the new fill itself. It ends
-              12px short of the right-hand buttons — three of them when full
-              screen is offered. */}
+              12px short of the right-hand button — the 56px battery box on
+              the Level 1 header. */}
           <PersistentProgressBar
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className="absolute left-[67px] right-[114px] top-[63px] -translate-y-1/2"
+            className={`absolute left-[67px] mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] right-[84px]" : "top-[63px] right-4"}`}
           />
         </>
       )}
 
-      {/* Hidden where it can't do anything (iPhone Safari, installed PWA).
-          Sits in the top-right corner so the bar keeps one width either way. */}
-      {fullscreen.available && (
-        <button
-          type="button"
-          onClick={fullscreen.toggle}
-          className="absolute top-0.5 right-4 flex h-5 w-5 cursor-pointer items-center justify-center text-[#444444] transition-all active:scale-95 dark:text-white/70"
-          aria-label={fullscreen.active ? "Exit full screen" : "Enter full screen"}
-        >
-          {fullscreen.active ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
-        </button>
+      {/* The battery sits in the top-right corner: `battery.riv` at the old
+          icon's 15px height, so 44px wide (its artboard is 320 x 110). Each
+          screen's `step` spends its share of it. Also the way into the hidden
+          dev panel (see BatteryMenu). */}
+      {level && (
+        <BatteryMenu className="absolute top-[6px] right-4">
+          <span className="flex h-[39px] w-[56px] items-center justify-center rounded-md border border-black/8 dark:border-white/15">
+            <PersistentBattery step={progress?.step} className="w-[44px]" />
+          </span>
+        </BatteryMenu>
       )}
 
-      <div className="absolute top-[43.5px] right-4 flex items-center gap-2">
-        {/* Light/dark switch and sound keep their places. */}
-        {/* Light/dark switch — the site's own theme (see ThemeContext),
-            wiped in diagonally from the top-right corner. */}
-        <button
-          type="button"
-          onClick={() => toggleTheme(WIPE)}
-          className={`${ICON_BUTTON} dark:text-amber-400`}
-          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-        >
-          {dark ? (
-            <Sun key="sun" className="w-5 h-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
-          ) : (
-            <Moon key="moon" className="w-5 h-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={onToggleMuted}
-          className={ICON_BUTTON}
-          aria-label={muted ? "Unmute" : "Mute"}
-        >
-          {muted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-        </button>
-      </div>
     </header>
   );
 }

@@ -263,9 +263,11 @@ export function GameBoardScreen({
       )}
 
       {/* Board on the left, controls on the right (stacked on small screens). */}
-      <div className={`flex flex-col lg:flex-row lg:items-start lg:justify-center lg:gap-6 ${borderless ? "flex-1 gap-0" : "gap-3"}`}>
+      {/* Level 1 (`borderless`) keeps its phone layout on every screen: the
+        side-by-side desktop columns are only for the intro's own game. */}
+      <div className={`flex flex-col ${borderless ? "flex-1 gap-0" : "gap-3 lg:flex-row lg:items-start lg:justify-center lg:gap-6"}`}>
         {/* ── Left column — the game board ── */}
-        <div className={`relative lg:order-1 lg:w-105 lg:shrink-0 ${borderless ? "mb-[calc(var(--stage-h)*-0.033)]" : ""}`}>
+        <div className={`relative ${borderless ? "mb-[calc(var(--stage-h)*-0.033)]" : "lg:order-1 lg:w-105 lg:shrink-0"}`}>
           <div
             inert={locked}
             className={`transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
@@ -292,7 +294,7 @@ export function GameBoardScreen({
         {/* ── Right column — program slots, actions and run controls ── */}
         <div
           inert={locked}
-          className={`flex flex-col lg:order-2 lg:w-100 lg:shrink-0 ${borderless ? "relative z-10 -mx-4 mt-auto items-center rounded-t-[38px] bg-white dark:bg-background" : "gap-3"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+          className={`flex flex-col ${borderless ? "relative z-10 -mx-4 mt-auto items-center rounded-t-[38px] bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
         >
           {borderless && (
             <div className="flex h-9 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-[#F7F2FF] px-3 dark:bg-white/6">

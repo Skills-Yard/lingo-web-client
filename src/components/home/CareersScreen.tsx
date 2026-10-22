@@ -38,21 +38,21 @@ function CareerCard({
       exit={{ opacity: 0, scale: 0.96 }}
       transition={{ duration: 0.25, ease: EASE }}
       aria-pressed={selected}
-      className={`flex flex-col items-start rounded-xl border bg-white p-3 text-left transition-colors duration-300 ${
-        selected ? "border-[#01A17F] border-[1.5px]" : "border-black/8"
+      className={`flex flex-col items-start rounded-xl border bg-white p-3 text-left transition-colors duration-300 dark:bg-[#1A1C22] ${
+        selected ? "border-[#01A17F] border-[1.5px]" : "border-black/8 dark:border-white/12"
       }`}
     >
       <span
-        className="flex h-8 w-8 items-center justify-center rounded-lg"
+        className="flex h-8 w-8 items-center justify-center rounded-lg dark:bg-[#16262D]!"
         style={{ backgroundColor: career.tint, color: career.color }}
       >
         <Icon className="h-[18px] w-[18px]" strokeWidth={2.2} />
       </span>
-      <span className="mt-2 truncate text-[13px] font-semibold text-[#2B2B2F]">{career.title}</span>
+      <span className="mt-2 truncate text-[13px] font-semibold text-[#2B2B2F] dark:text-white">{career.title}</span>
       <span className="mt-0.5 text-[11px] font-medium" style={{ color: GREEN }}>
         {career.salary} / yr
       </span>
-      <span className="mt-1 text-[10px] text-[#7B7B80]">
+      <span className="mt-1 text-[10px] text-[#7B7B80] dark:text-[#9FA19F]">
         {career.skills.length} skills · {career.months} months
       </span>
     </motion.button>
@@ -77,22 +77,22 @@ export function CareersScreen() {
   );
 
   return (
-    <HomeStage stageHeight={STAGE_H} topMargin={TOP_BAR_BOTTOM} className="bg-[#F3F4F7]">
+    <HomeStage stageHeight={STAGE_H} topMargin={TOP_BAR_BOTTOM} className="bg-[#F3F4F7] dark:bg-[#0F1F26]">
       <div className="flex h-full flex-col px-4">
-        <motion.h1 {...reveal(0.06)} className="text-[22px] font-semibold leading-tight text-[#2B2B2F]">
+        <motion.h1 {...reveal(0.06)} className="text-[22px] font-semibold leading-tight text-[#2B2B2F] dark:text-white">
           Careers
         </motion.h1>
 
         <motion.label
           {...reveal(0.1)}
-          className="mt-3 flex h-10 items-center gap-2 rounded-xl border border-black/8 bg-white px-3 text-[#7B7B80] focus-within:border-[#01A17F]"
+          className="mt-3 flex h-10 items-center gap-2 rounded-xl border border-black/8 bg-white px-3 text-[#7B7B80] focus-within:border-[#01A17F] dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#9FA19F]"
         >
           <Search className="h-4 w-4 shrink-0" strokeWidth={2} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search careers, skills..."
-            className="min-w-0 flex-1 bg-transparent text-[13px] text-[#2B2B2F] outline-none placeholder:text-[#7B7B80]"
+            className="min-w-0 flex-1 bg-transparent text-[13px] text-[#2B2B2F] outline-none placeholder:text-[#7B7B80] dark:text-white dark:placeholder:text-[#9FA19F]"
           />
         </motion.label>
 
@@ -107,7 +107,7 @@ export function CareersScreen() {
                 aria-selected={selected}
                 onClick={() => setFilter(name)}
                 className={`relative h-8 rounded-full border px-3.5 text-[13px] font-medium transition-colors duration-300 ${
-                  selected ? "border-transparent text-white" : "border-black/8 bg-white text-[#444444]"
+                  selected ? "border-transparent text-white" : "border-black/8 bg-white text-[#444444] dark:border-transparent dark:bg-[#16262D] dark:text-[#C8C7C5]"
                 }`}
               >
                 {selected && (

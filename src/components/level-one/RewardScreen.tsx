@@ -85,9 +85,10 @@ export function RewardScreen({ onContinue }: { onContinue?: () => void }) {
 
 const CHEST_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 /** The chest's box: as wide as the screen less `CHEST_SIDE_PADDING` on each
- * side, square so the artboard keeps its aspect ratio, centred on the screen. */
+ * side, square so the artboard keeps its aspect ratio, centred on the screen.
+ * Never taller than half the screen, so on a wide desktop it isn't cropped. */
 const CHEST_SIDE_PADDING = 16;
-const CHEST_MAX_WIDTH = `calc(100vw - ${CHEST_SIDE_PADDING * 2}px)`;
+const CHEST_MAX_WIDTH = `min(calc(100vw - ${CHEST_SIDE_PADDING * 2}px), 50vh)`;
 
 /** The closed chest ("REWARD_Chest" artboard): a tap fires its `open` trigger. */
 function Chest({ onOpen }: { onOpen: () => void }) {
@@ -134,7 +135,7 @@ function Claim({ onClaim }: { onClaim: () => void }) {
       transition={{ ...FLOAT_IN, delay: 0.6 }}
     >
       <div className="pointer-events-auto absolute inset-x-0 bottom-0 px-4 pb-9">
-        <Button3D onClick={onClaim} onPress={playClickSound} className="w-full">
+        <Button3D riveVariant="module" onClick={onClaim} onPress={playClickSound} className="w-full">
           Continue
         </Button3D>
       </div>

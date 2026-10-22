@@ -8,14 +8,14 @@ import { FEED, STORIES, type Poll, type Post, type StoryRing } from "./feedData"
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const GREEN = "#01A17F";
-const INK = "#2C2C2C";
-const MUTED = "#818185";
+const INK = "var(--h-ink)";
+const MUTED = "var(--h-muted)";
 
 /** Room under the feed for the shared bottom nav: 60px nav + its 38px margin
  * and some air. */
 const NAV_CLEARANCE = 60 + 38 + 24;
 
-const CARD = "w-full rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5";
+const CARD = "w-full rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5 dark:border-white/12 dark:bg-[#1A1C22]";
 
 const reveal = (delay: number) => ({
   initial: { opacity: 0, y: 14 },
@@ -27,7 +27,7 @@ function Story({ story }: { story: StoryRing }) {
   return (
     <button type="button" className="flex shrink-0 flex-col items-center gap-1">
       <span
-        className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 bg-white text-lg font-extrabold"
+        className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 bg-white text-lg font-extrabold dark:bg-[#1A1C22]"
         style={{ borderColor: story.color, color: INK }}
       >
         {story.letter}
@@ -63,7 +63,7 @@ function PostCard({ post }: { post: Post }) {
         )}
       </div>
 
-      <p className="text-sm font-semibold leading-5 text-[#444444]">{post.caption}</p>
+      <p className="text-sm font-semibold leading-5 text-[#444444] dark:text-[#C8C7C5]">{post.caption}</p>
 
       <footer className="flex items-center gap-4 text-xs" style={{ color: MUTED }}>
         <button
@@ -124,7 +124,7 @@ function PollCard({ poll }: { poll: Poll }) {
             disabled={answered}
             onClick={() => setPicked(i)}
             aria-pressed={isPicked}
-            className={`relative flex min-h-10 w-full items-center gap-2 overflow-hidden rounded-xl border-[1.5px] bg-[#F7F8FA] px-3 py-2.5 text-left transition-colors duration-300 ${
+            className={`relative flex min-h-10 w-full items-center gap-2 overflow-hidden rounded-xl border-[1.5px] bg-[#F7F8FA] dark:bg-[#16262D] px-3 py-2.5 text-left transition-colors duration-300 ${
               isPicked ? "border-[#01A17F]" : "border-transparent"
             } ${answered ? "" : "active:scale-[0.99]"}`}
           >
@@ -132,7 +132,7 @@ function PollCard({ poll }: { poll: Poll }) {
               <motion.span
                 aria-hidden
                 className="absolute inset-y-0 left-0"
-                style={{ backgroundColor: isPicked ? "#CDEBE2" : "#E9ECF0" }}
+                style={{ backgroundColor: isPicked ? "var(--h-poll-picked)" : "var(--h-poll-bar)" }}
                 initial={{ width: 0 }}
                 animate={{ width: `${percent}%` }}
                 transition={{ duration: 0.6, ease: EASE }}
@@ -182,7 +182,7 @@ export function FeedScreen() {
   return (
     <main
       style={{ top: TOP_BAR_BOTTOM }}
-      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
+      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white`}
     >
       <div
         className="mx-auto w-full max-w-[430px] px-4 pt-1"
@@ -192,13 +192,13 @@ export function FeedScreen() {
           Feed
         </motion.h1>
 
-        <motion.div {...reveal(0.1)} className="scrollbar-none -mx-4 mt-3 flex gap-3.5 overflow-x-auto px-4">
+        <motion.div {...reveal(0.1)} className="scrollbar-none sticky top-0 z-10 -mx-4 flex gap-3.5 overflow-x-auto bg-white px-4 pb-2 pt-3 dark:bg-[#0F1F26]">
           {STORIES.map((story) => (
             <Story key={story.id} story={story} />
           ))}
         </motion.div>
 
-        <div className="mt-4 flex flex-col gap-3">
+        <div className="mt-2 flex flex-col gap-3">
           {FEED.map((item, i) => (
             <motion.div key={item.id} {...reveal(0.15 + Math.min(i, 3) * 0.05)}>
               {item.type === "post" ? <PostCard post={item} /> : <PollCard poll={item} />}

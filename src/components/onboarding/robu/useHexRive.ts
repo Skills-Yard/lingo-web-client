@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useContext, useEffect, useMemo, useRef } from "react";
+import { createElement, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import type { Layout } from "@rive-app/canvas";
 import {
@@ -58,6 +58,10 @@ export function useHexRive(
   const { rive, RiveComponent } = useRive({
     ...hexRiveSource(),
     artboard,
+    // Only read when the canvas is created; later `state` changes are played
+    // by the effect below. Naming it here keeps Rive from defaulting to the
+    // artboard's first linear animation (deprecated, and warns).
+    stateMachine: state ?? undefined,
     autoplay: false,
     layout,
   });
@@ -211,9 +215,17 @@ export function useHexRive(
     setBoolean(HEX_DARK_THEME, theme === "dark");
   }, [setBoolean, theme]);
 
+  // The same canvas, marked `data-hex` so the hidden dev panel can tell where
+  // Hex is on screen (see DevPanel).
+  const HexCanvas = useMemo(() => {
+    const Marked = (props: Parameters<typeof RiveComponent>[0]) =>
+      createElement(RiveComponent, { ...props, "data-hex": "" } as typeof props);
+    return Marked;
+  }, [RiveComponent]);
+
   return {
     rive,
-    RiveComponent,
+    RiveComponent: HexCanvas,
     ready: viewModelInstance !== null,
     fireTrigger,
     fireNow,

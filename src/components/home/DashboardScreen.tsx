@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, ChartNoAxesColumn, ChevronRight, Flame, Star } from "lucide-react";
 import { GlossButton } from "./GlossButton";
@@ -10,8 +11,8 @@ import { HEADING } from "./homeFonts";
 import { LEARNER_STATS } from "./learnerStats";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
-const INK = "#2C2C2C";
-const MUTED = "#818185";
+const INK = "var(--h-ink)";
+const MUTED = "var(--h-muted)";
 
 /** Room under the page for the shared bottom nav: 60px nav + its 38px margin
  * and some air. */
@@ -88,7 +89,7 @@ export function StatCard({ stat }: { stat: StatSpec }) {
           {stat.label}
         </span>
       </div>
-      <div className="flex h-[52px] items-center justify-center gap-1.5 rounded-[15px] bg-white py-3">
+      <div className="flex h-[52px] items-center justify-center gap-1.5 rounded-[15px] bg-white py-3 dark:bg-[#1A1C22]">
         {stat.icon}
         <span className={`text-[21px] leading-7 tracking-[-0.1px] ${HEADING}`} style={{ color: stat.accent }}>
           {stat.value}
@@ -98,14 +99,15 @@ export function StatCard({ stat }: { stat: StatSpec }) {
   );
 }
 
-function LinkCard({ icon, tint, title }: { icon: ReactNode; tint: string; title: string }) {
+function LinkCard({ icon, tint, title, onClick }: { icon: ReactNode; tint: string; title: string; onClick?: () => void }) {
   return (
     <button
       type="button"
-      className="flex w-full items-center gap-3 rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5 text-left transition-transform active:scale-[0.99]"
+      onClick={onClick}
+      className="flex w-full items-center gap-3 rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5 text-left dark:border-white/12 dark:bg-[#1A1C22] transition-transform active:scale-[0.99]"
     >
       <span
-        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl dark:bg-[#16262D]!"
         style={{ backgroundColor: tint }}
       >
         {icon}
@@ -122,7 +124,7 @@ function Trophy({ earned }: { earned: boolean }) {
   return (
     <span
       className="flex h-[52px] w-[52px] items-center justify-center rounded-full"
-      style={{ backgroundColor: earned ? "#FFC342" : "#EDEEF0" }}
+      style={{ backgroundColor: earned ? "#FFC342" : "var(--h-trophy-off)" }}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -141,10 +143,11 @@ function Trophy({ earned }: { earned: boolean }) {
  * shared top bar and above the shared bottom nav.
  */
 export function DashboardScreen({ name = "Alex" }: { name?: string }) {
+  const router = useRouter();
   return (
     <main
       style={{ top: TOP_BAR_BOTTOM }}
-      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
+      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white`}
     >
       <div className="mx-auto w-full max-w-[430px] px-4 pt-1" style={{ paddingBottom: NAV_CLEARANCE }}>
         <motion.header {...reveal(0)} className="flex items-center gap-3">
@@ -169,6 +172,7 @@ export function DashboardScreen({ name = "Alex" }: { name?: string }) {
           <LinkCard
             tint="#FFC342"
             title={`Weekly league · #${LEAGUE.rank} of ${LEAGUE.of}`}
+            onClick={() => router.push("/league")}
             icon={
               // eslint-disable-next-line @next/next/no-img-element
               <img src="/images/dashboard/trophy-brown.png" alt="" draggable={false} className="h-6 w-6 select-none" />

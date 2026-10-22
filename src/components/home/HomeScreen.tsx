@@ -17,7 +17,7 @@ import { useRive } from "@rive-app/react-canvas";
 import { Code2, Maximize, Minimize, Moon, Sun } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
-import { configureRiveRuntime, LIVE_PLATFORM } from "@/lib/rive/runtime";
+import { configureRiveRuntime, HEX_ONBOARDING_TRIGGER, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
 import { hexRiveSource } from "@/lib/rive/hexFile";
 import { LevelBackground } from "./LevelBackground";
@@ -75,8 +75,8 @@ const tailGap = (level: number) =>
   TAIL_MIN_DY + TAIL_STEP * ((Math.imul(level, 2654435761) >>> 11) % 5);
 /** Where level 1's top-face centre sits, just under the pinned module card. */
 const FIRST_LEVEL_Y = 323;
-/** Room below the last level for the bottom nav + a breath. */
-const WORLD_BOTTOM_PAD = 200;
+/** Room below the last level for the floating home button + a breath. */
+const WORLD_BOTTOM_PAD = 120;
 
 type Point = { x: number; y: number };
 
@@ -161,6 +161,10 @@ const CURRENT_SIDE = CURRENT.x < STAGE_W / 2 ? "left" : "right";
 const CURRENT_PATH_STATE = CURRENT_SIDE === "left" ? 3 : 2;
 /** The `entryStyle` the current block enters with. */
 const CURRENT_ENTRY_STYLE = 6;
+/** Hex keeps playing his ambient idle on the current block, this often, once
+ * he has entered; it pauses while a lesson is being opened. */
+const HEX_IDLE_FIRST_MS = 3200;
+const HEX_IDLE_REPEAT_MS = 4800;
 
 /** The artboard is drawn at `LIVE_RIV_SCALE` world px per artboard px inside
  * a canvas that is bigger than it, so animations can spill past its edges
@@ -283,16 +287,37 @@ function PathBlockCanvas({
     if (entryStyle) entryStyle.value = CURRENT_ENTRY_STYLE;
     instance.trigger("enter")?.trigger();
 
+    // Hex is not left standing still: his ambient idle fires on a loop, unless
+    // the screen has taken over (a lesson is opening).
+    let busy = false;
+    const ambient = () => {
+      if (!busy) instance.trigger(HEX_ONBOARDING_TRIGGER.idleAmbient)?.trigger();
+    };
+    let repeat = 0;
+    const first = window.setTimeout(() => {
+      ambient();
+      repeat = window.setInterval(ambient, HEX_IDLE_REPEAT_MS);
+    }, HEX_IDLE_FIRST_MS);
+
     controllerRef.current = {
       letsGo: () => {
+        busy = true;
         const letsGo = instance.boolean("letsGo");
         if (letsGo) letsGo.value = true;
         instance.trigger(CURRENT_SIDE === "left" ? "letsGoFromRight": "letsGoFromLeft")?.trigger();
       },
-      exitLetsGo: () => instance.trigger("exitLetsGo")?.trigger(),
-      startLesson: () => instance.trigger("startLesson")?.trigger(),
+      exitLetsGo: () => {
+        busy = false;
+        instance.trigger("exitLetsGo")?.trigger();
+      },
+      startLesson: () => {
+        busy = true;
+        instance.trigger("startLesson")?.trigger();
+      },
     };
     return () => {
+      window.clearTimeout(first);
+      window.clearInterval(repeat);
       controllerRef.current = null;
     };
   }, [rive, pathState, controllerRef]);
@@ -426,8 +451,8 @@ const CARD_TOP_Y = 99;
 const STACK_PEEK = 10;
 const STACK_SHRINK = 0.03;
 const STACK_VISIBLE = 2;
-/** The finished pile rests just above the bottom nav (nav top is 96px up). */
-const NAV_CLEARANCE = 96 + 8;
+/** The finished pile rests near the bottom of the screen (there is no nav). */
+const NAV_CLEARANCE = 24;
 
 type CardPlace = { y: number; scale: number; height: number; opacity: number; zIndex: number };
 
@@ -820,8 +845,8 @@ export function HomeScreen({
           {/* Streak + gems: pinned to the screen's own left and right edges
             (not the centred stage column), each chip scaled with the layout. */}
           <motion.div
-            className="pointer-events-auto absolute inset-x-0 flex items-center justify-between"
-            style={{ top: 51 * scale, paddingInline: 16 * scale }}
+            className="pointer-events-auto absolute inset-x-0 mx-auto flex items-center justify-between"
+            style={{ top: 51 * scale, paddingInline: 16 * scale, maxWidth: 1024 }}
             {...reveal(0)}
           >
             <div style={{ transform: `scale(${scale})`, transformOrigin: "left center" }}>
@@ -855,21 +880,25 @@ export function HomeScreen({
         </div>
 
         {/* The module cards: the current one on top with the next ones queued
-          behind it; finished ones drop into a pile above the nav. */}
+          behind it. */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
             className="absolute left-1/2 top-0 origin-top"
             style={{ width: STAGE_W, height: viewH, transform: `translateX(-50%) scale(${scale})` }}
           >
-            {MODULES.map((m, i) => (
-              <ModuleCard
-                key={m.id}
-                title={m.title}
-                progress={i < done ? LESSONS_PER_MODULE : m.base}
-                place={cardPlace(i, done, viewH)}
-                compact={i < done}
-              />
-            ))}
+            {/* Finished modules no longer pile up at the bottom of the screen
+              (where the nav used to be): they just leave. */}
+            {MODULES.map((m, i) =>
+              i < done ? null : (
+                <ModuleCard
+                  key={m.id}
+                  title={m.title}
+                  progress={m.base}
+                  place={cardPlace(i, done, viewH)}
+                  compact={false}
+                />
+              ),
+            )}
           </div>
         </div>
       </div>

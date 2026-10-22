@@ -22,6 +22,7 @@ import type { HexExitRequest } from "./robu/hexExit";
 import { HEX_ENTER_STYLE, HEX_ENTRY_STYLE_BY_STEP, HEX_EXIT_BOTTOM_MS, HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { HexBackground } from "./robu/HexBackground";
+import { DevPanel } from "./DevPanel";
 import { playClickSound, preloadClickSound, setClickSoundMuted } from "./clickSound";
 import { Button3D } from "@/components/ui/Button3D";
 
@@ -517,13 +518,14 @@ export function OnboardingFlow({
                       questionId={step.id}
                       heading={step.heading(answers)}
                       {...(step.kind === "question-list"
-                        ? { kind: step.kind, options: step.options, variant: step.variant }
+                        ? { kind: step.kind, options: step.options, variant: step.variant, roomy: step.roomy }
                         : { kind: step.kind, options: step.options })}
                       selectedId={answers[step.answerKey] ?? null}
                       hexMode={step.hexMode}
                       reactionsArtboard={step.reactionsArtboard}
                       reactionsStateMachine={step.reactionsStateMachine}
                       reactionsScreen={step.reactionsScreen}
+                      reactionsOptionOrder={step.kind === "question-grid" ? step.reactionsOptionOrder : undefined}
                       onSelect={(id) => {
                         setAnswer(step.answerKey, id);
                         setPickCount((n) => n + 1);
@@ -555,7 +557,13 @@ export function OnboardingFlow({
             >
               <div
                 className="pointer-events-auto origin-top-left"
-                style={{ width: `${100 / headerScale}%`, transform: `scale(${headerScale})` }}
+                // Capped at 5xl (1024px) on screen, centred — the box is laid out
+                // at 1/scale of its on-screen size, so the cap is divided by it too.
+                style={{
+                  width: `min(${100 / headerScale}%, ${1024 / headerScale}px)`,
+                  marginLeft: "max(0px, calc((100% - 1024px) / 2))",
+                  transform: `scale(${headerScale})`,
+                }}
               >
                 <OnboardingHeader
                   onBack={goBack}
@@ -698,6 +706,8 @@ export function OnboardingFlow({
             onComplete={showSignUp}
           />
         </motion.div>
+        {/* TEMPORARY dev panel: three taps on Hex open it (see DevPanel). */}
+        <DevPanel muted={muted} onToggleMuted={() => setMuted((m) => !m)} />
       </main>
     </FoxStageProvider>
   );

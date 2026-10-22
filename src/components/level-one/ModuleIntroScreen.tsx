@@ -14,27 +14,28 @@ export function ModuleIntroScreen({ onContinue }: { onContinue?: () => void }) {
   return (
     <LevelOneShell
       step={1}
+      wash="dark"
       ctaLabel="Let's begin"
       onBack={() => router.push("/level")}
       onContinue={onContinue ?? (() => router.push(levelOneHref(2)))}
     >
       <div className="flex w-full flex-1 flex-col items-center pt-12 text-center">
-        <span className="flex h-8 items-center gap-1.5 rounded-full border border-[#2F80ED] bg-[#E5EFFD] py-[5px] pr-3 pl-1.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2F80ED]">
+        <span className="flex h-8 items-center gap-1.5 rounded-full border border-[#2F80ED] bg-[#E5EFFD] py-[5px] pr-3 pl-1.5 dark:border-[#5AA2FF] dark:bg-[#1B2B40]">
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2F80ED] dark:bg-[#5AA2FF]">
             <BookOpen className="h-[13px] w-[13px] text-white" strokeWidth={2} />
           </span>
-          <span className="text-xs leading-4 font-extrabold tracking-[1.2px] text-[#2F80ED] uppercase">
+          <span className="text-xs leading-4 font-extrabold tracking-[1.2px] text-[#2F80ED] uppercase dark:text-[#5AA2FF]">
             Learn
           </span>
         </span>
 
-        <p className="mt-4 text-[11px] leading-4 font-bold tracking-[1.2px] text-[#2F80ED] uppercase">
+        <p className="mt-4 text-[11px] leading-4 font-bold tracking-[1.2px] text-[#2F80ED] uppercase dark:text-[#1386B3]">
           Module 1 - Lesson 1
         </p>
-        <h1 className="mt-2 text-[32px] leading-9 font-extrabold text-[#1F2A44]">
+        <h1 className="mt-2 text-[32px] leading-9 font-extrabold text-[#1F2A44] dark:text-white">
           Think like a
           <br />
-          <span className="text-[#00A99D]">programmer</span>
+          <span className="text-[#00A99D] dark:text-[#00B8A9]">programmer</span>
         </h1>
 
         <div className="my-auto w-full py-4">
@@ -47,7 +48,7 @@ export function ModuleIntroScreen({ onContinue }: { onContinue?: () => void }) {
           />
         </div>
 
-        <p className="mb-4 max-w-[260px] text-sm leading-5 font-medium text-[#444444]">
+        <p className="mb-4 max-w-[260px] text-sm leading-5 font-medium text-[#444444] dark:text-[#C8C7C5]">
           12 mystery cards are hidden in this module. Collect them all!
         </p>
       </div>

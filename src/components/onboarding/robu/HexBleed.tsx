@@ -12,7 +12,9 @@ export const HEX_BLEED = { x: 420, y: 30 } as const;
  */
 export function HexBleed({ Canvas }: { Canvas: ComponentType<{ className?: string }> }) {
   return (
-    <div className="relative h-full w-full">
+    // `data-hex-box`: the box he stands in (not the bled canvas), which the
+    // hidden dev panel (see DevPanel) uses as his tap target.
+    <div data-hex-box className="relative h-full w-full">
       <div className="absolute" style={{ inset: `-${HEX_BLEED.y}px -${HEX_BLEED.x}px` }}>
         <Canvas className="h-full w-full" />
       </div>

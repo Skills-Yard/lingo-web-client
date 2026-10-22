@@ -132,22 +132,22 @@ export const MOTIVATION_OPTIONS: OnboardingListOption[] = [
   {
     id: "first-tech-job",
     label: "Landing my first job",
-    image: "/images/screen-04/04-new-2.png",
+    image: "/images/screen-04/04-new-5.png",
   },
   {
     id: "promotion",
     label: "Leveling up / Promotion",
-    image: "/images/screen-04/04-new-3.png",
+    image: "/images/screen-04/04-new-4.png",
   },
   {
     id: "personal-project",
     label: "Personal project",
-    image: "/images/screen-04/04-new-4.png",
+    image: "/images/screen-04/04-new-3.png",
   },
   {
     id: "freelance",
     label: "Freelance",
-    image: "/images/screen-04/04-new-5.png",
+    image: "/images/screen-04/04-new-2.png",
   },
 ];
 
@@ -471,6 +471,8 @@ export type OnboardingStep =
       variant?: "tiles";
       /** "row": Zox beside the heading instead of below it. */
       zoxLayout?: "row";
+      /** More room between the options, and between them and the heading. */
+      roomy?: boolean;
       heading: (answers: OnboardingAnswers) => TextSpan[];
       options: OnboardingListOption[];
       answerKey: keyof OnboardingAnswers;
@@ -500,6 +502,9 @@ export type OnboardingStep =
       reactionsStateMachine?: string;
       /** `screen` value set on the reactions artboard's data. */
       reactionsScreen?: number;
+      /** Artboard option number to play for each picked option (1-based
+       * position -> number), where the artboard numbers them differently. */
+      reactionsOptionOrder?: readonly number[];
       cta: string;
     };
 
@@ -579,6 +584,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 0,
+    // The artboard's reactions for the 2nd and 4th options are the other way round.
+    reactionsOptionOrder: [1, 4, 3, 2],
     voiceover: ["/audios/WYP_Ques.m4a"],
     cta: "Continue",
   },
@@ -632,6 +639,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "question-list",
     id: "motivation",
     zoxLayout: "row",
+    roomy: true,
     heading: () => [
       { text: "What do you wish to " },
       { text: "achieve", highlight: true },
@@ -710,6 +718,8 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
     kind: "question-list",
     id: "startingPoint",
+    zoxLayout: "row",
+    roomy: true,
     heading: () => [
       { text: "How do you want to begin your " },
       { text: "path", highlight: true },

@@ -5,12 +5,13 @@ import { AnimatePresence, motion } from "framer-motion";
 import { GlossButton } from "./GlossButton";
 import { TOP_BAR_BOTTOM } from "./HomeStage";
 import { HEADING } from "./homeFonts";
+import { setReminder, useReminders } from "./reminders";
 
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 const GREEN = "#01A17F";
-const INK = "#2C2C2C";
-const MUTED = "#818185";
+const INK = "var(--h-ink)";
+const MUTED = "var(--h-muted)";
 
 /** Room under the list for the shared bottom nav: 60px nav + its 38px margin
  * and some air. */
@@ -41,7 +42,7 @@ const reveal = (delay: number) => ({
 
 function LiveCard() {
   return (
-    <section className="flex w-full flex-col items-start gap-2 rounded-[18px] bg-[#FDECEC] p-3.5">
+    <section className="flex w-full flex-col items-start gap-2 rounded-[18px] bg-[#FDECEC] p-3.5 dark:bg-[#2A1517]">
       <div className="flex items-center gap-2">
         <span className="h-2.5 w-2.5 rounded-full bg-[#D42421]" />
         <span className="text-xs font-extrabold uppercase leading-4 tracking-[1.2px] text-[#D42421]">
@@ -69,8 +70,8 @@ function EventRow({
   onToggle: () => void;
 }) {
   return (
-    <article className="flex w-full items-center gap-3 rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5">
-      <div className="flex h-[58px] w-10 shrink-0 flex-col items-center rounded-[12px] bg-[#E9F5F0] p-2">
+    <article className="flex w-full items-center gap-3 rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5 dark:border-white/12 dark:bg-[#1A1C22]">
+      <div className="flex h-[58px] w-10 shrink-0 flex-col items-center rounded-[12px] bg-[#E9F5F0] p-2 dark:bg-[#16262D]">
         <span className={`text-[21px] leading-7 tracking-[-0.1px] ${HEADING}`} style={{ color: GREEN }}>
           {event.day}
         </span>
@@ -92,7 +93,7 @@ function EventRow({
         aria-pressed={reminded}
         aria-label={reminded ? "Remove reminder" : "Remind me"}
         className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-[background-color,transform] duration-300 active:scale-90 ${
-          reminded ? "scale-110 bg-[#01A17F]" : "bg-[#F7F8FA]"
+          reminded ? "scale-110 bg-[#01A17F]" : "bg-[#F7F8FA] dark:bg-[#16262D]"
         }`}
       >
         {/* The bell is grey artwork; on the green button it turns white. */}
@@ -113,19 +114,16 @@ function EventRow({
  * shared top bar and above the shared bottom nav.
  */
 export function EventsScreen() {
-  const [reminders, setReminders] = useState<ReadonlySet<string>>(new Set());
+  // Kept in local storage, so the home's notifications list them too.
+  const stored = useReminders();
+  const reminders = new Set(stored.map((r) => r.id));
   const [toast, setToast] = useState<number | null>(null);
   const toastTimer = useRef<number>(0);
   useEffect(() => () => window.clearTimeout(toastTimer.current), []);
 
-  const toggleReminder = (id: string) => {
-    const turningOn = !reminders.has(id);
-    setReminders((prev) => {
-      const next = new Set(prev);
-      if (turningOn) next.add(id);
-      else next.delete(id);
-      return next;
-    });
+  const toggleReminder = (event: UpcomingEvent) => {
+    const turningOn = !reminders.has(event.id);
+    setReminder({ id: event.id, title: event.title, meta: `${event.day} ${event.month} · ${event.meta}` }, turningOn);
     window.clearTimeout(toastTimer.current);
     if (!turningOn) {
       setToast(null);
@@ -139,7 +137,7 @@ export function EventsScreen() {
   return (
     <main
       style={{ top: TOP_BAR_BOTTOM }}
-      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C]`}
+      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white`}
     >
       <div className="mx-auto w-full max-w-[430px] px-4 pt-1" style={{ paddingBottom: NAV_CLEARANCE }}>
         <motion.h1 {...reveal(0)} className="text-2xl font-extrabold leading-tight">
@@ -160,7 +158,7 @@ export function EventsScreen() {
               <EventRow
                 event={event}
                 reminded={reminders.has(event.id)}
-                onToggle={() => toggleReminder(event.id)}
+                onToggle={() => toggleReminder(event)}
               />
             </motion.div>
           ))}
@@ -175,8 +173,8 @@ export function EventsScreen() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.3, ease: EASE }}
-            className="pointer-events-none fixed left-1/2 z-20 flex h-11 w-[300px] max-w-[calc(100vw-32px)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#2C2C2C] px-5 py-2.5"
-            style={{ bottom: `calc(${TOAST_ABOVE_NAV}px + env(safe-area-inset-bottom))` }}
+            className="pointer-events-none fixed left-1/2 z-20 flex h-11 w-[300px] max-w-[calc(100vw-32px)] -translate-x-1/2 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-[#2C2C2C] px-5 py-2.5 dark:bg-[#22262E]"
+            style={{ bottom: TOAST_ABOVE_NAV }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/images/feed/bell.png" alt="" draggable={false} className="h-[18px] w-[18px] brightness-0 invert" />

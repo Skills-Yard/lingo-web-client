@@ -4,28 +4,14 @@ import { useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
 import { moduleHref, onboardingHref } from "@/lib/routes";
-import type { HomeTab } from "./BottomNav";
 import { CareerDetailScreen } from "./CareerDetailScreen";
 import { careerById } from "./careersData";
 import { CareersScreen } from "./CareersScreen";
 import { DashboardScreen } from "./DashboardScreen";
 import { HomeScreen } from "./HomeScreen";
+import { LeagueScreen } from "./LeagueScreen";
 import { MainHomeScreen } from "./MainHomeScreen";
 import { ProfileScreen } from "./ProfileScreen";
-
-/** Nav tabs that have a page; the others are inert for now. */
-const TAB_PATH: Partial<Record<HomeTab, string>> = {
-  home: "/level",
-  profile: "/profile",
-};
-
-const useTabNavigation = () => {
-  const router = useRouter();
-  return (tab: HomeTab) => {
-    const path = TAB_PATH[tab];
-    if (path) router.push(path);
-  };
-};
 
 const subscribeNever = () => () => {};
 
@@ -46,6 +32,7 @@ export function MainHomeRoute() {
     <MainHomeScreen
       name={name || undefined}
       onContinue={() => router.push("/level")}
+      onProfile={() => router.push("/profile")}
     />
   );
 }
@@ -71,15 +58,20 @@ export function DashboardRoute() {
   return <DashboardScreen name={name || undefined} />;
 }
 
+/** `/league` — the weekly league; Back returns to the dashboard it opened from. */
+export function LeagueRoute() {
+  const router = useRouter();
+  return <LeagueScreen onBack={() => router.push("/dashboard")} />;
+}
+
 /** `/careers` — the careers tab. */
 export function CareersRoute() {
   return <CareersScreen />;
 }
 
-/** `/profile` — the learner's profile; "Redo onboarding" goes back to `/onboarding`. */
+/** `/profile` — a temporary profile; Back returns home, "Redo onboarding" goes to `/onboarding`. */
 export function ProfileRoute() {
   const router = useRouter();
-  const navigate = useTabNavigation();
   // Session storage only exists in the browser (server snapshot: none), and
   // nothing changes it while this page is open, so there is nothing to
   // subscribe to.
@@ -89,7 +81,7 @@ export function ProfileRoute() {
   return (
     <ProfileScreen
       answers={answers}
-      onNavigate={navigate}
+      onBack={() => router.push("/home")}
       onRestartOnboarding={() => router.push(onboardingHref())}
     />
   );
