@@ -163,7 +163,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         {/* The header sits at the very top (it used to sit 9px lower, for the
           page count), with the content below exactly where it was. */}
         <div
-          className="relative z-10 mx-auto w-full"
+          className="relative z-10 mx-auto mt-2 w-full"
           // 5xl on screen, like the onboarding header; the stage is scaled, so divide.
           style={{ maxWidth: HEADER_MAX_W / (stage?.scale ?? 1) }}
         >
