@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MutableRefObject } from "react";
 import { Check, Move, X } from "lucide-react";
 import type { GameSlide } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
@@ -42,6 +42,9 @@ interface GameBoardScreenProps {
   stepMs?: number;
   /** Fired once a run has ended, whether it reached the flag or not. */
   onFinishedChange?: (finished: boolean) => void;
+  /** Filled with the hint action (fills the slots) once the board is live, so
+   * the screen's own hint button can trigger it. */
+  hintRef?: MutableRefObject<(() => void) | null>;
 }
 
 const LEVEL = lesson1Level;
@@ -92,6 +95,7 @@ export function GameBoardScreen({
   borderless,
   stepMs,
   onFinishedChange,
+  hintRef,
 }: GameBoardScreenProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const triggerSound = useSound(soundEnabled);
@@ -169,6 +173,14 @@ export function GameBoardScreen({
     stepMs,
   });
 
+  useEffect(() => {
+    if (!hintRef) return;
+    hintRef.current = locked || isPlaying ? null : fillHint;
+    return () => {
+      hintRef.current = null;
+    };
+  }, [hintRef, locked, isPlaying, fillHint]);
+
   // Latch: once solved, stay solved so "Continue" stays available even after a reset.
   useEffect(() => {
     if (success === true) onSolvedChange(true);
@@ -187,7 +199,7 @@ export function GameBoardScreen({
           bubble/description expand to the full row on their own — nothing
           else here needs to change to make room. ── */}
       {borderless && (
-        <div className="relative mb-[calc(var(--stage-h)*-0.033)] flex h-[74px] items-start pl-1">
+        <div className="relative flex h-[74px] items-start pl-1">
           {/* The heading sits over Hex's box (it's above him). */}
           <h1 className="relative z-30 mt-[5px] w-[72%] min-w-0 text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
             {HEADING_WORDS.map((word, w) => (

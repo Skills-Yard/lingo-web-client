@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
+import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HintFloat } from "./HintFloat";
@@ -19,8 +20,8 @@ export type Step = "says" | "quiz";
 const CORRECT_ID = "giving";
 
 const QUIZ_HEADING: TextSpan[] = [{ text: "What", highlight: true }, { text: " teacher is doing?" }];
-const SAYS_LINE_1: TextSpan[] = [{ text: "Let Suppose", highlight: true }];
-const SAYS_LINE_2: TextSpan[] = [{ text: "Teacher Says" }];
+const SAYS_LINE_1: TextSpan[] = [{ text: "Imagine your", highlight: true }];
+const SAYS_LINE_2: TextSpan[] = [{ text: "Teacher Says.." }];
 /** When Let / Suppose / Teacher / Says are spoken in screen_3_audio.mpeg (4.03s long), measured from the clip. */
 const SAYS_CLIP_SECONDS = 4.032;
 const SAYS_WORD_TIMES = [[0.14, 0.34], [0.34, 0.83], [1.47, 1.8], [1.8, 2.17]] as const;
@@ -84,7 +85,7 @@ export const LOOKS: Record<OptionState, { edge: string; card: string; radio: str
 
 const MORPH = { duration: 0.8, ease: [0.65, 0, 0.35, 1] } as const;
 /** Heading box heights: two lines on "Teacher Says", one on the quiz. */
-const TITLE_HEIGHT: Record<Step, number> = { says: 67, quiz: 32 };
+const TITLE_HEIGHT: Record<Step, number> = { says: 92, quiz: 36 };
 
 /**
  * Level 1's screens 2 and 3 ("Let Suppose / Teacher Says", then "What
@@ -157,6 +158,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
           router.push(levelOneHref(4));
         } else if (!checked) {
           setChecked(true);
+          vibrateForAnswer(selectedId === CORRECT_ID);
           setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
         }
         else router.push(levelOneHref(5));
@@ -168,7 +170,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         initial={false}
         animate={{ height: TITLE_HEIGHT[step] }}
         transition={MORPH}
-        className="relative mt-3 w-full shrink-0"
+        className="relative mt-5 w-full shrink-0"
       >
         <AnimatePresence initial={false}>
           {quiz ? (
@@ -178,7 +180,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute inset-x-0 top-0 text-center text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white"
+              className="absolute inset-x-0 top-0 text-center text-[28px] leading-9 font-semibold text-[#2C2C2C] dark:text-white"
             >
               <SpokenText spans={QUIZ_HEADING} />
             </motion.h1>
@@ -189,12 +191,12 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute inset-x-0 top-0 flex flex-col items-center text-center"
+              className="absolute inset-x-0 top-0 flex flex-col items-center gap-3.5 text-center"
             >
-              <span className="text-[20px] leading-[1.34] font-semibold">
+              <span className="text-[28px] leading-[1.34] font-semibold">
                 <SpokenText spans={SAYS_LINE_1} timing={{ clipSeconds: SAYS_CLIP_SECONDS, times: SAYS_WORD_TIMES, before: 0 }} />
               </span>
-              <span className="text-[32px] leading-[1.25] font-bold text-[#2C2C2C] dark:text-white">
+              <span className="text-[40px] leading-none font-semibold text-[#444444] dark:text-white">
                 <SpokenText spans={SAYS_LINE_2} timing={{ clipSeconds: SAYS_CLIP_SECONDS, times: SAYS_WORD_TIMES, before: 2 }} />
               </span>
             </motion.h1>
@@ -236,8 +238,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               opacity: { duration: 0.3, delay: 0.3 },
               y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
             }}
-            // 24px below the cropped picture; 56 once "+10 XP" floats above a card.
-            style={{ marginTop: checked && selectedId === CORRECT_ID ? 56 : 24 }}
+            // 48px below the cropped picture; 80 once "+10 XP" floats above a card.
+            style={{ marginTop: checked && selectedId === CORRECT_ID ? 80 : 48 }}
             className="flex w-full shrink-0 items-start gap-[19px] transition-[margin-top] duration-300"
           >
             {OPTIONS.map((option) => {
@@ -255,20 +257,15 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}
-                  className={`relative flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[12px] border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[color,background-color,border-color,box-shadow] ${
-                    state === "idle" ? `border-transparent ${option.tint}` : LOOKS[state].card
+                  className={`relative flex h-[221px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[8px] border-4 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[color,background-color,border-color,box-shadow] ${
+                    state === "idle" ? `border-white dark:border-transparent ${option.tint}` : LOOKS[state].card
                   } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
                 >
                   <XpPop show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={option.icon} alt="" draggable={false} className="h-[60px] w-[60px] shrink-0 object-contain" />
-                  <span className="flex w-[142px] flex-col items-center gap-3">
-                    <span className="text-[16px] leading-none font-medium text-[#444444] dark:text-white">
-                      {option.title}
-                    </span>
-                    <span className="w-[111px] text-center text-[12px] leading-[1.4] font-medium text-[#666666] dark:text-white/70">
-                      {option.text}
-                    </span>
+                  <img src={option.icon} alt="" draggable={false} className="h-[100px] w-[100px] shrink-0 object-contain" />
+                  <span className="text-[16px] leading-none font-semibold text-[#444444] dark:text-white">
+                    {option.title}
                   </span>
                 </motion.button>
                 </HintFloat>

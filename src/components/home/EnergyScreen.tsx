@@ -1,10 +1,12 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { animate, motion } from "framer-motion";
 import { Infinity as InfinityIcon, Play, X, Zap } from "lucide-react";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
+import { Confetti } from "@/components/level-one/Confetti";
+import { vibrateForClaim } from "@/lib/haptics";
 import { addBatteryUnits, refillBattery, setBatteryUnlimited, useBattery } from "./batteryStore";
 import { HEADING } from "./homeFonts";
 import { LEARNER_STATS } from "./learnerStats";
@@ -55,6 +57,31 @@ function EnergyCard({ icon, tint, darkTint, title, tag, tagClassName = "", disab
   );
 }
 
+const FILL_SECONDS = 1.2;
+/** A claim: the yellow fill's run, the beat before green follows, the confetti's length. */
+const YELLOW_SECONDS = 0.7;
+const YELLOW_PAUSE_MS = 250;
+const CELEBRATE_MS = 3500;
+
+/** Counts up from empty when the screen opens, and again from wherever it
+ * stands whenever `target` changes (a recharge). */
+function useFillingLevel(target: number) {
+  const [shown, setShown] = useState(0);
+  const shownRef = useRef(0);
+  useEffect(() => {
+    const controls = animate(shownRef.current, target, {
+      duration: FILL_SECONDS,
+      ease: EASE,
+      onUpdate: (value) => {
+        shownRef.current = value;
+        setShown(value);
+      },
+    });
+    return () => controls.stop();
+  }, [target]);
+  return shown;
+}
+
 /**
  * `/energy` — the battery's own screen: how full it is, and the ways to top
  * it up. Opened by tapping the battery; full screen, so no nav or stats bar.
@@ -62,6 +89,33 @@ function EnergyCard({ icon, tint, darkTint, title, tag, tagClassName = "", disab
 export function EnergyScreen({ onClose }: { onClose: () => void }) {
   const battery = useBattery();
   const full = battery.level >= 100;
+  // While a claim plays, the green fill is held where it was (`hold`) as the
+  // yellow one grows ahead of it; releasing `hold` lets green run on and cover it.
+  const [hold, setHold] = useState<number | null>(null);
+  const [yellow, setYellow] = useState<number | null>(null);
+  const [celebrating, setCelebrating] = useState(false);
+  const greenLevel = useFillingLevel(hold ?? battery.level);
+  const shownLevel = yellow === null ? greenLevel : Math.max(greenLevel, yellow);
+
+  const claimFreeEnergy = () => {
+    const from = battery.level;
+    const to = Math.min(100, from + (BONUS_UNITS / LEARNER_STATS.battery.max) * 100);
+    setHold(from);
+    setYellow(from);
+    setCelebrating(true);
+    vibrateForClaim();
+    addBatteryUnits(BONUS_UNITS);
+    animate(from, to, {
+      duration: YELLOW_SECONDS,
+      ease: EASE,
+      onUpdate: setYellow,
+      onComplete: () => {
+        window.setTimeout(() => setHold(null), YELLOW_PAUSE_MS);
+        window.setTimeout(() => setYellow(null), YELLOW_PAUSE_MS + FILL_SECONDS * 1000 + 100);
+      },
+    });
+    window.setTimeout(() => setCelebrating(false), CELEBRATE_MS);
+  };
 
   return (
     <main className="h-dvh w-full overflow-hidden bg-white font-[family-name:var(--font-app-poppins)] text-[#444444] dark:bg-[#0F1F26] dark:text-white">
@@ -165,13 +219,14 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
                 title={`+${BONUS_UNITS} energy`}
                 tag="Free"
                 tagClassName="text-[#01A17F]"
-                disabled={full || battery.unlimited}
-                onClick={() => addBatteryUnits(BONUS_UNITS)}
+                disabled={full || battery.unlimited || hold !== null}
+                onClick={claimFreeEnergy}
               />
             </motion.div>
           </div>
         </div>
       </div>
+      <Confetti active={celebrating} />
     </main>
   );
 }

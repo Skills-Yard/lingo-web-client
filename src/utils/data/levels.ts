@@ -52,8 +52,8 @@ export const lesson1Level: LevelConfig = {
   hints: ["straight", "straight", "right", "straight", "straight"],
 
   dimensions: {
-    platformWidth: "320px",
-    platformHeight: "270px",
+    platformWidth: "350px",
+    platformHeight: "295px",
     playerWidth: "17%",
     flagWidth: "17%",
     obstacleWidth: "13%",

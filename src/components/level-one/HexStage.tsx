@@ -80,7 +80,7 @@ export function HexStage({
   return (
     <motion.div
       aria-hidden
-      className="pointer-events-none absolute top-0 left-0 z-20"
+      className="pointer-events-none absolute top-0 left-0 z-[100]"
       animate={{
         x: rect.x + (rect.width * (1 - SIZE)) / 2 + rect.width * NUDGE_RIGHT,
         y: rect.y + (rect.height * (1 - SIZE)) / 2 + rect.height * NUDGE_DOWN,
@@ -180,7 +180,7 @@ export function HexGlide({
   return (
     <motion.div
       aria-hidden
-      className="pointer-events-none absolute top-0 left-0 z-30"
+      className="pointer-events-none absolute top-0 left-0 z-[100]"
       initial={false}
       animate={{ x: rect.x - (rect.width * (scale - 1)) / 2, y: rect.y - (rect.height * (scale - 1)) / 2, width: rect.width * scale, height: rect.height * scale, opacity: leaving ? 0 : 1 }}
       transition={{ default: moved ? HINT_GLIDE_TRANSITION : GLIDE_TRANSITION, opacity: leaving ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0 } }}

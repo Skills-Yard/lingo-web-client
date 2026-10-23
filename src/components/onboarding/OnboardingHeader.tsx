@@ -12,7 +12,11 @@ export { WIPE } from "./themeWipe";
 
 /** Back, full screen, light/dark and sound share one look — same size, same weight. */
 const ICON_BUTTON =
-  "w-[39px] h-[39px] flex items-center justify-center rounded-md border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
+  "flex items-center justify-center rounded-[6px] border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
+
+/** Level 1's slimmer bar: 30px buttons in a 44px header. */
+const BUTTON_SIZE = "w-[39px] h-[39px]";
+const LEVEL_BUTTON_SIZE = "w-[30px] h-[30px]";
 
 interface OnboardingHeaderProps {
   onBack: () => void;
@@ -59,7 +63,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
     // Fixed 83px box, placed from the top edge: page count at 27px, bar at
     // 63px, and the 39px buttons centred on the bar (43.5px). The bar always
     // runs between back and the two right buttons — one width on every screen.
-    <header className="relative h-[83px] shrink-0 select-none">
+    <header className={`relative shrink-0 select-none ${level ? "h-11" : "h-[83px]"}`}>
       <button
         type="button"
         onClick={onBack}

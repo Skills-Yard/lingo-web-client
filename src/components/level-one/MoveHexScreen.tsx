@@ -30,6 +30,7 @@ export function MoveHexScreen() {
   // Where Hex belongs right now (the board registers its own spot).
   const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const hintRef = useRef<(() => void) | null>(null);
 
   if (!GAME_SLIDE) return null;
 
@@ -39,12 +40,13 @@ export function MoveHexScreen() {
       flush
       fit
       ctaDisabled={!finished}
+      hint={{ visible: true, onUse: () => hintRef.current?.() }}
       onBack={() => router.push(levelOneHref(7))}
       onContinue={() => router.push(levelOneCompleteHref())}
     >
       {/* Hex is positioned against this box, so it must wrap the
         screen he walks around in. */}
-      <div ref={stageRef} className="relative mt-[calc(var(--stage-h)*0.045)] flex w-full flex-1 flex-col">
+      <div ref={stageRef} className="relative mt-5 flex w-full flex-1 flex-col">
         <HexStage anchorEl={anchorEl} containerRef={stageRef} />
         <GameBoardScreen
           slide={GAME_SLIDE}
@@ -52,6 +54,7 @@ export function MoveHexScreen() {
           onFinishedChange={setFinished}
           registerAnchor={setAnchorEl}
           borderless
+          hintRef={hintRef}
           stepMs={STEP_MS}
         />
       </div>

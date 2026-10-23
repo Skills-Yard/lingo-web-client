@@ -163,7 +163,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         {/* The header sits at the very top (it used to sit 9px lower, for the
           page count), with the content below exactly where it was. */}
         <div
-          className="relative z-10 mx-auto w-full"
+          className="relative z-10 mx-auto mt-2 w-full"
           // 5xl on screen, like the onboarding header; the stage is scaled, so divide.
           style={{ maxWidth: HEADER_MAX_W / (stage?.scale ?? 1) }}
         >
@@ -178,7 +178,10 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         </div>
         {/* The scroller spans the device, so a child can run edge to edge;
           the rest of the content stays in the centred column. */}
-        <div ref={scrollerRef} className="scrollbar-none min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+        {/* Reaches up behind the header (the padding gives the room back), so
+          Hex's jump isn't clipped at the scroller's edge — he draws over the
+          progress bar (z-[100]) instead of vanishing under it. */}
+        <div ref={scrollerRef} className="scrollbar-none -mt-20 min-h-0 flex-1 overflow-x-hidden overflow-y-auto pt-20">
           {/* Phone width at most: on a desktop the content keeps its proportions
             and sits in the middle instead of stretching across the screen. */}
           <div
