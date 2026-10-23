@@ -42,8 +42,8 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
         window.setTimeout(() => (onContinue ?? (() => router.push(levelOneHref(7))))(), EXIT_MS);
       }}
     >
-      {/* Hex and his question (plain heading text, as on the other screens): 32px under the header, 20px above the video. */}
-      <div className="relative mt-8 mb-5 flex h-[95px] shrink-0 items-start justify-center gap-[15px]">
+      {/* Hex and his question (plain heading text, as on the other screens): 20px under the header, 20px above the video. */}
+      <div className="relative mt-5 mb-5 flex h-[95px] shrink-0 items-start justify-center gap-8">
         {/* The row keeps Hex's 131px slot. His canvas is as wide as the screen
           (centred on the screen, then shifted so he stands on his slot), so
           his exit can run right to the screen's edge without being cut off.
@@ -51,12 +51,12 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
         <div aria-hidden className="h-[95px] w-[131px] shrink-0" />
         <div
           aria-hidden
-          className="pointer-events-none absolute top-1/2 z-10 h-[150px] -translate-y-1/2"
-          style={{ width: "var(--stage-w)", left: "calc(50% - var(--stage-w) / 2 - 83px)" }}
+          className="pointer-events-none absolute top-1/2 z-[100] h-[150px] -translate-y-1/2"
+          style={{ width: "var(--stage-w)", left: "calc(50% - var(--stage-w) / 2 - 91.5px)" }}
         >
           <OnboardingHex entryKey="video" leaving={leaving} exit="exitLeft" />
         </div>
-        <h2 className="w-[175px] shrink-0 self-center text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
+        <h2 className="w-[175px] shrink-0 self-center text-[30px] leading-9 font-semibold text-[#2C2C2C] dark:text-white">
           <SpokenText spans={HEADING} timing={HEADING_TIMING} />
         </h2>
       </div>
@@ -90,7 +90,7 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
       </div>
 
       <div className="mt-2.5 flex w-full shrink-0 flex-col gap-1">
-        <h1 className="text-[20px] leading-[30px] font-bold text-[#444444] dark:text-white">Introduction to Instructions</h1>
+        <h1 className="text-[30px] leading-9 font-semibold text-[#444444] dark:text-white">Introduction to Instructions</h1>
         <p className="text-[16px] leading-6 font-medium text-[#666666] dark:text-white/70">
           Watch this short video to understand instructions with real examples.
         </p>

@@ -1,5 +1,4 @@
 import React from "react";
-import { Lightbulb } from "lucide-react";
 import { DemoPlatform } from "./DemoPlatform";
 import { Level1Platform } from "./Level1Platform";
 import { LevelConfig, CommandType, Position, Direction } from "../../../utils/types";
@@ -56,7 +55,7 @@ export function GameBoard({
       className={`relative w-full flex flex-col items-center transition-colors ${
         borderless
           ? // Level 1: no card chrome and no padding below, so what follows sits close.
-            "px-3.5 pt-1"
+            "px-1 pt-1"
           : "bg-white dark:bg-[#111722] border border-slate-200 dark:border-[#1e293b] shadow-xs rounded-3xl p-3.5 mb-2"
       }`}
     >
@@ -68,22 +67,18 @@ export function GameBoard({
         >
           Steps left: {stepsLeft}
         </span>
-        <div className="pointer-events-auto flex gap-1.5">
-          <button
-            type="button"
-            onClick={fillHint}
-            disabled={isPlaying}
-            aria-label="Hint"
-            className={
-              borderless
-                ? // Level 1: just the bulb, where the sound button was.
-                  "flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FFF1BF] text-[#F5A300] shadow-[0_2px_6px_rgba(245,163,0,0.25)] transition-all cursor-pointer active:scale-95 disabled:opacity-50 dark:bg-amber-400/20 dark:text-amber-400"
-                : "flex items-center gap-1 bg-slate-50 hover:bg-amber-50 dark:bg-[#182232] dark:hover:bg-amber-950/40 text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 text-[11px] font-bold px-3 py-1 rounded-xl border border-slate-200 dark:border-[#22365a] hover:border-amber-300 shadow-xs transition-all cursor-pointer disabled:opacity-50"
-            }
-          >
-            {borderless ? <Lightbulb className="h-6 w-6" strokeWidth={2.2} /> : "💡 Hint"}
-          </button>
-          {!borderless && (
+        {/* Level 1 has no hint or sound button up here: its hint sits beside Continue. */}
+        {!borderless && (
+          <div className="pointer-events-auto flex gap-1.5">
+            <button
+              type="button"
+              onClick={fillHint}
+              disabled={isPlaying}
+              aria-label="Hint"
+              className="flex items-center gap-1 bg-slate-50 hover:bg-amber-50 dark:bg-[#182232] dark:hover:bg-amber-950/40 text-slate-700 dark:text-slate-200 hover:text-amber-600 dark:hover:text-amber-400 text-[11px] font-bold px-3 py-1 rounded-xl border border-slate-200 dark:border-[#22365a] hover:border-amber-300 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+            >
+              💡 Hint
+            </button>
             <button
               type="button"
               onClick={() => {
@@ -98,8 +93,8 @@ export function GameBoard({
             >
               {soundEnabled ? "🔊" : "🔇"}
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       <div className={`w-full flex items-center justify-center overflow-visible relative ${borderless ? "pt-2 pb-0" : "py-4"}`}>

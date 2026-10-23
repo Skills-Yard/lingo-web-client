@@ -11,7 +11,11 @@ export { WIPE } from "./themeWipe";
 
 /** Back, full screen, light/dark and sound share one look — same size, same weight. */
 const ICON_BUTTON =
-  "w-[39px] h-[39px] flex items-center justify-center rounded-md border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
+  "flex items-center justify-center rounded-[6px] border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
+
+/** Level 1's slimmer bar: 30px buttons in a 44px header. */
+const BUTTON_SIZE = "w-[39px] h-[39px]";
+const LEVEL_BUTTON_SIZE = "w-[30px] h-[30px]";
 
 interface OnboardingHeaderProps {
   onBack: () => void;
@@ -45,14 +49,14 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
     // Fixed 83px box, placed from the top edge: page count at 27px, bar at
     // 63px, and the 39px buttons centred on the bar (43.5px). The bar always
     // runs between back and the two right buttons — one width on every screen.
-    <header className="relative h-[83px] shrink-0 select-none">
+    <header className={`relative shrink-0 select-none ${level ? "h-11" : "h-[83px]"}`}>
       <button
         type="button"
         onClick={onBack}
-        className={`absolute left-4 ${level ? "top-[6px]" : "top-[43.5px]"} ${ICON_BUTTON}`}
+        className={`absolute left-4 ${level ? `top-[3px] ${LEVEL_BUTTON_SIZE}` : `top-[43.5px] ${BUTTON_SIZE}`} ${ICON_BUTTON}`}
         aria-label="Back"
       >
-        <ChevronLeft className="w-5 h-5" strokeWidth={1.4} />
+        <ChevronLeft className="h-5 w-5" strokeWidth={1.4} />
       </button>
 
       {progress && (
@@ -70,7 +74,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className={`absolute left-[67px] mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] right-[84px]" : "top-[63px] right-4"}`}
+            className={`absolute mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[18px] right-[78px] left-[58px]" : "top-[63px] right-4 left-[67px]"}`}
           />
         </>
       )}
@@ -80,9 +84,9 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
           screen's `step` spends its share of it. Also the way into the hidden
           dev panel (see BatteryMenu). */}
       {level && (
-        <BatteryMenu className="absolute top-[6px] right-4">
-          <span className="flex h-[39px] w-[56px] items-center justify-center rounded-md border border-black/8 dark:border-white/15">
-            <PersistentBattery step={progress?.step} className="w-[44px]" />
+        <BatteryMenu className="absolute top-[3px] right-4">
+          <span className="flex h-[30px] w-[48px] items-center justify-center rounded-[6px] border border-black/8 dark:border-white/15">
+            <PersistentBattery step={progress?.step} className="w-[36px]" />
           </span>
         </BatteryMenu>
       )}

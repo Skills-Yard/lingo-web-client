@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
+import { vibrateForTap } from "@/lib/haptics";
 import type { AnswerResult } from "./RiveProgressBar";
 import { RiveButtonFace, RIVE_BUTTON_H, RIVE_BUTTON_W, type RiveButtonVariant } from "./RiveButtonFace";
 
@@ -118,6 +119,7 @@ export function Button3D({
     if (!onClick) return;
     if (pending.current) return;
     onPress?.();
+    vibrateForTap();
     pending.current = true;
     setPressed(true);
     setPressCount((n) => n + 1);

@@ -126,7 +126,7 @@ export function TeacherSpeech({
           scale: hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
         }}
         style={{ width: HEX_SIZE, height: HEX_SIZE, transformOrigin: "0 0" }}
-        className="pointer-events-none absolute top-0 left-0 z-20"
+        className="pointer-events-none absolute top-0 left-0 z-[100]"
       >
         <motion.div
           animate={cued ? HEX_FLOAT : { y: 0 }}

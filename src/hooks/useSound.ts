@@ -1,7 +1,9 @@
 import { useCallback } from 'react';
+import { vibrateForAnswer } from '@/lib/haptics';
 
 export function useSound(soundEnabled: boolean) {
   const triggerSound = useCallback((type: 'tap' | 'step' | 'pickup' | 'win' | 'lose' | 'hint') => {
+    if (type === 'win' || type === 'lose') vibrateForAnswer(type === 'win');
     if (!soundEnabled || typeof window === 'undefined') return;
     try {
       const AC = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;

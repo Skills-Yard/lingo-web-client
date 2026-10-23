@@ -8,6 +8,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
+import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
@@ -67,6 +68,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       onContinue={() => {
         if (!checked) {
           setChecked(true);
+          vibrateForAnswer(selectedId === CORRECT_ID);
           setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
         } else (onContinue ?? (() => router.push(levelOneRewardHref())))();
       }}
@@ -94,13 +96,13 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
           opacity: { duration: 0.3, delay: 0.3 },
           y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
         }}
-        className="mt-3 flex w-full shrink-0 items-center gap-3"
+        className="mt-5 flex w-full shrink-0 items-center gap-3"
       >
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-lg bg-[#04ACAB]/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/level-one/q-badge.png" alt="Question" draggable={false} className="h-[26px] w-[30px] object-contain" />
         </span>
-        <h1 className="text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
+        <h1 className="text-[30px] leading-9 font-semibold text-[#2C2C2C] dark:text-white">
           What are <span className="text-level-gradient">instructions</span> known as?
         </h1>
       </motion.div>
