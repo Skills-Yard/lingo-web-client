@@ -15,19 +15,29 @@ type Host = {
 
 let host: Host | null = null;
 
-/** What the artboard should show; applied as soon as it has loaded. */
+/** What the artboard should show; applied as soon as it has loaded. The theme
+ * is kept apart from the fill so switching it mid-session only rewrites
+ * `darkTheme`. */
 let wanted: { level: number; unlimited: boolean } | null = null;
+let wantedDarkTheme: boolean | null = null;
 let flashQueued = false;
 
 const fireFullFlash = (rive: Rive) => rive.viewModelInstance?.trigger(BATTERY.fullFlashTrigger)?.trigger();
 
-const apply = (rive: Rive) => {
+const applyFill = (rive: Rive) => {
   const instance = rive.viewModelInstance;
   if (!instance || !wanted) return;
   const level = instance.number(BATTERY.levelProperty);
   if (level) level.value = wanted.level;
   const unlimited = instance.boolean(BATTERY.unlimitedProperty);
   if (unlimited) unlimited.value = wanted.unlimited;
+};
+
+const applyDarkTheme = (rive: Rive) => {
+  const instance = rive.viewModelInstance;
+  if (!instance || wantedDarkTheme === null) return;
+  const darkTheme = instance.boolean(BATTERY.darkThemeProperty);
+  if (darkTheme) darkTheme.value = wantedDarkTheme;
 };
 
 /** Browser only. Creates the canvas and starts loading on first use. */
@@ -54,7 +64,8 @@ export const getBatteryHost = (): Host => {
       if (!rive) return;
       rive.resizeDrawingSurfaceToCanvas();
       created.loaded = true;
-      apply(rive);
+      applyFill(rive);
+      applyDarkTheme(rive);
       if (flashQueued) {
         flashQueued = false;
         fireFullFlash(rive);
@@ -67,7 +78,14 @@ export const getBatteryHost = (): Host => {
 /** Sets the battery's `level` (0-100) and `unlimited`. */
 export const writeBattery = (next: { level: number; unlimited: boolean }) => {
   wanted = next;
-  if (host?.loaded && host.rive) apply(host.rive);
+  if (host?.loaded && host.rive) applyFill(host.rive);
+};
+
+/** Sets the battery's `darkTheme` — `true` for the dark theme, `false` for
+ * light. Safe to call whenever the theme changes. */
+export const writeBatteryTheme = (darkTheme: boolean) => {
+  wantedDarkTheme = darkTheme;
+  if (host?.loaded && host.rive) applyDarkTheme(host.rive);
 };
 
 /** Plays the `fullFlash` trigger — held back until the file has loaded. */

@@ -151,7 +151,7 @@ Artboard `BTRY-001_Battery_Design_V3` (320 × 110), state machine `Battery_SM`, 
 | 5 | `Splash Screen` | `Splash_SM` | `Splash_VM` | fitWidth / center |
 | 6 | `09` | `Onboarding_complete` | none | contain / bottomCenter |
 | 7 | `BG_Grid` | `BG_SM` | none | cover / center |
-| 8 | `HEX_Widget` | `Widget_SM` | none | contain / center |
+| 8 | `HEX_Widget` | `WidgetFull_SM` | none | contain / center |
 | 9 | `PathBuilding` | `PathBuilding_SM` | default (`DataBind.auto()`) | contain / center |
 | 10 | `ModuleBackground 2` | `State Machine 1` | none | fill / topCenter |
 | 11 | `LESSON_ProgressBar` | `ProgressBar_SM` | default (`DataBind.auto()`) | contain / center |
@@ -238,7 +238,7 @@ Triggers `morning`, `noon`, `evening`, `night`; also `entryStyle` = 6, `enter`, 
 - **`Splash Screen`**: plays from the first frame. At 2500 ms (from ready, not mount) fire `showSignUpScreen` and swap to sign-up on the same canvas. The sign-up animation settles at 5500 ms: enable the CTA then. Back to sign-up: fire again. Deep link to sign-up: fire as soon as ready. Layout fitWidth; if full-width height would overlap the footer CTA or the "Lingo" wordmark, use contain between them. The wordmark is Flutter text (section 5).
 - **`09`**: one-shot full-screen "all set"; replaces Hex and the bubble. No inputs.
 - **`BG_Grid`**: looping transparent grid behind the whole onboarding flow; opacity 0 on question and time-slider screens. One instance for the flow.
-- **`HEX_Widget`**: autoplay, no inputs; on the streak screen over a phone mockup at left 6%, top 12%, 60% × 48% of the card.
+- **`HEX_Widget`**: autoplay, no inputs; the whole widget card on the streak screen (no mockup image behind it). Size the canvas to the artboard's own aspect ratio, `min(100%, 21rem)` wide.
 
 ### 4.6 Artboards 9 to 13
 
@@ -314,7 +314,7 @@ Header from `greeting` onward (not on `splash` or `sign-up`): Back button (fires
 
 **`notifications`** · Heading: "Get notified when it’s time to learn." · CTA "Allow Notifications" (requests the OS permission, then continues) + text button "Don't Allow" (continues without asking) · CTA disabled until voice done · No bar · `HEX_Notify` (4.5): `show` 300 ms after the screen faded in. Two short haptic pulses 650 ms after arrival (optional). Style 2.
 
-**`streak`** · Heading: "Stay **one tap away** from your next lesson." · Phone-home-screen mockup image · CTA "Continue", disabled until voice done · No bar · `HEX_Widget` autoplays; no Hex character on this screen. The header fades out as the screen exits.
+**`streak`** · Heading: "Stay **one tap away** from your next lesson." · CTA "Continue", disabled until voice done · No bar · `HEX_Widget` (the whole widget card) autoplays; no Hex character on this screen. The header fades out as the screen exits.
 
 **`three-months`** · Bubble: "In 3 months you will be building real {career} projects on your own." · CTA "Yes!", disabled until voice done · Bar 6/7 · `HEX` style 5: `enter` → `talk*` → `showQuestion`.
 
