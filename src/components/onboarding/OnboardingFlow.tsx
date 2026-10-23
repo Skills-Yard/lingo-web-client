@@ -357,9 +357,10 @@ export function OnboardingFlow({
   const onBubbleScreen =
     (step?.kind === "fox-message" && !step.hexScene) || step?.kind === "name-input";
   const showSkip = onBubbleScreen && awaitingVoiceover;
+  // `exiting` is left out on purpose: the CTA stays green after a click while
+  // Hex leaves (afterHexExit already swallows repeat clicks).
   const ctaDisabled =
     index < -1 ||
-    exiting ||
     awaitingVoiceover ||
     (step?.kind === "name-input" && !answers.name?.trim()) ||
     ((step?.kind === "question-list" || step?.kind === "question-grid") &&
