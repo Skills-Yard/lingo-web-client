@@ -178,7 +178,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute inset-x-0 top-0 text-center text-[30px] leading-9 font-semibold text-[#2C2C2C] dark:text-white"
+              className="absolute inset-x-0 top-0 text-center text-[28px] leading-9 font-semibold text-[#2C2C2C] dark:text-white"
             >
               <SpokenText spans={QUIZ_HEADING} />
             </motion.h1>
@@ -236,8 +236,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               opacity: { duration: 0.3, delay: 0.3 },
               y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
             }}
-            // 24px below the cropped picture; 56 once "+10 XP" floats above a card.
-            style={{ marginTop: checked && selectedId === CORRECT_ID ? 56 : 24 }}
+            // 48px below the cropped picture; 80 once "+10 XP" floats above a card.
+            style={{ marginTop: checked && selectedId === CORRECT_ID ? 80 : 48 }}
             className="flex w-full shrink-0 items-start gap-[19px] transition-[margin-top] duration-300"
           >
             {OPTIONS.map((option) => {
@@ -255,20 +255,15 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}
-                  className={`relative flex h-[197px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[12px] border-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[color,background-color,border-color,box-shadow] ${
-                    state === "idle" ? `border-transparent ${option.tint}` : LOOKS[state].card
+                  className={`relative flex h-[221px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[8px] border-4 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[color,background-color,border-color,box-shadow] ${
+                    state === "idle" ? `border-white dark:border-transparent ${option.tint}` : LOOKS[state].card
                   } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
                 >
                   <XpPop show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={option.icon} alt="" draggable={false} className="h-[60px] w-[60px] shrink-0 object-contain" />
-                  <span className="flex w-[142px] flex-col items-center gap-3">
-                    <span className="text-[16px] leading-none font-medium text-[#444444] dark:text-white">
-                      {option.title}
-                    </span>
-                    <span className="w-[111px] text-center text-[12px] leading-[1.4] font-medium text-[#666666] dark:text-white/70">
-                      {option.text}
-                    </span>
+                  <img src={option.icon} alt="" draggable={false} className="h-[100px] w-[100px] shrink-0 object-contain" />
+                  <span className="text-[16px] leading-none font-semibold text-[#444444] dark:text-white">
+                    {option.title}
                   </span>
                 </motion.button>
                 </HintFloat>

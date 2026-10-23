@@ -102,7 +102,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/level-one/q-badge.png" alt="Question" draggable={false} className="h-[26px] w-[30px] object-contain" />
         </span>
-        <h1 className="text-[30px] leading-9 font-semibold text-[#2C2C2C] dark:text-white">
+        <h1 className="text-[28px] leading-9 font-semibold text-[#2C2C2C] dark:text-white">
           What are <span className="text-level-gradient">instructions</span> known as?
         </h1>
       </motion.div>

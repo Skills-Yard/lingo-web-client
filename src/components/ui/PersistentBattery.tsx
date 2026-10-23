@@ -12,13 +12,18 @@ type PersistentBatteryProps = {
   step?: number;
   /** Give it a width; the height follows the artboard. */
   className?: string;
+  /** Shows this fill (0-100) instead of the learner's, for a screen that
+   * animates the battery filling itself. */
+  level?: number;
 };
 
 /** The session's one battery (see `batteryHost`), moved into this slot, showing
  * the learner's `useBattery()` level. */
-export function PersistentBattery({ step, className = "" }: PersistentBatteryProps) {
+export function PersistentBattery({ step, className = "", level: shownLevel }: PersistentBatteryProps) {
   const slot = useRef<HTMLDivElement>(null);
-  const { level, unlimited } = useBattery();
+  const battery = useBattery();
+  const level = shownLevel ?? battery.level;
+  const { unlimited } = battery;
 
   useLayoutEffect(() => {
     const element = slot.current;

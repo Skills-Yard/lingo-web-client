@@ -32,7 +32,7 @@ export function ModuleIntroScreen({ onContinue }: { onContinue?: () => void }) {
         <p className="mt-4 text-[11px] leading-4 font-bold tracking-[1.2px] text-[#2F80ED] uppercase dark:text-[#1386B3]">
           Module 1 - Lesson 1
         </p>
-        <h1 className="mt-2 text-[30px] leading-9 font-semibold text-[#1F2A44] dark:text-white">
+        <h1 className="mt-2 text-[28px] leading-9 font-semibold text-[#1F2A44] dark:text-white">
           Think like a
           <br />
           <span className="text-level-gradient">programmer</span>

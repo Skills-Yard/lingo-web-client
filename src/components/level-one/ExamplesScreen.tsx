@@ -100,7 +100,7 @@ function ExamplesCarousel() {
 
   return (
     <>
-      <h1 className="mt-5 w-[264px] shrink-0 text-center text-[30px] leading-9 font-semibold text-[#444444] dark:text-white">
+      <h1 className="mt-5 w-[264px] shrink-0 text-center text-[28px] leading-9 font-semibold text-[#444444] dark:text-white">
         <SpokenText spans={HEADING} />
       </h1>
 
