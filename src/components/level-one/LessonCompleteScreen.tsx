@@ -7,6 +7,7 @@ import { Button3D } from "@/components/ui/Button3D";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { LESSON_COMPLETE } from "@/lib/rive/runtime";
+import { vibrateForLessonComplete } from "@/lib/haptics";
 
 /** The lesson's results, shown by the artboard. */
 const LESSON_XP = 40;
@@ -51,6 +52,7 @@ export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }
     set(LESSON_COMPLETE.accuracyProperty, LESSON_ACCURACY, `${LESSON_ACCURACY}%`);
     set(LESSON_COMPLETE.timeProperty, LESSON_SECONDS, formatTime(LESSON_SECONDS));
     fireTrigger(LESSON_COMPLETE.playTrigger);
+    vibrateForLessonComplete();
   }, [rive, ready, fireTrigger]);
 
   return (

@@ -1,7 +1,16 @@
 const CORRECT_PATTERN = [250];
 const WRONG_PATTERN = [80, 40, 80];
 
-const TAP_PATTERN = [60];
+const TAP_PATTERN = [110];
+const LESSON_COMPLETE_PATTERN = [1200];
+
+/** One very long buzz for finishing a lesson. */
+export function vibrateForLessonComplete() {
+  if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
+  try {
+    navigator.vibrate(LESSON_COMPLETE_PATTERN);
+  } catch {}
+}
 
 /** Short buzz for a button press. */
 export function vibrateForTap() {
