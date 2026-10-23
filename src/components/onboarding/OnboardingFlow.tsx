@@ -554,7 +554,9 @@ export function OnboardingFlow({
               // On the streak screen the header leaves with Hex's exit.
               animate={{ opacity: exiting && step.kind === "streak" ? 0 : 1 }}
               transition={{ duration: exiting ? 0.4 : 0.2 }}
-              className="pointer-events-none absolute inset-x-0 top-0 z-20"
+              // Below Hex (z-[5], see PersistentFox) so his jump passes over the
+              // progress bar, not under it; still above the screens (z auto).
+              className="pointer-events-none absolute inset-x-0 top-0 z-4"
             >
               <div
                 className="pointer-events-auto origin-top-left"
