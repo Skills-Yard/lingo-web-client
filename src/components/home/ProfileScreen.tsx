@@ -90,7 +90,7 @@ export function ProfileScreen({
         <motion.section {...rise(0.06)} className={`${CARD} flex shrink-0 flex-col items-center px-5 py-6`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src="/images/home/avatar.png"
+            src="/images/home/profile-avatar.png"
             alt=""
             draggable={false}
             className="h-[84px] w-[84px] select-none rounded-full bg-[#F9F8F6] object-cover ring-4 ring-white dark:bg-[#16262D] dark:ring-[#1A1C22]"

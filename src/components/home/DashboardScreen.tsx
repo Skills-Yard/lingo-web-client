@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Check, ChartNoAxesColumn, ChevronRight, Flame, Star } from "lucide-react";
 import { GlossButton } from "./GlossButton";
-import { HexAvatar } from "./HexAvatar";
 import { TOP_BAR_BOTTOM } from "./HomeStage";
 import { HEADING } from "./homeFonts";
 import { LEARNER_STATS } from "./learnerStats";
@@ -151,9 +150,13 @@ export function DashboardScreen({ name = "Alex" }: { name?: string }) {
     >
       <div className="mx-auto w-full max-w-[430px] px-4 pt-1" style={{ paddingBottom: NAV_CLEARANCE }}>
         <motion.header {...reveal(0)} className="flex items-center gap-3">
-          <div className="h-[72px] w-[72px] shrink-0">
-            <HexAvatar className="h-full w-full" />
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/images/home/profile-avatar.png"
+            alt="Profile"
+            draggable={false}
+            className="h-[72px] w-[72px] shrink-0 select-none rounded-full object-cover"
+          />
           <div className="min-w-0">
             <h1 className="truncate text-2xl font-extrabold leading-tight">{name}</h1>
             <p className="text-xs leading-[18px]" style={{ color: MUTED }}>
