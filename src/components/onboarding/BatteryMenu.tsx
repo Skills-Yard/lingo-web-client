@@ -2,18 +2,23 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Infinity as InfinityIcon, Maximize, Minimize, Moon, Sun } from "lucide-react";
 import { setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { energyHref } from "@/lib/routes";
 import { WIPE } from "./themeWipe";
 
 const BUTTON =
   "mt-2 flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg bg-[#F7F8FA] px-3 text-[13px] font-medium text-[#2C2C2C] active:scale-[0.98] dark:bg-[#16262D] dark:text-white";
 
+/** How long the battery is held before the dev panel opens. */
+const HOLD_MS = 600;
+
 type BatteryMenuProps = {
-  /** The battery itself — tapping (or holding) it opens the panel. */
+  /** The battery itself — tapping it opens `/energy`, holding it the dev panel. */
   children: ReactNode;
   /** Sizes and places the wrapper, which must be positioned (`absolute` or
    * `relative`): the panel opens under it, right-aligned. */
@@ -23,9 +28,9 @@ type BatteryMenuProps = {
 };
 
 /**
- * TEMPORARY — FOR DEVS ONLY. The battery doubles as the way into a hidden
- * testing panel (theme, full screen, infinite battery): nothing about it looks
- * pressable (no pointer, hover or focus ring).
+ * A tap on the battery opens the Energy screen. TEMPORARY — FOR DEVS ONLY: a
+ * hold opens a hidden testing panel (theme, full screen, infinite battery);
+ * nothing about it looks pressable (no pointer, hover or focus ring).
  */
 export function BatteryMenu({ children, className = "", buttonClassName = "" }: BatteryMenuProps) {
   const { theme, toggleTheme } = useTheme();
@@ -34,6 +39,18 @@ export function BatteryMenu({ children, className = "", buttonClassName = "" }: 
   const { unlimited } = useBattery();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+  const holdTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const held = useRef(false);
+
+  const startHold = () => {
+    held.current = false;
+    holdTimer.current = setTimeout(() => {
+      held.current = true;
+      setOpen(true);
+    }, HOLD_MS);
+  };
+  const cancelHold = () => clearTimeout(holdTimer.current);
 
   useEffect(() => {
     if (!open) return;
@@ -50,7 +67,18 @@ export function BatteryMenu({ children, className = "", buttonClassName = "" }: 
       <button
         type="button"
         tabIndex={-1}
-        onClick={() => setOpen((value) => !value)}
+        onPointerDown={startHold}
+        onPointerUp={cancelHold}
+        onPointerLeave={cancelHold}
+        onPointerCancel={cancelHold}
+        onClick={() => {
+          if (held.current) {
+            held.current = false;
+            return;
+          }
+          if (open) return setOpen(false);
+          router.push(energyHref(window.location.pathname + window.location.search));
+        }}
         // A hold must open the panel, not the browser's long-press menu.
         onContextMenu={(e) => e.preventDefault()}
         className={`cursor-default outline-none select-none [-webkit-touch-callout:none] ${buttonClassName}`}
