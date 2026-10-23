@@ -27,7 +27,7 @@ const OPTIONS = [
 
 // The teacher picture is one element across both screens: on the quiz it is
 // cropped from the bottom and moves up, to make room for the options.
-const IMAGE_GAP: Record<Step, number> = { says: 48, quiz: 12 };
+const IMAGE_GAP: Record<Step, number> = { says: 20, quiz: 20 };
 // Frame top 163 + 240 = 403, which leaves 24px above the options at 427.
 const IMAGE_HEIGHT: Record<Step, number> = { says: 358, quiz: 240 };
 // After Check the picture is cropped further, so the options ride up and stay
@@ -158,7 +158,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         initial={false}
         animate={{ height: TITLE_HEIGHT[step] }}
         transition={MORPH}
-        className="relative mt-9 w-full shrink-0"
+        className="relative mt-3 w-full shrink-0"
       >
         <AnimatePresence initial={false}>
           {quiz ? (
@@ -208,7 +208,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             className="h-[358px] w-full rounded-lg object-cover object-top"
           />
         </div>
-        <AnimatePresence>{!checked && <TeacherSpeech key="speech" hexAway={selectedId !== null} hexToCard={hinted && flipped} skipIntro={openedOnQuiz} />}</AnimatePresence>
+        <AnimatePresence>{!checked && <TeacherSpeech key="speech" hexAway={selectedId !== null} hexToCard={hinted && flipped} skipIntro={openedOnQuiz || quiz} />}</AnimatePresence>
       </motion.div>
 
       <AnimatePresence>

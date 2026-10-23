@@ -91,7 +91,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
           opacity: { duration: 0.3, delay: 0.3 },
           y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
         }}
-        className="mt-9 flex w-full shrink-0 items-center gap-3"
+        className="mt-3 flex w-full shrink-0 items-center gap-3"
       >
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-lg bg-[#04ACAB]/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}

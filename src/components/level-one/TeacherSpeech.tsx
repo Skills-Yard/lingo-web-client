@@ -68,6 +68,8 @@ export function TeacherSpeech({
 }) {
   const { speaking } = useLevelVoice();
   const [cued, setCued] = useState(skipIntro);
+  // Jumping to the quiz while Hex is still waiting below the picture: skip the rest of the intro.
+  if (skipIntro && !cued) setCued(true);
   // Hex leaves when an option is picked. If he is asked back (the quiz starts
   // over) he is a fresh Hex, so the one that left is not reused.
   const [hexRun, setHexRun] = useState(0);
