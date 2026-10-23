@@ -256,7 +256,7 @@ export function MainHomeScreen({
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src="/images/home/avatar.png"
+                src="/images/home/profile-avatar.png"
                 alt="Profile"
                 draggable={false}
                 className="h-12 w-12 shrink-0 select-none rounded-[38px] bg-[#F9F8F6] object-cover dark:bg-[#16262D]"
