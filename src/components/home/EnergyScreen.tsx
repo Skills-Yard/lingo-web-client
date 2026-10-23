@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Infinity as InfinityIcon, Play, X, Zap } from "lucide-react";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
-import { addBatteryUnits, batteryLabel, refillBattery, setBatteryUnlimited, useBattery } from "./batteryStore";
+import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
+import { addBatteryUnits, refillBattery, setBatteryUnlimited, useBattery } from "./batteryStore";
 import { HEADING } from "./homeFonts";
 import { LEARNER_STATS } from "./learnerStats";
 
@@ -88,35 +89,38 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
           </div>
 
           <motion.div {...reveal(0.04)} className="mt-6 flex items-center gap-2">
-            <div className="relative h-12 min-w-0 flex-1 overflow-hidden rounded-full bg-[#E9F5F0] dark:bg-[#133A35]">
-              <motion.div
-                className="absolute inset-y-0 left-0 rounded-full bg-[#01A17F]"
-                initial={false}
-                animate={{ width: battery.unlimited ? "100%" : `${battery.level}%` }}
-                transition={{ duration: 0.5, ease: EASE }}
-              />
-              <span className="absolute inset-0 flex items-center justify-center text-base font-extrabold text-[#2C2C2C] dark:text-white">
-                {battery.unlimited ? "∞" : batteryLabel(battery).replace("/", " / ")}
-              </span>
-            </div>
+            {battery.unlimited ? (
+              // The artboard only has the teal look, so unlimited gets its own full gradient bar.
+              <div className="flex h-9 min-w-0 flex-1 items-center justify-center rounded-full bg-linear-to-r from-[#3F6BFF] to-[#9B51E0]">
+                <InfinityIcon className="h-6 w-6 text-white" strokeWidth={3} aria-label="Infinite" />
+              </div>
+            ) : (
+              <div className="relative min-w-0 flex-1">
+                <RiveProgressBar value={battery.level} className="w-full" />
+              </div>
+            )}
             <PersistentBattery className="w-[56px]" />
           </motion.div>
 
           <div className="mt-6 flex flex-col gap-3">
-            <motion.div {...reveal(0.1)} className="overflow-hidden rounded-[18px] bg-gradient-to-r from-[#A855F7] via-[#3B82F6] to-[#38A3C9] pt-8">
-              <div className="-mt-8 mb-px h-8 px-4 text-[18px] font-extrabold italic leading-8 text-white">SUPER</div>
+            <motion.div {...reveal(0.1)} className="overflow-hidden rounded-[18px] bg-linear-to-br from-[#3F6BFF] to-[#9B51E0] pt-8">
+              <div className="-mt-8 mb-px h-8 px-4 text-[18px] font-extrabold italic leading-8 text-white">INFINITE</div>
               <button
                 type="button"
                 onClick={() => setBatteryUnlimited(!battery.unlimited)}
-                className="flex h-[72px] w-full cursor-pointer items-center gap-3 rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5 text-left transition-transform active:scale-[0.98] dark:border-white/12 dark:bg-[#1A1C22]"
+                className={`flex h-[72px] w-full cursor-pointer items-center gap-3 rounded-[18px] border-[1.5px] p-3.5 text-left transition-[transform,background-color,border-color] active:scale-[0.98] ${
+                  battery.unlimited
+                    ? "border-[#7C5CF0] bg-[#F1EEFE] dark:bg-[#251F45]"
+                    : "border-black/10 bg-white dark:border-white/12 dark:bg-[#1A1C22]"
+                }`}
               >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-gradient-to-br from-[#22C55E] via-[#3B82F6] to-[#A855F7]">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[12px] bg-linear-to-br from-[#3F6BFF] to-[#9B51E0]">
                   <InfinityIcon className="h-6 w-6 text-white" strokeWidth={2.4} />
                 </span>
                 <span className="min-w-0 flex-1 truncate text-base font-extrabold leading-[22px] text-[#2C2C2C] dark:text-white">
-                  Unlimited
+                  Infinite
                 </span>
-                <span className="shrink-0 text-sm font-extrabold uppercase leading-5 text-[#C026D3] dark:text-[#E879F9]">
+                <span className="shrink-0 text-sm font-extrabold uppercase leading-5 text-[#7C5CF0] dark:text-[#A78BFA]">
                   {battery.unlimited ? "On" : "Free trial"}
                 </span>
               </button>
