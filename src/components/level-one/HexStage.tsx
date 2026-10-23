@@ -121,8 +121,11 @@ export function HexGlide({
   enter,
   entryStyle,
   leaving = false,
+  fromScale = 1,
   containerRef,
 }: {
+  /** Grows Hex's box around its centre while he is in `fromEl` (the artboard has padding, so he reads small). */
+  fromScale?: number;
   fromEl: HTMLDivElement | null;
   toEl?: HTMLDivElement | null;
   /** True once Hex should be in `toEl`. */
@@ -140,6 +143,7 @@ export function HexGlide({
   const [rect, setRect] = useState<Rect | null>(null);
   const [arrived, setArrived] = useState(false);
   const target = moved && toEl ? toEl : fromEl;
+  const scale = target === fromEl ? fromScale : 1;
   // Once he has left and faded he is taken off the screen, so the canvas is
   // not left resizing as his slot closes.
   const [gone, setGone] = useState(false);
@@ -178,7 +182,7 @@ export function HexGlide({
       aria-hidden
       className="pointer-events-none absolute top-0 left-0 z-30"
       initial={false}
-      animate={{ x: rect.x, y: rect.y, width: rect.width, height: rect.height, opacity: leaving ? 0 : 1 }}
+      animate={{ x: rect.x - (rect.width * (scale - 1)) / 2, y: rect.y - (rect.height * (scale - 1)) / 2, width: rect.width * scale, height: rect.height * scale, opacity: leaving ? 0 : 1 }}
       transition={{ default: moved ? HINT_GLIDE_TRANSITION : GLIDE_TRANSITION, opacity: leaving ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0 } }}
       onAnimationComplete={() => setArrived(moved)}
     >

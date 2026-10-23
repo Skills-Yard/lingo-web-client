@@ -355,6 +355,21 @@ export const PROGRESS_BAR = {
   wrongTrigger: "wrong",
 } as const;
 
+/** The battery — "BatteryArtboard-Main" in `battery.riv` (320x110), played by
+ * `Battery_SM`. The artboard binds the `Battery` view model: `level` (0-100) is
+ * the fill, `unlimited` swaps it for the infinity sign, and the `fullFlash`
+ * trigger sparkles across the whole battery. */
+export const BATTERY = {
+  src: "/animations/battery.riv",
+  artboard: "BatteryArtboard-Main",
+  stateMachine: "Battery_SM",
+  levelProperty: "level",
+  unlimitedProperty: "unlimited",
+  fullFlashTrigger: "fullFlash",
+  width: 320,
+  height: 110,
+} as const;
+
 /** The reward screen's chest — "REWARD_Chest" in `hex.riv`, played by
  * `RewardChest_SM`. Firing `open` on the `RewardChest` view model opens it. */
 export const REWARD_CHEST = {

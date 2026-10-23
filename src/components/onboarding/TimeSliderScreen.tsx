@@ -191,7 +191,6 @@ export function TimeSliderScreen({
           role="slider"
           aria-label="Minutes per day"
           aria-valuemin={STEP}
-          aria-valuestep={STEP}
           aria-valuemax={TIME_SLIDER.max}
           aria-valuenow={minutes}
           tabIndex={0}

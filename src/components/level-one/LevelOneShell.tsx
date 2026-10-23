@@ -205,6 +205,8 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
             />
           )}
           <Button3D
+            riveVariant="module"
+            answer={answer}
             onClick={() => onContinue?.()}
             onPress={playClickSound}
             disabled={ctaDisabled}

@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
-import { RiveButtonFace, RIVE_BUTTON_H, RIVE_BUTTON_W } from "./RiveButtonFace";
+import type { AnswerResult } from "./RiveProgressBar";
+import { RiveButtonFace, RIVE_BUTTON_H, RIVE_BUTTON_W, type RiveButtonVariant } from "./RiveButtonFace";
 
 // Firefox restores a button's disabled state across reloads, so after a
 // reload the DOM can disagree with the server HTML (hydration mismatch).
@@ -68,6 +69,10 @@ interface Button3DProps
    * 5s. Defaults to on for the brand tone (the tone the reference itself
    * used) and off for the others, where it'd fight the tone's own color. */
   shine?: boolean;
+  /** Brand tone only: which Rive artboard draws the face. */
+  riveVariant?: RiveButtonVariant;
+  /** Module variant only: the latest checked answer, which sets the face's correct / wrong state. */
+  answer?: AnswerResult | null;
   /** Fires the instant the button is clicked — unlike `onClick`, which waits
    * for the press animation (CLICK_DELAY_MS). For immediate feedback such as
    * a click sound. */
@@ -88,6 +93,8 @@ export function Button3D({
   children,
   tone = "brand",
   shine,
+  riveVariant,
+  answer,
   disabled,
   className,
   onClick,
@@ -124,6 +131,9 @@ export function Button3D({
   };
 
   if (tone === "brand") {
+    // The module artboard draws its own disabled art (buttonState 0), so it
+    // skips the grey filter and keeps shining.
+    const drawsOwnDisabled = riveVariant === "module";
     const label = plainText(children);
     return (
       <button
@@ -132,7 +142,7 @@ export function Button3D({
         disabled={disabled}
         style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}
         className={`relative block border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
-          disabled ? "cursor-not-allowed grayscale" : "cursor-pointer"
+          disabled ? `cursor-not-allowed ${drawsOwnDisabled ? "" : "grayscale"}` : "cursor-pointer"
         } ${className ?? ""}`}
         {...rest}
         onClick={handleClick}
@@ -140,7 +150,10 @@ export function Button3D({
         <RiveButtonFace
           label={label ?? ""}
           pressCount={pressCount}
-          shine={showShine && !disabled}
+          shine={showShine && (drawsOwnDisabled || !disabled)}
+          variant={riveVariant}
+          disabled={disabled}
+          answer={answer}
         />
         {label === null ? (
           // Richer content (e.g. an icon + text) can't go into the Rive text

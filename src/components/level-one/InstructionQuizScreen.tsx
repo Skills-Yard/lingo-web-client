@@ -79,7 +79,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
             {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
             {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>
           </FeedbackPanel>
-          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} leaving={selectedId !== null}
+          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} leaving={selectedId !== null} fromScale={2.2}
             containerRef={glideRef} />
         </div>
       }

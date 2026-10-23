@@ -135,7 +135,7 @@ function Claim({ onClaim }: { onClaim: () => void }) {
       transition={{ ...FLOAT_IN, delay: 0.6 }}
     >
       <div className="pointer-events-auto absolute inset-x-0 bottom-0 px-4 pb-9">
-        <Button3D onClick={onClaim} onPress={playClickSound} className="w-full">
+        <Button3D riveVariant="module" onClick={onClaim} onPress={playClickSound} className="w-full">
           Continue
         </Button3D>
       </div>

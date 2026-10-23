@@ -1,16 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ChevronLeft, Maximize, Minimize, Moon, Sun } from "lucide-react";
-import { useTheme } from "@/context/ThemeContext";
-import { useFullscreen } from "@/hooks/useFullscreen";
+import { useEffect, useState } from "react";
+import { ChevronLeft } from "lucide-react";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
+import { BatteryMenu } from "./BatteryMenu";
 
-/** The theme switch's wipe colours — each theme's onboarding background
- * (`--background` in globals.css, `.onboarding-light` and its dark override). */
-export const WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
+export { WIPE } from "./themeWipe";
 
 /** Back, full screen, light/dark and sound share one look — same size, same weight. */
 const ICON_BUTTON =
@@ -40,21 +37,6 @@ interface OnboardingHeaderProps {
 let lastShown: { step: number; total: number } | null = null;
 
 export function OnboardingHeader({ onBack, progress, answer, showCount, level }: OnboardingHeaderProps) {
-  const { theme, toggleTheme } = useTheme();
-  const dark = theme === "dark";
-  const fullscreen = useFullscreen();
-  // The Level 1 dev panel (opened from the battery) and its click-away.
-  const [panelOpen, setPanelOpen] = useState(false);
-  const panelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!panelOpen) return;
-    const close = (e: PointerEvent) => {
-      if (e.target instanceof Node && panelRef.current?.contains(e.target)) return;
-      setPanelOpen(false);
-    };
-    document.addEventListener("pointerdown", close);
-    return () => document.removeEventListener("pointerdown", close);
-  }, [panelOpen]);
   const [fromStep] = useState(() => (progress ? (lastShown?.step ?? progress.step - 1) : null));
   useEffect(() => {
     if (progress) lastShown = { step: progress.step, total: progress.total };
@@ -82,69 +64,27 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
             </span>
           )}
           {/* Rive draws the bar; it animates to the new fill itself. It ends
-              12px short of the right-hand buttons — three of them when full
-              screen is offered. */}
+              12px short of the right-hand button — the 56px battery box on
+              the Level 1 header. */}
           <PersistentProgressBar
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className={`absolute left-[67px] mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] right-[67px]" : "top-[63px] right-4"}`}
+            className={`absolute left-[67px] mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] right-[84px]" : "top-[63px] right-4"}`}
           />
         </>
       )}
 
-      {/* Hidden where it can't do anything (iPhone Safari, installed PWA).
-          Sits in the top-right corner so the bar keeps one width either way. */}
+      {/* The battery sits in the top-right corner: `battery.riv` at the old
+          icon's 15px height, so 44px wide (its artboard is 320 x 110). Each
+          screen's `step` spends its share of it. Also the way into the hidden
+          dev panel (see BatteryMenu). */}
       {level && (
-        // The battery is also the way into a hidden dev panel: nothing about it
-        // looks pressable (no pointer, hover or focus ring).
-        <div ref={panelRef} className="absolute top-[6px] right-4">
-          <button
-            type="button"
-            tabIndex={-1}
-            onClick={() => setPanelOpen((open) => !open)}
-            className="flex h-[39px] w-[39px] cursor-default items-center justify-center rounded-md border border-black/8 outline-none select-none dark:border-white/15"
-          >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/level-one/battery.png" alt="" draggable={false} className="h-[15px] w-[30px] select-none" />
-          </button>
-          <AnimatePresence>
-            {panelOpen && (
-              <motion.div
-                role="dialog"
-                aria-label="Developer testing panel"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-                style={{ transformOrigin: "100% 0%" }}
-                className="absolute top-[45px] right-0 z-30 w-[220px] rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
-              >
-                <p className="text-[11px] leading-[15px] text-[#818185] dark:text-[#9FA19F]">
-                  For testing by devs only. Temporary.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => toggleTheme(WIPE)}
-                  className="mt-2.5 flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg bg-[#F7F8FA] px-3 text-[13px] font-medium text-[#2C2C2C] active:scale-[0.98] dark:bg-[#16262D] dark:text-white"
-                >
-                  {dark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
-                  {dark ? "Switch to light mode" : "Switch to dark mode"}
-                </button>
-                {fullscreen.available && (
-                  <button
-                    type="button"
-                    onClick={fullscreen.toggle}
-                    className="mt-2 flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg bg-[#F7F8FA] px-3 text-[13px] font-medium text-[#2C2C2C] active:scale-[0.98] dark:bg-[#16262D] dark:text-white"
-                  >
-                    {fullscreen.active ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
-                    {fullscreen.active ? "Exit full screen" : "Full screen"}
-                  </button>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <BatteryMenu className="absolute top-[6px] right-4">
+          <span className="flex h-[39px] w-[56px] items-center justify-center rounded-md border border-black/8 dark:border-white/15">
+            <PersistentBattery step={progress?.step} className="w-[44px]" />
+          </span>
+        </BatteryMenu>
       )}
 
     </header>

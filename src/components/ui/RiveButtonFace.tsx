@@ -3,30 +3,38 @@
 import { useEffect, useState } from "react";
 import { preload } from "react-dom";
 import { useRive } from "@rive-app/react-canvas";
-import { Layout, Fit, Alignment } from "@rive-app/canvas";
+import { Layout, Fit, Alignment, type Rive } from "@rive-app/canvas";
+import type { AnswerResult } from "./RiveProgressBar";
 import { configureRiveRuntime } from "@/lib/rive/runtime";
 
 configureRiveRuntime();
 
 /**
- * `btn-click.riv` — the brand-tone Button3D's artwork. Artboard "Button"
- * (371x113) holds the green slab, a full-width centre-aligned text object
- * whose run is named `Text` (so the label can be set at runtime), and three
- * one-shot clips: "Shine" (0.67s), "Button Pressing" (0.33s — the same length
- * as Button3D's CLICK_DELAY_MS) and "Button Idle" (unused). The artboard has
- * no state machine, so both clips are played by hand. The file also carries
- * an unrelated robot artboard ("Artboard 1", the default), hence the explicit
- * `artboard` below.
+ * `btn-click.riv` — the brand-tone Button3D's artwork. The
+ * "onboarding" variant is artboard "OnboardingButton" / "Onboarding_SM"; the
+ * "module" variant is "ModuleButton" / "ModuleButton_SM" with `buttonState`
+ * 4. Either way the bound view model's
+ * `shine` and `click` triggers sweep the highlight and play the press, and its
+ * `label` string drives the button's text. The file also holds other
+ * artboards, hence the explicit `artboard` below.
  */
-export const RIVE_BUTTON_SRC = "/animations/btn-click.riv";
+export const RIVE_BUTTON_SRC = "/animations/btn-click.riv?v=3";
 export const RIVE_BUTTON_W = 371;
 export const RIVE_BUTTON_H = 113;
-const ARTBOARD = "Button";
-const TEXT_RUN = "Text";
-const SHINE_ANIMATION = "Shine";
-const PRESS_ANIMATION = "Button Pressing";
+export type RiveButtonVariant = "onboarding" | "module";
+/** Both artboards share a `Button` view model (`shine`, `click`, `buttonState`, `label`). */
+const VARIANTS: Record<RiveButtonVariant, { artboard: string; stateMachine: string; buttonState?: number }> = {
+  onboarding: { artboard: "OnboardingButton", stateMachine: "Onboarding_SM" },
+  module: { artboard: "ModuleButton", stateMachine: "ModuleButton_SM", buttonState: 4 },
+};
+const LABEL_PROPERTY = "label";
+const SHINE_TRIGGER = "shine";
+const CLICK_TRIGGER = "click";
 /** Same cadence the old CSS shine used (`animate-button-shine`, 5s). */
 const SHINE_EVERY_MS = 5000;
+const DISABLED_BUTTON_STATE = 0;
+const WRONG_BUTTON_STATE = 2;
+const CORRECT_BUTTON_STATE = 3;
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
 // Shown until the .riv has loaded (it's ~250 KB, mostly its embedded font),
@@ -35,16 +43,35 @@ const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 const PLACEHOLDER_SRC = "/images/polygon-btn/default-btn.png";
 
 interface RiveButtonFaceProps {
-  /** Written into the `Text` run; `""` leaves the Rive text empty so
+  /** Written into the view model's `label`; `""` leaves the Rive text empty so
    * the caller can overlay richer content (e.g. an icon) in HTML instead. */
   label: string;
   /** Bumped by the caller on every click — each change plays the press clip. */
   pressCount: number;
   shine: boolean;
+  variant?: RiveButtonVariant;
+  /** Module variant only: swaps `buttonState` to its disabled art (0). */
+  disabled?: boolean;
+  /** Module variant only: the latest checked answer — `buttonState` 3 when correct, 2 when wrong. */
+  answer?: AnswerResult | null;
+}
+
+/** Fires a trigger on the artboard's bound view model ("data"). */
+function fireTrigger(rive: Rive, name: string) {
+  rive.viewModelInstance?.trigger(name)?.trigger();
+}
+
+/** `undefined` (the onboarding variant) leaves `buttonState` untouched. */
+function pickButtonState(enabledState: number | undefined, disabled: boolean, answer: AnswerResult | null) {
+  if (enabledState === undefined) return undefined;
+  if (answer) return answer.correct ? CORRECT_BUTTON_STATE : WRONG_BUTTON_STATE;
+  return disabled ? DISABLED_BUTTON_STATE : enabledState;
 }
 
 /** The Rive-drawn face of Button3D's brand tone — fills its parent. */
-export function RiveButtonFace({ label, pressCount, shine }: RiveButtonFaceProps) {
+export function RiveButtonFace({ label, pressCount, shine, variant = "onboarding", disabled = false, answer = null }: RiveButtonFaceProps) {
+  const { artboard, stateMachine, buttonState: enabledState } = VARIANTS[variant];
+  const buttonState = pickButtonState(enabledState, disabled, answer);
   // Fetch starts as early as the first button renders; later instances reuse
   // the browser's cached copy. `crossOrigin: "anonymous"` matches the
   // credentials mode of Rive's own `fetch()`, or the browser ignores the
@@ -53,8 +80,10 @@ export function RiveButtonFace({ label, pressCount, shine }: RiveButtonFaceProps
 
   const { rive, RiveComponent } = useRive({
     src: RIVE_BUTTON_SRC,
-    artboard: ARTBOARD,
-    autoplay: false,
+    artboard,
+    stateMachine,
+    autoBind: true,
+    autoplay: true,
     layout: LAYOUT,
   });
 
@@ -67,10 +96,11 @@ export function RiveButtonFace({ label, pressCount, shine }: RiveButtonFaceProps
   const [labelDrawn, setLabelDrawn] = useState(false);
 
   // Nothing is animating when the label changes, so redraw explicitly —
-  // setting the run's text alone doesn't repaint the canvas.
+  // setting the property alone doesn't repaint the canvas.
   useEffect(() => {
     if (!rive) return;
-    rive.setTextRunValue(TEXT_RUN, label);
+    const text = rive.viewModelInstance?.string(LABEL_PROPERTY);
+    if (text) text.value = label;
     rive.drawFrame();
     // drawFrame() paints on the next animation frame, so reveal after it.
     const raf = requestAnimationFrame(() => requestAnimationFrame(() => setLabelDrawn(true)));
@@ -78,10 +108,15 @@ export function RiveButtonFace({ label, pressCount, shine }: RiveButtonFaceProps
   }, [rive, label]);
 
   useEffect(() => {
+    if (!rive || buttonState === undefined) return;
+    const state = rive.viewModelInstance?.number("buttonState");
+    if (state) state.value = buttonState;
+  }, [rive, buttonState]);
+
+  useEffect(() => {
     if (!rive || !shine) return;
     const sweep = () => {
-      rive.stop(SHINE_ANIMATION);
-      rive.play(SHINE_ANIMATION);
+      fireTrigger(rive, SHINE_TRIGGER);
     };
     sweep();
     const timer = window.setInterval(sweep, SHINE_EVERY_MS);
@@ -92,8 +127,7 @@ export function RiveButtonFace({ label, pressCount, shine }: RiveButtonFaceProps
 
   useEffect(() => {
     if (!rive || pressCount === 0) return;
-    rive.stop(PRESS_ANIMATION);
-    rive.play(PRESS_ANIMATION);
+    fireTrigger(rive, CLICK_TRIGGER);
   }, [rive, pressCount]);
 
   return (

@@ -1,18 +1,26 @@
 "use client";
 
+import type { ReactNode } from "react";
+import { BatteryMenu } from "@/components/onboarding/BatteryMenu";
+import { PersistentBattery } from "@/components/ui/PersistentBattery";
+import { batteryLabel, useBattery } from "./batteryStore";
 import { LEARNER_STATS } from "./learnerStats";
 
 function StatCard({
   icon,
+  art,
   tint,
   darkTint,
   value,
   label,
   color,
   darkColor,
+  className = "",
 }: {
   /** An image under public/images/stats. */
-  icon: string;
+  icon?: string;
+  /** Drawn in the icon's place (the battery). */
+  art?: ReactNode;
   /** The square behind the icon. */
   tint: string;
   /** The same square, in dark mode. */
@@ -22,15 +30,18 @@ function StatCard({
   color: string;
   /** The value's colour in dark mode. */
   darkColor: string;
+  className?: string;
 }) {
   return (
-    <div className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-[12px] border border-black/8 bg-white px-3 dark:border-white/12 dark:bg-[#1A1C22]">
+    <div className={`flex h-12 min-w-0 items-center gap-2 rounded-[12px] border border-black/8 bg-white px-3 dark:border-white/12 dark:bg-[#1A1C22] ${className}`}>
       <span
         className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[8px] dark:bg-(--dark-tint)!"
         style={{ backgroundColor: tint, "--dark-tint": darkTint } as React.CSSProperties}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={icon} alt="" draggable={false} className="h-[18px] w-[18px] select-none object-contain" />
+        {art ?? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={icon} alt="" draggable={false} className="h-[18px] w-[18px] select-none object-contain" />
+        )}
       </span>
       <span className="flex min-w-0 flex-col">
         <span
@@ -45,13 +56,34 @@ function StatCard({
   );
 }
 
+/** The battery card: `battery.riv` for the icon and the live level for the
+ * number. Tapping it opens the same hidden dev panel as the Level 1 header. */
+function BatteryStatCard() {
+  const battery = useBattery();
+  return (
+    <BatteryMenu className="relative min-w-0" buttonClassName="block w-full text-left">
+      <StatCard
+        art={<PersistentBattery className="w-6" />}
+        tint="#E9F5F0"
+        darkTint="#133A35"
+        value={batteryLabel(battery)}
+        label="battery"
+        color="#01A17F"
+        darkColor="#01A17F"
+        className="w-full"
+      />
+    </BatteryMenu>
+  );
+}
+
 /** The three stat cards: streak, gems, battery. */
 export function HomeStats() {
   return (
-    <div className="flex gap-2 font-[family-name:var(--font-app-poppins)]">
+    // A grid, so the three columns stay equal whatever wraps the cards.
+    <div className="grid grid-cols-3 gap-2 font-[family-name:var(--font-app-poppins)]">
       <StatCard icon="/images/stats/flame.png" tint="#FFF3DE" darkTint="#3A2A1A" value={String(LEARNER_STATS.streak)} label="day streak" color="#FF8D42" darkColor="#FF8D42" />
       <StatCard icon="/images/stats/gem.png" tint="#E5EFFD" darkTint="#1B2B40" value={String(LEARNER_STATS.gems)} label="gems" color="#2F80ED" darkColor="#5AA2FF" />
-      <StatCard icon="/images/stats/battery.png" tint="#E9F5F0" darkTint="#133A35" value={`${LEARNER_STATS.battery.current}/${LEARNER_STATS.battery.max}`} label="battery" color="#01A17F" darkColor="#01A17F" />
+      <BatteryStatCard />
     </div>
   );
 }
