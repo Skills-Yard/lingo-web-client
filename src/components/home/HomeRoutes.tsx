@@ -3,11 +3,12 @@
 import { useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
-import { moduleHref, onboardingHref } from "@/lib/routes";
+import { energyReturnPath, moduleHref, onboardingHref } from "@/lib/routes";
 import { CareerDetailScreen } from "./CareerDetailScreen";
 import { careerById } from "./careersData";
 import { CareersScreen } from "./CareersScreen";
 import { DashboardScreen } from "./DashboardScreen";
+import { EnergyScreen } from "./EnergyScreen";
 import { HomeScreen } from "./HomeScreen";
 import { LeagueScreen } from "./LeagueScreen";
 import { MainHomeScreen } from "./MainHomeScreen";
@@ -62,6 +63,18 @@ export function DashboardRoute() {
 export function LeagueRoute() {
   const router = useRouter();
   return <LeagueScreen onBack={() => router.push("/dashboard")} />;
+}
+
+/** `/energy` — the battery's screen; the cross returns to where it was opened from. */
+export function EnergyRoute() {
+  const router = useRouter();
+  // Straight to where it was opened from; with no `from` (opened by URL), one step back.
+  const close = () => {
+    const from = energyReturnPath(window.location.search);
+    if (from) router.push(from);
+    else router.back();
+  };
+  return <EnergyScreen onClose={close} />;
 }
 
 /** `/careers` — the careers tab. */

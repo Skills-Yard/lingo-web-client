@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
@@ -53,10 +53,10 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
       <button
         type="button"
         onClick={onBack}
-        className={`absolute left-4 ${level ? `top-[3px] ${LEVEL_BUTTON_SIZE}` : `top-[43.5px] ${BUTTON_SIZE}`} ${ICON_BUTTON}`}
-        aria-label="Back"
+        className={`absolute left-4 ${level ? "top-[6px] border-transparent! dark:border-transparent! dark:hover:bg-transparent!" : `top-[43.5px]`} ${ICON_BUTTON}`}
+        aria-label={level ? "Close" : "Back"}
       >
-        <ChevronLeft className="h-5 w-5" strokeWidth={1.4} />
+        {level ? <X className="w-[30px] h-[30px]" strokeWidth={1.6} /> : <ChevronLeft className="w-5 h-5" strokeWidth={1.4} />}
       </button>
 
       {progress && (
@@ -74,7 +74,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className={`absolute mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[18px] right-[78px] left-[58px]" : "top-[63px] right-4 left-[67px]"}`}
+            className={`absolute left-[67px] mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] right-[100px]" : "top-[63px] right-4"}`}
           />
         </>
       )}
@@ -84,9 +84,9 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
           screen's `step` spends its share of it. Also the way into the hidden
           dev panel (see BatteryMenu). */}
       {level && (
-        <BatteryMenu className="absolute top-[3px] right-4">
-          <span className="flex h-[30px] w-[48px] items-center justify-center rounded-[6px] border border-black/8 dark:border-white/15">
-            <PersistentBattery step={progress?.step} className="w-[36px]" />
+        <BatteryMenu className="absolute top-[6px] right-4">
+          <span className="flex h-[39px] w-[72px] items-center justify-center rounded-md">
+            <PersistentBattery step={progress?.step} className="w-[60px]" />
           </span>
         </BatteryMenu>
       )}

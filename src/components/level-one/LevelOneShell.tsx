@@ -168,7 +168,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
           style={{ maxWidth: HEADER_MAX_W / (stage?.scale ?? 1) }}
         >
           <OnboardingHeader
-            onBack={onBack ?? (() => router.back())}
+            onBack={() => router.push("/level")}
             progress={{ step, total: LEVEL_ONE_STEPS }}
             answer={answer}
             level

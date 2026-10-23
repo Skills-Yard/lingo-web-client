@@ -107,4 +107,12 @@ export const chargeBatteryScreen = (step: number): boolean => {
   return spends;
 };
 
-export const setBatteryUnlimited = (unlimited: boolean) => write({ ...read(), unlimited });
+/** Whole battery units (of `max`) added to the fill, capped at full. */
+export const addBatteryUnits = (units: number) => {
+  const saved = read();
+  write({ ...saved, level: Math.min(100, saved.level + (units / max) * 100) });
+};
+
+export const refillBattery = () => write({ ...read(), level: 100 });
+
+export const setBatteryUnlimited =(unlimited: boolean) => write({ ...read(), unlimited });
