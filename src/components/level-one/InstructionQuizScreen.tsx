@@ -25,6 +25,9 @@ const OPTIONS = [
   { id: "question", icon: "/images/level-one/question.png", title: "Question", tint: "bg-[#FFF9F0]", iconSize: "h-[31px] w-[38px]" },
 ] as const;
 
+/** Hex is drawn this many times his slot, on every device: the frame is scaled as one piece, so he keeps his proportions. */
+const HEX_SCALE = 1.1;
+
 /** The card's 4px bottom edge and fill: tinted at rest, coloured once picked / marked. */
 const LOOK = {
   idle: "border-[#BDBA99]",
@@ -79,7 +82,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
             {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
             {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>
           </FeedbackPanel>
-          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} leaving={selectedId !== null} fromScale={2.2}
+          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} leaving={selectedId !== null} fromScale={HEX_SCALE}
             containerRef={glideRef} />
         </div>
       }
@@ -98,7 +101,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
           <img src="/images/level-one/q-badge.png" alt="Question" draggable={false} className="h-[26px] w-[30px] object-contain" />
         </span>
         <h1 className="text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
-          What are <span className="text-[#00B8A9]">instructions</span> known as?
+          What are <span className="text-level-gradient">instructions</span> known as?
         </h1>
       </motion.div>
 

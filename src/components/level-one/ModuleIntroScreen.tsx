@@ -35,7 +35,7 @@ export function ModuleIntroScreen({ onContinue }: { onContinue?: () => void }) {
         <h1 className="mt-2 text-[32px] leading-9 font-extrabold text-[#1F2A44] dark:text-white">
           Think like a
           <br />
-          <span className="text-[#00A99D] dark:text-[#00B8A9]">programmer</span>
+          <span className="text-level-gradient">programmer</span>
         </h1>
 
         <div className="my-auto w-full py-4">

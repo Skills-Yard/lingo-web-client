@@ -6,6 +6,12 @@ import { Play } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { OnboardingHex } from "./FeedbackPanel";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
+import { SpokenText } from "./SpokenText";
+import type { TextSpan } from "@/lib/constants/onboarding";
+
+const HEADING: TextSpan[] = [{ text: "What are " }, { text: "instructions", highlight: true }, { text: "?" }];
+/** When What / are / instructions are spoken in screen_6_audio.mpeg, measured from the clip. Its progress runs against the whole 6.41s file, though only the first 2.15s plays. */
+const HEADING_TIMING = { clipSeconds: 6.408, times: [[0.49, 0.76], [0.76, 1.12], [1.12, 1.72]], before: 0 } as const;
 
 /** Hex's exit starts, then the next screen opens after this beat
  * without waiting for the exit to finish. */
@@ -51,7 +57,7 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
           <OnboardingHex entryKey="video" leaving={leaving} exit="exitLeft" />
         </div>
         <h2 className="w-[175px] shrink-0 self-center text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
-          What are <span className="text-[#0A9EAE]">instructions</span>?
+          <SpokenText spans={HEADING} timing={HEADING_TIMING} />
         </h2>
       </div>
 

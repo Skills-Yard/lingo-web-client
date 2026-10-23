@@ -3,7 +3,6 @@
 import { HexBleed, HEX_BLEED } from "@/components/onboarding/robu/HexBleed";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check, X } from "lucide-react";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import {
   HEX_ARTBOARD,
@@ -118,15 +117,11 @@ const FEEDBACK = {
     title: "Correct! +10 XP",
     panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
     bold: "[&_b]:text-[#04ACAB]",
-    badge: "bg-[#04ACAB]",
-    Icon: Check,
   },
   wrong: {
     title: "Not quite, try to remember!",
     panel: "border-[#F2A9AB] bg-[#FDEAEA] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
     bold: "[&_b]:text-[#E5484D]",
-    badge: "bg-[#E5484D]",
-    Icon: X,
   },
 } as const;
 
@@ -189,7 +184,6 @@ export function FeedbackPanel({
     };
   }, [hexIn]);
   const look = FEEDBACK[correct ? "correct" : "wrong"];
-  const { Icon } = look;
   return (
     <motion.div
       initial={{ y: "100%" }}
@@ -199,7 +193,7 @@ export function FeedbackPanel({
       style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}
       className={`absolute inset-x-0 bottom-0 z-0 mx-auto rounded-t-[28px] border-[1.5px] border-b-0 px-4 pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
     >
-      <div className="mx-auto flex w-full items-center gap-3">
+      <div className="mx-auto flex w-full items-center justify-center gap-6">
         <div ref={hexSlot} aria-hidden className="pointer-events-none -my-4 h-[112px] w-[120px] shrink-0">
           {!hexSlot && <OnboardingHex
               entryKey={enterNow ? "feedback" : null}
@@ -207,15 +201,12 @@ export function FeedbackPanel({
               cueDelayMs={ENTER_SETTLE_MS}
             />}
         </div>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-0">
           <h2 className="text-[18px] leading-tight font-bold text-[#1F2A44] dark:text-white">{look.title}</h2>
           <p className={`mt-1 text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.bold}`}>
             {children}
           </p>
         </div>
-        <span className={`flex size-8 shrink-0 items-center justify-center self-start rounded-full text-white ${look.badge}`}>
-          <Icon className="size-[18px]" strokeWidth={3.2} />
-        </span>
       </div>
     </motion.div>
   );

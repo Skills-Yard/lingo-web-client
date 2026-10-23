@@ -10,12 +10,20 @@ import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
+import { SpokenText } from "./SpokenText";
+import type { TextSpan } from "@/lib/constants/onboarding";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
 
 const CORRECT_ID = "giving";
 
+const QUIZ_HEADING: TextSpan[] = [{ text: "What", highlight: true }, { text: " teacher is doing?" }];
+const SAYS_LINE_1: TextSpan[] = [{ text: "Let Suppose", highlight: true }];
+const SAYS_LINE_2: TextSpan[] = [{ text: "Teacher Says" }];
+/** When Let / Suppose / Teacher / Says are spoken in screen_3_audio.mpeg (4.03s long), measured from the clip. */
+const SAYS_CLIP_SECONDS = 4.032;
+const SAYS_WORD_TIMES = [[0.14, 0.34], [0.34, 0.83], [1.47, 1.8], [1.8, 2.17]] as const;
 const SAYS_AUDIO = ["/audios/screen_3_audio.mpeg"];
 /** Just the question; the options are not read out. */
 const QUIZ_AUDIO = ["/audios/screen_4/screen_4_audio_trim.m4a"];
@@ -170,7 +178,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               transition={{ duration: 0.3 }}
               className="absolute inset-x-0 top-0 text-center text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white"
             >
-              <span className="text-[#00B8A9]">What</span> teacher is doing?
+              <SpokenText spans={QUIZ_HEADING} />
             </motion.h1>
           ) : (
             <motion.h1
@@ -181,8 +189,12 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               transition={{ duration: 0.3 }}
               className="absolute inset-x-0 top-0 flex flex-col items-center text-center"
             >
-              <span className="text-[20px] leading-[1.34] font-semibold text-[#00B8A9]">Let Suppose</span>
-              <span className="text-[32px] leading-[1.25] font-bold text-[#2C2C2C] dark:text-white">Teacher Says</span>
+              <span className="text-[20px] leading-[1.34] font-semibold">
+                <SpokenText spans={SAYS_LINE_1} timing={{ clipSeconds: SAYS_CLIP_SECONDS, times: SAYS_WORD_TIMES, before: 0 }} />
+              </span>
+              <span className="text-[32px] leading-[1.25] font-bold text-[#2C2C2C] dark:text-white">
+                <SpokenText spans={SAYS_LINE_2} timing={{ clipSeconds: SAYS_CLIP_SECONDS, times: SAYS_WORD_TIMES, before: 2 }} />
+              </span>
             </motion.h1>
           )}
         </AnimatePresence>

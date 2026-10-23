@@ -85,15 +85,18 @@ function KaraokeSpan({
   text,
   cut,
   highlight,
+  highlightClass = "text-brand-gradient",
 }: {
   text: string;
   cut: number;
   highlight?: boolean;
+  /** The class that colors the spoken highlighted words. */
+  highlightClass?: string;
 }) {
   return (
     <>
       {cut > 0 && (
-        <span className={highlight ? "text-brand-gradient" : undefined}>{text.slice(0, cut)}</span>
+        <span className={highlight ? highlightClass : undefined}>{text.slice(0, cut)}</span>
       )}
       {cut < text.length && (
         <span className={`${highlight ? "text-[#0a9eae]" : ""} opacity-35 transition-opacity`}>
@@ -109,7 +112,7 @@ function KaraokeSpan({
  * questionSpoken) of it at full strength, the rest faded. For screens that
  * show their own text instead of the Zox + question row.
  */
-export function KaraokeSpans({ spans, spoken }: { spans: TextSpan[]; spoken: number }) {
+export function KaraokeSpans({ spans, spoken, highlightClass }: { spans: TextSpan[]; spoken: number; highlightClass?: string }) {
   const total = spansLength(spans);
   const lit = spoken >= 1 ? total : Math.floor(spoken * total);
   return (
@@ -117,7 +120,7 @@ export function KaraokeSpans({ spans, spoken }: { spans: TextSpan[]; spoken: num
       {spans.map((span, i) => {
         const start = spansLength(spans.slice(0, i));
         const cut = Math.max(0, Math.min(span.text.length, lit - start));
-        return <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} />;
+        return <KaraokeSpan key={i} text={span.text} cut={cut} highlight={span.highlight} highlightClass={highlightClass} />;
       })}
     </>
   );

@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
 import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 import { useLevelVoice } from "./LevelVoice";
+import { SpokenText } from "./SpokenText";
+import type { TextSpan } from "@/lib/constants/onboarding";
+
+const HEADING: TextSpan[] = [{ text: "Some " }, { text: "examples", highlight: true }, { text: " of instruction" }];
 
 const EXAMPLES = [
   { id: "parent", src: "/images/level-one/example-parent.png", label: "Parent eats the food" },
@@ -97,7 +101,7 @@ function ExamplesCarousel() {
   return (
     <>
       <h1 className="mt-9 w-[264px] shrink-0 text-center text-[24px] leading-[1.34] font-semibold text-[#444444] dark:text-white">
-        Some <span className="text-brand-gradient">examples</span> of instruction
+        <SpokenText spans={HEADING} />
       </h1>
 
       {/* The band is centred in the space between the heading and Continue,

@@ -10,6 +10,7 @@ import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { playClickSound, setClickSoundMuted } from "@/components/onboarding/clickSound";
 import { useVoiceover } from "@/components/onboarding/useVoiceover";
+import { questionSpoken } from "@/components/onboarding/QuestionHeading";
 import { moduleHref } from "@/lib/routes";
 import { LevelVoiceContext } from "./LevelVoice";
 import { useLevelMuted } from "./levelMuted";
@@ -73,9 +74,10 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
   const voice = useVoiceover(voiceover, true, muted);
+  const spoken = questionSpoken(voice, !!voiceover?.length);
   const levelVoice = useMemo(
-    () => ({ speaking: voice.playing, clip: Math.max(0, voice.clip) }),
-    [voice.playing, voice.clip],
+    () => ({ speaking: voice.playing, clip: Math.max(0, voice.clip), spoken }),
+    [voice.playing, voice.clip, spoken],
   );
   const mainRef = useRef<HTMLElement>(null);
   // The screen is laid out as the 390x844 frame and scaled as one piece, so
