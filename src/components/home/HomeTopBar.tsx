@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { BatteryMenu } from "@/components/onboarding/BatteryMenu";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { batteryLabel, useBattery } from "./batteryStore";
+import { TOP_MARGIN } from "./HomeStage";
 import { LEARNER_STATS } from "./learnerStats";
 
 function StatCard({
@@ -88,14 +89,51 @@ export function HomeStats() {
   );
 }
 
+/** A small stat chip: icon and value, as tall as the level map's menu button. */
+function MiniStat({ children, value, color, darkColor }: { children: ReactNode; value: string; color: string; darkColor: string }) {
+  return (
+    <div className="flex h-9 items-center gap-1.5 rounded-lg border border-black/8 bg-white px-3 dark:border-white/12 dark:bg-[#1A1C22]">
+      {children}
+      <span
+        className="text-base font-semibold leading-[1.4] dark:text-(--dark-color)!"
+        style={{ color, "--dark-color": darkColor } as React.CSSProperties}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+/** The level map's stats, as small chips: gems and battery (the rest is in
+ * its menu). Tapping the battery opens the hidden dev panel. */
+export function LevelStats({ className = "" }: { className?: string }) {
+  const battery = useBattery();
+  return (
+    <div className={`flex items-center gap-2 font-[family-name:var(--font-app-poppins)] ${className}`}>
+      <MiniStat value={String(LEARNER_STATS.gems)} color="#2F80ED" darkColor="#5AA2FF">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/images/stats/gem.png" alt="Gems" draggable={false} className="h-[20px] w-[20px] select-none object-contain" />
+      </MiniStat>
+      <BatteryMenu className="relative" buttonClassName="block text-left">
+        <MiniStat value={batteryLabel(battery)} color="#01A17F" darkColor="#01A17F">
+          <PersistentBattery className="w-9" />
+        </MiniStat>
+      </BatteryMenu>
+    </div>
+  );
+}
+
 /**
- * The stats, pinned 54px from the top. It belongs to HomeShell, so it stays
+ * The stats, pinned TOP_MARGIN from the top. It belongs to HomeShell, so it stays
  * exactly where it is as the tabs change under it (the home itself shows them
  * inline, under the greeting).
  */
 export function HomeTopBar() {
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-[54px] z-10 mx-auto w-full max-w-[430px] px-4">
+    <div
+      className="pointer-events-none absolute inset-x-0 z-10 mx-auto w-full max-w-[430px] px-4"
+      style={{ top: TOP_MARGIN }}
+    >
       <div className="pointer-events-auto">
         <HomeStats />
       </div>

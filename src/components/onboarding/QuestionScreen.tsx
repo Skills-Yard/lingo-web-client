@@ -66,10 +66,10 @@ type QuestionScreenProps = {
  * question has him look back up at the user.
  */
 /** What the day/night screen keeps for everything under the scene when the
- * options' spacing is at its smallest (px): the scene's top margin, the
+ * options' spacing is at its smallest (px): the scene's top margin (4px), the
  * heading and panel padding (net of the panel's overlap on the scene), and
  * the two rows of options with their tightest spacing. */
-const SCENE_BELOW_PX = 302;
+const SCENE_BELOW_PX = 294;
 /** The scene is never cropped below this height (px). */
 const SCENE_MIN_PX = 120;
 /** The scene's own height: its 390:267 ratio at full width, or less when the screen is short. */
@@ -142,7 +142,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
         // (cropped from the top, Hex stays) by exactly what they are short.
         <div
           aria-hidden
-          className="relative -mx-4 mt-3 shrink-0 overflow-hidden"
+          className="relative -mx-4 mt-1 shrink-0 overflow-hidden border-t-3 border-black"
           style={{ height: SCENE_HEIGHT }}
         >
           <div className="absolute inset-0">

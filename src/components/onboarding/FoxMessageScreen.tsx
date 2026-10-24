@@ -33,11 +33,10 @@ const FOX_VISUAL_SCALE = 1.25;
 /** Where the background grid's floor starts (its top edge), read off the
  * `BG_Grid` artboard: the artboard covers the screen, 0.567 wide for every
  * 1 high, and the floor starts FLOOR_BELOW_CENTER of its height below its
- * middle. Hex's body ends FOX_ART_BOTTOM of the way down his slot, so he can
- * stand exactly on it. */
+ * middle. Hex's artboard (empty margin below the body included) ends exactly
+ * there: its bottom edge is attached to the floor's top edge. */
 const BACKGROUND_ASPECT = 0.567;
-const FLOOR_BELOW_CENTER = 0.1785;
-const FOX_ART_BOTTOM = 0.84;
+const FLOOR_BELOW_CENTER = 0.1665;
 const floorTop = (screenWidth: number, screenHeight: number) =>
   screenHeight / 2 + FLOOR_BELOW_CENTER * Math.max(screenHeight, screenWidth / BACKGROUND_ASPECT);
 /** The text below Hex ends this far (px) above the bottom of the screen — at
@@ -306,8 +305,8 @@ export function FoxMessageScreen({
       setBelowBottom(Math.max(0, belowBottomPx - footerHeight));
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
       const size = Math.min(FOX_MAX_REM * rem, (FOX_MAX_DVH / 100) * window.innerHeight);
-      // Hex stands on the background's floor: his body ends right where the
-      // grid begins, no gap.
+      // Hex's artboard sits on the background's floor: its bottom edge is the
+      // floor's top edge, no gap.
       const overlap = size * FOX_BUBBLE_OVERLAP;
       // On a short screen the bubble would run off the top: Hex steps down
       // just enough to keep it in.
@@ -315,7 +314,7 @@ export function FoxMessageScreen({
         ? Math.max(
             floorTop(window.innerWidth, window.innerHeight) -
               stage.getBoundingClientRect().top -
-              size * FOX_VISUAL_SCALE * FOX_ART_BOTTOM,
+              size * FOX_VISUAL_SCALE,
             aboveEl.offsetHeight + BUBBLE_MIN_TOP_PX - overlap,
           )
         : FOX_TOP_PX;

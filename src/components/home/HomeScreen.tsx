@@ -11,12 +11,15 @@ import {
   type RefObject,
 } from "react";
 import { Poppins } from "next/font/google";
-import { AnimatePresence, motion } from "framer-motion";
+import { useRouter } from "next/navigation";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Layout, Fit, Alignment, type Rive } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
-import { Code2, Maximize, Minimize, Moon, Sun } from "lucide-react";
+import { Check, Code2, House, Maximize, Menu, Minimize, Moon, Sun, Undo2 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
+import { TOP_MARGIN } from "./HomeStage";
+import { LevelStats } from "./HomeTopBar";
 import { configureRiveRuntime, HEX_ONBOARDING_TRIGGER, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
 import { hexRiveSource } from "@/lib/rive/hexFile";
@@ -74,7 +77,7 @@ const TAIL_STEP = 25;
 const tailGap = (level: number) =>
   TAIL_MIN_DY + TAIL_STEP * ((Math.imul(level, 2654435761) >>> 11) % 5);
 /** Where level 1's top-face centre sits, just under the pinned module card. */
-const FIRST_LEVEL_Y = 323;
+const FIRST_LEVEL_Y = 287;
 /** Room below the last level for the floating home button + a breath. */
 const WORLD_BOTTOM_PAD = 120;
 
@@ -441,25 +444,26 @@ const MODULES = [
   { id: "m3", title: "Module 3 Control Flow", base: 0 },
 ] as const;
 
-const CARD_X = 16;
-const CARD_W = 357;
 const CARD_FULL_H = 158;
 const CARD_COMPACT_H = 78;
-const CARD_TOP_Y = 99;
+/** The cards start 10px (real size) under the 36px header row. */
+const CARDS_TOP = TOP_MARGIN + 36 + 10;
+const CARD_TOP_Y = 0;
 /** How far each card queued behind the front one peeks out (px), and how
  * much narrower it is, so the stack reads as a pile. */
 const STACK_PEEK = 10;
 const STACK_SHRINK = 0.03;
 const STACK_VISIBLE = 2;
-/** The finished pile rests near the bottom of the screen (there is no nav). */
-const NAV_CLEARANCE = 24;
+/** A finished card rests this far (real px) above the screen's bottom edge. */
+const BOTTOM_GAP = 10;
 
 type CardPlace = { y: number; scale: number; height: number; opacity: number; zIndex: number };
 
 /** Where module `index` sits when `done` modules are finished: the current
- * one on top, the ones still to come queued behind it, the finished ones
- * piled above the nav (the latest finished in front). */
-const cardPlace = (index: number, done: number, viewH: number): CardPlace => {
+ * one on top, the ones still to come queued behind it, and the finished ones
+ * collapsed into a pile at the bottom (the latest finished in front).
+ * `areaH` is the height of the area the cards are placed in. */
+const cardPlace = (index: number, done: number, areaH: number): CardPlace => {
   if (index >= done) {
     const queued = index - done;
     const depth = Math.min(queued, STACK_VISIBLE);
@@ -474,13 +478,25 @@ const cardPlace = (index: number, done: number, viewH: number): CardPlace => {
   const rank = done - 1 - index;
   const depth = Math.min(rank, STACK_VISIBLE);
   return {
-    y: viewH - NAV_CLEARANCE - CARD_COMPACT_H - STACK_PEEK * depth,
+    y: areaH - CARD_COMPACT_H - BOTTOM_GAP - STACK_PEEK * depth,
     scale: 1 - STACK_SHRINK * depth,
     height: CARD_COMPACT_H,
     opacity: rank > STACK_VISIBLE ? 0 : 1,
     zIndex: 20 - rank,
   };
 };
+
+/** The Home button's usual distance from the bottom of the screen. */
+const HOME_BUTTON_BOTTOM = 24;
+/** Gap between the Home button and the finished-module pile under it. */
+const HOME_BUTTON_GAP = 10;
+
+/** Where the Home button's bottom edge sits: above the pile of finished
+ * modules once there is one (the pile's older cards peek out above it). */
+const homeButtonBottom = (done: number) =>
+  done === 0
+    ? HOME_BUTTON_BOTTOM
+    : BOTTOM_GAP + CARD_COMPACT_H + STACK_PEEK * Math.min(done - 1, STACK_VISIBLE) + HOME_BUTTON_GAP;
 
 const SPRING = { type: "spring", stiffness: 300, damping: 32, mass: 0.9 } as const;
 
@@ -502,7 +518,7 @@ function ModuleCard({
   return (
     <motion.div
       className="absolute top-0 box-border overflow-hidden rounded-lg border-b-[6px] border-[#BDBA99] bg-gradient-to-b from-white from-[30.82%] to-[#DCD5FE] shadow-[1px_1px_7.3px_1px_rgba(0,0,0,0.25)] dark:border-[#3a4a45] dark:from-[#1c2e36] dark:to-[#2b2a57]"
-      style={{ left: CARD_X, width: CARD_W, transformOrigin: "50% 0%", zIndex: place.zIndex }}
+      style={{ left: 16, right: 16, transformOrigin: "50% 0%", zIndex: place.zIndex }}
       initial={false}
       animate={{ y: place.y, scale: place.scale, height: place.height, opacity: place.opacity }}
       transition={{ ...SPRING, opacity: { duration: 0.25 } }}
@@ -513,7 +529,7 @@ function ModuleCard({
         animate={{ opacity: compact ? 0 : 1 }}
         transition={fade}
       >
-        <div className="flex h-[116px] w-[229px] shrink-0 flex-col gap-2.5">
+        <div className="flex h-[116px] min-w-0 flex-1 flex-col gap-2.5">
           <div className="flex h-[30px] items-center gap-2.5">
             <span className="flex h-[30px] w-[30px] items-center justify-center rounded-[4px] bg-gradient-to-br from-[#E2DFFF] to-[#E6E2FC] text-[#5D4CFE]">
               <Code2 className="h-[18px] w-[18px]" strokeWidth={2.2} />
@@ -574,9 +590,15 @@ function ModuleCard({
   );
 }
 
-/** Temporary: step the learner through the modules (mark the current one
- * complete / take the last one back) to try the card stack. */
-function ProgressDebug({
+/** The wipe colours: each theme's page background (see the screen's gradient). */
+const THEME_WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
+
+const MENU_ROW =
+  "flex h-11 w-full items-center gap-3 px-3 text-left text-[13px] font-medium text-[#444444] transition-colors active:bg-black/5 disabled:opacity-35 dark:text-[#C8C7C5] dark:active:bg-white/10";
+
+/** The header's menu button: theme, full screen and the temporary module
+ * Done/Undo live in here. */
+function LevelMenu({
   done,
   onComplete,
   onUndo,
@@ -585,101 +607,64 @@ function ProgressDebug({
   onComplete: () => void;
   onUndo: () => void;
 }) {
-  const btn = "h-7 px-1.5 text-[10px] font-semibold leading-none transition-opacity disabled:opacity-35";
-  return (
-    <div className="pointer-events-auto absolute left-[84px] top-[55px] flex overflow-hidden rounded-full border border-black/8 bg-white/60 text-[#5D4CFE] dark:border-white/10 dark:bg-white/5 dark:text-[#A99FFF]">
-      <button type="button" className={btn} onClick={onComplete} disabled={done >= MODULES.length}>
-        Done
-      </button>
-      <span className="w-px bg-black/10 dark:bg-white/15" />
-      <button type="button" className={btn} onClick={onUndo} disabled={done <= 0}>
-        Undo
-      </button>
-    </div>
-  );
-}
-
-function StatChip({ children, className }: { children: ReactNode; className?: string }) {
-  return (
-    <div
-      className={`flex h-9 items-center gap-1.5 rounded-lg border border-black/8 bg-white px-3 dark:border-white/10 dark:bg-[#1c3039] ${className ?? ""}`}
-    >
-      {children}
-    </div>
-  );
-}
-
-function FlameIcon() {
-  return (
-    <svg width="19" height="23" viewBox="0 0 19 23" fill="none" aria-hidden>
-      <path
-        d="M9.500 0 C10 5 18 8 18 15 C18 19.500 14.500 23 9.500 23 C4.500 23 1 19.500 1 15 C1 11 3.500 9 4.500 6.500 C6 8 6.500 9 7 10 C8.500 7 9.500 4 9.500 0 Z"
-        fill="#FF8D42"
-      />
-      <path
-        d="M9.500 12 C10.500 14 14 15 14 18 C14 20.500 12 22 9.500 22 C7 22 5 20.500 5 18 C5 15.500 8 14.500 9.500 12 Z"
-        fill="#FFC342"
-      />
-    </svg>
-  );
-}
-
-function GemIcon() {
-  const id = useHomeId();
-  return (
-    <svg width="23" height="24" viewBox="0 0 23 24" fill="none" aria-hidden>
-      <defs>
-        <linearGradient id={`${id}-g`} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#7DE8F5" />
-          <stop offset="0.55" stopColor="#0398DD" />
-          <stop offset="1" stopColor="#60CBFD" />
-        </linearGradient>
-      </defs>
-      <path d="M11.500 1 L21 6.500 V17.500 L11.500 23 L2 17.500 V6.500 Z" fill={`url(#${id}-g)`} />
-      <path d="M11.500 5 L17.500 8.500 V15.500 L11.500 19 L5.500 15.500 V8.500 Z" fill="#7DE8F5" fillOpacity="0.7" />
-    </svg>
-  );
-}
-
-/** The wipe colours: each theme's page background (see the screen's gradient). */
-const THEME_WIPE = { wipe: { light: "#ffffff", dark: "#0f1f26" } } as const;
-
-/** Light/dark switch, top centre between the streak and gem chips. */
-function ThemeSwitch() {
+  const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const fullscreen = useFullscreen();
   const dark = theme === "dark";
-  return (
-    <motion.button
-      type="button"
-      onClick={() => toggleTheme(THEME_WIPE)}
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-      className="pointer-events-auto absolute left-1/2 top-[51px] flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full border border-black/8 bg-white text-[#1A1C22]/70 transition-transform active:scale-95 dark:border-white/10 dark:bg-[#1c3039] dark:text-amber-400"
-      {...reveal(0)}
-    >
-      {dark ? (
-        <Sun key="sun" className="h-5 w-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
-      ) : (
-        <Moon key="moon" className="h-5 w-5 animate-[spinIn_0.45s_cubic-bezier(0.4,0,0.2,1)]" />
-      )}
-    </motion.button>
-  );
-}
 
-/** Full screen toggle, right beside the theme switch. Hidden where it can't
- * do anything (iPhone Safari, installed PWA). */
-function FullscreenSwitch() {
-  const { available, active, toggle } = useFullscreen();
-  if (!available) return null;
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: PointerEvent) => {
+      if (e.target instanceof Element && e.target.closest("[data-level-menu]")) return;
+      setOpen(false);
+    };
+    document.addEventListener("pointerdown", close);
+    return () => document.removeEventListener("pointerdown", close);
+  }, [open]);
+
   return (
-    <motion.button
-      type="button"
-      onClick={toggle}
-      aria-label={active ? "Exit full screen" : "Enter full screen"}
-      className="pointer-events-auto absolute left-[calc(50%+26px)] top-[51px] flex h-9 w-9 items-center justify-center rounded-full border border-black/8 bg-white text-[#1A1C22]/70 transition-transform active:scale-95 dark:border-white/10 dark:bg-[#1c3039] dark:text-white/70"
-      {...reveal(0)}
-    >
-      {active ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
-    </motion.button>
+    <div data-level-menu className="pointer-events-auto relative shrink-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Menu"
+        aria-expanded={open}
+        className="flex h-9 w-9 items-center justify-center rounded-lg border border-black/8 bg-white text-[#444444] transition-transform active:scale-95 dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#C8C7C5]"
+      >
+        <Menu className="h-5 w-5" strokeWidth={1.8} />
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.96 }}
+            transition={{ duration: 0.18, ease: EASE }}
+            style={{ transformOrigin: "top right" }}
+            className="absolute right-0 top-11 z-50 w-48 overflow-hidden rounded-xl border border-black/8 bg-white py-1 shadow-[0_4px_16px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22]"
+          >
+            <button type="button" className={MENU_ROW} onClick={() => toggleTheme(THEME_WIPE)}>
+              {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+              {dark ? "Light mode" : "Dark mode"}
+            </button>
+            {fullscreen.available && (
+              <button type="button" className={MENU_ROW} onClick={fullscreen.toggle}>
+                {fullscreen.active ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                {fullscreen.active ? "Exit full screen" : "Full screen"}
+              </button>
+            )}
+            <button type="button" className={MENU_ROW} onClick={onComplete} disabled={done >= MODULES.length}>
+              <Check className="h-5 w-5" />
+              Complete module
+            </button>
+            <button type="button" className={MENU_ROW} onClick={onUndo} disabled={done <= 0}>
+              <Undo2 className="h-5 w-5" />
+              Undo module
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -702,6 +687,8 @@ export function HomeScreen({
 }: {
   onStart?: () => void;
 }) {
+  const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const boxRef = useRef<HTMLDivElement>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -836,69 +823,59 @@ export function HomeScreen({
           </div>
         </div>
 
-        {/* Header + module card: pinned to the top of the screen, over the
-          path. The fade lets the scrolling path slide under them. */}
-        <div
-          className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-transparent to-transparent"
-          style={{ height: 283 * scale }}
+        {/* Header: gems + battery, and the menu. Pinned to the top of the
+          screen over the path, TOP_MARGIN down like the home tabs. */}
+        <motion.div
+          className="pointer-events-none absolute inset-x-0 z-40 mx-auto flex w-full max-w-[430px] items-center gap-2 px-4"
+          style={{ top: TOP_MARGIN }}
+          {...reveal(0)}
         >
-          {/* Streak + gems: pinned to the screen's own left and right edges
-            (not the centred stage column), each chip scaled with the layout. */}
-          <motion.div
-            className="pointer-events-auto absolute inset-x-0 mx-auto flex items-center justify-between"
-            style={{ top: 51 * scale, paddingInline: 16 * scale, maxWidth: 1024 }}
-            {...reveal(0)}
-          >
-            <div style={{ transform: `scale(${scale})`, transformOrigin: "left center" }}>
-              <StatChip>
-                <FlameIcon />
-                <span className="text-base font-semibold leading-[1.4] text-[#FF8D42]">4</span>
-              </StatChip>
-            </div>
-            <div style={{ transform: `scale(${scale})`, transformOrigin: "right center" }}>
-              <StatChip>
-                <GemIcon />
-                <span className="text-base font-semibold leading-[1.4] text-[#3683D3]">373</span>
-              </StatChip>
-            </div>
-          </motion.div>
-
-          <div
-            className="absolute left-1/2 top-0 origin-top"
-            style={{ width: STAGE_W, height: 283, transform: `translateX(-50%) scale(${scale})` }}
-          >
-          {/* After the stats row, so it sits on top */}
-          <ThemeSwitch />
-          <FullscreenSwitch />
-          <ProgressDebug
+          <LevelStats className="pointer-events-auto min-w-0 flex-1" />
+          <LevelMenu
             done={done}
             onComplete={() => setDone((d) => Math.min(d + 1, MODULES.length))}
             onUndo={() => setDone((d) => Math.max(d - 1, 0))}
           />
+        </motion.div>
 
-          </div>
-        </div>
+        {/* Floats: a slow bob. It rides up above the finished modules. */}
+        <motion.div
+          className="pointer-events-none absolute inset-x-0 z-50 mx-auto w-full max-w-[430px] px-4"
+          initial={false}
+          animate={{ bottom: homeButtonBottom(done) }}
+          transition={SPRING}
+        >
+          <motion.button
+            type="button"
+            onClick={() => router.push("/home")}
+            aria-label="Home"
+            animate={reduceMotion ? undefined : { y: [0, -7, 0] }}
+            transition={{ duration: 3, ease: "easeInOut", repeat: Infinity }}
+            whileTap={{ scale: 0.94 }}
+            className="pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full border border-black bg-[#1A1C22] text-white shadow-[0_10px_24px_rgba(0,0,0,0.25)] dark:border-white dark:bg-white dark:text-[#1A1C22] dark:shadow-[0_10px_24px_rgba(0,0,0,0.55)]"
+          >
+            <House className="h-7 w-7" strokeWidth={1.65} />
+          </motion.button>
+        </motion.div>
 
         {/* The module cards: the current one on top with the next ones queued
           behind it. */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
-            className="absolute left-1/2 top-0 origin-top"
-            style={{ width: STAGE_W, height: viewH, transform: `translateX(-50%) scale(${scale})` }}
+            className="absolute inset-x-0 mx-auto w-full max-w-[430px]"
+            style={{ top: CARDS_TOP, height: viewH * scale - CARDS_TOP }}
           >
-            {/* Finished modules no longer pile up at the bottom of the screen
-              (where the nav used to be): they just leave. */}
-            {MODULES.map((m, i) =>
-              i < done ? null : (
-                <ModuleCard
-                  key={m.id}
-                  title={m.title}
-                  progress={m.base}
-                  place={cardPlace(i, done, viewH)}
-                  compact={false}
-                />
-              ),
-            )}
+            {/* A finished module collapses and moves to the bottom of the
+              screen; undo brings it back. */}
+            {MODULES.map((m, i) => (
+              <ModuleCard
+                key={m.id}
+                title={m.title}
+                progress={m.base}
+                place={cardPlace(i, done, viewH * scale - CARDS_TOP)}
+                compact={i < done}
+              />
+            ))}
           </div>
         </div>
       </div>
