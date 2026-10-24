@@ -144,9 +144,32 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
 
           <motion.div {...reveal(0.04)} className="mt-6 flex items-center gap-2">
             {battery.unlimited ? (
-              // The artboard only has the teal look, so unlimited gets its own full gradient bar.
-              <div className="flex h-9 min-w-0 flex-1 items-center justify-center rounded-full bg-linear-to-r from-[#3F6BFF] to-[#9B51E0]">
-                <InfinityIcon className="h-6 w-6 text-white" strokeWidth={3} aria-label="Infinite" />
+              // The artboard only has the teal look, so unlimited gets its own pastel rainbow bar.
+              <div className="flex h-9 min-w-0 flex-1 items-center justify-center rounded-full bg-[linear-gradient(100deg,#FF9AD5_0%,#FFD479_30%,#9BF0B5_60%,#8FC8FF_100%)] shadow-[inset_0_0_0_2px_rgba(255,255,255,0.45)]">
+                <svg viewBox="0 0 48 24" className="h-6 w-12 drop-shadow-[0_1px_2px_rgba(0,0,0,0.18)]" role="img" aria-label="Infinite">
+                  <defs>
+                    <linearGradient id="infinite-bar-stroke" x1="0" x2="1" y1="0" y2="0">
+                      <stop offset="0%" stopColor="#FF4FB0" />
+                      <stop offset="35%" stopColor="#FFB020" />
+                      <stop offset="65%" stopColor="#2FD27A" />
+                      <stop offset="100%" stopColor="#2F9BFF" />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    d="M24 12C20 5 14 3 9.5 5.5 4.5 8.5 4.5 15.5 9.5 18.5 14 21 20 19 24 12 28 5 34 3 38.5 5.5 43.5 8.5 43.5 15.5 38.5 18.5 34 21 28 19 24 12Z"
+                    fill="none"
+                    stroke="white"
+                    strokeWidth="6.5"
+                    strokeLinejoin="round"
+                  />
+                  <path
+                    d="M24 12C20 5 14 3 9.5 5.5 4.5 8.5 4.5 15.5 9.5 18.5 14 21 20 19 24 12 28 5 34 3 38.5 5.5 43.5 8.5 43.5 15.5 38.5 18.5 34 21 28 19 24 12Z"
+                    fill="none"
+                    stroke="url(#infinite-bar-stroke)"
+                    strokeWidth="3.4"
+                    strokeLinejoin="round"
+                  />
+                </svg>
               </div>
             ) : (
               <div className="relative min-w-0 flex-1">
