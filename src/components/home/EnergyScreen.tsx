@@ -145,8 +145,8 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
           <motion.div {...reveal(0.04)} className="mt-6 flex items-center gap-2">
             {battery.unlimited ? (
               // The artboard only has the teal look, so unlimited gets its own pastel rainbow bar.
-              <div className="flex h-9 min-w-0 flex-1 items-center justify-center rounded-full bg-[linear-gradient(100deg,#FF9AD5_0%,#FFD479_30%,#9BF0B5_60%,#8FC8FF_100%)] shadow-[inset_0_0_0_2px_rgba(255,255,255,0.45)]">
-                <svg viewBox="0 0 48 24" className="h-6 w-12 drop-shadow-[0_1px_2px_rgba(0,0,0,0.18)]" role="img" aria-label="Infinite">
+              <div className="flex h-5 min-w-0 flex-1 items-center justify-center rounded-full bg-[linear-gradient(100deg,#FF9AD5_0%,#FFD479_30%,#9BF0B5_60%,#8FC8FF_100%)] shadow-[inset_0_0_0_2px_rgba(255,255,255,0.45)]">
+                <svg viewBox="0 0 48 24" className="h-3.5 w-7 drop-shadow-[0_1px_2px_rgba(0,0,0,0.18)]" role="img" aria-label="Infinite">
                   <defs>
                     <linearGradient id="infinite-bar-stroke" x1="0" x2="1" y1="0" y2="0">
                       <stop offset="0%" stopColor="#FF4FB0" />
