@@ -710,7 +710,7 @@ export function OnboardingFlow({
           />
         </motion.div>
         {/* TEMPORARY dev panel: three taps on Hex open it (see DevPanel). */}
-        <DevPanel muted={muted} onToggleMuted={() => setMuted((m) => !m)} />
+        <DevPanel muted={muted} onToggleMuted={() => setMuted((m) => !m)} onBack={step ? goBack : undefined} />
       </main>
     </FoxStageProvider>
   );

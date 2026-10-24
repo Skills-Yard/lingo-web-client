@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { OnboardingListOption } from "@/lib/constants/onboarding";
 import { motion } from "framer-motion";
-import { optionDropIn } from "./optionCard";
+import { optionDropIn, squeezedSpace } from "./optionCard";
 import { QuestionGridOptions } from "./QuestionGridScreen";
 
 interface QuestionListOptionsProps {
@@ -90,13 +90,25 @@ export function QuestionListOptions({
     );
   }
 
+  // Each row is 58px plus the 6px under it for its edge. On a short phone the
+  // gaps and the padding shrink (never the rows) before the list scrolls.
+  const space = squeezedSpace(options.length * 64, {
+    top: { max: roomy ? 40 : 24, min: 6 },
+    gap: { max: roomy ? 18 : 12, min: 6, count: options.length - 1 },
+    bottom: { max: 8, min: 3 },
+  });
+
   return (
-    // Options keep their natural height; if they don't all fit, only this
-    // section scrolls (scrollbar hidden) — the CTA below is `shrink-0`, so it
-    // always stays fully on screen.
+    // The outer box takes the room the screen leaves and measures it, so the
+    // list's spacing can follow it (see `squeezedSpace`). Options keep their
+    // natural height; if they still don't fit, only this section scrolls
+    // (scrollbar hidden) — the CTA below is `shrink-0`, so it always stays
+    // fully on screen.
+    <div className="-mx-2.5 -mt-4 flex min-h-0 flex-1 flex-col [container-type:size] sm:-mt-3">
     <div
       ref={optionsRef}
-      className={`scrollbar-none flex min-h-0 flex-1 flex-col overflow-y-auto -mx-2.5 px-3 pb-2 -mt-4 sm:-mt-3 ${
+      style={space as React.CSSProperties}
+      className={`scrollbar-none flex h-full min-h-0 flex-col overflow-y-auto px-3 pb-2 max-sm:gap-(--sq-gap) max-sm:pt-(--sq-top) max-sm:pb-(--sq-bottom) ${
         roomy ? "gap-[18px] pt-10 sm:gap-5" : "gap-3 pt-6 sm:gap-3.5"
       }`}
     >
@@ -140,6 +152,7 @@ export function QuestionListOptions({
           </motion.button>
         );
       })}
+    </div>
     </div>
   );
 }

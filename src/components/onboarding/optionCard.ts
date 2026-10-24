@@ -60,3 +60,25 @@ export function optionCardClass(selected: boolean, spotlight = false, flatDark =
     spotlight ? "scale-[1.04]" : ""
   } ${state}`;
 }
+
+/** One stretch of space around the options: its normal size, and how small it may get. */
+type Squeeze = { max: number; min: number; count?: number };
+
+/**
+ * On a short phone the options' spacing gives way before the options scroll.
+ * `used` is the px the options themselves need; the space left in the box
+ * (`cqh`: the options' container, which is `container-type: size`) is shared
+ * between the stretches in proportion to their normal size, each kept between
+ * its `min` and `max`. With room to spare every stretch is at its `max` (the
+ * design's own spacing), so taller screens look exactly as before. Only once
+ * the stretches are all at `min` does the list scroll.
+ */
+export const squeezedSpace = (used: number, stretches: Record<string, Squeeze>) => {
+  const total = Object.values(stretches).reduce((sum, { max, count = 1 }) => sum + max * count, 0);
+  return Object.fromEntries(
+    Object.entries(stretches).map(([name, { max, min }]) => [
+      `--sq-${name}`,
+      `clamp(${min}px, calc((100cqh - ${used}px) * ${max / total}), ${max}px)`,
+    ]),
+  ) as Record<string, string>;
+};

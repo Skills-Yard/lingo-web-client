@@ -163,17 +163,17 @@ export function QuestionHeading({
   return (
     // Under a scene the heading hangs off the artboard's bottom edge with a
     // short, fixed gap rather than the usual header offset.
-    <div className={`flex shrink-0 ${wide ? "items-center justify-center" : "items-center justify-start"} gap-2 ${wide ? "pt-3" : "max-sm:pt-[9px] sm:pt-0"}`}>
+    <div className={`flex shrink-0 ${wide ? "items-center justify-center" : "items-center justify-start"} gap-2 ${wide ? "pt-3" : "sm:pt-0"}`}>
       {(hex || showFox) && (
         // The artboard has empty margins, so the slot beside the question is
-        // a fixed box narrower than the fox: it draws bigger than the slot
+        // a fixed box, no taller than the fox itself and narrower than it: it draws bigger than the slot
         // (anchored to its top-left, so a bigger fox grows downward and the
         // row keeps the screen's 16px side margin) and the question overlaps
         // the empty space. Resizing the fox therefore never moves the question.
         <div
           aria-hidden
           className={`relative z-20 shrink-0 ${
-            big ? (hex ? "h-[7.5rem] w-[5rem]" : "h-[7.25rem] w-[5.75rem]") : "h-[6rem] w-[4.5rem]"
+            big ? (hex ? "h-[6.5rem] w-[5rem]" : "h-[6.25rem] w-[5.75rem]") : "h-[6rem] w-[4.5rem]"
           } sm:h-[7rem] sm:w-[5.5rem]`}
         >
           <div

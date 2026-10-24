@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
-import { Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from "lucide-react";
+import { ChevronLeft, Maximize, Minimize, Moon, Sun, Volume2, VolumeX } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { WIPE } from "./OnboardingHeader";
@@ -11,7 +11,7 @@ import { useTripleTap } from "./tripleTap";
 
 /*
  * TEMPORARY — FOR DEVS ONLY. REMOVE BEFORE RELEASE.
- * A hidden testing panel (theme, sound, full screen) that opens when Hex is
+ * A hidden testing panel (back, theme, sound, full screen) that opens when Hex is
  * tapped. There is a twin on the Level 1 header (the battery, see
  * OnboardingHeader). Nothing on screen hints that they exist, and it takes
  * three taps on Hex in a row to open.
@@ -30,7 +30,16 @@ const hexAt = (x: number, y: number) =>
     return r.width > 0 && r.height > 0 && x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
   });
 
-export function DevPanel({ muted, onToggleMuted }: { muted: boolean; onToggleMuted: () => void }) {
+export function DevPanel({
+  muted,
+  onToggleMuted,
+  onBack,
+}: {
+  muted: boolean;
+  onToggleMuted: () => void;
+  /** Goes back a screen; left out where there is nothing to go back from. */
+  onBack?: () => void;
+}) {
   const { theme, toggleTheme } = useTheme();
   const fullscreen = useFullscreen();
   const [open, setOpen] = useState(false);
@@ -71,6 +80,20 @@ export function DevPanel({ muted, onToggleMuted }: { muted: boolean; onToggleMut
           className="fixed top-14 right-4 z-[200] flex w-[220px] flex-col gap-2 rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
         >
           <p className="text-[11px] leading-[15px] text-[#818185] dark:text-[#9FA19F]">For testing by devs only. Temporary.</p>
+          {onBack && (
+            <button
+              type="button"
+              onClick={() => {
+                setOpen(false);
+                reset();
+                onBack();
+              }}
+              className={BUTTON}
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Back
+            </button>
+          )}
           <button type="button" onClick={() => toggleTheme(WIPE)} className={BUTTON}>
             {dark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
             {dark ? "Switch to light mode" : "Switch to dark mode"}

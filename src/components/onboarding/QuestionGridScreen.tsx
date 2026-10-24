@@ -5,7 +5,7 @@ import { Poppins } from "next/font/google";
 import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption } from "@/lib/constants/onboarding";
 import { motion } from "framer-motion";
-import { optionCardClass, optionDropIn } from "./optionCard";
+import { optionCardClass, optionDropIn, squeezedSpace } from "./optionCard";
 
 const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
@@ -72,12 +72,26 @@ export function QuestionGridOptions({
   // the cards shrink together instead of colliding.
   const three = options.length > 4;
 
+  // The tiles' own size, the row gap and the padding the grid has when there
+  // is room; on a short phone the gap and padding shrink to `min` (never the
+  // tiles) before the grid scrolls.
+  const tile = compact ? { height: 109, gap: 16, min: 8 } : three ? { height: 130, gap: 24, min: 10 } : { height: 150, gap: 29, min: 12 };
+  const rows = Math.ceil(options.length / (three ? 3 : 2));
+  const space = squeezedSpace(rows * tile.height, {
+    top: { max: 24, min: compact ? 6 : 8 },
+    gap: { max: tile.gap, min: tile.min, count: rows - 1 },
+    bottom: { max: 8, min: 3 },
+  });
+
   return (
-    // `auto-rows-max` keeps each row the full tile height: on short screens
-    // auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
-    // over the gap into the next row. Now the gap is always gap-y-3 and the
-    // grid scrolls instead.
-    <div ref={optionsRef} className={`scrollbar-none mx-auto ${compact ? "-mt-1.5" : "-mt-1 sm:mt-0"} grid w-full ${compact ? "max-w-[313px] grid-cols-2 gap-x-[19px] gap-y-4" : three ? "max-w-[374px] grid-cols-3 gap-x-[17px] gap-y-6" : "max-w-[322px] grid-cols-2 gap-x-[30px] gap-y-[29px]"} min-h-0 flex-1 auto-rows-max content-start overflow-y-auto px-2 pt-6 pb-2`}>
+    // The outer box takes the room the screen leaves and measures it, so the
+    // grid's spacing can follow it (see `squeezedSpace`).
+    <div className={`${compact ? "-mt-1.5" : "-mt-1 sm:mt-0"} flex min-h-0 flex-1 flex-col [container-type:size]`}>
+    {/* `auto-rows-max` keeps each row the full tile height: on short screens
+        auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
+        over the gap into the next row. The gap now only shrinks while the
+        screen is too short, and the grid scrolls once it can't shrink more. */}
+    <div ref={optionsRef} style={space as React.CSSProperties} className={`scrollbar-none mx-auto grid h-full w-full ${compact ? "max-w-[313px] grid-cols-2 gap-x-[19px] gap-y-4" : three ? "max-w-[374px] grid-cols-3 gap-x-[17px] gap-y-6" : "max-w-[322px] grid-cols-2 gap-x-[30px] gap-y-[29px]"} min-h-0 auto-rows-max content-start overflow-y-auto px-2 pt-6 pb-2 max-sm:gap-y-(--sq-gap) max-sm:pt-(--sq-top) max-sm:pb-(--sq-bottom)`}>
       {options.map((option, i) => {
         const selected = option.id === selectedId;
         const spotlight = !selected && i === spokenOption;
@@ -125,6 +139,7 @@ export function QuestionGridOptions({
           </motion.button>
         );
       })}
+    </div>
     </div>
   );
 }

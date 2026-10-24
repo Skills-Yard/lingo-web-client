@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/context/ThemeContext";
-import { AutoFullscreen } from "@/components/pwa/AutoFullscreen";
 import { InstallHint } from "@/components/pwa/InstallHint";
 
 const poppins = Poppins({
@@ -50,7 +49,6 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
         <ThemeProvider>{children}</ThemeProvider>
         <InstallHint />
-        <AutoFullscreen />
       </body>
     </html>
   );

@@ -30,6 +30,16 @@ const FOX_MAX_DVH = 25;
 const FOX_SIZE = `min(${FOX_MAX_REM}rem, ${FOX_MAX_DVH}dvh)`;
 /** Hex is drawn this much bigger than its slot (the slot's `scale-125`). */
 const FOX_VISUAL_SCALE = 1.25;
+/** Where the background grid's floor starts (its top edge), read off the
+ * `BG_Grid` artboard: the artboard covers the screen, 0.567 wide for every
+ * 1 high, and the floor starts FLOOR_BELOW_CENTER of its height below its
+ * middle. Hex's body ends FOX_ART_BOTTOM of the way down his slot, so he can
+ * stand exactly on it. */
+const BACKGROUND_ASPECT = 0.567;
+const FLOOR_BELOW_CENTER = 0.1785;
+const FOX_ART_BOTTOM = 0.84;
+const floorTop = (screenWidth: number, screenHeight: number) =>
+  screenHeight / 2 + FLOOR_BELOW_CENTER * Math.max(screenHeight, screenWidth / BACKGROUND_ASPECT);
 /** The text below Hex ends this far (px) above the bottom of the screen — at
  * most; short screens use BELOW_TEXT_BOTTOM_MAX_VH of their height instead. */
 const BELOW_TEXT_BOTTOM_PX = 200;
@@ -296,15 +306,16 @@ export function FoxMessageScreen({
       setBelowBottom(Math.max(0, belowBottomPx - footerHeight));
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
       const size = Math.min(FOX_MAX_REM * rem, (FOX_MAX_DVH / 100) * window.innerHeight);
-      // Hex's visual center sits at the vertical center of the screen.
+      // Hex stands on the background's floor: his body ends right where the
+      // grid begins, no gap.
       const overlap = size * FOX_BUBBLE_OVERLAP;
       // On a short screen the bubble would run off the top: Hex steps down
       // just enough to keep it in.
       const top = aboveEl
         ? Math.max(
-            window.innerHeight / 2 -
+            floorTop(window.innerWidth, window.innerHeight) -
               stage.getBoundingClientRect().top -
-              (size * FOX_VISUAL_SCALE) / 2,
+              size * FOX_VISUAL_SCALE * FOX_ART_BOTTOM,
             aboveEl.offsetHeight + BUBBLE_MIN_TOP_PX - overlap,
           )
         : FOX_TOP_PX;

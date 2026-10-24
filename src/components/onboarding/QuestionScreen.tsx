@@ -65,6 +65,16 @@ type QuestionScreenProps = {
  * stops. Each pick also has Zox look at his tablet and type, and each new
  * question has him look back up at the user.
  */
+/** What the day/night screen keeps for everything under the scene when the
+ * options' spacing is at its smallest (px): the scene's top margin, the
+ * heading and panel padding (net of the panel's overlap on the scene), and
+ * the two rows of options with their tightest spacing. */
+const SCENE_BELOW_PX = 302;
+/** The scene is never cropped below this height (px). */
+const SCENE_MIN_PX = 120;
+/** The scene's own height: its 390:267 ratio at full width, or less when the screen is short. */
+const SCENE_HEIGHT = `clamp(${SCENE_MIN_PX}px, calc(100cqh - ${SCENE_BELOW_PX}px), calc((100cqw + 32px) * 267 / 390))`;
+
 export function QuestionScreen(props: QuestionScreenProps) {
   const {
     questionId,
@@ -123,14 +133,17 @@ export function QuestionScreen(props: QuestionScreenProps) {
   const scene = hexMode === "reactions" && reactionsArtboard === DAYNIGHT_ARTBOARD;
 
   return (
-    <div className={`flex min-h-0 flex-col px-4 ${className ?? ""}`}>
+    <div className={`flex min-h-0 flex-col px-4 ${scene ? "[container-type:size]" : ""} ${className ?? ""}`}>
       {scene && (
         // Full-width, top-aligned under the header (pt-3 clears the progress
         // bar and buttons). Height follows the artboard's 390:267 ratio so the
-        // scene always fills the full screen width (Fit.FitWidth).
+        // scene always fills the full screen width (Fit.FitWidth) — until the
+        // screen is too short for the options below it: then it gets shorter
+        // (cropped from the top, Hex stays) by exactly what they are short.
         <div
           aria-hidden
-          className="relative -mx-4 mt-3 aspect-390/267 shrink-0 overflow-hidden"
+          className="relative -mx-4 mt-3 shrink-0 overflow-hidden"
+          style={{ height: SCENE_HEIGHT }}
         >
           <div className="absolute inset-0">
             <DayNightHex
@@ -149,7 +162,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
       <div
         className={`flex min-h-0 flex-1 flex-col ${
           scene
-            ? "relative z-10 -mx-4 -mt-6 rounded-t-[24px] bg-white px-4 pt-6 dark:bg-background"
+            ? "relative z-10 -mx-4 -mt-6 rounded-t-[24px] bg-white px-4 pt-4 dark:bg-background"
             : ""
         }`}
       >

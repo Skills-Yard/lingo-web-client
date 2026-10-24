@@ -14,10 +14,11 @@ import {
 import { useHexRive } from "./useHexRive";
 import { useHexExit } from "./hexExit";
 
-// FitWidth, pinned to the top: the scene always spans the full screen width and
-// sits flush under the header. The slot's aspect ratio matches the artboard, so
-// nothing is cropped.
-const LAYOUT = new Layout({ fit: Fit.FitWidth, alignment: Alignment.TopCenter });
+// FitWidth, pinned to the bottom: the scene always spans the full screen width
+// and sits flush under the header. The slot's aspect ratio matches the artboard,
+// so nothing is cropped — except on a short screen, where the slot is shorter
+// and the top of the sky goes, not Hex at the bottom.
+const LAYOUT = new Layout({ fit: Fit.FitWidth, alignment: Alignment.BottomCenter });
 
 /**
  * The "DayNight" artboard's `DayNight_SM`: picking Morning / Afternoon /

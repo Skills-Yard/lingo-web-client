@@ -64,7 +64,7 @@ export function NotificationPermissionScreen({
       {/* Same box as the question rows' fox slot, so the heading sits at the
           same height as on the other question screens. */}
       <div className="flex shrink-0 items-center max-sm:h-[7.25rem] max-sm:pt-[9px] sm:h-[7rem]">
-        <h1 className={`max-w-[min(20rem,calc(100vw-3rem))] text-center ${ONBOARDING_QUESTION_CLASS}`}>
+        <h1 className={`max-w-[min(20rem,calc(100vw-3rem))] -translate-y-12 text-center ${ONBOARDING_QUESTION_CLASS}`}>
           <KaraokeSpans spans={[{ text: heading }]} spoken={spoken} />
         </h1>
       </div>
