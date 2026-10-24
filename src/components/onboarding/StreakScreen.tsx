@@ -11,8 +11,6 @@ const CARD_IN = { type: "spring", stiffness: 260, damping: 26 } as const;
 
 interface StreakScreenProps {
   heading: TextSpan[];
-  /** The home-screen mockup with the streak widget (public/images/codingStreak). */
-  image: string;
   /** Read out as the screen appears; the heading fills in with it. */
   voiceover?: readonly string[];
   /** Called once the voiceover has finished (or failed to play). */
@@ -29,14 +27,13 @@ interface StreakScreenProps {
 
 /**
  * "Keep your coding streak going": the same fox + text row the question
- * screens use (Hex on the `Onboarding` state machine, like the greeting), over a phone-home-screen mockup showing Lingo's streak
- * widget. The mockup rises in once the screen has faded in; if it's taller
- * than the space left above the CTA, its (empty) bottom is cropped behind a
- * soft fade instead of shrinking the widget.
+ * screens use (Hex on the `Onboarding` state machine, like the greeting), over
+ * Lingo's streak widget (the "HEX_Widget" Rive artboard). The widget rises in
+ * once the screen has faded in; if it's taller than the space left above the
+ * CTA, its bottom is cropped behind a soft fade instead of shrinking it.
  */
 export function StreakScreen({
   heading,
-  image,
   voiceover,
   onVoiceoverDone,
   skipCount = 0,
@@ -72,14 +69,7 @@ export function StreakScreen({
               : { ...CARD_IN, delay: CARD_DELAY_S }
           }
         >
-          <img
-            src={image}
-            alt="Lingo's streak widget on your home screen"
-            draggable={false}
-            className="h-auto w-full select-none"
-          />
-          {/* The mockup's empty area (left of the app tiles) holds Hex's widget. */}
-          <StreakWidgetHex className="absolute top-[12%] left-[6%] h-[48%] w-[60%]" />
+          <StreakWidgetHex className="w-full" />
         </motion.div>
         <div
           aria-hidden

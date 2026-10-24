@@ -500,7 +500,6 @@ export function OnboardingFlow({
                     <StreakScreen
                       className="flex-1"
                       heading={step.heading(answers)}
-                      image={step.image}
                       exiting={exiting}
                       exitDelay={0}
                       voiceover={resolveVoiceover(step.voiceover, answers)}

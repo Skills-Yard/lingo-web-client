@@ -86,9 +86,15 @@ const subscribe = (listener: () => void) => {
 /** The learner's battery, shared by every screen that shows it. */
 export const useBattery = (): BatteryState => useSyncExternalStore(subscribe, read, () => FRESH);
 
+const unitsLeft = (level: number) => Math.round((level / 100) * max);
+
 /** "14/20", or the infinity sign when unlimited. */
 export const batteryLabel = ({ level, unlimited }: BatteryState) =>
-  unlimited ? "∞" : `${Math.round((level / 100) * max)}/${max}`;
+  unlimited ? "∞" : `${unitsLeft(level)}/${max}`;
+
+/** What is left, "14", or the infinity sign when unlimited. */
+export const batteryCount = ({ level, unlimited }: BatteryState) =>
+  unlimited ? "∞" : String(unitsLeft(level));
 
 /**
  * The learner is on lesson screen `step`: each screen not yet paid for spends

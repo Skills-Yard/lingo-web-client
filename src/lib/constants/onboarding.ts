@@ -458,8 +458,6 @@ export type OnboardingStep =
       kind: "streak";
       id: string;
       heading: (answers: OnboardingAnswers) => TextSpan[];
-      /** The home-screen mockup with the streak widget. */
-      image: string;
       voiceover?: StepVoiceover;
       cta: string;
     }
@@ -697,7 +695,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "one tap away", highlight: true },
       { text: " from your next lesson." },
     ],
-    image: "/images/codingStreak/codingStreak-3.png",
     voiceover: ["/audios/stay.mp3"],
     cta: "Continue",
   },

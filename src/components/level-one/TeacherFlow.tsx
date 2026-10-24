@@ -115,6 +115,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       setHinted(false);
       setFlipped(false);
       setChecked(false);
+      // The button (and bar) go back to their resting state too.
+      setAnswer(null);
     }
     setStep(next);
   };

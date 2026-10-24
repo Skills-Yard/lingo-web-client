@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { ChevronLeft, X } from "lucide-react";
+import { batteryCount, useBattery } from "@/components/home/batteryStore";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
@@ -40,6 +41,19 @@ interface OnboardingHeaderProps {
 // user moves forward, shrinking back when they return to an earlier question.
 let lastShown: { step: number; total: number } | null = null;
 
+/** What is left of the battery, "14" — or the infinity sign when unlimited.
+ * Fixed width, so the battery beside it stays put as the text changes. */
+function BatteryCount() {
+  const battery = useBattery();
+  return (
+    <span
+      className={`min-w-[26px] font-semibold text-[#01A17F] tabular-nums ${battery.unlimited ? "text-[28px] leading-[28px]" : "text-[20px] leading-[24px]"}`}
+    >
+      {batteryCount(battery)}
+    </span>
+  );
+}
+
 export function OnboardingHeader({ onBack, progress, answer, showCount, level }: OnboardingHeaderProps) {
   const [fromStep] = useState(() => (progress ? (lastShown?.step ?? progress.step - 1) : null));
   useEffect(() => {
@@ -71,26 +85,26 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
               {String(progress.total).padStart(2, "0")}
             </span>
           )}
-          {/* Rive draws the bar; it animates to the new fill itself. It ends
-              12px short of the right-hand button — the 56px battery box on
-              the Level 1 header. */}
+          {/* Rive draws the bar; it animates to the new fill itself. On the
+              Level 1 header it ends 10px short of the battery and its count
+              (90px wide, 16px from the edge). */}
           <PersistentProgressBar
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className={`absolute mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] left-[67px] right-[100px]" : "top-[63px] left-4 right-4"}`}
+            className={`absolute mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] left-[67px] right-[116px]" : "top-[63px] left-4 right-4"}`}
           />
         </>
       )}
 
-      {/* The battery sits in the top-right corner: `battery.riv` at the old
-          icon's 15px height, so 44px wide (its artboard is 320 x 110). Each
-          screen's `step` spends its share of it. Also the way into the hidden
-          dev panel (see BatteryMenu). */}
+      {/* The battery sits in the top-right corner: `battery.riv` 60px wide (its
+          artboard is 320 x 110), with what is left of it written beside it. Each screen's `step` spends its
+          share of it. Also the way into the hidden dev panel (see BatteryMenu). */}
       {level && (
         <BatteryMenu className="absolute top-[6px] right-4">
-          <span className="flex h-[39px] w-[72px] items-center justify-center rounded-md">
+          <span className="flex h-[39px] items-center gap-1 rounded-md">
             <PersistentBattery step={progress?.step} className="w-[60px]" />
+            <BatteryCount />
           </span>
         </BatteryMenu>
       )}

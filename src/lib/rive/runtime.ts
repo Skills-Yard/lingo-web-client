@@ -319,9 +319,13 @@ export const NOTIFY_TRIGGER = { show: "show", hide: "hide" } as const;
 /** The artboard's size, for laying out the canvas at its own aspect. */
 export const NOTIFY_ASPECT = 390 / 360;
 
-/** Hex's home-screen widget — "HEX_Widget" in `hex.riv`, played by `Widget_SM`. */
+/** Hex's home-screen widget — "HEX_Widget" in `hex.riv`, played by
+ * `WidgetFull_SM`. It is the whole widget card the streak screen shows (it
+ * replaced the phone-mockup PNG), so the canvas takes the artboard's own aspect. */
 export const WIDGET_ARTBOARD = "HEX_Widget";
-export const WIDGET_STATE_MACHINE = "Widget_SM";
+export const WIDGET_STATE_MACHINE = "WidgetFull_SM";
+/** Used until the artboard's real size is read. */
+export const WIDGET_FALLBACK_ASPECT = 0.957;
 
 /** The level screen's background — the "ModuleBackground 2" artboard in
  * `hex.riv`, playing "State Machine 1" and repeated down the page. */
@@ -357,17 +361,42 @@ export const PROGRESS_BAR = {
 
 /** The battery — "BatteryArtboard-Main" in `battery.riv` (320x110), played by
  * `Battery_SM`. The artboard binds the `Battery` view model: `level` (0-100) is
- * the fill, `unlimited` swaps it for the infinity sign, and the `fullFlash`
- * trigger sparkles across the whole battery. */
+ * the fill, `unlimited` swaps it for the infinity sign, `darkTheme` is `true`
+ * in the dark theme and `false` in light, and the `fullFlash` trigger sparkles
+ * across the whole battery. */
 export const BATTERY = {
   src: "/animations/battery.riv",
   artboard: "BatteryArtboard-Main",
   stateMachine: "Battery_SM",
   levelProperty: "level",
   unlimitedProperty: "unlimited",
+  darkThemeProperty: "darkTheme",
   fullFlashTrigger: "fullFlash",
   width: 320,
   height: 110,
+} as const;
+
+/** The brand CTA button — `btn-click.riv`. Its artboards are 371 x 113 and bind
+ * the `Button` view model: `label` is the text, and the `shine` and `click`
+ * triggers play the highlight sweep and the press. */
+export const BUTTON = {
+  src: "/animations/btn-click.riv?v=3",
+  width: 371,
+  height: 113,
+  labelProperty: "label",
+  shineTrigger: "shine",
+  clickTrigger: "click",
+  /** Same cadence the old CSS shine used (`animate-button-shine`, 5s). */
+  shineEveryMs: 5000,
+} as const;
+
+/** The "ModuleButton" artboard every module screen shares, played by
+ * `ModuleButton_SM`. Its `buttonState` number picks the art. */
+export const MODULE_BUTTON = {
+  artboard: "ModuleButton",
+  stateMachine: "ModuleButton_SM",
+  stateProperty: "buttonState",
+  state: { disabled: 0, wrong: 2, correct: 3, enabled: 4 },
 } as const;
 
 /** The reward screen's chest — "REWARD_Chest" in `hex.riv`, played by

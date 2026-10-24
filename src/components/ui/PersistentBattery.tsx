@@ -2,7 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { chargeBatteryScreen, useBattery } from "@/components/home/batteryStore";
-import { flashBattery, getBatteryHost, writeBattery } from "@/lib/rive/batteryHost";
+import { useTheme } from "@/context/ThemeContext";
+import { flashBattery, getBatteryHost, writeBattery, writeBatteryTheme } from "@/lib/rive/batteryHost";
 import { BATTERY } from "@/lib/rive/runtime";
 
 type PersistentBatteryProps = {
@@ -24,6 +25,8 @@ export function PersistentBattery({ step, className = "", level: shownLevel }: P
   const battery = useBattery();
   const level = shownLevel ?? battery.level;
   const { unlimited } = battery;
+  const { theme } = useTheme();
+  const darkTheme = theme === "dark";
 
   useLayoutEffect(() => {
     const element = slot.current;
@@ -39,6 +42,10 @@ export function PersistentBattery({ step, className = "", level: shownLevel }: P
   useEffect(() => {
     writeBattery({ level, unlimited });
   }, [level, unlimited]);
+
+  useEffect(() => {
+    writeBatteryTheme(darkTheme);
+  }, [darkTheme]);
 
   useEffect(() => {
     if (step !== undefined && chargeBatteryScreen(step)) flashBattery();
