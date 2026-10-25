@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { ArrowDown, ArrowUp, CornerUpLeft, CornerUpRight } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { LevelConfig, CommandType } from "../../../utils/types";
@@ -25,6 +26,9 @@ const TILE_ORDER: readonly { type: CommandType; Icon: LucideIcon }[] = [
   { type: "right", Icon: CornerUpRight },
 ];
 
+/** Low damping: the tile overshoots a little on release. */
+const PRESS_SPRING = { type: "spring", stiffness: 500, damping: 14 } as const;
+
 export function CommandPalette({ level, isPlaying, success, addCommand, borderless, selected }: CommandPaletteProps) {
   if (borderless) {
     return (
@@ -33,15 +37,20 @@ export function CommandPalette({ level, isPlaying, success, addCommand, borderle
           // The last move added keeps the highlighted look.
           const chosen = type === selected;
           return (
-            <button
+            <motion.button
               key={type}
               type="button"
               onClick={() => addCommand(type)}
               disabled={isPlaying || success !== null}
-              className={`flex h-[104px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border p-3 transition-all active:scale-95 disabled:cursor-default ${
+              // A normal border, and under it a solid shadow edge. Pressed, the
+              // shadow goes and the tile sinks onto where it was; it
+              // springs back with a bounce.
+              whileTap={{ scale: 0.97, y: 4, boxShadow: "0 0px 0 0 rgba(0,0,0,0)" }}
+              transition={PRESS_SPRING}
+              className={`flex h-[104px] w-full cursor-pointer flex-col items-center justify-center gap-1.5 rounded-lg border p-3 transition-[background-color,border-color,opacity] disabled:cursor-default ${
                 chosen
-                  ? "border-[#444444] border-b-2 bg-[linear-gradient(112.32deg,#49C1AE_10.64%,#02B1AA_82.74%)]"
-                  : "border-[#CEE8DF] border-b-[6px] bg-white disabled:opacity-60 dark:border-[#1F4A44] dark:bg-[#15181E]"
+                  ? "border-[#444444] shadow-[0_4px_0_#444444] bg-[linear-gradient(112.32deg,#49C1AE_10.64%,#02B1AA_82.74%)]"
+                  : "border-[#CEE8DF] bg-white shadow-[0_4px_0_#A9CDC1] disabled:opacity-60 dark:border-[#1F4A44] dark:bg-[#15181E] dark:shadow-[0_4px_0_#143733]"
               }`}
             >
               <span
@@ -58,7 +67,7 @@ export function CommandPalette({ level, isPlaying, success, addCommand, borderle
               >
                 {COMMAND_DETAILS[type].label}
               </span>
-            </button>
+            </motion.button>
           );
         })}
       </div>

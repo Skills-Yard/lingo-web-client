@@ -2,6 +2,7 @@ import React from "react";
 import { Position, Direction } from "../../../utils/types";
 import { lesson1Level } from "../../../utils/data/levels";
 import { RobuAnchor } from "../RobuAnchor";
+import { NUDGE_DOWN, NUDGE_RIGHT, SIZE } from "@/components/level-one/HexStage";
 
 // Ported from lingo-website-client/src/components/programming-basic/level1.tsx
 
@@ -186,11 +187,18 @@ export const Level1Platform: React.FC<Level1PlatformProps> = ({
                 transform: dims.playerTransform,
               }}
             >
-              {/* Direction indicator (only for main levels) */}
+              {/* Direction indicator (only for main levels): the glow under Hex's
+                  feet. Hex is drawn by HexStage at the anchor below (255% of this
+                  box, shifted 6px left and 24px down), scaled to SIZE and nudged
+                  by NUDGE_*; the same numbers place this at the centre of his
+                  feet, so it stays under him (percentages here are of this box:
+                  its width is 1, its height 2.55). */}
               <div
-                className="absolute bottom-0 left-1/2 w-12 h-12 rounded-full border border-white/50 bg-[#0bc98077]  flex items-center justify-center  transition-transform drop-shadow-[0_5px_6px_rgb(251,191,36)] duration-300 z-0"
+                className="absolute w-12 h-12 rounded-full border border-white/50 bg-[#0bc98077]  flex items-center justify-center  transition-transform drop-shadow-[0_5px_6px_rgb(251,191,36)] duration-300 z-0"
                 style={{
-                  transform: `translate(-50%, 50%) scaleY(0.5) rotate(${
+                  left: `calc(50% - 6px + ${(2.55 * NUDGE_RIGHT * 100).toFixed(1)}%)`,
+                  top: `calc(24px + ${((0.5 + SIZE / 2 + NUDGE_DOWN) * 100).toFixed(1)}%)`,
+                  transform: `translate(-50%, -50%) scaleY(0.5) rotate(${
                     playerDir === "up"
                       ? -90
                       : playerDir === "right"

@@ -8,16 +8,22 @@ type Rect = { x: number; y: number; width: number; height: number };
 
 /** Hex is drawn at this fraction of his anchor box, centred, then nudged
  * down by `NUDGE_DOWN` of the box's height. */
-const SIZE = 0.7;
-const NUDGE_DOWN = -0.04;
+export const SIZE = 0.7;
+export const NUDGE_DOWN = 0.07;
 /** And to the right by this fraction of the box's width. */
-const NUDGE_RIGHT = 0.06;
+export const NUDGE_RIGHT = 0.06;
 
 /** Hex's glide between tiles — shorter than a run's step, so he arrives before the next one. */
-const WALK_TRANSITION = { duration: 0.35, ease: [0.22, 1, 0.36, 1] as const };
+// Springs, not tweens: the target is re-measured every frame (the board floats
+// and slides), and a tween restarts from its slow start each time the target
+// moves, so one axis would lag the other and he'd travel in an L. A spring
+// keeps its velocity through a moving target, so x and y arrive together.
+const WALK_TRANSITION = { type: "spring", stiffness: 320, damping: 30, restDelta: 0.1, restSpeed: 0.1 } as const;
 
 /** Hex's slow, soft trip from one spot to another (header -> platform). */
-const PLACE_TRANSITION = { duration: 1.4, ease: [0.45, 0, 0.2, 1] as const };
+const PLACE_TRANSITION = { type: "spring", stiffness: 42, damping: 12.5, restDelta: 0.1, restSpeed: 0.1 } as const;
+/** How long a placing trip is given before he is back to walking. */
+const PLACE_MS = 1500;
 
 /**
  * The one Hex for a screen that has a game board: it measures whichever
@@ -45,7 +51,7 @@ export function HexStage({
       return;
     }
     setPlacing(true);
-    const timer = window.setTimeout(() => setPlacing(false), PLACE_TRANSITION.duration * 1000 + 100);
+    const timer = window.setTimeout(() => setPlacing(false), PLACE_MS);
     return () => window.clearTimeout(timer);
   }, [anchorEl]);
 

@@ -122,14 +122,14 @@ const FEEDBACK = {
   correct: {
     title: "Correct! +10 XP",
     titleColor: "text-[#01A17F]",
-    text: `w-[156px] ${poppins.className} leading-[1.4]`,
+    text: `${poppins.className} leading-[1.4]`,
     panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
     bold: "[&_b]:text-[#04ACAB]",
   },
   wrong: {
     title: "Not quite",
     titleColor: "text-[#D42421]",
-    text: `w-[149px] ${nunito.className} leading-5`,
+    text: `${nunito.className} leading-5`,
     panel: "border-[#F2A9AB] bg-[#FDEAEA] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
     bold: "[&_b]:text-[#E5484D]",
   },
@@ -201,10 +201,10 @@ export function FeedbackPanel({
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
       // 5xl on screen, like the header; the stage is scaled, so divide.
       style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}
-      className={`absolute inset-x-0 bottom-0 z-0 mx-auto rounded-t-[28px] border-[1.5px] border-b-0 px-4 pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
+      className={`absolute inset-x-0 bottom-0 z-0 mx-auto rounded-t-[28px] border-[1.5px] border-b-0 px-[25px] pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
     >
-      <div className="mx-auto flex w-full items-center justify-center gap-6">
-        <div className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex w-full items-center justify-between">
+        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <h2 className={`${fredoka.className} text-[21px] leading-7 font-semibold tracking-[-0.1px] ${look.titleColor}`}>{look.title}</h2>
           <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.text} ${look.bold}`}>
             {children}

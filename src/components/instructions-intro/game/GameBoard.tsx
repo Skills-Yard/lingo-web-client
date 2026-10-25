@@ -60,13 +60,16 @@ export function GameBoard({
       }`}
     >
       <div className="absolute top-3 left-3 right-3 flex justify-between items-center z-10 pointer-events-none">
-        <span
-          className={`pointer-events-auto text-white font-black text-[10px] px-3 py-1 rounded-full shadow-xs ${
-            level.isDemo ? "bg-amber-500" : "bg-emerald-600 dark:bg-emerald-500"
-          }`}
-        >
-          Steps left: {stepsLeft}
-        </span>
+        {/* Level 1 shows the count in the moves bar instead. */}
+        {!borderless && (
+          <span
+            className={`pointer-events-auto text-white font-black text-[10px] px-3 py-1 rounded-full shadow-xs ${
+              level.isDemo ? "bg-amber-500" : "bg-emerald-600 dark:bg-emerald-500"
+            }`}
+          >
+            Steps left: {stepsLeft}
+          </span>
+        )}
         {/* Level 1 has no hint or sound button up here: its hint sits beside Continue. */}
         {!borderless && (
           <div className="pointer-events-auto flex gap-1.5">

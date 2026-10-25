@@ -50,6 +50,8 @@ interface LevelOneShellProps {
   /** A soft blue wash fading down from the top, behind everything. "dark":
    * only in dark mode (light mode stays plain). */
   wash?: boolean | "dark";
+  /** A picture covering the whole screen, behind everything (light mode only). */
+  backdrop?: string;
   /** Rendered over everything (popups). */
   overlay?: ReactNode;
   /** Shrinks the whole frame a little further if the content is taller than
@@ -65,7 +67,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint }: LevelOneShellProps) {
+export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
@@ -135,6 +137,17 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
       ref={mainRef}
       className="onboarding-light relative h-dvh w-full overflow-hidden bg-white pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] dark:bg-background"
     >
+      {backdrop && (
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 bg-cover bg-center dark:hidden"
+          style={{ backgroundImage: `url(${backdrop})` }}
+        />
+      )}
+      {/* The white lower area carries on under the home indicator, outside the stage. */}
+      {backdrop && (
+        <div aria-hidden className="pointer-events-none absolute inset-x-0 bottom-0 h-[env(safe-area-inset-bottom)] bg-white dark:bg-background" />
+      )}
       {/* Pinned to the screen's own top and full width (not the stage's), so it
         reaches the very top edge, behind the status bar too. */}
       {wash && (
@@ -184,7 +197,12 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
         {/* The same at the bottom (under the Continue button, which sits above
           it): Hex's canvas is bigger than he is, and where it reaches past the
           content it would otherwise make the screen scroll. */}
-        <div ref={scrollerRef} className="scrollbar-none -mt-20 -mb-8 min-h-0 flex-1 overflow-x-hidden overflow-y-auto pt-20 pb-8">
+        {/* With `fit` the stage scales until nothing overflows, so what is left (a
+          pixel or two of rounding, a button's press travel) must not turn into a scroll. */}
+        <div
+          ref={scrollerRef}
+          className={`scrollbar-none -mt-20 -mb-8 min-h-0 flex-1 overflow-x-hidden pt-20 pb-8 ${fit ? "overflow-y-hidden" : "overflow-y-auto"}`}
+        >
           {/* Phone width at most: on a desktop the content keeps its proportions
             and sits in the middle instead of stretching across the screen. */}
           <div
@@ -198,14 +216,18 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
 
       {/* Never wider than the 390px frame, so on a desktop the button keeps its
         phone size and sits in the middle instead of stretching across. */}
-      <ActionRow
-        maxWidth={FRAME_W + 60}
-        hint={hint}
-        answer={answer}
-        ctaLabel={ctaLabel}
-        ctaDisabled={ctaDisabled}
-        onContinue={onContinue}
-      />
+      {/* With a backdrop the whole lower area stays white: the row gets a
+        full-width white base, down to the stage's bottom. */}
+      <div className={backdrop ? "relative z-10 w-full shrink-0 bg-white dark:bg-background" : "contents"}>
+        <ActionRow
+          maxWidth={FRAME_W + 60}
+          hint={hint}
+          answer={answer}
+          ctaLabel={ctaLabel}
+          ctaDisabled={ctaDisabled}
+          onContinue={onContinue}
+        />
+      </div>
 
       {overlay}
       </div>
