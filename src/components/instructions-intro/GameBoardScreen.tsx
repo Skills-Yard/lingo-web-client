@@ -237,12 +237,13 @@ export function GameBoardScreen({
           bubble/description expand to the full row on their own — nothing
           else here needs to change to make room. ── */}
       {borderless && (
-        <div className="relative top-3 flex h-[74px] items-start pl-1">
+        <div className="relative top-3 left-1/2 flex h-[74px] w-[calc(var(--stage-w)-50px)] shrink-0 -translate-x-1/2 items-start">
           {/* The heading sits over Hex's box (it's above him). */}
-          <h1 className="relative z-30 mt-[5px] w-[72%] min-w-0 text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
+          <h1 className="relative z-30 mt-[5px] w-[72%] min-w-0 text-[28px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
             {HEADING_WORDS.map((word, w) => (
               <span key={w}>
-                {w > 0 && " "}
+                {/* "command" always starts the second line. */}
+                {word[0].accent && !HEADING_WORDS[w - 1]?.[0].accent ? <br /> : w > 0 && " "}
                 <span className="inline-block whitespace-nowrap">
                   {word.map(({ char, accent, index }) => (
                     // Typed in one letter at a time; hidden letters keep their
@@ -322,6 +323,12 @@ export function GameBoardScreen({
             inert={locked}
             className={`transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
           >
+          {/* Level 1: the platform, with everything on it (Hex follows, he is
+            measured every frame), drifts up and down a few px (9). */}
+          <motion.div
+            animate={borderless && !reducedMotion ? { y: [0, -9, 0] } : undefined}
+            transition={{ duration: 3.6, ease: "easeInOut", repeat: Infinity }}
+          >
           <GameBoard
             level={LEVEL}
             commands={commands}
@@ -338,18 +345,23 @@ export function GameBoardScreen({
             robuJoinedGame={robuJoinedGame}
             borderless={borderless}
           />
+          </motion.div>
           </div>
         </div>
 
         {/* ── Right column — program slots, actions and run controls ── */}
         <div
           inert={locked}
-          className={`flex flex-col ${borderless ? "relative left-1/2 z-[4] mt-auto w-(--stage-w) max-w-none -translate-x-1/2 items-center rounded-t-[38px] bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+          className={`flex flex-col ${borderless ? "relative top-3 left-1/2 z-[4] mt-auto w-(--stage-w) max-w-none -translate-x-1/2 items-center rounded-t-[38px] pt-1 bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
         >
           {borderless && (
-            <div className="flex h-11 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-[#F7F2FF] px-3 dark:bg-white/6">
+            <div className="flex h-11 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-white px-3 dark:bg-white/6">
               <Move className="h-[22px] w-[22px] text-[#B286FD]" strokeWidth={2} />
-              <span className="text-[12px] leading-[18px] font-medium text-[#2C2C2C] dark:text-white">
+              {/* The stage is scaled to fit the device; dividing by that scale draws a true 12px on screen. */}
+              <span
+                className="font-medium text-[#2C2C2C] dark:text-white"
+                style={{ fontSize: "calc(12px / var(--stage-scale, 1))", lineHeight: "calc(18px / var(--stage-scale, 1))" }}
+              >
                 Tap any option to preview Hex’s movement.
               </span>
             </div>

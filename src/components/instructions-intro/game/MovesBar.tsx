@@ -43,7 +43,7 @@ export function MovesBar({
   const stepsLeft = commands.filter((c) => c === null).length;
 
   return (
-    <div className="mb-4 flex h-14 w-full items-center gap-2 bg-[#F4F6F8]/20 px-[25px] shadow-[inset_0_1px_13.1px_rgba(0,0,0,0.25)] select-none dark:bg-white/8">
+    <div className="mb-4 flex h-14 w-[calc(100%-50px)] items-center gap-2 overflow-hidden rounded-[16px] bg-[#F4F6F8]/20 pl-3 shadow-[inset_0_1px_13.1px_rgba(0,0,0,0.25)] select-none dark:bg-white/8">
       <span className="font-[Inter,sans-serif] text-[16px] leading-6 font-bold text-[#666666] dark:text-white/60">MOVES</span>
 
       <div className="flex items-center gap-1.5">
@@ -81,8 +81,8 @@ export function MovesBar({
         })}
       </div>
 
-      <div className="ml-auto flex items-center gap-2">
-        <span className="font-[Inter,sans-serif] text-[12px] leading-4 font-bold whitespace-nowrap text-[#666666] dark:text-white/60">
+      <div className="ml-auto flex h-full items-center gap-3">
+        <span className="font-[Inter,sans-serif] text-[16px] leading-6 font-bold whitespace-nowrap text-[#666666] dark:text-white/60">
           Steps left: {stepsLeft}
         </span>
         <motion.button
@@ -94,7 +94,7 @@ export function MovesBar({
             triggerSound("tap");
             resetLevel();
           }}
-          className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-white text-slate-600 shadow-xs dark:bg-white/10 dark:text-slate-200"
+          className="flex h-full w-14 cursor-pointer items-center justify-center rounded-none bg-[#444444] text-white"
         >
           <RotateCcw className="h-5 w-5" />
         </motion.button>

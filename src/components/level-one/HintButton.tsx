@@ -3,9 +3,10 @@
 import { motion } from "framer-motion";
 import { Lightbulb } from "lucide-react";
 
-const SIZE = 68;
-/** Includes the room the button beside it grows into when it is scaled up. */
-const GAP = 84;
+export const HINT_SIZE = 80;
+const SIZE = HINT_SIZE;
+/** Space is left to the row (`justify-between`), so the slot adds none of its own. */
+const GAP = 0;
 const SLIDE = { type: "spring", stiffness: 220, damping: 26 } as const;
 
 /**
@@ -34,10 +35,10 @@ export function HintButton({ visible, onPress, count }: { visible: boolean; onPr
         className="relative flex cursor-pointer items-center justify-center border-[#DFE3E8] bg-white shadow-[0_4px_0_#BFC6CF] outline-none focus-visible:ring-2 focus-visible:ring-[#FF8D42] dark:border-[#0B0D11] dark:bg-[#22262E] dark:shadow-[0_4px_0_#05070A]"
         style={{ width: SIZE, height: SIZE, borderWidth: "1.5px", borderStyle: "solid", borderRadius: 18 }}
       >
-        <Lightbulb className="h-8 w-8 text-[#FF8D42]" strokeWidth={1.98} />
+        <Lightbulb className="h-9 w-9 text-[#FF8D42]" strokeWidth={1.98} />
         <span
           aria-hidden
-          className="absolute -top-[7px] left-[52px] flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-white bg-[#FF8D42] text-[11px] leading-[14px] font-bold tracking-[0.2px] text-white dark:border-[#0F1F26]"
+          className="absolute -top-[7px] left-[64px] flex h-[22px] w-[22px] items-center justify-center rounded-full border-2 border-white bg-[#FF8D42] text-[11px] leading-[14px] font-bold tracking-[0.2px] text-white dark:border-[#0F1F26]"
         >
           {count}
         </span>

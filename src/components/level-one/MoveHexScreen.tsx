@@ -57,6 +57,7 @@ export function MoveHexScreen() {
       step={8}
       flush
       fit
+      backdrop="/images/level-one/game-bg.png"
       // The main button plays the moves Hex was given; once a run has ended it
       // becomes Continue.
       ctaLabel={finished ? "Continue" : "Play"}
