@@ -15,6 +15,7 @@ export const STORIES: readonly StoryRing[] = [
  * are icons. */
 export type PostMedia =
   | { kind: "video"; tint: string }
+  | { kind: "image"; src: string }
   | { kind: "icon"; Icon: LucideIcon; tint: string; color: string };
 
 export type Post = {
@@ -47,8 +48,8 @@ export const FEED: readonly FeedItem[] = [
     id: "netflix-reel",
     author: "Data Scientist · official",
     avatar: "#01A17F",
-    media: { kind: "video", tint: VIDEO_TINT },
-    caption: "Reel · How Netflix uses Python to recommend shows (60 s)",
+    media: { kind: "image", src: "/images/netflix.png" },
+    caption: "How Netflix uses Python to recommend shows",
     likes: "1.2k",
     comments: 84,
   },

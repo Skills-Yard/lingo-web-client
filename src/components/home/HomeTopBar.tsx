@@ -34,25 +34,21 @@ function StatCard({
   className?: string;
 }) {
   return (
-    <div className={`flex h-12 min-w-0 items-center gap-2 rounded-[12px] border border-black/8 bg-white px-3 dark:border-white/12 dark:bg-[#1A1C22] ${className}`}>
-      <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[8px] dark:bg-(--dark-tint)!"
-        style={{ backgroundColor: tint, "--dark-tint": darkTint } as React.CSSProperties}
-      >
-        {art ?? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={icon} alt="" draggable={false} className="h-[18px] w-[18px] select-none object-contain" />
-        )}
-      </span>
-      <span className="flex min-w-0 flex-col">
-        <span
-          className="truncate text-[15px] font-semibold leading-[19px] dark:text-(--dark-color)!"
-          style={{ color, "--dark-color": darkColor } as React.CSSProperties}
-        >
-          {value}
+    // The card is a size container, so the icon and text shrink with its width
+    // (cqw) instead of spilling out of it on a narrow screen.
+    <div className={`@container h-14 min-w-0 overflow-hidden rounded-[12px] border border-black/10 bg-white dark:border-white/12 dark:bg-[#1A1C22] ${className}`}>
+      <div className="flex h-full items-center justify-center gap-[4cqw] px-[5cqw]">
+        <span className="flex shrink-0 items-center justify-center">
+          {art ?? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={icon} alt="" draggable={false} className="h-auto w-[clamp(18px,22cqw,32px)] select-none object-contain" />
+          )}
         </span>
-        <span className="truncate text-[10px] leading-[13px] text-[#818185] dark:text-[#9FA19F]">{label}</span>
-      </span>
+        <span className="flex flex-col whitespace-nowrap">
+          <span className="text-[clamp(12px,13.5cqw,16px)] font-semibold leading-tight text-[#2C2C2C] dark:text-white">{value}</span>
+          <span className="text-[clamp(9px,9.5cqw,11px)] leading-tight text-[#818185] dark:text-[#9FA19F]">{label}</span>
+        </span>
+      </div>
     </div>
   );
 }
@@ -64,7 +60,7 @@ function BatteryStatCard() {
   return (
     <BatteryMenu className="relative min-w-0" buttonClassName="block w-full text-left">
       <StatCard
-        art={<PersistentBattery className="w-6" />}
+        art={<PersistentBattery className="w-[clamp(24px,28cqw,36px)]" />}
         tint="#E9F5F0"
         darkTint="#133A35"
         value={batteryLabel(battery)}
@@ -82,8 +78,8 @@ export function HomeStats() {
   return (
     // A grid, so the three columns stay equal whatever wraps the cards.
     <div className="grid grid-cols-3 gap-2 font-[family-name:var(--font-app-poppins)]">
-      <StatCard icon="/images/stats/flame.png" tint="#FFF3DE" darkTint="#3A2A1A" value={String(LEARNER_STATS.streak)} label="day streak" color="#FF8D42" darkColor="#FF8D42" />
-      <StatCard icon="/images/stats/gem.png" tint="#E5EFFD" darkTint="#1B2B40" value={String(LEARNER_STATS.gems)} label="gems" color="#2F80ED" darkColor="#5AA2FF" />
+      <StatCard icon="/images/streak.png" tint="#FFF3DE" darkTint="#3A2A1A" value={String(LEARNER_STATS.streak)} label="day streak" color="#FF8D42" darkColor="#FF8D42" />
+      <StatCard icon="/images/gem.png" tint="#E5EFFD" darkTint="#1B2B40" value={String(LEARNER_STATS.gems)} label="gems" color="#2F80ED" darkColor="#5AA2FF" />
       <BatteryStatCard />
     </div>
   );
