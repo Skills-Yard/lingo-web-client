@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["172.30.144.1", "192.168.1.110"],
+  allowedDevOrigins: ["172.30.144.1", "192.168.1.104"],
   async headers() {
     // Static media is large and rarely changes: let the browser/CDN keep it
     // (revalidating in the background) instead of re-downloading each visit.
