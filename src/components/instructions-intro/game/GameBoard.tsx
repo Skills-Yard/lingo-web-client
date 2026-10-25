@@ -116,6 +116,7 @@ export function GameBoard({
             collectedStar={collectedStar}
             registerAnchor={registerAnchor}
             robuJoinedGame={robuJoinedGame}
+            fullWidth={borderless}
           />
         )}
       </div>

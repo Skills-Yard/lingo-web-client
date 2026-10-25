@@ -142,7 +142,7 @@ export function QuestionScreen(props: QuestionScreenProps) {
         // (cropped from the top, Hex stays) by exactly what they are short.
         <div
           aria-hidden
-          className="relative -mx-4 mt-1 shrink-0 overflow-hidden border-t-3 border-black"
+          className="relative -mx-4 mt-1 shrink-0 overflow-hidden border-t-3 border-black dark:border-white"
           style={{ height: SCENE_HEIGHT }}
         >
           <div className="absolute inset-0">

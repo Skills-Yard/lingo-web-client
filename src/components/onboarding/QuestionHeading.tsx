@@ -178,8 +178,12 @@ export function QuestionHeading({
         >
           <div
             className={`absolute left-0 ${
-              big ? (hex ? "-top-3 h-[9rem] w-[9rem]" : "-top-8 h-[10.5rem] w-[10.5rem]") : "top-0 h-[6rem] w-[6rem]"
-            } sm:top-0 sm:h-[7rem] sm:w-[7rem]`}
+              big
+                ? hex
+                  ? "-top-[0.6rem] h-[7.65rem] w-[7.65rem]"
+                  : "-top-[1.3rem] h-[8.9rem] w-[8.9rem]"
+                : "top-0 h-[6rem] w-[6rem]"
+            } sm:top-2 sm:h-[6rem] sm:w-[6rem]`}
           >
             {hex ??
               (foxMode === "onboarding" ? (

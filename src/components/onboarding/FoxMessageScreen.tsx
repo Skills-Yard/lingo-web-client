@@ -34,11 +34,12 @@ const FOX_VISUAL_SCALE = 1.25;
  * `BG_Grid` artboard: the artboard covers the screen, 0.567 wide for every
  * 1 high, and the floor starts FLOOR_BELOW_CENTER of its height below its
  * middle. Hex's artboard (empty margin below the body included) ends exactly
- * there: its bottom edge is attached to the floor's top edge. */
-const BACKGROUND_ASPECT = 0.567;
+ * there: its bottom edge is attached to the floor's top edge.
+ * Only the screen's height counts: on a wide screen the grid is stretched
+ * (cover) and its floor runs far down, but Hex does not follow it — he stays
+ * where he stands from the centre of the screen. */
 const FLOOR_BELOW_CENTER = 0.1665;
-const floorTop = (screenWidth: number, screenHeight: number) =>
-  screenHeight / 2 + FLOOR_BELOW_CENTER * Math.max(screenHeight, screenWidth / BACKGROUND_ASPECT);
+const floorTop = (screenHeight: number) => screenHeight / 2 + FLOOR_BELOW_CENTER * screenHeight;
 /** The text below Hex ends this far (px) above the bottom of the screen — at
  * most; short screens use BELOW_TEXT_BOTTOM_MAX_VH of their height instead. */
 const BELOW_TEXT_BOTTOM_PX = 200;
@@ -312,7 +313,7 @@ export function FoxMessageScreen({
       // just enough to keep it in.
       const top = aboveEl
         ? Math.max(
-            floorTop(window.innerWidth, window.innerHeight) -
+            floorTop(window.innerHeight) -
               stage.getBoundingClientRect().top -
               size * FOX_VISUAL_SCALE,
             aboveEl.offsetHeight + BUBBLE_MIN_TOP_PX - overlap,

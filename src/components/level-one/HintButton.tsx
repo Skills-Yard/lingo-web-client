@@ -4,7 +4,8 @@ import { motion } from "framer-motion";
 import { Lightbulb } from "lucide-react";
 
 const SIZE = 58;
-const GAP = 10;
+/** Includes the room the button beside it grows into when it is scaled up. */
+const GAP = 36;
 const SLIDE = { type: "spring", stiffness: 220, damping: 26 } as const;
 
 /**

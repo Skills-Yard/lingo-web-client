@@ -8,7 +8,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
-import { vibrateForAnswer } from "@/lib/haptics";
+import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
@@ -51,8 +51,10 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   // Once the hinted card has finished flipping, Hex floats over to it.
   const [flipped, setFlipped] = useState(false);
   const [hintSlot, setHintSlot] = useState<HTMLDivElement | null>(null);
-  // Hex sits in the question's slot and leaves as soon as an option is picked;
-  // on Check the result panel brings its own Hex, entering inside it.
+  // Hex sits in the question's slot and stays through the pick; on Check the
+  // slot closes: he stays put and the options slide up over him (they are
+  // drawn above him), while the result panel brings its own Hex, entering
+  // inside it.
   const glideRef = useRef<HTMLDivElement>(null);
   const [questionSlot, setQuestionSlot] = useState<HTMLDivElement | null>(null);
 
@@ -60,10 +62,10 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
     <LevelOneShell
       step={7}
       wash
+      fit
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
-      hint={{ visible: !checked, onUse: () => setHinted(true) }}
       onBack={() => router.push(levelOneHref(6))}
       onContinue={() => {
         if (!checked) {
@@ -84,7 +86,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
             {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
             {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>
           </FeedbackPanel>
-          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} leaving={selectedId !== null} fromScale={HEX_SCALE}
+          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} rising={checked} fromScale={HEX_SCALE}
             containerRef={glideRef} />
         </div>
       }
@@ -108,21 +110,34 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       </motion.div>
 
       {/* Hex's spot: the Hex itself is drawn by the overlay's HexGlide, which
-        sends him off when an option is picked; on Check the slot closes and
-        the options slide up into its space. */}
+        keeps him in place when the slot closes on Check, as the options
+        slide up over him. */}
       <motion.div
         ref={setQuestionSlot}
         aria-hidden
         className="pointer-events-none w-[180px] shrink-0"
         initial={false}
         animate={checked ? { height: 0, marginTop: 0 } : { height: 150, marginTop: 8 }}
-        transition={{ type: "spring", stiffness: 70, damping: 18 }}
+        // The very spring the result panel slides up with (see FeedbackPanel), so
+        // the options rise exactly as the panel arrives — it looks like the
+        // panel pushing them up.
+        transition={{ type: "spring", stiffness: 360, damping: 32 }}
       />
 
-      <div className="relative mt-5 w-full shrink-0">
+      <div className="relative z-10 mt-5 w-full shrink-0 bg-white dark:bg-background">
         <div className="relative flex flex-col gap-[23px]">
           {OPTIONS.map((option, i) => {
             const state = optionState(option.id, selectedId, checked, CORRECT_ID);
+            const base = optionDropIn(state === "selected");
+            const dropIn = {
+              ...base,
+              animate: {
+                ...base.animate,
+                scale: state === "selected" ? [1, 0.93, 1.07, 0.99, 1] : 1,
+                rotateX: state === "selected" ? [0, 14, -8, 3, 0] : 0,
+              },
+              transition: { ...base.transition, scale: { duration: 0.55, ease: "easeOut" as const }, rotateX: { duration: 0.55, ease: "easeOut" as const } },
+            };
             return (
               <HintFloat key={option.id} className="relative w-full" spin={false} active={hinted && selectedId === null && option.id === CORRECT_ID} onFlipEnd={() => setFlipped(true)}>
               {/* Where Hex lands: small, standing on the card's top edge. */}
@@ -130,15 +145,20 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                 <div ref={setHintSlot} aria-hidden className="pointer-events-none absolute -top-[58px] right-3 h-[72px] w-[72px]" />
               )}
               <motion.button
-                {...optionDropIn(state === "selected")}
+                {...dropIn}
+                // Pressed, the card sinks onto its 4px edge (see `active:border-b-0`);
+                // once picked it bounces and tips forward in 3D.
+                whileTap={{ scale: 0.97, y: 4 }}
+                style={{ transformPerspective: 600 }}
                 type="button"
                 disabled={checked}
                 onClick={() => {
                   playClickSound();
+                  vibrateForTap();
                   setSelectedId(option.id);
                 }}
                 aria-pressed={state === "selected"}
-                className={`relative isolate flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] transition-[color,background-color,border-color,box-shadow] dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
+                className={`relative isolate flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] shadow-[0_3px_0_rgba(0,0,0,0.06)] active:border-b-0 active:shadow-none transition-[color,background-color,border-color,box-shadow] dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
               >
                 {/* The hint's orange fill, wiped in from the left behind the content. */}
                 <motion.span
