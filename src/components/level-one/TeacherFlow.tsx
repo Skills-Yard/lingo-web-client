@@ -83,6 +83,8 @@ export const LOOKS: Record<OptionState, { edge: string; card: string; radio: str
   },
 };
 
+/** The result panel's own spring (see FeedbackPanel). */
+const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 const MORPH = { duration: 0.8, ease: [0.65, 0, 0.35, 1] } as const;
 /** Heading box heights: two lines on "Teacher Says", one on the quiz. */
 const TITLE_HEIGHT: Record<Step, number> = { says: 92, quiz: 36 };
@@ -134,7 +136,6 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
-      hint={{ visible: quiz && !checked, onUse: () => setHinted(true) }}
       onBack={() => {
         if (!quiz) return router.push(levelOneHref(2));
         show("says");
@@ -212,7 +213,9 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       <motion.div
         initial={false}
         animate={{ marginTop: IMAGE_GAP[step], height: checked ? CHECKED_IMAGE_HEIGHT : IMAGE_HEIGHT[step] }}
-        transition={MORPH}
+        // On Check the picture closes on the very spring the result panel slides
+        // up with, so the options rise as the panel arrives, as if it pushed them.
+        transition={checked ? PANEL_SPRING : MORPH}
         className="relative w-full shrink-0"
       >
         <div className="absolute inset-0 overflow-hidden rounded-lg">
@@ -224,7 +227,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             className="h-[358px] w-full rounded-lg object-cover object-top"
           />
         </div>
-        <AnimatePresence>{!checked && <TeacherSpeech key="speech" hexAway={selectedId !== null} hexToCard={hinted && flipped} skipIntro={openedOnQuiz || quiz} />}</AnimatePresence>
+        {/* Hex stays through the pick and the check; the options slide up over him. */}
+        <TeacherSpeech key="speech" tucked={checked} hexToCard={hinted && flipped} skipIntro={openedOnQuiz || quiz} />
       </motion.div>
 
       <AnimatePresence>
@@ -240,7 +244,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             }}
             // 48px below the cropped picture; 80 once "+10 XP" floats above a card.
             style={{ marginTop: checked && selectedId === CORRECT_ID ? 80 : 48 }}
-            className="flex w-full shrink-0 items-start gap-[19px] transition-[margin-top] duration-300"
+            className="relative z-10 flex w-full shrink-0 items-start gap-[19px] bg-white transition-[margin-top] duration-300 dark:bg-background"
           >
             {OPTIONS.map((option) => {
               const state = optionState(option.id, selectedId, checked);

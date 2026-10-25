@@ -21,6 +21,8 @@ interface Level1PlatformProps {
    * pulled off the header (and doesn't briefly render at the tile's
    * un-joined size) before that arrival beat has actually played out. */
   robuJoinedGame: boolean;
+  /** Level 1: the platform nearly spans the screen, 45px short of each edge. */
+  fullWidth?: boolean;
 }
 
 const TILE_COORDS: Record<
@@ -46,6 +48,7 @@ export const Level1Platform: React.FC<Level1PlatformProps> = ({
   collectedStar: _collectedStar,
   registerAnchor,
   robuJoinedGame,
+  fullWidth = false,
 }) => {
   const dims = lesson1Level.dimensions;
 
@@ -66,7 +69,9 @@ export const Level1Platform: React.FC<Level1PlatformProps> = ({
       <div
         className="relative select-none animate-fade-in w-full"
         style={{
-          maxWidth: dims.platformWidth,
+          maxWidth: fullWidth
+            ? "min(calc(var(--stage-w) - 90px), calc(var(--stage-h) * 0.4))"
+            : dims.platformWidth,
           aspectRatio: `${parseFloat(dims.platformWidth)} / ${parseFloat(dims.platformHeight)}`,
         }}
       >

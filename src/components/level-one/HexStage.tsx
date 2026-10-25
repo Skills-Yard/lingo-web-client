@@ -121,6 +121,7 @@ export function HexGlide({
   enter,
   entryStyle,
   leaving = false,
+  rising = false,
   fromScale = 1,
   containerRef,
 }: {
@@ -138,10 +139,15 @@ export function HexGlide({
   entryStyle?: number;
   /** Hex leaves the screen (and stays gone). */
   leaving?: boolean;
+  /** Hex stays where he is while `fromEl` closes: whatever slides up over
+   * that spot (the options) covers him, as it is drawn above him. */
+  rising?: boolean;
   containerRef: RefObject<HTMLDivElement | null>;
 }) {
   const [rect, setRect] = useState<Rect | null>(null);
   const [arrived, setArrived] = useState(false);
+  // His size and left edge while his slot had room, kept for the ride up.
+  const frozen = useRef<{ x: number; y: number; width: number; height: number } | null>(null);
   const target = moved && toEl ? toEl : fromEl;
   const scale = target === fromEl ? fromScale : 1;
   // Once he has left and faded he is taken off the screen, so the canvas is
@@ -174,15 +180,26 @@ export function HexGlide({
     return () => cancelAnimationFrame(rafId);
   }, [target, containerRef]);
 
-  // A slot with no size (closed) has no room to draw him in.
-  if (!rect || gone || rect.width < 1 || rect.height < 1) return null;
+  if (rect && !rising && rect.width >= 1 && rect.height >= 1) {
+    frozen.current = { x: rect.x - (rect.width * (scale - 1)) / 2, y: rect.y - (rect.height * (scale - 1)) / 2, width: rect.width * scale, height: rect.height * scale };
+  }
+  const ride = rising ? frozen.current : null;
+
+  // A slot with no size (closed) has no room to draw him in — unless he is
+  // riding it up.
+  if (!rect || gone || (!ride && (rect.width < 1 || rect.height < 1))) return null;
 
   return (
     <motion.div
       aria-hidden
-      className="pointer-events-none absolute top-0 left-0 z-[100]"
+      // Once `rising`, he sits below the header and the options (z-10).
+      className={`pointer-events-none absolute top-0 left-0 ${ride ? "z-[5]" : "z-[100]"}`}
       initial={false}
-      animate={{ x: rect.x - (rect.width * (scale - 1)) / 2, y: rect.y - (rect.height * (scale - 1)) / 2, width: rect.width * scale, height: rect.height * scale, opacity: leaving ? 0 : 1 }}
+      animate={
+        ride
+          ? { x: ride.x, y: ride.y, width: ride.width, height: ride.height, opacity: 1 }
+          : { x: rect.x - (rect.width * (scale - 1)) / 2, y: rect.y - (rect.height * (scale - 1)) / 2, width: rect.width * scale, height: rect.height * scale, opacity: leaving ? 0 : 1 }
+      }
       transition={{ default: moved ? HINT_GLIDE_TRANSITION : GLIDE_TRANSITION, opacity: leaving ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0 } }}
       onAnimationComplete={() => setArrived(moved)}
     >

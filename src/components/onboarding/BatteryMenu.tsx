@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { Infinity as InfinityIcon, Maximize, Minimize, Moon, Sun } from "lucide-react";
+import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize, Moon, Sun } from "lucide-react";
 import { setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
@@ -12,7 +12,7 @@ import { energyHref } from "@/lib/routes";
 import { WIPE } from "./themeWipe";
 
 const BUTTON =
-  "mt-2 flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg bg-[#F7F8FA] px-3 text-[13px] font-medium text-[#2C2C2C] active:scale-[0.98] dark:bg-[#16262D] dark:text-white";
+  "mt-2 flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-lg bg-[#F7F8FA] px-3 text-[16px] font-medium text-[#2C2C2C] active:scale-[0.98] dark:bg-[#16262D] dark:text-white";
 
 /** How long the battery is held before the dev panel opens. */
 const HOLD_MS = 600;
@@ -25,6 +25,8 @@ type BatteryMenuProps = {
   className?: string;
   /** Styles the pressable around `children`. */
   buttonClassName?: string;
+  /** Adds a Back option to the panel. */
+  onBack?: () => void;
 };
 
 /**
@@ -32,7 +34,7 @@ type BatteryMenuProps = {
  * hold opens a hidden testing panel (theme, full screen, infinite battery);
  * nothing about it looks pressable (no pointer, hover or focus ring).
  */
-export function BatteryMenu({ children, className = "", buttonClassName = "" }: BatteryMenuProps) {
+export function BatteryMenu({ children, className = "", buttonClassName = "", onBack }: BatteryMenuProps) {
   const { theme, toggleTheme } = useTheme();
   const dark = theme === "dark";
   const fullscreen = useFullscreen();
@@ -95,23 +97,36 @@ export function BatteryMenu({ children, className = "", buttonClassName = "" }: 
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
             style={{ transformOrigin: "100% 0%" }}
-            className="absolute top-[calc(100%+6px)] right-0 z-30 w-[220px] rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
+            className="absolute top-[calc(100%+6px)] right-0 z-30 w-[270px] rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
           >
-            <p className="text-[11px] leading-[15px] text-[#818185] dark:text-[#9FA19F]">
+            <p className="text-[13px] leading-[18px] text-[#818185] dark:text-[#9FA19F]">
               For testing by devs only. Temporary.
             </p>
+            {onBack && (
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  onBack();
+                }}
+                className={BUTTON}
+              >
+                <ChevronLeft className="h-5 w-5" />
+                Back
+              </button>
+            )}
             <button type="button" onClick={() => toggleTheme(WIPE)} className={BUTTON}>
-              {dark ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4" />}
+              {dark ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5" />}
               {dark ? "Switch to light mode" : "Switch to dark mode"}
             </button>
             {fullscreen.available && (
               <button type="button" onClick={fullscreen.toggle} className={BUTTON}>
-                {fullscreen.active ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+                {fullscreen.active ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                 {fullscreen.active ? "Exit full screen" : "Full screen"}
               </button>
             )}
             <button type="button" onClick={() => setBatteryUnlimited(!unlimited)} className={BUTTON}>
-              <InfinityIcon className="h-4 w-4" />
+              <InfinityIcon className="h-5 w-5" />
               {unlimited ? "Back to normal battery" : "Infinite battery"}
             </button>
           </motion.div>

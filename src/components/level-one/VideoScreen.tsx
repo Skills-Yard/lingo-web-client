@@ -69,7 +69,7 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
         </div>
       </div>
 
-      <div className="mt-5 flex w-[340px] shrink-0 items-center gap-3 rounded-lg bg-[#B286FD]/11 px-2 py-[18px]">
+      <div className="mt-5 flex w-full shrink-0 items-center gap-3 rounded-lg bg-[#B286FD]/11 px-2 py-[18px]">
         <Sparkles className="h-[43px] w-[43px] shrink-0 text-[#8E82FF]" strokeWidth={1.5} />
         <span aria-hidden className="h-[55px] w-px shrink-0 bg-[#8E82FF]" />
         <div className="flex min-w-0 flex-col gap-1">

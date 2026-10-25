@@ -41,8 +41,8 @@ export function MovesBar({
   const canRun = !isPlaying && success === null && commands.some((c) => c !== null);
 
   return (
-    <div className="mx-auto mt-2 mb-3.5 flex h-11 w-full max-w-[358px] items-center gap-2 rounded bg-[#F4F6F8]/20 px-3 shadow-[inset_0_1px_13.1px_rgba(0,0,0,0.25)] select-none dark:bg-white/8">
-      <span className="font-[Inter,sans-serif] text-[14px] leading-5 font-bold text-[#666666] dark:text-white/60">MOVES</span>
+    <div className="mb-4 flex h-14 w-full items-center gap-2 bg-[#F4F6F8]/20 px-3 shadow-[inset_0_1px_13.1px_rgba(0,0,0,0.25)] select-none dark:bg-white/8">
+      <span className="font-[Inter,sans-serif] text-[16px] leading-6 font-bold text-[#666666] dark:text-white/60">MOVES</span>
 
       <div className="flex items-center gap-1.5">
         {commands.map((command, idx) => {
@@ -51,7 +51,7 @@ export function MovesBar({
             return (
               <span
                 key={idx}
-                className={`h-[27px] w-[27px] shrink-0 rounded-lg bg-slate-200/80 dark:bg-white/10 ${
+                className={`h-[33px] w-[33px] shrink-0 rounded-lg bg-slate-200/80 dark:bg-white/10 ${
                   idx === nextSlot
                     ? "animate-pulse bg-emerald-100 ring-2 ring-emerald-400 shadow-[0_0_10px_2px_rgba(16,185,129,0.55)] dark:bg-emerald-500/20"
                     : ""
@@ -67,11 +67,11 @@ export function MovesBar({
               aria-label={`Remove ${command}`}
               onClick={() => removeCommand(idx)}
               disabled={isPlaying || success !== null}
-              className={`flex h-[27px] w-[27px] shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[#444444] text-white transition-all disabled:cursor-default ${
+              className={`flex h-[33px] w-[33px] shrink-0 cursor-pointer items-center justify-center rounded-lg bg-[#444444] text-white transition-all disabled:cursor-default ${
                 active ? "scale-110 ring-2 ring-emerald-400" : "active:scale-90"
               }`}
             >
-              <Icon className="h-[15px] w-[15px]" strokeWidth={3} />
+              <Icon className="h-[18px] w-[18px]" strokeWidth={3} />
             </button>
           );
         })}
@@ -85,7 +85,7 @@ export function MovesBar({
             triggerSound("tap");
             resetLevel();
           }}
-          className="flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-full bg-white text-slate-600 shadow-xs transition-transform active:scale-90 dark:bg-white/10 dark:text-slate-200"
+          className="flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-full bg-white text-slate-600 shadow-xs transition-transform active:scale-90 dark:bg-white/10 dark:text-slate-200"
         >
           <RotateCcw className="h-3.5 w-3.5" />
         </button>
@@ -94,7 +94,7 @@ export function MovesBar({
           aria-label="Run program"
           disabled={!canRun}
           onClick={runSequence}
-          className="flex h-[30px] w-[30px] cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-md transition-transform active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
+          className="flex h-[34px] w-[34px] cursor-pointer items-center justify-center rounded-full bg-primary text-white shadow-md transition-transform active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
         >
           {isPlaying ? (
             <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />

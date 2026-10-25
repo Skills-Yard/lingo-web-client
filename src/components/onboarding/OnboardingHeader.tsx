@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronLeft, X } from "lucide-react";
+import { X } from "lucide-react";
 import { batteryCount, useBattery } from "@/components/home/batteryStore";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
@@ -10,16 +10,14 @@ import { BatteryMenu } from "./BatteryMenu";
 
 export { WIPE } from "./themeWipe";
 
-/** Back, full screen, light/dark and sound share one look — same size, same weight. */
+/** The close button's look. */
 const ICON_BUTTON =
   "flex items-center justify-center rounded-[6px] border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
 
-/** Level 1's slimmer bar: 30px buttons in a 44px header. */
-const BUTTON_SIZE = "w-[39px] h-[39px]";
-const LEVEL_BUTTON_SIZE = "w-[30px] h-[30px]";
-
 interface OnboardingHeaderProps {
   onBack: () => void;
+  /** The hidden battery panel's Back: the previous screen (the close button goes to the level list). */
+  onPrevious?: () => void;
   /** Question screens show the step progress (reference screens 8-14); the
    * connector screens between them (foxy intro, ready-check, notification
    * permission) don't — there's nothing to show progress *of* there. */
@@ -41,20 +39,33 @@ interface OnboardingHeaderProps {
 // user moves forward, shrinking back when they return to an earlier question.
 let lastShown: { step: number; total: number } | null = null;
 
+/** The count's colour by what is left: green when full, yellow halfway, red
+ * when nearly empty — blended between them so it shifts a little at a time. */
+const COUNT_FULL = [0x1e, 0xa0, 0x1b] as const;
+const COUNT_HALF = [0xea, 0xb9, 0x11] as const;
+const COUNT_LOW = [0xfc, 0x47, 0x1c] as const;
+
+const countColor = (level: number) => {
+  const t = Math.max(0, Math.min(100, level)) / 50;
+  const [from, to, mix] = t >= 1 ? [COUNT_HALF, COUNT_FULL, t - 1] : [COUNT_LOW, COUNT_HALF, t];
+  return `rgb(${from.map((channel, i) => Math.round(channel + (to[i] - channel) * mix)).join(" ")})`;
+};
+
 /** What is left of the battery, "14" — or the infinity sign when unlimited.
  * Fixed width, so the battery beside it stays put as the text changes. */
 function BatteryCount() {
   const battery = useBattery();
   return (
     <span
-      className={`min-w-[26px] font-semibold text-[#01A17F] tabular-nums ${battery.unlimited ? "text-[28px] leading-[28px]" : "text-[20px] leading-[24px]"}`}
+      style={{ color: countColor(battery.unlimited ? 100 : battery.level) }}
+      className={`min-w-[26px] font-semibold tabular-nums transition-colors duration-500 ${battery.unlimited ? "text-[28px] leading-[28px]" : "text-[20px] leading-[24px]"}`}
     >
       {batteryCount(battery)}
     </span>
   );
 }
 
-export function OnboardingHeader({ onBack, progress, answer, showCount, level }: OnboardingHeaderProps) {
+export function OnboardingHeader({ onBack, onPrevious, progress, answer, showCount, level }: OnboardingHeaderProps) {
   const [fromStep] = useState(() => (progress ? (lastShown?.step ?? progress.step - 1) : null));
   useEffect(() => {
     if (progress) lastShown = { step: progress.step, total: progress.total };
@@ -92,7 +103,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
             value={(progress.step / progress.total) * 100}
             from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
             answer={answer}
-            className={`absolute mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] left-[67px] right-[116px]" : "top-[63px] left-4 right-4"}`}
+            className={`absolute mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] left-[67px] right-[116px] sm:left-[116px]" : "top-[63px] left-4 right-4"}`}
           />
         </>
       )}
@@ -101,7 +112,7 @@ export function OnboardingHeader({ onBack, progress, answer, showCount, level }:
           artboard is 320 x 110), with what is left of it written beside it. Each screen's `step` spends its
           share of it. Also the way into the hidden dev panel (see BatteryMenu). */}
       {level && (
-        <BatteryMenu className="absolute top-[6px] right-4">
+        <BatteryMenu className="absolute top-[6px] right-4" onBack={onPrevious ?? onBack}>
           <span className="flex h-[39px] items-center gap-1 rounded-md">
             <PersistentBattery step={progress?.step} className="w-[60px]" />
             <BatteryCount />

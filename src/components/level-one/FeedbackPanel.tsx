@@ -4,6 +4,7 @@ import { HexBleed, HEX_BLEED } from "@/components/onboarding/robu/HexBleed";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
+import { Fredoka, Nunito, Poppins } from "next/font/google";
 import {
   HEX_ARTBOARD,
   HEX_ONBOARDING_TRIGGER,
@@ -112,14 +113,23 @@ export function OnboardingHex({
 }
 
 
+const fredoka = Fredoka({ subsets: ["latin"], weight: "600" });
+const poppins = Poppins({ subsets: ["latin"], weight: "500" });
+const nunito = Nunito({ subsets: ["latin"], weight: "600" });
+
+// Figma "Frame 201": a 21px / 28px Fredoka title over a 14px body, 6px apart.
 const FEEDBACK = {
   correct: {
     title: "Correct! +10 XP",
+    titleColor: "text-[#01A17F]",
+    text: `w-[156px] ${poppins.className} leading-[1.4]`,
     panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
     bold: "[&_b]:text-[#04ACAB]",
   },
   wrong: {
-    title: "Not quite, try to remember!",
+    title: "Not quite",
+    titleColor: "text-[#D42421]",
+    text: `w-[149px] ${nunito.className} leading-5`,
     panel: "border-[#F2A9AB] bg-[#FDEAEA] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
     bold: "[&_b]:text-[#E5484D]",
   },
@@ -194,18 +204,18 @@ export function FeedbackPanel({
       className={`absolute inset-x-0 bottom-0 z-0 mx-auto rounded-t-[28px] border-[1.5px] border-b-0 px-4 pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
     >
       <div className="mx-auto flex w-full items-center justify-center gap-6">
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <h2 className={`${fredoka.className} text-[21px] leading-7 font-semibold tracking-[-0.1px] ${look.titleColor}`}>{look.title}</h2>
+          <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.text} ${look.bold}`}>
+            {children}
+          </p>
+        </div>
         <div ref={hexSlot} aria-hidden className="pointer-events-none -my-4 h-[112px] w-[120px] shrink-0">
           {!hexSlot && <OnboardingHex
               entryKey={enterNow ? "feedback" : null}
               cue={enterNow ? hexCue : null}
               cueDelayMs={ENTER_SETTLE_MS}
             />}
-        </div>
-        <div className="min-w-0">
-          <h2 className="text-[18px] leading-tight font-bold text-[#1F2A44] dark:text-white">{look.title}</h2>
-          <p className={`mt-1 text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.bold}`}>
-            {children}
-          </p>
         </div>
       </div>
     </motion.div>

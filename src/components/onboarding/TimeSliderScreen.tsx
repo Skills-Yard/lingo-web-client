@@ -183,11 +183,11 @@ export function TimeSliderScreen({
   const knobDeg = valueToDeg(shown);
   const knob = pointAt(knobDeg, RADIUS);
 
-  // The tooltip sits up and to the right of the knob, kept inside the view;
-  // its pointer keeps following the knob.
-  const tipX = clamp(knob.x + 10.5, VIEW_X + 4, VIEW_X + VIEW_W - 4 - TOOLTIP_W);
+  // The tooltip sits centred above the knob, kept inside the view (at the
+  // ends it slides over and its pointer keeps following the knob).
+  const tipX = clamp(knob.x - TOOLTIP_W / 2, VIEW_X + 4, VIEW_X + VIEW_W - 4 - TOOLTIP_W);
   const tipY = knob.y - 61.5;
-  const pointerX = clamp(knob.x + 31, tipX + 14, tipX + TOOLTIP_W - 14);
+  const pointerX = clamp(knob.x, tipX + 14, tipX + TOOLTIP_W - 14);
 
   return (
     <div

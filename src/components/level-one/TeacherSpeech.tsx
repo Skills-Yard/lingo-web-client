@@ -24,6 +24,11 @@ const HEX_SIZE = 130;
 const HEX_BELOW = { x: 114, y: 362 };
 const HEX_ENTER_FROM = { x: 114, y: 420 };
 const HEX_BESIDE = { x: 228, y: 84 };
+/** Once the answer is checked the options rise to 158px down the picture:
+ * he is pushed down to here, where they cover him. */
+const HEX_TUCKED = { x: 228, y: 200 };
+/** The result panel's own spring (see FeedbackPanel), so he sinks as it arrives. */
+const HEX_TUCK_MOVE = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The hint: a smaller Hex standing on the top edge of the right-hand option
  * card (which starts 264px down, with the picture cropped to 240px). */
 const HEX_AT_CARD = { x: 262, y: 198, scale: 80 / HEX_SIZE };
@@ -58,10 +63,13 @@ const useTyped = (text: string, active: boolean) => {
 export function TeacherSpeech({
   hexAway = false,
   hexToCard = false,
+  tucked = false,
   skipIntro = false,
 }: {
   hexAway?: boolean;
   hexToCard?: boolean;
+  /** The options are rising over him: he sinks behind them. */
+  tucked?: boolean;
   /** The screen was opened straight on the quiz: no voice intro to wait for,
    * so Hex is already beside the bubble and the line types at once. */
   skipIntro?: boolean;
@@ -116,17 +124,18 @@ export function TeacherSpeech({
         initial={{ opacity: 0, ...(skipIntro ? HEX_BESIDE : HEX_ENTER_FROM) }}
         animate={{
           opacity: hexAway ? 0 : 1,
-          ...(hexToCard ? HEX_AT_CARD : { ...(cued ? HEX_BESIDE : HEX_BELOW), scale: 1 }),
+          ...(tucked ? { ...HEX_TUCKED, scale: 1 } : hexToCard ? HEX_AT_CARD : { ...(cued ? HEX_BESIDE : HEX_BELOW), scale: 1 }),
         }}
         exit={{ opacity: 0, transition: { duration: 0.2 } }}
         transition={{
           opacity: hexAway ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0.2 },
-          x: hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
-          y: hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
-          scale: hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
+          x: tucked ? HEX_TUCK_MOVE : hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
+          y: tucked ? HEX_TUCK_MOVE : hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
+          scale: tucked ? HEX_TUCK_MOVE : hexToCard ? HEX_HINT_MOVE : HEX_MOVE,
         }}
         style={{ width: HEX_SIZE, height: HEX_SIZE, transformOrigin: "0 0" }}
-        className="pointer-events-none absolute top-0 left-0 z-[100]"
+        // Below the options (z-10), so they cover him as they rise.
+        className="pointer-events-none absolute top-0 left-0 z-[5]"
       >
         <motion.div
           animate={cued ? HEX_FLOAT : { y: 0 }}

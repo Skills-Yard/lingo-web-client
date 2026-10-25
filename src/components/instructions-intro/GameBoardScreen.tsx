@@ -45,6 +45,11 @@ interface GameBoardScreenProps {
   /** Filled with the hint action (fills the slots) once the board is live, so
    * the screen's own hint button can trigger it. */
   hintRef?: MutableRefObject<(() => void) | null>;
+  /** Filled with the run action while a run can start (the board is live and
+   * a command has been entered), so the screen's own Play button can start it. */
+  playRef?: MutableRefObject<(() => void) | null>;
+  /** Fired when a run can start / is running — for the screen's Play button. */
+  onRunStateChange?: (state: { canRun: boolean; running: boolean }) => void;
 }
 
 const LEVEL = lesson1Level;
@@ -96,6 +101,8 @@ export function GameBoardScreen({
   stepMs,
   onFinishedChange,
   hintRef,
+  playRef,
+  onRunStateChange,
 }: GameBoardScreenProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const triggerSound = useSound(soundEnabled);
@@ -180,6 +187,19 @@ export function GameBoardScreen({
       hintRef.current = null;
     };
   }, [hintRef, locked, isPlaying, fillHint]);
+
+  // The same condition as the MOVES bar's own Play button.
+  const canRun = !locked && !isPlaying && success === null && commands.some((c) => c !== null);
+  useEffect(() => {
+    if (!playRef) return;
+    playRef.current = canRun ? runSequence : null;
+    return () => {
+      playRef.current = null;
+    };
+  }, [playRef, canRun, runSequence]);
+  useEffect(() => {
+    onRunStateChange?.({ canRun, running: isPlaying });
+  }, [onRunStateChange, canRun, isPlaying]);
 
   // Latch: once solved, stay solved so "Continue" stays available even after a reset.
   useEffect(() => {
@@ -279,7 +299,7 @@ export function GameBoardScreen({
         side-by-side desktop columns are only for the intro's own game. */}
       <div className={`flex flex-col ${borderless ? "flex-1 gap-0" : "gap-3 lg:flex-row lg:items-start lg:justify-center lg:gap-6"}`}>
         {/* ── Left column — the game board ── */}
-        <div className={`relative ${borderless ? "mb-[calc(var(--stage-h)*-0.033)]" : "lg:order-1 lg:w-105 lg:shrink-0"}`}>
+        <div className={`relative ${borderless ? "left-1/2 -mt-4 mb-3 w-(--stage-w) -translate-x-1/2" : "lg:order-1 lg:w-105 lg:shrink-0"}`}>
           <div
             inert={locked}
             className={`transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
@@ -306,10 +326,10 @@ export function GameBoardScreen({
         {/* ── Right column — program slots, actions and run controls ── */}
         <div
           inert={locked}
-          className={`flex flex-col ${borderless ? "relative z-10 -mx-4 mt-auto items-center rounded-t-[38px] bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+          className={`flex flex-col ${borderless ? "relative left-1/2 z-10 mt-auto w-(--stage-w) max-w-none -translate-x-1/2 items-center rounded-t-[38px] bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
         >
           {borderless && (
-            <div className="flex h-9 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-[#F7F2FF] px-3 dark:bg-white/6">
+            <div className="flex h-11 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-[#F7F2FF] px-3 dark:bg-white/6">
               <Move className="h-[22px] w-[22px] text-[#B286FD]" strokeWidth={2} />
               <span className="text-[12px] leading-[18px] font-medium text-[#2C2C2C] dark:text-white">
                 Tap any option to preview Hex’s movement.
@@ -345,7 +365,6 @@ export function GameBoardScreen({
             success={success}
             addCommand={addCommand}
             borderless={borderless}
-            selected={commands.findLast((c) => c !== null) ?? null}
           />
 
           {!borderless && (

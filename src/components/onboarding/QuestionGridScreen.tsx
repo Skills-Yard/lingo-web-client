@@ -21,6 +21,9 @@ const ILLUSTRATIONS: Record<OnboardingGridOption["illustration"], { icon: Lucide
 
 // The Figma label type: Poppins 500, 16px / 140%.
 
+/** The fixed space between the question row and the first row of options. */
+const TOP_GAP_PX = 15;
+
 interface QuestionGridOptionsProps {
   options: OnboardingGridOption[];
   selectedId: string | null;
@@ -78,20 +81,33 @@ export function QuestionGridOptions({
   const tile = compact ? { height: 109, gap: 16, min: 8 } : three ? { height: 130, gap: 24, min: 10 } : { height: 150, gap: 29, min: 12 };
   const rows = Math.ceil(options.length / (three ? 3 : 2));
   const space = squeezedSpace(rows * tile.height, {
-    top: { max: 24, min: compact ? 6 : 8 },
+    top: { max: compact ? 24 : TOP_GAP_PX, min: compact ? 6 : TOP_GAP_PX },
     gap: { max: tile.gap, min: tile.min, count: rows - 1 },
     bottom: { max: 8, min: 3 },
   });
 
+  // The grid's width sets the tiles' size (they keep their aspect ratio), so
+  // cap it by the room the box leaves: every row of tiles then fits in the
+  // height and the grid never needs to scroll. Spacing here is the roomy
+  // maximum — it only ever shrinks, so this is a safe underestimate.
+  const cols = compact ? 2 : three ? 3 : 2;
+  const colGap = compact ? 19 : three ? 17 : 30;
+  const rowGap = compact ? 16 : tile.gap;
+  const aspect = compact ? 139 / 109 : three ? 108 / 130 : 138 / 150;
+  const padY = (compact ? 6 : TOP_GAP_PX) + 8;
+  const tileH = `((100cqh - ${padY + rowGap * (rows - 1)}px) / ${rows})`;
+  const fitWidth = `calc(${tileH} * ${aspect} * ${cols} + ${colGap * (cols - 1) + 16}px)`;
+  const maxWidth = `min(${compact ? 313 : three ? 374 : 322}px, ${fitWidth})`;
+
   return (
     // The outer box takes the room the screen leaves and measures it, so the
     // grid's spacing can follow it (see `squeezedSpace`).
-    <div className={`${compact ? "-mt-1.5" : "-mt-1 sm:mt-0"} flex min-h-0 flex-1 flex-col [container-type:size]`}>
+    <div className={`${compact ? "-mt-1.5" : "mt-0"} flex min-h-0 flex-1 flex-col [container-type:size]`}>
     {/* `auto-rows-max` keeps each row the full tile height: on short screens
         auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
         over the gap into the next row. The gap now only shrinks while the
         screen is too short, and the grid scrolls once it can't shrink more. */}
-    <div ref={optionsRef} style={space as React.CSSProperties} className={`scrollbar-none mx-auto grid h-full w-full ${compact ? "max-w-[313px] grid-cols-2 gap-x-[19px] gap-y-4" : three ? "max-w-[374px] grid-cols-3 gap-x-[17px] gap-y-6" : "max-w-[322px] grid-cols-2 gap-x-[30px] gap-y-[29px]"} min-h-0 auto-rows-max content-start overflow-y-auto px-2 pt-6 pb-2 max-sm:gap-y-(--sq-gap) max-sm:pt-(--sq-top) max-sm:pb-(--sq-bottom)`}>
+    <div ref={optionsRef} style={{ ...space, maxWidth } as React.CSSProperties} className={`scrollbar-none mx-auto grid h-full w-full ${compact ? "grid-cols-2 gap-x-[19px] gap-y-4" : three ? "grid-cols-3 gap-x-[17px] gap-y-6" : "grid-cols-2 gap-x-[30px] gap-y-[29px]"} min-h-0 auto-rows-max content-start overflow-y-auto px-2 ${compact ? "pt-6" : "pt-[15px]"} pb-2 max-sm:gap-y-(--sq-gap) max-sm:pt-(--sq-top) max-sm:pb-(--sq-bottom)`}>
       {options.map((option, i) => {
         const selected = option.id === selectedId;
         const spotlight = !selected && i === spokenOption;

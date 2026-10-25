@@ -3,15 +3,13 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
-import { Button3D } from "@/components/ui/Button3D";
-import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
-import { HintButton } from "./HintButton";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
-import { playClickSound, setClickSoundMuted } from "@/components/onboarding/clickSound";
+import { setClickSoundMuted } from "@/components/onboarding/clickSound";
 import { useVoiceover } from "@/components/onboarding/useVoiceover";
 import { questionSpoken } from "@/components/onboarding/QuestionHeading";
 import { moduleHref } from "@/lib/routes";
+import { ActionRow } from "./ActionRow";
 import { LevelVoiceContext } from "./LevelVoice";
 import { useLevelMuted } from "./levelMuted";
 
@@ -19,6 +17,7 @@ import { useLevelMuted } from "./levelMuted";
 const FRAME_W = 390;
 const FRAME_H = 844;
 const MAX_SCALE = 1.5;
+
 /** The header's widest on-screen width (px) — 5xl. */
 const HEADER_MAX_W = 1024;
 
@@ -64,9 +63,6 @@ interface LevelOneShellProps {
   /** Shows the hint button left of the main button; `visible` slides it in / out. */
   hint?: { visible: boolean; onUse: () => void };
 }
-
-/** The badge count — fixed at 1 for now. */
-const HINTS_LEFT = 1;
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
 export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint }: LevelOneShellProps) {
@@ -130,6 +126,8 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
   }, [fit]);
   const stageScaleRef = useRef(1);
   stageScaleRef.current = stage?.scale ?? 1;
+  // The header's width (frame px).
+  const columnW = Math.max(FRAME_W, HEADER_MAX_W / (stage?.scale ?? 1));
 
   return (
     <LevelVoiceContext.Provider value={levelVoice}>
@@ -164,11 +162,13 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
           page count), with the content below exactly where it was. */}
         <div
           className="relative z-10 mx-auto mt-2 w-full"
-          // 5xl on screen, like the onboarding header; the stage is scaled, so divide.
-          style={{ maxWidth: HEADER_MAX_W / (stage?.scale ?? 1) }}
+          // 5xl on screen — wider than the content column below it. The stage
+          // is scaled, so divide.
+          style={{ maxWidth: columnW }}
         >
           <OnboardingHeader
             onBack={() => router.push("/level")}
+            onPrevious={onBack ?? (() => router.back())}
             progress={{ step, total: LEVEL_ONE_STEPS }}
             answer={answer}
             level
@@ -198,35 +198,14 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
 
       {/* Never wider than the 390px frame, so on a desktop the button keeps its
         phone size and sits in the middle instead of stretching across. */}
-      <div className="relative z-10 mx-auto w-full shrink-0 px-4 pb-9" style={{ maxWidth: FRAME_W }}>
-        {/* Fixed at the full-width button's own ratio, so the row never changes
-          height while the hint slides in and the button narrows beside it. */}
-        <div className="flex w-full items-center" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
-          {hint && (
-            <HintButton
-              visible={hint.visible}
-              count={HINTS_LEFT}
-              onPress={() => {
-                playClickSound();
-                hint.onUse();
-              }}
-            />
-          )}
-          <Button3D
-            riveVariant="module"
-            answer={answer}
-            onClick={() => onContinue?.()}
-            onPress={playClickSound}
-            disabled={ctaDisabled}
-            className={`min-w-0 flex-1 ${hint ? "transition-[height] duration-500 ease-out" : ""}`}
-            // With the hint showing the button also drops in height (the art
-            // scales to fit), so it reads as smaller, not just narrower.
-            {...(hint && { style: { aspectRatio: "auto", height: hint.visible ? "74%" : "100%" } })}
-          >
-            {ctaLabel}
-          </Button3D>
-        </div>
-      </div>
+      <ActionRow
+        maxWidth={FRAME_W + 60}
+        hint={hint}
+        answer={answer}
+        ctaLabel={ctaLabel}
+        ctaDisabled={ctaDisabled}
+        onContinue={onContinue}
+      />
 
       {overlay}
       </div>

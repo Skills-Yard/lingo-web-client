@@ -31,6 +31,8 @@ export function MoveHexScreen() {
   const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const hintRef = useRef<(() => void) | null>(null);
+  const playRef = useRef<(() => void) | null>(null);
+  const [run, setRun] = useState({ canRun: false, running: false });
 
   if (!GAME_SLIDE) return null;
 
@@ -39,10 +41,13 @@ export function MoveHexScreen() {
       step={8}
       flush
       fit
-      ctaDisabled={!finished}
+      // The main button plays the moves Hex was given; once a run has ended it
+      // becomes Continue.
+      ctaLabel={finished ? "Continue" : "Play"}
+      ctaDisabled={finished ? false : !run.canRun}
       hint={{ visible: true, onUse: () => hintRef.current?.() }}
       onBack={() => router.push(levelOneHref(7))}
-      onContinue={() => router.push(levelOneCompleteHref())}
+      onContinue={finished ? () => router.push(levelOneCompleteHref()) : () => playRef.current?.()}
     >
       {/* Hex is positioned against this box, so it must wrap the
         screen he walks around in. */}
@@ -55,6 +60,8 @@ export function MoveHexScreen() {
           registerAnchor={setAnchorEl}
           borderless
           hintRef={hintRef}
+          playRef={playRef}
+          onRunStateChange={setRun}
           stepMs={STEP_MS}
         />
       </div>

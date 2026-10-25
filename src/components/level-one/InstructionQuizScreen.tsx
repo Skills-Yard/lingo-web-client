@@ -51,8 +51,10 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   // Once the hinted card has finished flipping, Hex floats over to it.
   const [flipped, setFlipped] = useState(false);
   const [hintSlot, setHintSlot] = useState<HTMLDivElement | null>(null);
-  // Hex sits in the question's slot and leaves as soon as an option is picked;
-  // on Check the result panel brings its own Hex, entering inside it.
+  // Hex sits in the question's slot and stays through the pick; on Check the
+  // slot closes: he stays put and the options slide up over him (they are
+  // drawn above him), while the result panel brings its own Hex, entering
+  // inside it.
   const glideRef = useRef<HTMLDivElement>(null);
   const [questionSlot, setQuestionSlot] = useState<HTMLDivElement | null>(null);
 
@@ -63,7 +65,6 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
-      hint={{ visible: !checked, onUse: () => setHinted(true) }}
       onBack={() => router.push(levelOneHref(6))}
       onContinue={() => {
         if (!checked) {
@@ -84,7 +85,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
             {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
             {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>
           </FeedbackPanel>
-          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} leaving={selectedId !== null} fromScale={HEX_SCALE}
+          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} rising={checked} fromScale={HEX_SCALE}
             containerRef={glideRef} />
         </div>
       }
@@ -108,18 +109,21 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       </motion.div>
 
       {/* Hex's spot: the Hex itself is drawn by the overlay's HexGlide, which
-        sends him off when an option is picked; on Check the slot closes and
-        the options slide up into its space. */}
+        keeps him in place when the slot closes on Check, as the options
+        slide up over him. */}
       <motion.div
         ref={setQuestionSlot}
         aria-hidden
         className="pointer-events-none w-[180px] shrink-0"
         initial={false}
         animate={checked ? { height: 0, marginTop: 0 } : { height: 150, marginTop: 8 }}
-        transition={{ type: "spring", stiffness: 70, damping: 18 }}
+        // The very spring the result panel slides up with (see FeedbackPanel), so
+        // the options rise exactly as the panel arrives — it looks like the
+        // panel pushing them up.
+        transition={{ type: "spring", stiffness: 360, damping: 32 }}
       />
 
-      <div className="relative mt-5 w-full shrink-0">
+      <div className="relative z-10 mt-5 w-full shrink-0 bg-white dark:bg-background">
         <div className="relative flex flex-col gap-[23px]">
           {OPTIONS.map((option, i) => {
             const state = optionState(option.id, selectedId, checked, CORRECT_ID);
