@@ -247,7 +247,11 @@ export function MainHomeScreen({
   return (
     <HomeStage stageHeight={STAGE_H} scroll>
         <div className="flex flex-col px-4 pb-6">
-          <motion.header {...reveal(0)} className="relative z-20 flex items-center justify-between gap-3">
+          <motion.div {...reveal(0)}>
+            <HomeStats />
+          </motion.div>
+
+          <motion.header {...reveal(0.04)} className="relative z-20 mt-3 flex items-center justify-between gap-3">
             <button
               type="button"
               onClick={onProfile}
@@ -332,10 +336,6 @@ export function MainHomeScreen({
             >
               <Plus className="h-[18px] w-[18px]" strokeWidth={2} />
             </button>
-          </motion.div>
-
-          <motion.div {...reveal(0.1)} className="mt-4">
-            <HomeStats />
           </motion.div>
 
           <motion.div {...reveal(0.14)} className="mt-3 overflow-hidden">
