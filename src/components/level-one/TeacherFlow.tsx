@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
-import { vibrateForAnswer } from "@/lib/haptics";
+import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HintFloat } from "./HintFloat";
@@ -258,6 +258,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                   disabled={checked}
                   onClick={() => {
                     playClickSound();
+                    vibrateForTap();
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}

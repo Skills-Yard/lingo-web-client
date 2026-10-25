@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, type MutableRefObject } from "react";
-import { Check, Move, X } from "lucide-react";
+import { Move, X } from "lucide-react";
 import type { GameSlide } from "@/lib/constants/instructionsIntro";
 import { useSound } from "@/hooks/useSound";
 import { lesson1Level } from "../../utils/data/levels";
@@ -50,6 +50,11 @@ interface GameBoardScreenProps {
   playRef?: MutableRefObject<(() => void) | null>;
   /** Fired when a run can start / is running — for the screen's Play button. */
   onRunStateChange?: (state: { canRun: boolean; running: boolean }) => void;
+  /** Fired with how the latest run went: null while there is none (start,
+   * after a reset), true on the flag, false on a miss (with what went wrong). */
+  onResultChange?: (result: { success: boolean | null; failureMsg: string }) => void;
+  /** Filled with the reset action (back to the start, empty slots). */
+  resetRef?: MutableRefObject<(() => void) | null>;
 }
 
 const LEVEL = lesson1Level;
@@ -103,6 +108,8 @@ export function GameBoardScreen({
   hintRef,
   playRef,
   onRunStateChange,
+  onResultChange,
+  resetRef,
 }: GameBoardScreenProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const triggerSound = useSound(soundEnabled);
@@ -200,6 +207,17 @@ export function GameBoardScreen({
   useEffect(() => {
     onRunStateChange?.({ canRun, running: isPlaying });
   }, [onRunStateChange, canRun, isPlaying]);
+
+  useEffect(() => {
+    if (!resetRef) return;
+    resetRef.current = resetLevel;
+    return () => {
+      resetRef.current = null;
+    };
+  }, [resetRef, resetLevel]);
+  useEffect(() => {
+    onResultChange?.({ success, failureMsg });
+  }, [onResultChange, success, failureMsg]);
 
   // Latch: once solved, stay solved so "Continue" stays available even after a reset.
   useEffect(() => {
@@ -326,7 +344,7 @@ export function GameBoardScreen({
         {/* ── Right column — program slots, actions and run controls ── */}
         <div
           inert={locked}
-          className={`flex flex-col ${borderless ? "relative left-1/2 z-10 mt-auto w-(--stage-w) max-w-none -translate-x-1/2 items-center rounded-t-[38px] bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+          className={`flex flex-col ${borderless ? "relative left-1/2 z-[4] mt-auto w-(--stage-w) max-w-none -translate-x-1/2 items-center rounded-t-[38px] bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
         >
           {borderless && (
             <div className="flex h-11 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-[#F7F2FF] px-3 dark:bg-white/6">
@@ -380,8 +398,9 @@ export function GameBoardScreen({
         </div>
       </div>
 
-      {/* ── Inline result banner (no CompletionModal in the intro flow) ── */}
-      {success !== null && (
+      {/* ── Inline result banner (no CompletionModal in the intro flow). Only
+          for a miss: a win is celebrated by the gem popup (Level 1). ── */}
+      {success === false && !borderless && (
         <motion.div
           // Level 1: a sheet that slides up from the bottom, over whatever is
           // in the way, parked above Continue so nothing is scrolled out of view.
@@ -394,45 +413,16 @@ export function GameBoardScreen({
           animate={{ y: 0, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 28 }}
           style={{
-            backgroundImage:
-              success === true
-                ? "linear-gradient(180deg, rgba(1,161,127,0.16) 0%, rgba(255,255,255,0) 98.7%)"
-                : "linear-gradient(180deg, rgba(225,29,72,0.16) 0%, rgba(255,255,255,0) 98.7%)",
+            backgroundImage: "linear-gradient(180deg, rgba(225,29,72,0.16) 0%, rgba(255,255,255,0) 98.7%)",
           }}
         >
-          <div
-            className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-              success === true ? "bg-primary" : "bg-rose-600 dark:bg-rose-500"
-            }`}
-          >
-            {success === true ? (
-              <Check className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-            ) : (
-              <X className="w-3.5 h-3.5 text-white" strokeWidth={3} />
-            )}
+          <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 bg-rose-600 dark:bg-rose-500">
+            <X className="w-3.5 h-3.5 text-white" strokeWidth={3} />
           </div>
           <div className="min-w-0">
-            <h3
-              className={`text-base font-semibold leading-tight ${
-                success === true
-                  ? "text-primary"
-                  : "text-rose-600 dark:text-rose-400"
-              }`}
-            >
-              {success === true
-                ? "Nice! You reached the flag."
-                : "Not quite yet."}
-            </h3>
-            <p
-              className={`text-xs font-medium leading-[1.4] mt-0.5 ${
-                success === true
-                  ? "text-primary"
-                  : "text-rose-600 dark:text-rose-400"
-              }`}
-            >
-              {success === true
-                ? "Tap Continue to keep going."
-                : `${failureMsg} Tap Reset and try again.`}
+            <h3 className="text-base font-semibold leading-tight text-rose-600 dark:text-rose-400">Not quite yet.</h3>
+            <p className="text-xs font-medium leading-[1.4] mt-0.5 text-rose-600 dark:text-rose-400">
+              {failureMsg} Tap Reset and try again.
             </p>
           </div>
         </motion.div>

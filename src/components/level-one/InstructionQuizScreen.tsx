@@ -8,7 +8,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
-import { vibrateForAnswer } from "@/lib/haptics";
+import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
@@ -139,6 +139,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                 disabled={checked}
                 onClick={() => {
                   playClickSound();
+                  vibrateForTap();
                   setSelectedId(option.id);
                 }}
                 aria-pressed={state === "selected"}
