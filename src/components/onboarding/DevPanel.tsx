@@ -77,7 +77,7 @@ export function DevPanel({
           exit={{ opacity: 0, y: -6, scale: 0.97 }}
           transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
           style={{ transformOrigin: "100% 0%" }}
-          className="fixed top-14 right-4 z-[200] flex w-[220px] flex-col gap-2 rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
+          className="fixed top-14 right-4 z-[2147483647] flex w-[220px] flex-col gap-2 rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
         >
           <p className="text-[11px] leading-[15px] text-[#818185] dark:text-[#9FA19F]">For testing by devs only. Temporary.</p>
           {onBack && (

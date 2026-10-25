@@ -237,7 +237,7 @@ export function GameBoardScreen({
           bubble/description expand to the full row on their own — nothing
           else here needs to change to make room. ── */}
       {borderless && (
-        <div className="relative flex h-[74px] items-start pl-1">
+        <div className="relative top-3 flex h-[74px] items-start pl-1">
           {/* The heading sits over Hex's box (it's above him). */}
           <h1 className="relative z-30 mt-[5px] w-[72%] min-w-0 text-[24px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
             {HEADING_WORDS.map((word, w) => (
@@ -361,7 +361,6 @@ export function GameBoardScreen({
               success={success}
               executingStep={executingStep}
               removeCommand={removeCommand}
-              runSequence={runSequence}
               resetLevel={resetLevel}
               triggerSound={triggerSound}
             />
@@ -377,13 +376,15 @@ export function GameBoardScreen({
             />
           )}
 
-          <CommandPalette
-            level={LEVEL}
-            isPlaying={isPlaying}
-            success={success}
-            addCommand={addCommand}
-            borderless={borderless}
-          />
+          <div className={borderless ? "w-full px-[25px]" : "contents"}>
+            <CommandPalette
+              level={LEVEL}
+              isPlaying={isPlaying}
+              success={success}
+              addCommand={addCommand}
+              borderless={borderless}
+            />
+          </div>
 
           {!borderless && (
           <GameFooter

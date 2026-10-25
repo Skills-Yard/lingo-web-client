@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize, Moon, Sun } from "lucide-react";
@@ -41,6 +42,11 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
   const { unlimited } = useBattery();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  // Where the panel opens: under the battery, right-aligned (fixed, in viewport px).
+  const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null);
   const router = useRouter();
   const holdTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const held = useRef(false);
@@ -49,6 +55,8 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
     held.current = false;
     holdTimer.current = setTimeout(() => {
       held.current = true;
+      const rect = ref.current?.getBoundingClientRect();
+      if (rect) setAnchor({ top: rect.bottom + 6, right: window.innerWidth - rect.right });
       setOpen(true);
     }, HOLD_MS);
   };
@@ -57,7 +65,7 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
   useEffect(() => {
     if (!open) return;
     const close = (e: PointerEvent) => {
-      if (e.target instanceof Node && ref.current?.contains(e.target)) return;
+      if (e.target instanceof Node && (ref.current?.contains(e.target) || panelRef.current?.contains(e.target))) return;
       setOpen(false);
     };
     document.addEventListener("pointerdown", close);
@@ -87,17 +95,20 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
       >
         {children}
       </button>
+      {/* Portalled to the body and drawn above everything (Hex included): inside the header it would sit under him. */}
+      {mounted && createPortal(
       <AnimatePresence>
-        {open && (
+        {open && anchor && (
           <motion.div
+            ref={panelRef}
             role="dialog"
             aria-label="Developer testing panel"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            style={{ transformOrigin: "100% 0%" }}
-            className="absolute top-[calc(100%+6px)] right-0 z-30 w-[270px] rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
+            style={{ transformOrigin: "100% 0%", top: anchor.top, right: anchor.right }}
+            className="fixed z-[2147483647] w-[270px] rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
           >
             <p className="text-[13px] leading-[18px] text-[#818185] dark:text-[#9FA19F]">
               For testing by devs only. Temporary.
@@ -131,7 +142,9 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
             </button>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body,
+      )}
     </div>
   );
 }

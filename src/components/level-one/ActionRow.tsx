@@ -53,7 +53,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, onCon
           // With the hint showing, the button's art is drawn with margins that
           // make it look small: it is scaled up from its right edge, so it
           // grows away from the hint.
-          {...(hint && { style: { aspectRatio: "auto", height: "100%", transform: "scale(1.1)", transformOrigin: "right center" } })}
+          {...(hint && { style: { aspectRatio: "auto", height: "100%", transform: "scale(1.2)", transformOrigin: "right center" } })}
         >
           {ctaLabel}
         </Button3D>

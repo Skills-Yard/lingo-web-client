@@ -98,7 +98,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
           opacity: { duration: 0.3, delay: 0.3 },
           y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
         }}
-        className="mt-5 flex w-full shrink-0 items-center gap-3"
+        className="mt-5 flex w-[calc(min(100vw,450px)-12px)] shrink-0 items-center gap-3"
       >
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-lg bg-[#04ACAB]/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -124,7 +124,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         transition={{ type: "spring", stiffness: 360, damping: 32 }}
       />
 
-      <div className="relative z-10 mt-5 w-full shrink-0 bg-white dark:bg-background">
+      {/* Content sits 16px in from the frame; the bottom button row is min(100vw, 450px) minus 6px per side; match it exactly. */}
+      <div className="relative z-10 mt-5 w-[calc(min(100vw,450px)-12px)] shrink-0 bg-white dark:bg-background">
         <div className="relative flex flex-col gap-[23px]">
           {OPTIONS.map((option, i) => {
             const state = optionState(option.id, selectedId, checked, CORRECT_ID);
