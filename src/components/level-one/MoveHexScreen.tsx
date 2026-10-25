@@ -23,12 +23,10 @@ const GAME_SLIDE = INSTRUCTIONS_INTRO_SLIDES.find(
  * `/module?level=1&step=8` — the game board screen from the instructions intro, as it
  * was: the same board, program slots, actions and Run/Reset controls, with
  * Hex (HexStage) walking the grid as the player piece.
- * Finishing a run (right or wrong) unlocks Continue.
+ * Reaching the flag unlocks Continue; missing it offers Try again.
  */
 export function MoveHexScreen() {
   const router = useRouter();
-  // Continue unlocks once a run has ended, whether it reached the flag or not.
-  const [finished, setFinished] = useState(false);
   // Where Hex belongs right now (the board registers its own spot).
   const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -52,16 +50,21 @@ export function MoveHexScreen() {
 
   if (!GAME_SLIDE) return null;
 
+  // Reaching the flag unlocks Continue; a run that missed it turns the main
+  // button into "Try again", which takes the moves back.
+  const solved = result.success === true;
+  const failed = result.success === false;
+
   return (
     <LevelOneShell
       step={8}
       flush
       fit
       backdrop="/images/level-one/game-bg.png"
-      // The main button plays the moves Hex was given; once a run has ended it
-      // becomes Continue.
-      ctaLabel={finished ? "Continue" : "Play"}
-      ctaDisabled={finished ? false : !run.canRun}
+      // The main button plays the moves Hex was given; then it is Continue, or
+      // Try again after a miss.
+      ctaLabel={solved ? "Continue" : failed ? "Try again" : "Play"}
+      ctaDisabled={solved || failed ? false : !run.canRun}
       hint={{ visible: true, onUse: () => hintRef.current?.() }}
       // The wrong-result panel sits above the program panel (see GameBoardScreen's
       // z-index) and below the Play / Continue row, like on the quizzes; a tap
@@ -69,7 +72,7 @@ export function MoveHexScreen() {
       overlay={
         <>
           <div
-            className="absolute inset-0 z-[6]"
+            className="absolute inset-0 z-[9]"
             style={{ pointerEvents: result.success === false ? "auto" : "none" }}
             onClick={() => resetRef.current?.()}
           >
@@ -81,7 +84,11 @@ export function MoveHexScreen() {
         </>
       }
       onBack={() => router.push(levelOneHref(7))}
-      onContinue={finished ? () => router.push(levelOneCompleteHref()) : () => playRef.current?.()}
+      onContinue={() => {
+        if (solved) router.push(levelOneCompleteHref());
+        else if (failed) resetRef.current?.();
+        else playRef.current?.();
+      }}
     >
       {/* Hex is positioned against this box, so it must wrap the
         screen he walks around in. */}
@@ -90,7 +97,6 @@ export function MoveHexScreen() {
         <GameBoardScreen
           slide={GAME_SLIDE}
           onSolvedChange={onSolved}
-          onFinishedChange={setFinished}
           registerAnchor={setAnchorEl}
           borderless
           hintRef={hintRef}
