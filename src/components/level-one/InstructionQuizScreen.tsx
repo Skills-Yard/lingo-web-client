@@ -62,6 +62,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
     <LevelOneShell
       step={7}
       wash
+      fit
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
@@ -127,6 +128,16 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         <div className="relative flex flex-col gap-[23px]">
           {OPTIONS.map((option, i) => {
             const state = optionState(option.id, selectedId, checked, CORRECT_ID);
+            const base = optionDropIn(state === "selected");
+            const dropIn = {
+              ...base,
+              animate: {
+                ...base.animate,
+                scale: state === "selected" ? [1, 0.93, 1.07, 0.99, 1] : 1,
+                rotateX: state === "selected" ? [0, 14, -8, 3, 0] : 0,
+              },
+              transition: { ...base.transition, scale: { duration: 0.55, ease: "easeOut" as const }, rotateX: { duration: 0.55, ease: "easeOut" as const } },
+            };
             return (
               <HintFloat key={option.id} className="relative w-full" spin={false} active={hinted && selectedId === null && option.id === CORRECT_ID} onFlipEnd={() => setFlipped(true)}>
               {/* Where Hex lands: small, standing on the card's top edge. */}
@@ -134,7 +145,11 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                 <div ref={setHintSlot} aria-hidden className="pointer-events-none absolute -top-[58px] right-3 h-[72px] w-[72px]" />
               )}
               <motion.button
-                {...optionDropIn(state === "selected")}
+                {...dropIn}
+                // Pressed, the card sinks onto its 4px edge (see `active:border-b-0`);
+                // once picked it bounces and tips forward in 3D.
+                whileTap={{ scale: 0.97, y: 4 }}
+                style={{ transformPerspective: 600 }}
                 type="button"
                 disabled={checked}
                 onClick={() => {
@@ -143,7 +158,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                   setSelectedId(option.id);
                 }}
                 aria-pressed={state === "selected"}
-                className={`relative isolate flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] transition-[color,background-color,border-color,box-shadow] dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
+                className={`relative isolate flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] shadow-[0_3px_0_rgba(0,0,0,0.06)] active:border-b-0 active:shadow-none transition-[color,background-color,border-color,box-shadow] dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
               >
                 {/* The hint's orange fill, wiped in from the left behind the content. */}
                 <motion.span
