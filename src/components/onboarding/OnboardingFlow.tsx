@@ -288,9 +288,13 @@ export function OnboardingFlow({
     exitingRef.current = false;
     setExiting(false);
   }, [index]);
-  // The day / night scene's Hex leaves through the bottom either way.
-  const exitDirection = (side: "exitLeft" | "exitRight"): HexExitRequest["direction"] =>
-    stepId === "learningTime" ? "exitBottom" : side;
+  // The day / night scene's Hex leaves through the bottom either way; the
+  // greeting's Hex does too when going on.
+  const exitDirection = (side: "exitLeft" | "exitRight"): HexExitRequest["direction"] => {
+    if (stepId === "learningTime") return "exitBottom";
+    if (stepId === "greeting" && side === "exitRight") return "exitBottom";
+    return side;
+  };
   const exitMs = exitRequest?.direction === "exitBottom" ? HEX_EXIT_BOTTOM_MS : HEX_EXIT_MS;
   const afterHexExit = (direction: HexExitRequest["direction"], proceed: () => void) => {
     if (!step) {
@@ -680,6 +684,7 @@ export function OnboardingFlow({
           slot={foxOnScreen ? foxSlot : null}
           questionKey={isQuestion && step.hexMode === "onboarding" ? step.id : null}
           pickCount={pickCount}
+          bleedBottom={step?.kind === "fox-message" && !!step.hexBleedBottom}
         />
 
         {/* The splash/sign-up canvas stays mounted for the whole flow, so going

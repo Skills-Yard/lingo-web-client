@@ -429,6 +429,9 @@ export type OnboardingStep =
        * trigger on it — on arrival, or with `excite` at the excitement moment
        * instead. Replaces the `greet` / `excite` poses. */
       hexBeat?: HexOnboardingBeat;
+      /** Lets Hex's canvas run on below his box, so an entrance from the
+       * bottom or an `exitBottom` isn't cut off at the box's edge. */
+      hexBleedBottom?: boolean;
       /** Plays this full-screen Hex artboard instead of the flow's fox and
        * the bubble — the artboard has its own text ("You're all set!"). */
       hexScene?: HexScene;
@@ -515,6 +518,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     id: "greeting",
     bubble: () => [{ text: "Hey! I'm Hex,\nyour skills buddy" }],
     hexBeat: "hi",
+    hexBleedBottom: true,
     voiceover: ["/audios/hey.mp3"],
     cta: "Continue",
   },
@@ -530,6 +534,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     sparkle: true,
     excite: true,
     hexBeat: "ready",
+    hexBleedBottom: true,
     voiceover: ["/audios/text-2-screen.m4a", "/audios/ready.m4a"],
     voiceReads: "heading",
     bubble: () => [{ text: "Are you ready?" }],

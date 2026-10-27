@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import {
   HEX_STATE,
@@ -87,6 +87,11 @@ interface OnboardingFoxProps {
   /** Changes with every screen; on the `Onboarding` state machine each new
    * one fires `showQuestion` at once, before that screen's own triggers. */
   screenKey?: string | null;
+  /** How far (px, before the stage's scale) the canvas reaches below the fox's
+   * box, so Hex can enter from / leave through the bottom without being cut
+   * off at it. The artboard is still fitted into the box itself. `0` keeps the
+   * canvas on the box but ready to be bled; leave it out for a plain canvas. */
+  bleedBottom?: number;
 }
 
 /** Restarts the `Onboarding` machine from idle whenever it lands on a new screen. */
@@ -175,6 +180,7 @@ export function OnboardingFox({
   questionKey = null,
   pickCount = 0,
   screenKey = null,
+  bleedBottom,
 }: OnboardingFoxProps) {
   const waving = useHello(greet);
   const tapping = useTapping(tapCount, greet || !!beat);
@@ -185,12 +191,19 @@ export function OnboardingFox({
   else if (waving) state = HEX_STATE.hello;
   else if (excited) state = HEX_STATE.excited;
 
+  const bleed = useMemo(
+    () => (bleedBottom === undefined ? undefined : { x: 0, y: 0, bottom: bleedBottom }),
+    [bleedBottom],
+  );
   const { RiveComponent, ready, fireTrigger, reset } = useHexRive(
     LAYOUT,
     state,
     undefined,
     undefined,
     screenKey ?? questionKey ?? "fox",
+    undefined,
+    undefined,
+    bleed,
   );
   // Before the hooks below, so the machine is back at idle ahead of the
   // screen's triggers.
@@ -205,8 +218,12 @@ export function OnboardingFox({
   useHexExit(fireTrigger, ready);
 
   return (
-    <div className={`relative ${className ?? ""}`} style={style}>
-      <RiveComponent className="h-full w-full" />
+    // `data-hex-box`: the box Hex stands in (not the bled canvas), which the
+    // hidden dev panel (see DevPanel) uses as his tap target.
+    <div data-hex-box className={`relative ${className ?? ""}`} style={style}>
+      <div className="absolute inset-x-0 top-0" style={{ bottom: -(bleedBottom ?? 0) }}>
+        <RiveComponent className="h-full w-full" />
+      </div>
     </div>
   );
 }

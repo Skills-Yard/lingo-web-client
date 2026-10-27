@@ -48,7 +48,7 @@ export function useHexRive(
   entryKey: string | null = null,
   entryStyleOverride: number | null = null,
   enterTrigger: string = HEX_ONBOARDING_TRIGGER.enter,
-  bleed?: { x: number; y: number },
+  bleed?: { x: number; y: number; bottom?: number },
 ) {
   const { theme } = useTheme();
   const contextEntryStyle = useContext(HexEntryStyleContext);
@@ -72,6 +72,8 @@ export function useHexRive(
   // The bleed is in layout px, but the canvas is drawn at its on-screen size
   // (the shell scales its stage), so the inset is scaled the same way, and
   // redone whenever that scale changes (e.g. the browser toolbar hiding).
+  // `bottom` overrides `y` for the bottom edge alone, for a canvas that
+  // reaches further down than up (Hex entering from / leaving through the bottom).
   useEffect(() => {
     if (!rive || !bleed) return;
     const target = rive as unknown as { resizeToCanvas: () => void; canvas: HTMLCanvasElement };
@@ -84,10 +86,11 @@ export function useHexRive(
       original();
       const dpr = rive.devicePixelRatioUsed || window.devicePixelRatio || 1;
       const padX = bleed.x * stageScale() * dpr;
-      const padY = bleed.y * stageScale() * dpr;
+      const padTop = bleed.y * stageScale() * dpr;
+      const padBottom = (bleed.bottom ?? bleed.y) * stageScale() * dpr;
       const { width, height } = target.canvas;
-      if (width <= padX * 2 || height <= padY * 2) return;
-      rive.layout = rive.layout.copyWith({ minX: padX, minY: padY, maxX: width - padX, maxY: height - padY });
+      if (width <= padX * 2 || height <= padTop + padBottom) return;
+      rive.layout = rive.layout.copyWith({ minX: padX, minY: padTop, maxX: width - padX, maxY: height - padBottom });
     };
     target.resizeToCanvas = inset;
     rive.resizeDrawingSurfaceToCanvas();
