@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Heart, MessageCircle, Share2 } from "lucide-react";
-import { TOP_BAR_BOTTOM } from "./HomeStage";
+import { Bell, ChartNoAxesColumn, Heart, MessageCircle, Plus, Share2 } from "lucide-react";
+import { TOP_MARGIN } from "./HomeStage";
 import { FEED, STORIES, type Poll, type Post, type StoryRing } from "./feedData";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -15,7 +15,7 @@ const MUTED = "var(--h-muted)";
  * and some air. */
 const NAV_CLEARANCE = 60 + 38 + 24;
 
-const CARD = "w-full rounded-[18px] border-[1.5px] border-black/10 bg-white p-3.5 dark:border-white/12 dark:bg-[#1A1C22]";
+const CARD = "w-full rounded-2xl border border-black/10 bg-white p-3 dark:border-white/12 dark:bg-[#1A1C22]";
 
 const reveal = (delay: number) => ({
   initial: { opacity: 0, y: 14 },
@@ -25,16 +25,17 @@ const reveal = (delay: number) => ({
 
 function Story({ story }: { story: StoryRing }) {
   return (
-    <button type="button" className="flex shrink-0 flex-col items-center gap-1">
+    <button type="button" className="relative flex shrink-0 flex-col items-center gap-1.5">
       <span
-        className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 bg-white text-lg font-extrabold dark:bg-[#1A1C22]"
+        className="flex h-[52px] w-[52px] items-center justify-center rounded-full border-[2.5px] bg-white text-lg font-semibold dark:bg-[#1A1C22]"
         style={{ borderColor: story.color, color: INK }}
       >
         {story.letter}
       </span>
-      <span className="text-[11px] font-semibold" style={{ color: MUTED }}>
-        {story.name}
-      </span>
+      {story.id === "you" && (
+        <span className="absolute right-0 top-9 h-3 w-3 rounded-full border-2 border-white bg-[#01A17F] dark:border-[#0F1F26]" />
+      )}
+      <span className="text-xs font-medium leading-4 text-[#444444] dark:text-[#C8C7C5]">{story.name}</span>
     </button>
   );
 }
@@ -43,27 +44,29 @@ function PostCard({ post }: { post: Post }) {
   const [liked, setLiked] = useState(false);
   const { media } = post;
   return (
-    <article className={`${CARD} flex flex-col gap-2.5`}>
+    <article className={`${CARD} flex flex-col gap-3`}>
       <header className="flex items-center gap-2.5">
-        <span className="h-[34px] w-[34px] shrink-0 rounded-full" style={{ backgroundColor: post.avatar }} />
-        <h3 className="truncate text-base font-extrabold leading-[22px]" style={{ color: INK }}>
+        <span className="h-8 w-8 shrink-0 rounded-full" style={{ backgroundColor: post.avatar }} />
+        <h3 className="truncate text-base font-medium leading-6 text-[#2C2C2C] dark:text-white">
           {post.author}
         </h3>
       </header>
 
-      <div
-        className="flex h-[120px] w-full items-center justify-center rounded-xl"
-        style={{ backgroundColor: media.tint }}
-      >
-        {media.kind === "video" ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src="/images/feed/video.png" alt="" draggable={false} className="h-10 w-10 select-none" />
-        ) : (
-          <media.Icon className="h-10 w-10" style={{ color: media.color }} strokeWidth={2} />
-        )}
-      </div>
+      {media.kind === "image" ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={media.src} alt="" draggable={false} className="aspect-[2/1] w-full select-none rounded-xl object-cover" />
+      ) : (
+        <div className="flex h-[120px] w-full items-center justify-center rounded-xl" style={{ backgroundColor: media.tint }}>
+          {media.kind === "video" ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/images/feed/video.png" alt="" draggable={false} className="h-10 w-10 select-none" />
+          ) : (
+            <media.Icon className="h-10 w-10" style={{ color: media.color }} strokeWidth={2} />
+          )}
+        </div>
+      )}
 
-      <p className="text-sm font-semibold leading-5 text-[#444444] dark:text-[#C8C7C5]">{post.caption}</p>
+      <p className="text-base font-semibold leading-[22px] text-[#2C2C2C] dark:text-white">{post.caption}</p>
 
       <footer className="flex items-center gap-4 text-xs" style={{ color: MUTED }}>
         <button
@@ -110,9 +113,13 @@ function PollCard({ poll }: { poll: Poll }) {
   const total = counts.reduce((sum, n) => sum + n, 0);
 
   return (
-    <article className={`${CARD} flex flex-col gap-2`}>
-      <h3 className="text-base font-extrabold leading-[22px]" style={{ color: INK }}>
-        {poll.question}
+    <article className={`${CARD} flex flex-col gap-2.5`}>
+      <span className="flex w-fit items-center gap-1 rounded-lg bg-[#E8F8F4] px-2 py-1 text-xs font-medium leading-4 text-[#007A70] dark:bg-[#133A35] dark:text-[#00B8A9]">
+        <ChartNoAxesColumn className="h-3.5 w-3.5" strokeWidth={2.2} />
+        Quick poll
+      </span>
+      <h3 className="text-base font-semibold leading-[22px] text-[#2C2C2C] dark:text-white">
+        {poll.question.replace("Quick poll · ", "")}
       </h3>
       {poll.options.map((option, i) => {
         const percent = Math.round((counts[i] / total) * 100);
@@ -180,25 +187,28 @@ function PollCard({ poll }: { poll: Poll }) {
  */
 export function FeedScreen() {
   return (
-    <main
-      style={{ top: TOP_BAR_BOTTOM }}
-      className={`font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white`}
-    >
+    <main className="font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white">
       <div
-        className="mx-auto w-full max-w-[430px] px-4 pt-1"
-        style={{ paddingBottom: NAV_CLEARANCE }}
+        className="mx-auto w-full max-w-[430px] px-4"
+        style={{ paddingTop: TOP_MARGIN + 30, paddingBottom: NAV_CLEARANCE }}
       >
-        <motion.h1 {...reveal(0.05)} className="text-2xl font-extrabold leading-tight">
-          Feed
-        </motion.h1>
+        <motion.header {...reveal(0.05)} className="flex items-center justify-between">
+          <button type="button" aria-label="New post" className="flex h-8 w-8 items-center justify-center">
+            <Plus className="h-6 w-6" strokeWidth={1.8} />
+          </button>
+          <h1 className="text-xl font-semibold leading-7">Your Community</h1>
+          <button type="button" aria-label="Notifications" className="flex h-8 w-8 items-center justify-center">
+            <Bell className="h-6 w-6" strokeWidth={1.6} />
+          </button>
+        </motion.header>
 
-        <motion.div {...reveal(0.1)} className="scrollbar-none sticky top-0 z-10 -mx-4 flex gap-3.5 overflow-x-auto bg-white px-4 pb-2 pt-3 dark:bg-[#0F1F26]">
+        <motion.div {...reveal(0.1)} className="scrollbar-none -mx-4 mt-5 flex gap-4 overflow-x-auto px-4 pb-1">
           {STORIES.map((story) => (
             <Story key={story.id} story={story} />
           ))}
         </motion.div>
 
-        <div className="mt-2 flex flex-col gap-3">
+        <div className="mt-4 flex flex-col gap-4">
           {FEED.map((item, i) => (
             <motion.div key={item.id} {...reveal(0.15 + Math.min(i, 3) * 0.05)}>
               {item.type === "post" ? <PostCard post={item} /> : <PollCard poll={item} />}

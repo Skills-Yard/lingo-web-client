@@ -3,5 +3,6 @@
 export const LEARNER_STATS = {
   streak: 4,
   gems: 373,
+  hints: 2,
   battery: { current: 18, max: 20 },
 } as const;

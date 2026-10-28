@@ -3,88 +3,68 @@
 import type { ReactNode } from "react";
 import { BatteryMenu } from "@/components/onboarding/BatteryMenu";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
-import { batteryLabel, useBattery } from "./batteryStore";
+import { batteryCount, batteryLabel, useBattery } from "./batteryStore";
 import { TOP_MARGIN } from "./HomeStage";
 import { LEARNER_STATS } from "./learnerStats";
 
-function StatCard({
-  icon,
-  art,
-  tint,
-  darkTint,
+/** One stat in the home's row: its artwork and the number beside it. */
+function StatItem({
+  children,
   value,
   label,
   color,
   darkColor,
-  className = "",
 }: {
-  /** An image under public/images/stats. */
-  icon?: string;
-  /** Drawn in the icon's place (the battery). */
-  art?: ReactNode;
-  /** The square behind the icon. */
-  tint: string;
-  /** The same square, in dark mode. */
-  darkTint: string;
+  children: ReactNode;
   value: string;
+  /** Read out with the value, e.g. "55 day streak". */
   label: string;
   color: string;
   /** The value's colour in dark mode. */
   darkColor: string;
-  className?: string;
 }) {
   return (
-    <div className={`flex h-12 min-w-0 items-center gap-2 rounded-[12px] border border-black/8 bg-white px-3 dark:border-white/12 dark:bg-[#1A1C22] ${className}`}>
-      <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center overflow-hidden rounded-[8px] dark:bg-(--dark-tint)!"
-        style={{ backgroundColor: tint, "--dark-tint": darkTint } as React.CSSProperties}
-      >
-        {art ?? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={icon} alt="" draggable={false} className="h-[18px] w-[18px] select-none object-contain" />
-        )}
+    <div className="flex h-9 items-center gap-1.5">
+      <span aria-hidden className="flex h-7 items-center justify-center">
+        {children}
       </span>
-      <span className="flex min-w-0 flex-col">
-        <span
-          className="truncate text-[15px] font-semibold leading-[19px] dark:text-(--dark-color)!"
-          style={{ color, "--dark-color": darkColor } as React.CSSProperties}
-        >
-          {value}
-        </span>
-        <span className="truncate text-[10px] leading-[13px] text-[#818185] dark:text-[#9FA19F]">{label}</span>
+      <span
+        className="text-lg font-semibold leading-none dark:text-(--dark-color)!"
+        style={{ color, "--dark-color": darkColor } as React.CSSProperties}
+      >
+        {value}
+        <span className="sr-only"> {label}</span>
       </span>
     </div>
   );
 }
 
-/** The battery card: `battery.riv` for the icon and the live level for the
- * number. Tapping it opens the same hidden dev panel as the Level 1 header. */
-function BatteryStatCard() {
+const statImg = (src: string, className: string) => (
+  // eslint-disable-next-line @next/next/no-img-element
+  <img src={src} alt="" draggable={false} className={`select-none object-contain ${className}`} />
+);
+
+/** The four stats in one row: streak, gems, hints and the battery (its Rive
+ * artboard). Tapping the battery opens the same hidden dev panel as the
+ * Level 1 header. */
+export function HomeStats() {
   const battery = useBattery();
   return (
-    <BatteryMenu className="relative min-w-0" buttonClassName="block w-full text-left">
-      <StatCard
-        art={<PersistentBattery className="w-6" />}
-        tint="#E9F5F0"
-        darkTint="#133A35"
-        value={batteryLabel(battery)}
-        label="battery"
-        color="#01A17F"
-        darkColor="#01A17F"
-        className="w-full"
-      />
-    </BatteryMenu>
-  );
-}
-
-/** The three stat cards: streak, gems, battery. */
-export function HomeStats() {
-  return (
-    // A grid, so the three columns stay equal whatever wraps the cards.
-    <div className="grid grid-cols-3 gap-2 font-[family-name:var(--font-app-poppins)]">
-      <StatCard icon="/images/stats/flame.png" tint="#FFF3DE" darkTint="#3A2A1A" value={String(LEARNER_STATS.streak)} label="day streak" color="#FF8D42" darkColor="#FF8D42" />
-      <StatCard icon="/images/stats/gem.png" tint="#E5EFFD" darkTint="#1B2B40" value={String(LEARNER_STATS.gems)} label="gems" color="#2F80ED" darkColor="#5AA2FF" />
-      <BatteryStatCard />
+    <div className="flex items-center justify-between font-[family-name:var(--font-app-poppins)]">
+      <StatItem value={String(LEARNER_STATS.streak)} label="day streak" color="#FF8D42" darkColor="#FF8D42">
+        {statImg("/images/streak.png", "h-6 w-auto")}
+      </StatItem>
+      <StatItem value={String(LEARNER_STATS.gems)} label="gems" color="#7B5CF0" darkColor="#A48BFF">
+        {statImg("/images/gem.png", "h-6 w-6")}
+      </StatItem>
+      <StatItem value={String(LEARNER_STATS.hints)} label="hints" color="#F2A900" darkColor="#FFC93C">
+        {statImg("/images/idea.png", "h-6 w-auto")}
+      </StatItem>
+      <BatteryMenu className="relative" buttonClassName="block text-left">
+        <StatItem value={batteryCount(battery)} label="battery" color="#01A17F" darkColor="#01A17F">
+          <PersistentBattery className="w-9" />
+        </StatItem>
+      </BatteryMenu>
     </div>
   );
 }

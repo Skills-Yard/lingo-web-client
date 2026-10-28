@@ -32,7 +32,7 @@ export function HomeShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-white dark:bg-[#0F1F26]">
       {children}
-      {pathname !== "/home" && pathname !== "/level" && <HomeTopBar />}
+      {pathname !== "/home" && pathname !== "/level" && pathname !== "/careers" && pathname !== "/feed" && pathname !== "/events" && pathname !== "/dashboard" && <HomeTopBar />}
       {/* The level map has no nav: its own Home button lives in the screen. */}
       {pathname === "/level" ? null : (
         <div

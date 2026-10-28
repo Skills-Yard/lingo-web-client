@@ -206,6 +206,10 @@ export function FoxSlot({
  * transform) keeps the Rive canvas from being re-sized every frame while it
  * glides between slots of different sizes. As big as the biggest slot. */
 const BASE_SIZE = 320;
+/** On a `bleedBottom` screen the canvas reaches this far (in base units) below
+ * the fox's box, which is more than the screen has room for, so Hex's entrance
+ * from the bottom and his exit through it are never cut off. */
+const BLEED_BOTTOM = 800;
 const GLIDE = { stiffness: 210, damping: 30, mass: 1 } as const;
 /** Arriving at a hidden slot: fade out as the glide lands. */
 const HIDE_FADE = { duration: 0.25, delay: 0.3 } as const;
@@ -230,12 +234,16 @@ export function PersistentFox({
   slot,
   questionKey = null,
   pickCount = 0,
+  bleedBottom = false,
 }: {
   containerRef: RefObject<HTMLElement | null>;
   slot: SlotInfo | null;
   /** See OnboardingFox's `questionKey` / `pickCount`. */
   questionKey?: string | null;
   pickCount?: number;
+  /** Lets the canvas run on below the fox's box (see `BLEED_BOTTOM`), for a
+   * screen whose Hex enters from / exits through the bottom. */
+  bleedBottom?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   const x = useSpring(0, GLIDE);
@@ -381,6 +389,7 @@ export function PersistentFox({
         pickCount={pickCount}
         screenKey={questionKey ?? slot?.id ?? null}
         tapCount={tapCount}
+        bleedBottom={bleedBottom ? BLEED_BOTTOM : 0}
       />
     </motion.div>
   );
