@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Layout, Fit, Alignment, type Rive } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
-import { Check, Code2, House, Maximize, Menu, Minimize, Moon, RotateCcw, Sun, Undo2 } from "lucide-react";
+import { Check, Code2, House, Maximize, Menu, Minimize, MapPin, Moon, Sun, Undo2 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { TOP_MARGIN } from "./HomeStage";
@@ -28,7 +28,7 @@ import {
   PLAYABLE_MODULES,
   readModuleJustDone,
   readModulesDone,
-  resetModules,
+  setModulesDone,
 } from "@/lib/levelProgress";
 import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
 import { hexRiveSource } from "@/lib/rive/hexFile";
@@ -654,13 +654,16 @@ function LevelMenu({
   done,
   onComplete,
   onUndo,
-  onResetPath,
+  playing,
+  onPickModule,
 }: {
   done: number;
   onComplete: () => void;
   onUndo: () => void;
-  /** Forgets the finished modules: Hex goes back to module 1's block. */
-  onResetPath: () => void;
+  /** The module whose block Hex stands on (1-based). */
+  playing: number;
+  /** Puts Hex on module `module`'s block, so tapping it opens that module. */
+  onPickModule: (module: number) => void;
 }) {
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -716,10 +719,23 @@ function LevelMenu({
               <Undo2 className="h-5 w-5" />
               Undo module
             </button>
-            <button type="button" className={MENU_ROW} onClick={onResetPath}>
-              <RotateCcw className="h-5 w-5" />
-              Reset path
-            </button>
+            <div className="mx-3 my-1 border-t border-black/8 dark:border-white/12" />
+            {Array.from({ length: PLAYABLE_MODULES }, (_, i) => i + 1).map((module) => (
+              <button
+                key={module}
+                type="button"
+                className={MENU_ROW}
+                aria-pressed={module === playing}
+                onClick={() => {
+                  onPickModule(module);
+                  setOpen(false);
+                }}
+              >
+                <MapPin className={`h-5 w-5 ${module === playing ? "text-[#6F5CFF]" : ""}`} />
+                <span className="flex-1">Module {module}</span>
+                {module === playing && <Check className="h-4 w-4 text-[#6F5CFF]" />}
+              </button>
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
@@ -967,8 +983,9 @@ export function HomeScreen({
             done={done}
             onComplete={() => setDone((d) => Math.min(d + 1, MODULES.length))}
             onUndo={() => setDone((d) => Math.max(d - 1, 0))}
-            onResetPath={() => {
-              resetModules();
+            playing={moduleNumber}
+            onPickModule={(module) => {
+              setModulesDone(module - 1);
               setArrived(false);
               rerender();
             }}

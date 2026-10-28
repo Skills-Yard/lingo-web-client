@@ -46,12 +46,14 @@ export function clearModuleJustDone(): void {
   }
 }
 
-/** Forgets every finished module (the path starts over). */
-export function resetModules(): void {
+/** Puts the path at `count` finished modules (Hex on the block after them),
+ * with no move-on to play. 0 starts the path over. */
+export function setModulesDone(count: number): void {
   try {
-    window.localStorage.removeItem(DONE_KEY);
+    if (count > 0) window.localStorage.setItem(DONE_KEY, String(count));
+    else window.localStorage.removeItem(DONE_KEY);
     window.sessionStorage.removeItem(JUST_DONE_KEY);
   } catch {
-    // Nothing stored to clear.
+    // The path just stays where it was.
   }
 }
