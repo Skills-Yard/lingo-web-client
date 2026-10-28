@@ -205,7 +205,7 @@ export const HEX_ENTRY_STYLE_BY_STEP: Readonly<
   Record<string, number | HexDirectionalEntryStyle>
 > = {
   greeting: 5,
-  "ready-check": 8,
+  "ready-check": 7,
   career: FORWARD_3_BACK_4,
   "good-news": 6,
   pythonLevel: FORWARD_3_BACK_4,
