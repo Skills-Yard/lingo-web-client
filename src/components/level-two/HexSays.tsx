@@ -1,15 +1,18 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Poppins } from "next/font/google";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { TYPE_DELAY_MS, useTyped } from "@/components/level-one/useTyped";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 
+const poppins = Poppins({ subsets: ["latin"], weight: "500" });
+
 /** Hex beside his line; once `cheer` turns on he gives a thumbs up. */
 export function HexSays({ entryKey, line, cheer }: { entryKey: string; line: string; cheer: boolean }) {
   return (
-    <div className="mt-4 flex w-full items-center gap-2">
-      <div aria-hidden className="relative h-[92px] w-[92px] shrink-0">
+    <div className="mt-4 flex w-full items-center justify-between">
+      <div aria-hidden className="relative h-[110px] w-[110px] shrink-0">
         <OnboardingHex entryKey={entryKey} cue={cheer ? HEX_ONBOARDING_TRIGGER.continueThumb : null} />
       </div>
       <SpeechBubble key={line}>{line}</SpeechBubble>
@@ -17,8 +20,9 @@ export function HexSays({ entryKey, line, cheer }: { entryKey: string; line: str
   );
 }
 
-/** Hex's line, in a bubble whose tail points back at him, typed in letter by
- * letter the way module 1's teacher line is. */
+/** Hex's line (Figma "Rectangle 142": 212.5 x 86, 3px teal border over a
+ * blue drop edge), its tail pointing back at him, typed in letter by letter
+ * the way module 1's teacher line is. */
 function SpeechBubble({ children }: { children: string }) {
   const typed = useTyped(children, true);
   return (
@@ -27,16 +31,17 @@ function SpeechBubble({ children }: { children: string }) {
       animate={{ opacity: 1, scale: 1, x: 0 }}
       transition={{ type: "spring", stiffness: 260, damping: 20, delay: TYPE_DELAY_MS / 1000 }}
       style={{ transformOrigin: "0% 50%" }}
-      className="relative min-w-0 flex-1 rounded-xl border-[1.5px] border-[#04ACAB] bg-white px-3 py-2.5 shadow-[0_4px_12px_rgba(4,172,171,0.12)]"
+      className="relative flex min-h-[86px] w-[212.5px] shrink-0 items-center justify-center rounded-xl border-[3px] border-[#00B8A9] bg-white px-[19.5px] py-2.5 shadow-[0_3px_0_#128CB3]"
     >
       <span
         aria-hidden
-        className="absolute top-1/2 -left-[7px] h-3 w-3 -translate-y-1/2 rotate-45 border-b-[1.5px] border-l-[1.5px] border-[#04ACAB] bg-white"
+        className="absolute top-[42%] -left-[10px] h-[15px] w-[15px] -translate-y-1/2 rotate-45 rounded-bl-[3px] border-b-[3px] border-l-[3px] border-[#00B8A9] bg-white"
       />
-      <p className="relative text-[13px] leading-[18px] font-medium text-[#2C2C2C]">
-        {/* The full line, unseen, holds the bubble at its final size. */}
-        <span className="invisible">{children}</span>
-        <span className="absolute inset-0">{typed}</span>
+      <p className={`${poppins.className} relative text-center text-[16px] leading-[1.24] font-medium text-[#444444]`}>
+        {/* The whole line is laid out from the start (the rest unseen), so
+          centred lines never shift as letters arrive. */}
+        {typed}
+        <span className="invisible">{children.slice(typed.length)}</span>
       </p>
     </motion.div>
   );
