@@ -230,14 +230,18 @@ export function GameBoardScreen({
   }, [success, onFinishedChange]);
 
   return (
-    <div className={`flex flex-col gap-3 md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center ${borderless ? "min-h-full flex-1" : ""}`}>
+    // Level 1 (`borderless`) stays the phone column's width: the intro's desktop
+    // widths would let its full-stage rows stretch it and push it off centre.
+    <div className={`flex flex-col gap-3 ${borderless ? "min-h-full w-full flex-1" : "md:mx-auto md:max-w-xl lg:max-w-4xl md:min-h-full md:justify-center"}`}>
       {/* ── Header — Robu stands here for the first beat (same arrival every
           other screen gets), then leaves for the board once he joins the
           game; his icon un-reserves that space the instant he does, so the
           bubble/description expand to the full row on their own — nothing
           else here needs to change to make room. ── */}
       {borderless && (
-        <div className="relative top-3 left-1/2 flex h-[74px] w-[calc(var(--stage-w)-50px)] shrink-0 -translate-x-1/2 items-start">
+        // Phone width at most: Hex's slot is a share of this row, so on a wide
+        // desktop he would otherwise outgrow the screen.
+        <div className="relative top-3 left-1/2 flex h-[74px] w-[calc(min(var(--stage-w),560px)-50px)] shrink-0 -translate-x-1/2 items-start">
           {/* The heading sits over Hex's box (it's above him). */}
           <h1 className="relative z-30 mt-[5px] w-[72%] min-w-0 text-[28px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
             {HEADING_WORDS.map((word, w) => (
@@ -352,7 +356,7 @@ export function GameBoardScreen({
         {/* ── Right column — program slots, actions and run controls ── */}
         <div
           inert={locked}
-          className={`flex flex-col ${borderless ? "relative top-3 left-1/2 z-[4] mt-auto w-(--stage-w) max-w-none -translate-x-1/2 items-center rounded-t-[38px] pt-1 bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
+          className={`flex flex-col ${borderless ? "relative top-3 left-1/2 z-[4] mt-auto w-[min(var(--stage-w),560px)] max-w-none -translate-x-1/2 items-center rounded-t-[38px] pt-1 bg-white dark:bg-background" : "gap-3 lg:order-2 lg:w-100 lg:shrink-0"} transition-[filter] duration-[1400ms] ease-in-out ${locked ? "pointer-events-none grayscale select-none" : "grayscale-0"}`}
         >
           {borderless && (
             <div className="flex h-11 w-full items-center justify-center gap-1.5 rounded-t-[38px] bg-white px-3 dark:bg-white/6">

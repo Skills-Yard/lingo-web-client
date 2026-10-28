@@ -12,6 +12,8 @@ const HINTS_LEFT = 1;
 const CTA_SCALE = 1.7;
 /** The least room left between the hint button and the scaled-up main button. */
 const MIN_GAP = 12;
+/** The hint row's widest width (stage px) — a phone's whole stage, so only a desktop is capped. */
+const HINT_ROW_MAX_W = 560;
 
 type ActionRowProps = {
   /** The row's widest width (px) — it keeps its phone size on a desktop. */
@@ -28,12 +30,15 @@ type ActionRowProps = {
 /**
  * The bottom row of every Level 1 screen: the hint button (where there is one)
  * and Continue as one component, spread to the two ends of the row
- * (`justify-between`). With the hint showing, the row runs the full width of the screen, 50px in from each side wall, hint at the left and the button at the
+ * (`justify-between`). With the hint showing, the row runs the full width of the (phone-width) row, 50px in from each side wall, hint at the left and the button at the
  * right, as far apart as they go (6px in from the side walls otherwise).
  */
 export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, onContinue }: ActionRowProps) {
   return (
-    <div className={`relative z-10 mx-auto w-full shrink-0 pb-9 ${hint ? "px-[50px]" : "px-1.5"}`} style={{ maxWidth: hint ? undefined : maxWidth }}>
+    // Capped even with the hint (wider, the same as the game panel above it):
+    // the row's height follows its width (the aspect ratio below), so a
+    // full-desktop-width row would outgrow the screen.
+    <div className={`relative z-10 mx-auto w-full shrink-0 pb-9 ${hint ? "px-[50px]" : "px-1.5"}`} style={{ maxWidth: hint ? HINT_ROW_MAX_W : maxWidth }}>
       {/* Fixed at the full-width button's own ratio, so the row never changes
         height while the hint slides in and the button narrows beside it. */}
       <div className="flex w-full items-center justify-between" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
