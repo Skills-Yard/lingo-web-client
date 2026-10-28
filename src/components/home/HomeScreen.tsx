@@ -25,6 +25,7 @@ import { LevelStats } from "./HomeTopBar";
 import { configureRiveRuntime, HEX_EXIT_MS, HEX_ONBOARDING_TRIGGER, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import {
   clearModuleJustDone,
+  completeModule,
   PLAYABLE_MODULES,
   readModuleJustDone,
   readModulesDone,
@@ -770,7 +771,6 @@ export function HomeScreen({
   const [scale, setScale] = useState(1);
   const [viewH, setViewH] = useState(STAGE_H);
   const [boxW, setBoxW] = useState(STAGE_W);
-  const [done, setDone] = useState(0);
   const [popupOpen, setPopupOpen] = useState(false);
   const currentBlock = useRef<BlockController | null>(null);
   // The level Hex stands on, read from the learner's finished modules (only
@@ -807,6 +807,17 @@ export function HomeScreen({
   const current = path?.current ?? FIRST_MODULE_LEVEL;
   const currentPoint = levelCenter(current);
   const moduleNumber = current - FIRST_MODULE_LEVEL + 1;
+  // The finished modules' cards collapse to the bottom of the screen; the one
+  // Hex has just finished goes as he arrives on the next block.
+  const done = Math.min(moduleNumber - 1, MODULES.length);
+  /** Puts the path at `count` finished modules; `moveOn` plays Hex leaving
+   * the last of them for the next block (and its card going down). */
+  const goTo = (count: number, moveOn = false) => {
+    if (moveOn) completeModule(count);
+    else setModulesDone(count);
+    setArrived(false);
+    rerender();
+  };
   const lesson = MODULE_LESSONS[moduleNumber - 1] ?? COMING_SOON;
   // Arriving, he comes in from the block he left; otherwise he just enters.
   const enterTrigger = path?.arrived ? moveTriggers(current - 1, current).enter : HEX_ONBOARDING_TRIGGER.enter;
@@ -981,14 +992,10 @@ export function HomeScreen({
           <LevelStats className="pointer-events-auto min-w-0 flex-1" />
           <LevelMenu
             done={done}
-            onComplete={() => setDone((d) => Math.min(d + 1, MODULES.length))}
-            onUndo={() => setDone((d) => Math.max(d - 1, 0))}
+            onComplete={() => goTo(done + 1, true)}
+            onUndo={() => goTo(done - 1)}
             playing={moduleNumber}
-            onPickModule={(module) => {
-              setModulesDone(module - 1);
-              setArrived(false);
-              rerender();
-            }}
+            onPickModule={(module) => goTo(module - 1)}
           />
         </motion.div>
 
@@ -1025,7 +1032,7 @@ export function HomeScreen({
               <ModuleCard
                 key={m.id}
                 title={m.title}
-                progress={m.base}
+                progress={i < done ? LESSONS_PER_MODULE : m.base}
                 place={cardPlace(i, done, viewH * scale - CARDS_TOP)}
                 compact={i < done}
               />
