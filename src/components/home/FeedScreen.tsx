@@ -190,7 +190,7 @@ export function FeedScreen() {
     <main className="font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white">
       <div className="mx-auto w-full max-w-[430px]" style={{ paddingBottom: NAV_CLEARANCE }}>
         {/* The whole top part (buttons, title, stories) sticks; the posts scroll under it. */}
-        <div className="sticky top-0 z-10 bg-white pb-4 dark:bg-[#0F1F26]" style={{ paddingTop: TOP_MARGIN + 30 }}>
+        <div className="sticky top-0 z-10 bg-white pb-4 dark:bg-[#0F1F26]" style={{ paddingTop: TOP_MARGIN }}>
           <motion.header {...reveal(0.05)} className="flex items-center justify-between px-4">
             <button type="button" aria-label="New post" className="flex h-8 w-8 items-center justify-center">
               <Plus className="h-6 w-6" strokeWidth={1.8} />

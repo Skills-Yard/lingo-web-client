@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { animate, AnimatePresence, motion, useMotionValue, type PanInfo } from "framer-motion";
 import { Bell, ChartNoAxesColumn, ChevronLeft, ChevronRight, CodeXml, Play, Plus } from "lucide-react";
-import { HomeStage } from "./HomeStage";
+import { HomeStage, STAGE_GUTTER } from "./HomeStage";
 import { DailyQuests, HappeningSoon, HexGreetingCard, ModulePath } from "./HomeSections";
 import { NotificationsPopup } from "./NotificationsPopup";
 import { HomeStats } from "./HomeTopBar";
@@ -309,7 +309,7 @@ export function MainHomeScreen({
   );
   return (
     <HomeStage stageHeight={STAGE_H} scroll>
-        <div className="flex flex-col px-4 pb-6">
+        <div className={`flex flex-col pb-6 ${STAGE_GUTTER}`}>
           <motion.div {...reveal(0)}>
             <HomeStats />
           </motion.div>

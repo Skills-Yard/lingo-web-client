@@ -201,9 +201,10 @@ const HEX_IDLE_REPEAT_MS = 4800;
 
 /** The artboard is drawn at `LIVE_RIV_SCALE` world px per artboard px inside
  * a canvas that is bigger than it, so animations can spill past its edges
- * without being clipped. The current block's canvas is a full screen tall and
- * wide enough to reach both screen edges, so its animations can play anywhere;
- * every other block only gets `BLEED` artboard px of room on each side. */
+ * without being clipped. The current block's canvas (and its neighbours') is a
+ * full screen tall and wide enough to reach both screen edges, so its
+ * animations can play anywhere; every other block only gets `BLEED` artboard
+ * px of room on each side. */
 const BLEED = 80;
 
 const artboardCentre = (cx: number, cy: number): Point => ({
@@ -387,18 +388,21 @@ function PathBlock({
   enterTrigger,
   onLaunch,
   controllerRef,
+  wide,
 }: {
   cx: number;
   cy: number;
   pathState: number;
   side: Side;
+  /** A full-screen canvas, for animations that reach past the block. */
+  wide: boolean;
   enterTrigger?: string;
   onLaunch?: () => void;
   controllerRef?: MutableRefObject<BlockController | null>;
 }) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const near = useNearViewport(sentinelRef);
-  const box = useMemo(() => canvasBox(cx, cy, !!controllerRef), [cx, cy, controllerRef]);
+  const box = useMemo(() => canvasBox(cx, cy, wide), [cx, cy, wide]);
 
   return (
     <>
@@ -442,6 +446,9 @@ function PlatformArt({ spec, launch }: { spec: PlatformSpec; launch: Launch }) {
       cy={cy}
       pathState={pathStateOf(level, launch.current)}
       side={sideOf(level)}
+      // The blocks either side of Hex's are wide already, so when he moves on
+      // no canvas is resized (and redrawn) under him mid-animation.
+      wide={Math.abs(level - launch.current) <= 1}
       enterTrigger={isCurrent ? launch.enterTrigger : undefined}
       onLaunch={isCurrent ? launch.onLaunch : undefined}
       controllerRef={isCurrent ? launch.controllerRef : undefined}
@@ -551,7 +558,9 @@ const homeButtonBottom = (done: number) =>
     ? HOME_BUTTON_BOTTOM
     : BOTTOM_GAP + CARD_COMPACT_H + STACK_PEEK * Math.min(done - 1, STACK_VISIBLE) + HOME_BUTTON_GAP;
 
-const SPRING = { type: "spring", stiffness: 300, damping: 32, mass: 0.9 } as const;
+/** A finished card's trip down the screen (and the Home button riding up with
+ * it): a long, even ease in and out, not a spring that shoots over the distance. */
+const CARD_MOVE = { duration: 0.9, ease: [0.65, 0, 0.35, 1] } as const;
 
 /** One module's card. Full size while it is the current module, compact once
  * finished; both layouts stay mounted and cross-fade as the card travels. */
@@ -567,20 +576,23 @@ function ModuleCard({
   compact: boolean;
 }) {
   const percent = (progress / LESSONS_PER_MODULE) * 100;
-  const fade = { duration: 0.2 };
+  // The layout it is leaving fades out early in the trip, the one it is
+  // taking fades in as it settles, so the two never show at once.
+  const fadeOut = { duration: 0.3, ease: "easeOut" } as const;
+  const fadeIn = { duration: 0.4, ease: "easeOut", delay: 0.4 } as const;
   return (
     <motion.div
-      className="absolute top-0 box-border overflow-hidden rounded-lg border-b-[6px] border-[#BDBA99] bg-gradient-to-b from-white from-[30.82%] to-[#DCD5FE] shadow-[1px_1px_7.3px_1px_rgba(0,0,0,0.25)] dark:border-[#3a4a45] dark:from-[#1c2e36] dark:to-[#2b2a57]"
+      className="absolute top-0 box-border overflow-hidden rounded-lg border-b-[6px] border-[#BDBA99] bg-gradient-to-b from-white from-[30.82%] to-[#DCD5FE] shadow-[1px_1px_7.3px_1px_rgba(0,0,0,0.25)] will-change-transform dark:border-[#3a4a45] dark:from-[#1c2e36] dark:to-[#2b2a57]"
       style={{ left: 16, right: 16, transformOrigin: "50% 0%", zIndex: place.zIndex }}
       initial={false}
       animate={{ y: place.y, scale: place.scale, height: place.height, opacity: place.opacity }}
-      transition={{ ...SPRING, opacity: { duration: 0.25 } }}
+      transition={{ ...CARD_MOVE, opacity: { duration: 0.4 } }}
     >
       {/* Full */}
       <motion.div
         className="absolute inset-0 flex items-center gap-2.5 p-[18px]"
         animate={{ opacity: compact ? 0 : 1 }}
-        transition={fade}
+        transition={compact ? fadeOut : fadeIn}
       >
         <div className="flex h-[116px] min-w-0 flex-1 flex-col gap-2.5">
           <div className="flex h-[30px] items-center gap-2.5">
@@ -612,7 +624,7 @@ function ModuleCard({
       <motion.div
         className="absolute inset-0 flex items-center gap-2.5 px-[18px]"
         animate={{ opacity: compact ? 1 : 0 }}
-        transition={fade}
+        transition={compact ? fadeIn : fadeOut}
         aria-hidden={!compact}
       >
         <div className="flex w-[229px] shrink-0 flex-col gap-2">
@@ -1004,7 +1016,7 @@ export function HomeScreen({
           className="pointer-events-none absolute inset-x-0 z-50 mx-auto w-full max-w-[430px] px-4"
           initial={false}
           animate={{ bottom: homeButtonBottom(done) }}
-          transition={SPRING}
+          transition={CARD_MOVE}
         >
           <motion.button
             type="button"

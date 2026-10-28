@@ -12,6 +12,8 @@ const HINTS_LEFT = 1;
 const CTA_SCALE = 1.7;
 /** The least room left between the hint button and the scaled-up main button. */
 const MIN_GAP = 12;
+/** The empty band (%) above and below the button's art in its box, left out of the click area. */
+const CTA_MARGIN_Y = 30;
 /** The hint row's widest width (stage px) — a phone's whole stage, so only a desktop is capped. */
 const HINT_ROW_MAX_W = 560;
 
@@ -61,8 +63,9 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, onCon
           className={hint ? "min-w-0 flex-none transition-[height] duration-500 ease-out" : "min-w-0 flex-1"}
           // With the hint showing, the button's art is drawn with margins that
           // make it look small: it is scaled up from its right edge, so it
-          // grows away from the hint.
-          {...(hint && { style: { aspectRatio: "auto", width: `calc((100% - ${HINT_SIZE + MIN_GAP}px) / ${CTA_SCALE})`, height: "100%", transform: `scale(${CTA_SCALE})`, transformOrigin: "right center" } })}
+          // grows away from the hint. Scaling grows its click area too, over the
+          // game panel above, so it is clipped to the art (the margins are empty).
+          {...(hint && { style: { aspectRatio: "auto", width: `calc((100% - ${HINT_SIZE + MIN_GAP}px) / ${CTA_SCALE})`, height: "100%", transform: `scale(${CTA_SCALE})`, transformOrigin: "right center", clipPath: `inset(${CTA_MARGIN_Y}% 0)` } })}
         >
           {ctaLabel}
         </Button3D>

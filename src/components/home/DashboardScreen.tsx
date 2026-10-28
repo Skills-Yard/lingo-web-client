@@ -125,7 +125,7 @@ export function DashboardScreen({ name = "Alex" }: { name?: string }) {
       style={{ top: TOP_MARGIN }}
       className="font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-x-0 bottom-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white"
     >
-      <div className="mx-auto w-full max-w-[430px] px-4 pt-1" style={{ paddingBottom: NAV_CLEARANCE }}>
+      <div className="mx-auto w-full max-w-[430px] px-4" style={{ paddingBottom: NAV_CLEARANCE }}>
         <motion.header {...reveal(0)} className="flex items-center gap-3">
           {img("/images/home/profile-avatar.png", "h-14 w-14 shrink-0 rounded-full object-cover", "Profile")}
           <div className="min-w-0 flex-1">

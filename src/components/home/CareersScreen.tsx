@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { AppWindow, BrainCircuit, ChartNoAxesColumn, CodeXml, Search, ShieldCheck, type LucideIcon } from "lucide-react";
 import { CAREERS, FILTERS, type Career, type Filter } from "./careersData";
-import { HomeStage, TOP_MARGIN } from "./HomeStage";
+import { HomeStage, STAGE_GUTTER } from "./HomeStage";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -86,8 +86,8 @@ export function CareersScreen() {
   );
 
   return (
-    <HomeStage stageHeight={STAGE_H} topMargin={TOP_MARGIN + 30} className="bg-[#F3F4F7] dark:bg-[#0F1F26]">
-      <div className="flex h-full flex-col px-4">
+    <HomeStage stageHeight={STAGE_H} className="bg-[#F3F4F7] dark:bg-[#0F1F26]">
+      <div className={`flex h-full flex-col ${STAGE_GUTTER}`}>
         <motion.label
           {...reveal(0.1)}
           className="flex h-[51px] shrink-0 items-center gap-2.5 rounded-lg border-[1.5px] border-black/10 bg-white p-3 text-[#818185] focus-within:border-[#01A17F] dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#9FA19F]"
@@ -103,7 +103,7 @@ export function CareersScreen() {
 
         <motion.div
           {...reveal(0.14)}
-          className="scrollbar-none -ml-4 -mr-[calc(1rem+var(--stage-bleed,0px))] mt-5 flex shrink-0 gap-3 overflow-x-auto pl-4 pr-0"
+          className="scrollbar-none -ml-[var(--stage-gutter)] -mr-[calc(var(--stage-inset)+var(--stage-bleed,0px))] mt-5 flex shrink-0 gap-3 overflow-x-auto pl-[var(--stage-gutter)] pr-0"
           role="tablist"
         >
           {FILTERS.map((name) => {

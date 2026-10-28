@@ -15,6 +15,13 @@ export const TOP_MARGIN = 15;
 /** Where the shared top bar (see HomeTopBar: TOP_MARGIN from the top, 48px
  * tall, plus a 12px gap) ends; every tab starts its content below this line. */
 export const TOP_BAR_BOTTOM = TOP_MARGIN + 60;
+/** Real-size space at the content's left and right (never scaled), the same
+ * `px-4` the unscaled tabs use inside their 430px column. */
+export const SIDE_MARGIN = 16;
+const COLUMN_W = 430;
+/** The stage content's side gutter: put it on the stage's top-level wrapper
+ * (instead of `px-4`) so its edges sit SIDE_MARGIN from the column's, at any scale. */
+export const STAGE_GUTTER = "mx-[var(--stage-inset)]";
 
 /**
  * One tab's content: a stage scaled to fit the room above the bottom nav. The
@@ -44,6 +51,8 @@ export function HomeStage({
   const [scale, setScale] = useState(1);
   /** Room (in stage px) between the stage's edge and the screen's, each side. */
   const [bleed, setBleed] = useState(0);
+  /** Stage px from the stage's edge to the content's (negative: past it). */
+  const [inset, setInset] = useState(SIDE_MARGIN);
   const [contentH, setContentH] = useState(stageHeight);
   useEffect(() => {
     const box = boxRef.current;
@@ -55,6 +64,8 @@ export function HomeStage({
         : Math.min(width / STAGE_W, (height - NAV_RESERVE - topMargin) / stageHeight, MAX_SCALE);
       setScale(next);
       setBleed(Math.max(0, (width / next - STAGE_W) / 2));
+      const columnW = Math.min(width, Math.max(COLUMN_W, STAGE_W * next));
+      setInset((STAGE_W - (columnW - 2 * SIDE_MARGIN) / next) / 2);
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -84,6 +95,9 @@ export function HomeStage({
         transform: `translateX(-50%) scale(${scale})`,
         // Lets a row run to the screen's edge: `calc(1rem + var(--stage-bleed))`.
         ["--stage-bleed" as string]: `${bleed}px`,
+        ["--stage-inset" as string]: `${inset}px`,
+        // SIDE_MARGIN in stage px, for a row that scrolls out to the gutter.
+        ["--stage-gutter" as string]: `${SIDE_MARGIN / scale}px`,
       }}
     >
       {children}
