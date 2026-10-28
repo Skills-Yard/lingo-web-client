@@ -47,9 +47,9 @@ function CareerCard({
       transition={{ duration: 0.25, ease: EASE }}
       aria-pressed={selected}
       style={{ backgroundColor: card.bg, borderColor: card.border }}
-      className="relative flex h-[160px] flex-col items-start gap-1 overflow-hidden rounded-2xl border py-4 pl-3 pr-2 text-left shadow-[1px_1px_11px_rgba(0,0,0,0.08)] dark:brightness-90"
+      className="relative flex h-[146px] flex-col items-start gap-1 overflow-hidden rounded-2xl border py-4 pl-3 pr-2 text-left shadow-[1px_1px_11px_rgba(0,0,0,0.08)] dark:brightness-90"
     >
-      <span className="text-[17px] font-bold leading-6 text-[#444444]">{career.title}</span>
+      <span className="text-base font-bold leading-6 text-[#444444]">{career.title}</span>
       <span className="whitespace-nowrap text-sm leading-[18px] text-[#444444]">
         {career.skills.length} skills · {career.months} months
       </span>
@@ -87,7 +87,7 @@ export function CareersScreen() {
 
   return (
     <HomeStage stageHeight={STAGE_H} topMargin={TOP_MARGIN + 30} className="bg-[#F3F4F7] dark:bg-[#0F1F26]">
-      <div className="flex h-full flex-col px-3">
+      <div className="flex h-full flex-col px-4">
         <motion.label
           {...reveal(0.1)}
           className="flex h-[51px] shrink-0 items-center gap-2.5 rounded-lg border-[1.5px] border-black/10 bg-white p-3 text-[#818185] focus-within:border-[#01A17F] dark:border-white/12 dark:bg-[#1A1C22] dark:text-[#9FA19F]"
@@ -103,7 +103,7 @@ export function CareersScreen() {
 
         <motion.div
           {...reveal(0.14)}
-          className="scrollbar-none -mx-3 mt-5 flex shrink-0 gap-3 overflow-x-auto px-3"
+          className="scrollbar-none -ml-4 -mr-[calc(1rem+var(--stage-bleed,0px))] mt-5 flex shrink-0 gap-3 overflow-x-auto pl-4 pr-0"
           role="tablist"
         >
           {FILTERS.map((name) => {
@@ -135,7 +135,7 @@ export function CareersScreen() {
           })}
         </motion.div>
 
-        <div className="mt-5 grid grid-cols-2 content-start gap-x-3 gap-y-3.5">
+        <div className="mt-5 grid grid-cols-2 content-start gap-4">
           <AnimatePresence mode="popLayout" initial>
             {visible.map((career) => (
               <CareerCard

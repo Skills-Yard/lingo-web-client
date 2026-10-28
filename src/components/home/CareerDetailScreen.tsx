@@ -102,7 +102,7 @@ export function CareerDetailScreen({
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-[#0F1F26] dark:via-[#0F1F26]/90 px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-10">
         <div className="pointer-events-auto">
-          <Button3D onClick={onStart} className="w-full">
+          <Button3D riveVariant="module" onClick={onStart} className="w-full">
             Start this career
           </Button3D>
         </div>

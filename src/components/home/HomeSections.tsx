@@ -34,7 +34,7 @@ export function HexGreetingCard({ done = 1, goal = 2, streak = 4 }: { done?: num
   return (
     <motion.section
       {...reveal(0.4)}
-      className="flex items-center gap-3 rounded-2xl bg-[#E9F5F0] p-3.5 dark:bg-[#133A35]"
+      className="flex items-center gap-3 rounded-[18px] bg-[#E9F5F0] p-3.5 dark:bg-[#133A35]"
     >
       <div className="h-[47px] w-16 shrink-0">
         <HexAvatar className="h-full w-full" />
@@ -106,7 +106,7 @@ function QuestRow({ quest }: { quest: Quest }) {
   // An empty bar still shows a dot of its colour, as in the design.
   const percent = Math.max((quest.done / quest.goal) * 100, 0);
   return (
-    <div className="flex h-[66px] items-center gap-3 rounded-[14px] border border-black/10 bg-white p-3 dark:border-white/12 dark:bg-[#1A1C22]">
+    <div className="flex h-[66px] items-center gap-3 rounded-[18px] border border-black/10 bg-white p-3 dark:border-white/12 dark:bg-[#1A1C22]">
       <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${quest.tile}`}>
         {quest.icon}
       </span>
@@ -167,7 +167,7 @@ export function ModulePath() {
           src="/images/home/module-1.png"
           alt=""
           draggable={false}
-          className="aspect-[1074/450] w-full select-none rounded-[20px] object-cover dark:brightness-90"
+          className="aspect-[1074/450] w-full select-none rounded-[18px] object-cover dark:brightness-90"
         />
       </button>
     </motion.section>
@@ -186,7 +186,7 @@ export function HappeningSoon() {
     <motion.section {...reveal(0.55)}>
       <SectionHead title="Happening soon" action="See all" onAction={() => router.push("/events")} />
       <div className="mt-3 flex gap-4">
-        <article className="flex h-[140px] w-[171px] flex-col items-start gap-1.5 rounded-2xl bg-[#FDECEC] p-3.5 dark:bg-[#3D1B1D]">
+        <article className="flex h-[140px] w-[171px] flex-col items-start gap-1.5 rounded-[18px] bg-[#FDECEC] p-3.5 dark:bg-[#3D1B1D]">
           <span className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-[#D42421] dark:bg-[#FF5A57]" />
             <span className="text-[10px] font-semibold leading-[14px] tracking-[0.06em] text-[#D42421] dark:text-[#FF5A57]">LIVE IN 2H</span>
@@ -204,7 +204,7 @@ export function HappeningSoon() {
           </button>
         </article>
 
-        <article className="flex h-[140px] w-[171px] flex-col items-start gap-1.5 rounded-2xl bg-[#E5EFFD] p-3.5 dark:bg-[#1B2B40]">
+        <article className="flex h-[140px] w-[171px] flex-col items-start gap-1.5 rounded-[18px] bg-[#E5EFFD] p-3.5 dark:bg-[#1B2B40]">
           <span className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-white dark:bg-[#1A1C22]">
             <CodeXml className="h-[18px] w-[18px] text-[#2F80ED] dark:text-[#5AA2FF]" strokeWidth={1.8} />
           </span>

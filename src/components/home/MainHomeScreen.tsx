@@ -1,17 +1,12 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Layout, Fit, Alignment } from "@rive-app/canvas";
-import { Bell, ChartNoAxesColumn, CodeXml, Play, Plus } from "lucide-react";
-import { configureRiveRuntime, HEX_STATE } from "@/lib/rive/runtime";
-import { useHexRive } from "@/components/onboarding/robu/useHexRive";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { animate, AnimatePresence, motion, useMotionValue, type PanInfo } from "framer-motion";
+import { Bell, ChartNoAxesColumn, ChevronLeft, ChevronRight, CodeXml, Play, Plus } from "lucide-react";
 import { HomeStage } from "./HomeStage";
 import { DailyQuests, HappeningSoon, HexGreetingCard, ModulePath } from "./HomeSections";
 import { NotificationsPopup } from "./NotificationsPopup";
 import { HomeStats } from "./HomeTopBar";
-
-configureRiveRuntime();
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
@@ -19,8 +14,8 @@ const EASE = [0.22, 1, 0.36, 1] as const;
 const STAGE_H = 1600;
 
 const TRACKS = [
-  { id: "web", label: "Web Dev", Icon: CodeXml },
-  { id: "data", label: "Data Analyst", Icon: ChartNoAxesColumn },
+  { id: "web", label: "Web Dev", Icon: CodeXml, banner: "/images/home/track-web-dev.png" },
+  { id: "data", label: "Data Analyst", Icon: ChartNoAxesColumn, banner: "/images/home/track-data-analyst.png" },
 ] as const;
 
 type TrackId = (typeof TRACKS)[number]["id"];
@@ -116,16 +111,84 @@ const slide = (direction: 1 | -1) => ({
   initial: { opacity: 0, x: 28 * direction },
   animate: { opacity: 1, x: 0 },
   exit: { opacity: 0, x: -28 * direction },
-  transition: { duration: 0.22, ease: EASE },
+  transition: { duration: 0.32, ease: EASE },
 });
+
+const BANNER_SPRING = { type: "spring", stiffness: 260, damping: 32, mass: 0.9 } as const;
+
+/** Past this much drag (px) or flick speed (px/s) a swipe changes the track. */
+const SWIPE_DISTANCE = 50;
+const SWIPE_VELOCITY = 400;
 
 const subscribeNever = () => () => {};
 
-const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+/**
+ * The track banners side by side. The row glides to the selected track (from a
+ * tab tap or a swipe) and follows the finger while dragging.
+ */
+function TrackBanners({ index, onSelect }: { index: number; onSelect: (index: number) => void }) {
+  const frame = useRef<HTMLDivElement>(null);
+  const x = useMotionValue(0);
+  const [width, setWidth] = useState(0);
 
-function HomeHex() {
-  const { RiveComponent } = useHexRive(HEX_LAYOUT, HEX_STATE.idle);
-  return <RiveComponent className="h-full w-full" />;
+  useEffect(() => {
+    const el = frame.current;
+    if (!el) return;
+    const measure = () => setWidth(el.offsetWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    const controls = animate(x, -index * width, BANNER_SPRING);
+    return () => controls.stop();
+  }, [index, width, x]);
+
+  const settle = (_: PointerEvent, { offset, velocity }: PanInfo) => {
+    const goNext = offset.x < -SWIPE_DISTANCE || velocity.x < -SWIPE_VELOCITY;
+    const goPrev = offset.x > SWIPE_DISTANCE || velocity.x > SWIPE_VELOCITY;
+    const next = Math.min(TRACKS.length - 1, Math.max(0, index + (goNext ? 1 : goPrev ? -1 : 0)));
+    if (next !== index) return onSelect(next);
+    animate(x, -index * width, BANNER_SPRING);
+  };
+
+  return (
+    <div ref={frame} className="relative mt-2 overflow-hidden rounded-[18px]">
+      <motion.div drag="x" dragElastic={0.12} dragMomentum={false} dragConstraints={{ left: -(TRACKS.length - 1) * width, right: 0 }} onDragEnd={settle} style={{ x, touchAction: "pan-y" }} className="flex cursor-grab active:cursor-grabbing">
+        {TRACKS.map(({ id, label, banner }) => (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            key={id}
+            src={banner}
+            alt={label}
+            draggable={false}
+            className="aspect-[345/216] w-full shrink-0 select-none object-cover"
+          />
+        ))}
+      </motion.div>
+      {([-1, 1] as const).map((step) => {
+        const target = index + step;
+        const disabled = target < 0 || target >= TRACKS.length;
+        const Arrow = step === -1 ? ChevronLeft : ChevronRight;
+        return (
+          <button
+            key={step}
+            type="button"
+            aria-label={step === -1 ? "Previous track" : "Next track"}
+            disabled={disabled}
+            onClick={() => onSelect(target)}
+            className={`absolute top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm transition-[opacity,transform] duration-300 active:scale-90 ${
+              step === -1 ? "left-1.5" : "right-1.5"
+            } ${disabled ? "pointer-events-none opacity-0" : "opacity-100"}`}
+          >
+            <Arrow className="h-4 w-4" strokeWidth={2.4} />
+          </button>
+        );
+      })}
+    </div>
+  );
 }
 
 function ProgressRing({ done, total, theme }: { done: number; total: number; theme: CourseTheme }) {
@@ -164,7 +227,7 @@ function CourseCard({ course, delay, onContinue }: { course: Course; delay: numb
   return (
     <motion.section
       {...reveal(delay)}
-      className="relative overflow-hidden rounded-2xl p-4"
+      className="relative overflow-hidden rounded-[18px] p-4"
       style={{ background: theme.background, color: theme.ink, boxShadow: theme.shadow }}
     >
       <div className="flex items-center gap-2.5">
@@ -339,7 +402,7 @@ export function MainHomeScreen({
           </motion.div>
 
           <motion.div {...reveal(0.14)} className="mt-3 overflow-hidden">
-            <AnimatePresence mode="wait" initial={false}>
+            <AnimatePresence mode="popLayout" initial={false}>
               <motion.h1
                 key={track}
                 {...slide(direction)}
@@ -350,23 +413,8 @@ export function MainHomeScreen({
             </AnimatePresence>
           </motion.div>
 
-          <motion.div {...reveal(0.18)} className="relative mt-2 overflow-hidden rounded-xl">
-            <AnimatePresence mode="wait" initial={false}>
-              <motion.div key={track} {...slide(direction)}>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/home/python-hero-clean.png"
-                  alt="Python"
-                  draggable={false}
-                  className="aspect-[1080/651] w-full select-none object-cover"
-                />
-              </motion.div>
-            </AnimatePresence>
-            {/* Hex stands where the picture's robot was; he stays put while the
-              picture slides, so his canvas isn't reloaded. */}
-            <div className="pointer-events-none absolute left-[52%] top-[34%] h-[46%] w-[26%]">
-              <HomeHex />
-            </div>
+          <motion.div {...reveal(0.18)}>
+            <TrackBanners index={trackIndex(track)} onSelect={(i) => selectTrack(TRACKS[i].id)} />
           </motion.div>
 
           <motion.div {...reveal(0.26)} className="mt-3 flex items-center justify-between">

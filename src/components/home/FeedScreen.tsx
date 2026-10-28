@@ -188,27 +188,27 @@ function PollCard({ poll }: { poll: Poll }) {
 export function FeedScreen() {
   return (
     <main className="font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white">
-      <div
-        className="mx-auto w-full max-w-[430px] px-4"
-        style={{ paddingTop: TOP_MARGIN + 30, paddingBottom: NAV_CLEARANCE }}
-      >
-        <motion.header {...reveal(0.05)} className="flex items-center justify-between">
-          <button type="button" aria-label="New post" className="flex h-8 w-8 items-center justify-center">
-            <Plus className="h-6 w-6" strokeWidth={1.8} />
-          </button>
-          <h1 className="text-xl font-semibold leading-7">Your Community</h1>
-          <button type="button" aria-label="Notifications" className="flex h-8 w-8 items-center justify-center">
-            <Bell className="h-6 w-6" strokeWidth={1.6} />
-          </button>
-        </motion.header>
+      <div className="mx-auto w-full max-w-[430px]" style={{ paddingBottom: NAV_CLEARANCE }}>
+        {/* The whole top part (buttons, title, stories) sticks; the posts scroll under it. */}
+        <div className="sticky top-0 z-10 bg-white pb-4 dark:bg-[#0F1F26]" style={{ paddingTop: TOP_MARGIN + 30 }}>
+          <motion.header {...reveal(0.05)} className="flex items-center justify-between px-4">
+            <button type="button" aria-label="New post" className="flex h-8 w-8 items-center justify-center">
+              <Plus className="h-6 w-6" strokeWidth={1.8} />
+            </button>
+            <h1 className="text-xl font-semibold leading-7">Your Community</h1>
+            <button type="button" aria-label="Notifications" className="flex h-8 w-8 items-center justify-center">
+              <Bell className="h-6 w-6" strokeWidth={1.6} />
+            </button>
+          </motion.header>
 
-        <motion.div {...reveal(0.1)} className="scrollbar-none -mx-4 mt-5 flex gap-4 overflow-x-auto px-4 pb-1">
-          {STORIES.map((story) => (
-            <Story key={story.id} story={story} />
-          ))}
-        </motion.div>
+          <motion.div {...reveal(0.1)} className="scrollbar-none mt-5 flex gap-4 overflow-x-auto px-4">
+            {STORIES.map((story) => (
+              <Story key={story.id} story={story} />
+            ))}
+          </motion.div>
+        </div>
 
-        <div className="mt-4 flex flex-col gap-4">
+        <div className="flex flex-col gap-4 px-4">
           {FEED.map((item, i) => (
             <motion.div key={item.id} {...reveal(0.15 + Math.min(i, 3) * 0.05)}>
               {item.type === "post" ? <PostCard post={item} /> : <PollCard poll={item} />}

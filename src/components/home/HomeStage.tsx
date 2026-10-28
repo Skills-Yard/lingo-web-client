@@ -42,17 +42,19 @@ export function HomeStage({
   const boxRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
+  /** Room (in stage px) between the stage's edge and the screen's, each side. */
+  const [bleed, setBleed] = useState(0);
   const [contentH, setContentH] = useState(stageHeight);
   useEffect(() => {
     const box = boxRef.current;
     if (!box) return;
     const measure = () => {
       const { width, height } = box.getBoundingClientRect();
-      setScale(
-        scroll
-          ? Math.min(width / STAGE_W, MAX_SCALE)
-          : Math.min(width / STAGE_W, (height - NAV_RESERVE - topMargin) / stageHeight, MAX_SCALE),
-      );
+      const next = scroll
+        ? Math.min(width / STAGE_W, MAX_SCALE)
+        : Math.min(width / STAGE_W, (height - NAV_RESERVE - topMargin) / stageHeight, MAX_SCALE);
+      setScale(next);
+      setBleed(Math.max(0, (width / next - STAGE_W) / 2));
     };
     measure();
     const observer = new ResizeObserver(measure);
@@ -80,6 +82,8 @@ export function HomeStage({
         width: STAGE_W,
         height: scroll ? undefined : stageHeight,
         transform: `translateX(-50%) scale(${scale})`,
+        // Lets a row run to the screen's edge: `calc(1rem + var(--stage-bleed))`.
+        ["--stage-bleed" as string]: `${bleed}px`,
       }}
     >
       {children}
