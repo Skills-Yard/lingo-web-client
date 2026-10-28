@@ -8,6 +8,7 @@ import { MoveHexScreen } from "@/components/level-one/MoveHexScreen";
 import { RewardScreen } from "@/components/level-one/RewardScreen";
 import { TeacherFlow } from "@/components/level-one/TeacherFlow";
 import { VideoScreen } from "@/components/level-one/VideoScreen";
+import { CommandScreen } from "@/components/level-two/CommandScreen";
 
 /** Level 1's screen for `?step=`. Screens 3 and 4 are the same TeacherFlow,
  * so moving between them keeps it mounted and the picture animates. */
@@ -48,8 +49,17 @@ function levelOneScreen(step: string) {
 }
 
 /**
+/** Level 2's screen for `?step=`: three rounds of giving the robot arm a
+ * command, then "Lesson complete!". */
+function levelTwoScreen(step: string) {
+  if (step === "1" || step === "2" || step === "3") return <CommandScreen round={Number(step)} />;
+  if (step === "complete") return <LessonCompleteScreen level={2} />;
+  return null;
+}
+
+/**
  * A module's screens: `/module?level=1&step=1` … `step=8` (both default to
- * 1). Only Level 1 exists so far.
+ * 1), and `/module?level=2&step=1` … `step=3`.
  */
 export default async function ModulePage({
   searchParams,
@@ -57,7 +67,7 @@ export default async function ModulePage({
   searchParams: Promise<{ level?: string; step?: string }>;
 }) {
   const { level = "1", step = "1" } = await searchParams;
-  const screen = level === "1" ? levelOneScreen(step) : null;
+  const screen = level === "1" ? levelOneScreen(step) : level === "2" ? levelTwoScreen(step) : null;
   if (!screen) notFound();
   return screen;
 }

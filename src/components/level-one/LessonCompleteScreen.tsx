@@ -8,6 +8,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { LESSON_COMPLETE } from "@/lib/rive/runtime";
 import { vibrateForLessonComplete } from "@/lib/haptics";
+import { completeModule } from "@/lib/levelProgress";
 
 /** The lesson's results, shown by the artboard. */
 const LESSON_XP = 40;
@@ -23,12 +24,14 @@ const LAYOUT =new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 /**
- * `/module?level=1&step=complete` — "Lesson complete!": the "LESSON_Complete"
+ * `/module?level=N&step=complete` — "Lesson complete!": the "LESSON_Complete"
  * Rive artboard. Once it is ready, its `xp`, `accuracy` and `time` are set and
  * its `play` trigger fired. Each value is written as a number, or as display
  * text (`+40`, `92%`, `3:42`) if the artboard declares that property as a string.
+ * Continue records module `level` as finished and goes back to the path,
+ * where Hex moves on to the next block.
  */
-export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }) {
+export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number; onContinue?: () => void }) {
   const router = useRouter();
   const { rive, RiveComponent, ready, fireTrigger } = useHexRive(
     LAYOUT,
@@ -67,7 +70,10 @@ export function LessonCompleteScreen({ onContinue }: { onContinue?: () => void }
       <div className="absolute inset-x-0 bottom-0 z-10 mx-auto px-4 pb-9" style={{ maxWidth: PHONE_MAX_W }}>
         <Button3D
           riveVariant="module"
-          onClick={onContinue ?? (() => router.push("/level"))}
+          onClick={onContinue ?? (() => {
+            completeModule(level);
+            router.push("/level");
+          })}
           onPress={playClickSound}
           className="w-full"
         >

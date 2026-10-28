@@ -4,8 +4,10 @@ import {
   useEffect,
   useId,
   useMemo,
+  useReducer,
   useRef,
   useState,
+  useSyncExternalStore,
   type MutableRefObject,
   type ReactNode,
   type RefObject,
@@ -15,12 +17,19 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Layout, Fit, Alignment, type Rive } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
-import { Check, Code2, House, Maximize, Menu, Minimize, Moon, Sun, Undo2 } from "lucide-react";
+import { Check, Code2, House, Maximize, Menu, Minimize, Moon, RotateCcw, Sun, Undo2 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { TOP_MARGIN } from "./HomeStage";
 import { LevelStats } from "./HomeTopBar";
-import { configureRiveRuntime, HEX_ONBOARDING_TRIGGER, LIVE_PLATFORM } from "@/lib/rive/runtime";
+import { configureRiveRuntime, HEX_EXIT_MS, HEX_ONBOARDING_TRIGGER, LIVE_PLATFORM } from "@/lib/rive/runtime";
+import {
+  clearModuleJustDone,
+  PLAYABLE_MODULES,
+  readModuleJustDone,
+  readModulesDone,
+  resetModules,
+} from "@/lib/levelProgress";
 import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
 import { hexRiveSource } from "@/lib/rive/hexFile";
 import { LevelBackground } from "./LevelBackground";
@@ -37,22 +46,18 @@ const MAX_SCALE = 1.5;
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-/** done: lit platform with its tick; current: the one Hex stands on;
- * locked: greyed with a padlock. */
-type LevelState = "done" | "current" | "locked";
-
 type PlatformSpec = {
   id: string;
   level: number;
-  state: LevelState;
   /** Top-face centre, in world px. */
   cx: number;
   cy: number;
 };
 
 const LEVEL_COUNT = 100;
-/** The level Hex stands on ("Start"); every level before it is done. */
-const CURRENT_LEVEL = 3;
+/** The block module 1 is played from; every block before it is done, and
+ * each finished module moves Hex one block on. */
+const FIRST_MODULE_LEVEL = 3;
 /** Top-face centres of the first nine levels, read off the Figma frame
  * (done x2, live, locked x4) and flipped so the path runs top to bottom.
  * `y` is the distance below level 1. */
@@ -106,39 +111,49 @@ const PLATFORMS: PlatformSpec[] = Array.from({ length: LEVEL_COUNT }, (_, n) => 
   return {
     id: `l${level}`,
     level,
-    state: level < CURRENT_LEVEL ? "done" : level === CURRENT_LEVEL ? "current" : "locked",
     cx: x,
     cy: y,
   };
 });
 
-/** Smooth curve (Catmull-Rom as cubic beziers) through the given points. */
-const curveThrough = (points: Point[]): string => {
-  const [first, ...rest] = points;
+const CENTERS = Array.from({ length: LEVEL_COUNT }, (_, n) => levelCenter(n + 1));
+
+/** The smooth curve (Catmull-Rom as cubic beziers) through the whole path,
+ * from level `from` to level `to`. Its bends are those of the whole path,
+ * so pieces of it drawn separately line up. */
+const curveBetween = (from: number, to: number): string => {
+  const first = levelCenter(from);
   let d = `M${first.x} ${first.y}`;
-  rest.forEach((p, i) => {
-    const p0 = points[Math.max(i - 1, 0)];
-    const p1 = points[i];
-    const p3 = points[Math.min(i + 2, points.length - 1)];
+  for (let i = from - 1; i < to - 1; i++) {
+    const p0 = CENTERS[Math.max(i - 1, 0)];
+    const p1 = CENTERS[i];
+    const p = CENTERS[i + 1];
+    const p3 = CENTERS[Math.min(i + 2, CENTERS.length - 1)];
     const c1 = { x: p1.x + (p.x - p0.x) / 6, y: p1.y + (p.y - p0.y) / 6 };
     const c2 = { x: p.x - (p3.x - p1.x) / 6, y: p.y - (p3.y - p1.y) / 6 };
     d += ` C${c1.x} ${c1.y} ${c2.x} ${c2.y} ${p.x} ${p.y}`;
-  });
+  }
   return d;
 };
 
-const CENTERS = Array.from({ length: LEVEL_COUNT }, (_, n) => levelCenter(n + 1));
-const PURPLE_PATH = curveThrough(CENTERS.slice(0, CURRENT_LEVEL));
-const GRAY_PATH = curveThrough(CENTERS.slice(CURRENT_LEVEL - 1));
-const CURRENT = levelCenter(CURRENT_LEVEL);
+/** After a finished module: how long Hex stands on its block before he
+ * leaves for the next one (his entrance plays first). */
+const MOVE_ON_DELAY_MS = 1800;
+
+/** Progress is read from storage, which nothing on this screen listens to. */
+const subscribeNever = () => () => {};
 /** How long `startLesson` plays before the flow moves on to the lesson. */
 const START_LESSON_MS = 1000;
 
 /** How long the popup waits before it appears after a tap. */
 const HOP_S = 0.42;
 
-/** The lesson the live platform opens, shown in its popup. */
-const LIVE_LESSON = { title: "How Programmers Think", xp: 50 } as const;
+/** The lesson each module's block opens, shown in its popup (module 1 first). */
+const MODULE_LESSONS = [
+  { title: "How Programmers Think", xp: 50 },
+  { title: "Give Instructions", xp: 50 },
+] as const;
+const COMING_SOON = { title: "Coming soon", xp: 0 } as const;
 
 const useHomeId = () => useId().replace(/:/g, "");
 
@@ -154,14 +169,28 @@ const LIVE_RIV = { ax: 47, ay: 22 } as const;
 const ANIMATED_LEVELS = 9;
 
 /** What the current block's artboard lets the screen do to it. */
-type BlockController = { letsGo: () => void; exitLetsGo: () => void; startLesson: () => void };
+type BlockController = {
+  letsGo: () => void;
+  exitLetsGo: () => void;
+  startLesson: () => void;
+  /** Hex walks off the block (its module is done), through this trigger. */
+  leave: (trigger: string) => void;
+};
 
-type Launch = { onLaunch: () => void; controllerRef: MutableRefObject<BlockController | null> };
+type Launch = {
+  /** The level Hex stands on. */
+  current: number;
+  /** The trigger Hex enters the current block with. */
+  enterTrigger: string;
+  onLaunch: () => void;
+  controllerRef: MutableRefObject<BlockController | null>;
+};
 
-/** The current block sits nearer the left or the right screen edge; that
- * picks its `pathState` and which `letsGoFrom…` trigger it plays. */
-const CURRENT_SIDE = CURRENT.x < STAGE_W / 2 ? "left" : "right";
-const CURRENT_PATH_STATE = CURRENT_SIDE === "left" ? 3 : 2;
+type Side = "left" | "right";
+
+/** A block sits nearer the left or the right screen edge; for the current
+ * one that picks its `pathState` and which `letsGoFrom…` trigger it plays. */
+const sideOf = (level: number): Side => (levelCenter(level).x < STAGE_W / 2 ? "left" : "right");
 /** The `entryStyle` the current block enters with. */
 const CURRENT_ENTRY_STYLE = 6;
 /** Hex keeps playing his ambient idle on the current block, this often, once
@@ -255,17 +284,29 @@ function useNearViewport(ref: RefObject<HTMLElement | null>): boolean {
 }
 
 /** The artboard's `pathState` data: 0 for a lesson not done yet, 1 for a
- * finished one, `CURRENT_PATH_STATE` for the current one. */
-const pathStateOf = (level: number): number =>
-  level < CURRENT_LEVEL ? 1 : level === CURRENT_LEVEL ? CURRENT_PATH_STATE : 0;
+ * finished one, 3 / 2 for the current one (on the left / right). */
+const pathStateOf = (level: number, current: number): number =>
+  level < current ? 1 : level === current ? (sideOf(level) === "left" ? 3 : 2) : 0;
+
+/** Hex leaves a finished block towards the next one, and enters that one
+ * from the side he came from. */
+const moveTriggers = (from: number, to: number) =>
+  levelCenter(to).x >= levelCenter(from).x
+    ? { exit: HEX_ONBOARDING_TRIGGER.exitRight, enter: "enterLeft" }
+    : { exit: HEX_ONBOARDING_TRIGGER.exitLeft, enter: "enterRight" };
 
 function PathBlockCanvas({
   pathState,
   frame,
+  side,
+  enterTrigger = HEX_ONBOARDING_TRIGGER.enter,
   controllerRef,
 }: {
   pathState: number;
   frame: ArtboardFrame;
+  side: Side;
+  /** The trigger the current block's Hex enters with. */
+  enterTrigger?: string;
   /** Given only to the current block: it enters, then takes the screen's taps. */
   controllerRef?: MutableRefObject<BlockController | null>;
 }) {
@@ -288,7 +329,7 @@ function PathBlockCanvas({
 
     const entryStyle = instance.number("entryStyle");
     if (entryStyle) entryStyle.value = CURRENT_ENTRY_STYLE;
-    instance.trigger("enter")?.trigger();
+    instance.trigger(enterTrigger)?.trigger();
 
     // Hex is not left standing still: his ambient idle fires on a loop, unless
     // the screen has taken over (a lesson is opening).
@@ -307,7 +348,7 @@ function PathBlockCanvas({
         busy = true;
         const letsGo = instance.boolean("letsGo");
         if (letsGo) letsGo.value = true;
-        instance.trigger(CURRENT_SIDE === "left" ? "letsGoFromRight": "letsGoFromLeft")?.trigger();
+        instance.trigger(side === "left" ? "letsGoFromRight": "letsGoFromLeft")?.trigger();
       },
       exitLetsGo: () => {
         busy = false;
@@ -317,13 +358,17 @@ function PathBlockCanvas({
         busy = true;
         instance.trigger("startLesson")?.trigger();
       },
+      leave: (trigger) => {
+        busy = true;
+        instance.trigger(trigger)?.trigger();
+      },
     };
     return () => {
       window.clearTimeout(first);
       window.clearInterval(repeat);
       controllerRef.current = null;
     };
-  }, [rive, pathState, controllerRef]);
+  }, [rive, pathState, side, enterTrigger, controllerRef]);
 
   return <RiveComponent className="h-full w-full" />;
 }
@@ -337,12 +382,16 @@ function PathBlock({
   cx,
   cy,
   pathState,
+  side,
+  enterTrigger,
   onLaunch,
   controllerRef,
 }: {
   cx: number;
   cy: number;
   pathState: number;
+  side: Side;
+  enterTrigger?: string;
   onLaunch?: () => void;
   controllerRef?: MutableRefObject<BlockController | null>;
 }) {
@@ -366,7 +415,7 @@ function PathBlock({
       />
       {near && (
         <div aria-hidden className="pointer-events-none absolute" style={box.style}>
-          <PathBlockCanvas pathState={pathState} frame={box.frame} controllerRef={controllerRef} />
+          <PathBlockCanvas pathState={pathState} frame={box.frame} side={side} enterTrigger={enterTrigger} controllerRef={controllerRef} />
         </div>
       )}
       {onLaunch && (
@@ -384,14 +433,17 @@ function PathBlock({
 }
 
 function PlatformArt({ spec, launch }: { spec: PlatformSpec; launch: Launch }) {
-  const { state, level, cx, cy } = spec;
+  const { level, cx, cy } = spec;
+  const isCurrent = level === launch.current;
   return (
     <PathBlock
       cx={cx}
       cy={cy}
-      pathState={pathStateOf(level)}
-      onLaunch={state === "current" ? launch.onLaunch : undefined}
-      controllerRef={state === "current" ? launch.controllerRef : undefined}
+      pathState={pathStateOf(level, launch.current)}
+      side={sideOf(level)}
+      enterTrigger={isCurrent ? launch.enterTrigger : undefined}
+      onLaunch={isCurrent ? launch.onLaunch : undefined}
+      controllerRef={isCurrent ? launch.controllerRef : undefined}
     />
   );
 }
@@ -602,10 +654,13 @@ function LevelMenu({
   done,
   onComplete,
   onUndo,
+  onResetPath,
 }: {
   done: number;
   onComplete: () => void;
   onUndo: () => void;
+  /** Forgets the finished modules: Hex goes back to module 1's block. */
+  onResetPath: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const { theme, toggleTheme } = useTheme();
@@ -661,6 +716,10 @@ function LevelMenu({
               <Undo2 className="h-5 w-5" />
               Undo module
             </button>
+            <button type="button" className={MENU_ROW} onClick={onResetPath}>
+              <RotateCcw className="h-5 w-5" />
+              Reset path
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -685,7 +744,8 @@ const reveal = (delay: number) => ({
 export function HomeScreen({
   onStart,
 }: {
-  onStart?: () => void;
+  /** Opens module `module` (1-based). */
+  onStart?: (module: number) => void;
 }) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
@@ -697,6 +757,51 @@ export function HomeScreen({
   const [done, setDone] = useState(0);
   const [popupOpen, setPopupOpen] = useState(false);
   const currentBlock = useRef<BlockController | null>(null);
+  // The level Hex stands on, read from the learner's finished modules (only
+  // in the browser, so the path is drawn once it is known). Just after a
+  // module is finished he starts on its block and then moves on: `arrived`
+  // turns on once he has, and the stretch of path he walked lights up.
+  const modulesDone = useSyncExternalStore(subscribeNever, readModulesDone, () => null);
+  const justDone = useSyncExternalStore(subscribeNever, readModuleJustDone, () => false);
+  const [arrived, setArrived] = useState(false);
+  // Storage changes nothing re-renders for (the path being reset).
+  const [, rerender] = useReducer((n: number) => n + 1, 0);
+  const path = useMemo(() => {
+    if (modulesDone === null) return null;
+    const reached = FIRST_MODULE_LEVEL + Math.min(modulesDone, LEVEL_COUNT - FIRST_MODULE_LEVEL);
+    const moving = justDone && !arrived && reached > FIRST_MODULE_LEVEL;
+    return { current: moving ? reached - 1 : reached, next: moving ? reached : null, arrived };
+  }, [modulesDone, justDone, arrived]);
+  useEffect(() => {
+    if (!path?.next) return;
+    const { exit } = moveTriggers(path.current, path.next);
+    let arrive = 0;
+    const leave = window.setTimeout(() => {
+      currentBlock.current?.leave(exit);
+      arrive = window.setTimeout(() => {
+        setArrived(true);
+        clearModuleJustDone();
+      }, HEX_EXIT_MS);
+    }, MOVE_ON_DELAY_MS);
+    return () => {
+      window.clearTimeout(leave);
+      window.clearTimeout(arrive);
+    };
+  }, [path]);
+  const current = path?.current ?? FIRST_MODULE_LEVEL;
+  const currentPoint = levelCenter(current);
+  const moduleNumber = current - FIRST_MODULE_LEVEL + 1;
+  const lesson = MODULE_LESSONS[moduleNumber - 1] ?? COMING_SOON;
+  // Arriving, he comes in from the block he left; otherwise he just enters.
+  const enterTrigger = path?.arrived ? moveTriggers(current - 1, current).enter : HEX_ONBOARDING_TRIGGER.enter;
+
+  // The current block kept in view: on opening the path, and as Hex moves on.
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || !path) return;
+    const top = Math.max(0, currentPoint.y * scale - scroller.clientHeight * 0.55);
+    if (top > scroller.scrollTop) scroller.scrollTo({ top, behavior: path.arrived ? "smooth" : "auto" });
+  }, [path, currentPoint.y, scale]);
   // Tapping the current block plays its "lets go" and opens its popup; Start
   // plays `startLesson` and goes on to the lesson.
   const openPopup = () => {
@@ -711,12 +816,21 @@ export function HomeScreen({
     if (startTimer.current === undefined) currentBlock.current?.exitLetsGo();
   };
   const startLesson = () => {
-    if (startTimer.current !== undefined) return;
+    // Blocks past the modules that have screens have nothing to open yet.
+    if (startTimer.current !== undefined || moduleNumber > PLAYABLE_MODULES) return;
     currentBlock.current?.startLesson();
-    startTimer.current = window.setTimeout(() => onStart?.(), START_LESSON_MS);
+    startTimer.current = window.setTimeout(() => onStart?.(moduleNumber), START_LESSON_MS);
   };
   useEffect(() => () => window.clearTimeout(startTimer.current), []);
-  const launch: Launch = { onLaunch: openPopup, controllerRef: currentBlock };
+  const launch: Launch = {
+    current,
+    enterTrigger,
+    // No taps while Hex is moving on.
+    onLaunch: () => {
+      if (!path?.next) openPopup();
+    },
+    controllerRef: currentBlock,
+  };
 
   // A tap anywhere outside the popup (and the platform/Hex that open it)
   // closes it.
@@ -779,40 +893,58 @@ export function HomeScreen({
                 fill="none"
                 aria-hidden
               >
-                <motion.path
-                  d={GRAY_PATH}
-                  stroke="#B7BAC6"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeDasharray="5 8"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 0.9 }}
-                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
-                />
-                <motion.path
-                  d={PURPLE_PATH}
-                  stroke="#6F5CFF"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeDasharray="5 8"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
-                />
+                {path && (
+                  <>
+                    {/* Grey still runs under the stretch Hex has just walked,
+                      while it lights up. */}
+                    <motion.path
+                      d={curveBetween(path.arrived ? current - 1 : current, LEVEL_COUNT)}
+                      stroke="#B7BAC6"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="5 8"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.9 }}
+                      transition={{ duration: 0.8, ease: "easeOut", delay: 0.5 }}
+                    />
+                    <motion.path
+                      d={curveBetween(1, path.arrived ? current - 1 : current)}
+                      stroke="#6F5CFF"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                      strokeDasharray="5 8"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.8, ease: "easeOut", delay: 0.3 }}
+                    />
+                    {path.arrived && (
+                      <motion.path
+                        d={curveBetween(current - 1, current)}
+                        stroke="#6F5CFF"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                        strokeDasharray="5 8"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.6, ease: "easeOut" }}
+                      />
+                    )}
+                  </>
+                )}
               </svg>
 
-              {PLATFORMS.map((spec) => (
+              {path && PLATFORMS.map((spec) => (
                 <PlatformNode key={spec.id} spec={spec} launch={launch} />
               ))}
 
               <AnimatePresence>
                 {popupOpen && (
                   <LevelStartPopup
-                    cx={CURRENT.x}
-                    cy={CURRENT.y}
+                    cx={currentPoint.x}
+                    cy={currentPoint.y}
                     stageWidth={STAGE_W}
-                    title={LIVE_LESSON.title}
-                    xp={LIVE_LESSON.xp}
+                    title={lesson.title}
+                    xp={lesson.xp}
                     onStart={startLesson}
                     delay={HOP_S}
                   />
@@ -835,6 +967,11 @@ export function HomeScreen({
             done={done}
             onComplete={() => setDone((d) => Math.min(d + 1, MODULES.length))}
             onUndo={() => setDone((d) => Math.max(d - 1, 0))}
+            onResetPath={() => {
+              resetModules();
+              setArrived(false);
+              rerender();
+            }}
           />
         </motion.div>
 

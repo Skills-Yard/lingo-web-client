@@ -36,6 +36,10 @@ export const levelOneCompleteHref = () => moduleHref(1, "complete");
 interface LevelOneShellProps {
   /** 1-based screen number, shown in the progress bar. */
   step: number;
+  /** The progress bar's total (default Level 1's). */
+  total?: number;
+  /** Stands in for the hint / Continue row (the same room at the bottom). */
+  action?: ReactNode;
   onContinue?: () => void;
   /** Defaults to the browser Back. */
   onBack?: () => void;
@@ -67,7 +71,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
+export function LevelOneShell({ step, total = LEVEL_ONE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
@@ -182,7 +186,7 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
           <OnboardingHeader
             onBack={() => router.push("/level")}
             onPrevious={onBack ?? (() => router.back())}
-            progress={{ step, total: LEVEL_ONE_STEPS }}
+            progress={{ step, total }}
             answer={answer}
             level
             muted={muted}
@@ -219,14 +223,16 @@ export function LevelOneShell({ step, onContinue, onBack, ctaDisabled, ctaLabel 
       {/* With a backdrop the whole lower area stays white: the row gets a
         full-width white base, down to the stage's bottom. */}
       <div className={backdrop ? "relative z-10 w-full shrink-0 bg-white dark:bg-background" : "contents"}>
-        <ActionRow
-          maxWidth={FRAME_W + 60}
-          hint={hint}
-          answer={answer}
-          ctaLabel={ctaLabel}
-          ctaDisabled={ctaDisabled}
-          onContinue={onContinue}
-        />
+        {action ?? (
+          <ActionRow
+            maxWidth={FRAME_W + 60}
+            hint={hint}
+            answer={answer}
+            ctaLabel={ctaLabel}
+            ctaDisabled={ctaDisabled}
+            onContinue={onContinue}
+          />
+        )}
       </div>
 
       {overlay}
