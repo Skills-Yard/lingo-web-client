@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { OnboardingHex } from "./FeedbackPanel";
 import { LEAVE_FADE_DELAY_S } from "./HexStage";
 import { useLevelVoice } from "./LevelVoice";
+import { TYPE_DELAY_MS, useTyped } from "./useTyped";
 
 const LINE = "Open Your Notebook";
 
@@ -13,9 +14,6 @@ const LINE = "Open Your Notebook";
 const CUE_AFTER_VOICE_MS = 2800;
 /** With no voice to wait for (it failed to play), the cue comes this long after mount. */
 const CUE_WITHOUT_VOICE_MS = 6000;
-/** The delay before the first letter, so Hex has started moving. */
-const TYPE_DELAY_MS = 350;
-const TYPE_STEP_MS = 55;
 
 const HEX_SIZE = 130;
 /** Hex's spots on the picture (px from its top left, 358px wide): standing
@@ -38,22 +36,6 @@ const HEX_FLOAT_TRANSITION = { duration: 2.4, ease: "easeInOut", repeat: Infinit
 /** The quicker, better-damped trip to the hinted card, timed to land as its flip stops. */
 const HEX_HINT_MOVE = { type: "spring", stiffness: 170, damping: 24, mass: 0.9 } as const;
 const HEX_MOVE = { type: "spring", stiffness: 70, damping: 16, mass: 1 } as const;
-
-/** The characters of `text` shown so far, one more every `TYPE_STEP_MS` once `active`. */
-const useTyped = (text: string, active: boolean) => {
-  const [count, setCount] = useState(0);
-  useEffect(() => {
-    if (!active) return;
-    let timer: number;
-    const next = (n: number) => {
-      setCount(n);
-      if (n < text.length) timer = window.setTimeout(() => next(n + 1), TYPE_STEP_MS);
-    };
-    timer = window.setTimeout(() => next(1), TYPE_DELAY_MS);
-    return () => window.clearTimeout(timer);
-  }, [text, active]);
-  return text.slice(0, count);
-};
 
 /**
  * Hex and the teacher's line. Hex stands below the picture while the voice
