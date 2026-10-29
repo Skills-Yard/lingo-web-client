@@ -35,7 +35,7 @@ const WRONG_MS = 650;
 type Side = "left" | "right";
 
 /**
- * `/module?level=2&step=6` — "Can you match them?": tap an instruction, then
+ * `/module?step=6` — "Can you match them?": tap an instruction, then
  * the action it does. A right pair turns green and stays; a wrong pair shakes
  * red and lets go. Next unlocks once both are matched.
  */

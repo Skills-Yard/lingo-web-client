@@ -13,7 +13,8 @@ import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
-import { LevelOneShell, levelOneHref } from "./LevelOneShell";
+import { moduleHref } from "@/lib/routes";
+import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
 
@@ -130,14 +131,14 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
 
   return (
     <LevelOneShell
-      step={quiz ? 4 : 3}
+      step={levelOneStep(quiz ? 4 : 3)}
       answer={answer}
       // The quiz's question is read once, until it is checked.
       voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
       onBack={() => {
-        if (!quiz) return router.push(levelOneHref(2));
+        if (!quiz) return router.push(moduleHref(levelOneStep(3) - 1));
         show("says");
         router.push(levelOneHref(3));
       }}

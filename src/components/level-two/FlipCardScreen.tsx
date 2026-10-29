@@ -18,7 +18,7 @@ const FACE = "absolute inset-0 overflow-hidden rounded-[18px] border-2 border-wh
 const HIDDEN = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" } as const;
 
 /**
- * `/module?level=2&step=10` — "Flip the card to reveal.": a card (with two
+ * `/module?step=10` — "Flip the card to reveal.": a card (with two
  * more behind it) that turns over when tapped, to what a command is. Next
  * unlocks once it has been turned.
  */

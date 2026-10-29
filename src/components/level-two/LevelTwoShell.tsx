@@ -4,7 +4,8 @@ import { Fragment, type ComponentProps, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { LevelOneShell } from "@/components/level-one/LevelOneShell";
-import { FRAME_TOP_SHIFT, LEVEL_TWO_STEPS, levelTwoHref, type TitleLines } from "./levelTwo";
+import { MODULE_STEPS } from "@/lib/moduleFlow";
+import { FRAME_TOP_SHIFT, levelTwoHref, type TitleLines } from "./levelTwo";
 
 type LevelTwoShellProps = Omit<ComponentProps<typeof LevelOneShell>, "step" | "total" | "onBack" | "children"> & {
   step: number;
@@ -25,7 +26,7 @@ export function LevelTwoShell({ step, scene, children, ...shell }: LevelTwoShell
   return (
     <LevelOneShell
       step={step}
-      total={LEVEL_TWO_STEPS}
+      total={MODULE_STEPS}
       onBack={() => router.push(step > 1 ? levelTwoHref(step - 1) : "/level")}
       {...shell}
     >

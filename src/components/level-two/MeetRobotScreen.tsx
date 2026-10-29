@@ -7,7 +7,7 @@ import { RobotScene } from "./RobotScene";
 import { levelTwoHref } from "./levelTwo";
 
 /**
- * `/module?level=2&step=1` — "Meet your robot.": the LEARN chip, the chapter
+ * `/module?step=1` — "Meet your robot.": the LEARN chip, the chapter
  * and a line about the robot, over the picture fading out to white.
  */
 export function MeetRobotScreen() {

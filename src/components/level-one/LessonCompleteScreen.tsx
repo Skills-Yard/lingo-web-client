@@ -24,7 +24,7 @@ const LAYOUT =new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 /**
- * `/module?level=N&step=complete` — "Lesson complete!": the "LESSON_Complete"
+ * `/module?step=complete` — "Lesson complete!": the "LESSON_Complete"
  * Rive artboard. Once it is ready, its `xp`, `accuracy` and `time` are set and
  * its `play` trigger fired. Each value is written as a number, or as display
  * text (`+40`, `92%`, `3:42`) if the artboard declares that property as a string.

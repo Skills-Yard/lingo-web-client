@@ -7,7 +7,7 @@ import { RobotScene } from "./RobotScene";
 import { levelTwoHref } from "./levelTwo";
 
 /**
- * `/module?level=2&step=9` — "Meet the Command.": the picture fading out to
+ * `/module?step=9` — "Meet the Command.": the picture fading out to
  * white, a voice clip to play, and what instructions are known as.
  */
 export function MeetCommandScreen() {

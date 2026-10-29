@@ -10,7 +10,8 @@ import { GameBoardScreen } from "@/components/instructions-intro/GameBoardScreen
 import { FeedbackPanel } from "./FeedbackPanel";
 import { GemPopup } from "./GemPopup";
 import { HexStage } from "./HexStage";
-import { LevelOneShell, levelOneCompleteHref, levelOneHref } from "./LevelOneShell";
+import { moduleHref } from "@/lib/routes";
+import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
 
 /** Time per command — quicker than the old intro's 700ms. */
 const STEP_MS = 400;
@@ -20,7 +21,7 @@ const GAME_SLIDE = INSTRUCTIONS_INTRO_SLIDES.find(
 );
 
 /**
- * `/module?level=1&step=8` — the game board screen from the instructions intro, as it
+ * `/module?step=16` — the game board screen from the instructions intro, as it
  * was: the same board, program slots, actions and Run/Reset controls, with
  * Hex (HexStage) walking the grid as the player piece.
  * Reaching the flag unlocks Continue; missing it offers Try again.
@@ -57,7 +58,7 @@ export function MoveHexScreen() {
 
   return (
     <LevelOneShell
-      step={8}
+      step={levelOneStep(8)}
       flush
       fit
       backdrop="/images/level-one/game-bg.png"
@@ -83,9 +84,9 @@ export function MoveHexScreen() {
           <GemPopup open={gemOpen} onClose={closeGem} />
         </>
       }
-      onBack={() => router.push(levelOneHref(7))}
+      onBack={() => router.push(levelOneHref(6))}
       onContinue={() => {
-        if (solved) router.push(levelOneCompleteHref());
+        if (solved) router.push(moduleHref("complete"));
         else if (failed) resetRef.current?.();
         else playRef.current?.();
       }}

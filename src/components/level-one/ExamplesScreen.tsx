@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { LevelOneShell, levelOneHref } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
 import { useLevelVoice } from "./LevelVoice";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
@@ -48,7 +48,7 @@ const slotOf = (index: number, active: number) => {
 };
 
 /**
- * `/module?level=1&step=5` — "Some examples of instruction": a looping carousel of
+ * `/module?step=14` — "Some examples of instruction": a looping carousel of
  * example cards. The active card is centred with its neighbours peeking in
  * from each side; swipe, tap a neighbour or use the arrow keys to move.
  */
@@ -57,7 +57,7 @@ export function ExamplesScreen({ onContinue }: { onContinue?: () => void }) {
 
   return (
     <LevelOneShell
-      step={5}
+      step={levelOneStep(5)}
       ctaLabel="Continue to video"
       voiceover={VOICEOVER}
       onBack={() => router.push(levelOneHref(4))}

@@ -20,7 +20,7 @@ const subscribeNever = () => () => {};
 export function LevelRoute() {
   const router = useRouter();
   return (
-    <HomeScreen onStart={(level) => router.push(moduleHref(level, 1))} />
+    <HomeScreen onStart={() => router.push(moduleHref(1))} />
   );
 }
 

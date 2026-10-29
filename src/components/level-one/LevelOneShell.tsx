@@ -8,6 +8,7 @@ import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { setClickSoundMuted } from "@/components/onboarding/clickSound";
 import { useVoiceover } from "@/components/onboarding/useVoiceover";
 import { questionSpoken } from "@/components/onboarding/QuestionHeading";
+import { LEVEL_ONE_STEP, MODULE_STEPS, type LevelOneStepKey } from "@/lib/moduleFlow";
 import { moduleHref } from "@/lib/routes";
 import { ActionRow } from "./ActionRow";
 import { LevelVoiceContext } from "./LevelVoice";
@@ -21,22 +22,16 @@ const MAX_SCALE = 1.5;
 /** The header's widest on-screen width (px) — 5xl. */
 const HEADER_MAX_W = 1024;
 
-/** Screens in Level 1 (the progress bar's total). */
-export const LEVEL_ONE_STEPS = 9;
+/** Where Level 1's `n`th screen sits in the module (see `LEVEL_ONE_STEP`). */
+export const levelOneStep = (n: LevelOneStepKey) => LEVEL_ONE_STEP[n];
 
-/** Level 1's `step`th screen (1-based) — `/module?level=1&step=N`. */
-export const levelOneHref = (step: number) => moduleHref(1, step);
-
-/** The reward screen between 7 and 8, not one of the numbered screens. */
-export const levelOneRewardHref = () => moduleHref(1, "reward");
-
-/** "Lesson complete!", after the last numbered screen. */
-export const levelOneCompleteHref = () => moduleHref(1, "complete");
+/** Level 1's `n`th screen — `/module?step=N`. */
+export const levelOneHref = (n: LevelOneStepKey) => moduleHref(LEVEL_ONE_STEP[n]);
 
 interface LevelOneShellProps {
   /** 1-based screen number, shown in the progress bar. */
   step: number;
-  /** The progress bar's total (default Level 1's). */
+  /** The progress bar's total (default the module's). */
   total?: number;
   /** Stands in for the hint / Continue row (the same room at the bottom). */
   action?: ReactNode;
@@ -71,7 +66,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, total = LEVEL_ONE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
+export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);

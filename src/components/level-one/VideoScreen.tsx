@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Maximize, Play, Sparkles } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { LevelOneShell, levelOneHref } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
 
@@ -16,7 +16,7 @@ const HEADING_TIMING = { clipSeconds: 6.408, times: [[0.49, 0.76], [0.76, 1.12],
 const VIDEO_AUDIO = ["/audios/screen_6_audio.mpeg#end=2.15"];
 
 /**
- * `/module?level=1&step=6` — "What are instructions?": the question, and a
+ * `/module?step=15` — "What are instructions?": the question, and a
  * short video (thumbnail, player bar) with a note on what it covers.
  */
 export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
@@ -24,11 +24,11 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
 
   return (
     <LevelOneShell
-      step={6}
+      step={levelOneStep(6)}
       wash
       voiceover={VIDEO_AUDIO}
       onBack={() => router.push(levelOneHref(5))}
-      onContinue={onContinue ?? (() => router.push(levelOneHref(7)))}
+      onContinue={onContinue ?? (() => router.push(levelOneHref(8)))}
     >
       <div className="mt-10 flex w-full shrink-0 flex-col gap-[15px]">
         <h1 className="text-[28px] leading-[134%] font-semibold text-[#444444] dark:text-white">

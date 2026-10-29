@@ -150,10 +150,7 @@ const START_LESSON_MS = 1000;
 const HOP_S = 0.42;
 
 /** The lesson each module's block opens, shown in its popup (module 1 first). */
-const MODULE_LESSONS = [
-  { title: "How Programmers Think", xp: 50 },
-  { title: "Give Instructions", xp: 50 },
-] as const;
+const MODULE_LESSONS = [{ title: "How Programmers Think", xp: 50 }] as const;
 const COMING_SOON = { title: "Coming soon", xp: 0 } as const;
 
 const useHomeId = () => useId().replace(/:/g, "");

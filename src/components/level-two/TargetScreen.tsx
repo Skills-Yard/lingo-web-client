@@ -7,7 +7,7 @@ import { RobotScene } from "./RobotScene";
 import { levelTwoHref } from "./levelTwo";
 
 /**
- * `/module?level=2&step=7` — "Move the cube in the target area.": the robot
+ * `/module?step=7` — "Move the cube in the target area.": the robot
  * holds the cube, and the target box is lit up with its label.
  */
 export function TargetScreen() {

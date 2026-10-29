@@ -1,10 +1,7 @@
 import { moduleHref } from "@/lib/routes";
 
-/** Screens in Module 2 (the progress bar's total). */
-export const LEVEL_TWO_STEPS = 13;
-
-/** Module 2's `step`th screen, or its "Lesson complete!". */
-export const levelTwoHref = (step: number | "complete") => moduleHref(2, step);
+/** The module's `step`th screen, or its "Lesson complete!". */
+export const levelTwoHref = (step: number | "complete") => moduleHref(step);
 
 /** The Figma frame is 390 x 844 with its own status bar; the Level 1 shell's
  * header sits this much higher, so everything pinned to the top (title, Hex's
@@ -84,7 +81,7 @@ export type Quiz = {
 const LAVENDER = "bg-[#F6F4FE] dark:bg-[#1B1830]";
 const CREAM = "bg-[#FFF9F0] dark:bg-[#2A2218]";
 
-/** Screen 3 — `/module?level=2&step=3`. */
+/** Screen 3 — `/module?step=3`. */
 export const WHAT_JUST_HAPPENED: Quiz = {
   title: [[{ text: "What just " }, { text: "happened?", teal: true }]],
   line: [{ text: "What happened when you selected PICK UP?" }],
@@ -103,7 +100,7 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   hint: false,
 };
 
-/** Screen 5 — `/module?level=2&step=5`. */
+/** Screen 5 — `/module?step=5`. */
 export const WHAT_NEXT: Quiz = {
   title: [[{ text: "What will happen " }, { text: "next?", teal: true }]],
   line: [{ text: "The robot has picked up the cube. Now look at the highlighted area." }],
@@ -122,7 +119,7 @@ export const WHAT_NEXT: Quiz = {
   hint: true,
 };
 
-/** Screen 4 — `/module?level=2&step=4`. */
+/** Screen 4 — `/module?step=4`. */
 export const ROBOT_PICKED_UP: Quiz = {
   title: [[{ text: "Robot " }, { text: "has picked it up!", teal: true }]],
   underline: true,
@@ -141,7 +138,7 @@ export const ROBOT_PICKED_UP: Quiz = {
   hint: true,
 };
 
-/** Screen 11 — `/module?level=2&step=11`. */
+/** Not in the flow now (Level 1's quiz is the 11th). */
 export const LETS_PICK_UP: Quiz = {
   title: [
     [{ text: "Let’s make the robot" }],
@@ -163,7 +160,7 @@ export const LETS_PICK_UP: Quiz = {
   hint: false,
 };
 
-/** Screen 8 — `/module?level=2&step=8`. */
+/** Screen 8 — `/module?step=8`. */
 export const WHERE_SHOULD_GO: Quiz = {
   title: [
     [{ text: "Where should" }],
@@ -187,7 +184,7 @@ export const WHERE_SHOULD_GO: Quiz = {
   ctaLabel: "Let’s do it!",
 };
 
-/** Screen 13 — `/module?level=2&step=13`. */
+/** Screen 18 — `/module?step=18`. */
 export const WILL_REACH: Quiz = {
   title: [[{ text: "Will it reach " }, { text: "the target?", teal: true }]],
   line: [{ text: "What happens if you choose PUT DOWN?" }],

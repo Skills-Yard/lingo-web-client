@@ -14,9 +14,11 @@ import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
 import { FILL_S, HintFloat } from "./HintFloat";
-import { LevelOneShell, levelOneHref, levelOneRewardHref } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref } from "./LevelOneShell";
 import { optionState } from "./TeacherFlow";
 
+/** Its place in the module; Level 1's screens carry on from the next one. */
+const QUIZ_STEP = 11;
 const CORRECT_ID = "command";
 /** The `entryStyle` Hex enters with here (set before the entrance trigger). */
 const HEX_ENTRY_STYLE = 6;
@@ -39,22 +41,11 @@ const LOOK = {
 } as const;
 
 /**
- * `/module?level=1&step=7` — "What are instructions known as?": a single-answer quiz
+ * `/module?step=11` — "What are instructions known as?": a single-answer quiz
  * with Hex between the question and the options. Check locks the answer and
- * marks it right (green) or wrong (red); Continue follows. Module 2 reuses it
- * (`level={2}`) at its own `step` of `total`, between the screens around it.
+ * marks it right (green) or wrong (red); Continue follows.
  */
-export function InstructionQuizScreen({
-  level = 1,
-  step = 7,
-  total,
-  onContinue,
-}: {
-  level?: 1 | 2;
-  step?: number;
-  total?: number;
-  onContinue?: () => void;
-}) {
+export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
@@ -72,20 +63,19 @@ export function InstructionQuizScreen({
 
   return (
     <LevelOneShell
-      step={step}
-      total={total}
+      step={QUIZ_STEP}
       wash
       fit
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
-      onBack={() => router.push(level === 1 ? levelOneHref(6) : moduleHref(level, step - 1))}
+      onBack={() => router.push(moduleHref(QUIZ_STEP - 1))}
       onContinue={() => {
         if (!checked) {
           setChecked(true);
           vibrateForAnswer(selectedId === CORRECT_ID);
           setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
-        } else (onContinue ?? (() => router.push(level === 1 ? levelOneRewardHref() : moduleHref(level, step + 1))))();
+        } else (onContinue ?? (() => router.push(levelOneHref(3))))();
       }}
       overlay={
         <div ref={glideRef} className="pointer-events-none absolute inset-0">

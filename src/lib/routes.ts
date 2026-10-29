@@ -3,9 +3,8 @@
 export const onboardingHref = (step?: string) =>
   step ? `/onboarding?step=${step}` : "/onboarding";
 
-/** `/module?level=&step=` — one screen of a level, both 1-based. */
-export const moduleHref = (level: number, step: number | string) =>
-  `/module?level=${level}&step=${step}`;
+/** `/module?step=` — one screen of the module (1-based, or `reward` / `complete`). */
+export const moduleHref = (step: number | string) => `/module?step=${step}`;
 
 /** `/energy?from=` — the battery's screen; `from` is where its cross returns to. */
 export const energyHref = (from: string) => `/energy?from=${encodeURIComponent(from)}`;
