@@ -16,12 +16,6 @@ export const CARDS_RISE = 180;
  * shell's button (and the hint beside it) is drawn taller, so they end this
  * far above it instead. */
 export const GAP_ABOVE_BUTTONS = 12;
-/** A card's height and the gap between cards (px) — `h-[76px]` and `gap-1.5` below. */
-const CARD_H = 76;
-const CARD_GAP = 6;
-
-/** How tall the list of `count` cards is, with its gap above the button row (what the robot rests above). */
-export const answerCardsStack = (count: number) => GAP_ABOVE_BUTTONS + count * CARD_H + (count - 1) * CARD_GAP;
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
@@ -30,6 +24,8 @@ type AnswerCardsProps = {
   correctId: string;
   selectedId: string | null;
   checked: boolean;
+  /** Once the result panel is up the cards rise to make room for it (default: as soon as `checked`). */
+  risen?: boolean;
   /** The hint was used: the right card is filled in orange until something is picked. */
   hinted: boolean;
   /** The screen has the hint button beside its main button. */
@@ -39,16 +35,16 @@ type AnswerCardsProps = {
 
 /**
  * The three answers (Figma "Frame 322"): 358 x 76 white cards 6px apart with a
- * picture, the text and a radio. Pinned to the button row; once `checked` they
+ * picture, the text and a radio. Pinned to the button row; once `risen` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, hinted, withHint, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, risen = checked, hinted, withHint, onPick }: AnswerCardsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -CARDS_RISE : 0 }}
+      animate={{ opacity: 1, y: risen ? -CARDS_RISE : 0 }}
       transition={
-        checked
+        risen
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
@@ -96,7 +92,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, hinted, w
                 <span className={`absolute inset-[7px] rounded-full transition-transform duration-200 ${look.dot}`} />
               </span>
             </motion.button>
-            <XpPop show={checked && choice.id === correctId && selectedId === correctId} />
+            <XpPop show={risen && choice.id === correctId && selectedId === correctId} />
           </HintFloat>
         );
       })}

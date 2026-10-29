@@ -375,6 +375,8 @@ export const COMMAND_ROBOT = {
   height: 306,
   overflowTop: 210,
   overflowBottom: 84,
+  /** How far below the artboard's top the arm's highest point is, holding the cube. */
+  armTop: 43,
   triggers: {
     pickUp: "pickUp",
     putDown: "putDown",
@@ -386,8 +388,20 @@ export const COMMAND_ROBOT = {
     wrongCube: "wrongCube",
   },
   targetLabelProperty: "targetLabel",
-  /** How long the `pickUp` move takes (the "PickUp" clip), in seconds. */
-  pickUpSeconds: 1.83,
+  /** How long each move takes (its clip in the file), in seconds. The next
+   * trigger is only taken once the machine is back at rest, so a move fired
+   * sooner than this after another is dropped. */
+  moveSeconds: {
+    pickUp: 1.83,
+    putDown: 1.63,
+    placeInTarget: 2.7,
+    reset: 0.8,
+    wrongClaw: 1.17,
+    wrongCube: 1.17,
+    // The hint plays on its own, beside the others.
+    showHint: 0,
+    hideHint: 0,
+  },
 } as const;
 
 /** The battery — "BatteryArtboard-Main" in `battery.riv` (320x110), played by

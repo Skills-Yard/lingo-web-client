@@ -19,8 +19,12 @@ export type Span = { text: string; teal?: boolean };
 /** A title: one run of spans per line. */
 export type TitleLines = readonly (readonly Span[])[];
 
-/** A quiz answer; `icon` is a file in `public/images/level-two/` (drawn once it exists). */
-export type Choice = { id: string; text: string; icon: string; tint?: string };
+/**
+ * A quiz answer; `icon` is a file in `public/images/level-two/` (drawn once it
+ * exists). `moves` is what the robot plays, in order, when this answer is
+ * checked — right or wrong; a wrong answer with none plays the claw's.
+ */
+export type Choice = { id: string; text: string; icon: string; tint?: string; moves?: readonly RobotMove[] };
 
 export type Quiz = {
   title: TitleLines;
@@ -41,10 +45,6 @@ export type Quiz = {
   wrong: string;
   /** Where the cube is when the screen opens (the robot carries on from the previous screen). */
   pose: RobotPose;
-  /** A right answer places the cube in the target box. */
-  placesCube?: boolean;
-  /** How the robot reacts to a wrong answer (default: the claw). */
-  wrongMove?: Extract<RobotMove, "wrongClaw" | "wrongCube">;
   /** The hint also lights up the target box. */
   targetHint?: boolean;
   hint: boolean;
@@ -63,9 +63,10 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   bubbleTop: 172,
   layout: "list",
   choices: [
-    { id: "picked", text: "The robot picked up the cube.", icon: "step-4.1.svg" },
-    { id: "table", text: "The robot moved the table.", icon: "step-4.2.svg" },
-    { id: "nothing", text: "Nothing happened.", icon: "step-4.3.svg" },
+    // The right answer shows it again: the cube goes back, and is picked up.
+    { id: "picked", text: "The robot picked up the cube.", icon: "step-4.1.svg", moves: ["reset", "pickUp"] },
+    { id: "table", text: "The robot moved the table.", icon: "step-4.2.svg", moves: ["wrongCube"] },
+    { id: "nothing", text: "Nothing happened.", icon: "step-4.3.svg", moves: ["wrongClaw"] },
   ],
   correctId: "picked",
   right: "Yes! The robot picked up the cube.",
@@ -82,16 +83,15 @@ export const WHAT_NEXT: Quiz = {
   bubbleTop: 172,
   layout: "list",
   choices: [
-    { id: "place", text: "The robot will place the cube in the targeted area.", icon: "step-5.1.svg" },
-    { id: "higher", text: "The robot will pickup the cube higher.", icon: "step-5.2.svg" },
-    { id: "right", text: "The robot will move the cube to the right.", icon: "step-5.3.svg" },
+    { id: "place", text: "The robot will place the cube in the targeted area.", icon: "step-5.1.svg", moves: ["placeInTarget"] },
+    { id: "higher", text: "The robot will pickup the cube higher.", icon: "step-5.2.svg", moves: ["wrongClaw"] },
+    { id: "right", text: "The robot will move the cube to the right.", icon: "step-5.3.svg", moves: ["wrongCube"] },
   ],
   correctId: "place",
   right: "Yes! The robot will place the cube in the targeted area.",
   wrong: "Remember: The robot will place the cube in the targeted area.",
   pose: "holding",
   targetHint: true,
-  wrongMove: "wrongCube",
   hint: true,
 };
 
@@ -104,8 +104,8 @@ export const ROBOT_PICKED_UP: Quiz = {
   bubbleTop: 162,
   layout: "pair",
   choices: [
-    { id: "pickup", text: "Pick Up", icon: "step-9.1.svg", tint: LAVENDER },
-    { id: "putdown", text: "Put Down", icon: "step-9.2.svg", tint: CREAM },
+    { id: "pickup", text: "Pick Up", icon: "step-9.1.svg", tint: LAVENDER, moves: ["wrongClaw"] },
+    { id: "putdown", text: "Put Down", icon: "step-9.2.svg", tint: CREAM, moves: ["putDown"] },
   ],
   correctId: "putdown",
   right: "Yes! Put Down makes the robot release the cube.",
@@ -147,16 +147,14 @@ export const WHERE_SHOULD_GO: Quiz = {
   bubbleTop: 176,
   layout: "tiles",
   choices: [
-    { id: "pickup", text: "Pick Up", icon: "step-13.1.svg", tint: "bg-[#ECF7ED] dark:bg-[#10261A]" },
-    { id: "putdown", text: "Put Down", icon: "step-13.2.svg", tint: "bg-[#FFF3DE] dark:bg-[#2A2218]" },
-    { id: "target", text: "Place in Target", icon: "step-13.3.svg", tint: "bg-[#E5EFFD] dark:bg-[#15233A]" },
+    { id: "pickup", text: "Pick Up", icon: "step-13.1.svg", tint: "bg-[#ECF7ED] dark:bg-[#10261A]", moves: ["wrongClaw"] },
+    { id: "putdown", text: "Put Down", icon: "step-13.2.svg", tint: "bg-[#FFF3DE] dark:bg-[#2A2218]", moves: ["wrongCube"] },
+    { id: "target", text: "Place in Target", icon: "step-13.3.svg", tint: "bg-[#E5EFFD] dark:bg-[#15233A]", moves: ["placeInTarget"] },
   ],
   correctId: "target",
   right: "Yes! Place in Target moves the cube to the target area.",
   wrong: "Remember: Place in Target moves the cube to the target area.",
   pose: "holding",
-  placesCube: true,
-  wrongMove: "wrongCube",
   hint: false,
   ctaLabel: "Let’s do it!",
 };

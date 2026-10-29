@@ -14,14 +14,11 @@ import type { Choice } from "./levelTwo";
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
-/** Each layout's card height (`card`, and `height` in px), the picture's box and the text's size. */
+/** Each layout's card height, the picture's box and the text's size. */
 const LAYOUT = {
-  pair: { card: "h-[184px]", height: 184, picture: "h-[100px] w-full", text: "text-[14px] leading-[20px]", gap: "gap-3.5" },
-  tiles: { card: "h-[110px]", height: 110, picture: "h-[44px] w-full", text: "text-[13px] leading-[17px]", gap: "gap-3.5" },
+  pair: { card: "h-[184px]", picture: "h-[100px] w-full", text: "text-[14px] leading-[20px]", gap: "gap-3.5" },
+  tiles: { card: "h-[110px]", picture: "h-[44px] w-full", text: "text-[13px] leading-[17px]", gap: "gap-3.5" },
 } as const;
-
-/** How tall the cards are, with their gap above the button row (what the robot rests above). */
-export const tileCardsStack = (layout: keyof typeof LAYOUT) => GAP_ABOVE_BUTTONS + LAYOUT[layout].height;
 
 type TileCardsProps = {
   layout: "pair" | "tiles";
@@ -29,6 +26,8 @@ type TileCardsProps = {
   correctId: string;
   selectedId: string | null;
   checked: boolean;
+  /** Once the result panel is up the cards rise to make room for it (default: as soon as `checked`). */
+  risen?: boolean;
   hinted: boolean;
   withHint: boolean;
   /** The text is a sentence: set smaller and left to wrap. */
@@ -39,16 +38,16 @@ type TileCardsProps = {
 /**
  * The answers as cards side by side — two big ones or three small tiles — in
  * the same 358px column as the rest of the screen, standing on the button row.
- * Like the list, they rise once the result panel is up.
+ * Like the list, they rise once the result panel is up (`risen`).
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, hinted, withHint, longText, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, risen = checked, hinted, withHint, longText, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -CARDS_RISE : 0 }}
+      animate={{ opacity: 1, y: risen ? -CARDS_RISE : 0 }}
       transition={
-        checked
+        risen
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
@@ -93,7 +92,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, hin
                 {choice.text}
               </span>
             </motion.button>
-            <XpPop show={checked && choice.id === correctId && selectedId === correctId} />
+            <XpPop show={risen && choice.id === correctId && selectedId === correctId} />
           </HintFloat>
         );
       })}

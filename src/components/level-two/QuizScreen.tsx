@@ -1,31 +1,40 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
-import { fireRobot } from "@/lib/rive/robotHost";
+import { fireRobot, robotDoneIn } from "@/lib/rive/robotHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { AnswerCards, answerCardsStack } from "./AnswerCards";
+import { AnswerCards } from "./AnswerCards";
 import { HexBubble } from "./HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, TitleText } from "./LevelTwoShell";
-import { RobotBackdrop, robotAbove } from "./RobotBackdrop";
-import { TileCards, tileCardsStack } from "./TileCards";
+import { RobotBackdrop, robotBelowDialogue } from "./RobotBackdrop";
+import { TileCards } from "./TileCards";
 import { levelTwoHref, type Quiz } from "./levelTwo";
+
+/** The longest the result panel is held back for the robot's move to play out. */
+const MAX_REVEAL_WAIT_MS = 3500;
 
 /**
  * A Module 2 question: the title, Hex asking it, and the answers (rows, two
  * cards or three tiles). Like Level 1's quizzes, the main button checks the
  * pick (right is green, a miss red, the result panel slides up) and then moves
- * on. The robot behind it reacts: a miss plays `quiz.wrongMove`, and a right
- * answer can also place the cube in the target (`quiz.placesCube`).
+ * on. The robot behind it reacts to the answer that was checked: it plays that
+ * choice's `moves` (a wrong one with none plays the claw's). The pick locks in
+ * at once (the button, the cards' colours), but the result panel — and the
+ * cards rising to make room for it, which would hide the robot — wait until the
+ * robot has finished.
  */
 export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
+  const [revealed, setRevealed] = useState(false);
+  const revealTimer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(revealTimer.current), []);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [hinted, setHinted] = useState(false);
   const correct = selectedId === quiz.correctId;
@@ -34,8 +43,11 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
     setChecked(true);
     vibrateForAnswer(correct);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
-    if (!correct) fireRobot(quiz.wrongMove ?? "wrongClaw");
-    else if (quiz.placesCube) fireRobot("placeInTarget");
+    // The hint's glow goes out first, then the robot plays what this answer does.
+    if (quiz.targetHint && hinted) fireRobot("hideHint");
+    const picked = quiz.choices.find((choice) => choice.id === selectedId);
+    (picked?.moves ?? (correct ? [] : ["wrongClaw"])).forEach((move) => fireRobot(move));
+    revealTimer.current = window.setTimeout(() => setRevealed(true), Math.min(robotDoneIn(), MAX_REVEAL_WAIT_MS));
   };
 
   return (
@@ -43,7 +55,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
       step={step}
       scene={
         <RobotBackdrop
-          bottom={robotAbove(quiz.layout === "list" ? answerCardsStack(quiz.choices.length) : tileCardsStack(quiz.layout), quiz.hint)}
+          below={robotBelowDialogue(quiz.bubbleTop, quiz.bubble)}
           pose={quiz.pose}
           hint={!!quiz.targetHint && hinted && !checked}
         />
@@ -57,8 +69,8 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
-            open={checked}
-            hexIn={checked}
+            open={revealed}
+            hexIn={revealed}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
           >
             {correct ? quiz.right : quiz.wrong}
@@ -78,6 +90,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
           correctId={quiz.correctId}
           selectedId={selectedId}
           checked={checked}
+          risen={revealed}
           hinted={hinted}
           withHint={quiz.hint}
           onPick={setSelectedId}
@@ -89,13 +102,14 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
           correctId={quiz.correctId}
           selectedId={selectedId}
           checked={checked}
+          risen={revealed}
           hinted={hinted}
           withHint={quiz.hint}
           longText={quiz.longText}
           onPick={setSelectedId}
         />
       )}
-      <Confetti active={checked && correct} />
+      <Confetti active={revealed && correct} />
     </LevelTwoShell>
   );
 }

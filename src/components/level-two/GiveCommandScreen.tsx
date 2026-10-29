@@ -17,7 +17,7 @@ import { levelTwoHref } from "./levelTwo";
 const fredoka = Fredoka({ subsets: ["latin"], weight: "600" });
 
 /** Once the cube is up (the robot's pick-up clip), this long until "Nice!" comes in. */
-const NICE_AFTER_S = COMMAND_ROBOT.pickUpSeconds + 0.45;
+const NICE_AFTER_S = COMMAND_ROBOT.moveSeconds.pickUp + 0.45;
 /** Hex's question stands this far up from the bottom of the frame; the robot rests above it. */
 const QUESTION_BOTTOM = 240;
 /** Hex enters a touch after the panel, and his thumbs-up follows his entrance. */

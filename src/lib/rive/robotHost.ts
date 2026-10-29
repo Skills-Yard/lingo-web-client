@@ -38,7 +38,8 @@ const MOVES_FROM_IDLE: Record<Exclude<RobotPose, "idle">, readonly RobotMove[]> 
 /** The picture's height (px) at the artboard's own width: the artboard and the room drawn past its top and bottom. */
 export const ROBOT_PICTURE_HEIGHT = COMMAND_ROBOT.overflowTop + COMMAND_ROBOT.height + COMMAND_ROBOT.overflowBottom;
 
-/** Two triggers fired in the same frame are not both taken, so queued moves go out this far apart. */
+/** Two triggers fired in the same frame are not both taken, and one fired while a move is still playing is dropped:
+ * so each queued move goes out this long (plus its own clip's length) after the last. */
 const MOVE_GAP_MS = 150;
 /** A trigger fired the moment the file loads is dropped (the machine is still entering its first state), so the first move waits this long. */
 const SETTLE_MS = 600;
@@ -49,6 +50,8 @@ let wantedLabel: string | null = null;
 /** Moves asked for before the file had loaded, or too soon after the last one. */
 let queue: RobotMove[] = [];
 let draining = false;
+/** When the move now playing ends (a `Date.now()`). */
+let busyUntil = 0;
 
 /**
  * Fits the artboard to the canvas's width and starts it `overflowTop` (scaled)
@@ -88,10 +91,11 @@ const drain = () => {
   queue = queue.slice(1);
   rive.viewModelInstance?.trigger(COMMAND_ROBOT.triggers[move])?.trigger();
   draining = true;
+  busyUntil = Date.now() + COMMAND_ROBOT.moveSeconds[move] * 1000;
   window.setTimeout(() => {
     draining = false;
     drain();
-  }, MOVE_GAP_MS);
+  }, COMMAND_ROBOT.moveSeconds[move] * 1000 + MOVE_GAP_MS);
 };
 
 /** Browser only. Creates the canvas and starts loading on first use. */
@@ -145,6 +149,12 @@ export const fireRobot = (move: RobotMove) => {
   pose = POSE_AFTER[move] ?? pose;
   queue = [...queue, move];
   drain();
+};
+
+/** How long (ms) until every move asked for so far has finished playing — what a screen waits for before covering the robot. */
+export const robotDoneIn = () => {
+  const queued = queue.reduce((sum, move) => sum + COMMAND_ROBOT.moveSeconds[move] * 1000 + MOVE_GAP_MS, 0);
+  return Math.max(0, busyUntil - Date.now()) + queued;
 };
 
 /**

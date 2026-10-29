@@ -3,8 +3,12 @@
 import { useRouter } from "next/navigation";
 import { HexBubble } from "./HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
-import { RobotBackdrop, robotAbove } from "./RobotBackdrop";
+import { RobotBackdrop, robotBelowDialogue } from "./RobotBackdrop";
 import { levelTwoHref } from "./levelTwo";
+
+/** Figma: Hex's line starts 182px down the frame. */
+const DIALOGUE_TOP = 182;
+const BUBBLE = { width: 167 };
 
 /**
  * `/module?step=7` — "Move the cube in the target area.": the robot
@@ -13,14 +17,14 @@ import { levelTwoHref } from "./levelTwo";
 export function TargetScreen() {
   const router = useRouter();
   return (
-    <LevelTwoShell step={7} scene={<RobotBackdrop bottom={robotAbove(0)} pose="holding" hint targetLabel="TARGET AREA" />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(8))}>
+    <LevelTwoShell step={7} scene={<RobotBackdrop below={robotBelowDialogue(DIALOGUE_TOP, BUBBLE)} pose="holding" hint targetLabel="TARGET AREA" />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(8))}>
       <ScreenTitle>
         Move the cube in the
         <br />
         <Teal>target area.</Teal>
       </ScreenTitle>
-      <CentredRow top={stageTop(182)}>
-        <HexBubble entryKey="target" hex="left" size={{ width: 167 }} line={[{ text: "The robot is holding the cube." }]} />
+      <CentredRow top={stageTop(DIALOGUE_TOP)}>
+        <HexBubble entryKey="target" hex="left" size={BUBBLE} line={[{ text: "The robot is holding the cube." }]} />
       </CentredRow>
     </LevelTwoShell>
   );
