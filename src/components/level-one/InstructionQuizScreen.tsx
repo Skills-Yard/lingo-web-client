@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { moduleHref } from "@/lib/routes";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -40,9 +41,20 @@ const LOOK = {
 /**
  * `/module?level=1&step=7` — "What are instructions known as?": a single-answer quiz
  * with Hex between the question and the options. Check locks the answer and
- * marks it right (green) or wrong (red); Continue follows.
+ * marks it right (green) or wrong (red); Continue follows. Module 2 reuses it
+ * (`level={2}`) at its own `step` of `total`, between the screens around it.
  */
-export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void }) {
+export function InstructionQuizScreen({
+  level = 1,
+  step = 7,
+  total,
+  onContinue,
+}: {
+  level?: 1 | 2;
+  step?: number;
+  total?: number;
+  onContinue?: () => void;
+}) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
@@ -60,19 +72,20 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
 
   return (
     <LevelOneShell
-      step={7}
+      step={step}
+      total={total}
       wash
       fit
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
-      onBack={() => router.push(levelOneHref(6))}
+      onBack={() => router.push(level === 1 ? levelOneHref(6) : moduleHref(level, step - 1))}
       onContinue={() => {
         if (!checked) {
           setChecked(true);
           vibrateForAnswer(selectedId === CORRECT_ID);
           setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
-        } else (onContinue ?? (() => router.push(levelOneRewardHref())))();
+        } else (onContinue ?? (() => router.push(level === 1 ? levelOneRewardHref() : moduleHref(level, step + 1))))();
       }}
       overlay={
         <div ref={glideRef} className="pointer-events-none absolute inset-0">
