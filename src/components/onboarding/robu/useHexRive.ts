@@ -84,11 +84,14 @@ export function useHexRive(
     };
     const inset = () => {
       original();
-      const dpr = rive.devicePixelRatioUsed || window.devicePixelRatio || 1;
-      const padX = bleed.x * stageScale() * dpr;
-      const padTop = bleed.y * stageScale() * dpr;
-      const padBottom = (bleed.bottom ?? bleed.y) * stageScale() * dpr;
       const { width, height } = target.canvas;
+      // Drawing-surface px per layout px, read off the surface itself: it isn't
+      // always sized to the on-screen (scaled) box, and a pad worked out from
+      // the on-screen scale then fits Hex into the wrong region.
+      const pxPerLayoutPx = target.canvas.offsetWidth > 0 ? width / target.canvas.offsetWidth : 1;
+      const padX = bleed.x * pxPerLayoutPx;
+      const padTop = bleed.y * pxPerLayoutPx;
+      const padBottom = (bleed.bottom ?? bleed.y) * pxPerLayoutPx;
       if (width <= padX * 2 || height <= padTop + padBottom) return;
       rive.layout = rive.layout.copyWith({ minX: padX, minY: padTop, maxX: width - padX, maxY: height - padBottom });
     };
