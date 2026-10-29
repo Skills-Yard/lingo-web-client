@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   INSTRUCTIONS_INTRO_SLIDES,
@@ -11,7 +11,11 @@ import { FeedbackPanel } from "./FeedbackPanel";
 import { GemPopup } from "./GemPopup";
 import { HexStage } from "./HexStage";
 import { moduleHref } from "@/lib/routes";
+import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
+
+/** Its place in the module. */
+const STEP = 16;
 
 /** Time per command — quicker than the old intro's 700ms. */
 const STEP_MS = 400;
@@ -48,6 +52,14 @@ export function MoveHexScreen() {
   // A run that missed the flag: the quiz's "wrong" result panel slides up
   // (and goes again when the board is reset).
   const [result, setResult] = useState<{ success: boolean | null; failureMsg: string }>({ success: null, failureMsg: "" });
+  // A run that missed the flag counts against this question: the first go is what is noted,
+  // and Continue (once Hex gets there) asks to be shown it again unless the first run made it.
+  const missed = useRef(false);
+  useEffect(() => {
+    if (result.success !== false) return;
+    missed.current = true;
+    noteAnswer(STEP, false);
+  }, [result.success]);
 
   if (!GAME_SLIDE) return null;
 
@@ -86,7 +98,10 @@ export function MoveHexScreen() {
       }
       onBack={() => router.push(levelOneHref(6))}
       onContinue={() => {
-        if (solved) router.push(moduleHref("complete"));
+        if (solved) {
+          noteAnswer(STEP, !missed.current);
+          router.push(nextAfter(STEP, !missed.current, moduleHref("complete")));
+        }
         else if (failed) resetRef.current?.();
         else playRef.current?.();
       }}

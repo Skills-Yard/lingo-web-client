@@ -2,6 +2,7 @@
 
 import { useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
+import { resetReview } from "@/lib/moduleReview";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
 import { energyReturnPath, moduleHref, onboardingHref } from "@/lib/routes";
 import { CareerDetailScreen } from "./CareerDetailScreen";
@@ -20,7 +21,12 @@ const subscribeNever = () => () => {};
 export function LevelRoute() {
   const router = useRouter();
   return (
-    <HomeScreen onStart={() => router.push(moduleHref(1))} />
+    <HomeScreen
+      onStart={() => {
+        resetReview();
+        router.push(moduleHref(1));
+      }}
+    />
   );
 }
 

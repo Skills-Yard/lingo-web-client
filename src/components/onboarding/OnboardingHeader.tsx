@@ -22,6 +22,9 @@ interface OnboardingHeaderProps {
    * connector screens between them (foxy intro, ready-check, notification
    * permission) don't — there's nothing to show progress *of* there. */
   progress?: { step: number; total: number };
+  /** The screen the battery charges for, when that is not the bar's `step` (a
+   * question asked again is a screen already paid for). */
+  batteryStep?: number;
   /** The latest checked answer — plays the bar's correct / wrong reaction. */
   answer?: AnswerResult | null;
   /** Shows "step/total" above the bar. */
@@ -65,7 +68,7 @@ function BatteryCount() {
   );
 }
 
-export function OnboardingHeader({ onBack, onPrevious, progress, answer, showCount, level }: OnboardingHeaderProps) {
+export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, answer, showCount, level }: OnboardingHeaderProps) {
   const [fromStep] = useState(() => (progress ? (lastShown?.step ?? progress.step - 1) : null));
   useEffect(() => {
     if (progress) lastShown = { step: progress.step, total: progress.total };
@@ -114,7 +117,7 @@ export function OnboardingHeader({ onBack, onPrevious, progress, answer, showCou
       {level && (
         <BatteryMenu className="absolute top-[6px] right-4" onBack={onPrevious ?? onBack}>
           <span className="flex h-[39px] items-center gap-1 rounded-md">
-            <PersistentBattery step={progress?.step} className="w-[60px]" />
+            <PersistentBattery step={batteryStep ?? progress?.step} className="w-[60px]" />
             <BatteryCount />
           </span>
         </BatteryMenu>

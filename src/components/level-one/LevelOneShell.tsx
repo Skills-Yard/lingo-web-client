@@ -9,6 +9,7 @@ import { setClickSoundMuted } from "@/components/onboarding/clickSound";
 import { useVoiceover } from "@/components/onboarding/useVoiceover";
 import { questionSpoken } from "@/components/onboarding/QuestionHeading";
 import { LEVEL_ONE_STEP, MODULE_STEPS, type LevelOneStepKey } from "@/lib/moduleFlow";
+import { useReviewProgress } from "@/lib/moduleReview";
 import { moduleHref } from "@/lib/routes";
 import { ActionRow } from "./ActionRow";
 import { LevelVoiceContext } from "./LevelVoice";
@@ -70,6 +71,9 @@ interface LevelOneShellProps {
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
 export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLocked, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
   const router = useRouter();
+  // A question being asked again (see `moduleReview`): the bar is the review's, and
+  // Back leaves the module rather than going to the screen before it.
+  const review = useReviewProgress(step);
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
   const voice = useVoiceover(voiceover, true, muted);
@@ -182,8 +186,9 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
         >
           <OnboardingHeader
             onBack={() => router.push("/level")}
-            onPrevious={onBack ?? (() => router.back())}
-            progress={{ step, total }}
+            onPrevious={review ? () => router.push("/level") : (onBack ?? (() => router.back()))}
+            progress={review ?? { step, total }}
+            batteryStep={step}
             answer={answer}
             level
             muted={muted}

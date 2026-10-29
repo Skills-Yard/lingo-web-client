@@ -9,10 +9,10 @@ import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { LESSON_COMPLETE } from "@/lib/rive/runtime";
 import { vibrateForLessonComplete } from "@/lib/haptics";
 import { completeModule } from "@/lib/levelProgress";
+import { firstTryAccuracy, resetReview } from "@/lib/moduleReview";
 
 /** The lesson's results, shown by the artboard. */
 const LESSON_XP = 40;
-const LESSON_ACCURACY = 92;
 /** The seconds the lesson took. */
 const LESSON_SECONDS = 222;
 
@@ -25,7 +25,8 @@ const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(se
 
 /**
  * `/module?step=complete` — "Lesson complete!": the "LESSON_Complete"
- * Rive artboard. Once it is ready, its `xp`, `accuracy` and `time` are set and
+ * Rive artboard. Once it is ready, its `xp`, `accuracy` (the share of questions
+ * answered right the first time) and `time` are set and
  * its `play` trigger fired. Each value is written as a number, or as display
  * text (`+40`, `92%`, `3:42`) if the artboard declares that property as a string.
  * Continue records module `level` as finished and goes back to the path,
@@ -52,7 +53,9 @@ export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number
       }
     };
     set(LESSON_COMPLETE.xpProperty, LESSON_XP, `+${LESSON_XP}`);
-    set(LESSON_COMPLETE.accuracyProperty, LESSON_ACCURACY, `${LESSON_ACCURACY}%`);
+    // The questions answered right the first time, of all of them.
+    const accuracy = firstTryAccuracy();
+    set(LESSON_COMPLETE.accuracyProperty, accuracy, `${accuracy}%`);
     set(LESSON_COMPLETE.timeProperty, LESSON_SECONDS, formatTime(LESSON_SECONDS));
     fireTrigger(LESSON_COMPLETE.playTrigger);
     vibrateForLessonComplete();
@@ -72,6 +75,7 @@ export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number
           riveVariant="module"
           onClick={onContinue ?? (() => {
             completeModule(level);
+            resetReview();
             router.push("/level");
           })}
           onPress={playClickSound}

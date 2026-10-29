@@ -7,6 +7,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
+import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HintFloat } from "./HintFloat";
@@ -160,10 +161,11 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
           router.push(levelOneHref(4));
         } else if (!checked) {
           setChecked(true);
+          noteAnswer(levelOneStep(4), selectedId === CORRECT_ID);
           vibrateForAnswer(selectedId === CORRECT_ID);
           setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
         }
-        else router.push(levelOneHref(5));
+        else router.push(nextAfter(levelOneStep(4), selectedId === CORRECT_ID, levelOneHref(5)));
       }}
     >
       {/* The heading box resizes with the picture, so nothing jumps when the

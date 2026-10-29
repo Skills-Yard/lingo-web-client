@@ -3,6 +3,7 @@ import { ExamplesScreen } from "@/components/level-one/ExamplesScreen";
 import { InstructionQuizScreen } from "@/components/level-one/InstructionQuizScreen";
 import { LessonCompleteScreen } from "@/components/level-one/LessonCompleteScreen";
 import { MoveHexScreen } from "@/components/level-one/MoveHexScreen";
+import { ReviewIntroScreen } from "@/components/level-one/ReviewIntroScreen";
 import { TeacherFlow } from "@/components/level-one/TeacherFlow";
 import { VideoScreen } from "@/components/level-one/VideoScreen";
 import { FlipCardScreen } from "@/components/level-two/FlipCardScreen";
@@ -70,6 +71,9 @@ function moduleScreen(step: string) {
       return <VideoScreen />;
     case "16":
       return <MoveHexScreen />;
+    // After the last screen, if some questions were missed: "Let's fix the ones you missed".
+    case "review":
+      return <ReviewIntroScreen />;
     case "complete":
       return <LessonCompleteScreen />;
     default:

@@ -10,6 +10,7 @@ import { optionDropIn } from "@/components/onboarding/optionCard";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
+import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
@@ -73,9 +74,10 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       onContinue={() => {
         if (!checked) {
           setChecked(true);
+          noteAnswer(QUIZ_STEP, selectedId === CORRECT_ID);
           vibrateForAnswer(selectedId === CORRECT_ID);
           setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: selectedId === CORRECT_ID }));
-        } else (onContinue ?? (() => router.push(levelOneHref(3))))();
+        } else (onContinue ?? (() => router.push(nextAfter(QUIZ_STEP, selectedId === CORRECT_ID, levelOneHref(3)))))();
       }}
       overlay={
         <div ref={glideRef} className="pointer-events-none absolute inset-0">

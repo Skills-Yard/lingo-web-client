@@ -8,6 +8,7 @@ import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
+import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
 import { levelTwoHref } from "./levelTwo";
@@ -29,6 +30,8 @@ const ROW_TOP = [231, 440] as const;
 const CARD_W = 172;
 const CARD_H = 184;
 const GAP = 14;
+/** Its place in the module. */
+const STEP = 6;
 /** How long a wrong pair shows red before both cards let go. */
 const WRONG_MS = 650;
 
@@ -47,6 +50,8 @@ export function MatchScreen() {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [hinted, setHinted] = useState(false);
   const timer = useRef<number | undefined>(undefined);
+  // Whether any pair has been wrong in this go.
+  const slipped = useRef(false);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const done = matched.length === INSTRUCTIONS.length * 2;
@@ -69,6 +74,8 @@ export function MatchScreen() {
       setPicked({ left: null, right: null });
       setHinted(false);
     } else {
+      slipped.current = true;
+      noteAnswer(STEP, false);
       setWrong(true);
       timer.current = window.setTimeout(() => {
         setWrong(false);
@@ -131,7 +138,12 @@ export function MatchScreen() {
       ctaLabel="Next"
       ctaDisabled={!done}
       hint={{ visible: true, onUse: () => setHinted(true) }}
-      onContinue={() => router.push(levelTwoHref(7))}
+      onContinue={() => {
+        // Right only if no pair was wrong on the way (the first go is what is noted).
+        const correct = !slipped.current;
+        noteAnswer(STEP, correct);
+        router.push(nextAfter(STEP, correct, levelTwoHref(7)));
+      }}
     >
       <ScreenTitle>
         Can you <Teal>match them?</Teal>

@@ -6,6 +6,7 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
+import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { fireRobot } from "@/lib/rive/robotHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { AnswerCards } from "./AnswerCards";
@@ -33,6 +34,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
 
   const check = () => {
     setChecked(true);
+    noteAnswer(step, correct);
     vibrateForAnswer(correct);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
     // The hint's glow goes out first, then the robot plays what this answer does.
@@ -55,7 +57,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : (quiz.ctaLabel ?? "Check")}
       hint={quiz.hint ? { visible: true, onUse: () => setHinted(true) } : undefined}
-      onContinue={() => (checked ? router.push(levelTwoHref(step + 1)) : check())}
+      onContinue={() => (checked ? router.push(nextAfter(step, correct, levelTwoHref(step + 1))) : check())}
       overlay={
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel

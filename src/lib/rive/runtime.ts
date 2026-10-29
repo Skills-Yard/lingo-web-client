@@ -394,7 +394,9 @@ export const COMMAND_ROBOT = {
   moveSeconds: {
     pickUp: 1.83,
     putDown: 1.63,
-    placeInTarget: 2.7,
+    // The "PlaceInTarget" clip (2.7s) and the "Success_In" (0.6s) that follows it:
+    // a `reset` fired before that has played out is dropped.
+    placeInTarget: 3.3,
     reset: 0.8,
     wrongClaw: 1.17,
     wrongCube: 1.17,
