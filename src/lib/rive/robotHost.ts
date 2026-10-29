@@ -50,8 +50,6 @@ let wantedLabel: string | null = null;
 /** Moves asked for before the file had loaded, or too soon after the last one. */
 let queue: RobotMove[] = [];
 let draining = false;
-/** When the move now playing ends (a `Date.now()`). */
-let busyUntil = 0;
 
 /**
  * Fits the artboard to the canvas's width and starts it `overflowTop` (scaled)
@@ -91,7 +89,6 @@ const drain = () => {
   queue = queue.slice(1);
   rive.viewModelInstance?.trigger(COMMAND_ROBOT.triggers[move])?.trigger();
   draining = true;
-  busyUntil = Date.now() + COMMAND_ROBOT.moveSeconds[move] * 1000;
   window.setTimeout(() => {
     draining = false;
     drain();
@@ -149,12 +146,6 @@ export const fireRobot = (move: RobotMove) => {
   pose = POSE_AFTER[move] ?? pose;
   queue = [...queue, move];
   drain();
-};
-
-/** How long (ms) until every move asked for so far has finished playing — what a screen waits for before covering the robot. */
-export const robotDoneIn = () => {
-  const queued = queue.reduce((sum, move) => sum + COMMAND_ROBOT.moveSeconds[move] * 1000 + MOVE_GAP_MS, 0);
-  return Math.max(0, busyUntil - Date.now()) + queued;
 };
 
 /**

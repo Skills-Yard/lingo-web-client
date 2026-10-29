@@ -4,7 +4,8 @@ import { Button3D } from "@/components/ui/Button3D";
 import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { HintButton } from "./HintButton";
+import { BUTTON } from "@/lib/rive/runtime";
+import { HintButton, type HintSize } from "./HintButton";
 
 /** The badge count — fixed at 1 for now. */
 const HINTS_LEFT = 1;
@@ -17,6 +18,20 @@ const HINTS_LEFT = 1;
  */
 export const CTA_HEIGHT_WITH_HINT = 0.9;
 
+/**
+ * The hint button is as tall as the drawn face of the main button beside it,
+ * top to bottom: the face spans `BUTTON.face` of the button's box, which is
+ * `CTA_HEIGHT_WITH_HINT` of the row and stands on the row's bottom edge. It is a
+ * square, so its width is that same length as a share of the row's width (the row's
+ * shape is the button's own, so a share of the height is `height / width` of one).
+ */
+const HINT_HEIGHT = (BUTTON.face.bottom - BUTTON.face.top) * CTA_HEIGHT_WITH_HINT;
+const HINT_SIZE: HintSize = {
+  height: `${HINT_HEIGHT * 100}%`,
+  width: `${HINT_HEIGHT * (RIVE_BUTTON_H / RIVE_BUTTON_W) * 100}%`,
+  lift: `${(1 - BUTTON.face.bottom) * CTA_HEIGHT_WITH_HINT * 100}%`,
+};
+
 type ActionRowProps = {
   /** The row's widest width (px) — it keeps its phone size on a desktop. */
   maxWidth: number;
@@ -26,6 +41,8 @@ type ActionRowProps = {
   /** Label of the main button. */
   ctaLabel: string;
   ctaDisabled?: boolean;
+  /** The main button takes no clicks, but is drawn enabled. */
+  ctaLocked?: boolean;
   onContinue?: () => void;
 };
 
@@ -37,7 +54,7 @@ type ActionRowProps = {
  * button narrows beside it and drops to `CTA_HEIGHT_WITH_HINT` of the row,
  * standing on the row's bottom edge like the hint does.
  */
-export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, onContinue }: ActionRowProps) {
+export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, onContinue }: ActionRowProps) {
   const withHint = !!hint?.visible;
   return (
     <div className="relative z-10 mx-auto w-full shrink-0 px-1.5 pb-9" style={{ maxWidth }}>
@@ -46,6 +63,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, onCon
           <HintButton
             visible={hint.visible}
             count={HINTS_LEFT}
+            size={HINT_SIZE}
             onPress={() => {
               playClickSound();
               hint.onUse();
@@ -59,6 +77,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, onCon
           onClick={() => onContinue?.()}
           onPress={playClickSound}
           disabled={ctaDisabled}
+          locked={ctaLocked}
           className={hint ? "min-w-0 flex-1 transition-[height] duration-500 ease-out" : "min-w-0 flex-1"}
           {...(hint && { style: { aspectRatio: "auto", height: `${(withHint ? CTA_HEIGHT_WITH_HINT : 1) * 100}%` } })}
         >

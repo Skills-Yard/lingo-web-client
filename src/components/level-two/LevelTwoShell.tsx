@@ -4,7 +4,6 @@ import { Fragment, type ComponentProps, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CTA_HEIGHT_WITH_HINT } from "@/components/level-one/ActionRow";
-import { HINT_SIZE } from "@/components/level-one/HintButton";
 import { LevelOneShell } from "@/components/level-one/LevelOneShell";
 import { MODULE_STEPS } from "@/lib/moduleFlow";
 import { FRAME_TOP_SHIFT, levelTwoHref, type TitleLines } from "./levelTwo";
@@ -55,12 +54,12 @@ const ROW_HEIGHT = `(min(var(--stage-w, 390px), 450px) - 12px) * ${BUTTON_RATIO}
  * A CSS `bottom` that stands `gap` px above the shell's button row. The row's
  * height follows its width, which is capped on a wide screen: so a fixed offset
  * from Figma would run into the button there. With `withHint` the top of the
- * row is the hint button (80px tall) or, if that is shorter, the main button
- * beside it, which stands on the row's bottom edge at `CTA_HEIGHT_WITH_HINT`.
+ * row is the main button's (and the hint's, which is as tall), which stands on
+ * the row's bottom edge at `CTA_HEIGHT_WITH_HINT` of its height.
  */
 export const aboveButtons = (gap: number, withHint = false) =>
   withHint
-    ? `calc(36px + max(${HINT_SIZE}px, ${ROW_HEIGHT} * ${CTA_HEIGHT_WITH_HINT * (1 - BUTTON_MARGIN_TOP)}) + ${gap}px)`
+    ? `calc(36px + ${ROW_HEIGHT} * ${CTA_HEIGHT_WITH_HINT * (1 - BUTTON_MARGIN_TOP)} + ${gap}px)`
     : `calc(36px + ${ROW_HEIGHT} * ${1 - BUTTON_MARGIN_TOP} + ${gap}px)`;
 
 /** The Figma title: Poppins 600 28px / 134%, #444444, centred; `at` is its Figma `top` (116). */

@@ -24,8 +24,6 @@ type AnswerCardsProps = {
   correctId: string;
   selectedId: string | null;
   checked: boolean;
-  /** Once the result panel is up the cards rise to make room for it (default: as soon as `checked`). */
-  risen?: boolean;
   /** The hint was used: the right card is filled in orange until something is picked. */
   hinted: boolean;
   /** The screen has the hint button beside its main button. */
@@ -35,16 +33,16 @@ type AnswerCardsProps = {
 
 /**
  * The three answers (Figma "Frame 322"): 358 x 76 white cards 6px apart with a
- * picture, the text and a radio. Pinned to the button row; once `risen` they
+ * picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, risen = checked, hinted, withHint, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, hinted, withHint, onPick }: AnswerCardsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: risen ? -CARDS_RISE : 0 }}
+      animate={{ opacity: 1, y: checked ? -CARDS_RISE : 0 }}
       transition={
-        risen
+        checked
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
@@ -92,7 +90,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, risen = c
                 <span className={`absolute inset-[7px] rounded-full transition-transform duration-200 ${look.dot}`} />
               </span>
             </motion.button>
-            <XpPop show={risen && choice.id === correctId && selectedId === correctId} />
+            <XpPop show={checked && choice.id === correctId && selectedId === correctId} />
           </HintFloat>
         );
       })}

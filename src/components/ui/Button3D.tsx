@@ -78,6 +78,9 @@ interface Button3DProps
    * (a squeezed shape) instead of fitted inside it, so the box can be narrower
    * than the artwork's shape without the artwork getting shorter. */
   stretch?: boolean;
+  /** Takes no clicks (no press, no sound, no vibration) but looks enabled, for
+   * the moments a screen is busy and the button should not grey out. */
+  locked?: boolean;
   /** Fires the instant the button is clicked — unlike `onClick`, which waits
    * for the press animation (CLICK_DELAY_MS). For immediate feedback such as
    * a click sound. */
@@ -101,6 +104,7 @@ export function Button3D({
   riveVariant,
   answer,
   stretch,
+  locked,
   disabled,
   className,
   onClick,
@@ -121,7 +125,7 @@ export function Button3D({
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
 
   const handleClick = (e: MouseEvent<HTMLButtonElement>) => {
-    if (!onClick) return;
+    if (!onClick || locked) return;
     if (pending.current) return;
     onPress?.();
     vibrateForTap();
@@ -147,6 +151,7 @@ export function Button3D({
         type="button"
         {...NO_STATE_RESTORE}
         disabled={disabled}
+        aria-disabled={locked || undefined}
         style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}
         className={`relative block border-0 bg-transparent p-0 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${
           disabled ? `cursor-not-allowed ${drawsOwnDisabled ? "" : "grayscale"}` : "cursor-pointer"

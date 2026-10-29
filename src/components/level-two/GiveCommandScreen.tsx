@@ -31,7 +31,9 @@ const PANEL_MIN_HEIGHT = 844 - 593;
  * tell the robot, the main button ("Pick Up", our usual one) gives the
  * instruction and the cube is picked up. Then, on this same screen, the title
  * becomes "Nice! You gave an instruction.", a panel with Hex says so above the
- * button, and the button becomes "Next". The hint points at Hex's question.
+ * button, and the button becomes "Next". The hint points at Hex's question. The
+ * button row stays as it is throughout (the hint stays, the button keeps its
+ * look); while the cube is being picked up the button just takes no clicks.
  */
 export function GiveCommandScreen() {
   const router = useRouter();
@@ -49,8 +51,8 @@ export function GiveCommandScreen() {
       step={2}
       scene={<RobotBackdrop bottom={`${QUESTION_BOTTOM + HEX_SLOT + ROBOT_GAP}px`} pose="idle" />}
       ctaLabel={nice ? "Next" : "Pick Up"}
-      ctaDisabled={given && !nice}
-      hint={given ? undefined : { visible: true, onUse: () => setHinted(true) }}
+      ctaLocked={given && !nice}
+      hint={{ visible: true, onUse: () => !given && setHinted(true) }}
       onContinue={() => {
         if (nice) {
           router.push(levelTwoHref(3));

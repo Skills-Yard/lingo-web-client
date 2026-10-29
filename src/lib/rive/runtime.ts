@@ -428,6 +428,9 @@ export const BUTTON = {
   src: "/animations/btn-click.riv?v=3",
   width: 371,
   height: 113,
+  /** Where the drawn button sits in the artboard, as shares of its height: the
+   * rest above and below it is empty margin. */
+  face: { top: 0.168, bottom: 0.819 },
   labelProperty: "label",
   shineTrigger: "shine",
   clickTrigger: "click",

@@ -26,8 +26,6 @@ type TileCardsProps = {
   correctId: string;
   selectedId: string | null;
   checked: boolean;
-  /** Once the result panel is up the cards rise to make room for it (default: as soon as `checked`). */
-  risen?: boolean;
   hinted: boolean;
   withHint: boolean;
   /** The text is a sentence: set smaller and left to wrap. */
@@ -38,16 +36,16 @@ type TileCardsProps = {
 /**
  * The answers as cards side by side — two big ones or three small tiles — in
  * the same 358px column as the rest of the screen, standing on the button row.
- * Like the list, they rise once the result panel is up (`risen`).
+ * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, risen = checked, hinted, withHint, longText, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, hinted, withHint, longText, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: risen ? -CARDS_RISE : 0 }}
+      animate={{ opacity: 1, y: checked ? -CARDS_RISE : 0 }}
       transition={
-        risen
+        checked
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
@@ -92,7 +90,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, ris
                 {choice.text}
               </span>
             </motion.button>
-            <XpPop show={risen && choice.id === correctId && selectedId === correctId} />
+            <XpPop show={checked && choice.id === correctId && selectedId === correctId} />
           </HintFloat>
         );
       })}

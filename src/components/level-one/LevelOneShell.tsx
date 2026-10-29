@@ -40,6 +40,8 @@ interface LevelOneShellProps {
   onBack?: () => void;
   /** Greys out Continue until the learner has answered. */
   ctaDisabled?: boolean;
+  /** Main button takes no clicks for now, but keeps its enabled look (a move is playing). */
+  ctaLocked?: boolean;
   /** Label of the main button (default "Continue"). */
   ctaLabel?: string;
   /** Content between the header and the Continue button. */
@@ -66,7 +68,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
+export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLocked, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
   const router = useRouter();
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
@@ -225,6 +227,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
             answer={answer}
             ctaLabel={ctaLabel}
             ctaDisabled={ctaDisabled}
+            ctaLocked={ctaLocked}
             onContinue={onContinue}
           />
         )}
