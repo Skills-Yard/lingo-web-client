@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useRef } from "react";
 import {
   getModuleButtonHost,
   pressModuleButton,
+  setModuleButtonStretch,
   sweepModuleButtonShine,
   writeModuleButton,
 } from "@/lib/rive/moduleButtonHost";
@@ -28,6 +29,8 @@ type PersistentModuleButtonFaceProps = {
   disabled?: boolean;
   /** The latest checked answer — `buttonState` correct / wrong. */
   answer?: AnswerResult | null;
+  /** The artwork is stretched to fill the slot instead of fitted inside it. */
+  stretch?: boolean;
 };
 
 /** The session's one module button (see `moduleButtonHost`), moved into this
@@ -39,6 +42,7 @@ export function PersistentModuleButtonFace({
   shine,
   disabled = false,
   answer = null,
+  stretch = false,
 }: PersistentModuleButtonFaceProps) {
   const slot = useRef<HTMLDivElement>(null);
   const state = pickState(disabled, answer);
@@ -49,6 +53,10 @@ export function PersistentModuleButtonFace({
   useLayoutEffect(() => {
     writeModuleButton({ label, state });
   }, [label, state]);
+
+  useLayoutEffect(() => {
+    setModuleButtonStretch(stretch);
+  }, [stretch]);
 
   useLayoutEffect(() => {
     const element = slot.current;

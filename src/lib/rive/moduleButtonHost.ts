@@ -20,8 +20,15 @@ let host: Host | null = null;
 
 /** What the artboard should show; applied as soon as it has loaded. */
 let wanted: ModuleButtonData | null = null;
+/** Whether the artwork fills its slot (squeezed to it) rather than fitting inside it. */
+let stretched = false;
 let shineQueued = false;
 let revealQueued = false;
+
+const applyFit = (rive: Rive) => {
+  const fit = stretched ? Fit.Fill : Fit.Contain;
+  if (rive.layout.fit !== fit) rive.layout = rive.layout.copyWith({ fit });
+};
 
 const fireTrigger = (rive: Rive, name: string) => rive.viewModelInstance?.trigger(name)?.trigger();
 
@@ -68,10 +75,11 @@ export const getModuleButtonHost = (): Host => {
     stateMachine: MODULE_BUTTON.stateMachine,
     autoplay: true,
     autoBind: true,
-    layout: new Layout({ fit: Fit.Contain, alignment: Alignment.Center }),
+    layout: new Layout({ fit: stretched ? Fit.Fill : Fit.Contain, alignment: Alignment.Center }),
     onLoad: () => {
       const rive = created.rive;
       if (!rive) return;
+      applyFit(rive);
       rive.resizeDrawingSurfaceToCanvas();
       created.loaded = true;
       apply(created, rive);
@@ -82,6 +90,12 @@ export const getModuleButtonHost = (): Host => {
     },
   });
   return created;
+};
+
+/** Makes the artwork fill its slot (`true`) or fit inside it. Safe to call before the file has loaded. */
+export const setModuleButtonStretch = (next: boolean) => {
+  stretched = next;
+  if (host?.rive) applyFit(host.rive);
 };
 
 /** Sets the button's label and `buttonState`. */

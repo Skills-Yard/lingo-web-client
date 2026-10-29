@@ -7,16 +7,19 @@ import { Fredoka } from "next/font/google";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { HintFloat } from "@/components/level-one/HintFloat";
 import { vibrateForTap } from "@/lib/haptics";
-import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { HexBubble } from "./HexBubble";
+import { fireRobot } from "@/lib/rive/robotHost";
+import { COMMAND_ROBOT, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { HEX_SLOT, HexBubble } from "./HexBubble";
 import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, Teal } from "./LevelTwoShell";
-import { RobotScene } from "./RobotScene";
-import { LEG_S, levelTwoHref } from "./levelTwo";
+import { ROBOT_GAP, RobotBackdrop } from "./RobotBackdrop";
+import { levelTwoHref } from "./levelTwo";
 
 const fredoka = Fredoka({ subsets: ["latin"], weight: "600" });
 
-/** Once the cube is up, this long until "Nice!" comes in. */
-const NICE_AFTER_S = LEG_S + 0.45;
+/** Once the cube is up (the robot's pick-up clip), this long until "Nice!" comes in. */
+const NICE_AFTER_S = COMMAND_ROBOT.pickUpSeconds + 0.45;
+/** Hex's question stands this far up from the bottom of the frame; the robot rests above it. */
+const QUESTION_BOTTOM = 240;
 /** Hex enters a touch after the panel, and his thumbs-up follows his entrance. */
 const HEX_AFTER_MS = 250;
 const HEX_SETTLE_MS = 900;
@@ -44,7 +47,7 @@ export function GiveCommandScreen() {
   return (
     <LevelTwoShell
       step={2}
-      scene={<RobotScene from="table" moves={["held"]} go={given} />}
+      scene={<RobotBackdrop bottom={`${QUESTION_BOTTOM + HEX_SLOT + ROBOT_GAP}px`} pose="idle" />}
       ctaLabel={nice ? "Next" : "Pick Up"}
       ctaDisabled={given && !nice}
       hint={given ? undefined : { visible: true, onUse: () => setHinted(true) }}
@@ -54,6 +57,7 @@ export function GiveCommandScreen() {
           return;
         }
         vibrateForTap();
+        fireRobot("pickUp");
         setGiven(true);
       }}
       overlay={nice ? <NicePanel /> : undefined}
@@ -72,7 +76,7 @@ export function GiveCommandScreen() {
         </ScreenTitle>
       )}
       {!given && (
-        <CentredRow bottom={240}>
+        <CentredRow bottom={QUESTION_BOTTOM}>
           <HintFloat className="relative" spin={false} active={hinted}>
             <HexBubble
               entryKey="give-command"

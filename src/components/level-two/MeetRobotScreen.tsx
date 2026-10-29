@@ -2,20 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { BookOpen } from "lucide-react";
-import { aboveButtons, FadeToWhite, LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
-import { RobotScene } from "./RobotScene";
+import { aboveButtons, LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
+import { RobotBackdrop, robotAbove } from "./RobotBackdrop";
 import { levelTwoHref } from "./levelTwo";
+
+/** The line about the robot: its gap above the button row and its height (three lines). */
+const TEXT_GAP = 54;
+const TEXT_H = 69;
 
 /**
  * `/module?step=1` — "Meet your robot.": the LEARN chip, the chapter
- * and a line about the robot, over the picture fading out to white.
+ * and a line about the robot, with the robot resting above that line.
  */
 export function MeetRobotScreen() {
   const router = useRouter();
   return (
-    <LevelTwoShell step={1} scene={<RobotScene from="table" />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(2))}>
-      <FadeToWhite />
-
+    <LevelTwoShell step={1} scene={<RobotBackdrop bottom={robotAbove(TEXT_GAP + TEXT_H)} pose="idle" />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(2))}>
       {/* The same chip as module 1's opening screen. */}
       <div className="absolute inset-x-0 flex justify-center" style={{ top: stageTop(113) }}>
         <span className="flex h-8 items-center gap-1.5 rounded-full border border-[#2F80ED] bg-[#E5EFFD] py-[5px] pr-3 pl-1.5">
@@ -37,7 +39,7 @@ export function MeetRobotScreen() {
 
       <p
         className="absolute text-center text-[16px] leading-[23px] font-medium text-[#444444]"
-        style={{ bottom: aboveButtons(54), width: 372, left: "calc(50% - 186px)" }}
+        style={{ bottom: aboveButtons(TEXT_GAP), width: 372, left: "calc(50% - 186px)" }}
       >
         This robot can handle objects at its workstation. It can pick things up, put them down and place them where they&apos;re needed.
       </p>

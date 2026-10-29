@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { HexBubble } from "./HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
-import { RobotScene } from "./RobotScene";
+import { RobotBackdrop, robotAbove } from "./RobotBackdrop";
 import { levelTwoHref } from "./levelTwo";
 
 /**
@@ -13,7 +13,7 @@ import { levelTwoHref } from "./levelTwo";
 export function TargetScreen() {
   const router = useRouter();
   return (
-    <LevelTwoShell step={7} scene={<RobotScene from="held" target />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(8))}>
+    <LevelTwoShell step={7} scene={<RobotBackdrop bottom={robotAbove(0)} pose="holding" hint targetLabel="TARGET AREA" />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(8))}>
       <ScreenTitle>
         Move the cube in the
         <br />

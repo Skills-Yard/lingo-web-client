@@ -5,8 +5,8 @@ import { Lightbulb } from "lucide-react";
 
 export const HINT_SIZE = 80;
 const SIZE = HINT_SIZE;
-/** Space is left to the row (`justify-between`), so the slot adds none of its own. */
-const GAP = 0;
+/** The space between the hint and the main button beside it. */
+const GAP = 10;
 const SLIDE = { type: "spring", stiffness: 220, damping: 26 } as const;
 
 /**

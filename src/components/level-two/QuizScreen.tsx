@@ -6,19 +6,21 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
+import { fireRobot } from "@/lib/rive/robotHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { AnswerCards } from "./AnswerCards";
+import { AnswerCards, answerCardsStack } from "./AnswerCards";
 import { HexBubble } from "./HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, TitleText } from "./LevelTwoShell";
-import { RobotScene } from "./RobotScene";
-import { TileCards } from "./TileCards";
+import { RobotBackdrop, robotAbove } from "./RobotBackdrop";
+import { TileCards, tileCardsStack } from "./TileCards";
 import { levelTwoHref, type Quiz } from "./levelTwo";
 
 /**
  * A Module 2 question: the title, Hex asking it, and the answers (rows, two
  * cards or three tiles). Like Level 1's quizzes, the main button checks the
  * pick (right is green, a miss red, the result panel slides up) and then moves
- * on. A right answer can also move the cube (`quiz.moves`).
+ * on. The robot behind it reacts: a miss plays `quiz.wrongMove`, and a right
+ * answer can also place the cube in the target (`quiz.placesCube`).
  */
 export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
   const router = useRouter();
@@ -32,12 +34,20 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
     setChecked(true);
     vibrateForAnswer(correct);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
+    if (!correct) fireRobot(quiz.wrongMove ?? "wrongClaw");
+    else if (quiz.placesCube) fireRobot("placeInTarget");
   };
 
   return (
     <LevelTwoShell
       step={step}
-      scene={<RobotScene from={quiz.cube} moves={quiz.moves} go={checked && correct && !!quiz.moves} />}
+      scene={
+        <RobotBackdrop
+          bottom={robotAbove(quiz.layout === "list" ? answerCardsStack(quiz.choices.length) : tileCardsStack(quiz.layout), quiz.hint)}
+          pose={quiz.pose}
+          hint={!!quiz.targetHint && hinted && !checked}
+        />
+      }
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : (quiz.ctaLabel ?? "Check")}

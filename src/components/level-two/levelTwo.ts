@@ -1,3 +1,4 @@
+import type { RobotMove, RobotPose } from "@/lib/rive/robotHost";
 import { moduleHref } from "@/lib/routes";
 
 /** The module's `step`th screen, or its "Lesson complete!". */
@@ -7,37 +8,6 @@ export const levelTwoHref = (step: number | "complete") => moduleHref(step);
  * header sits this much higher, so everything pinned to the top (title, Hex's
  * row, the picture) is moved up by it, and what is pinned to the bottom isn't. */
 export const FRAME_TOP_SHIFT = 37;
-
-/** The robot-arm picture (the arm, its table and the target box; the cube is
- * drawn over it so it can move) and its size in px. */
-export const SCENE_SRC = "/images/level-two/robot-arm-bg.webp";
-export const SCENE_W = 1560;
-export const SCENE_H = 2383;
-
-/** Picture px -> % of the picture. */
-const px = (x: number, y: number) => ({ left: `${(x / SCENE_W) * 100}%`, top: `${(y / SCENE_H) * 100}%` });
-
-/** The cube's top-left corner in each of its spots (picture px). */
-export const CUBE_AT = {
-  table: px(448, 1643),
-  held: px(507, 1407),
-  overTarget: px(994, 1407),
-  target: px(994, 1587),
-} as const;
-export const CUBE_SIZE = { width: `${(240 / SCENE_W) * 100}%`, height: `${(222 / SCENE_H) * 100}%` };
-
-/** The dashed target box in the picture (picture px), as % of it. */
-export const TARGET_BOX = {
-  left: `${(857 / SCENE_W) * 100}%`,
-  top: `${(1690 / SCENE_H) * 100}%`,
-  width: `${(506 / SCENE_W) * 100}%`,
-  height: `${(150 / SCENE_H) * 100}%`,
-} as const;
-
-export type CubeSpot = keyof typeof CUBE_AT;
-
-/** Each leg of the cube's trip. */
-export const LEG_S = 0.55;
 
 /** A speech bubble's width (px), set by where its text breaks in the designs;
  * `short` is Figma's 77px-tall bubble, `minHeight` any other height (the rest are 86). */
@@ -69,10 +39,14 @@ export type Quiz = {
   /** The result panel's sentence: `right` after a correct pick, `wrong` after a miss. */
   right: string;
   wrong: string;
-  /** Where the cube is (the picture carries on from the previous screen), and
-   * where it goes on a right answer. */
-  cube: CubeSpot;
-  moves?: readonly CubeSpot[];
+  /** Where the cube is when the screen opens (the robot carries on from the previous screen). */
+  pose: RobotPose;
+  /** A right answer places the cube in the target box. */
+  placesCube?: boolean;
+  /** How the robot reacts to a wrong answer (default: the claw). */
+  wrongMove?: Extract<RobotMove, "wrongClaw" | "wrongCube">;
+  /** The hint also lights up the target box. */
+  targetHint?: boolean;
   hint: boolean;
   /** The main button before the answer is checked (default "Check"). */
   ctaLabel?: string;
@@ -96,7 +70,7 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   correctId: "picked",
   right: "Yes! The robot picked up the cube.",
   wrong: "Remember: When you selected PICK UP, the robot picked up the cube.",
-  cube: "held",
+  pose: "holding",
   hint: false,
 };
 
@@ -115,7 +89,9 @@ export const WHAT_NEXT: Quiz = {
   correctId: "place",
   right: "Yes! The robot will place the cube in the targeted area.",
   wrong: "Remember: The robot will place the cube in the targeted area.",
-  cube: "held",
+  pose: "holding",
+  targetHint: true,
+  wrongMove: "wrongCube",
   hint: true,
 };
 
@@ -134,7 +110,7 @@ export const ROBOT_PICKED_UP: Quiz = {
   correctId: "putdown",
   right: "Yes! Put Down makes the robot release the cube.",
   wrong: "Remember: Put Down makes the robot release the cube.",
-  cube: "held",
+  pose: "holding",
   hint: true,
 };
 
@@ -156,7 +132,7 @@ export const LETS_PICK_UP: Quiz = {
   correctId: "pickup",
   right: "Yes! PICK UP makes the robot lift the cube.",
   wrong: "Remember: PICK UP makes the robot lift the cube.",
-  cube: "table",
+  pose: "idle",
   hint: false,
 };
 
@@ -178,8 +154,9 @@ export const WHERE_SHOULD_GO: Quiz = {
   correctId: "target",
   right: "Yes! Place in Target moves the cube to the target area.",
   wrong: "Remember: Place in Target moves the cube to the target area.",
-  cube: "held",
-  moves: ["overTarget", "target"],
+  pose: "holding",
+  placesCube: true,
+  wrongMove: "wrongCube",
   hint: false,
   ctaLabel: "Let’s do it!",
 };
@@ -199,6 +176,6 @@ export const WILL_REACH: Quiz = {
   correctId: "here",
   right: "Yes! Put Down releases the cube right where the robot is.",
   wrong: "Remember: Put Down releases the cube at the robot’s current position.",
-  cube: "held",
+  pose: "holding",
   hint: true,
 };

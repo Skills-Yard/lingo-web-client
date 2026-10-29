@@ -8,7 +8,7 @@ import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
-import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
+import { LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
 import { levelTwoHref } from "./levelTwo";
 
@@ -126,7 +126,7 @@ export function MatchScreen() {
   return (
     <LevelTwoShell
       step={6}
-      scene={<div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,#EAF3FF_0%,#F7FAFF_38%,#FFFFFF_100%)]" />}
+      scene={<SoftBackdrop />}
       answer={answer}
       ctaLabel="Next"
       ctaDisabled={!done}

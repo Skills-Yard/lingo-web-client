@@ -3,20 +3,22 @@
 import { Fragment, type ComponentProps, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { CTA_HEIGHT_WITH_HINT } from "@/components/level-one/ActionRow";
+import { HINT_SIZE } from "@/components/level-one/HintButton";
 import { LevelOneShell } from "@/components/level-one/LevelOneShell";
 import { MODULE_STEPS } from "@/lib/moduleFlow";
 import { FRAME_TOP_SHIFT, levelTwoHref, type TitleLines } from "./levelTwo";
 
 type LevelTwoShellProps = Omit<ComponentProps<typeof LevelOneShell>, "step" | "total" | "onBack" | "children"> & {
   step: number;
-  /** The picture behind the screen (see RobotScene). */
+  /** The picture behind the screen (see RobotBackdrop). */
   scene: ReactNode;
   children: ReactNode;
 };
 
 /**
  * The frame every Module 2 screen shares: Level 1's shell (header, battery,
- * bottom button row) with the robot picture behind it. `children` are laid out
+ * bottom button row) with the robot behind it. `children` are laid out
  * in Figma's 390 x 844 frame (`stageTop` for what hangs from the top, `bottom`
  * for what stands on the button row): the shell scales that frame as one
  * piece, so it looks the same on every device.
@@ -46,17 +48,20 @@ const BUTTON_RATIO = 113 / 371;
 /** The empty band above the button's art, as a share of its box. */
 const BUTTON_MARGIN_TOP = 0.17;
 
+/** The button row's height (a CSS length): it follows its width (see ActionRow), which on a wide screen is capped at 450. */
+const ROW_HEIGHT = `(min(var(--stage-w, 390px), 450px) - 12px) * ${BUTTON_RATIO}`;
+
 /**
  * A CSS `bottom` that stands `gap` px above the shell's button row. The row's
- * height follows its width (see ActionRow), which on a wide screen is capped
- * (450, or 560 with the hint): so a fixed offset from Figma would run into
- * the button there. With `withHint` it clears the hint button (80px tall,
- * centred in the row) instead of the main button's art.
+ * height follows its width, which is capped on a wide screen: so a fixed offset
+ * from Figma would run into the button there. With `withHint` the top of the
+ * row is the hint button (80px tall) or, if that is shorter, the main button
+ * beside it, which stands on the row's bottom edge at `CTA_HEIGHT_WITH_HINT`.
  */
 export const aboveButtons = (gap: number, withHint = false) =>
   withHint
-    ? `calc(36px + (min(var(--stage-w, 390px), 560px) - 100px) * ${BUTTON_RATIO / 2} + 40px + ${gap}px)`
-    : `calc(36px + (min(var(--stage-w, 390px), 450px) - 12px) * ${BUTTON_RATIO * (1 - BUTTON_MARGIN_TOP)} + ${gap}px)`;
+    ? `calc(36px + max(${HINT_SIZE}px, ${ROW_HEIGHT} * ${CTA_HEIGHT_WITH_HINT * (1 - BUTTON_MARGIN_TOP)}) + ${gap}px)`
+    : `calc(36px + ${ROW_HEIGHT} * ${1 - BUTTON_MARGIN_TOP} + ${gap}px)`;
 
 /** The Figma title: Poppins 600 28px / 134%, #444444, centred; `at` is its Figma `top` (116). */
 export function ScreenTitle({ children, at = 116 }: { children: ReactNode; at?: number }) {
@@ -99,14 +104,9 @@ export function TitleText({ lines, underline = false }: { lines: TitleLines; und
   ));
 }
 
-/** The picture fading out to white under the text (the Figma "learn" screens). */
-export function FadeToWhite() {
-  return (
-    <div
-      className="absolute inset-x-0 bottom-0"
-      style={{ top: stageTop(470), background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, #FFFFFF 32%)" }}
-    />
-  );
+/** The soft blue-to-white wash behind the screens that have no robot (match them, flip the card). */
+export function SoftBackdrop() {
+  return <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,#EAF3FF_0%,#F7FAFF_38%,#FFFFFF_100%)]" />;
 }
 
 /** Centres a row of the frame at `top` (stage px) — Hex and his line. */

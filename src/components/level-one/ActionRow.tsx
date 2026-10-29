@@ -4,18 +4,18 @@ import { Button3D } from "@/components/ui/Button3D";
 import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { HINT_SIZE, HintButton } from "./HintButton";
+import { HintButton } from "./HintButton";
 
 /** The badge count — fixed at 1 for now. */
 const HINTS_LEFT = 1;
-/** With the hint showing, the main button is drawn this many times its box (see below). */
-const CTA_SCALE = 1.7;
-/** The least room left between the hint button and the scaled-up main button. */
-const MIN_GAP = 12;
-/** The empty band (%) above and below the button's art in its box, left out of the click area. */
-const CTA_MARGIN_Y = 30;
-/** The hint row's widest width (stage px) — a phone's whole stage, so only a desktop is capped. */
-const HINT_ROW_MAX_W = 560;
+/**
+ * With the hint showing, the main button is drawn this share of the row's
+ * height, in whatever width is left beside the hint. Its artwork can't be
+ * made narrower without getting shorter (it is one fixed-shape drawing), so it
+ * is squeezed a little across instead: almost as tall as the button on a screen
+ * with no hint, and still the same shape.
+ */
+export const CTA_HEIGHT_WITH_HINT = 0.9;
 
 type ActionRowProps = {
   /** The row's widest width (px) — it keeps its phone size on a desktop. */
@@ -31,19 +31,17 @@ type ActionRowProps = {
 
 /**
  * The bottom row of every Level 1 screen: the hint button (where there is one)
- * and Continue as one component, spread to the two ends of the row
- * (`justify-between`). With the hint showing, the row runs the full width of the (phone-width) row, 50px in from each side wall, hint at the left and the button at the
- * right, as far apart as they go (6px in from the side walls otherwise).
+ * and Continue as one component. The row is the same height with or without
+ * the hint (the height follows its width, at the full-width button's own
+ * ratio), so no screen's layout changes when it has one; with the hint, the
+ * button narrows beside it and drops to `CTA_HEIGHT_WITH_HINT` of the row,
+ * standing on the row's bottom edge like the hint does.
  */
 export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, onContinue }: ActionRowProps) {
+  const withHint = !!hint?.visible;
   return (
-    // Capped even with the hint (wider, the same as the game panel above it):
-    // the row's height follows its width (the aspect ratio below), so a
-    // full-desktop-width row would outgrow the screen.
-    <div className={`relative z-10 mx-auto w-full shrink-0 pb-9 ${hint ? "px-[50px]" : "px-1.5"}`} style={{ maxWidth: hint ? HINT_ROW_MAX_W : maxWidth }}>
-      {/* Fixed at the full-width button's own ratio, so the row never changes
-        height while the hint slides in and the button narrows beside it. */}
-      <div className="flex w-full items-center justify-between" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
+    <div className="relative z-10 mx-auto w-full shrink-0 px-1.5 pb-9" style={{ maxWidth }}>
+      <div className="flex w-full items-end" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
         {hint && (
           <HintButton
             visible={hint.visible}
@@ -56,16 +54,13 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, onCon
         )}
         <Button3D
           riveVariant="module"
+          stretch={!!hint}
           answer={answer}
           onClick={() => onContinue?.()}
           onPress={playClickSound}
           disabled={ctaDisabled}
-          className={hint ? "min-w-0 flex-none transition-[height] duration-500 ease-out" : "min-w-0 flex-1"}
-          // With the hint showing, the button's art is drawn with margins that
-          // make it look small: it is scaled up from its right edge, so it
-          // grows away from the hint. Scaling grows its click area too, over the
-          // game panel above, so it is clipped to the art (the margins are empty).
-          {...(hint && { style: { aspectRatio: "auto", width: `calc((100% - ${HINT_SIZE + MIN_GAP}px) / ${CTA_SCALE})`, height: "100%", transform: `scale(${CTA_SCALE})`, transformOrigin: "right center", clipPath: `inset(${CTA_MARGIN_Y}% 0)` } })}
+          className={hint ? "min-w-0 flex-1 transition-[height] duration-500 ease-out" : "min-w-0 flex-1"}
+          {...(hint && { style: { aspectRatio: "auto", height: `${(withHint ? CTA_HEIGHT_WITH_HINT : 1) * 100}%` } })}
         >
           {ctaLabel}
         </Button3D>

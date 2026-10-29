@@ -74,6 +74,10 @@ interface Button3DProps
   riveVariant?: RiveButtonVariant;
   /** Module variant only: the latest checked answer, which sets the face's correct / wrong state. */
   answer?: AnswerResult | null;
+  /** Module variant only: the face's artwork is stretched to the button's box
+   * (a squeezed shape) instead of fitted inside it, so the box can be narrower
+   * than the artwork's shape without the artwork getting shorter. */
+  stretch?: boolean;
   /** Fires the instant the button is clicked — unlike `onClick`, which waits
    * for the press animation (CLICK_DELAY_MS). For immediate feedback such as
    * a click sound. */
@@ -96,6 +100,7 @@ export function Button3D({
   shine,
   riveVariant,
   answer,
+  stretch,
   disabled,
   className,
   onClick,
@@ -156,6 +161,7 @@ export function Button3D({
           variant={riveVariant}
           disabled={disabled}
           answer={answer}
+          stretch={stretch}
         />
         {label === null ? (
           // Richer content (e.g. an icon + text) can't go into the Rive text

@@ -15,7 +15,13 @@ export const CARDS_RISE = 180;
 /** Figma has the cards end at 726 (frame px), 16px above its button; the
  * shell's button (and the hint beside it) is drawn taller, so they end this
  * far above it instead. */
-const GAP_ABOVE_BUTTONS = 12;
+export const GAP_ABOVE_BUTTONS = 12;
+/** A card's height and the gap between cards (px) — `h-[76px]` and `gap-1.5` below. */
+const CARD_H = 76;
+const CARD_GAP = 6;
+
+/** How tall the list of `count` cards is, with its gap above the button row (what the robot rests above). */
+export const answerCardsStack = (count: number) => GAP_ABOVE_BUTTONS + count * CARD_H + (count - 1) * CARD_GAP;
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 

@@ -6,7 +6,7 @@ import { vibrateForTap } from "@/lib/haptics";
 import { XpPop } from "@/components/level-one/FeedbackPanel";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
-import { CARDS_RISE } from "./AnswerCards";
+import { CARDS_RISE, GAP_ABOVE_BUTTONS } from "./AnswerCards";
 import { aboveButtons } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
 import type { Choice } from "./levelTwo";
@@ -14,11 +14,14 @@ import type { Choice } from "./levelTwo";
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
-/** Each layout's card height, the picture's box and the text's size. */
+/** Each layout's card height (`card`, and `height` in px), the picture's box and the text's size. */
 const LAYOUT = {
-  pair: { card: "h-[184px]", picture: "h-[100px] w-full", text: "text-[14px] leading-[20px]", gap: "gap-3.5" },
-  tiles: { card: "h-[110px]", picture: "h-[44px] w-full", text: "text-[13px] leading-[17px]", gap: "gap-3.5" },
+  pair: { card: "h-[184px]", height: 184, picture: "h-[100px] w-full", text: "text-[14px] leading-[20px]", gap: "gap-3.5" },
+  tiles: { card: "h-[110px]", height: 110, picture: "h-[44px] w-full", text: "text-[13px] leading-[17px]", gap: "gap-3.5" },
 } as const;
+
+/** How tall the cards are, with their gap above the button row (what the robot rests above). */
+export const tileCardsStack = (layout: keyof typeof LAYOUT) => GAP_ABOVE_BUTTONS + LAYOUT[layout].height;
 
 type TileCardsProps = {
   layout: "pair" | "tiles";
@@ -50,7 +53,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, hin
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
       className={`pointer-events-auto absolute z-[1] flex w-[358px] items-stretch ${look.gap}`}
-      style={{ bottom: aboveButtons(12, withHint), left: "calc(50% - 179px)" }}
+      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: "calc(50% - 179px)" }}
     >
       {choices.map((choice) => {
         const state = optionState(choice.id, selectedId, checked, correctId);

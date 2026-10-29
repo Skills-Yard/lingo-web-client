@@ -359,6 +359,37 @@ export const PROGRESS_BAR = {
   wrongTrigger: "wrong",
 } as const;
 
+/** The robot arm behind the module's first screens — "CMD_RobotArm" in
+ * `command.riv` (390x306), played by `Main`. The artboard binds the `RobotVM`
+ * view model: each name in `triggers` is a trigger that plays that move, and
+ * `targetLabel` is the text on the target box.
+ *
+ * The room is drawn past the artboard's edges (it doesn't clip): the wall and
+ * window `overflowTop` px above it, the table's legs and the floor
+ * `overflowBottom` px below it, so the whole picture is 390 x 600. */
+export const COMMAND_ROBOT = {
+  src: "/animations/command.riv",
+  artboard: "CMD_RobotArm",
+  stateMachine: "Main",
+  width: 390,
+  height: 306,
+  overflowTop: 210,
+  overflowBottom: 84,
+  triggers: {
+    pickUp: "pickUp",
+    putDown: "putDown",
+    placeInTarget: "placeInTarget",
+    reset: "reset",
+    showHint: "showHint",
+    hideHint: "hideHint",
+    wrongClaw: "wrongClaw",
+    wrongCube: "wrongCube",
+  },
+  targetLabelProperty: "targetLabel",
+  /** How long the `pickUp` move takes (the "PickUp" clip), in seconds. */
+  pickUpSeconds: 1.83,
+} as const;
+
 /** The battery — "BatteryArtboard-Main" in `battery.riv` (320x110), played by
  * `Battery_SM`. The artboard binds the `Battery` view model: `level` (0-100) is
  * the fill, `unlimited` swaps it for the infinity sign, `darkTheme` is `true`

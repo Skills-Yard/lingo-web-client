@@ -6,7 +6,7 @@ import { TYPE_DELAY_MS, useTyped } from "@/components/level-one/useTyped";
 import type { BubbleSize, Span } from "./levelTwo";
 
 /** Hex's slot, the one Module 2's old screens gave him. */
-const HEX_SLOT = 110;
+export const HEX_SLOT = 110;
 
 type HexBubbleProps = {
   entryKey: string;

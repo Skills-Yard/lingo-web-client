@@ -45,6 +45,8 @@ interface RiveButtonFaceProps {
   disabled?: boolean;
   /** Module variant only: the latest checked answer — `buttonState` correct / wrong. */
   answer?: AnswerResult | null;
+  /** Module variant only: stretch the artwork to fill the box rather than fit inside it. */
+  stretch?: boolean;
 }
 
 /** Fires a trigger on the artboard's bound view model ("data"). */
@@ -53,8 +55,8 @@ function fireTrigger(rive: Rive, name: string) {
 }
 
 /** The Rive-drawn face of Button3D's brand tone — fills its parent. */
-export function RiveButtonFace({ variant = "onboarding", disabled, answer, ...face }: RiveButtonFaceProps) {
-  if (variant === "module") return <PersistentModuleButtonFace {...face} disabled={disabled} answer={answer} />;
+export function RiveButtonFace({ variant = "onboarding", disabled, answer, stretch, ...face }: RiveButtonFaceProps) {
+  if (variant === "module") return <PersistentModuleButtonFace {...face} disabled={disabled} answer={answer} stretch={stretch} />;
   return <OnboardingButtonFace {...face} />;
 }
 

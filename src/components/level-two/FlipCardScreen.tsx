@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
-import { RobotScene } from "./RobotScene";
+import { LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
 import { levelTwoHref } from "./levelTwo";
 
@@ -37,7 +36,7 @@ export function FlipCardScreen() {
   return (
     <LevelTwoShell
       step={10}
-      scene={<RobotScene from="table" />}
+      scene={<SoftBackdrop />}
       ctaLabel="Next"
       ctaDisabled={!seen}
       onContinue={() => router.push(levelTwoHref(11))}
