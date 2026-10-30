@@ -9,7 +9,7 @@ import { batteryEmpty, RECHARGE_COST, refillBattery, setBatteryUnlimited, useBat
 import { LEARNER_STATS } from "@/components/home/learnerStats";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { Button3D } from "@/components/ui/Button3D";
-import { buttonBottomMargin } from "./ActionRow";
+import { BUTTON } from "@/lib/rive/runtime";
 
 /** How long the battery's drop to 0 is left to show before the sheet comes up. */
 const APPEAR_DELAY_MS = 600;
@@ -17,6 +17,16 @@ const APPEAR_DELAY_MS = 600;
 /** The sheet's widest width (px), and the room its button has inside the padding. */
 const SHEET_MAX_W = 430;
 const BUTTON_WIDTH = `(min(100vw, ${SHEET_MAX_W}px) - 40px)`;
+
+/**
+ * The button's box has an empty band of art above and below its drawn face, so
+ * its margins pull the box over them: the face stands `above` px under the cards
+ * and `below` px over the "No thanks" under it.
+ */
+const BUTTON_ROW_STYLE = {
+  marginTop: `calc(${BUTTON_WIDTH} * ${(-BUTTON.height / BUTTON.width) * BUTTON.face.top} + 16px)`,
+  marginBottom: `calc(${BUTTON_WIDTH} * ${(-BUTTON.height / BUTTON.width) * (1 - BUTTON.face.bottom)} + 2px)`,
+};
 
 const GEM_SRC = "/images/stats/gem.png";
 
@@ -47,7 +57,7 @@ function InfiniteOption({ chosen, onChoose }: OptionProps) {
       >
         <span className="flex h-8 items-center justify-center text-base leading-8 font-extrabold text-white italic">INFINITE</span>
         <span
-          className={`m-0.5 mt-0 flex flex-1 flex-col items-center gap-3 rounded-b-[16px] px-2 pt-5 pb-4 transition-colors ${chosen ? "bg-[#F4EFFE]" : "bg-white"}`}
+          className={`m-0.5 mt-0 flex flex-1 flex-col items-center gap-2 rounded-b-[16px] px-2 pt-4 pb-3 transition-colors ${chosen ? "bg-[#F4EFFE]" : "bg-white"}`}
         >
           <span className="flex h-11 w-[60px] items-center justify-center rounded-[12px] bg-linear-to-br from-[#3F6BFF] to-[#9B51E0]">
             <InfinityIcon className="h-6 w-6 text-white" strokeWidth={2.4} />
@@ -69,7 +79,7 @@ function RechargeOption({ chosen, onChoose }: OptionProps) {
         aria-pressed={chosen}
         onClick={onChoose}
         // The top padding lines the icon up with the unlimited card's (its banner is 32px).
-        className={`flex h-full w-full cursor-pointer flex-col items-center gap-3 rounded-[18px] border-2 px-2 pt-[50px] pb-4 text-center transition-[transform,background-color,border-color] active:scale-[0.98] ${
+        className={`flex h-full w-full cursor-pointer flex-col items-center gap-2 rounded-[18px] border-2 px-2 pt-[46px] pb-3 text-center transition-[transform,background-color,border-color] active:scale-[0.98] ${
           chosen ? "border-[#2F80ED] bg-[#F2F7FE]" : "border-black/10 bg-white"
         }`}
       >
@@ -153,7 +163,7 @@ export function OutOfEnergySheet() {
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 34 }}
             style={{ maxWidth: SHEET_MAX_W }}
-            className="fixed inset-x-0 bottom-0 z-[2001] mx-auto w-full rounded-t-[28px] bg-white px-5 pt-5 pb-[max(20px,env(safe-area-inset-bottom))] font-[family-name:var(--font-app-poppins)] text-[#2C2C2C] shadow-[0_-8px_32px_rgba(0,0,0,0.18)]"
+            className="fixed inset-x-0 bottom-0 z-[2001] mx-auto w-full rounded-t-[28px] bg-white px-5 pt-4 pb-[max(12px,env(safe-area-inset-bottom))] font-[family-name:var(--font-app-poppins)] text-[#2C2C2C] shadow-[0_-8px_32px_rgba(0,0,0,0.18)]"
           >
             <div className="flex justify-end">
               <span className="flex items-center gap-1.5 text-base font-extrabold text-[#2F80ED]">
@@ -163,14 +173,14 @@ export function OutOfEnergySheet() {
               </span>
             </div>
 
-            <h2 className="mt-5 text-center text-2xl leading-8 font-extrabold">Out of energy! Recharge to keep playing.</h2>
+            <h2 className="mt-1 text-center text-2xl leading-8 font-extrabold">Out of energy! Recharge to keep playing.</h2>
 
-            <div className="mt-8 grid grid-cols-2 gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-3">
               <InfiniteOption chosen={choice === "infinite"} onChoose={() => setChoice("infinite")} />
               <RechargeOption chosen={choice === "recharge"} onChoose={() => setChoice("recharge")} />
             </div>
 
-            <div className="mt-6" style={{ marginBottom: buttonBottomMargin(BUTTON_WIDTH) }}>
+            <div style={BUTTON_ROW_STYLE}>
               <Button3D riveVariant="module" onPress={playClickSound} onClick={goOn} className="w-full">
                 {CTA_LABEL[choice]}
               </Button3D>
@@ -178,7 +188,7 @@ export function OutOfEnergySheet() {
             <button
               type="button"
               onClick={leave}
-              className="mt-4 block w-full cursor-pointer py-3 text-center text-base font-extrabold tracking-wide text-[#2F80ED] uppercase transition-opacity active:opacity-60"
+              className="block w-full cursor-pointer py-2 text-center text-base font-extrabold tracking-wide text-[#2F80ED] uppercase transition-opacity active:opacity-60"
             >
               No thanks
             </button>

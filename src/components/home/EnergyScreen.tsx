@@ -2,12 +2,12 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, motion } from "framer-motion";
-import { Infinity as InfinityIcon, Play, X, Zap } from "lucide-react";
+import { BatteryLow, Infinity as InfinityIcon, Play, X, Zap } from "lucide-react";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "@/components/level-one/Confetti";
 import { vibrateForClaim } from "@/lib/haptics";
-import { addBatteryUnits, RECHARGE_COST, refillBattery, setBatteryUnlimited, useBattery } from "./batteryStore";
+import { addBatteryUnits, RECHARGE_COST, refillBattery, setBatteryUnits, setBatteryUnlimited, useBattery } from "./batteryStore";
 import { HEADING } from "./homeFonts";
 import { LEARNER_STATS } from "./learnerStats";
 
@@ -243,6 +243,20 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
                 tagClassName="text-[#01A17F]"
                 disabled={full || battery.unlimited || hold !== null}
                 onClick={claimFreeEnergy}
+              />
+            </motion.div>
+
+            {/* TEMPORARY — FOR DEVS ONLY: gets the battery to its last unit, to try the out-of-energy sheet. */}
+            <motion.div {...reveal(0.3)}>
+              <EnergyCard
+                icon={<BatteryLow className="h-6 w-6 text-[#D42421]" />}
+                tint="#FDEAEA"
+                darkTint="#2E1517"
+                title="Reset battery to 1"
+                tag="Testing"
+                tagClassName="text-[#D42421]"
+                disabled={hold !== null}
+                onClick={() => setBatteryUnits(1)}
               />
             </motion.div>
           </div>

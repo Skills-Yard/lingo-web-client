@@ -124,4 +124,8 @@ export const addBatteryUnits = (units: number) => {
 
 export const refillBattery = () => write({ ...read(), level: 100 });
 
+/** Sets the battery to exactly `units` (of `max`) and ends unlimited — for testing what happens as it runs out. */
+export const setBatteryUnits = (units: number) =>
+  write({ ...read(), level: Math.max(0, Math.min(100, (units / max) * 100)), unlimited: false });
+
 export const setBatteryUnlimited =(unlimited: boolean) => write({ ...read(), unlimited });
