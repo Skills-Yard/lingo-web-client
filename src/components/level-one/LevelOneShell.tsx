@@ -15,6 +15,7 @@ import { ActionRow } from "./ActionRow";
 import { LevelVoiceContext } from "./LevelVoice";
 import { useLevelMuted } from "./levelMuted";
 import { OutOfEnergySheet, useOutOfEnergy } from "./OutOfEnergySheet";
+import { useStreakStrikes } from "./useStreakStrikes";
 
 /** The Figma frame every Level 1 screen is laid out in. */
 const FRAME_W = 390;
@@ -77,6 +78,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
   const review = useReviewProgress(step);
   // With no battery left the screen can't be played: it stays, but takes no taps or keys.
   const outOfEnergy = useOutOfEnergy();
+  useStreakStrikes({ step, answer, withHint: !!hint });
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
   const voice = useVoiceover(voiceover, true, muted);
@@ -181,9 +183,11 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
       >
       <div className="flex min-h-0 w-full flex-1 flex-col">
         {/* The header sits at the very top (it used to sit 9px lower, for the
-          page count), with the content below exactly where it was. */}
+          page count), with the content below exactly where it was. Above the
+          screens' own z-10 blocks (options, button row), so the bar's strikes
+          - drawn on a screen-sized canvas - aren't covered by them; Hex (z-[100]) still passes in front. */}
         <div
-          className="relative z-10 mx-auto mt-2 w-full"
+          className="relative z-[60] mx-auto mt-2 w-full"
           // 5xl on screen — wider than the content column below it. The stage
           // is scaled, so divide.
           style={{ maxWidth: columnW }}

@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { applyCanvasBleed } from "@/lib/rive/bleed";
-import { hexRiveSource } from "@/lib/rive/hexFile";
 import { PROGRESS_BAR } from "@/lib/rive/runtime";
 
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
@@ -29,12 +28,12 @@ type RiveProgressBarProps = {
   className?: string;
 };
 
-/** `hex.riv`'s "Lesson_Progressbar" artboard playing `progressBar_SM`, its
+/** `progressBar.riv`'s "LESSON_ProgressBar" artboard playing `ProgressBar_SM`, its
  * `progress` property set to `value`. Give it a width; the height follows the artboard. */
 export function RiveProgressBar({ value, from, answer = null, className = "" }: RiveProgressBarProps) {
   const [aspect, setAspect] = useState(FALLBACK_ASPECT);
   const { rive, canvas, RiveComponent } = useRive({
-    ...hexRiveSource(),
+    src: PROGRESS_BAR.src,
     artboard: PROGRESS_BAR.artboard,
     stateMachine: PROGRESS_BAR.stateMachine,
     autoplay: true,

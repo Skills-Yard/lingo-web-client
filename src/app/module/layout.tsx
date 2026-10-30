@@ -3,7 +3,7 @@ import { ModuleButtonWarmup } from "@/components/rive/ModuleButtonWarmup";
 import { RobotWarmup } from "@/components/rive/RobotWarmup";
 import { ForcedTheme } from "@/context/ThemeContext";
 
-/** Level screens share the progress bar and Hex canvases of `hex.riv`, one Continue button and the robot of `command.riv`.
+/** Level screens share the Hex canvases of `hex.riv`, the progress bar of `progressBar.riv`, one Continue button and the robot of `command.riv`.
  * The module is light only for now, whatever theme the learner has chosen. */
 export default function ModuleLayout({ children }: { children: React.ReactNode }) {
   return (

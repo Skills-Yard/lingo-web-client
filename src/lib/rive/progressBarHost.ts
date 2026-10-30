@@ -1,6 +1,4 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
-import { applyCanvasBleed } from "./bleed";
-import { hexRiveSource } from "./hexFile";
 import { configureRiveRuntime, PROGRESS_BAR } from "./runtime";
 
 /**
@@ -8,6 +6,11 @@ import { configureRiveRuntime, PROGRESS_BAR } from "./runtime";
  * so a bar created per header would reload and flash on each screen change.
  * Instead the canvas (and its Rive instance) lives here, and each header just
  * moves it into its own slot — it never restarts, so it only ever animates.
+ *
+ * Rive clips what it draws at the canvas edge, and the strikes reach well past
+ * the artboard. So the canvas is as big as the screen, not the slot: it hangs
+ * from the slot out to the screen's edges, and the artboard is drawn in the
+ * slot's place on it, at the artboard's own proportions.
  */
 const FALLBACK_ASPECT = 8;
 
@@ -17,7 +20,12 @@ type Host = {
   rive: Rive | null;
   aspect: number;
   loaded: boolean;
+  /** The slot the canvas is in now. */
+  slot: HTMLElement | null;
 };
+
+/** The slot on the canvas, in the canvas's CSS px. */
+type Placement = { x: number; y: number; width: number; height: number };
 
 let host: Host | null = null;
 let version = 0;
@@ -36,21 +44,91 @@ export const subscribeProgressBar = (listener: () => void) => {
 };
 export const progressBarVersion = () => version;
 
+let placement: Placement | null = null;
+/** The canvas's CSS size when its bitmap was last sized to it. */
+let canvasSize = "";
+
+/** Draws the artboard in the slot's place on the canvas. Rive resets its frame to
+ * the whole canvas on every resize, so this is put back after each one. */
+const applyFrame = () => {
+  const rive = host?.rive;
+  const canvas = host?.canvas;
+  if (!rive || !canvas || !placement || !canvas.clientWidth) return;
+  const pixels = canvas.width / canvas.clientWidth;
+  Object.assign(rive, {
+    layout: new Layout({
+      fit: Fit.Contain,
+      alignment: Alignment.Center,
+      minX: placement.x * pixels,
+      minY: placement.y * pixels,
+      maxX: (placement.x + placement.width) * pixels,
+      maxY: (placement.y + placement.height) * pixels,
+    }),
+  });
+};
+
+/** Sizes the canvas to the screen, hung from the slot, and points the artboard at the slot. */
+const placeCanvas = () => {
+  const current = host;
+  const slot = current?.slot;
+  if (!current || !slot) return;
+  const rect = slot.getBoundingClientRect();
+  // The module's stage is scaled as one piece: `rect` is on screen, the canvas's CSS px are the stage's.
+  const scale = slot.offsetWidth ? rect.width / slot.offsetWidth : 1;
+  if (!scale) return;
+  placement = { x: rect.left / scale, y: rect.top / scale, width: rect.width / scale, height: rect.height / scale };
+  const size = { width: `${window.innerWidth / scale}px`, height: `${window.innerHeight / scale}px` };
+  Object.assign(current.canvas.style, { left: `${-placement.x}px`, top: `${-placement.y}px`, ...size });
+  // Only a new canvas size needs a new bitmap (it clears the canvas); moving the slot just moves the frame.
+  const sized = `${size.width} ${size.height}`;
+  if (sized !== canvasSize) {
+    canvasSize = sized;
+    current.rive?.resizeDrawingSurfaceToCanvas();
+  }
+  applyFrame();
+};
+
+/**
+ * Moves the bar into `slot` and keeps the canvas fitted to it. The slot can move
+ * or scale without its own size changing (the stage scales, screens slide in),
+ * so it is checked every frame and the canvas only redone when it has changed.
+ * Returns the cleanup.
+ */
+export const attachProgressBar = (slot: HTMLElement): (() => void) => {
+  const shared = getProgressBarHost();
+  slot.appendChild(shared.element);
+  shared.slot = slot;
+  let frame = 0;
+  let last = "";
+  const track = () => {
+    const rect = slot.getBoundingClientRect();
+    const key = [rect.left, rect.top, rect.width, rect.height, slot.offsetWidth, window.innerWidth, window.innerHeight].join();
+    if (key !== last) {
+      last = key;
+      placeCanvas();
+    }
+    frame = requestAnimationFrame(track);
+  };
+  track();
+  return () => {
+    cancelAnimationFrame(frame);
+    if (shared.slot === slot) shared.slot = null;
+  };
+};
+
 /** Browser only. Creates the canvas and starts loading on first use. */
 export const getProgressBarHost = (): Host => {
   if (host) return host;
   configureRiveRuntime();
   const element = document.createElement("div");
-  element.style.cssText = "position:relative;width:100%;height:100%";
+  element.style.cssText = "position:relative;width:100%;height:100%;pointer-events:none";
   const canvas = document.createElement("canvas");
-  // Bigger than the slot by the bleed on every side, so effects past the artboard show.
-  const { bleed } = PROGRESS_BAR;
-  canvas.style.cssText = `position:absolute;display:block;left:-${bleed}px;top:-${bleed}px;width:calc(100% + ${2 * bleed}px);height:calc(100% + ${2 * bleed}px)`;
+  canvas.style.cssText = "position:absolute;display:block;pointer-events:none";
   element.appendChild(canvas);
-  const created: Host = { element, canvas, rive: null, aspect: FALLBACK_ASPECT, loaded: false };
+  const created: Host = { element, canvas, rive: null, aspect: FALLBACK_ASPECT, loaded: false, slot: null };
   host = created;
   created.rive = new Rive({
-    ...hexRiveSource(),
+    src: PROGRESS_BAR.src,
     canvas,
     artboard: PROGRESS_BAR.artboard,
     stateMachine: PROGRESS_BAR.stateMachine,
@@ -60,8 +138,15 @@ export const getProgressBarHost = (): Host => {
     onLoad: () => {
       const rive = created.rive;
       if (!rive) return;
-      applyCanvasBleed(rive, canvas, bleed, PROGRESS_BAR.trackInset);
-      rive.resizeDrawingSurfaceToCanvas();
+      const resizeToCanvas = rive.resizeToCanvas.bind(rive);
+      Object.assign(rive, {
+        resizeToCanvas: () => {
+          resizeToCanvas();
+          applyFrame();
+        },
+      });
+      canvasSize = "";
+      placeCanvas();
       const { minX, maxX, minY, maxY } = rive.bounds;
       if (maxY > minY) created.aspect = (maxX - minX) / (maxY - minY);
       created.loaded = true;
@@ -100,6 +185,14 @@ export const pulseCombo = () => {
   clearTimeout(comboTimer);
   writeCombo(PROGRESS_BAR.comboValue);
   comboTimer = setTimeout(() => writeCombo(0), PROGRESS_BAR.comboHoldMs);
+};
+
+/** Fires the view model's trigger `name` — dropped until the file has loaded. */
+export const fireProgressTrigger = (name: string) => {
+  if (!host?.loaded) return;
+  const trigger = host.rive?.viewModelInstance?.trigger(name);
+  if (trigger) trigger.trigger();
+  else console.warn(`[progress bar] no "${name}" trigger found on the view model`);
 };
 
 const RESULT_NAME = { correct: /correct|right|success|win/i, wrong: /wrong|incorrect|fail|lose|error/i } as const;
