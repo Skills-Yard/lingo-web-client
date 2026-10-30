@@ -103,7 +103,7 @@ export function CareersScreen() {
 
         <motion.div
           {...reveal(0.14)}
-          className="scrollbar-none -ml-[var(--stage-gutter)] -mr-[calc(var(--stage-inset)+var(--stage-bleed,0px))] mt-5 flex shrink-0 gap-3 overflow-x-auto pl-[var(--stage-gutter)] pr-0"
+          className="scrollbar-none -mx-[var(--stage-gutter)] mt-5 flex shrink-0 gap-3 overflow-x-auto px-[var(--stage-gutter)]"
           role="tablist"
         >
           {FILTERS.map((name) => {
