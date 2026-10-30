@@ -9,6 +9,7 @@ import { Confetti } from "./Confetti";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { BUTTON_DROP } from "./ActionRow";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
@@ -245,8 +246,9 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               opacity: { duration: 0.3, delay: 0.3 },
               y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
             }}
-            // 48px below the cropped picture; 80 once "+10 XP" floats above a card.
-            style={{ marginTop: checked && selectedId === CORRECT_ID ? 80 : 48 }}
+            // 48px below the cropped picture; 80 once "+10 XP" floats above a card;
+            // the button's drop on top, so the options keep their gap to it.
+            style={{ marginTop: (checked && selectedId === CORRECT_ID ? 80 : 48) + BUTTON_DROP }}
             className="relative z-10 flex w-full shrink-0 items-start gap-[19px] bg-white transition-[margin-top] duration-300 dark:bg-background"
           >
             {OPTIONS.map((option) => {

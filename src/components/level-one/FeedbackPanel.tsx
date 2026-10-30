@@ -201,7 +201,7 @@ export function FeedbackPanel({
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
       // 5xl on screen, like the header; the stage is scaled, so divide.
       style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}
-      className={`absolute inset-x-0 bottom-0 z-0 mx-auto rounded-t-[28px] border-[1.5px] border-b-0 px-[25px] pt-5 pb-[176px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
+      className={`absolute inset-x-0 bottom-0 z-0 mx-auto rounded-t-[28px] border-[1.5px] border-b-0 px-[25px] pt-5 pb-[140px] ${open ? "" : "pointer-events-none"} ${look.panel}`}
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">

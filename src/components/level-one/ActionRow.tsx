@@ -32,6 +32,26 @@ const HINT_SIZE: HintSize = {
   lift: `${(1 - BUTTON.face.bottom) * CTA_HEIGHT_WITH_HINT * 100}%`,
 };
 
+/** The gap (px) from a module button's drawn bottom edge to the bottom of the screen. */
+export const BUTTON_BOTTOM_GAP = 20;
+
+/**
+ * How far (px, in the 390px frame) the button's top moved down when its bottom
+ * gap became `BUTTON_BOTTOM_GAP` (it was 36px of padding under the empty band of
+ * its art). A layout that flows from the top adds this above the options it
+ * wants to keep the same distance from the button.
+ */
+export const BUTTON_DROP = 37;
+
+/**
+ * The CSS `margin-bottom` that leaves `BUTTON_BOTTOM_GAP` under a button's drawn
+ * edge, for a button box `width` (a CSS length) wide, drawn `scale` of its full
+ * height. The box has an empty band under its art that is taller than the gap, so
+ * this is negative: the box hangs a little below the edge.
+ */
+export const buttonBottomMargin = (width: string, scale = 1) =>
+  `calc(${BUTTON_BOTTOM_GAP}px - ${width} * ${(RIVE_BUTTON_H / RIVE_BUTTON_W) * scale * (1 - BUTTON.face.bottom)})`;
+
 type ActionRowProps = {
   /** The row's widest width (px) — it keeps its phone size on a desktop. */
   maxWidth: number;
@@ -56,8 +76,14 @@ type ActionRowProps = {
  */
 export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, onContinue }: ActionRowProps) {
   const withHint = !!hint?.visible;
+  // The row is the stage's width (capped at `maxWidth`) less the padding at each
+  // side. With the hint the button is shorter, so its art ends higher in the row.
+  const rowWidth = `(min(var(--stage-w, 390px), ${maxWidth}px) - 12px)`;
   return (
-    <div className="relative z-10 mx-auto w-full shrink-0 px-1.5 pb-9" style={{ maxWidth }}>
+    <div
+      className="relative z-10 mx-auto w-full shrink-0 px-1.5 transition-[margin] duration-500 ease-out"
+      style={{ maxWidth, marginBottom: buttonBottomMargin(rowWidth, withHint ? CTA_HEIGHT_WITH_HINT : 1) }}
+    >
       <div className="flex w-full items-end" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
         {hint && (
           <HintButton

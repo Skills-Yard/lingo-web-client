@@ -12,6 +12,7 @@ import { Confetti } from "./Confetti";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { BUTTON_DROP } from "./ActionRow";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
 import { FILL_S, HintFloat } from "./HintFloat";
@@ -130,7 +131,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       />
 
       {/* Content sits 16px in from the frame; the bottom button row is min(100vw, 450px) minus 6px per side; match it exactly. */}
-      <div className="relative z-10 mt-5 w-[calc(min(100vw,450px)-12px)] shrink-0 bg-white dark:bg-background">
+      <div className="relative z-10 w-[calc(min(100vw,450px)-12px)] shrink-0 bg-white dark:bg-background" style={{ marginTop: 20 + BUTTON_DROP }}>
         <div className="relative flex flex-col gap-[23px]">
           {OPTIONS.map((option, i) => {
             const state = optionState(option.id, selectedId, checked, CORRECT_ID);

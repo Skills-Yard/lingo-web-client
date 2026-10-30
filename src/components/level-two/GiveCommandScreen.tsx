@@ -18,8 +18,9 @@ const fredoka = Fredoka({ subsets: ["latin"], weight: "600" });
 
 /** Once the cube is up (the robot's pick-up clip), this long until "Nice!" comes in. */
 const NICE_AFTER_S = COMMAND_ROBOT.moveSeconds.pickUp + 0.45;
-/** Hex's question stands this far up from the bottom of the frame; the robot rests above it. */
-const QUESTION_BOTTOM = 240;
+/** Hex's question stands this far above the hint and the button (the frame has it 240px up from the bottom); the robot rests above it. */
+const QUESTION_ABOVE_BUTTONS = 118;
+const QUESTION_BOTTOM = aboveButtons(QUESTION_ABOVE_BUTTONS, true);
 /** Hex enters a touch after the panel, and his thumbs-up follows his entrance. */
 const HEX_AFTER_MS = 250;
 const HEX_SETTLE_MS = 900;
@@ -49,7 +50,7 @@ export function GiveCommandScreen() {
   return (
     <LevelTwoShell
       step={2}
-      scene={<RobotBackdrop bottom={`${QUESTION_BOTTOM + HEX_SLOT + ROBOT_GAP}px`} pose="idle" />}
+      scene={<RobotBackdrop bottom={`calc(${QUESTION_BOTTOM} + ${HEX_SLOT + ROBOT_GAP}px)`} pose="idle" />}
       ctaLabel={nice ? "Next" : "Pick Up"}
       ctaLocked={given && !nice}
       hint={{ visible: true, onUse: () => !given && setHinted(true) }}

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
+import { buttonBottomMargin } from "@/components/level-one/ActionRow";
 import { Button3D } from "@/components/ui/Button3D";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
@@ -70,7 +71,10 @@ export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number
       <div className="absolute inset-y-0 left-1/2 w-full -translate-x-1/2" style={{ maxWidth: PHONE_MAX_W }}>
         <RiveComponent aria-hidden className="h-full w-full" />
       </div>
-      <div className="absolute inset-x-0 bottom-0 z-10 mx-auto px-4 pb-9" style={{ maxWidth: PHONE_MAX_W }}>
+      <div
+        className="absolute inset-x-0 bottom-0 z-10 mx-auto px-4"
+        style={{ maxWidth: PHONE_MAX_W, marginBottom: buttonBottomMargin(`(min(100vw, ${PHONE_MAX_W}px) - 32px)`) }}
+      >
         <Button3D
           riveVariant="module"
           onClick={onContinue ?? (() => {
