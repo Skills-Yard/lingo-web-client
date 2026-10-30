@@ -7,13 +7,12 @@ import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { RiveProgressBar } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "@/components/level-one/Confetti";
 import { vibrateForClaim } from "@/lib/haptics";
-import { addBatteryUnits, refillBattery, setBatteryUnlimited, useBattery } from "./batteryStore";
+import { addBatteryUnits, RECHARGE_COST, refillBattery, setBatteryUnlimited, useBattery } from "./batteryStore";
 import { HEADING } from "./homeFonts";
 import { LEARNER_STATS } from "./learnerStats";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-const RECHARGE_COST = 350;
 const BONUS_UNITS = 5;
 
 const reveal = (delay: number) => ({

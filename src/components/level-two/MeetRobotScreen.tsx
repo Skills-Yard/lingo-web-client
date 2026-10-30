@@ -1,8 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { BookOpen } from "lucide-react";
-import { aboveButtons, LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
+import { aboveButtons, LevelTwoShell, ScreenTitle, Teal } from "./LevelTwoShell";
 import { RobotBackdrop, robotAbove } from "./RobotBackdrop";
 import { levelTwoHref } from "./levelTwo";
 
@@ -11,29 +10,14 @@ const TEXT_GAP = 54;
 const TEXT_H = 69;
 
 /**
- * `/module?step=1` — "Meet your robot.": the LEARN chip, the chapter
- * and a line about the robot, with the robot resting above that line.
+ * `/module?step=1` — "Meet your robot.": the title and a line about the
+ * robot, with the robot resting above that line.
  */
 export function MeetRobotScreen() {
   const router = useRouter();
   return (
     <LevelTwoShell step={1} scene={<RobotBackdrop bottom={robotAbove(TEXT_GAP + TEXT_H)} pose="idle" />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(2))}>
-      {/* The same chip as module 1's opening screen. */}
-      <div className="absolute inset-x-0 flex justify-center" style={{ top: stageTop(113) }}>
-        <span className="flex h-8 items-center gap-1.5 rounded-full border border-[#2F80ED] bg-[#E5EFFD] py-[5px] pr-3 pl-1.5">
-          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#2F80ED]">
-            <BookOpen className="h-[13px] w-[13px] text-white" strokeWidth={2} />
-          </span>
-          <span className="text-xs leading-4 font-extrabold tracking-[1.2px] text-[#2F80ED] uppercase">Learn</span>
-        </span>
-      </div>
-      <p
-        className="absolute inset-x-0 text-center text-[11px] leading-4 font-bold tracking-[1.2px] text-[#1386B3] uppercase"
-        style={{ top: stageTop(175) }}
-      >
-        Chapter 1 · Commands
-      </p>
-      <ScreenTitle at={202}>
+      <ScreenTitle>
         Meet your <Teal>robot.</Teal>
       </ScreenTitle>
 
