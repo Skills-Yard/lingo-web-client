@@ -14,6 +14,7 @@ import { moduleHref } from "@/lib/routes";
 import { ActionRow } from "./ActionRow";
 import { LevelVoiceContext } from "./LevelVoice";
 import { useLevelMuted } from "./levelMuted";
+import { OutOfEnergySheet, useOutOfEnergy } from "./OutOfEnergySheet";
 import { useStreakStrikes } from "./useStreakStrikes";
 
 /** The Figma frame every Level 1 screen is laid out in. */
@@ -75,6 +76,8 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
   // A question being asked again (see `moduleReview`): the bar is the review's, and
   // Back leaves the module rather than going to the screen before it.
   const review = useReviewProgress(step);
+  // With no battery left the screen can't be played: it stays, but takes no taps or keys.
+  const outOfEnergy = useOutOfEnergy();
   useStreakStrikes({ step, answer, withHint: !!hint });
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
@@ -165,6 +168,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
         />
       )}
       <div
+        inert={outOfEnergy}
         className="absolute left-0 flex origin-top-left flex-col"
         style={{
           top: "env(safe-area-inset-top)",
@@ -244,6 +248,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
 
       {overlay}
       </div>
+      <OutOfEnergySheet />
     </main>
     </LevelVoiceContext.Provider>
   );
