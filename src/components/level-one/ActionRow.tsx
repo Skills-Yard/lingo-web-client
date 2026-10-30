@@ -10,13 +10,15 @@ import { HintButton, type HintSize } from "./HintButton";
 /** The badge count — fixed at 1 for now. */
 const HINTS_LEFT = 1;
 /**
- * With the hint showing, the main button is drawn this share of the row's
- * height, in whatever width is left beside the hint: the same height as the
- * button on a screen with no hint, and so as tall as the hint beside it. Its
- * artwork can't be made narrower without getting shorter (it is one fixed-shape
- * drawing), so it is squeezed across instead.
+ * With the hint showing, the main button is drawn at this share of its full
+ * width and `CTA_HEIGHT_WITH_HINT` of its full height (its artwork is stretched
+ * to fit), and the hint is drawn as tall as that: the two are always the same
+ * height, standing on the same bottom edge, so they share one centre line, and
+ * the pair is centred in the row. Under 1 they are smaller than the button on a
+ * screen with no hint.
  */
-export const CTA_HEIGHT_WITH_HINT = 1;
+const CTA_WIDTH_WITH_HINT = 0.72;
+export const CTA_HEIGHT_WITH_HINT = 0.82;
 
 /**
  * The hint button is as tall as the drawn face of the main button beside it,
@@ -71,8 +73,9 @@ type ActionRowProps = {
  * and Continue as one component. The row is the same height with or without
  * the hint (the height follows its width, at the full-width button's own
  * ratio), so no screen's layout changes when it has one; with the hint, the
- * button narrows beside it and drops to `CTA_HEIGHT_WITH_HINT` of the row,
- * standing on the row's bottom edge like the hint does.
+ * button shrinks to `CTA_WIDTH_WITH_HINT` of its width and `CTA_HEIGHT_WITH_HINT`
+ * of its height, standing on the row's bottom edge like the hint does, and the
+ * two sit centred in the row together.
  */
 export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, onContinue }: ActionRowProps) {
   const withHint = !!hint?.visible;
@@ -84,7 +87,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
       className="relative z-10 mx-auto w-full shrink-0 px-1.5 transition-[margin] duration-500 ease-out"
       style={{ maxWidth, marginBottom: buttonBottomMargin(rowWidth, withHint ? CTA_HEIGHT_WITH_HINT : 1) }}
     >
-      <div className="flex w-full items-end" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
+      <div className="flex w-full items-end justify-center" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
         {hint && (
           <HintButton
             visible={hint.visible}
@@ -104,8 +107,14 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
           onPress={playClickSound}
           disabled={ctaDisabled}
           locked={ctaLocked}
-          className={hint ? "min-w-0 flex-1 transition-[height] duration-500 ease-out" : "min-w-0 flex-1"}
-          {...(hint && { style: { aspectRatio: "auto", height: `${(withHint ? CTA_HEIGHT_WITH_HINT : 1) * 100}%` } })}
+          className={hint ? "min-w-0 transition-[width,height] duration-500 ease-out" : "min-w-0 flex-1"}
+          {...(hint && {
+            style: {
+              aspectRatio: "auto",
+              width: `${(withHint ? CTA_WIDTH_WITH_HINT : 1) * 100}%`,
+              height: `${(withHint ? CTA_HEIGHT_WITH_HINT : 1) * 100}%`,
+            },
+          })}
         >
           {ctaLabel}
         </Button3D>
