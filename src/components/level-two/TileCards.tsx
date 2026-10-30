@@ -92,7 +92,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 {choice.text}
               </span>
             </motion.button>
-            <XpPop show={checked && choice.id === correctId && selectedId === correctId} />
+            <XpPop inside="top" show={checked && choice.id === correctId && selectedId === correctId} fading={fadeOut} />
           </HintFloat>
         );
       })}

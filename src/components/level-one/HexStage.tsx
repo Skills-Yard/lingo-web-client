@@ -109,6 +109,9 @@ export const LEAVE_FADE_DELAY_S = 0.8;
 // tween would restart every frame.
 const GLIDE_TRANSITION = { type: "spring", stiffness: 70, damping: 18, mass: 1, restDelta: 0.5, restSpeed: 2 } as const;
 
+/** The spring the options slide up with (see FeedbackPanel), which Hex sinks under them on. */
+const RIDE_TRANSITION = { type: "spring", stiffness: 360, damping: 32 } as const;
+
 /** The quicker, better-damped glide to a hinted card, timed to land as its flip stops. */
 const HINT_GLIDE_TRANSITION = { type: "spring", stiffness: 170, damping: 24, mass: 0.9, restDelta: 0.5, restSpeed: 2 } as const;
 
@@ -128,6 +131,7 @@ export function HexGlide({
   entryStyle,
   leaving = false,
   rising = false,
+  rideDown = 0,
   fromScale = 1,
   containerRef,
 }: {
@@ -148,6 +152,9 @@ export function HexGlide({
   /** Hex stays where he is while `fromEl` closes: whatever slides up over
    * that spot (the options) covers him, as it is drawn above him. */
   rising?: boolean;
+  /** While `rising` he also sinks this many px (stage px), on the options' own spring:
+   * they land that much lower than his slot's top, which would leave his head showing. */
+  rideDown?: number;
   containerRef: RefObject<HTMLDivElement | null>;
 }) {
   const [rect, setRect] = useState<Rect | null>(null);
@@ -203,10 +210,10 @@ export function HexGlide({
       initial={false}
       animate={
         ride
-          ? { x: ride.x, y: ride.y, width: ride.width, height: ride.height, opacity: 1 }
+          ? { x: ride.x, y: ride.y + rideDown, width: ride.width, height: ride.height, opacity: 1 }
           : { x: rect.x - (rect.width * (scale - 1)) / 2, y: rect.y - (rect.height * (scale - 1)) / 2, width: rect.width * scale, height: rect.height * scale, opacity: leaving ? 0 : 1 }
       }
-      transition={{ default: moved ? HINT_GLIDE_TRANSITION : GLIDE_TRANSITION, opacity: leaving ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0 } }}
+      transition={{ default: ride ? RIDE_TRANSITION : moved ? HINT_GLIDE_TRANSITION : GLIDE_TRANSITION, opacity: leaving ? { delay: LEAVE_FADE_DELAY_S, duration: 0.15 } : { duration: 0 } }}
       onAnimationComplete={() => setArrived(moved)}
     >
       <OnboardingHex entryKey="quiz" enter={enter} entryStyle={entryStyle} leaving={leaving} cue={arrived ? arrivedCue : null} />

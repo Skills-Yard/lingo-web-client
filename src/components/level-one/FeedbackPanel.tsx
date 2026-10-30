@@ -2,7 +2,7 @@
 
 import { HexBleed, HEX_BLEED } from "@/components/onboarding/robu/HexBleed";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Transition } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { Fredoka, Nunito, Poppins } from "next/font/google";
 import {
@@ -135,19 +135,32 @@ const FEEDBACK = {
   },
 } as const;
 
+const XP_SPRING = { type: "spring", stiffness: 220, damping: 14, delay: 0.15 } as const;
+/** With `fading`: shown, held for a moment, then gone sliding up (a share of the whole run at each key). */
+const XP_FADE: Transition = { duration: 1.6, delay: 0.15, times: [0, 0.2, 0.6, 1], ease: "easeOut" };
+
+/** Where the "+10 XP" stands on its card: above it, inside at its right end, or inside at the top. */
+const XP_PLACE = {
+  above: "-top-8 left-1/2 -translate-x-1/2",
+  right: "top-1/2 right-4 -translate-y-1/2",
+  top: "top-2 left-1/2 -translate-x-1/2",
+} as const;
+
 /** The "+10 XP" that pops up on the right answer's card: above it, or with
- * `inside`, at its right end. */
-export function XpPop({ show, inside = false }: { show: boolean; inside?: boolean }) {
+ * `inside`, at its right end (`"top"`: inside, at the top, for a card with its
+ * content in the middle). With `fading` (the cards fade out) it fades out
+ * sliding up after it has been shown, instead of staying where the card was. */
+export function XpPop({ show, inside = false, fading = false }: { show: boolean; inside?: boolean | "top"; fading?: boolean }) {
   return (
     <AnimatePresence>
       {show && (
         <motion.span
           initial={{ opacity: 0, scale: 0.7 }}
-          animate={{ opacity: 1, scale: 1 }}
+          animate={fading ? { opacity: [0, 1, 1, 0], y: [8, 0, 0, -28], scale: 1 } : { opacity: 1, scale: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ type: "spring", stiffness: 220, damping: 14, delay: 0.15 }}
+          transition={fading ? { opacity: XP_FADE, y: XP_FADE, scale: XP_SPRING } : XP_SPRING}
           className={`pointer-events-none absolute z-10 text-[18px] leading-6 font-bold whitespace-nowrap text-[#F5A623] ${
-            inside ? "top-1/2 right-4 -translate-y-1/2" : "-top-8 left-1/2 -translate-x-1/2"
+            XP_PLACE[inside === "top" ? "top" : inside ? "right" : "above"]
           }`}
         >
           +10 XP
@@ -205,7 +218,7 @@ export function FeedbackPanel({
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h2 className={`${fredoka.className} text-[21px] leading-7 font-semibold tracking-[-0.1px] ${look.titleColor}`}>{look.title}</h2>
+          <h2 className={`${fredoka.className} text-[28px] leading-9 font-semibold tracking-[-0.1px] ${look.titleColor}`}>{look.title}</h2>
           <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.text} ${look.bold}`}>
             {children}
           </p>

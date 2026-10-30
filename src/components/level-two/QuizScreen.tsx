@@ -77,7 +77,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
         <TitleText lines={quiz.title} underline={quiz.underline} />
       </ScreenTitle>
       <CentredRow top={stageTop(quiz.bubbleTop)}>
-        <HexBubble entryKey={`quiz-${step}`} hex="right" line={quiz.line} size={quiz.bubble} />
+        <HexBubble entryKey={`quiz-${step}`} hex="right" line={quiz.line} size={quiz.bubble} tucked={checked} />
       </CentredRow>
       {quiz.layout === "list" ? (
         <AnswerCards

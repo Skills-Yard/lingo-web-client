@@ -16,17 +16,31 @@ type HexBubbleProps = {
   size: BubbleSize;
   /** A trigger Hex plays once he has entered. */
   cue?: string | null;
+  /** Hex slides back behind the bubble and is gone (the result panel brings its own). */
+  tucked?: boolean;
 };
+
+/** How far Hex slides back toward the bubble, and how fast: the panel's own spring (see FeedbackPanel), so he leaves as it arrives. */
+const TUCK_DISTANCE = HEX_SLOT * 0.75;
+const TUCK_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
 /** Hex beside his line: the line is typed in letter by letter, the way module
  * 1's teacher line is. */
-export function HexBubble({ entryKey, hex, line, size, cue = null }: HexBubbleProps) {
+export function HexBubble({ entryKey, hex, line, size, cue = null, tucked = false }: HexBubbleProps) {
   const hexAtLeft = hex === "left";
   return (
     <div className={`flex w-fit items-center ${hexAtLeft ? "" : "flex-row-reverse"}`}>
-      <div aria-hidden className="relative shrink-0" style={{ width: HEX_SLOT, height: HEX_SLOT }}>
+      {/* The bubble comes after him, so it is drawn over him as he slides back. */}
+      <motion.div
+        aria-hidden
+        className="relative shrink-0"
+        style={{ width: HEX_SLOT, height: HEX_SLOT }}
+        initial={false}
+        animate={tucked ? { x: hexAtLeft ? TUCK_DISTANCE : -TUCK_DISTANCE, scale: 0.7, opacity: 0 } : { x: 0, scale: 1, opacity: 1 }}
+        transition={TUCK_SPRING}
+      >
         <OnboardingHex entryKey={entryKey} cue={cue} />
-      </div>
+      </motion.div>
       <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tailAtLeft={hexAtLeft} />
     </div>
   );

@@ -11,12 +11,12 @@ import { HintButton, type HintSize } from "./HintButton";
 const HINTS_LEFT = 1;
 /**
  * With the hint showing, the main button is drawn this share of the row's
- * height, in whatever width is left beside the hint. Its artwork can't be
- * made narrower without getting shorter (it is one fixed-shape drawing), so it
- * is squeezed a little across instead: almost as tall as the button on a screen
- * with no hint, and still the same shape.
+ * height, in whatever width is left beside the hint: the same height as the
+ * button on a screen with no hint, and so as tall as the hint beside it. Its
+ * artwork can't be made narrower without getting shorter (it is one fixed-shape
+ * drawing), so it is squeezed across instead.
  */
-export const CTA_HEIGHT_WITH_HINT = 0.9;
+export const CTA_HEIGHT_WITH_HINT = 1;
 
 /**
  * The hint button is as tall as the drawn face of the main button beside it,

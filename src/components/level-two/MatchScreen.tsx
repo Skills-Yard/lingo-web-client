@@ -8,7 +8,6 @@ import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
-import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
 import { levelTwoHref } from "./levelTwo";
@@ -30,17 +29,22 @@ const ROW_TOP = [231, 440] as const;
 const CARD_W = 172;
 const CARD_H = 184;
 const GAP = 14;
-/** Its place in the module. */
-const STEP = 6;
-/** How long a wrong pair shows red before both cards let go. */
-const WRONG_MS = 650;
+/** A wrong pair shakes red for this long (seconds), and both cards let go this long (ms) after it was made. */
+const SHAKE_S = 0.28;
+const WRONG_MS = 300;
+/** A right pair: both cards bounce up and back in this long (seconds), along a sine so it never stops at the top, and go gray and disabled. */
+const BOUNCE_S = 0.3;
+const BOUNCE = Array.from({ length: 9 }, (_, i) => 1 + 0.1 * Math.sin((Math.PI * i) / 8));
+/** Colours fade in and out over this long (Tailwind's `duration-250`): into gray, and from red back to normal. */
+const GRAY_CARD = "border-[#E3E5E9] bg-[#F1F2F4] duration-250 dark:border-white/10 dark:bg-[#1A1D23]";
 
 type Side = "left" | "right";
 
 /**
  * `/module?step=6` — "Can you match them?": tap an instruction, then
- * the action it does. A right pair turns green and stays; a wrong pair shakes
- * red and lets go. Next unlocks once both are matched.
+ * the action it does. A right pair bounces once and goes gray and disabled; a
+ * wrong pair shakes red and lets go, both quickly. Next unlocks once all are
+ * matched. It is not graded: the screen can't be left until every pair is right.
  */
 export function MatchScreen() {
   const router = useRouter();
@@ -50,8 +54,6 @@ export function MatchScreen() {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [hinted, setHinted] = useState(false);
   const timer = useRef<number | undefined>(undefined);
-  // Whether any pair has been wrong in this go.
-  const slipped = useRef(false);
   useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const done = matched.length === INSTRUCTIONS.length * 2;
@@ -74,8 +76,6 @@ export function MatchScreen() {
       setPicked({ left: null, right: null });
       setHinted(false);
     } else {
-      slipped.current = true;
-      noteAnswer(STEP, false);
       setWrong(true);
       timer.current = window.setTimeout(() => {
         setWrong(false);
@@ -85,7 +85,7 @@ export function MatchScreen() {
   };
 
   const state = (side: Side, card: Card) => {
-    if (matched.includes(card.id)) return "correct" as const;
+    if (matched.includes(card.id)) return "done" as const;
     if (picked[side] !== card.id) return "idle" as const;
     return wrong ? ("wrong" as const) : ("selected" as const);
   };
@@ -99,18 +99,18 @@ export function MatchScreen() {
             type="button"
             onClick={() => pick(side, card.id)}
             aria-pressed={look === "selected"}
-            disabled={look === "correct"}
+            disabled={look === "done"}
             initial={{ opacity: 0, y: 40 }}
             animate={{
               opacity: 1,
               y: 0,
               x: look === "wrong" ? [0, -7, 7, -5, 5, 0] : 0,
-              scale: look === "selected" ? [1, 0.96, 1.04, 1] : 1,
+              scale: look === "selected" ? [1, 0.96, 1.04, 1] : look === "done" ? BOUNCE : 1,
             }}
             whileTap={{ scale: 0.97 }}
-            transition={{ opacity: { duration: 0.3, delay: 0.15 + row * 0.1 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 }, x: { duration: 0.4 }, scale: { duration: 0.4 } }}
+            transition={{ opacity: { duration: 0.3, delay: 0.15 + row * 0.1 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 }, x: { duration: SHAKE_S }, scale: look === "done" ? { duration: BOUNCE_S, ease: "linear" } : { duration: 0.4 } }}
             className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${
-              look === "idle" ? `border-white dark:border-transparent ${tint}` : LOOKS[look].card
+              look === "idle" ? `border-white duration-250 dark:border-transparent ${tint}` : look === "done" ? GRAY_CARD : LOOKS[look].card
             }`}
             style={{ width: CARD_W, height: CARD_H }}
           >
@@ -121,10 +121,12 @@ export function MatchScreen() {
               transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
               className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
             />
-            <span className="flex h-[100px] w-full items-center justify-center">
+            <span className={`flex h-[100px] w-full items-center justify-center transition-opacity duration-250 ${look === "done" ? "opacity-50" : ""}`}>
               <SlotImage file={card.icon} className="max-h-full max-w-full object-contain" />
             </span>
-            <span className="text-center text-[14px] leading-5 font-semibold text-[#444444] dark:text-white">{card.text}</span>
+            <span className={`text-center text-[14px] leading-5 font-semibold text-[#444444] transition-opacity duration-250 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
+              {card.text}
+            </span>
           </motion.button>
         </HintFloat>
       );
@@ -138,12 +140,7 @@ export function MatchScreen() {
       ctaLabel="Next"
       ctaDisabled={!done}
       hint={{ visible: true, onUse: () => setHinted(true) }}
-      onContinue={() => {
-        // Right only if no pair was wrong on the way (the first go is what is noted).
-        const correct = !slipped.current;
-        noteAnswer(STEP, correct);
-        router.push(nextAfter(STEP, correct, levelTwoHref(7)));
-      }}
+      onContinue={() => router.push(levelTwoHref(7))}
     >
       <ScreenTitle>
         Can you <Teal>match them?</Teal>

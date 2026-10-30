@@ -59,30 +59,22 @@ export const optionState = (
   return id === selectedId ? "selected" : "idle";
 };
 
-export const LOOKS: Record<OptionState, { edge: string; card: string; radio: string; dot: string }> = {
+export const LOOKS: Record<OptionState, { edge: string; card: string }> = {
   idle: {
     edge: "border-[#BDBA99]",
     card: "border-black/4 bg-white dark:border-white/6 dark:bg-[#15181E]",
-    radio: "bg-[#D9D9D9]/8 shadow-[inset_0_0_3.8px_4px_rgba(0,0,0,0.1)]",
-    dot: "scale-0",
   },
   selected: {
     edge: "border-[#008566]",
     card: "border-primary bg-[#F2FBF8] dark:bg-[#0F2921]",
-    radio: "border-2 border-primary",
-    dot: "scale-100 bg-primary",
   },
   correct: {
     edge: "border-[#008566]",
     card: "border-primary bg-[#F2FBF8] dark:bg-[#0F2921]",
-    radio: "border-2 border-primary",
-    dot: "scale-100 bg-primary",
   },
   wrong: {
     edge: "border-[#B3261E]",
     card: "border-[#E5484D] bg-[#FFF1F1] dark:bg-[#2A1517]",
-    radio: "border-2 border-[#E5484D]",
-    dot: "scale-100 bg-[#E5484D]",
   },
 };
 

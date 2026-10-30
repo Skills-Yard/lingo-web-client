@@ -88,11 +88,8 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 </span>
                 <span className="w-[186px] text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{choice.text}</span>
               </span>
-              <span className={`relative h-[34px] w-[34px] shrink-0 rounded-full ${look.radio}`}>
-                <span className={`absolute inset-[7px] rounded-full transition-transform duration-200 ${look.dot}`} />
-              </span>
             </motion.button>
-            <XpPop show={checked && choice.id === correctId && selectedId === correctId} />
+            <XpPop inside show={checked && choice.id === correctId && selectedId === correctId} fading={fadeOut} />
           </HintFloat>
         );
       })}
