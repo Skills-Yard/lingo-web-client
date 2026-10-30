@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
+  attachProgressBar,
   fireAnswer,
   getProgressBarHost,
   lastShownFill,
@@ -40,13 +41,9 @@ export function PersistentProgressBar({ value, from, answer = null, className = 
   useLayoutEffect(() => {
     const element = slot.current;
     if (!element) return;
-    const shared = getProgressBarHost();
-    element.appendChild(shared.element);
-    shared.rive?.resizeDrawingSurfaceToCanvas();
-    setHost(shared);
-    const observer = new ResizeObserver(() => shared.rive?.resizeDrawingSurfaceToCanvas());
-    observer.observe(element);
-    return () => observer.disconnect();
+    const detach = attachProgressBar(element);
+    setHost(getProgressBarHost());
+    return detach;
   }, []);
 
   useEffect(() => {

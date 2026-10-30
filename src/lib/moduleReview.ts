@@ -1,5 +1,6 @@
 import { useState, useSyncExternalStore } from "react";
 import { GRADED_STEPS, MODULE_STEPS } from "./moduleFlow";
+import { resetStreak } from "./moduleStreak";
 import { moduleHref } from "./routes";
 
 /**
@@ -82,8 +83,11 @@ const subscribe = (listener: () => void) => {
 /** The graded steps answered wrong the first time, in the order they come. */
 const missedSteps = ({ firstTry }: ReviewState): number[] => GRADED_STEPS.filter((step) => firstTry[step] === false);
 
-/** Starts the module over: nothing answered, no review. */
-export const resetReview = () => write(FRESH);
+/** Starts the module over: nothing answered, no review, no streak. */
+export const resetReview = () => {
+  write(FRESH);
+  resetStreak();
+};
 
 /**
  * Notes how the learner answered question `step`. Only the first answer to a

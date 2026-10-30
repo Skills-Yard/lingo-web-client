@@ -337,9 +337,10 @@ export const LEVEL_BACKGROUND = {
   fallbackAspect: 390 / 844,
 } as const;
 
-/** The lesson progress bar — "LESSON_ProgressBar" in `hex.riv`, played by
+/** The lesson progress bar — "LESSON_ProgressBar" in `progressBar.riv`, played by
  * `ProgressBar_SM`; its `progress` property is the fill in percent (0-100). */
 export const PROGRESS_BAR = {
+  src: "/animations/progressBar.riv",
   artboard: "LESSON_ProgressBar",
   stateMachine: "ProgressBar_SM",
   property: "progress",
@@ -348,8 +349,9 @@ export const PROGRESS_BAR = {
   bleed: 10,
   /** The track starts this many artboard px in from the artboard's left edge
    * (and so overruns its right edge by as much). The bar is drawn shifted
-   * left by it, so the track itself fills the slot. */
-  trackInset: 21,
+   * left by it, so the track itself fills the slot. `progressBar.riv`'s track
+   * spans its 350px artboard edge to edge, so there is none to correct. */
+  trackInset: 0,
   /** Number on the view model; held at `comboValue` for `comboHoldMs` whenever the fill changes. */
   comboProperty: "combo",
   comboValue: 3,
@@ -357,6 +359,10 @@ export const PROGRESS_BAR = {
   /** Triggers on the view model, fired when an answer is checked. */
   correctTrigger: "correct",
   wrongTrigger: "wrong",
+  /** A strike (see `moduleStreak`) waits this long, so it never lands in the
+   * same frame as `correct` / `wrong` (one of two triggers fired together is
+   * dropped) and starts with the fill's own tween. */
+  strikeDelayMs: 150,
 } as const;
 
 /** The robot arm behind the module's first screens — "CMD_RobotArm" in
