@@ -12,7 +12,7 @@ export const BATTERY_AFTER_LESSON = 10;
 /** The screens that spend battery: Level 1's numbered screens, 1-8. */
 const LESSON_SCREENS = 8;
 
-/** Opening the module's first screen starts it over: the battery is refilled. */
+/** Opening the module's first screen starts it over: the battery is topped up to `BATTERY_START`. */
 const FIRST_SCREEN = 1;
 
 /** Every screen spends the same share, so the last one lands on `BATTERY_AFTER_LESSON`. */
@@ -100,12 +100,16 @@ export const batteryCount = ({ level, unlimited }: BatteryState) =>
  * The learner is on lesson screen `step`: each screen not yet paid for spends
  * its share. Returns whether any battery was spent, so the caller can flash it.
  * While the battery is unlimited the screens still count as paid for.
- * Reaching the first screen (starting or restarting the module) refills the
- * battery first, so every run spends the same 90% down to 10%.
+ * Reaching the first screen (starting or restarting the module) tops the
+ * battery up to `BATTERY_START` first, so every run begins with at least that
+ * much — a battery the learner recharged beyond it is never pulled back down.
+ * Coming back to the first screen while it is already the one being shown
+ * (from `/energy`, or a reload) is not a restart: nothing is reset or spent.
  */
 export const chargeBatteryScreen = (step: number): boolean => {
   const saved = read();
-  const before = step === FIRST_SCREEN ? { ...saved, level: BATTERY_START, charged: 0 } : saved;
+  const restarts = step === FIRST_SCREEN && saved.charged !== FIRST_SCREEN;
+  const before = restarts ? { ...saved, level: Math.max(saved.level, BATTERY_START), charged: 0 } : saved;
   if (step <= before.charged) return false;
   const spends = !before.unlimited;
   const level = spends ? Math.max(0, before.level - (step - before.charged) * COST_PER_SCREEN) : before.level;

@@ -31,6 +31,9 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [hinted, setHinted] = useState(false);
   const correct = selectedId === quiz.correctId;
+  const picked = quiz.choices.find((choice) => choice.id === selectedId);
+  // A right answer that plays a robot move: the cards go clear so it can be seen.
+  const fadeCards = checked && correct && !quiz.keepCards && !!picked?.moves?.length;
 
   const check = () => {
     setChecked(true);
@@ -39,7 +42,6 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
     // The hint's glow goes out first, then the robot plays what this answer does.
     if (quiz.targetHint && hinted) fireRobot("hideHint");
-    const picked = quiz.choices.find((choice) => choice.id === selectedId);
     (picked?.moves ?? (correct ? [] : ["wrongClaw"])).forEach((move) => fireRobot(move));
   };
 
@@ -83,6 +85,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
           correctId={quiz.correctId}
           selectedId={selectedId}
           checked={checked}
+          fadeOut={fadeCards}
           hinted={hinted}
           withHint={quiz.hint}
           onPick={setSelectedId}
@@ -94,6 +97,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
           correctId={quiz.correctId}
           selectedId={selectedId}
           checked={checked}
+          fadeOut={fadeCards}
           hinted={hinted}
           withHint={quiz.hint}
           longText={quiz.longText}

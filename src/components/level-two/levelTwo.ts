@@ -45,6 +45,8 @@ export type Quiz = {
   wrong: string;
   /** Where the cube is when the screen opens (the robot carries on from the previous screen). */
   pose: RobotPose;
+  /** The cards stay in view on a right answer, though the robot plays a move (they fade out otherwise). */
+  keepCards?: boolean;
   /** The hint also lights up the target box. */
   targetHint?: boolean;
   hint: boolean;
@@ -72,6 +74,7 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   right: "Yes! The robot picked up the cube.",
   wrong: "Remember: When you selected PICK UP, the robot picked up the cube.",
   pose: "holding",
+  keepCards: true,
   hint: false,
 };
 

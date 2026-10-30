@@ -26,6 +26,8 @@ type TileCardsProps = {
   correctId: string;
   selectedId: string | null;
   checked: boolean;
+  /** The cards fade out completely, so the robot's move behind them can be seen. */
+  fadeOut: boolean;
   hinted: boolean;
   withHint: boolean;
   /** The text is a sentence: set smaller and left to wrap. */
@@ -38,7 +40,7 @@ type TileCardsProps = {
  * the same 358px column as the rest of the screen, standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, hinted, withHint, longText, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -66,7 +68,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, hin
                 onPick(choice.id);
               }}
               aria-pressed={state === "selected"}
-              animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
+              animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] ${look.card} ${

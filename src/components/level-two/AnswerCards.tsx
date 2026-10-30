@@ -24,6 +24,8 @@ type AnswerCardsProps = {
   correctId: string;
   selectedId: string | null;
   checked: boolean;
+  /** The cards fade out completely, so the robot's move behind them can be seen. */
+  fadeOut: boolean;
   /** The hint was used: the right card is filled in orange until something is picked. */
   hinted: boolean;
   /** The screen has the hint button beside its main button. */
@@ -36,7 +38,7 @@ type AnswerCardsProps = {
  * picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, hinted, withHint, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, onPick }: AnswerCardsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
@@ -64,7 +66,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, hinted, w
                 onPick(choice.id);
               }}
               aria-pressed={state === "selected"}
-              animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
+              animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className={`relative isolate flex h-[76px] w-full cursor-pointer items-center justify-between gap-[34px] overflow-hidden rounded-[18px] border px-3.5 py-2.5 text-left shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] transition-[background-color,border-color] ${
