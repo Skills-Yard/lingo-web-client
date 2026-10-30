@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "./LevelTwoShell";
+import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
 import { levelTwoHref } from "./levelTwo";
 
@@ -15,6 +15,25 @@ const CARD_H = 214;
 const CARD_TOP = 274;
 const FACE = "absolute inset-0 overflow-hidden rounded-[18px] border-2 border-white shadow-[0_6px_18px_rgba(31,42,68,0.18)]";
 const HIDDEN = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" } as const;
+
+/** Where the wall meets the floor in the picture, as a share of its height. */
+const HORIZON = "67%";
+
+/**
+ * The empty room, already cropped to Figma's 390 x 844 frame. It covers the whole
+ * stage, so it fills the screen whatever its shape. Where that cuts it (a stage
+ * wider than the frame) it is held by the horizon, which stays at the same share of
+ * the screen's height as in the frame.
+ */
+function RoomBackdrop() {
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-no-repeat"
+      style={{ backgroundImage: "url(/images/level-two/flipCard-bg.svg)", backgroundPosition: `50% ${HORIZON}` }}
+    />
+  );
+}
 
 /**
  * `/module?step=10` — "Flip the card to reveal.": a card (with two
@@ -36,7 +55,7 @@ export function FlipCardScreen() {
   return (
     <LevelTwoShell
       step={10}
-      scene={<SoftBackdrop />}
+      scene={<RoomBackdrop />}
       ctaLabel="Next"
       ctaDisabled={!seen}
       onContinue={() => router.push(levelTwoHref(11))}
