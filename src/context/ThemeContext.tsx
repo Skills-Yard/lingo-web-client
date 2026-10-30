@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useLayoutEffect, useMemo, useState } from "react";
 import { flushSync } from "react-dom";
 
 type Theme = "light" | "dark";
@@ -103,9 +103,13 @@ type ViewTransitionDocument = Document & {
   };
 };
 
+/** The theme the page is held to while a `ForcedTheme` is mounted, whatever the learner chose. */
+let forcedTheme: Theme | null = null;
+
 /** Reflect the theme onto <html> so the CSS (`.dark` / `[data-theme]`) picks it up. */
-function applyTheme(t: Theme) {
+function applyTheme(chosen: Theme) {
   const root = document.documentElement;
+  const t = forcedTheme ?? chosen;
   if (t === "dark") {
     root.classList.add("dark");
     root.setAttribute("data-theme", "dark");
@@ -269,6 +273,28 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       {children}
     </ThemeContext.Provider>
   );
+}
+
+/**
+ * Shows `children` in `theme` whatever the learner has chosen, for a part of
+ * the app that has only one look so far. The page is switched to it while this
+ * is mounted (and stays switched if the provider applies the learner's theme
+ * meanwhile), and put back to the learner's own on leaving; `useTheme()` inside
+ * reports `theme`, and its switch does nothing. The learner's saved choice is
+ * never touched.
+ */
+export function ForcedTheme({ theme, children }: { theme: Theme; children: React.ReactNode }) {
+  const chosen = useTheme().theme;
+  useLayoutEffect(() => {
+    forcedTheme = theme;
+    applyTheme(theme);
+    return () => {
+      forcedTheme = null;
+      applyTheme(chosen);
+    };
+  }, [theme, chosen]);
+  const value = useMemo<ThemeContextType>(() => ({ theme, setTheme: () => {}, toggleTheme: () => {} }), [theme]);
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {
