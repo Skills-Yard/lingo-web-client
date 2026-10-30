@@ -356,6 +356,9 @@ export const PROGRESS_BAR = {
   comboProperty: "combo",
   comboValue: 3,
   comboHoldMs: 1000,
+  /** Number on the view model, held at `screenHeightValue` for every screen. */
+  screenHeightProperty: "screenH",
+  screenHeightValue: -1,
   /** Triggers on the view model, fired when an answer is checked. */
   correctTrigger: "correct",
   wrongTrigger: "wrong",

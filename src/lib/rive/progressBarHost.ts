@@ -1,5 +1,5 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
-import { configureRiveRuntime, PROGRESS_BAR } from "./runtime";
+import { BUTTON, configureRiveRuntime, PROGRESS_BAR } from "./runtime";
 
 /**
  * One progress bar for the whole session. Every screen mounts its own header,
@@ -10,7 +10,8 @@ import { configureRiveRuntime, PROGRESS_BAR } from "./runtime";
  * Rive clips what it draws at the canvas edge, and the strikes reach well past
  * the artboard. So the canvas is as big as the screen, not the slot: it hangs
  * from the slot out to the screen's edges, and the artboard is drawn in the
- * slot's place on it, at the artboard's own proportions.
+ * slot's place on it, at the artboard's own proportions. At the bottom it stops
+ * a button artboard's height short, so nothing is drawn over the Continue button.
  */
 const FALLBACK_ASPECT = 8;
 
@@ -67,7 +68,7 @@ const applyFrame = () => {
   });
 };
 
-/** Sizes the canvas to the screen, hung from the slot, and points the artboard at the slot. */
+/** Sizes the canvas to the screen less the button's room at the bottom, hung from the slot, and points the artboard at the slot. */
 const placeCanvas = () => {
   const current = host;
   const slot = current?.slot;
@@ -77,7 +78,7 @@ const placeCanvas = () => {
   const scale = slot.offsetWidth ? rect.width / slot.offsetWidth : 1;
   if (!scale) return;
   placement = { x: rect.left / scale, y: rect.top / scale, width: rect.width / scale, height: rect.height / scale };
-  const size = { width: `${window.innerWidth / scale}px`, height: `${window.innerHeight / scale}px` };
+  const size = { width: `${window.innerWidth / scale}px`, height: `${window.innerHeight / scale - BUTTON.height}px` };
   Object.assign(current.canvas.style, { left: `${-placement.x}px`, top: `${-placement.y}px`, ...size });
   // Only a new canvas size needs a new bitmap (it clears the canvas); moving the slot just moves the frame.
   const sized = `${size.width} ${size.height}`;
@@ -147,6 +148,7 @@ export const getProgressBarHost = (): Host => {
       });
       canvasSize = "";
       placeCanvas();
+      writeScreenHeight();
       const { minX, maxX, minY, maxY } = rive.bounds;
       if (maxY > minY) created.aspect = (maxX - minX) / (maxY - minY);
       created.loaded = true;
@@ -176,6 +178,13 @@ export const writeProgress = (fill: number) => {
 const writeCombo = (combo: number) => {
   const property = host?.rive?.viewModelInstance?.number(PROGRESS_BAR.comboProperty);
   if (property) property.value = combo;
+};
+
+/** Sets `screenH` to -1. The bar is shared by every screen, so once on load covers them all. */
+const writeScreenHeight = () => {
+  const property = host?.rive?.viewModelInstance?.number(PROGRESS_BAR.screenHeightProperty);
+  if (property) property.value = PROGRESS_BAR.screenHeightValue;
+  else console.warn(`[progress bar] no "${PROGRESS_BAR.screenHeightProperty}" number found on the view model`);
 };
 
 let comboTimer: ReturnType<typeof setTimeout> | undefined;
