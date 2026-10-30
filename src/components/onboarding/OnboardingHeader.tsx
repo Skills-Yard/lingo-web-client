@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
 import { batteryCount, useBattery } from "@/components/home/batteryStore";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
@@ -73,54 +72,77 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
   useEffect(() => {
     if (progress) lastShown = { step: progress.step, total: progress.total };
   }, [progress]);
+  const fill = progress ? (progress.step / progress.total) * 100 : 0;
+  const fillFrom = progress ? ((fromStep ?? progress.step - 1) / progress.total) * 100 : 0;
   return (
     // Fixed 83px box, placed from the top edge: page count at 27px, bar at
     // 63px. The onboarding's bar runs the full width between the 16px margins;
     // Level 1's runs between its close and the battery — one width on every screen.
     <header className={`relative shrink-0 select-none ${level ? "h-11" : "h-[83px]"}`}>
-      {/* Only Level 1 has a button here (its close). The onboarding's Back
-          lives in the hidden dev panel (see DevPanel). */}
-      {level && (
-        <button
-          type="button"
-          onClick={onBack}
-          className={`absolute left-4 top-[6px] border-transparent! dark:border-transparent! dark:hover:bg-transparent! ${ICON_BUTTON}`}
-          aria-label="Close"
-        >
-          <X className="w-[30px] h-[30px]" strokeWidth={1.6} />
-        </button>
+      {progress && showCount && (
+        <span className="absolute top-[27px] left-1/2 -translate-x-1/2 text-[14px] leading-none font-medium whitespace-nowrap text-[#888888] tabular-nums dark:text-white/60">
+          <span className="text-[#00B8A9]">{String(progress.step).padStart(2, "0")}</span>/
+          {String(progress.total).padStart(2, "0")}
+        </span>
       )}
 
-      {progress && (
-        <>
-          {showCount && (
-            <span className="absolute top-[27px] left-1/2 -translate-x-1/2 text-[14px] leading-none font-medium whitespace-nowrap text-[#888888] tabular-nums dark:text-white/60">
-              <span className="text-[#00B8A9]">{String(progress.step).padStart(2, "0")}</span>/
-              {String(progress.total).padStart(2, "0")}
+      {/* Rive draws the bar; it animates to the new fill itself. */}
+      {progress && !level && (
+        <PersistentProgressBar
+          value={fill}
+          from={fillFrom}
+          answer={answer}
+          className="absolute top-[63px] left-4 right-4 mx-auto max-w-[480px] -translate-y-1/2"
+        />
+      )}
+
+      {/* Level 1's header is the Figma row: 30px tall, 16px in from the edges,
+          17px between close, bar and battery, all sitting on its bottom edge.
+          The close is 30 x 30; the bar takes what is left (250px on a 390px
+          frame when there is no count; the artboard's own proportions set its
+          height); the battery is `battery.riv` 40px wide (its artboard is
+          268 x 150, so 22px high) with what is left of it written beside it.
+          The bar is centred in a 20.84px box, the height of Figma's group, and
+          the battery in a 25px one. */}
+      {level && (
+        <div className="absolute inset-x-4 top-[6px] flex h-[30px] items-end gap-[17px]">
+          {/* Only Level 1 has a button here (its close). The onboarding's Back
+              lives in the hidden dev panel (see DevPanel). */}
+          <button
+            type="button"
+            onClick={onBack}
+            className={`h-[30px] w-[30px] shrink-0 border-0! dark:hover:bg-transparent! ${ICON_BUTTON}`}
+            aria-label="Close"
+          >
+            {/* The cross is 19.3px across with a 3px stroke, in the 30 x 30 box. */}
+            <svg
+              aria-hidden
+              viewBox="0 0 30 30"
+              className="h-[30px] w-[30px]"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={3}
+              strokeLinecap="round"
+            >
+              <path d="M6.85 6.85 23.15 23.15M23.15 6.85 6.85 23.15" />
+            </svg>
+          </button>
+
+          <div className="flex h-[20.84px] min-w-0 flex-1 items-center justify-center">
+            {progress && (
+              <PersistentProgressBar value={fill} from={fillFrom} answer={answer} className="w-full max-w-[480px]" />
+            )}
+          </div>
+
+          {/* Each screen's `step` spends its share of the battery. Also the way
+              into the hidden dev panel (see BatteryMenu). */}
+          <BatteryMenu className="relative shrink-0" buttonClassName="block" onBack={onPrevious ?? onBack}>
+            <span className="flex h-[25px] items-center gap-1">
+              <PersistentBattery step={batteryStep ?? progress?.step} className="w-[40px]" />
+              <BatteryCount />
             </span>
-          )}
-          {/* Rive draws the bar; it animates to the new fill itself. On the
-              Level 1 header it ends 10px short of the battery and its count
-              (90px wide, 16px from the edge). */}
-          <PersistentProgressBar
-            value={(progress.step / progress.total) * 100}
-            from={(((fromStep ?? progress.step - 1)) / progress.total) * 100}
-            answer={answer}
-            className={`absolute mx-auto max-w-[480px] -translate-y-1/2 ${level ? "top-[25.5px] left-[67px] right-[116px] sm:left-[116px]" : "top-[63px] left-4 right-4"}`}
-          />
-        </>
-      )}
-
-      {/* The battery sits in the top-right corner: `battery.riv` 60px wide (its
-          artboard is 320 x 110), with what is left of it written beside it. Each screen's `step` spends its
-          share of it. Also the way into the hidden dev panel (see BatteryMenu). */}
-      {level && (
-        <BatteryMenu className="absolute top-[6px] right-4" onBack={onPrevious ?? onBack}>
-          <span className="flex h-[39px] items-center gap-1 rounded-md">
-            <PersistentBattery step={batteryStep ?? progress?.step} className="w-[60px]" />
-            <BatteryCount />
-          </span>
-        </BatteryMenu>
+          </BatteryMenu>
+        </div>
       )}
 
     </header>

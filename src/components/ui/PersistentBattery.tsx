@@ -3,7 +3,7 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { chargeBatteryScreen, useBattery } from "@/components/home/batteryStore";
 import { useTheme } from "@/context/ThemeContext";
-import { flashBattery, getBatteryHost, writeBattery, writeBatteryTheme } from "@/lib/rive/batteryHost";
+import { flashBattery, getBatteryHost, resizeBattery, writeBattery, writeBatteryTheme } from "@/lib/rive/batteryHost";
 import { BATTERY } from "@/lib/rive/runtime";
 
 type PersistentBatteryProps = {
@@ -33,8 +33,8 @@ export function PersistentBattery({ step, className = "", level: shownLevel }: P
     if (!element) return;
     const shared = getBatteryHost();
     element.appendChild(shared.element);
-    shared.rive?.resizeDrawingSurfaceToCanvas();
-    const observer = new ResizeObserver(() => shared.rive?.resizeDrawingSurfaceToCanvas());
+    resizeBattery();
+    const observer = new ResizeObserver(resizeBattery);
     observer.observe(element);
     return () => observer.disconnect();
   }, []);

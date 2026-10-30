@@ -412,11 +412,13 @@ export const COMMAND_ROBOT = {
   },
 } as const;
 
-/** The battery — "BatteryArtboard-Main" in `battery.riv` (320x110), played by
+/** The battery — "BatteryArtboard-Main" in `battery.riv` (268x150), played by
  * `Battery_SM`. The artboard binds the `Battery` view model: `level` (0-100) is
  * the fill, `unlimited` swaps it for the infinity sign, `darkTheme` is `true`
  * in the dark theme and `false` in light, and the `fullFlash` trigger sparkles
- * across the whole battery. */
+ * across the whole battery. The drawing fills the artboard edge to edge and its
+ * empty-state glow spills about 7 units past it (the artboard does not clip),
+ * so the canvas gets `bleed` units of room on every side. */
 export const BATTERY = {
   src: "/animations/battery.riv",
   artboard: "BatteryArtboard-Main",
@@ -425,8 +427,9 @@ export const BATTERY = {
   unlimitedProperty: "unlimited",
   darkThemeProperty: "darkTheme",
   fullFlashTrigger: "fullFlash",
-  width: 320,
-  height: 110,
+  width: 268,
+  height: 150,
+  bleed: 16,
 } as const;
 
 /** The brand CTA button — `btn-click.riv`. Its artboards are 371 x 113 and bind

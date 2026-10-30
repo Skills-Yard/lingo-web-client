@@ -9,6 +9,7 @@ import { BATTERY, configureRiveRuntime } from "./runtime";
  */
 type Host = {
   element: HTMLDivElement;
+  canvas: HTMLCanvasElement;
   rive: Rive | null;
   loaded: boolean;
 };
@@ -40,6 +41,20 @@ const applyDarkTheme = (rive: Rive) => {
   if (darkTheme) darkTheme.value = wantedDarkTheme;
 };
 
+/** Matches the drawing surface to the canvas, then pins the artboard to the
+ * middle of it, `bleed` artboard units in from each edge. Rive resets its frame
+ * to the whole canvas on every resize, so the margin is re-applied here; and
+ * `Contain` alone would stretch the artboard over the margin too. */
+export const resizeBattery = () => {
+  const rive = host?.rive;
+  if (!host || !rive) return;
+  rive.resizeDrawingSurfaceToCanvas();
+  const { width, height } = host.canvas;
+  const marginX = (width * BATTERY.bleed) / (BATTERY.width + 2 * BATTERY.bleed);
+  const marginY = (height * BATTERY.bleed) / (BATTERY.height + 2 * BATTERY.bleed);
+  rive.layout = rive.layout.copyWith({ minX: marginX, minY: marginY, maxX: width - marginX, maxY: height - marginY });
+};
+
 /** Browser only. Creates the canvas and starts loading on first use. */
 export const getBatteryHost = (): Host => {
   if (host) return host;
@@ -47,9 +62,14 @@ export const getBatteryHost = (): Host => {
   const element = document.createElement("div");
   element.style.cssText = "position:relative;width:100%;height:100%";
   const canvas = document.createElement("canvas");
-  canvas.style.cssText = "position:absolute;display:block;inset:0;width:100%;height:100%";
+  // The slot is exactly the artboard; the canvas reaches `bleed` artboard units
+  // past it on every side so the glow isn't cut at the slot's edge (see
+  // `resizeBattery`, which keeps the artboard itself at the slot's size).
+  const bleedX = (BATTERY.bleed / BATTERY.width) * 100;
+  const bleedY = (BATTERY.bleed / BATTERY.height) * 100;
+  canvas.style.cssText = `position:absolute;display:block;left:${-bleedX}%;top:${-bleedY}%;width:${100 + 2 * bleedX}%;height:${100 + 2 * bleedY}%`;
   element.appendChild(canvas);
-  const created: Host = { element, rive: null, loaded: false };
+  const created: Host = { element, canvas, rive: null, loaded: false };
   host = created;
   created.rive = new Rive({
     src: BATTERY.src,
@@ -62,7 +82,7 @@ export const getBatteryHost = (): Host => {
     onLoad: () => {
       const rive = created.rive;
       if (!rive) return;
-      rive.resizeDrawingSurfaceToCanvas();
+      resizeBattery();
       created.loaded = true;
       applyFill(rive);
       applyDarkTheme(rive);
