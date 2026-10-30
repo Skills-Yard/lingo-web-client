@@ -15,7 +15,7 @@ export const CARDS_RISE = 180;
 /** Figma has the cards end at 726 (frame px), 16px above its button; the
  * shell's button (and the hint beside it) is drawn taller, so they end this
  * far above it instead. */
-export const GAP_ABOVE_BUTTONS = 12;
+export const GAP_ABOVE_BUTTONS = 28;
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 

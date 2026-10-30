@@ -101,7 +101,6 @@ export const WHAT_NEXT: Quiz = {
 /** Screen 4 — `/module?step=4`. */
 export const ROBOT_PICKED_UP: Quiz = {
   title: [[{ text: "Robot " }, { text: "has picked it up!", teal: true }]],
-  underline: true,
   line: [{ text: "Now, what if we want the robot to release the cube right here?" }],
   bubble: { width: 200 },
   bubbleTop: 162,

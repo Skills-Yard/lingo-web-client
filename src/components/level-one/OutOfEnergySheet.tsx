@@ -8,25 +8,13 @@ import { Check, Infinity as InfinityIcon, Zap } from "lucide-react";
 import { batteryEmpty, RECHARGE_COST, refillBattery, setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
 import { LEARNER_STATS } from "@/components/home/learnerStats";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { Button3D } from "@/components/ui/Button3D";
-import { BUTTON } from "@/lib/rive/runtime";
+import { vibrateForTap } from "@/lib/haptics";
 
 /** How long the battery's drop to 0 is left to show before the sheet comes up. */
 const APPEAR_DELAY_MS = 600;
 
-/** The sheet's widest width (px), and the room its button has inside the padding. */
+/** The sheet's widest width (px). */
 const SHEET_MAX_W = 430;
-const BUTTON_WIDTH = `(min(100vw, ${SHEET_MAX_W}px) - 40px)`;
-
-/**
- * The button's box has an empty band of art above and below its drawn face, so
- * its margins pull the box over them: the face stands `above` px under the cards
- * and `below` px over the "No thanks" under it.
- */
-const BUTTON_ROW_STYLE = {
-  marginTop: `calc(${BUTTON_WIDTH} * ${(-BUTTON.height / BUTTON.width) * BUTTON.face.top} + 16px)`,
-  marginBottom: `calc(${BUTTON_WIDTH} * ${(-BUTTON.height / BUTTON.width) * (1 - BUTTON.face.bottom)} + 2px)`,
-};
 
 const GEM_SRC = "/images/stats/gem.png";
 
@@ -180,10 +168,21 @@ export function OutOfEnergySheet() {
               <RechargeOption chosen={choice === "recharge"} onChoose={() => setChoice("recharge")} />
             </div>
 
-            <div style={BUTTON_ROW_STYLE}>
-              <Button3D riveVariant="module" onPress={playClickSound} onClick={goOn} className="w-full">
+            {/* Drawn here in the module button's colours, not with its Rive artwork: that is one
+                instance shared by every screen, and the sheet would take it along when it closes,
+                leaving the screen's own Continue empty. */}
+            <div className="mt-4 pb-[7px]">
+              <button
+                type="button"
+                onClick={() => {
+                  playClickSound();
+                  vibrateForTap();
+                  goOn();
+                }}
+                className="block h-[60px] w-full cursor-pointer rounded-[22px] bg-[#0398AE] text-xl font-medium text-white shadow-[0_7px_0_#007B8D] transition-[transform,box-shadow] active:translate-y-[5px] active:shadow-[0_2px_0_#007B8D]"
+              >
                 {CTA_LABEL[choice]}
-              </Button3D>
+              </button>
             </div>
             <button
               type="button"
