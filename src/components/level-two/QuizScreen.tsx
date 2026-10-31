@@ -58,7 +58,8 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : (quiz.ctaLabel ?? "Check")}
-      hint={quiz.hint ? { visible: true, onUse: () => setHinted(true) } : undefined}
+      // Once the answer is checked the hint folds away and Continue takes its room.
+      hint={quiz.hint ? { visible: !checked, onUse: () => setHinted(true) } : undefined}
       onContinue={() => (checked ? router.push(nextAfter(step, correct, levelTwoHref(step + 1))) : check())}
       overlay={
         <div className="pointer-events-none absolute inset-0">
