@@ -9,7 +9,7 @@ import { ONBOARDING_QUESTION_CLASS } from "./headingStyle";
 import { spansLength } from "./OnboardingBubble";
 import type { Voiceover } from "./useVoiceover";
 
-// Question headings: Inter 600, 20px.
+// Question headings: semibold, 20px (see headingStyle).
 
 /**
  * How far through its own clip (0..1) the question text has been spoken:

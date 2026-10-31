@@ -107,7 +107,7 @@ export function HomeStage({
   return (
     <main
       ref={boxRef}
-      className={`absolute inset-0 font-[family-name:var(--font-app-poppins)] text-[#444444] dark:text-white ${
+      className={`absolute inset-0 font-sans text-[#444444] dark:text-white ${
         scroll ? "scrollbar-none overflow-y-auto overflow-x-hidden" : "overflow-hidden"
       } ${className}`}
     >

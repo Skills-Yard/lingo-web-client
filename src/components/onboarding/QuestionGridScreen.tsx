@@ -1,13 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Poppins } from "next/font/google";
 import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
 import type { OnboardingGridOption } from "@/lib/constants/onboarding";
 import { motion } from "framer-motion";
 import { optionCardClass, optionDropIn, squeezedSpace } from "./optionCard";
-
-const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
 // Grid options without their own `image` get an icon in the picture panel
 // instead — no matching artwork exists for those yet ("No", and the later
@@ -146,7 +143,7 @@ export function QuestionGridOptions({
               )}
             </span>
             <span
-              className={`${poppins.className} flex w-full shrink-0 items-center justify-center px-2 text-balance ${three ? "h-[40px] text-[12px]" : compact ? "min-h-0 flex-1 text-[14px]" : "h-[43.65px] text-[14px]"} font-medium ${compact ? "leading-[1.4]" : "leading-[1.3]"} ${compact ? "text-[#444444] bg-white rounded-b-[5.8px] border-b-[4.35px] border-b-[#BDBA99] dark:rounded-b-[8px]" : "text-[#2C2C2C]"} dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] ${compact ? "dark:bg-[#3F4C51]" : "dark:bg-white/20"} ${
+              className={`flex w-full shrink-0 items-center justify-center px-2 text-balance ${three ? "h-[40px] text-[12px]" : compact ? "min-h-0 flex-1 text-[14px]" : "h-[43.65px] text-[14px]"} font-medium ${compact ? "leading-[1.4]" : "leading-[1.3]"} ${compact ? "text-[#444444] bg-white rounded-b-[5.8px] border-b-[4.35px] border-b-[#BDBA99] dark:rounded-b-[8px]" : "text-[#2C2C2C]"} dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] ${compact ? "dark:bg-[#3F4C51]" : "dark:bg-white/20"} ${
                 lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
               }`}
             >

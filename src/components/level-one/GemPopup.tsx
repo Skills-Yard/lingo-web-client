@@ -2,13 +2,8 @@
 
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Fredoka, Inter, Poppins } from "next/font/google";
 import { Sparkle, X } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
-
-const fredoka = Fredoka({ subsets: ["latin"], weight: "600" });
-const inter = Inter({ subsets: ["latin"], weight: "600" });
-const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
 /** How long the popup stays open when nobody closes it. */
 const AUTO_CLOSE_MS = 3000;
@@ -67,7 +62,7 @@ export function GemPopup({ open, onClose }: { open: boolean; onClose: () => void
             </button>
 
             <span
-              className={`${fredoka.className} absolute inset-x-0 top-[22px] text-center text-[32px] leading-7 font-semibold tracking-[-0.1px] text-[#FF8D42]`}
+              className={`absolute inset-x-0 top-[22px] text-center text-[32px] leading-7 font-semibold tracking-[-0.1px] text-[#FF8D42]`}
             >
               +10 XP
             </span>
@@ -81,7 +76,7 @@ export function GemPopup({ open, onClose }: { open: boolean; onClose: () => void
             />
 
             <h2
-              className={`${inter.className} absolute inset-x-0 top-[219px] text-center text-[32px] leading-[134%] font-semibold`}
+              className={`absolute inset-x-0 top-[219px] text-center text-[32px] leading-[134%] font-semibold`}
             >
               Congratulations!
             </h2>
@@ -89,7 +84,7 @@ export function GemPopup({ open, onClose }: { open: boolean; onClose: () => void
             <span className="absolute top-[280px] left-1/2 flex h-[63.61px] w-[154px] -translate-x-1/2 items-center justify-center rounded-lg bg-[#E9F8F4] px-3 py-2 dark:bg-[#0F2B28]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={GEM_SRC} alt="" draggable={false} className="h-[38.99px] w-[32.14px] -rotate-[19.93deg] object-contain" />
-              <span className={`${poppins.className} w-[73px] text-[24px] leading-8 font-semibold`}>1 Gem</span>
+              <span className={`w-[73px] text-[24px] leading-8 font-semibold`}>1 Gem</span>
             </span>
 
             <span aria-hidden className="absolute top-[368px] left-1/2 flex -translate-x-1/2 items-center gap-2.5">
@@ -99,7 +94,7 @@ export function GemPopup({ open, onClose }: { open: boolean; onClose: () => void
             </span>
 
             <p
-              className={`${poppins.className} absolute top-[410px] left-1/2 w-[265px] -translate-x-1/2 text-center text-[14px] leading-5 font-medium`}
+              className={`absolute top-[410px] left-1/2 w-[265px] -translate-x-1/2 text-center text-[14px] leading-5 font-medium`}
             >
               You won 1 Gem as you followed the given command.
             </p>

@@ -9,7 +9,6 @@ import {
 } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { motion } from "framer-motion";
-import { Fascinate } from "next/font/google";
 import {
   configureRiveRuntime,
   SPLASH_ARTBOARD,
@@ -19,13 +18,9 @@ import {
 } from "@/lib/rive/runtime";
 import { hexRiveSource } from "@/lib/rive/hexFile";
 
-// Fascinate only ships one weight (400) — passed explicitly since next/font
-// requires it for any non-variable Google font.
-const fascinate = Fascinate({ subsets: ["latin"], weight: "400" });
-
-// The "Lingo" wordmark (Figma): Fascinate 60px / 100%, #444444 in light
-// theme and #E8E8E8 in dark.
-const WORDMARK_CLASS = `${fascinate.className} px-[0.05em] pt-[0.05em] pb-[0.2em] text-center text-[60px] leading-none text-[#444444] dark:text-[#E8E8E8]`;
+// The "Lingo" wordmark: 60px / 100%, #444444 in light theme and #E8E8E8 in
+// dark, in the app font.
+const WORDMARK_CLASS = `font-semibold px-[0.05em] pt-[0.05em] pb-[0.2em] text-center text-[60px] leading-none text-[#444444] dark:text-[#E8E8E8]`;
 
 // "Welcome to" / tagline around the wordmark on the splash — same #444444.
 const SPLASH_TEXT_CLASS = "whitespace-nowrap leading-tight text-[#444444] dark:text-[#E8E8E8]";

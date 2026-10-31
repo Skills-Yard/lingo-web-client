@@ -35,7 +35,6 @@ export function MoveHexScreen() {
   // Where Hex belongs right now (the board registers its own spot).
   const [anchorEl, setAnchorEl] = useState<HTMLDivElement | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
-  const hintRef = useRef<(() => void) | null>(null);
   const playRef = useRef<(() => void) | null>(null);
   const resetRef = useRef<(() => void) | null>(null);
   const [run, setRun] = useState({ canRun: false, running: false });
@@ -78,7 +77,6 @@ export function MoveHexScreen() {
       // Try again after a miss.
       ctaLabel={solved ? "Continue" : failed ? "Try again" : "Play"}
       ctaDisabled={solved || failed ? false : !run.canRun}
-      hint={{ visible: true, onUse: () => hintRef.current?.() }}
       // The wrong-result panel sits above the program panel (see GameBoardScreen's
       // z-index) and below the Play / Continue row, like on the quizzes; a tap
       // on it takes the moves back so Hex can try again. The gem popup is above all.
@@ -115,7 +113,6 @@ export function MoveHexScreen() {
           onSolvedChange={onSolved}
           registerAnchor={setAnchorEl}
           borderless
-          hintRef={hintRef}
           playRef={playRef}
           onRunStateChange={setRun}
           onResultChange={setResult}

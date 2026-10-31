@@ -72,6 +72,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
+      // Once the answer is checked the hint folds away and Continue takes its room.
+      hint={{ visible: !checked, onUse: () => setHinted(true) }}
       onBack={() => router.push(moduleHref(QUIZ_STEP - 1))}
       onContinue={() => {
         if (!checked) {

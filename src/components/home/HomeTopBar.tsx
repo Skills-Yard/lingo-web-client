@@ -50,7 +50,7 @@ const statImg = (src: string, className: string) => (
 export function HomeStats() {
   const battery = useBattery();
   return (
-    <div className="flex items-center justify-between font-[family-name:var(--font-app-poppins)]">
+    <div className="flex items-center justify-between font-sans">
       <StatItem value={String(LEARNER_STATS.streak)} label="day streak" color="#FF8D42" darkColor="#FF8D42">
         {statImg("/images/streak.png", "h-6 w-auto")}
       </StatItem>
@@ -89,7 +89,7 @@ function MiniStat({ children, value, color, darkColor }: { children: ReactNode; 
 export function LevelStats({ className = "" }: { className?: string }) {
   const battery = useBattery();
   return (
-    <div className={`flex items-center gap-2 font-[family-name:var(--font-app-poppins)] ${className}`}>
+    <div className={`flex items-center gap-2 font-sans ${className}`}>
       <MiniStat value={String(LEARNER_STATS.gems)} color="#2F80ED" darkColor="#5AA2FF">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src="/images/stats/gem.png" alt="Gems" draggable={false} className="h-[20px] w-[20px] select-none object-contain" />

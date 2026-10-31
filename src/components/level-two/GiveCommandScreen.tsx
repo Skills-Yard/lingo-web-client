@@ -3,9 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Fredoka } from "next/font/google";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
-import { HintFloat } from "@/components/level-one/HintFloat";
 import { vibrateForTap } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
 import { COMMAND_ROBOT, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
@@ -14,13 +12,11 @@ import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, Teal } from "./Le
 import { ROBOT_GAP, RobotBackdrop } from "./RobotBackdrop";
 import { levelTwoHref } from "./levelTwo";
 
-const fredoka = Fredoka({ subsets: ["latin"], weight: "600" });
-
 /** Once the cube is up (the robot's pick-up clip), this long until "Nice!" comes in. */
 const NICE_AFTER_S = COMMAND_ROBOT.moveSeconds.pickUp + 0.45;
-/** Hex's question stands this far above the hint and the button (the frame has it 240px up from the bottom); the robot rests above it. */
+/** Hex's question stands this far above the button (the frame has it 240px up from the bottom); the robot rests above it. */
 const QUESTION_ABOVE_BUTTONS = 118;
-const QUESTION_BOTTOM = aboveButtons(QUESTION_ABOVE_BUTTONS, true);
+const QUESTION_BOTTOM = aboveButtons(QUESTION_ABOVE_BUTTONS);
 /** Hex enters a touch after the panel, and his thumbs-up follows his entrance. */
 const HEX_AFTER_MS = 250;
 const HEX_SETTLE_MS = 900;
@@ -32,15 +28,14 @@ const PANEL_MIN_HEIGHT = 844 - 593;
  * tell the robot, the main button ("Pick Up", our usual one) gives the
  * instruction and the cube is picked up. Then, on this same screen, the title
  * becomes "Nice! Instruction given!", a panel with Hex says so above the
- * button, and the button becomes "Next". The hint points at Hex's question. The
- * button row stays as it is throughout (the hint stays, the button keeps its
- * look); while the cube is being picked up the button just takes no clicks.
+ * button, and the button becomes "Next". The button row stays as it is
+ * throughout (the button keeps its look); while the cube is being picked up
+ * the button just takes no clicks.
  */
 export function GiveCommandScreen() {
   const router = useRouter();
   const [given, setGiven] = useState(false);
   const [nice, setNice] = useState(false);
-  const [hinted, setHinted] = useState(false);
   useEffect(() => {
     if (!given) return;
     const timer = window.setTimeout(() => setNice(true), NICE_AFTER_S * 1000);
@@ -53,7 +48,6 @@ export function GiveCommandScreen() {
       scene={<RobotBackdrop bottom={`calc(${QUESTION_BOTTOM} + ${HEX_SLOT + ROBOT_GAP}px)`} pose="idle" />}
       ctaLabel={nice ? "Next" : "Pick Up"}
       ctaLocked={given && !nice}
-      hint={{ visible: true, onUse: () => !given && setHinted(true) }}
       onContinue={() => {
         if (nice) {
           router.push(levelTwoHref(3));
@@ -76,14 +70,12 @@ export function GiveCommandScreen() {
       )}
       {!given && (
         <CentredRow bottom={QUESTION_BOTTOM}>
-          <HintFloat className="relative" spin={false} active={hinted}>
-            <HexBubble
-              entryKey="give-command"
-              hex="left"
-              size={{ width: 240 }}
-              line={[{ text: "What instruction should we give the robot?" }]}
-            />
-          </HintFloat>
+          <HexBubble
+            entryKey="give-command"
+            hex="left"
+            size={{ width: 240 }}
+            line={[{ text: "What instruction should we give the robot?" }]}
+          />
         </CentredRow>
       )}
     </LevelTwoShell>
@@ -113,7 +105,7 @@ function NicePanel() {
       >
         <div className="flex h-fit w-[290px] items-center justify-between">
           <div className="flex w-[180px] flex-col gap-1.5">
-            <h2 className={`${fredoka.className} text-[17px] leading-6 font-semibold text-[#01A17F]`}>Yayyy!</h2>
+            <h2 className="text-[17px] leading-6 font-semibold text-[#01A17F]">Yayyy!</h2>
             <p className="text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80">
               You gave an instruction. The robot performed an action.
             </p>

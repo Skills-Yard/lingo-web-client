@@ -79,7 +79,7 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   wrong: "Remember: When you selected PICK UP, the robot picked up the cube.",
   pose: "holding",
   keepCards: true,
-  hint: false,
+  hint: true,
 };
 
 /** Screen 5 — `/module?step=5`. */
@@ -158,7 +158,7 @@ export const WHERE_SHOULD_GO: Quiz = {
   right: "Yes! Place in Target moves the cube to the target area.",
   wrong: "Remember: Place in Target moves the cube to the target area.",
   pose: "holding",
-  hint: false,
+  hint: true,
   ctaLabel: "Let’s do it!",
 };
 

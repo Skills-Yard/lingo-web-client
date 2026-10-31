@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, type Transition } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
@@ -71,7 +70,6 @@ export function MatchScreen() {
   const [settled, setSettled] = useState<readonly string[]>([]);
   const [wrong, setWrong] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
   const timer = useRef<number | undefined>(undefined);
   const settleTimers = useRef<number[]>([]);
   useEffect(
@@ -83,8 +81,6 @@ export function MatchScreen() {
   );
 
   const done = matched.length === INSTRUCTIONS.length * 2;
-  // The hint points at the first pair still open.
-  const hintPair = INSTRUCTIONS.find((card) => !matched.includes(card.id));
 
   const pick = (side: Side, id: string) => {
     if (wrong || matched.includes(id)) return;
@@ -102,7 +98,6 @@ export function MatchScreen() {
       const pair = [next.left, next.right];
       setMatched((now) => [...now, ...pair]);
       setPicked({ left: null, right: null });
-      setHinted(false);
       settleTimers.current.push(window.setTimeout(() => setSettled((now) => [...now, ...pair]), GRAY_AFTER_MS));
     } else {
       setWrong(true);
@@ -122,7 +117,6 @@ export function MatchScreen() {
 
   const renderCard = (side: Side, card: Card, row: number, tint: string) => {
       const look = state(side, card);
-      const hintHere = hinted && !!hintPair && (card.id === hintPair.id || card.id === hintPair.pair) && look === "idle";
       // A right pair: lifting (green), then coming down (gray); it is disabled throughout.
       const matchedNow = look === "correct" || look === "done";
       const face =
@@ -136,52 +130,43 @@ export function MatchScreen() {
                 ? GRAY_CARD
                 : LOOKS.wrong.card;
       return (
-        <HintFloat className="relative" spin={false} active={hintHere}>
-          <motion.button
-            type="button"
-            onClick={() => pick(side, card.id)}
-            aria-pressed={look === "selected"}
-            disabled={matchedNow}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{
-              opacity: 1,
-              y: matchedNow ? LIFT : 0,
-              x: look === "wrong" ? [0, -7, 7, -5, 5, 0] : 0,
-              scale: look === "selected" ? [1, 0.96, 1.04, 1] : 1,
-            }}
-            whileTap={{ scale: 0.97 }}
-            transition={{
-              opacity: { duration: 0.3, delay: 0.15 + row * 0.1 },
-              y: matchedNow ? LIFT_TRANSITION : { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 },
-              x: { duration: SHAKE_S },
-              scale: { duration: 0.4 },
-            }}
-            className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${face}`}
-            style={{ width: CARD_W, height: CARD_H }}
-          >
-            <motion.span
-              aria-hidden
-              initial={false}
-              animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-              transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-              className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
-            />
-            <span className={`flex h-[100px] w-full items-center justify-center transition-opacity duration-150 ${look === "done" ? "opacity-50" : ""}`}>
-              <SlotImage file={card.icon} className="max-h-full max-w-full object-contain" />
-            </span>
-            <span className={`text-center text-[14px] leading-5 font-semibold text-[#444444] transition-opacity duration-150 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
-              {card.text}
-            </span>
-            <motion.span
-              aria-hidden
-              initial={false}
-              animate={matchedNow ? SHINE_ON : SHINE_OFF}
-              transition={SHINE_TRANSITION}
-              style={{ skewX: -20 }}
-              className="pointer-events-none absolute inset-y-0 left-0 w-14 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)]"
-            />
-          </motion.button>
-        </HintFloat>
+        <motion.button
+          type="button"
+          onClick={() => pick(side, card.id)}
+          aria-pressed={look === "selected"}
+          disabled={matchedNow}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{
+            opacity: 1,
+            y: matchedNow ? LIFT : 0,
+            x: look === "wrong" ? [0, -7, 7, -5, 5, 0] : 0,
+            scale: look === "selected" ? [1, 0.96, 1.04, 1] : 1,
+          }}
+          whileTap={{ scale: 0.97 }}
+          transition={{
+            opacity: { duration: 0.3, delay: 0.15 + row * 0.1 },
+            y: matchedNow ? LIFT_TRANSITION : { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 },
+            x: { duration: SHAKE_S },
+            scale: { duration: 0.4 },
+          }}
+          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${face}`}
+          style={{ width: CARD_W, height: CARD_H }}
+        >
+          <span className={`flex h-[100px] w-full items-center justify-center transition-opacity duration-150 ${look === "done" ? "opacity-50" : ""}`}>
+            <SlotImage file={card.icon} className="max-h-full max-w-full object-contain" />
+          </span>
+          <span className={`text-center text-[14px] leading-5 font-semibold text-[#444444] transition-opacity duration-150 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
+            {card.text}
+          </span>
+          <motion.span
+            aria-hidden
+            initial={false}
+            animate={matchedNow ? SHINE_ON : SHINE_OFF}
+            transition={SHINE_TRANSITION}
+            style={{ skewX: -20 }}
+            className="pointer-events-none absolute inset-y-0 left-0 w-14 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)]"
+          />
+        </motion.button>
       );
   };
 
@@ -192,7 +177,6 @@ export function MatchScreen() {
       answer={answer}
       ctaLabel="Next"
       ctaDisabled={!done}
-      hint={{ visible: true, onUse: () => setHinted(true) }}
       onContinue={() => router.push(levelTwoHref(7))}
     >
       <ScreenTitle>

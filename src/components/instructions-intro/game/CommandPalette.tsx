@@ -61,7 +61,7 @@ export function CommandPalette({ level, isPlaying, success, addCommand, borderle
                 <Icon className="h-[18px] w-[18px]" strokeWidth={2.8} />
               </span>
               <span
-                className={`shrink-0 font-[Inter,sans-serif] text-[14px] leading-[1.4] font-medium ${
+                className={`shrink-0 font-sans text-[14px] leading-[1.4] font-medium ${
                   chosen ? "text-white" : "text-[#444444] dark:text-white"
                 }`}
               >

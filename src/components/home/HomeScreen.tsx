@@ -12,7 +12,6 @@ import {
   type ReactNode,
   type RefObject,
 } from "react";
-import { Poppins } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { Layout, Fit, Alignment, type Rive } from "@rive-app/canvas";
@@ -38,7 +37,6 @@ import { LevelStartPopup } from "./LevelStartPopup";
 
 configureRiveRuntime();
 
-const poppins = Poppins({ subsets: ["latin"], weight: ["500", "600"] });
 
 /** The Figma frame every coordinate below is taken from. */
 const STAGE_W = 390;
@@ -898,7 +896,7 @@ export function HomeScreen({
 
   return (
     <main
-      className={`${poppins.className} onboarding-light flex h-dvh w-full justify-center overflow-hidden bg-gradient-to-b from-[#F3F4F7] via-[#F3F4F7] to-[#F3F4F7] text-[#1A1C22] dark:from-[#0f1f26] dark:via-[#0f1f26] dark:to-[#0a171d] dark:text-white`}
+      className={`onboarding-light flex h-dvh w-full justify-center overflow-hidden bg-gradient-to-b from-[#F3F4F7] via-[#F3F4F7] to-[#F3F4F7] text-[#1A1C22] dark:from-[#0f1f26] dark:via-[#0f1f26] dark:to-[#0a171d] dark:text-white`}
     >
       <div ref={boxRef} className="relative h-full w-full">
         {/* The scrolling world: every level of the path. */}

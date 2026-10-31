@@ -1,19 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Poppins } from "next/font/google";
 import "./globals.css";
+import { appFont } from "@/lib/fonts";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { InstallHint } from "@/components/pwa/InstallHint";
-
-const poppins = Poppins({
-  variable: "--font-app-poppins",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "Lingo - Instructions Intro",
@@ -42,7 +31,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${appFont.variable} h-full antialiased`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >

@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { preload } from "react-dom";
-import { Poppins } from "next/font/google";
 import {
   configureRiveRuntime,
   REWARD_RIVE_SRC,
@@ -24,12 +23,6 @@ import { GameBoardScreen } from "./GameBoardScreen";
 import { RobuScreen } from "./RobuScreen";
 import { RobuStage } from "./RobuStage";
 import { RobuTalkingContext } from "./RobuTalkingContext";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-  variable: "--font-poppins",
-});
 
 interface InstructionsIntroFlowProps {
   onComplete?: () => void;
@@ -333,7 +326,7 @@ export function InstructionsIntroFlow({
   return (
     <RobuTalkingContext.Provider value={{ startTalking, stopTalking }}>
     <main
-      className={`${poppins.className} h-screen w-full max-w-full overflow-hidden bg-background dark:bg-[#0D1016] text-foreground flex flex-col items-center transition-colors duration-200`}
+      className="h-screen w-full max-w-full overflow-hidden bg-background dark:bg-[#0D1016] text-foreground flex flex-col items-center transition-colors duration-200"
     >
       <div className="w-full max-w-md md:max-w-7xl flex flex-col h-full">
         {/* ── Header (same on every slide) — fixed height, never scrolls or gets covered ── */}

@@ -151,7 +151,7 @@ export function OutOfEnergySheet() {
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 320, damping: 34 }}
             style={{ maxWidth: SHEET_MAX_W }}
-            className="fixed inset-x-0 bottom-0 z-[2001] mx-auto w-full rounded-t-[28px] bg-white px-5 pt-4 pb-[max(12px,env(safe-area-inset-bottom))] font-[family-name:var(--font-app-poppins)] text-[#2C2C2C] shadow-[0_-8px_32px_rgba(0,0,0,0.18)]"
+            className="fixed inset-x-0 bottom-0 z-[2001] mx-auto w-full rounded-t-[28px] bg-white px-5 pt-4 pb-[max(12px,env(safe-area-inset-bottom))] font-sans text-[#2C2C2C] shadow-[0_-8px_32px_rgba(0,0,0,0.18)]"
           >
             <div className="flex justify-end">
               <span className="flex items-center gap-1.5 text-base font-extrabold text-[#2F80ED]">

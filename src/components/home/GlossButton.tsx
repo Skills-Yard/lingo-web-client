@@ -3,7 +3,7 @@
 import { HEADING } from "./homeFonts";
 
 /** A pill button with a gloss strip across its top, and a white disc holding
- * a green play triangle. Needs `fredoka.variable` on an ancestor. */
+ * a green play triangle. */
 export function GlossButton({
   label,
   background,

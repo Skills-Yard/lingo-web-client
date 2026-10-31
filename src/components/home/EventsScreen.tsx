@@ -224,7 +224,7 @@ export function EventsScreen() {
   return (
     <main
       style={{ paddingTop: TOP_MARGIN }}
-      className="font-[family-name:var(--font-app-poppins)] scrollbar-none absolute inset-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white"
+      className="font-sans scrollbar-none absolute inset-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white"
     >
       <div className="mx-auto w-full max-w-[430px] px-4" style={{ paddingBottom: NAV_CLEARANCE }}>
         <motion.header {...reveal(0)} className="flex items-center justify-between">

@@ -42,7 +42,7 @@ export function CareerDetailScreen({
   const [pickedSkill, setPickedSkill] = useState(career.skills[0]);
 
   return (
-    <main className="h-dvh w-full overflow-hidden bg-white font-[family-name:var(--font-app-poppins)] text-[#444444] dark:bg-[#0F1F26] dark:text-white">
+    <main className="h-dvh w-full overflow-hidden bg-white font-sans text-[#444444] dark:bg-[#0F1F26] dark:text-white">
     <div className="relative mx-auto flex h-full w-full max-w-[430px] flex-col">
       <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto">
         {/* The picture, with the back arrow over it. */}

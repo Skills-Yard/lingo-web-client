@@ -130,6 +130,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       voiceover={quiz ? (checked ? undefined : QUIZ_AUDIO) : SAYS_AUDIO}
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
+      // Only the quiz has a hint, and it folds away once the answer is checked.
+      hint={{ visible: quiz && !checked, onUse: () => setHinted(true) }}
       onBack={() => {
         if (!quiz) return router.push(moduleHref(levelOneStep(3) - 1));
         show("says");

@@ -1,2 +1,2 @@
-/** Headings, counters and button labels: the app's Poppins, semibold. */
-export const HEADING = "font-[family-name:var(--font-app-poppins)] font-semibold";
+/** Headings, counters and button labels: the app font (see lib/fonts), semibold. */
+export const HEADING = "font-sans font-semibold";

@@ -4,7 +4,6 @@ import { HexBleed, HEX_BLEED } from "@/components/onboarding/robu/HexBleed";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion, type Transition } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
-import { Fredoka, Nunito, Poppins } from "next/font/google";
 import {
   HEX_ARTBOARD,
   HEX_ONBOARDING_TRIGGER,
@@ -113,23 +112,19 @@ export function OnboardingHex({
 }
 
 
-const fredoka = Fredoka({ subsets: ["latin"], weight: "600" });
-const poppins = Poppins({ subsets: ["latin"], weight: "500" });
-const nunito = Nunito({ subsets: ["latin"], weight: "600" });
-
-// Figma "Frame 201": a 21px / 28px Fredoka title over a 14px body, 6px apart.
+// Figma "Frame 201": a 21px / 28px title over a 14px body, 6px apart.
 const FEEDBACK = {
   correct: {
     title: "Correct! +10 XP",
     titleColor: "text-[#01A17F]",
-    text: `${poppins.className} leading-[1.4]`,
+    text: "font-medium leading-[1.4]",
     panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
     bold: "[&_b]:text-[#04ACAB]",
   },
   wrong: {
     title: "Not quite",
     titleColor: "text-[#D42421]",
-    text: `${nunito.className} leading-5`,
+    text: "font-semibold leading-5",
     panel: "border-[#F2A9AB] bg-[#FDEAEA] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
     bold: "[&_b]:text-[#E5484D]",
   },
@@ -218,7 +213,7 @@ export function FeedbackPanel({
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h2 className={`${fredoka.className} text-[28px] leading-9 font-semibold tracking-[-0.1px] ${look.titleColor}`}>{look.title}</h2>
+          <h2 className={`text-[28px] leading-9 font-semibold tracking-[-0.1px] ${look.titleColor}`}>{look.title}</h2>
           <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.text} ${look.bold}`}>
             {children}
           </p>
