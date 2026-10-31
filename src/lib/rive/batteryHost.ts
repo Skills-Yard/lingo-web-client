@@ -1,6 +1,9 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { BATTERY, configureRiveRuntime } from "./runtime";
 
+// Same as `progressBarHost`: a hot reload would leave a second, unloaded battery beside the one on screen.
+import.meta.turbopackHot?.decline();
+
 /**
  * One battery for the whole session, like the progress bar (see
  * `progressBarHost`): every screen mounts its own header, so a battery created
