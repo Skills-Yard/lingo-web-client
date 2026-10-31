@@ -3,6 +3,9 @@ import { BUTTON, configureRiveRuntime, MODULE_BUTTON } from "./runtime";
 import { writeButtonStyle } from "./buttonStyle";
 import { applyArtboardBleed, artboardBleedBox } from "./bleed";
 
+// Same as `progressBarHost`: a hot reload would leave a second, unloaded button beside the one on screen.
+import.meta.turbopackHot?.decline();
+
 /**
  * One module button for the whole session, like the battery (see
  * `batteryHost`): every module screen mounts its own button, so a canvas made

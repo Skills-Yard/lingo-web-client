@@ -1,6 +1,10 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { BUTTON, configureRiveRuntime, PROGRESS_BAR } from "./runtime";
 
+// The one bar lives in this module. A hot reload would run it again beside the
+// bar already on screen, and every trigger would go to the new, unloaded one.
+import.meta.turbopackHot?.decline();
+
 /**
  * One progress bar for the whole session. Every screen mounts its own header,
  * so a bar created per header would reload and flash on each screen change.
@@ -218,10 +222,15 @@ export const pulseCombo = () => {
 
 /** Fires the view model's trigger `name` — dropped until the file has loaded. */
 export const fireProgressTrigger = (name: string) => {
-  if (!host?.loaded) return;
+  if (!host?.loaded) {
+    if (process.env.NODE_ENV !== "production") console.warn(`[progress bar] "${name}" dropped: the file has not loaded`);
+    return;
+  }
   const trigger = host.rive?.viewModelInstance?.trigger(name);
-  if (trigger) trigger.trigger();
-  else console.warn(`[progress bar] no "${name}" trigger found on the view model`);
+  if (trigger) {
+    trigger.trigger();
+    if (process.env.NODE_ENV !== "production") console.info(`[progress bar] fired "${name}"`);
+  } else console.warn(`[progress bar] no "${name}" trigger found on the view model`);
 };
 
 let loopTimer: ReturnType<typeof setTimeout> | undefined;
