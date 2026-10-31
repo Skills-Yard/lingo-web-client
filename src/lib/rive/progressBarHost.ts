@@ -224,6 +224,31 @@ export const fireProgressTrigger = (name: string) => {
   else console.warn(`[progress bar] no "${name}" trigger found on the view model`);
 };
 
+let loopTimer: ReturnType<typeof setTimeout> | undefined;
+
+const writeLoop = (on: boolean) => {
+  const property = host?.rive?.viewModelInstance?.boolean(PROGRESS_BAR.loopProperty);
+  if (property) property.value = on;
+  else console.warn(`[progress bar] no "${PROGRESS_BAR.loopProperty}" boolean found on the view model`);
+};
+
+/** Switches `strikeLoop` on, with `strikeWidth` at `loopWidth`, and back off after `seconds`. */
+export const startStrikeLoop = (seconds: number) => {
+  if (!host?.loaded) return;
+  clearTimeout(loopTimer);
+  const width = host.rive?.viewModelInstance?.number(PROGRESS_BAR.loopWidthProperty);
+  if (width) width.value = PROGRESS_BAR.loopWidth;
+  else console.warn(`[progress bar] no "${PROGRESS_BAR.loopWidthProperty}" number found on the view model`);
+  writeLoop(true);
+  loopTimer = setTimeout(() => writeLoop(false), seconds * 1000);
+};
+
+/** Switches `strikeLoop` off now, before its time is up. */
+export const stopStrikeLoop = () => {
+  clearTimeout(loopTimer);
+  if (host?.loaded) writeLoop(false);
+};
+
 const RESULT_NAME = { correct: /correct|right|success|win/i, wrong: /wrong|incorrect|fail|lose|error/i } as const;
 
 /** Plays the bar's reaction to a checked answer. Looks on the view model for a

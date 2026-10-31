@@ -29,7 +29,7 @@ function moduleScreen(step: string) {
     // "Meet your robot."
     case "1":
       return <MeetRobotScreen />;
-    // "Let's make something happen!": the Pick Up button, then "Nice! You gave an instruction." on the same screen.
+    // "Let's make it happen!": the Pick Up button, then "Nice! Instruction given!" on the same screen.
     case "2":
       return <GiveCommandScreen />;
     // "What just happened?"
@@ -44,7 +44,7 @@ function moduleScreen(step: string) {
     // "Can you match them?"
     case "6":
       return <MatchScreen />;
-    // "Move the cube in the target area."
+    // "Move cube to target"
     case "7":
       return <TargetScreen />;
     // "Where should the cube go?"
@@ -56,7 +56,7 @@ function moduleScreen(step: string) {
     // "Flip the card to reveal."
     case "10":
       return <FlipCardScreen />;
-    // "What are instructions known as?"
+    // "Instructions are…" (what instructions are known as)
     case "11":
       return <InstructionQuizScreen />;
     // Level 1's screens: the teacher (says, then the quiz), the examples,

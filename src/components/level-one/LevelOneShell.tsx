@@ -25,6 +25,11 @@ const MAX_SCALE = 1.5;
 /** The header's widest on-screen width (px) — 5xl. */
 const HEADER_MAX_W = 1024;
 
+/** Every screen's title starts 79px down the stage (Module 2's `ScreenTitle`: Figma's 116 less the shell's 37). The content column starts 52px down (8px, then the 44px header), so a title in it takes this much margin above. */
+export const TITLE_MARGIN_TOP = 27;
+/** A one-line title's box: 28px at 134%. */
+export const TITLE_HEIGHT = 38;
+
 /** Where Level 1's `n`th screen sits in the module (see `LEVEL_ONE_STEP`). */
 export const levelOneStep = (n: LevelOneStepKey) => LEVEL_ONE_STEP[n];
 
@@ -78,7 +83,12 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
   const review = useReviewProgress(step);
   // With no battery left the screen can't be played: it stays, but takes no taps or keys.
   const outOfEnergy = useOutOfEnergy();
-  useStreakStrikes({ step, answer, withHint: !!hint });
+  const endStrikes = useStreakStrikes({ answer, withHint: !!hint });
+  // A checked screen being left: what the answer played ends here, not on the next screen.
+  const handleContinue = () => {
+    if (answer) endStrikes();
+    onContinue?.();
+  };
   const [muted, toggleMuted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
   const voice = useVoiceover(voiceover, true, muted);
@@ -241,7 +251,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
             ctaLabel={ctaLabel}
             ctaDisabled={ctaDisabled}
             ctaLocked={ctaLocked}
-            onContinue={onContinue}
+            onContinue={handleContinue}
           />
         )}
       </div>

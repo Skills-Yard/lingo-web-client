@@ -6,11 +6,6 @@ export const MODULE_STEPS = 16;
  * The matching screen (6) is not one: it can't be left until every pair is right. */
 export const GRADED_STEPS = [3, 4, 5, 8, 11, 13, 16] as const;
 
-/** The screens that send the progress bar a checked answer (right or wrong), so
- * the streak counts them by it and not when they are left. The matching screen
- * sends one per pair; the last screen is graded for the review but sends none. */
-export const ANSWER_STEPS = [3, 4, 5, 6, 8, 11, 13] as const;
-
 /** Where the screens that began as Level 1's sit in the module, by their
  * number there. Its 1st and 2nd are not in the module, its 7th ("What are
  * instructions known as?") is the module's 11th, and its reward screen is

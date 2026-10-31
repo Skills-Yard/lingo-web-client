@@ -96,7 +96,8 @@ export function MatchScreen() {
     const instruction = INSTRUCTIONS.find((card) => card.id === next.left);
     const right = instruction?.pair === next.right;
     vibrateForAnswer(right);
-    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: right }));
+    const lastPair = matched.length + 2 === INSTRUCTIONS.length * 2;
+    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: right, partial: right && !lastPair }));
     if (right) {
       const pair = [next.left, next.right];
       setMatched((now) => [...now, ...pair]);

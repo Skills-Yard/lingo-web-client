@@ -60,14 +60,14 @@ const CREAM = "bg-[#FFF9F0] dark:bg-[#2A2218]";
 /** Screen 3 — `/module?step=3`. */
 export const WHAT_JUST_HAPPENED: Quiz = {
   title: [[{ text: "What just " }, { text: "happened?", teal: true }]],
-  line: [{ text: "What happened when you selected PICK UP?" }],
+  line: [{ text: "What happened after PICK UP?" }],
   bubble: { width: 178, short: true },
   bubbleTop: 172,
   layout: "list",
   choices: [
     // The right answer shows it again: the cube goes back, and is picked up.
-    { id: "picked", text: "The robot picked up the cube.", icon: "step-4.1.svg", moves: ["reset", "pickUp"] },
-    { id: "table", text: "The robot moved the table.", icon: "step-4.2.svg", moves: ["wrongCube"] },
+    { id: "picked", text: "Robot picked up the cube.", icon: "step-4.1.svg", moves: ["reset", "pickUp"] },
+    { id: "table", text: "Robot moved the table.", icon: "step-4.2.svg", moves: ["wrongCube"] },
     { id: "nothing", text: "Nothing happened.", icon: "step-4.3.svg", moves: ["wrongClaw"] },
   ],
   correctId: "picked",
@@ -81,14 +81,14 @@ export const WHAT_JUST_HAPPENED: Quiz = {
 /** Screen 5 — `/module?step=5`. */
 export const WHAT_NEXT: Quiz = {
   title: [[{ text: "What will happen " }, { text: "next?", teal: true }]],
-  line: [{ text: "The robot has picked up the cube. Now look at the highlighted area." }],
-  bubble: { width: 226 },
+  line: [{ text: "Robot has the cube. Look at the highlighted area." }],
+  bubble: { width: 244 },
   bubbleTop: 172,
   layout: "list",
   choices: [
-    { id: "place", text: "The robot will place the cube in the targeted area.", icon: "step-5.1.svg", moves: ["placeInTarget"] },
-    { id: "higher", text: "The robot will pickup the cube higher.", icon: "step-5.2.svg", moves: ["wrongClaw"] },
-    { id: "right", text: "The robot will move the cube to the right.", icon: "step-5.3.svg", moves: ["wrongCube"] },
+    { id: "place", text: "Place cube in the target", icon: "step-5.1.svg", moves: ["placeInTarget"] },
+    { id: "higher", text: "Lift the cube higher", icon: "step-5.2.svg", moves: ["wrongClaw"] },
+    { id: "right", text: "Move the cube right", icon: "step-5.3.svg", moves: ["wrongCube"] },
   ],
   correctId: "place",
   right: "Yes! The robot will place the cube in the targeted area.",
@@ -101,8 +101,8 @@ export const WHAT_NEXT: Quiz = {
 /** Screen 4 — `/module?step=4`. */
 export const ROBOT_PICKED_UP: Quiz = {
   title: [[{ text: "Robot " }, { text: "has picked it up!", teal: true }]],
-  line: [{ text: "Now, what if we want the robot to release the cube right here?" }],
-  bubble: { width: 200 },
+  line: [{ text: "Which instruction releases the cube here?" }],
+  bubble: { width: 232 },
   bubbleTop: 162,
   layout: "pair",
   choices: [
@@ -140,12 +140,9 @@ export const LETS_PICK_UP: Quiz = {
 
 /** Screen 8 — `/module?step=8`. */
 export const WHERE_SHOULD_GO: Quiz = {
-  title: [
-    [{ text: "Where should" }],
-    [{ text: "the cube go?", teal: true }],
-  ],
-  line: [{ text: "Select an instruction to place the cube in the target area." }],
-  bubble: { width: 192 },
+  title: [[{ text: "Where does " }, { text: "the cube go?", teal: true }]],
+  line: [{ text: "Pick an instruction to reach the target area." }],
+  bubble: { width: 232 },
   bubbleTop: 176,
   layout: "tiles",
   choices: [

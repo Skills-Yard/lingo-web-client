@@ -370,6 +370,11 @@ export const PROGRESS_BAR = {
    * same frame as `correct` / `wrong` (one of two triggers fired together is
    * dropped) and starts with the fill's own tween. */
   strikeDelayMs: 150,
+  /** `strikeLoop` is a boolean, not a trigger: it stays on until it is turned off
+   * by hand, with `strikeWidth` (a number) held at `loopWidth` while it plays. */
+  loopProperty: "strikeLoop",
+  loopWidthProperty: "strikeWidth",
+  loopWidth: 3,
 } as const;
 
 /** The robot arm behind the module's first screens — "CMD_RobotArm" in
@@ -423,7 +428,9 @@ export const COMMAND_ROBOT = {
  * `Battery_SM`. The artboard binds the `Battery` view model: `level` (0-100) is
  * the fill, `unlimited` swaps it for the infinity sign, `darkTheme` is `true`
  * in the dark theme and `false` in light, and the `fullFlash` trigger sparkles
- * across the whole battery. The drawing fills the artboard edge to edge and its
+ * across the whole battery. `spend` plays as a screen takes a unit; `gain`,
+ * `fullFlash` and the `charging` boolean play as a streak gives one back (see
+ * `moduleStreak`). The drawing fills the artboard edge to edge and its
  * empty-state glow spills about 7 units past it (the artboard does not clip),
  * so the canvas gets `bleed` units of room on every side. */
 export const BATTERY = {
@@ -434,6 +441,13 @@ export const BATTERY = {
   unlimitedProperty: "unlimited",
   darkThemeProperty: "darkTheme",
   fullFlashTrigger: "fullFlash",
+  gainTrigger: "gain",
+  spendTrigger: "spend",
+  chargingProperty: "charging",
+  /** How long `charging` stays on after a streak's charge. */
+  chargingMs: 1500,
+  /** `gain` and `fullFlash` are fired this far apart: one of two triggers fired in the same frame is dropped. */
+  triggerGapMs: 150,
   width: 268,
   height: 150,
   bleed: 16,
@@ -480,6 +494,8 @@ export const BUTTON = {
   /** Plays the electric effect, which reaches up to 17 units past the artboard
    * (see `bleed`): fired with every strike and battery charge of the progress bar. */
   electricTrigger: "electric",
+  /** How long the `Electric` clip plays, in seconds. */
+  electricSeconds: 0.67,
   /** Same cadence the old CSS shine used (`animate-button-shine`, 5s). */
   shineEveryMs: 5000,
 } as const;

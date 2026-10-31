@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Maximize, Play, Sparkles } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref, levelOneStep, TITLE_MARGIN_TOP } from "./LevelOneShell";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
 
@@ -30,7 +30,7 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
       onBack={() => router.push(levelOneHref(5))}
       onContinue={onContinue ?? (() => router.push(levelOneHref(8)))}
     >
-      <div className="mt-10 flex w-full shrink-0 flex-col gap-[15px]">
+      <div style={{ marginTop: TITLE_MARGIN_TOP }} className="flex w-full shrink-0 flex-col gap-[15px] text-center">
         <h1 className="text-[28px] leading-[134%] font-semibold text-[#444444] dark:text-white">
           <SpokenText spans={HEADING} timing={HEADING_TIMING} />
         </h1>
