@@ -21,9 +21,16 @@ let host: Host | null = null;
  * `darkTheme`. */
 let wanted: { level: number; unlimited: boolean } | null = null;
 let wantedDarkTheme: boolean | null = null;
-let flashQueued = false;
+/** Triggers asked for before the file had loaded, fired once it has. */
+const queuedTriggers = new Set<string>();
+let chargingTimer: ReturnType<typeof setTimeout> | undefined;
 
-const fireFullFlash = (rive: Rive) => rive.viewModelInstance?.trigger(BATTERY.fullFlashTrigger)?.trigger();
+const fireTrigger = (rive: Rive, name: string) => rive.viewModelInstance?.trigger(name)?.trigger();
+
+const writeCharging = (charging: boolean) => {
+  const property = host?.rive?.viewModelInstance?.boolean(BATTERY.chargingProperty);
+  if (property) property.value = charging;
+};
 
 const applyFill = (rive: Rive) => {
   const instance = rive.viewModelInstance;
@@ -86,10 +93,8 @@ export const getBatteryHost = (): Host => {
       created.loaded = true;
       applyFill(rive);
       applyDarkTheme(rive);
-      if (flashQueued) {
-        flashQueued = false;
-        fireFullFlash(rive);
-      }
+      queuedTriggers.forEach((name) => fireTrigger(rive, name));
+      queuedTriggers.clear();
     },
   });
   return created;
@@ -108,8 +113,20 @@ export const writeBatteryTheme = (darkTheme: boolean) => {
   if (host?.loaded && host.rive) applyDarkTheme(host.rive);
 };
 
-/** Plays the `fullFlash` trigger — held back until the file has loaded. */
-export const flashBattery = () => {
-  if (host?.loaded && host.rive) fireFullFlash(host.rive);
-  else flashQueued = true;
+/** Fires the trigger `name` — held back until the file has loaded. */
+const fireBatteryTrigger = (name: string) => {
+  if (host?.loaded && host.rive) fireTrigger(host.rive, name);
+  else queuedTriggers.add(name);
+};
+
+/** A screen took a unit: plays `spend`. */
+export const spendBattery = () => fireBatteryTrigger(BATTERY.spendTrigger);
+
+/** A streak gave a unit back: plays `gain` and then `fullFlash`, with `charging` on meanwhile. */
+export const chargeBattery = () => {
+  fireBatteryTrigger(BATTERY.gainTrigger);
+  setTimeout(() => fireBatteryTrigger(BATTERY.fullFlashTrigger), BATTERY.triggerGapMs);
+  clearTimeout(chargingTimer);
+  writeCharging(true);
+  chargingTimer = setTimeout(() => writeCharging(false), BATTERY.chargingMs);
 };

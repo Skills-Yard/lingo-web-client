@@ -3,12 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useReducedMotion } from "framer-motion";
-import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref, levelOneStep, TITLE_MARGIN_TOP } from "./LevelOneShell";
 import { useLevelVoice } from "./LevelVoice";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
 
-const HEADING: TextSpan[] = [{ text: "Some " }, { text: "examples", highlight: true }, { text: " of instruction" }];
+const HEADING: TextSpan[] = [{ text: "Examples", highlight: true }, { text: " of instruction" }];
 
 const EXAMPLES = [
   { id: "parent", src: "/images/level-one/example-parent.png", label: "Parent eats the food" },
@@ -48,7 +48,7 @@ const slotOf = (index: number, active: number) => {
 };
 
 /**
- * `/module?step=14` — "Some examples of instruction": a looping carousel of
+ * `/module?step=14` — "Examples of instruction": a looping carousel of
  * example cards. The active card is centred with its neighbours peeking in
  * from each side; swipe, tap a neighbour or use the arrow keys to move.
  */
@@ -100,7 +100,10 @@ function ExamplesCarousel() {
 
   return (
     <>
-      <h1 className="mt-5 w-[264px] shrink-0 text-center text-[28px] leading-9 font-semibold text-[#444444] dark:text-white">
+      <h1
+        style={{ marginTop: TITLE_MARGIN_TOP }}
+        className="w-full shrink-0 text-center text-[28px] leading-[134%] font-semibold text-[#444444] dark:text-white"
+      >
         <SpokenText spans={HEADING} />
       </h1>
 

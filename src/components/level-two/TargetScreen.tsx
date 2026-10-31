@@ -11,7 +11,7 @@ const DIALOGUE_TOP = 182;
 const BUBBLE = { width: 167 };
 
 /**
- * `/module?step=7` — "Move the cube in the target area.": the robot
+ * `/module?step=7` — "Move cube to target": the robot
  * holds the cube, and the target box is lit up with its label.
  */
 export function TargetScreen() {
@@ -19,9 +19,7 @@ export function TargetScreen() {
   return (
     <LevelTwoShell step={7} scene={<RobotBackdrop below={robotBelowDialogue(DIALOGUE_TOP, BUBBLE)} pose="holding" hint targetLabel="TARGET AREA" />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(8))}>
       <ScreenTitle>
-        Move the cube in the
-        <br />
-        <Teal>target area.</Teal>
+        Move cube <Teal>to target</Teal>
       </ScreenTitle>
       <CentredRow top={stageTop(DIALOGUE_TOP)}>
         <HexBubble entryKey="target" hex="left" size={BUBBLE} line={[{ text: "The robot is holding the cube." }]} />

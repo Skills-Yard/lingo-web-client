@@ -61,9 +61,8 @@ const LEVEL = lesson1Level;
 
 /** The Level 1 heading, in the pieces that are typed (the accent is teal). */
 const HEADING_TEXT_PARTS = [
-  { text: "Let’s give some ", accent: false },
-  { text: "command", accent: true },
-  { text: " to Hex", accent: false },
+  { text: "Command", accent: true },
+  { text: " Hex", accent: false },
 ] as const;
 /** Each part with the number of letters typed before it. */
 const HEADING_PARTS = HEADING_TEXT_PARTS.map((part, i) => ({
@@ -242,12 +241,13 @@ export function GameBoardScreen({
         // Phone width at most: Hex's slot is a share of this row, so on a wide
         // desktop he would otherwise outgrow the screen.
         <div className="relative top-3 left-1/2 flex h-[74px] w-[calc(min(var(--stage-w),560px)-50px)] shrink-0 -translate-x-1/2 items-start">
-          {/* The heading sits over Hex's box (it's above him). */}
-          <h1 className="relative z-30 mt-[5px] w-[72%] min-w-0 text-[28px] leading-8 font-semibold text-[#2C2C2C] dark:text-white">
+          {/* The heading sits over Hex's box (it's above him). Hex stands beside it, so
+            it stays at the left; its top is where every other screen's title starts
+            (79px down the stage: this row is at 84). */}
+          <h1 className="relative z-30 -mt-[5px] w-[72%] min-w-0 text-[28px] leading-[134%] font-semibold text-[#2C2C2C] dark:text-white">
             {HEADING_WORDS.map((word, w) => (
               <span key={w}>
-                {/* "command" always starts the second line. */}
-                {word[0].accent && !HEADING_WORDS[w - 1]?.[0].accent ? <br /> : w > 0 && " "}
+                {w > 0 && " "}
                 <span className="inline-block whitespace-nowrap">
                   {word.map(({ char, accent, index }) => (
                     // Typed in one letter at a time; hidden letters keep their

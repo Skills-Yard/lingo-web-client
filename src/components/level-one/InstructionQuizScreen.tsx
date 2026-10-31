@@ -17,7 +17,7 @@ import { BUTTON_DROP } from "./ActionRow";
 import { FeedbackPanel, XpPop } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
 import { FILL_S, HintFloat } from "./HintFloat";
-import { LevelOneShell, levelOneHref } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref, TITLE_HEIGHT, TITLE_MARGIN_TOP } from "./LevelOneShell";
 import { optionState } from "./TeacherFlow";
 
 /** Its place in the module; Level 1's screens carry on from the next one. */
@@ -44,7 +44,7 @@ const LOOK = {
 } as const;
 
 /**
- * `/module?step=11` — "What are instructions known as?": a single-answer quiz
+ * `/module?step=11` — "Instructions are…" (what instructions are known as): a single-answer quiz
  * with Hex between the question and the options. Check locks the answer and
  * marks it right (green) or wrong (red); Continue follows.
  */
@@ -112,8 +112,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/images/level-one/q-badge.png" alt="Question" draggable={false} className="h-[26px] w-[30px] object-contain" />
         </span>
-        <h1 className="text-[28px] leading-9 font-semibold text-[#2C2C2C] dark:text-white">
-          What are <span className="text-level-gradient">instructions</span> known as?
+        <h1 className="text-[28px] leading-[134%] font-semibold whitespace-nowrap text-[#2C2C2C] dark:text-white">
+          <span className="text-level-gradient">Instructions</span> are…
         </h1>
       </motion.div>
 
@@ -125,7 +125,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         aria-hidden
         className="pointer-events-none w-[180px] shrink-0"
         initial={false}
-        animate={checked ? { height: 0, marginTop: 0 } : { height: 150, marginTop: 8 }}
+        // 27px taller than it was: the one-line title above takes that much less, so the options stay where they were.
+        animate={checked ? { height: 0, marginTop: 0 } : { height: 177, marginTop: 8 }}
         // The very spring the result panel slides up with (see FeedbackPanel), so
         // the options rise exactly as the panel arrives — it looks like the
         // panel pushing them up.

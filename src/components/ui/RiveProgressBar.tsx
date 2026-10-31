@@ -15,8 +15,10 @@ const TWEEN_MS = 700;
 const TWEEN_DELAY_MS = 150;
 const easeOut = (t: number) => 1 - (1 - t) ** 3;
 
-/** A checked answer. A new `id` fires the trigger again, even for the same result. */
-export type AnswerResult = { id: number; correct: boolean };
+/** A checked answer. A new `id` fires the trigger again, even for the same result.
+ * `partial`: a right answer with more to come on its screen (a matching pair that
+ * isn't the last), which doesn't yet grow the module's run (see `moduleStreak`). */
+export type AnswerResult = { id: number; correct: boolean; partial?: boolean };
 
 type RiveProgressBarProps = {
   /** Fill, 0-100 (%). */

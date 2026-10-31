@@ -28,10 +28,10 @@ const HEX_SETTLE_MS = 900;
 const PANEL_MIN_HEIGHT = 844 - 593;
 
 /**
- * `/module?step=2` — "Let's make something happen!": Hex asks what to
+ * `/module?step=2` — "Let's make it happen!": Hex asks what to
  * tell the robot, the main button ("Pick Up", our usual one) gives the
  * instruction and the cube is picked up. Then, on this same screen, the title
- * becomes "Nice! You gave an instruction.", a panel with Hex says so above the
+ * becomes "Nice! Instruction given!", a panel with Hex says so above the
  * button, and the button becomes "Next". The hint points at Hex's question. The
  * button row stays as it is throughout (the hint stays, the button keeps its
  * look); while the cube is being picked up the button just takes no clicks.
@@ -67,15 +67,11 @@ export function GiveCommandScreen() {
     >
       {nice ? (
         <ScreenTitle key="nice">
-          Nice!
-          <br />
-          <Teal>You gave an instruction.</Teal>
+          Nice! <Teal>Instruction given!</Teal>
         </ScreenTitle>
       ) : (
         <ScreenTitle key="give">
-          Let&apos;s make
-          <br />
-          <Teal>something happen!</Teal>
+          Let&apos;s make <Teal>it happen!</Teal>
         </ScreenTitle>
       )}
       {!given && (
@@ -85,7 +81,7 @@ export function GiveCommandScreen() {
               entryKey="give-command"
               hex="left"
               size={{ width: 240 }}
-              line={[{ text: "Cube is right in front of the robot. What instruction should we give it?" }]}
+              line={[{ text: "What instruction should we give the robot?" }]}
             />
           </HintFloat>
         </CentredRow>

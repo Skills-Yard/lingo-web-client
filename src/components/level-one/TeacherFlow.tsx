@@ -17,18 +17,17 @@ import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { moduleHref } from "@/lib/routes";
-import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
+import { LevelOneShell, levelOneHref, levelOneStep, TITLE_HEIGHT, TITLE_MARGIN_TOP } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
 
 const CORRECT_ID = "giving";
 
 const QUIZ_HEADING: TextSpan[] = [{ text: "What", highlight: true }, { text: " teacher is doing?" }];
-const SAYS_LINE_1: TextSpan[] = [{ text: "Imagine your", highlight: true }];
-const SAYS_LINE_2: TextSpan[] = [{ text: "Teacher Says.." }];
-/** When Let / Suppose / Teacher / Says are spoken in screen_3_audio.mpeg (4.03s long), measured from the clip. */
+const SAYS_HEADING: TextSpan[] = [{ text: "Imagine ", highlight: true }, { text: "Teacher Says.." }];
+/** When Let / Suppose / Teacher / Says are spoken in screen_3_audio.mpeg (4.03s long), measured from the clip. "Imagine" takes the time of "Let Suppose". */
 const SAYS_CLIP_SECONDS = 4.032;
-const SAYS_WORD_TIMES = [[0.14, 0.34], [0.34, 0.83], [1.47, 1.8], [1.8, 2.17]] as const;
+const SAYS_WORD_TIMES = [[0.14, 0.83], [1.47, 1.8], [1.8, 2.17]] as const;
 const SAYS_AUDIO = ["/audios/screen_3_audio.mpeg"];
 /** Just the question; the options are not read out. */
 const QUIZ_AUDIO = ["/audios/screen_4/screen_4_audio_trim.m4a"];
@@ -39,8 +38,9 @@ const OPTIONS = [
 ] as const;
 
 // The teacher picture is one element across both screens: on the quiz it is
-// cropped from the bottom and moves up, to make room for the options.
-const IMAGE_GAP: Record<Step, number> = { says: 20, quiz: 20 };
+// cropped from the bottom, to make room for the options. It starts at the same
+// place on both (the title is one line on both, at the same height).
+const IMAGE_GAP: Record<Step, number> = { says: 11, quiz: 11 };
 // Frame top 163 + 240 = 403, which leaves 24px above the options at 427.
 const IMAGE_HEIGHT: Record<Step, number> = { says: 358, quiz: 240 };
 // After Check the picture is cropped further, so the options ride up and stay
@@ -82,8 +82,6 @@ export const LOOKS: Record<OptionState, { edge: string; card: string }> = {
 /** The result panel's own spring (see FeedbackPanel). */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 const MORPH = { duration: 0.8, ease: [0.65, 0, 0.35, 1] } as const;
-/** Heading box heights: two lines on "Teacher Says", one on the quiz. */
-const TITLE_HEIGHT: Record<Step, number> = { says: 92, quiz: 36 };
 
 /**
  * Level 1's screens 2 and 3 ("Let Suppose / Teacher Says", then "What
@@ -162,14 +160,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         else router.push(nextAfter(levelOneStep(4), selectedId === CORRECT_ID, levelOneHref(5)));
       }}
     >
-      {/* The heading box resizes with the picture, so nothing jumps when the
-        two headings swap: they cross-fade inside it while it animates. */}
-      <motion.div
-        initial={false}
-        animate={{ height: TITLE_HEIGHT[step] }}
-        transition={MORPH}
-        className="relative mt-5 w-full shrink-0"
-      >
+      {/* Both headings are one line at the same place: they cross-fade inside this box. */}
+      <div style={{ marginTop: TITLE_MARGIN_TOP, height: TITLE_HEIGHT }} className="relative w-full shrink-0">
         <AnimatePresence initial={false}>
           {quiz ? (
             <motion.h1
@@ -178,7 +170,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute top-0 left-1/2 -translate-x-1/2 text-center text-[28px] leading-9 font-semibold text-[#2C2C2C] dark:text-white"
+              className="absolute top-0 left-1/2 -translate-x-1/2 text-center text-[28px] leading-[134%] font-semibold text-[#2C2C2C] dark:text-white"
               style={{ width: COLUMN_W }}
             >
               <SpokenText spans={QUIZ_HEADING} />
@@ -190,18 +182,13 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute inset-x-0 top-0 flex flex-col items-center gap-3.5 text-center"
+              className="absolute inset-x-0 top-0 text-center text-[28px] leading-[134%] font-semibold text-[#444444] dark:text-white"
             >
-              <span className="text-[28px] leading-[1.34] font-semibold">
-                <SpokenText spans={SAYS_LINE_1} timing={{ clipSeconds: SAYS_CLIP_SECONDS, times: SAYS_WORD_TIMES, before: 0 }} />
-              </span>
-              <span className="text-[40px] leading-none font-semibold text-[#444444] dark:text-white">
-                <SpokenText spans={SAYS_LINE_2} timing={{ clipSeconds: SAYS_CLIP_SECONDS, times: SAYS_WORD_TIMES, before: 2 }} />
-              </span>
+              <SpokenText spans={SAYS_HEADING} timing={{ clipSeconds: SAYS_CLIP_SECONDS, times: SAYS_WORD_TIMES, before: 0 }} />
             </motion.h1>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
 
       {/* The picture keeps its width and its place from the top across both
         screens; on the quiz it is cropped from the bottom and moves up to

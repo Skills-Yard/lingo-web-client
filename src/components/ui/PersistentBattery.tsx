@@ -3,12 +3,12 @@
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { chargeBatteryScreen, useBattery } from "@/components/home/batteryStore";
 import { useTheme } from "@/context/ThemeContext";
-import { flashBattery, getBatteryHost, resizeBattery, writeBattery, writeBatteryTheme } from "@/lib/rive/batteryHost";
+import { getBatteryHost, resizeBattery, spendBattery, writeBattery, writeBatteryTheme } from "@/lib/rive/batteryHost";
 import { BATTERY } from "@/lib/rive/runtime";
 
 type PersistentBatteryProps = {
   /** The lesson screen this is on. Arriving at a screen that hasn't been paid
-   * for yet spends its share of battery, and flashes it. Leave out where the
+   * for yet spends its share of battery, and plays `spend`. Leave out where the
    * battery is only shown. */
   step?: number;
   /** Give it a width; the height follows the artboard. */
@@ -48,7 +48,7 @@ export function PersistentBattery({ step, className = "", level: shownLevel }: P
   }, [darkTheme]);
 
   useEffect(() => {
-    if (step !== undefined && chargeBatteryScreen(step)) flashBattery();
+    if (step !== undefined && chargeBatteryScreen(step)) spendBattery();
   }, [step]);
 
   return (

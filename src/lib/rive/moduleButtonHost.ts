@@ -29,6 +29,12 @@ let stretched = false;
 let shineQueued = false;
 let revealQueued = false;
 
+/** While held, the screens' buttons take no clicks (see `moduleButtonHeld`); the
+ * artboard keeps drawing `wanted` as it is. */
+let held = false;
+let holdTimer: ReturnType<typeof setTimeout> | undefined;
+const holdListeners = new Set<() => void>();
+
 const fireTrigger = (rive: Rive, name: string) => rive.viewModelInstance?.trigger(name)?.trigger();
 
 /** Hidden until the canvas has painted `wanted` itself: on load Rive paints the
@@ -103,6 +109,33 @@ export const setModuleButtonStretch = (next: boolean) => {
 export const writeModuleButton = (next: ModuleButtonData) => {
   wanted = next;
   if (host?.loaded && host.rive) apply(host, host.rive);
+};
+
+export const subscribeModuleButtonHold = (listener: () => void) => {
+  holdListeners.add(listener);
+  return () => {
+    holdListeners.delete(listener);
+  };
+};
+export const moduleButtonHeld = () => held;
+
+const setHeld = (next: boolean) => {
+  if (held === next) return;
+  held = next;
+  holdListeners.forEach((listener) => listener());
+};
+
+/** Holds the button for `ms`: it takes no clicks, and looks as it did. */
+export const holdModuleButton = (ms: number) => {
+  clearTimeout(holdTimer);
+  setHeld(true);
+  holdTimer = setTimeout(() => setHeld(false), ms);
+};
+
+/** Ends the hold now. */
+export const releaseModuleButton = () => {
+  clearTimeout(holdTimer);
+  setHeld(false);
 };
 
 /** Plays the `shine` trigger — held back until the file has loaded. */
