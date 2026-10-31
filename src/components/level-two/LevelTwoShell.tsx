@@ -43,8 +43,8 @@ export function LevelTwoShell({ step, scene, children, ...shell }: LevelTwoShell
 /** A Figma `top` (frame px) on this shell's stage — the header sits higher here than in Figma. */
 export const stageTop = (figmaTop: number) => figmaTop - FRAME_TOP_SHIFT;
 
-/** The shell's Button3D box is this tall for each px of its width (371 x 113). */
-const BUTTON_RATIO = 113 / 371;
+/** The shell's Button3D box is this tall for each px of its width (360 x 73). */
+const BUTTON_RATIO = BUTTON.height / BUTTON.width;
 /** The drawn button's height, as a share of its box (the rest is empty margin). */
 const BUTTON_DRAWN = BUTTON.face.bottom - BUTTON.face.top;
 

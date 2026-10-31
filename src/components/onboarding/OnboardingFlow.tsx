@@ -19,7 +19,7 @@ import { StreakScreen } from "./StreakScreen";
 import { NameScreen } from "./NameScreen";
 import { TimeSliderScreen } from "./TimeSliderScreen";
 import type { HexExitRequest } from "./robu/hexExit";
-import { HEX_ENTER_STYLE, HEX_ENTRY_STYLE_BY_STEP, HEX_EXIT_BOTTOM_MS, HEX_EXIT_MS } from "@/lib/rive/runtime";
+import { BUTTON, HEX_ENTER_STYLE, HEX_ENTRY_STYLE_BY_STEP, HEX_EXIT_BOTTOM_MS, HEX_EXIT_MS } from "@/lib/rive/runtime";
 import { FoxStageProvider, PersistentFox, useFoxStage } from "./foxStage";
 import { HexBackground } from "./robu/HexBackground";
 import { DevPanel } from "./DevPanel";
@@ -599,14 +599,18 @@ export function OnboardingFlow({
                 inert={hideCta}
                 className={hideCta ? "pointer-events-none" : undefined}
               >
-                <Button3D
-                  onClick={handleCta}
-                  onPress={playClickSound}
-                  disabled={ctaDisabled || hideCta}
-                  className="w-full"
-                >
-                  {ctaLabel}
-                </Button3D>
+                {/* The footer is laid out around the room the old artboard left
+                  around the button (see `BUTTON.room`). */}
+                <div style={{ paddingTop: BUTTON.room.onboarding.top, paddingBottom: BUTTON.room.onboarding.bottom }}>
+                  <Button3D
+                    onClick={handleCta}
+                    onPress={playClickSound}
+                    disabled={ctaDisabled || hideCta}
+                    className="w-full"
+                  >
+                    {ctaLabel}
+                  </Button3D>
+                </div>
               </motion.div>
               {/* Skip sits over the CTA's (faded-out) box, so the two swap in
                 place without the footer changing height. */}

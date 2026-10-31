@@ -1,12 +1,16 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { BUTTON, configureRiveRuntime, MODULE_BUTTON } from "./runtime";
+import { writeButtonStyle } from "./buttonStyle";
+import { applyArtboardBleed, artboardBleedBox } from "./bleed";
 
 /**
  * One module button for the whole session, like the battery (see
  * `batteryHost`): every module screen mounts its own button, so a canvas made
  * per button would reload on each screen change and show something else before
  * the real art. The canvas lives here and each screen's button just moves it
- * into its slot and writes its own data (label and state).
+ * into its slot and writes its own data (label and state). The slot is exactly
+ * the artboard's size; the canvas reaches `BUTTON.bleed` units past it on every
+ * side, so what the art draws outside the artboard isn't clipped.
  */
 type Host = {
   element: HTMLDivElement;
@@ -24,11 +28,6 @@ let wanted: ModuleButtonData | null = null;
 let stretched = false;
 let shineQueued = false;
 let revealQueued = false;
-
-const applyFit = (rive: Rive) => {
-  const fit = stretched ? Fit.Fill : Fit.Contain;
-  if (rive.layout.fit !== fit) rive.layout = rive.layout.copyWith({ fit });
-};
 
 const fireTrigger = (rive: Rive, name: string) => rive.viewModelInstance?.trigger(name)?.trigger();
 
@@ -48,6 +47,7 @@ const reveal = ({ element }: Host) => {
 const apply = (loadedHost: Host, rive: Rive) => {
   const instance = rive.viewModelInstance;
   if (!instance || !wanted) return;
+  writeButtonStyle(instance, BUTTON.style.module);
   const label = instance.string(BUTTON.labelProperty);
   if (label) label.value = wanted.label;
   const state = instance.number(MODULE_BUTTON.stateProperty);
@@ -64,22 +64,23 @@ export const getModuleButtonHost = (): Host => {
   const element = document.createElement("div");
   element.style.cssText = "position:relative;width:100%;height:100%;opacity:0";
   const canvas = document.createElement("canvas");
-  canvas.style.cssText = "position:absolute;display:block;inset:0;width:100%;height:100%";
+  canvas.style.cssText = "position:absolute;display:block";
+  Object.assign(canvas.style, artboardBleedBox(BUTTON, BUTTON.bleed));
   element.appendChild(canvas);
   const created: Host = { element, rive: null, loaded: false };
   host = created;
   created.rive = new Rive({
     src: BUTTON.src,
     canvas,
-    artboard: MODULE_BUTTON.artboard,
-    stateMachine: MODULE_BUTTON.stateMachine,
+    artboard: BUTTON.artboard,
+    stateMachine: BUTTON.stateMachine,
     autoplay: true,
     autoBind: true,
     layout: new Layout({ fit: stretched ? Fit.Fill : Fit.Contain, alignment: Alignment.Center }),
     onLoad: () => {
       const rive = created.rive;
       if (!rive) return;
-      applyFit(rive);
+      applyArtboardBleed(rive, canvas, BUTTON, BUTTON.bleed, () => (stretched ? Fit.Fill : Fit.Contain));
       rive.resizeDrawingSurfaceToCanvas();
       created.loaded = true;
       apply(created, rive);
@@ -95,10 +96,10 @@ export const getModuleButtonHost = (): Host => {
 /** Makes the artwork fill its slot (`true`) or fit inside it. Safe to call before the file has loaded. */
 export const setModuleButtonStretch = (next: boolean) => {
   stretched = next;
-  if (host?.rive) applyFit(host.rive);
+  if (host?.loaded && host.rive) host.rive.resizeToCanvas();
 };
 
-/** Sets the button's label and `buttonState`. */
+/** Sets the button's label and `buttonState` (the module look is set with them). */
 export const writeModuleButton = (next: ModuleButtonData) => {
   wanted = next;
   if (host?.loaded && host.rive) apply(host, host.rive);
@@ -108,6 +109,12 @@ export const writeModuleButton = (next: ModuleButtonData) => {
 export const sweepModuleButtonShine = () => {
   if (host?.loaded && host.rive) fireTrigger(host.rive, BUTTON.shineTrigger);
   else shineQueued = true;
+};
+
+/** Plays the `electric` trigger — dropped until the file has loaded, since a late
+ * one would play after the strike it goes with is long over. */
+export const electrifyModuleButton = () => {
+  if (host?.loaded && host.rive) fireTrigger(host.rive, BUTTON.electricTrigger);
 };
 
 /** Plays the `click` trigger (the press). */

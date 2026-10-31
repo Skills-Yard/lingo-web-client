@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft } from "lucide-react";
 import { Button3D } from "@/components/ui/Button3D";
+import { BUTTON } from "@/lib/rive/runtime";
 import type { Career } from "./careersData";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -101,7 +102,9 @@ export function CareerDetailScreen({
       </div>
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-white via-white/90 to-transparent dark:from-[#0F1F26] dark:via-[#0F1F26]/90 px-4 pb-[max(env(safe-area-inset-bottom),24px)] pt-10">
-        <div className="pointer-events-auto">
+        {/* The padding is laid out around the room the old button artboard left
+          around the button (see `BUTTON.room`). */}
+        <div className="pointer-events-auto" style={{ paddingTop: BUTTON.room.module.top, paddingBottom: BUTTON.room.module.bottom }}>
           <Button3D riveVariant="module" onClick={onStart} className="w-full">
             Start this career
           </Button3D>

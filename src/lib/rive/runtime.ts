@@ -359,6 +359,10 @@ export const PROGRESS_BAR = {
   /** Number on the view model, held at `screenHeightValue` for every screen. */
   screenHeightProperty: "screenH",
   screenHeightValue: -1,
+  /** CSS px the canvas stops short of the screen's bottom when no button
+   * artboard is on screen. With one, it stops at the artboard's top (see
+   * `BUTTON.boxAttribute`), so nothing is drawn over the button. */
+  bottomClearance: 113,
   /** Triggers on the view model, fired when an answer is checked. */
   correctTrigger: "correct",
   wrongTrigger: "wrong",
@@ -435,28 +439,53 @@ export const BATTERY = {
   bleed: 16,
 } as const;
 
-/** The brand CTA button — `btn-click.riv`. Its artboards are 371 x 113 and bind
- * the `Button` view model: `label` is the text, and the `shine` and `click`
- * triggers play the highlight sweep and the press. */
+/** The brand CTA button — "AllButton" in `progressBar.riv` (360 x 73), played by
+ * `ModuleButton_SM`. One artboard draws every button in the app: the `switchStyle`
+ * number on its `AllButtonVM` view model picks the look (`style`). The artboard is
+ * cropped to the drawn button, so the face fills it edge to edge. `label` is the
+ * text, and the `shine` and `click` triggers play the highlight sweep and the press. */
 export const BUTTON = {
-  src: "/animations/btn-click.riv?v=3",
-  width: 371,
-  height: 113,
-  /** Where the drawn button sits in the artboard, as shares of its height: the
-   * rest above and below it is empty margin. */
-  face: { top: 0.168, bottom: 0.819 },
+  src: PROGRESS_BAR.src,
+  artboard: "AllButton",
+  stateMachine: "ModuleButton_SM",
+  width: 360,
+  height: 73,
+  /** Where the drawn button sits in the artboard, as shares of its height. */
+  face: { top: 0, bottom: 1 },
+  /** Set on every button's box, which is the artboard's own rect (squeezed to
+   * fit beside the hint), so the progress bar can end its canvas at its top. */
+  boxAttribute: "data-button-artboard",
+  /** The art reaches past the artboard (the face's lip 5 units below it, the
+   * `electric` effect up to 17 on every side), and Rive clips at the canvas edge,
+   * so the canvas gets this many artboard units of room on every side while the
+   * button's box stays exactly the artboard's size (see `applyArtboardBleed`). */
+  bleed: 20,
+  /** The empty room the previous artboards (371 x 113, one per look) left above
+   * and below the drawn button, as CSS shares of the button's width. A layout
+   * that was built around that room pads the button with it. */
+  room: {
+    module: { top: "5.12%", bottom: "5.51%" },
+    onboarding: { top: "6.47%", bottom: "3.23%" },
+  },
   labelProperty: "label",
+  styleProperty: "switchStyle",
+  style: { module: 0, onboarding: 1 },
+  /** The artboard starts in the module look and morphs into the onboarding one
+   * when `switchStyle` is set (it takes 0.25s of Rive's time): a button that is
+   * drawn per screen stays hidden for this long. A module button's `buttonState`
+   * changes at once. */
+  styleSwitchSeconds: 0.3,
   shineTrigger: "shine",
   clickTrigger: "click",
+  /** Plays the electric effect, which reaches up to 17 units past the artboard
+   * (see `bleed`): fired with every strike and battery charge of the progress bar. */
+  electricTrigger: "electric",
   /** Same cadence the old CSS shine used (`animate-button-shine`, 5s). */
   shineEveryMs: 5000,
 } as const;
 
-/** The "ModuleButton" artboard every module screen shares, played by
- * `ModuleButton_SM`. Its `buttonState` number picks the art. */
+/** The module look (`BUTTON.style.module`): its `buttonState` number picks the art. */
 export const MODULE_BUTTON = {
-  artboard: "ModuleButton",
-  stateMachine: "ModuleButton_SM",
   stateProperty: "buttonState",
   state: { disabled: 0, wrong: 2, correct: 3, enabled: 4 },
 } as const;

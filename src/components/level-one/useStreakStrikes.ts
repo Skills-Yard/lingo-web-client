@@ -8,12 +8,18 @@ import {
   openScreen,
   type StreakBeat,
 } from "@/lib/moduleStreak";
+import { electrifyModuleButton } from "@/lib/rive/moduleButtonHost";
 import { fireProgressTrigger } from "@/lib/rive/progressBarHost";
 import { PROGRESS_BAR } from "@/lib/rive/runtime";
 
+/** A strike on the bar and a battery charge each come with the button's electric effect. */
 const playBeat = ({ trigger, battery }: StreakBeat) => {
   if (battery) addBatteryUnits(BATTERY_UNITS);
-  if (trigger) setTimeout(() => fireProgressTrigger(trigger), PROGRESS_BAR.strikeDelayMs);
+  if (!trigger && !battery) return;
+  setTimeout(() => {
+    if (trigger) fireProgressTrigger(trigger);
+    electrifyModuleButton();
+  }, PROGRESS_BAR.strikeDelayMs);
 };
 
 type StreakStrikesOptions = {

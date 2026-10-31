@@ -48,3 +48,60 @@ export const applyCanvasBleed = (
     Object.assign(rive, { resizeToCanvas });
   };
 };
+
+type ArtboardSize = { width: number; height: number };
+
+/**
+ * The box a canvas takes in its slot when it reaches `bleed` artboard units past
+ * the slot on every side (the slot being exactly the artboard's size). In
+ * percentages of the slot, so it follows the slot however it is sized or squeezed.
+ */
+export const artboardBleedBox = ({ width, height }: ArtboardSize, bleed: number) => {
+  const bleedX = (bleed / width) * 100;
+  const bleedY = (bleed / height) * 100;
+  return { left: `${-bleedX}%`, top: `${-bleedY}%`, width: `${100 + 2 * bleedX}%`, height: `${100 + 2 * bleedY}%` };
+};
+
+/**
+ * `applyCanvasBleed` for a canvas shaped by `artboardBleedBox`: the artboard is
+ * pinned to the slot in the middle of it — `Contain`ed there, or squeezed to it
+ * when `fit` says `Fill` — and the `bleed` ring around it is left free for
+ * whatever the artboard draws past its edge. The frame is re-applied after every
+ * resize (Rive resets it to the whole canvas), and calling `resizeToCanvas()`
+ * re-applies it after a change of `fit`. Returns the cleanup.
+ */
+export const applyArtboardBleed = (
+  rive: Rive,
+  canvas: HTMLCanvasElement,
+  artboard: ArtboardSize,
+  bleed: number,
+  fit: () => Fit = () => Fit.Contain,
+): (() => void) => {
+  const resizeToCanvas = rive.resizeToCanvas.bind(rive);
+  const applyFrame = () => {
+    const { width, height } = canvas;
+    // An unsized canvas (not in the page yet) has no frame to set; and a layout
+    // with a zero `maxX` / `maxY` makes Rive call `resizeToCanvas()` again.
+    if (!width || !height) return;
+    const marginX = (width * bleed) / (artboard.width + 2 * bleed);
+    const marginY = (height * bleed) / (artboard.height + 2 * bleed);
+    rive.layout = rive.layout.copyWith({
+      fit: fit(),
+      alignment: Alignment.Center,
+      minX: marginX,
+      minY: marginY,
+      maxX: width - marginX,
+      maxY: height - marginY,
+    });
+  };
+  Object.assign(rive, {
+    resizeToCanvas: () => {
+      resizeToCanvas();
+      applyFrame();
+    },
+  });
+  applyFrame();
+  return () => {
+    Object.assign(rive, { resizeToCanvas });
+  };
+};

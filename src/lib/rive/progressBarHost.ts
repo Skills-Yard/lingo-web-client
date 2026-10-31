@@ -10,8 +10,9 @@ import { BUTTON, configureRiveRuntime, PROGRESS_BAR } from "./runtime";
  * Rive clips what it draws at the canvas edge, and the strikes reach well past
  * the artboard. So the canvas is as big as the screen, not the slot: it hangs
  * from the slot out to the screen's edges, and the artboard is drawn in the
- * slot's place on it, at the artboard's own proportions. At the bottom it stops
- * a button artboard's height short, so nothing is drawn over the Continue button.
+ * slot's place on it, at the artboard's own proportions. At the bottom it is cut
+ * exactly where the button's artboard starts (`BUTTON.boxAttribute`), so nothing
+ * is drawn over the button and nothing stops short of it.
  */
 const FALLBACK_ASPECT = 8;
 
@@ -68,7 +69,17 @@ const applyFrame = () => {
   });
 };
 
-/** Sizes the canvas to the screen less the button's room at the bottom, hung from the slot, and points the artboard at the slot. */
+/** The top (on screen) of the lowest button artboard, or null when no button is on screen. */
+const buttonArtboardTop = (): number | null => {
+  let lowest: number | null = null;
+  document.querySelectorAll(`[${BUTTON.boxAttribute}]`).forEach((box) => {
+    const { top, height } = box.getBoundingClientRect();
+    if (height > 0 && (lowest === null || top > lowest)) lowest = top;
+  });
+  return lowest;
+};
+
+/** Sizes the canvas to the screen, hung from the slot, cut where the button starts, and points the artboard at the slot. */
 const placeCanvas = () => {
   const current = host;
   const slot = current?.slot;
@@ -78,8 +89,17 @@ const placeCanvas = () => {
   const scale = slot.offsetWidth ? rect.width / slot.offsetWidth : 1;
   if (!scale) return;
   placement = { x: rect.left / scale, y: rect.top / scale, width: rect.width / scale, height: rect.height / scale };
-  const size = { width: `${window.innerWidth / scale}px`, height: `${window.innerHeight / scale - BUTTON.height}px` };
-  Object.assign(current.canvas.style, { left: `${-placement.x}px`, top: `${-placement.y}px`, ...size });
+  const size = { width: `${window.innerWidth / scale}px`, height: `${window.innerHeight / scale}px` };
+  // Cut with CSS, not by sizing the canvas: the button's top moves while the hint
+  // slides in, and a new size would clear the bitmap on every frame of it.
+  const buttonTop = buttonArtboardTop();
+  const cut = buttonTop === null ? PROGRESS_BAR.bottomClearance : (window.innerHeight - buttonTop) / scale;
+  Object.assign(current.canvas.style, {
+    left: `${-placement.x}px`,
+    top: `${-placement.y}px`,
+    clipPath: `inset(0 0 ${Math.max(0, cut)}px 0)`,
+    ...size,
+  });
   // Only a new canvas size needs a new bitmap (it clears the canvas); moving the slot just moves the frame.
   const sized = `${size.width} ${size.height}`;
   if (sized !== canvasSize) {
@@ -103,7 +123,7 @@ export const attachProgressBar = (slot: HTMLElement): (() => void) => {
   let last = "";
   const track = () => {
     const rect = slot.getBoundingClientRect();
-    const key = [rect.left, rect.top, rect.width, rect.height, slot.offsetWidth, window.innerWidth, window.innerHeight].join();
+    const key = [rect.left, rect.top, rect.width, rect.height, slot.offsetWidth, window.innerWidth, window.innerHeight, buttonArtboardTop()].join();
     if (key !== last) {
       last = key;
       placeCanvas();

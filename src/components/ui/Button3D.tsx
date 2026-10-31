@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ButtonHTMLAttributes, MouseEvent, ReactNode } from "react";
 import { vibrateForTap } from "@/lib/haptics";
+import { BUTTON } from "@/lib/rive/runtime";
 import type { AnswerResult } from "./RiveProgressBar";
 import { RiveButtonFace, RIVE_BUTTON_H, RIVE_BUTTON_W, type RiveButtonVariant } from "./RiveButtonFace";
 
@@ -11,6 +12,10 @@ import { RiveButtonFace, RIVE_BUTTON_H, RIVE_BUTTON_W, type RiveButtonVariant } 
 // autocomplete="off" opts out. Spread in because React's types leave
 // `autoComplete` off <button>, though the attribute works there.
 const NO_STATE_RESTORE = { autoComplete: "off" };
+
+// Marks the brand button's box (the artboard's own rect) for the progress bar,
+// whose canvas ends at its top.
+const BOX_MARK = { [BUTTON.boxAttribute]: "" };
 
 // A click holds the button pressed for PRESS_HOLD_MS, releases it, and only
 // then (at CLICK_DELAY_MS) runs the caller's `onClick` — otherwise a click
@@ -47,7 +52,7 @@ const CHAMFER =
 // than this and the label starts reading as skewed rather than tilted.
 const TILT_TRANSFORM = "perspective(300px) rotateX(25deg)";
 
-// The brand tone is drawn by Rive (`btn-click.riv`, see RiveButtonFace):
+// The brand tone is drawn by Rive (the "AllButton" artboard, see RiveButtonFace):
 // plain-text children become the file's own label via its `Text` run,
 // so every screen's CTA text shows up on the artwork itself.
 
@@ -150,6 +155,7 @@ export function Button3D({
       <button
         type="button"
         {...NO_STATE_RESTORE}
+        {...BOX_MARK}
         disabled={disabled}
         aria-disabled={locked || undefined}
         style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}
