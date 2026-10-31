@@ -7,6 +7,7 @@ import { BUTTON_BOTTOM_GAP, CTA_HEIGHT_WITH_HINT } from "@/components/level-one/
 import { LevelOneShell } from "@/components/level-one/LevelOneShell";
 import { MODULE_STEPS } from "@/lib/moduleFlow";
 import { BUTTON } from "@/lib/rive/runtime";
+import { COLUMN_W } from "@/lib/questionColumn";
 import { FRAME_TOP_SHIFT, levelTwoHref, type TitleLines } from "./levelTwo";
 
 type LevelTwoShellProps = Omit<ComponentProps<typeof LevelOneShell>, "step" | "total" | "onBack" | "children"> & {
@@ -62,15 +63,19 @@ const ROW_HEIGHT = `(min(var(--stage-w, 390px), 450px) - 12px) * ${BUTTON_RATIO}
 export const aboveButtons = (gap: number, withHint = false) =>
   `calc(${BUTTON_BOTTOM_GAP}px + ${ROW_HEIGHT} * ${BUTTON_DRAWN * (withHint ? CTA_HEIGHT_WITH_HINT : 1)} + ${gap}px)`;
 
-/** The Figma title: Poppins 600 28px / 134%, #444444, centred; `at` is its Figma `top` (116). */
-export function ScreenTitle({ children, at = 116 }: { children: ReactNode; at?: number }) {
+/**
+ * The Figma title: Poppins 600 28px / 134%, #444444, centred; `at` is its Figma `top` (116).
+ * It wraps inside the column; with `oneLine` it never does (and stays centred even if a
+ * line is a little wider than the column), so a title drawn on one line can't grow a second.
+ */
+export function ScreenTitle({ children, at = 116, oneLine = false }: { children: ReactNode; at?: number; oneLine?: boolean }) {
   return (
     <motion.h1
       initial={{ opacity: 0, y: -24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 140, damping: 16, delay: 0.15 }}
-      className="absolute w-[358px] text-center text-[28px] leading-[134%] font-semibold text-[#444444]"
-      style={{ top: stageTop(at), left: "calc(50% - 179px)" }}
+      className={`absolute text-center text-[28px] leading-[134%] font-semibold text-[#444444] ${oneLine ? "whitespace-nowrap" : ""}`}
+      style={{ top: stageTop(at), left: 0, right: 0, marginInline: "auto", width: oneLine ? "max-content" : COLUMN_W }}
     >
       {children}
     </motion.h1>

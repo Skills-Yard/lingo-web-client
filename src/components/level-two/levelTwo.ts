@@ -1,3 +1,4 @@
+import { COLUMN_W } from "@/lib/questionColumn";
 import type { RobotMove, RobotPose } from "@/lib/rive/robotHost";
 import { moduleHref } from "@/lib/routes";
 
@@ -8,6 +9,9 @@ export const levelTwoHref = (step: number | "complete") => moduleHref(step);
  * header sits this much higher, so everything pinned to the top (title, Hex's
  * row, the picture) is moved up by it, and what is pinned to the bottom isn't. */
 export const FRAME_TOP_SHIFT = 37;
+
+/** A CSS `left` that centres the question's and the answers' column (see `questionColumn`) on the stage. */
+export const COLUMN_LEFT = `calc(50% - ${COLUMN_W} / 2)`;
 
 /** A speech bubble's width (px), set by where its text breaks in the designs;
  * `short` is Figma's 77px-tall bubble, `minHeight` any other height (the rest are 86). */

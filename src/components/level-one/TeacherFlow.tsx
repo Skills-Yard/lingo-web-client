@@ -15,6 +15,7 @@ import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
+import { COLUMN_W } from "@/lib/questionColumn";
 import { moduleHref } from "@/lib/routes";
 import { LevelOneShell, levelOneHref, levelOneStep } from "./LevelOneShell";
 
@@ -177,7 +178,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute inset-x-0 top-0 text-center text-[28px] leading-9 font-semibold text-[#2C2C2C] dark:text-white"
+              className="absolute top-0 left-1/2 -translate-x-1/2 text-center text-[28px] leading-9 font-semibold text-[#2C2C2C] dark:text-white"
+              style={{ width: COLUMN_W }}
             >
               <SpokenText spans={QUIZ_HEADING} />
             </motion.h1>
@@ -240,8 +242,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             }}
             // 48px below the cropped picture; 80 once "+10 XP" floats above a card;
             // the button's drop on top, so the options keep their gap to it.
-            style={{ marginTop: (checked && selectedId === CORRECT_ID ? 80 : 48) + BUTTON_DROP }}
-            className="relative z-10 flex w-full shrink-0 items-start gap-[19px] bg-white transition-[margin-top] duration-300 dark:bg-background"
+            style={{ width: COLUMN_W, marginTop: (checked && selectedId === CORRECT_ID ? 80 : 48) + BUTTON_DROP }}
+            className="relative z-10 flex shrink-0 items-start gap-[19px] bg-white transition-[margin-top] duration-300 dark:bg-background"
           >
             {OPTIONS.map((option) => {
               const state = optionState(option.id, selectedId, checked);
@@ -265,8 +267,9 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                 >
                   <XpPop show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={option.icon} alt="" draggable={false} className="h-[100px] w-[100px] shrink-0 object-contain" />
-                  <span className="text-[16px] leading-none font-semibold text-[#444444] dark:text-white">
+                  <img src={option.icon} alt="" draggable={false} className="h-[116px] w-[116px] shrink-0 object-contain" />
+                  {/* Narrow enough that both labels break onto two lines, so the pictures line up and no word touches the card's edge. */}
+                  <span className="max-w-[120px] text-center text-[20px] leading-6 font-semibold text-[#444444] dark:text-white">
                     {option.title}
                   </span>
                 </motion.button>

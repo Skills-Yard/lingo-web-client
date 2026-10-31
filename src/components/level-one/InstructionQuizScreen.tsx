@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { COLUMN_W } from "@/lib/questionColumn";
 import { moduleHref } from "@/lib/routes";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
@@ -26,9 +27,9 @@ const CORRECT_ID = "command";
 const HEX_ENTRY_STYLE = 6;
 
 const OPTIONS = [
-  { id: "statement", icon: "/images/level-one/statement.png", title: "Statement", tint: "bg-[#F6F4FE]", iconSize: "h-9 w-[31px]" },
-  { id: "command", icon: "/images/level-one/command.png", title: "Command", tint: "bg-[#FFF4F6]", iconSize: "h-8 w-[26px]" },
-  { id: "question", icon: "/images/level-one/question.png", title: "Question", tint: "bg-[#FFF9F0]", iconSize: "h-[31px] w-[38px]" },
+  { id: "statement", icon: "/images/level-one/statement.png", title: "Statement", tint: "bg-[#F6F4FE]", iconSize: "h-[45px] w-[39px]" },
+  { id: "command", icon: "/images/level-one/command.png", title: "Command", tint: "bg-[#FFF4F6]", iconSize: "h-10 w-[33px]" },
+  { id: "question", icon: "/images/level-one/question.png", title: "Question", tint: "bg-[#FFF9F0]", iconSize: "h-[39px] w-[48px]" },
 ] as const;
 
 /** Hex is drawn this many times his slot, on every device: the frame is scaled as one piece, so he keeps his proportions. */
@@ -104,7 +105,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
           opacity: { duration: 0.3, delay: 0.3 },
           y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
         }}
-        className="mt-5 flex w-[calc(min(100vw,450px)-12px)] shrink-0 items-center gap-3"
+        className="mt-5 flex shrink-0 items-center gap-3"
+        style={{ width: COLUMN_W }}
       >
         <span className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-lg bg-[#04ACAB]/10">
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -130,8 +132,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         transition={{ type: "spring", stiffness: 360, damping: 32 }}
       />
 
-      {/* Content sits 16px in from the frame; the bottom button row is min(100vw, 450px) minus 6px per side; match it exactly. */}
-      <div className="relative z-10 w-[calc(min(100vw,450px)-12px)] shrink-0 bg-white dark:bg-background" style={{ marginTop: 20 + BUTTON_DROP }}>
+      {/* The options keep the same margin from each side as the question. */}
+      <div className="relative z-10 shrink-0 bg-white dark:bg-background" style={{ width: COLUMN_W, marginTop: 20 + BUTTON_DROP }}>
         <div className="relative flex flex-col gap-[23px]">
           {OPTIONS.map((option, i) => {
             const state = optionState(option.id, selectedId, checked, CORRECT_ID);
@@ -178,7 +180,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                 <XpPop inside show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={option.icon} alt="" draggable={false} className={`shrink-0 object-contain ${option.iconSize}`} />
-                <span className="text-[16px] leading-none font-medium text-[#2C2C2C] dark:text-white">{option.title}</span>
+                <span className="text-[20px] leading-none font-medium text-[#2C2C2C] dark:text-white">{option.title}</span>
                 <span
                   aria-hidden
                   className={`absolute top-1/2 right-4 flex h-[26px] w-[26px] -translate-y-1/2 items-center justify-center rounded-full bg-[#E5484D] transition-[scale,opacity] duration-200 ${

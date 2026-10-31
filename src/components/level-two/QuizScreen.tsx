@@ -73,7 +73,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
         </div>
       }
     >
-      <ScreenTitle>
+      <ScreenTitle oneLine={quiz.title.length === 1}>
         <TitleText lines={quiz.title} underline={quiz.underline} />
       </ScreenTitle>
       <CentredRow top={stageTop(quiz.bubbleTop)}>
