@@ -9,15 +9,16 @@ import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { CARDS_RISE, GAP_ABOVE_BUTTONS } from "./AnswerCards";
 import { aboveButtons } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
-import type { Choice } from "./levelTwo";
+import { COLUMN_W } from "@/lib/questionColumn";
+import { COLUMN_LEFT, type Choice } from "./levelTwo";
 
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
 /** Each layout's card height, the picture's box and the text's size. */
 const LAYOUT = {
-  pair: { card: "h-[184px]", picture: "h-[100px] w-full", text: "text-[14px] leading-[20px]", gap: "gap-3.5" },
-  tiles: { card: "h-[110px]", picture: "h-[44px] w-full", text: "text-[13px] leading-[17px]", gap: "gap-3.5" },
+  pair: { card: "h-[184px]", picture: "h-[112px] w-full", text: "text-[18px] leading-6", gap: "gap-3.5" },
+  tiles: { card: "h-[110px]", picture: "h-[46px] w-full", text: "text-[16px] leading-5", gap: "gap-3.5" },
 } as const;
 
 type TileCardsProps = {
@@ -37,7 +38,7 @@ type TileCardsProps = {
 
 /**
  * The answers as cards side by side — two big ones or three small tiles — in
- * the same 358px column as the rest of the screen, standing on the button row.
+ * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
 export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, onPick }: TileCardsProps) {
@@ -51,8 +52,8 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
-      className={`pointer-events-auto absolute z-[1] flex w-[358px] items-stretch ${look.gap}`}
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: "calc(50% - 179px)" }}
+      className={`pointer-events-auto absolute z-[1] flex items-stretch ${look.gap}`}
+      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W }}
     >
       {choices.map((choice) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -87,7 +88,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
               </span>
               <span
-                className={`text-center font-semibold text-[#444444] dark:text-white ${look.text} ${longText ? "text-[13px]! leading-[18px]!" : ""}`}
+                className={`text-center font-semibold text-[#444444] dark:text-white ${look.text} ${longText ? "text-[15px]! leading-5!" : ""}`}
               >
                 {choice.text}
               </span>

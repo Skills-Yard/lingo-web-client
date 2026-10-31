@@ -8,7 +8,8 @@ import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { aboveButtons } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
-import type { Choice } from "./levelTwo";
+import { COLUMN_W } from "@/lib/questionColumn";
+import { COLUMN_LEFT, type Choice } from "./levelTwo";
 
 /** What the cards rise by once the result panel is up, so it never covers them. */
 export const CARDS_RISE = 180;
@@ -34,8 +35,8 @@ type AnswerCardsProps = {
 };
 
 /**
- * The three answers (Figma "Frame 322"): 358 x 76 white cards 6px apart with a
- * picture, the text and a radio. Pinned to the button row; once `checked` they
+ * The three answers (Figma "Frame 322"): 76px-tall white cards 6px apart, as wide
+ * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
 export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, onPick }: AnswerCardsProps) {
@@ -48,8 +49,8 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
-      className="pointer-events-auto absolute z-[1] flex w-[358px] flex-col gap-1.5"
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: "calc(50% - 179px)" }}
+      className="pointer-events-auto absolute z-[1] flex flex-col gap-1.5"
+      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W }}
     >
       {choices.map((choice) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -81,12 +82,12 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
               />
-              <span className="flex min-w-0 items-center gap-3.5">
-                {/* The picture's slot: 55px wide, so the text starts at 99px on every card. */}
-                <span className="flex h-[47px] w-[55px] shrink-0 items-center justify-center">
+              <span className="flex w-full min-w-0 items-center gap-3.5">
+                {/* The picture's slot, as tall as the card's inside (76 less its border and padding): the text starts at the same place on every card. */}
+                <span className="flex h-[54px] w-[60px] shrink-0 items-center justify-center">
                   <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
                 </span>
-                <span className="w-[186px] text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{choice.text}</span>
+                <span className="min-w-0 flex-1 text-[17px] leading-6 font-medium text-[#444444] dark:text-white">{choice.text}</span>
               </span>
             </motion.button>
             <XpPop inside show={checked && choice.id === correctId && selectedId === correctId} fading={fadeOut} />
