@@ -91,7 +91,7 @@ export function FlipCardScreen() {
             <span className="flex h-[64px] w-[72px] items-center justify-center">
               <SlotImage file="step-8.1.svg" className="max-h-full max-w-full object-contain" />
             </span>
-            <span className="text-[20px] leading-7 font-semibold text-[#555555]">Tap to flip</span>
+            <span className="text-[20px] leading-7 font-semibold text-[#555555]">Tap to reveal</span>
           </span>
 
           {/* Back: what a command is, with an example. */}

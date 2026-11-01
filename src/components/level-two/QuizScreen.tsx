@@ -65,6 +65,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
+            title={correct ? quiz.rightTitle : quiz.wrongTitle}
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}

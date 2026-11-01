@@ -25,7 +25,7 @@ export function MeetRobotScreen() {
         className="absolute text-center text-[16px] leading-[23px] font-medium text-[#444444]"
         style={{ bottom: aboveButtons(TEXT_GAP), width: 372, left: "calc(50% - 186px)" }}
       >
-        This robot can pick things up, put them down and place them where needed.
+        It picks up, puts down, and places objects at its workstation
       </p>
     </LevelTwoShell>
   );

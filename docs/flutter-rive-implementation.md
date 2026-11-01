@@ -351,10 +351,10 @@ Header on steps 1 to 8: Back, progress bar `step/9` (4.6), battery with `chargeS
 4. **Check pressed** (only once; options lock): create `AnswerResult(id++, selected == correct)`. In the same moment:
    - `ModuleButton`: `buttonState` 3 if correct, 2 if wrong; label becomes "Continue".
    - `LESSON_ProgressBar`: fire `correct` or `wrong`.
-   - The correct option turns green; a wrong pick turns red with an X. If correct, "+10 XP" pops on the right card and confetti plays.
+   - The correct option turns green; a wrong pick turns red with an X. If correct, confetti plays (no "+10 XP" on the card).
    - The result panel slides up (spring stiffness 360, damping 32) with a Hex; hint button disappears.
 5. **Panel Hex:** 250 ms after the panel is shown, `enter` (style 7); `idle5a` loop unless correct; **if correct**, `fireNow('continueThumb')` 900 ms after the entrance (that cue replaces the ambient loop).
-6. **Panel copy:** correct → title "Correct! +10 XP"; wrong → "Not quite, try to remember!". Step 4 sentence: "Yes! " (correct) or "Remember: " (wrong) + "The teacher is giving an **instruction.**". Step 7 sentence: "Yes! Instructions in a program is called **commands.**" (correct) / "Remember: Instructions in a program are called **commands.**" (wrong).
+6. **Panel copy:** correct → title "Correct!"; wrong → "Not quite, try to remember!". Step 4 sentence: "Yes! " (correct) or "Remember: " (wrong) + "The teacher is giving an **instruction.**". Step 7 sentence: "Yes! Instructions in a program is called **commands.**" (correct) / "Remember: Instructions in a program are called **commands.**" (wrong).
 7. **Continue pressed:** go to the next screen (step 4 → 5; step 7 → reward). The answer is cleared when the screen is left or the quiz resets; coming back to the quiz starts fresh.
 
 **Reward screen (`REWARD_Chest`).** Background image `reward-bg.png` (cover). Chest box: square, `min(width − 32, 50% of height)`. Disabled until ready. Tap anywhere: click sound → fire `open` once → 600 ms later the "Continue" `ModuleButton` springs in (slides up 40 px, fades in, spring stiffness 110, damping 13). Before the chest opens the button does not exist. Back goes to step 7; Continue goes to step 8. The battery is not shown and spends nothing.

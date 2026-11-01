@@ -47,6 +47,9 @@ export type Quiz = {
   /** The result panel's sentence: `right` after a correct pick, `wrong` after a miss. */
   right: string;
   wrong: string;
+  /** The panel's title, where it isn't the default ("Correct!" / "Not quite"). */
+  rightTitle?: string;
+  wrongTitle?: string;
   /** Where the cube is when the screen opens (the robot carries on from the previous screen). */
   pose: RobotPose;
   /** The cards stay in view on a right answer, though the robot plays a move (they fade out otherwise). */
@@ -64,7 +67,7 @@ const CREAM = "bg-[#FFF9F0] dark:bg-[#2A2218]";
 /** Screen 3 — `/module?step=3`. */
 export const WHAT_JUST_HAPPENED: Quiz = {
   title: [[{ text: "What just " }, { text: "happened?", teal: true }]],
-  line: [{ text: "What happened after PICK UP?" }],
+  line: [{ text: "What did the robot do after " }, { text: "Pick Up", teal: true }, { text: "?" }],
   bubble: { width: 178, short: true },
   bubbleTop: 172,
   layout: "list",
@@ -75,8 +78,10 @@ export const WHAT_JUST_HAPPENED: Quiz = {
     { id: "nothing", text: "Nothing happened.", icon: "step-4.3.svg", moves: ["wrongClaw"] },
   ],
   correctId: "picked",
-  right: "Yes! The robot picked up the cube.",
-  wrong: "Remember: When you selected PICK UP, the robot picked up the cube.",
+  rightTitle: "Exactly!",
+  right: "The robot followed the instructions and picked up the cube.",
+  wrongTitle: "Let’s look again!",
+  wrong: "Watch what robot does after you select the instruction.",
   pose: "holding",
   keepCards: true,
   hint: true,
@@ -84,28 +89,29 @@ export const WHAT_JUST_HAPPENED: Quiz = {
 
 /** Screen 5 — `/module?step=5`. */
 export const WHAT_NEXT: Quiz = {
-  title: [[{ text: "What will happen " }, { text: "next?", teal: true }]],
-  line: [{ text: "Robot has the cube. Look at the highlighted area." }],
+  title: [[{ text: "It’s your turn now!" }]],
+  line: [{ text: "Let’s make the robot pick up the cube." }],
   bubble: { width: 244 },
   bubbleTop: 172,
   layout: "list",
   choices: [
-    { id: "place", text: "Place cube in the target", icon: "step-5.1.svg", moves: ["placeInTarget"] },
-    { id: "higher", text: "Lift the cube higher", icon: "step-5.2.svg", moves: ["wrongClaw"] },
-    { id: "right", text: "Move the cube right", icon: "step-5.3.svg", moves: ["wrongCube"] },
+    { id: "pickup", text: "Pick Up the Cube", icon: "step-10.1.svg", moves: ["pickUp"] },
+    { id: "move", text: "MOVE to the table", icon: "step-10.2.svg", moves: ["wrongClaw"] },
+    { id: "place", text: "Place the cube", icon: "step-10.3.svg", moves: ["wrongCube"] },
   ],
-  correctId: "place",
-  right: "Yes! The robot will place the cube in the targeted area.",
-  wrong: "Remember: The robot will place the cube in the targeted area.",
-  pose: "holding",
-  targetHint: true,
+  correctId: "pickup",
+  rightTitle: "Nice!",
+  right: "You told the robot to pick up the cube.",
+  wrongTitle: "Let’s look again!",
+  wrong: "Which command lifts the cube?",
+  pose: "idle",
   hint: true,
 };
 
 /** Screen 4 — `/module?step=4`. */
 export const ROBOT_PICKED_UP: Quiz = {
-  title: [[{ text: "Robot " }, { text: "has picked it up!", teal: true }]],
-  line: [{ text: "Which instruction releases the cube here?" }],
+  title: [[{ text: "Let’s " }, { text: "release", teal: true }, { text: " the cube." }]],
+  line: [{ text: "Which command releases the cube?" }],
   bubble: { width: 232 },
   bubbleTop: 162,
   layout: "pair",
@@ -114,8 +120,10 @@ export const ROBOT_PICKED_UP: Quiz = {
     { id: "putdown", text: "Put Down", icon: "step-9.2.svg", tint: CREAM, moves: ["putDown"] },
   ],
   correctId: "putdown",
-  right: "Yes! Put Down makes the robot release the cube.",
-  wrong: "Remember: Put Down makes the robot release the cube.",
+  rightTitle: "Exactly!",
+  right: "The robot followed a different instruction and performed a different action.",
+  wrongTitle: "Not quite!",
+  wrong: "Robot is not releasing it, it will grab it.",
   pose: "holding",
   hint: true,
 };
@@ -144,7 +152,7 @@ export const LETS_PICK_UP: Quiz = {
 
 /** Screen 8 — `/module?step=8`. */
 export const WHERE_SHOULD_GO: Quiz = {
-  title: [[{ text: "Where does " }, { text: "the cube go?", teal: true }]],
+  title: [[{ text: "Where to place " }, { text: "the cube", teal: true }, { text: "?" }]],
   line: [{ text: "Pick an instruction to reach the target area." }],
   bubble: { width: 232 },
   bubbleTop: 176,
@@ -155,7 +163,8 @@ export const WHERE_SHOULD_GO: Quiz = {
     { id: "target", text: "Place in Target", icon: "step-13.3.svg", tint: "bg-[#E5EFFD] dark:bg-[#15233A]", moves: ["placeInTarget"] },
   ],
   correctId: "target",
-  right: "Yes! Place in Target moves the cube to the target area.",
+  rightTitle: "Exactly!",
+  right: "Place in Target moves the cube to the target area.",
   wrong: "Remember: Place in Target moves the cube to the target area.",
   pose: "holding",
   hint: true,

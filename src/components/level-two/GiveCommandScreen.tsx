@@ -3,7 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
+import {
+  OnboardingHex,
+  SHEET_HEX_BOX,
+  SHEET_HEX_SLOT,
+  SHEET_TITLE_SIZE,
+} from "@/components/level-one/FeedbackPanel";
 import { vibrateForTap } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
 import { COMMAND_ROBOT, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
@@ -26,8 +31,8 @@ const PANEL_MIN_HEIGHT = 844 - 593;
 /**
  * `/module?step=2` — "Let's make it happen!": Hex asks what to
  * tell the robot, the main button ("Pick Up", our usual one) gives the
- * instruction and the cube is picked up. Then, on this same screen, the title
- * becomes "Nice! Instruction given!", a panel with Hex says so above the
+ * instruction and the cube is picked up. Then, on this same screen (the title
+ * stays), a panel with Hex says so above the
  * button, and the button becomes "Next". The button row stays as it is
  * throughout (the button keeps its look); while the cube is being picked up
  * the button just takes no clicks.
@@ -59,22 +64,16 @@ export function GiveCommandScreen() {
       }}
       overlay={nice ? <NicePanel /> : undefined}
     >
-      {nice ? (
-        <ScreenTitle key="nice">
-          Nice! <Teal>Instruction given!</Teal>
-        </ScreenTitle>
-      ) : (
-        <ScreenTitle key="give">
-          Let&apos;s make <Teal>it happen!</Teal>
-        </ScreenTitle>
-      )}
+      <ScreenTitle>
+        Give an <Teal>instruction</Teal>
+      </ScreenTitle>
       {!given && (
         <CentredRow bottom={QUESTION_BOTTOM}>
           <HexBubble
             entryKey="give-command"
             hex="left"
             size={{ width: 240 }}
-            line={[{ text: "What instruction should we give the robot?" }]}
+            line={[{ text: "Give " }, { text: "instruction", teal: true }, { text: " to " }, { text: "Pick Up", teal: true }, { text: " the Cube" }]}
           />
         </CentredRow>
       )}
@@ -103,15 +102,17 @@ function NicePanel() {
         style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))", minHeight: PANEL_MIN_HEIGHT, paddingBottom: aboveButtons(10) }}
         className="absolute inset-x-0 bottom-0 z-0 mx-auto flex justify-center rounded-t-[28px] border-[1.5px] border-b-0 border-[#08A2AD] bg-[#DFFFF8] pt-[22px] dark:border-[#1E5F59] dark:bg-[#0F2B28]"
       >
-        <div className="flex h-fit w-[290px] items-center justify-between">
-          <div className="flex w-[180px] flex-col gap-1.5">
-            <h2 className="text-[17px] leading-6 font-semibold text-[#01A17F]">Yayyy!</h2>
+        <div className="flex h-fit w-[320px] items-center justify-between">
+          <div className="flex w-[171px] flex-col gap-1.5">
+            <h2 className={`font-semibold tracking-[-0.1px] text-[#01A17F] ${SHEET_TITLE_SIZE}`}>Yayyy!</h2>
             <p className="text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80">
-              You gave an instruction. The robot performed an action.
+              You gave an instruction and the robot did it.
             </p>
           </div>
-          <div aria-hidden className="-my-4 h-[112px] w-[110px] shrink-0">
-            <OnboardingHex entryKey={hexIn ? "nice" : null} cue={hexIn ? HEX_ONBOARDING_TRIGGER.continueThumb : null} cueDelayMs={HEX_SETTLE_MS} />
+          <div aria-hidden className={SHEET_HEX_SLOT}>
+            <div className={SHEET_HEX_BOX}>
+              <OnboardingHex entryKey={hexIn ? "nice" : null} cue={hexIn ? HEX_ONBOARDING_TRIGGER.continueThumb : null} cueDelayMs={HEX_SETTLE_MS} />
+            </div>
           </div>
         </div>
       </motion.div>
