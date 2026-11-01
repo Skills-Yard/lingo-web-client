@@ -16,6 +16,7 @@ import {
   SPLASH_VIEW_MODEL,
   SPLASH_SHOW_SIGNUP_TRIGGER,
 } from "@/lib/rive/runtime";
+import { useScreenTop } from "@/hooks/useFullscreen";
 import { hexRiveSource } from "@/lib/rive/hexFile";
 
 // The "Lingo" wordmark: 60px / 100%, #444444 in light theme and #E8E8E8 in
@@ -40,11 +41,10 @@ const SIGNUP_ANIMATION_MS = 5500;
 const LAYOUT_FIT_WIDTH = new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
 const LAYOUT_ABOVE_FOOTER = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
-// The sign-up wordmark sits this far below the top edge at the least, and
+// The sign-up wordmark sits `--screen-top` below the top edge at the least, and
 // this far above the artboard (Hex is at the artboard's very top).
 // The whole stack ("Welcome to", wordmark, tagline) is measured, so the
 // artboard always fits below it and no text is hidden.
-const WORDMARK_TOP_PX = 16;
 const WORDMARK_GAP_PX = 8;
 
 interface OnboardingSplashProps {
@@ -118,7 +118,8 @@ export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmar
   const artboardWidth = bounds ? bounds.maxX - bounds.minX : 0;
   const artboardHeight = bounds ? bounds.maxY - bounds.minY : 0;
   const aspect = artboardWidth ? artboardHeight / artboardWidth : 0;
-  const topInset = WORDMARK_TOP_PX + signUpWordmarkHeight + WORDMARK_GAP_PX;
+  const wordmarkTop = useScreenTop();
+  const topInset = wordmarkTop + signUpWordmarkHeight + WORDMARK_GAP_PX;
   const fullWidthTop = (size.height - size.width * aspect) / 2;
   const overlapsFooter =
     fullWidthTop < topInset || fullWidthTop + size.width * aspect > size.height - bottomInset;
@@ -206,7 +207,7 @@ export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmar
         animate={{ opacity: showSignUpWordmark ? 1 : 0 }}
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="pointer-events-none absolute inset-x-0 z-10 mx-auto w-max"
-        style={{ top: Math.max(WORDMARK_TOP_PX, artboardTop - WORDMARK_GAP_PX - signUpWordmarkHeight) }}
+        style={{ top: Math.max(wordmarkTop, artboardTop - WORDMARK_GAP_PX - signUpWordmarkHeight) }}
       >
         <p className={`${SPLASH_TEXT_CLASS} text-center text-[14px] font-medium`}>Welcome to</p>
         <h1 className={WORDMARK_CLASS}>Lingo</h1>

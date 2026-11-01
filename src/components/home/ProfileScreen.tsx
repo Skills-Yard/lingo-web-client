@@ -74,7 +74,7 @@ export function ProfileScreen({
 
   return (
     <main className="h-dvh w-full overflow-hidden bg-white font-sans text-[#444444] dark:bg-[#0F1F26] dark:text-white">
-      <div className="mx-auto flex h-full w-full max-w-[430px] flex-col gap-[clamp(12px,2.6vh,24px)] px-4 pb-[38px] pt-[54px]">
+      <div className="mx-auto flex h-full w-full max-w-[430px] flex-col gap-[clamp(12px,2.6vh,24px)] px-4 pb-[38px] pt-[calc(var(--screen-top)+env(safe-area-inset-top))]">
         <motion.div {...rise(0)} className="flex shrink-0 items-center gap-3">
           <button
             type="button"

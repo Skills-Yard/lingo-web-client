@@ -14,7 +14,7 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { BUTTON_DROP } from "./ActionRow";
-import { FeedbackPanel } from "./FeedbackPanel";
+import { FeedbackPanel, XpBurst } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
 import { FILL_S, HintFloat } from "./HintFloat";
 import { LevelOneShell, levelOneHref, TITLE_HEIGHT, TITLE_MARGIN_TOP } from "./LevelOneShell";
@@ -198,6 +198,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         </div>
       </div>
       <Confetti active={checked && selectedId === CORRECT_ID} />
+      <XpBurst show={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>
   );
 }

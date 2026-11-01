@@ -50,7 +50,7 @@ const statImg = (src: string, className: string) => (
 export function HomeStats() {
   const battery = useBattery();
   return (
-    <div className="flex items-center justify-between font-sans">
+    <div className="-mt-1.5 flex items-center justify-between font-sans">
       <StatItem value={String(LEARNER_STATS.streak)} label="day streak" color="#FF8D42" darkColor="#FF8D42">
         {statImg("/images/streak.png", "h-6 w-auto")}
       </StatItem>

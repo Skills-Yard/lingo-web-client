@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useScreenTop } from "@/hooks/useFullscreen";
 
 /** The content is drawn on a fixed 390px-wide stage and scaled as one piece,
  * so every size, font and gap shrinks with the screen and the page fits. */
@@ -11,10 +12,10 @@ const MAX_SCALE = 1.5;
 export const NAV_MARGIN = 10;
 const NAV_RESERVE = 60 + NAV_MARGIN + 10;
 /** Real-size space above the content (never scaled). */
-export const TOP_MARGIN = 15;
+export const TOP_MARGIN = "var(--screen-top)";
 /** Where the shared top bar (see HomeTopBar: TOP_MARGIN from the top, 48px
  * tall, plus a 12px gap) ends; every tab starts its content below this line. */
-export const TOP_BAR_BOTTOM = TOP_MARGIN + 60;
+export const TOP_BAR_BOTTOM = `calc(${TOP_MARGIN} + 60px)`;
 /** Real-size space at the content's left and right (never scaled), the same
  * `px-4` the unscaled tabs use inside their 430px column. */
 export const SIDE_MARGIN = 16;
@@ -29,15 +30,12 @@ export const STAGE_GUTTER = "mx-[var(--stage-inset)]";
  */
 export function HomeStage({
   stageHeight,
-  topMargin = TOP_MARGIN,
   className = "bg-white dark:bg-[#0F1F26]",
   scroll = false,
   children,
 }: {
   /** Height of the content, in stage px (the design's own units). */
   stageHeight: number;
-  /** Real-size space above the content. */
-  topMargin?: number;
   /** The page background. */
   className?: string;
   /** Scale to the width only and let the page scroll under the nav, for
@@ -46,6 +44,7 @@ export function HomeStage({
   scroll?: boolean;
   children: ReactNode;
 }) {
+  const topMargin = useScreenTop();
   const boxRef = useRef<HTMLElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);

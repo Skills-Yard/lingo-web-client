@@ -2,7 +2,7 @@
 
 import { HexBleed, HEX_BLEED } from "@/components/onboarding/robu/HexBleed";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, type Transition } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import {
   HEX_ARTBOARD,
@@ -26,6 +26,11 @@ const IDLE_REPEAT_MS = 4000;
 const ENTER_SETTLE_MS = 900;
 /** The panel's Hex starts entering this long after he is asked to. */
 const ENTER_DELAY_MS = 250;
+/** About how long a cue (his thumbs-up) plays, before his ambient idle takes over again. */
+const CUE_PLAY_MS = 2800;
+/** Hex's box in a result panel, the same in every one. His body stands about 14px
+ * inside it, so the 2px pull leaves 12px between the text and him. */
+export const PANEL_HEX = "-my-4 -ml-0.5 h-[112px] w-[110px] shrink-0";
 
 /**
  * Hex, played the onboarding way: the `Onboarding` machine, entering with
@@ -92,21 +97,27 @@ export function OnboardingHex({
   useEffect(() => {
     if (ready && leaving) fireNow(HEX_ONBOARDING_TRIGGER[exit]);
   }, [ready, leaving, exit, fireNow]);
+  // The cue that has finished playing, so the ambient idle can pick up again.
+  const [playedCue, setPlayedCue] = useState<string | null>(null);
   // With nothing else to play, Hex keeps running his ambient idle. The first
   // one queues behind `enter`; it stops once he starts leaving.
   useEffect(() => {
-    if (!ready || leaving || entryKey === null || cue !== null || speaking) return;
+    if (!ready || leaving || entryKey === null || (cue !== null && cue !== playedCue) || speaking) return;
     fireTrigger(HEX_ONBOARDING_TRIGGER.idleAmbient);
     const timer = window.setInterval(
       () => fireTrigger(HEX_ONBOARDING_TRIGGER.idleAmbient),
       IDLE_REPEAT_MS,
     );
     return () => window.clearInterval(timer);
-  }, [ready, leaving, entryKey, cue, speaking, fireTrigger]);
+  }, [ready, leaving, entryKey, cue, playedCue, speaking, fireTrigger]);
   useEffect(() => {
     if (!ready || !cue) return;
-    const timer = window.setTimeout(() => fireNow(cue), cueDelayMs);
-    return () => window.clearTimeout(timer);
+    const fire = window.setTimeout(() => fireNow(cue), cueDelayMs);
+    const played = window.setTimeout(() => setPlayedCue(cue), cueDelayMs + CUE_PLAY_MS);
+    return () => {
+      window.clearTimeout(fire);
+      window.clearTimeout(played);
+    };
   }, [ready, cue, cueDelayMs, fireNow]);
   return <HexBleed Canvas={RiveComponent} />;
 }
@@ -143,6 +154,30 @@ const FEEDBACK = {
     bold: "[&_b]:text-[#E5484D]",
   },
 } as const;
+
+/** How far "+10 XP" stays see-through at its strongest. */
+const XP_OPACITY = 0.7;
+/** It rises to the centre, holds, then leaves upward (a share of the whole run at each key). */
+const XP_RISE: Transition = { duration: 1.6, delay: 0.15, times: [0, 0.2, 0.65, 1], ease: "easeOut" };
+const XP_BOUNCE = { type: "spring", stiffness: 300, damping: 9, delay: 0.15 } as const;
+
+/** A big "+10 XP" in the middle of the screen for a right answer: comes up to
+ * the centre with a bounce, fading in, then fades out moving upward. */
+export function XpBurst({ show }: { show: boolean }) {
+  if (!show) return null;
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+      <motion.span
+        initial={{ opacity: 0, y: 60, scale: 0.4 }}
+        animate={{ opacity: [0, XP_OPACITY, XP_OPACITY, 0], y: [60, 0, 0, -110], scale: 1 }}
+        transition={{ opacity: XP_RISE, y: XP_RISE, scale: XP_BOUNCE }}
+        className="text-[56px] leading-none font-bold whitespace-nowrap text-[#F5A623]"
+      >
+        +10 XP
+      </motion.span>
+    </div>
+  );
+}
 
 /**
  * The result sheet: slides up from the bottom behind Continue, with the check
@@ -200,14 +235,12 @@ export function FeedbackPanel({
             {children}
           </p>
         </div>
-        <div aria-hidden className={`pointer-events-none ${SHEET_HEX_SLOT}`}>
-          <div ref={hexSlot} className={SHEET_HEX_BOX}>
-            {!hexSlot && <OnboardingHex
-                entryKey={enterNow ? "feedback" : null}
-                cue={enterNow ? hexCue : null}
-                cueDelayMs={ENTER_SETTLE_MS}
-              />}
-          </div>
+        <div ref={hexSlot} aria-hidden className={`pointer-events-none ${PANEL_HEX}`}>
+          {!hexSlot && <OnboardingHex
+              entryKey={enterNow ? "feedback" : null}
+              cue={enterNow ? hexCue : null}
+              cueDelayMs={ENTER_SETTLE_MS}
+            />}
         </div>
       </div>
     </motion.div>

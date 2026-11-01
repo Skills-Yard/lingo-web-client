@@ -439,7 +439,7 @@ export function OnboardingFlow({
                   don't stretch across a wide screen. */}
                 <div className="mx-auto flex min-h-0 w-full max-w-md flex-1 flex-col">
                   {/* Room for the persistent header drawn above the screens. */}
-                  <div aria-hidden className="h-[83px] shrink-0" />
+                  <div aria-hidden className="shrink-0" style={{ height: `calc(var(--screen-top) + ${32 * headerScale}px)` }} />
 
                   {step.kind === "fox-message" && (
                     <FoxMessageScreen
@@ -569,7 +569,8 @@ export function OnboardingFlow({
                   width: `min(${100 / headerScale}%, ${1024 / headerScale}px)`,
                   marginLeft: "max(0px, calc((100% - 1024px) / 2))",
                   transform: `scale(${headerScale})`,
-                }}
+                  "--stage-scale": headerScale,
+                } as React.CSSProperties}
               >
                 <OnboardingHeader
                   onBack={goBack}

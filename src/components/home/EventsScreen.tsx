@@ -227,7 +227,7 @@ export function EventsScreen() {
       className="font-sans scrollbar-none absolute inset-0 overflow-y-auto overflow-x-hidden bg-white text-[#2C2C2C] dark:bg-[#0F1F26] dark:text-white"
     >
       <div className="mx-auto w-full max-w-[430px] px-4" style={{ paddingBottom: NAV_CLEARANCE }}>
-        <motion.header {...reveal(0)} className="flex items-center justify-between">
+        <motion.header {...reveal(0)} className="-mt-[9px] flex items-center justify-between">
           <IconButton
             label={savedOnly ? "Show all events" : "Show saved events"}
             pressed={savedOnly}

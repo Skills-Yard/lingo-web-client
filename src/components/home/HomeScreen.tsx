@@ -18,7 +18,7 @@ import { Layout, Fit, Alignment, type Rive } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { Check, Code2, House, Maximize, Menu, Minimize, MapPin, Moon, Sun, Undo2 } from "lucide-react";
 import { useTheme } from "@/context/ThemeContext";
-import { useFullscreen } from "@/hooks/useFullscreen";
+import { useFullscreen, useScreenTop } from "@/hooks/useFullscreen";
 import { TOP_MARGIN } from "./HomeStage";
 import { LevelStats } from "./HomeTopBar";
 import { configureRiveRuntime, HEX_EXIT_MS, HEX_ONBOARDING_TRIGGER, LIVE_PLATFORM } from "@/lib/rive/runtime";
@@ -501,8 +501,6 @@ const MODULES = [
 
 const CARD_FULL_H = 158;
 const CARD_COMPACT_H = 78;
-/** The cards start 10px (real size) under the 36px header row. */
-const CARDS_TOP = TOP_MARGIN + 36 + 10;
 const CARD_TOP_Y = 0;
 /** How far each card queued behind the front one peeks out (px), and how
  * much narrower it is, so the stack reads as a pile. */
@@ -777,6 +775,8 @@ export function HomeScreen({
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
   const [viewH, setViewH] = useState(STAGE_H);
+  // The cards start 10px (real size) under the 36px header row.
+  const cardsTop = useScreenTop() + 36 + 10;
   const [boxW, setBoxW] = useState(STAGE_W);
   const [popupOpen, setPopupOpen] = useState(false);
   const currentBlock = useRef<BlockController | null>(null);
@@ -1031,7 +1031,7 @@ export function HomeScreen({
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
           <div
             className="absolute inset-x-0 mx-auto w-full max-w-[430px]"
-            style={{ top: CARDS_TOP, height: viewH * scale - CARDS_TOP }}
+            style={{ top: cardsTop, height: viewH * scale - cardsTop }}
           >
             {/* A finished module collapses and moves to the bottom of the
               screen; undo brings it back. */}
@@ -1040,7 +1040,7 @@ export function HomeScreen({
                 key={m.id}
                 title={m.title}
                 progress={i < done ? LESSONS_PER_MODULE : m.base}
-                place={cardPlace(i, done, viewH * scale - CARDS_TOP)}
+                place={cardPlace(i, done, viewH * scale - cardsTop)}
                 compact={i < done}
               />
             ))}

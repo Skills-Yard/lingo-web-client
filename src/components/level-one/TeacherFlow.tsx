@@ -10,7 +10,7 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { BUTTON_DROP } from "./ActionRow";
-import { FeedbackPanel } from "./FeedbackPanel";
+import { FeedbackPanel, XpBurst } from "./FeedbackPanel";
 import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
 import { SpokenText } from "./SpokenText";
@@ -229,8 +229,8 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               opacity: { duration: 0.3, delay: 0.3 },
               y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
             }}
-            // 48px below the cropped picture, the button's drop on top, so the
-            // options keep their gap to it.
+            // 48px below the cropped picture;
+            // the button's drop on top, so the options keep their gap to it.
             style={{ width: COLUMN_W, marginTop: 48 + BUTTON_DROP }}
             className="relative z-10 flex shrink-0 items-start gap-[19px] bg-white dark:bg-background"
           >
@@ -268,6 +268,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         )}
       </AnimatePresence>
       <Confetti active={checked && selectedId === CORRECT_ID} />
+      <XpBurst show={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>
   );
 }

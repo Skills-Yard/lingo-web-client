@@ -11,7 +11,7 @@ import { PersistentRobot, robotPx } from "./PersistentRobot";
 /** The gap between the robot's bottom edge and the first control under it. */
 export const ROBOT_GAP = 12;
 
-/** The top bar is 8px down the stage and 44px tall; the picture shows from the gap below it. */
+/** The top bar's room is 52px of the stage; the picture shows from the gap below it. */
 const TOP_BAR_BOTTOM = 52;
 export const ROBOT_TOP_GAP = 8;
 /** The picture is cut at this stage `top`: under the top bar and the gap below it. */

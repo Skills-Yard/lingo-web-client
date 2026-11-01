@@ -3,6 +3,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  /* The gap above every screen; see the full-screen rules below. */
+  --screen-top: 30px;
   color-scheme: light;
   --surface: #ffffff;
   --surface-strong: #f2f2f2;
@@ -44,6 +46,16 @@
   --h-trophy-off: #edeef0;
   --h-course-bg: linear-gradient(180deg, #3762eb 0%, #2a66db 55%, #4a8bf0 100%);
   --h-course-shadow: none;
+}
+
+/* A little more room when the app fills the whole screen: installed, or the Full screen toggle. */
+@media (display-mode: fullscreen), (display-mode: standalone) {
+  :root {
+    --screen-top: 40px;
+  }
+}
+:root:fullscreen {
+  --screen-top: 40px;
 }
 
 .dark,
