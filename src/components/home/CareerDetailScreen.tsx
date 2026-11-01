@@ -58,7 +58,7 @@ export function CareerDetailScreen({
             type="button"
             onClick={onBack}
             aria-label="Back"
-            className="absolute left-4 top-[54px] flex h-10 w-10 items-center justify-center transition-transform active:scale-95"
+            className="absolute left-4 top-[calc(var(--screen-top)+env(safe-area-inset-top)-12px)] flex h-10 w-10 items-center justify-center transition-transform active:scale-95"
           >
             <ArrowLeft className="h-6 w-6 text-[#444444]" strokeWidth={1.8} />
           </button>

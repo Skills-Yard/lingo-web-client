@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Fredoka } from "next/font/google";
-import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
+import { OnboardingHex, PANEL_HEX } from "@/components/level-one/FeedbackPanel";
 import { HintFloat } from "@/components/level-one/HintFloat";
 import { vibrateForTap } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
@@ -112,13 +112,13 @@ function NicePanel() {
         className="absolute inset-x-0 bottom-0 z-0 mx-auto flex justify-center rounded-t-[28px] border-[1.5px] border-b-0 border-[#08A2AD] bg-[#DFFFF8] pt-[22px] dark:border-[#1E5F59] dark:bg-[#0F2B28]"
       >
         <div className="flex h-fit w-[290px] items-center justify-between">
-          <div className="flex w-[180px] flex-col gap-1.5">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <h2 className={`${fredoka.className} text-[17px] leading-6 font-semibold text-[#01A17F]`}>Yayyy!</h2>
             <p className="text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80">
               You gave an instruction. The robot performed an action.
             </p>
           </div>
-          <div aria-hidden className="-my-4 h-[112px] w-[110px] shrink-0">
+          <div aria-hidden className={PANEL_HEX}>
             <OnboardingHex entryKey={hexIn ? "nice" : null} cue={hexIn ? HEX_ONBOARDING_TRIGGER.continueThumb : null} cueDelayMs={HEX_SETTLE_MS} />
           </div>
         </div>

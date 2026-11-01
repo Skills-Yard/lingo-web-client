@@ -75,10 +75,10 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
   const fill = progress ? (progress.step / progress.total) * 100 : 0;
   const fillFrom = progress ? ((fromStep ?? progress.step - 1) / progress.total) * 100 : 0;
   return (
-    // Fixed 83px box, placed from the top edge: page count at 27px, bar at
-    // 63px. The onboarding's bar runs the full width between the 16px margins;
+    // Fixed box, placed from the top edge: page count at 27px, bar `--screen-top` down on
+    // screen. The onboarding's bar runs the full width between the 16px margins;
     // Level 1's runs between its close and the battery — one width on every screen.
-    <header className={`relative shrink-0 select-none ${level ? "h-11" : "h-[83px]"}`}>
+    <header className={`relative shrink-0 select-none ${level ? "h-11" : "h-[62px]"}`}>
       {progress && showCount && (
         <span className="absolute top-[27px] left-1/2 -translate-x-1/2 text-[14px] leading-none font-medium whitespace-nowrap text-[#888888] tabular-nums dark:text-white/60">
           <span className="text-[#00B8A9]">{String(progress.step).padStart(2, "0")}</span>/
@@ -92,7 +92,7 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
           value={fill}
           from={fillFrom}
           answer={answer}
-          className="absolute top-[63px] left-4 right-4 mx-auto max-w-[480px] -translate-y-1/2"
+          className="absolute top-[calc(var(--screen-top)/var(--stage-scale,1))] left-4 right-4 mx-auto max-w-[480px]"
         />
       )}
 
@@ -105,7 +105,7 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
           The bar is centred in a 20.84px box, the height of Figma's group, and
           the battery in a 25px one. */}
       {level && (
-        <div className="absolute inset-x-4 top-[6px] flex h-[30px] items-end gap-[17px]">
+        <div className="absolute inset-x-4 -top-[5.35px] flex h-[30px] items-end gap-[17px]">
           {/* Only Level 1 has a button here (its close). The onboarding's Back
               lives in the hidden dev panel (see DevPanel). */}
           <button
@@ -114,7 +114,7 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
             className={`h-[30px] w-[30px] shrink-0 border-0! dark:hover:bg-transparent! ${ICON_BUTTON}`}
             aria-label="Close"
           >
-            {/* The cross is 19.3px across with a 3px stroke, in the 30 x 30 box. */}
+            {/* The cross is 19.3px across with a 3px stroke, in the 30 x 30 box: the row sits 5.35px up, so the cross itself meets the page margin. */}
             <svg
               aria-hidden
               viewBox="0 0 30 30"

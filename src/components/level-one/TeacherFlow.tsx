@@ -10,7 +10,7 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { BUTTON_DROP } from "./ActionRow";
-import { FeedbackPanel, XpPop } from "./FeedbackPanel";
+import { FeedbackPanel, XpBurst } from "./FeedbackPanel";
 import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
 import { SpokenText } from "./SpokenText";
@@ -227,10 +227,10 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               opacity: { duration: 0.3, delay: 0.3 },
               y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
             }}
-            // 48px below the cropped picture; 80 once "+10 XP" floats above a card;
+            // 48px below the cropped picture;
             // the button's drop on top, so the options keep their gap to it.
-            style={{ width: COLUMN_W, marginTop: (checked && selectedId === CORRECT_ID ? 80 : 48) + BUTTON_DROP }}
-            className="relative z-10 flex shrink-0 items-start gap-[19px] bg-white transition-[margin-top] duration-300 dark:bg-background"
+            style={{ width: COLUMN_W, marginTop: 48 + BUTTON_DROP }}
+            className="relative z-10 flex shrink-0 items-start gap-[19px] bg-white dark:bg-background"
           >
             {OPTIONS.map((option) => {
               const state = optionState(option.id, selectedId, checked);
@@ -252,7 +252,6 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     state === "idle" ? `border-white dark:border-transparent ${option.tint}` : LOOKS[state].card
                   } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
                 >
-                  <XpPop show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={option.icon} alt="" draggable={false} className="h-[116px] w-[116px] shrink-0 object-contain" />
                   {/* Narrow enough that both labels break onto two lines, so the pictures line up and no word touches the card's edge. */}
@@ -267,6 +266,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
         )}
       </AnimatePresence>
       <Confetti active={checked && selectedId === CORRECT_ID} />
+      <XpBurst show={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>
   );
 }

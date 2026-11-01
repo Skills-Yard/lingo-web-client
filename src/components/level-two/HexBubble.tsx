@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { motion, type Transition } from "framer-motion";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { TYPE_DELAY_MS, useTyped } from "@/components/level-one/useTyped";
 import type { BubbleSize, Span } from "./levelTwo";
@@ -16,45 +17,58 @@ type HexBubbleProps = {
   size: BubbleSize;
   /** A trigger Hex plays once he has entered. */
   cue?: string | null;
-  /** Hex slides back behind the bubble and is gone (the result panel brings its own). */
-  tucked?: boolean;
+  /** The bubble bounces off to the left behind Hex, then he follows (the result panel brings its own Hex). */
+  leaving?: boolean;
 };
 
-/** How far Hex slides back toward the bubble, and how fast: the panel's own spring (see FeedbackPanel), so he leaves as it arrives. */
-const TUCK_DISTANCE = HEX_SLOT * 0.75;
-const TUCK_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
+/** Hex starts his own exit this long after the bubble sets off. */
+const HEX_FOLLOWS_MS = 80;
+/** The bubble's way out: a little bounce the other way (px), then off to the left. */
+const BUBBLE_WINDUP = 18;
+const BUBBLE_EXIT: Transition = { duration: 0.15, times: [0, 0.35, 1], ease: ["easeOut", "backIn"] };
+
+/** Hex's way out, quicker than his Rive exit can play: he is slid off to the left. */
+const HEX_EXIT: Transition = { duration: 0.2, ease: "easeIn" };
 
 /** Hex beside his line: the line is typed in letter by letter, the way module
  * 1's teacher line is. */
-export function HexBubble({ entryKey, hex, line, size, cue = null, tucked = false }: HexBubbleProps) {
+export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false }: HexBubbleProps) {
   const hexAtLeft = hex === "left";
+  const [hexLeaving, setHexLeaving] = useState(false);
+  useEffect(() => {
+    if (!leaving) return;
+    const timer = window.setTimeout(() => setHexLeaving(true), HEX_FOLLOWS_MS);
+    return () => window.clearTimeout(timer);
+  }, [leaving]);
   return (
     <div className={`flex w-fit items-center ${hexAtLeft ? "" : "flex-row-reverse"}`}>
-      {/* The bubble comes after him, so it is drawn over him as he slides back. */}
+      {/* Leaving, he is drawn over the bubble, so it passes behind him. */}
       <motion.div
         aria-hidden
-        className="relative shrink-0"
+        className={`relative shrink-0 ${leaving ? "z-10" : ""}`}
         style={{ width: HEX_SLOT, height: HEX_SLOT }}
         initial={false}
-        animate={tucked ? { x: hexAtLeft ? TUCK_DISTANCE : -TUCK_DISTANCE, scale: 0.7, opacity: 0 } : { x: 0, scale: 1, opacity: 1 }}
-        transition={TUCK_SPRING}
+        // Twice the window's width is past the left edge at any scale the shell uses.
+        animate={{ x: hexLeaving ? -2 * window.innerWidth : 0 }}
+        transition={HEX_EXIT}
       >
-        <OnboardingHex entryKey={entryKey} cue={cue} />
+        <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />
       </motion.div>
-      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tailAtLeft={hexAtLeft} />
+      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tailAtLeft={hexAtLeft} leaving={leaving} />
     </div>
   );
 }
 
 /** The bubble's own look: a 3px teal border over a blue drop edge (the Figma
  * "Rectangle 142" and the onboarding's), its tail pointing at Hex. */
-function SpeechBubble({ line, size, tailAtLeft }: { line: readonly Span[]; size: BubbleSize; tailAtLeft: boolean }) {
+function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span[]; size: BubbleSize; tailAtLeft: boolean; leaving: boolean }) {
   const typed = useTyped(line.map((span) => span.text).join(""), true);
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.85, x: tailAtLeft ? -8 : 8 }}
-      animate={{ opacity: 1, scale: 1, x: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 20, delay: TYPE_DELAY_MS / 1000 }}
+      // Twice the window's width is past the left edge at any scale the shell uses.
+      animate={leaving ? { opacity: 1, scale: 1, x: [0, BUBBLE_WINDUP, -2 * window.innerWidth] } : { opacity: 1, scale: 1, x: 0 }}
+      transition={leaving ? BUBBLE_EXIT : { type: "spring", stiffness: 260, damping: 20, delay: TYPE_DELAY_MS / 1000 }}
       // Figma: the short bubble ("Rectangle 142") is 77 tall with its text 9px in; the others 86.
       style={{ transformOrigin: tailAtLeft ? "0% 50%" : "100% 50%", width: size.width, minHeight: size.minHeight }}
       className={`relative flex shrink-0 items-center justify-center rounded-xl border-[3px] border-[#00B8A9] bg-white px-[9px] shadow-[0_3px_0_#128CB3] ${

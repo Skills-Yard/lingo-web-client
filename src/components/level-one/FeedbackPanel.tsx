@@ -2,7 +2,7 @@
 
 import { HexBleed, HEX_BLEED } from "@/components/onboarding/robu/HexBleed";
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion, type Transition } from "framer-motion";
+import { motion, type Transition } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { Fredoka, Nunito, Poppins } from "next/font/google";
 import {
@@ -27,6 +27,11 @@ const IDLE_REPEAT_MS = 4000;
 const ENTER_SETTLE_MS = 900;
 /** The panel's Hex starts entering this long after he is asked to. */
 const ENTER_DELAY_MS = 250;
+/** About how long a cue (his thumbs-up) plays, before his ambient idle takes over again. */
+const CUE_PLAY_MS = 2800;
+/** Hex's box in a result panel, the same in every one. His body stands about 14px
+ * inside it, so the 2px pull leaves 12px between the text and him. */
+export const PANEL_HEX = "-my-4 -ml-0.5 h-[112px] w-[110px] shrink-0";
 
 /**
  * Hex, played the onboarding way: the `Onboarding` machine, entering with
@@ -93,21 +98,27 @@ export function OnboardingHex({
   useEffect(() => {
     if (ready && leaving) fireNow(HEX_ONBOARDING_TRIGGER[exit]);
   }, [ready, leaving, exit, fireNow]);
+  // The cue that has finished playing, so the ambient idle can pick up again.
+  const [playedCue, setPlayedCue] = useState<string | null>(null);
   // With nothing else to play, Hex keeps running his ambient idle. The first
   // one queues behind `enter`; it stops once he starts leaving.
   useEffect(() => {
-    if (!ready || leaving || entryKey === null || cue !== null || speaking) return;
+    if (!ready || leaving || entryKey === null || (cue !== null && cue !== playedCue) || speaking) return;
     fireTrigger(HEX_ONBOARDING_TRIGGER.idleAmbient);
     const timer = window.setInterval(
       () => fireTrigger(HEX_ONBOARDING_TRIGGER.idleAmbient),
       IDLE_REPEAT_MS,
     );
     return () => window.clearInterval(timer);
-  }, [ready, leaving, entryKey, cue, speaking, fireTrigger]);
+  }, [ready, leaving, entryKey, cue, playedCue, speaking, fireTrigger]);
   useEffect(() => {
     if (!ready || !cue) return;
-    const timer = window.setTimeout(() => fireNow(cue), cueDelayMs);
-    return () => window.clearTimeout(timer);
+    const fire = window.setTimeout(() => fireNow(cue), cueDelayMs);
+    const played = window.setTimeout(() => setPlayedCue(cue), cueDelayMs + CUE_PLAY_MS);
+    return () => {
+      window.clearTimeout(fire);
+      window.clearTimeout(played);
+    };
   }, [ready, cue, cueDelayMs, fireNow]);
   return <HexBleed Canvas={RiveComponent} />;
 }
@@ -135,38 +146,27 @@ const FEEDBACK = {
   },
 } as const;
 
-const XP_SPRING = { type: "spring", stiffness: 220, damping: 14, delay: 0.15 } as const;
-/** With `fading`: shown, held for a moment, then gone sliding up (a share of the whole run at each key). */
-const XP_FADE: Transition = { duration: 1.6, delay: 0.15, times: [0, 0.2, 0.6, 1], ease: "easeOut" };
+/** How far "+10 XP" stays see-through at its strongest. */
+const XP_OPACITY = 0.7;
+/** It rises to the centre, holds, then leaves upward (a share of the whole run at each key). */
+const XP_RISE: Transition = { duration: 1.6, delay: 0.15, times: [0, 0.2, 0.65, 1], ease: "easeOut" };
+const XP_BOUNCE = { type: "spring", stiffness: 300, damping: 9, delay: 0.15 } as const;
 
-/** Where the "+10 XP" stands on its card: above it, inside at its right end, or inside at the top. */
-const XP_PLACE = {
-  above: "-top-8 left-1/2 -translate-x-1/2",
-  right: "top-1/2 right-4 -translate-y-1/2",
-  top: "top-2 left-1/2 -translate-x-1/2",
-} as const;
-
-/** The "+10 XP" that pops up on the right answer's card: above it, or with
- * `inside`, at its right end (`"top"`: inside, at the top, for a card with its
- * content in the middle). With `fading` (the cards fade out) it fades out
- * sliding up after it has been shown, instead of staying where the card was. */
-export function XpPop({ show, inside = false, fading = false }: { show: boolean; inside?: boolean | "top"; fading?: boolean }) {
+/** A big "+10 XP" in the middle of the screen for a right answer: comes up to
+ * the centre with a bounce, fading in, then fades out moving upward. */
+export function XpBurst({ show }: { show: boolean }) {
+  if (!show) return null;
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.span
-          initial={{ opacity: 0, scale: 0.7 }}
-          animate={fading ? { opacity: [0, 1, 1, 0], y: [8, 0, 0, -28], scale: 1 } : { opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={fading ? { opacity: XP_FADE, y: XP_FADE, scale: XP_SPRING } : XP_SPRING}
-          className={`pointer-events-none absolute z-10 text-[18px] leading-6 font-bold whitespace-nowrap text-[#F5A623] ${
-            XP_PLACE[inside === "top" ? "top" : inside ? "right" : "above"]
-          }`}
-        >
-          +10 XP
-        </motion.span>
-      )}
-    </AnimatePresence>
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+      <motion.span
+        initial={{ opacity: 0, y: 60, scale: 0.4 }}
+        animate={{ opacity: [0, XP_OPACITY, XP_OPACITY, 0], y: [60, 0, 0, -110], scale: 1 }}
+        transition={{ opacity: XP_RISE, y: XP_RISE, scale: XP_BOUNCE }}
+        className="text-[56px] leading-none font-bold whitespace-nowrap text-[#F5A623]"
+      >
+        +10 XP
+      </motion.span>
+    </div>
   );
 }
 
@@ -223,7 +223,7 @@ export function FeedbackPanel({
             {children}
           </p>
         </div>
-        <div ref={hexSlot} aria-hidden className="pointer-events-none -my-4 h-[112px] w-[120px] shrink-0">
+        <div ref={hexSlot} aria-hidden className={`pointer-events-none ${PANEL_HEX}`}>
           {!hexSlot && <OnboardingHex
               entryKey={enterNow ? "feedback" : null}
               cue={enterNow ? hexCue : null}

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Confetti } from "@/components/level-one/Confetti";
-import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
+import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
@@ -78,7 +78,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
         <TitleText lines={quiz.title} underline={quiz.underline} />
       </ScreenTitle>
       <CentredRow top={stageTop(quiz.bubbleTop)}>
-        <HexBubble entryKey={`quiz-${step}`} hex="right" line={quiz.line} size={quiz.bubble} tucked={checked} />
+        <HexBubble entryKey={`quiz-${step}`} hex="left" line={quiz.line} size={quiz.bubble} leaving={checked} />
       </CentredRow>
       {quiz.layout === "list" ? (
         <AnswerCards
@@ -106,6 +106,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
         />
       )}
       <Confetti active={checked && correct} />
+      <XpBurst show={checked && correct} />
     </LevelTwoShell>
   );
 }

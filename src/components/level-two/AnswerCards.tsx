@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { XpPop } from "@/components/level-one/FeedbackPanel";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { aboveButtons } from "./LevelTwoShell";
@@ -90,7 +89,6 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 <span className="min-w-0 flex-1 text-[17px] leading-6 font-medium text-[#444444] dark:text-white">{choice.text}</span>
               </span>
             </motion.button>
-            <XpPop inside show={checked && choice.id === correctId && selectedId === correctId} fading={fadeOut} />
           </HintFloat>
         );
       })}

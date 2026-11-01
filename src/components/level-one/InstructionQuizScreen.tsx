@@ -14,7 +14,7 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { BUTTON_DROP } from "./ActionRow";
-import { FeedbackPanel, XpPop } from "./FeedbackPanel";
+import { FeedbackPanel, XpBurst } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
 import { FILL_S, HintFloat } from "./HintFloat";
 import { LevelOneShell, levelOneHref, TITLE_HEIGHT, TITLE_MARGIN_TOP } from "./LevelOneShell";
@@ -178,7 +178,6 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                   transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                   className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit] bg-[#FFE7D1] dark:bg-[#33220F]"
                 />
-                <XpPop inside show={checked && option.id === CORRECT_ID && selectedId === CORRECT_ID} />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={option.icon} alt="" draggable={false} className={`shrink-0 object-contain ${option.iconSize}`} />
                 <span className="text-[20px] leading-none font-medium text-[#2C2C2C] dark:text-white">{option.title}</span>
@@ -197,6 +196,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
         </div>
       </div>
       <Confetti active={checked && selectedId === CORRECT_ID} />
+      <XpBurst show={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>
   );
 }

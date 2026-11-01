@@ -3,7 +3,6 @@
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { XpPop } from "@/components/level-one/FeedbackPanel";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { CARDS_RISE, GAP_ABOVE_BUTTONS } from "./AnswerCards";
@@ -93,7 +92,6 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 {choice.text}
               </span>
             </motion.button>
-            <XpPop inside="top" show={checked && choice.id === correctId && selectedId === correctId} fading={fadeOut} />
           </HintFloat>
         );
       })}

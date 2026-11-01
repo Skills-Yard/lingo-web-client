@@ -76,3 +76,12 @@ export function useFullscreen() {
   const state = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   return { available: state !== "unavailable", active: state === "on", toggle: toggleFullscreen };
 }
+
+const readScreenTop = () =>
+  parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--screen-top"));
+
+/** `--screen-top` (globals.css) as a number, for layout that does sums with it.
+ * It changes with the display mode, so it follows the same events. */
+export function useScreenTop() {
+  return useSyncExternalStore(subscribe, readScreenTop, () => 30);
+}

@@ -119,8 +119,8 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
   return (
     <main className="h-dvh w-full overflow-hidden bg-white font-[family-name:var(--font-app-poppins)] text-[#444444] dark:bg-[#0F1F26] dark:text-white">
       <div className="mx-auto flex h-full w-full max-w-[430px] flex-col">
-        <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-[54px]">
-          <div className="relative flex h-10 items-center justify-between">
+        <div className="scrollbar-none min-h-0 flex-1 overflow-y-auto px-4 pb-10 pt-[calc(var(--screen-top)+env(safe-area-inset-top))]">
+          <div className="relative -mt-[11px] flex h-10 items-center justify-between">
             <button
               type="button"
               onClick={onClose}

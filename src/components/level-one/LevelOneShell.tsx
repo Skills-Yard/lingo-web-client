@@ -25,7 +25,7 @@ const MAX_SCALE = 1.5;
 /** The header's widest on-screen width (px) — 5xl. */
 const HEADER_MAX_W = 1024;
 
-/** Every screen's title starts 79px down the stage (Module 2's `ScreenTitle`: Figma's 116 less the shell's 37). The content column starts 52px down (8px, then the 44px header), so a title in it takes this much margin above. */
+/** Every screen's title starts 79px down the stage (Module 2's `ScreenTitle`: Figma's 116 less the shell's 37). The content column starts 52px down (the header's room), so a title in it takes this much margin above. */
 export const TITLE_MARGIN_TOP = 27;
 /** A one-line title's box: 28px at 134%. */
 export const TITLE_HEIGHT = 38;
@@ -197,10 +197,11 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
           screens' own z-10 blocks (options, button row), so the bar's strikes
           - drawn on a screen-sized canvas - aren't covered by them; Hex (z-[100]) still passes in front. */}
         <div
-          className="relative z-[60] mx-auto mt-2 w-full"
+          className="relative z-[60] mx-auto h-[52px] w-full"
           // 5xl on screen — wider than the content column below it. The stage
-          // is scaled, so divide.
-          style={{ maxWidth: columnW }}
+          // is scaled, so divide. Its only space above is `--screen-top`; the 52px is the
+          // room it keeps for the content below, which starts there whatever the margin.
+          style={{ maxWidth: columnW, top: `calc(var(--screen-top) / var(--stage-scale, 1))` }}
         >
           <OnboardingHeader
             onBack={() => router.push("/level")}
