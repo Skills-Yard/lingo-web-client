@@ -56,6 +56,8 @@ export type Quiz = {
   keepCards?: boolean;
   /** The hint also lights up the target box. */
   targetHint?: boolean;
+  /** The target box is lit from the start, with this text on it (as on the "Move cube to target" screen). */
+  targetLabel?: string;
   hint: boolean;
   /** The main button before the answer is checked (default "Check"). */
   ctaLabel?: string;
@@ -89,7 +91,7 @@ export const WHAT_JUST_HAPPENED: Quiz = {
 
 /** Screen 5 — `/module?step=5`. */
 export const WHAT_NEXT: Quiz = {
-  title: [[{ text: "It’s your turn now!" }]],
+  title: [[{ text: "It’s " }, { text: "your turn", teal: true }, { text: " now!" }]],
   line: [{ text: "Let’s make the robot pick up the cube." }],
   bubble: { width: 244 },
   bubbleTop: 172,
@@ -163,6 +165,7 @@ export const WHERE_SHOULD_GO: Quiz = {
     { id: "target", text: "Place in Target", icon: "step-13.3.svg", tint: "bg-[#E5EFFD] dark:bg-[#15233A]", moves: ["placeInTarget"] },
   ],
   correctId: "target",
+  targetLabel: "TARGET AREA",
   rightTitle: "Exactly!",
   right: "Place in Target moves the cube to the target area.",
   wrong: "Remember: Place in Target moves the cube to the target area.",

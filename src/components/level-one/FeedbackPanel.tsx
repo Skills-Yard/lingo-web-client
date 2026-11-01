@@ -28,9 +28,6 @@ const ENTER_SETTLE_MS = 900;
 const ENTER_DELAY_MS = 250;
 /** About how long a cue (his thumbs-up) plays, before his ambient idle takes over again. */
 const CUE_PLAY_MS = 2800;
-/** Hex's box in a result panel, the same in every one. His body stands about 14px
- * inside it, so the 2px pull leaves 12px between the text and him. */
-export const PANEL_HEX = "-my-4 -ml-0.5 h-[112px] w-[110px] shrink-0";
 
 /**
  * Hex, played the onboarding way: the `Onboarding` machine, entering with
@@ -236,12 +233,14 @@ export function FeedbackPanel({
             {children}
           </p>
         </div>
-        <div ref={hexSlot} aria-hidden className={`pointer-events-none ${PANEL_HEX}`}>
-          {!hexSlot && <OnboardingHex
-              entryKey={enterNow ? "feedback" : null}
-              cue={enterNow ? hexCue : null}
-              cueDelayMs={ENTER_SETTLE_MS}
-            />}
+        <div aria-hidden className={`pointer-events-none ${SHEET_HEX_SLOT}`}>
+          <div ref={hexSlot} className={SHEET_HEX_BOX}>
+            {!hexSlot && <OnboardingHex
+                entryKey={enterNow ? "feedback" : null}
+                cue={enterNow ? hexCue : null}
+                cueDelayMs={ENTER_SETTLE_MS}
+              />}
+          </div>
         </div>
       </div>
     </motion.div>

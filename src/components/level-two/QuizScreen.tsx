@@ -34,6 +34,8 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
   const picked = quiz.choices.find((choice) => choice.id === selectedId);
   // A right answer that plays a robot move: the cards go clear so it can be seen.
   const fadeCards = checked && correct && !quiz.keepCards && !!picked?.moves?.length;
+  // The target box is lit from the start (`targetLabel`) or by the hint, until the answer is checked.
+  const targetLit = quiz.targetLabel !== undefined || (!!quiz.targetHint && hinted);
 
   const check = () => {
     setChecked(true);
@@ -41,7 +43,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
     vibrateForAnswer(correct);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
     // The hint's glow goes out first, then the robot plays what this answer does.
-    if (quiz.targetHint && hinted) fireRobot("hideHint");
+    if (targetLit) fireRobot("hideHint");
     (picked?.moves ?? (correct ? [] : ["wrongClaw"])).forEach((move) => fireRobot(move));
   };
 
@@ -52,7 +54,8 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
         <RobotBackdrop
           below={robotBelowDialogue(quiz.bubbleTop, quiz.bubble)}
           pose={quiz.pose}
-          hint={!!quiz.targetHint && hinted && !checked}
+          hint={targetLit && !checked}
+          targetLabel={quiz.targetLabel}
         />
       }
       answer={answer}
