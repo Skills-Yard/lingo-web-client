@@ -23,11 +23,22 @@ const ACTIONS: readonly Card[] = [
   { id: "lift", text: "Lift the cube", icon: "step-11.4.svg", pair: "pickup" },
 ];
 
-/** Figma: the column chips start 181px down the frame, the cards' rows at 231 and 440. */
-const ROW_TOP = [231, 440] as const;
+/** The column headers start 181px down the frame; the cards' rows follow them. */
+const CHIP_TOP = 181;
+const CHIP_H = 52;
+const CHIP_GAP = 10;
 const CARD_W = 172;
-const CARD_H = 184;
+const CARD_H = 140;
 const GAP = 14;
+/** Between the two columns: they sit out toward the screen's edges, 8px in on the 390px frame. */
+const COLUMN_GAP = 30;
+const COLUMNS_W = CARD_W * 2 + COLUMN_GAP;
+const ROW_TOP = [CHIP_TOP + CHIP_H + CHIP_GAP, CHIP_TOP + CHIP_H + CHIP_GAP + CARD_H + GAP] as const;
+/** The column headers: what each column holds. */
+const CHIPS = [
+  { side: "left", icon: "match-instructions.svg", label: "Instructions", sub: "What to do", box: "bg-[#F1EEFF]", title: "text-[#5B3FD0]" },
+  { side: "right", icon: "match-actions.svg", label: "Actions", sub: "How it looks in the robot", box: "bg-[#FFF4E3]", title: "text-[#A85B00]" },
+] as const;
 /** A wrong pair shakes red for this long (seconds), and both cards let go this long (ms) after it was made. */
 const SHAKE_S = 0.28;
 const WRONG_MS = 300;
@@ -164,10 +175,10 @@ export function MatchScreen() {
             x: { duration: waiting ? WAIT_NUDGE_S : SHAKE_S },
             scale: matchedNow ? LIFT_TRANSITION : { duration: waiting ? WAIT_NUDGE_S : 0.4 },
           }}
-          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${face}`}
+          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${face}`}
           style={{ width: CARD_W, height: CARD_H }}
         >
-          <span className={`flex h-[100px] w-full items-center justify-center transition-opacity duration-150 ${look === "done" ? "opacity-50" : ""}`}>
+          <span className={`flex h-[92px] w-full items-center justify-center transition-opacity duration-150 ${look === "done" ? "opacity-50" : ""}`}>
             <SlotImage file={card.icon} className="max-h-full max-w-full object-contain" />
           </span>
           <span className={`text-center text-[14px] leading-5 font-semibold text-[#444444] transition-opacity duration-150 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
@@ -202,25 +213,21 @@ export function MatchScreen() {
         Can you <Teal>match them?</Teal>
       </ScreenTitle>
 
-      {/* The column chips. */}
-      {(
-        [
-          { side: "left", label: "Instruction", color: "text-[#8E82FF] bg-[#F6F4FE]" },
-          { side: "right", label: "Actions", color: "text-[#FF8D42] bg-[#FFF9F0]" },
-        ] as const
-      ).map((chip) => (
-        <span
-          key={chip.side}
-          className={`absolute rounded-md px-3 py-1 text-center text-[14px] leading-5 font-medium ${chip.color}`}
-          style={{
-            top: stageTop(181),
-            left: `calc(50% - 179px + ${chip.side === "left" ? 0 : CARD_W + GAP}px)`,
-            width: CARD_W,
-          }}
-        >
-          {chip.label}
-        </span>
-      ))}
+      {/* The column headers. */}
+      <div
+        className="absolute flex justify-between"
+        style={{ top: stageTop(CHIP_TOP), left: `calc(50% - ${COLUMNS_W / 2}px)`, width: COLUMNS_W, height: CHIP_H }}
+      >
+        {CHIPS.map((chip) => (
+          <div key={chip.side} className={`flex items-center gap-1.5 rounded-[10px] px-2 ${chip.box}`} style={{ width: CARD_W }}>
+            <SlotImage file={chip.icon} className="h-6 w-6 shrink-0 object-contain" />
+            <div className="min-w-0">
+              <p className={`text-[16px] leading-5 font-bold ${chip.title}`}>{chip.label}</p>
+              <p className="text-[10.5px] leading-[14px] font-medium whitespace-nowrap text-[#555555]">{chip.sub}</p>
+            </div>
+          </div>
+        ))}
+      </div>
 
       {(
         [
@@ -232,7 +239,7 @@ export function MatchScreen() {
           <div
             key={card.id}
             className="absolute"
-            style={{ top: stageTop(ROW_TOP[row]), left: `calc(50% - 179px + ${columnIndex * (CARD_W + GAP)}px)` }}
+            style={{ top: stageTop(ROW_TOP[row]), left: `calc(50% - ${COLUMNS_W / 2}px + ${columnIndex * (CARD_W + COLUMN_GAP)}px)` }}
           >
             {renderCard(side, card, row, tint)}
           </div>
