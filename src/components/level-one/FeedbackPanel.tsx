@@ -196,7 +196,8 @@ export function FeedbackPanel({
   /** In place of the usual "Correct! +10 XP" / "Not quite". */
   title?: string;
   /** Slides up. The panel stays mounted while closed, so Hex's canvas is
-   * already loaded when his entrance is asked for. */
+   * already loaded when his entrance is asked for, but hidden: being below the
+   * screen isn't enough, as Hex's canvas (and some displays) reach past its edge. */
   open: boolean;
   /** Plays Hex's entrance — independent of whether the sheet has arrived. */
   hexIn: boolean;
@@ -221,8 +222,8 @@ export function FeedbackPanel({
   const look = FEEDBACK[correct ? "correct" : "wrong"];
   return (
     <motion.div
-      initial={{ y: "100%" }}
-      animate={{ y: open ? 0 : "100%" }}
+      initial={{ y: "100%", visibility: "hidden" }}
+      animate={open ? { y: 0, visibility: "visible" } : { y: "100%", transitionEnd: { visibility: "hidden" } }}
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
       // 5xl on screen, like the header; the stage is scaled, so divide.
       style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}

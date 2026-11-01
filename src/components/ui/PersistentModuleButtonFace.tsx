@@ -11,12 +11,14 @@ import {
 import { BUTTON, MODULE_BUTTON } from "@/lib/rive/runtime";
 import type { AnswerResult } from "./RiveProgressBar";
 
-/** A checked answer sets the correct / wrong art; otherwise the button is at
- * rest, enabled or disabled. */
+/** A disabled button always looks disabled (a matching pair is an answer, but
+ * the screen isn't done yet). Otherwise a checked answer sets the correct / wrong
+ * art, and with none the button is at rest. */
 const pickState = (disabled: boolean, answer: AnswerResult | null) => {
   const { state } = MODULE_BUTTON;
+  if (disabled) return state.disabled;
   if (answer) return answer.correct ? state.correct : state.wrong;
-  return disabled ? state.disabled : state.enabled;
+  return state.enabled;
 };
 
 type PersistentModuleButtonFaceProps = {
