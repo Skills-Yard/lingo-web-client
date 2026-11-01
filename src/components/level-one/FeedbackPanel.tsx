@@ -193,7 +193,7 @@ export function FeedbackPanel({
   children,
 }: {
   correct: boolean;
-  /** Replaces the default title ("Correct!" / "Not quite"). */
+  /** In place of the usual "Correct! +10 XP" / "Not quite". */
   title?: string;
   /** Slides up. The panel stays mounted while closed, so Hex's canvas is
    * already loaded when his entrance is asked for. */
@@ -230,7 +230,7 @@ export function FeedbackPanel({
     >
       <div className="flex w-full items-center justify-between">
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h2 className={`font-semibold tracking-[-0.1px] ${SHEET_TITLE_SIZE} ${look.titleColor}`}>{title ?? look.title}</h2>
+          <h2 className={`${fredoka.className} text-[28px] leading-9 font-semibold tracking-[-0.1px] ${look.titleColor}`}>{title ?? look.title}</h2>
           <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.text} ${look.bold}`}>
             {children}
           </p>

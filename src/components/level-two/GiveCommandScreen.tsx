@@ -81,14 +81,8 @@ export function GiveCommandScreen() {
   );
 }
 
-/** The "Yayyy!" panel with Hex, coming up from behind the Next button. */
+/** The "Yayyy!" panel with Hex, coming up from behind the Next button: the right-answer panel, with its own title. */
 function NicePanel() {
-  const [hexIn, setHexIn] = useState(false);
-  useEffect(() => {
-    const timer = window.setTimeout(() => setHexIn(true), HEX_AFTER_MS);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   return (
     <div className="pointer-events-none absolute inset-0">
       {/* Behind the Next button, like Level 1's result panel (the button row is z-10). */}
