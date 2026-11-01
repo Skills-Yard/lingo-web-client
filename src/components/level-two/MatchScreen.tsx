@@ -145,56 +145,47 @@ export function MatchScreen() {
                 ? GRAY_CARD
                 : LOOKS.wrong.card;
       return (
-        <HintFloat className="relative" spin={false} active={hintHere}>
-          <motion.button
-            type="button"
-            onClick={() => pick(side, card.id)}
-            aria-pressed={look === "selected"}
-            disabled={matchedNow}
-            initial={{ opacity: 0, y: 40 }}
-            animate={{
-              opacity: 1,
-              y: matchedNow ? LIFT : waiting ? WAIT_FLOAT : 0,
-              x: look === "wrong" ? [0, -7, 7, -5, 5, 0] : waiting ? WAIT_SHAKE : 0,
-              scale: matchedNow ? LIFT_SCALE : look === "selected" ? [1, 0.96, 1.04, 1] : waiting ? WAIT_SCALE : 1,
-            }}
-            whileTap={{ scale: 0.97 }}
-            transition={{
-              opacity: { duration: 0.3, delay: 0.15 + row * 0.1 },
-              y: matchedNow ? LIFT_TRANSITION : waiting ? WAIT_FLOAT_TRANSITION : { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 },
-              x: { duration: waiting ? WAIT_NUDGE_S : SHAKE_S },
-              scale: matchedNow ? LIFT_TRANSITION : { duration: waiting ? WAIT_NUDGE_S : 0.4 },
-            }}
-            className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${face}`}
-            style={{ width: CARD_W, height: CARD_H }}
-          >
-            <motion.span
-              aria-hidden
-              initial={false}
-              animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-              transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-              className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
-            />
-            <span className={`flex h-[100px] w-full items-center justify-center transition-opacity duration-150 ${look === "done" ? "opacity-50" : ""}`}>
-              <SlotImage file={card.icon} className="max-h-full max-w-full object-contain" />
-            </span>
-            <span className={`text-center text-[14px] leading-5 font-semibold text-[#444444] transition-opacity duration-150 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
-              {card.text}
-            </span>
-            <motion.span
-              aria-hidden
-              initial={false}
-              animate={matchedNow || waiting ? SHINE_ON : SHINE_OFF}
-              transition={waiting ? WAIT_SHINE_TRANSITION : SHINE_TRANSITION}
-              style={{ skewX: -20 }}
-              className={`pointer-events-none absolute inset-y-0 left-0 w-14 ${
-                waiting
-                  ? "bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.8),transparent)]"
-                  : "bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)]"
-              }`}
-            />
-          </motion.button>
-        </HintFloat>
+        <motion.button
+          type="button"
+          onClick={() => pick(side, card.id)}
+          aria-pressed={look === "selected"}
+          disabled={matchedNow}
+          initial={{ opacity: 0, y: 40 }}
+          animate={{
+            opacity: 1,
+            y: matchedNow ? LIFT : waiting ? WAIT_FLOAT : 0,
+            x: look === "wrong" ? [0, -7, 7, -5, 5, 0] : waiting ? WAIT_SHAKE : 0,
+            scale: matchedNow ? LIFT_SCALE : look === "selected" ? [1, 0.96, 1.04, 1] : waiting ? WAIT_SCALE : 1,
+          }}
+          whileTap={{ scale: 0.97 }}
+          transition={{
+            opacity: { duration: 0.3, delay: 0.15 + row * 0.1 },
+            y: matchedNow ? LIFT_TRANSITION : waiting ? WAIT_FLOAT_TRANSITION : { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 },
+            x: { duration: waiting ? WAIT_NUDGE_S : SHAKE_S },
+            scale: matchedNow ? LIFT_TRANSITION : { duration: waiting ? WAIT_NUDGE_S : 0.4 },
+          }}
+          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${face}`}
+          style={{ width: CARD_W, height: CARD_H }}
+        >
+          <span className={`flex h-[100px] w-full items-center justify-center transition-opacity duration-150 ${look === "done" ? "opacity-50" : ""}`}>
+            <SlotImage file={card.icon} className="max-h-full max-w-full object-contain" />
+          </span>
+          <span className={`text-center text-[14px] leading-5 font-semibold text-[#444444] transition-opacity duration-150 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
+            {card.text}
+          </span>
+          <motion.span
+            aria-hidden
+            initial={false}
+            animate={matchedNow || waiting ? SHINE_ON : SHINE_OFF}
+            transition={waiting ? WAIT_SHINE_TRANSITION : SHINE_TRANSITION}
+            style={{ skewX: -20 }}
+            className={`pointer-events-none absolute inset-y-0 left-0 w-14 ${
+              waiting
+                ? "bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.8),transparent)]"
+                : "bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)]"
+            }`}
+          />
+        </motion.button>
       );
   };
 
