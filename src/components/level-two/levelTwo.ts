@@ -154,7 +154,7 @@ export const LETS_PICK_UP: Quiz = {
 
 /** Screen 8 — `/module?step=8`. */
 export const WHERE_SHOULD_GO: Quiz = {
-  title: [[{ text: "Where to place " }, { text: "the cube", teal: true }, { text: "?" }]],
+  title: [[{ text: "How to " }, { text: "reach the target?", teal: true }]],
   line: [{ text: "Pick an instruction to reach the target area." }],
   bubble: { width: 232 },
   bubbleTop: 176,
