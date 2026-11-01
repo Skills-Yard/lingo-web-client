@@ -356,6 +356,12 @@ export const PROGRESS_BAR = {
   comboProperty: "combo",
   comboValue: 3,
   comboHoldMs: 1000,
+  /** Boolean on the view model: on while `combo` is `comboValue`, off otherwise. */
+  fireProperty: "fire",
+  /** Number on the view model: `trailActive` while `combo` is `comboValue`, `trailDefault` otherwise. */
+  trailProperty: "trail",
+  trailActive: 1,
+  trailDefault: 3,
   /** Number on the view model, held at `screenHeightValue` for every screen. */
   screenHeightProperty: "screenH",
   screenHeightValue: -1,

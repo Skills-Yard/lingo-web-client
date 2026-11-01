@@ -173,6 +173,7 @@ export const getProgressBarHost = (): Host => {
       canvasSize = "";
       placeCanvas();
       writeScreenHeight();
+      writeComboEffects(0);
       const { minX, maxX, minY, maxY } = rive.bounds;
       if (maxY > minY) created.aspect = (maxX - minX) / (maxY - minY);
       created.loaded = true;
@@ -199,9 +200,22 @@ export const writeProgress = (fill: number) => {
   if (property) property.value = fill;
 };
 
+/** Turns `fire` on and sets `trail` to `trailActive` while `combo` is `comboValue`; otherwise `fire` off and `trail` at `trailDefault`. */
+const writeComboEffects = (combo: number) => {
+  const instance = host?.rive?.viewModelInstance;
+  const burning = combo === PROGRESS_BAR.comboValue;
+  const fire = instance?.boolean(PROGRESS_BAR.fireProperty);
+  if (fire) fire.value = burning;
+  else console.warn(`[progress bar] no "${PROGRESS_BAR.fireProperty}" boolean found on the view model`);
+  const trail = instance?.number(PROGRESS_BAR.trailProperty);
+  if (trail) trail.value = burning ? PROGRESS_BAR.trailActive : PROGRESS_BAR.trailDefault;
+  else console.warn(`[progress bar] no "${PROGRESS_BAR.trailProperty}" number found on the view model`);
+};
+
 const writeCombo = (combo: number) => {
   const property = host?.rive?.viewModelInstance?.number(PROGRESS_BAR.comboProperty);
   if (property) property.value = combo;
+  writeComboEffects(combo);
 };
 
 /** Sets `screenH` to -1. The bar is shared by every screen, so once on load covers them all. */
