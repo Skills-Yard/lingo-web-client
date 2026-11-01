@@ -2,9 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { Fredoka } from "next/font/google";
-import { OnboardingHex, PANEL_HEX } from "@/components/level-one/FeedbackPanel";
+import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import { HintFloat } from "@/components/level-one/HintFloat";
 import { vibrateForTap } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
@@ -14,18 +12,11 @@ import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, Teal } from "./Le
 import { ROBOT_GAP, RobotBackdrop } from "./RobotBackdrop";
 import { levelTwoHref } from "./levelTwo";
 
-const fredoka = Fredoka({ subsets: ["latin"], weight: "600" });
-
 /** Once the cube is up (the robot's pick-up clip), this long until "Nice!" comes in. */
 const NICE_AFTER_S = COMMAND_ROBOT.moveSeconds.pickUp + 0.45;
 /** Hex's question stands this far above the hint and the button (the frame has it 240px up from the bottom); the robot rests above it. */
 const QUESTION_ABOVE_BUTTONS = 118;
 const QUESTION_BOTTOM = aboveButtons(QUESTION_ABOVE_BUTTONS, true);
-/** Hex enters a touch after the panel, and his thumbs-up follows his entrance. */
-const HEX_AFTER_MS = 250;
-const HEX_SETTLE_MS = 900;
-/** Figma: the panel's top edge is 593px down the frame. */
-const PANEL_MIN_HEIGHT = 844 - 593;
 
 /**
  * `/module?step=2` — "Let's make it happen!": Hex asks what to
@@ -90,39 +81,13 @@ export function GiveCommandScreen() {
   );
 }
 
-/** The "Yayyy!" panel with Hex, coming up from behind the Next button. */
+/** The "Yayyy!" panel with Hex, coming up from behind the Next button: the right-answer panel, with its own title. */
 function NicePanel() {
-  const [hexIn, setHexIn] = useState(false);
-  useEffect(() => {
-    const timer = window.setTimeout(() => setHexIn(true), HEX_AFTER_MS);
-    return () => window.clearTimeout(timer);
-  }, []);
-
   return (
     <div className="pointer-events-none absolute inset-0">
-      {/* Behind the Next button, like Level 1's result panel (the button row is z-10). */}
-      <motion.div
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        transition={{ type: "spring", stiffness: 360, damping: 32 }}
-        // 5xl on screen, like the header; the stage is scaled, so divide.
-        // Figma's panel is 251 tall (top at 593); the button is drawn taller here
-        // (and taller still on a wide screen), so the panel reaches 10px above it.
-        style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))", minHeight: PANEL_MIN_HEIGHT, paddingBottom: aboveButtons(10) }}
-        className="absolute inset-x-0 bottom-0 z-0 mx-auto flex justify-center rounded-t-[28px] border-[1.5px] border-b-0 border-[#08A2AD] bg-[#DFFFF8] pt-[22px] dark:border-[#1E5F59] dark:bg-[#0F2B28]"
-      >
-        <div className="flex h-fit w-[290px] items-center justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <h2 className={`${fredoka.className} text-[17px] leading-6 font-semibold text-[#01A17F]`}>Yayyy!</h2>
-            <p className="text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80">
-              You gave an instruction. The robot performed an action.
-            </p>
-          </div>
-          <div aria-hidden className={PANEL_HEX}>
-            <OnboardingHex entryKey={hexIn ? "nice" : null} cue={hexIn ? HEX_ONBOARDING_TRIGGER.continueThumb : null} cueDelayMs={HEX_SETTLE_MS} />
-          </div>
-        </div>
-      </motion.div>
+      <FeedbackPanel correct title="Yayyy!" open hexIn hexCue={HEX_ONBOARDING_TRIGGER.continueThumb}>
+        You gave an instruction. The robot performed an action.
+      </FeedbackPanel>
     </div>
   );
 }

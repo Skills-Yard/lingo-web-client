@@ -33,21 +33,34 @@ const GAP = 14;
 const SHAKE_S = 0.28;
 const WRONG_MS = 300;
 /**
- * A right pair, in 0.35s: both cards lift 14px and drop back, with one small dip
- * below their place before they settle (each leg eased so the motion slows at the
- * top and speeds into the landing, never stopping dead). They turn green as they
- * rise and gray as they come down, and are disabled from the start.
+ * A right pair, in 1.2s: both cards lift 16px as they scale up, float there for a
+ * moment, then glide slowly back down to their place and size. They turn green as
+ * they rise and gray as they come down, and are disabled from the start.
  */
-const LIFT = [0, -14, 0, 3, 0];
-const LIFT_TRANSITION: Transition = { duration: 0.35, times: [0, 0.33, 0.67, 0.83, 1], ease: ["easeOut", "easeIn", "easeOut", "easeInOut"] };
+const LIFT = [null, -16, -12, 0];
+const LIFT_SCALE = [null, 1.06, 1.06, 1];
+const LIFT_TRANSITION: Transition = { duration: 1.2, times: [0, 0.2, 0.45, 1], ease: ["easeOut", "easeInOut", "easeInOut"] };
 /** They go gray this long (ms) after the match: as they start to come down. */
-const GRAY_AFTER_MS = 170;
+const GRAY_AFTER_MS = 540;
 /** The shine: a slim slanted band, very light, crossing each matched card from left to right as they lift. */
 const SHINE_OFF = { x: -60, opacity: 0 };
 const SHINE_ON = { x: [-60, CARD_W + 20], opacity: [0, 1, 1, 0] };
 const SHINE_TRANSITION: Transition = {
   x: { duration: 0.27, ease: "easeInOut", delay: 0.03 },
   opacity: { duration: 0.27, times: [0, 0.2, 0.8, 1], delay: 0.03 },
+};
+/**
+ * With a card picked, the other column's open cards show they are next: one scale
+ * up and shake, then a gentle float and a brighter shine that loop until the pick is made.
+ */
+const WAIT_NUDGE_S = 0.45;
+const WAIT_SCALE = [1, 1.05, 1];
+const WAIT_SHAKE = [0, -4, 4, -3, 3, 0];
+const WAIT_FLOAT = [0, -5, 0];
+const WAIT_FLOAT_TRANSITION: Transition = { duration: 1.8, ease: "easeInOut", repeat: Infinity, delay: WAIT_NUDGE_S };
+const WAIT_SHINE_TRANSITION: Transition = {
+  x: { duration: 0.9, ease: "easeInOut", repeat: Infinity, repeatDelay: 0.9, delay: WAIT_NUDGE_S },
+  opacity: { duration: 0.9, times: [0, 0.2, 0.8, 1], repeat: Infinity, repeatDelay: 0.9, delay: WAIT_NUDGE_S },
 };
 /** A right pair's colours fade over 0.15s (Tailwind's `duration-150`): blue to green to gray. A wrong pair's red fades back to normal over 0.25s (`duration-250`, on the idle look). */
 const BLUE_CARD = "border-[#5B9BFF] bg-[#EEF4FF] dark:bg-[#15213A]";
@@ -125,6 +138,8 @@ export function MatchScreen() {
       const hintHere = hinted && !!hintPair && (card.id === hintPair.id || card.id === hintPair.pair) && look === "idle";
       // A right pair: lifting (green), then coming down (gray); it is disabled throughout.
       const matchedNow = look === "correct" || look === "done";
+      // A card is picked in the other column and none yet in this one.
+      const waiting = look === "idle" && !picked[side] && !!picked[side === "left" ? "right" : "left"];
       const face =
         look === "idle"
           ? `border-white duration-250 dark:border-transparent ${tint}`
@@ -145,16 +160,16 @@ export function MatchScreen() {
             initial={{ opacity: 0, y: 40 }}
             animate={{
               opacity: 1,
-              y: matchedNow ? LIFT : 0,
-              x: look === "wrong" ? [0, -7, 7, -5, 5, 0] : 0,
-              scale: look === "selected" ? [1, 0.96, 1.04, 1] : 1,
+              y: matchedNow ? LIFT : waiting ? WAIT_FLOAT : 0,
+              x: look === "wrong" ? [0, -7, 7, -5, 5, 0] : waiting ? WAIT_SHAKE : 0,
+              scale: matchedNow ? LIFT_SCALE : look === "selected" ? [1, 0.96, 1.04, 1] : waiting ? WAIT_SCALE : 1,
             }}
             whileTap={{ scale: 0.97 }}
             transition={{
               opacity: { duration: 0.3, delay: 0.15 + row * 0.1 },
-              y: matchedNow ? LIFT_TRANSITION : { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 },
-              x: { duration: SHAKE_S },
-              scale: { duration: 0.4 },
+              y: matchedNow ? LIFT_TRANSITION : waiting ? WAIT_FLOAT_TRANSITION : { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 },
+              x: { duration: waiting ? WAIT_NUDGE_S : SHAKE_S },
+              scale: matchedNow ? LIFT_TRANSITION : { duration: waiting ? WAIT_NUDGE_S : 0.4 },
             }}
             className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${face}`}
             style={{ width: CARD_W, height: CARD_H }}
@@ -175,10 +190,14 @@ export function MatchScreen() {
             <motion.span
               aria-hidden
               initial={false}
-              animate={matchedNow ? SHINE_ON : SHINE_OFF}
-              transition={SHINE_TRANSITION}
+              animate={matchedNow || waiting ? SHINE_ON : SHINE_OFF}
+              transition={waiting ? WAIT_SHINE_TRANSITION : SHINE_TRANSITION}
               style={{ skewX: -20 }}
-              className="pointer-events-none absolute inset-y-0 left-0 w-14 bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)]"
+              className={`pointer-events-none absolute inset-y-0 left-0 w-14 ${
+                waiting
+                  ? "bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.8),transparent)]"
+                  : "bg-[linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)]"
+              }`}
             />
           </motion.button>
         </HintFloat>
