@@ -383,6 +383,23 @@ export const PROGRESS_BAR = {
   loopWidth: 3,
 } as const;
 
+/** The module's flip card — "Flip card" in `progressBar.riv` (207 x 275), played by
+ * `Card_SM`. Both faces are drawn in the artboard (the front's "Tap to reveal", the
+ * back's definition and example); firing the `flipTrigger` input turns the card over,
+ * and firing it again turns it back. The turn is a perspective one: mid-flip the card
+ * reaches about 16 units above the artboard (and 4 below), and Rive clips at the
+ * canvas edge, so the canvas gets `bleed` artboard units of room on every side (see
+ * `applyArtboardBleed`). */
+export const FLIP_CARD = {
+  src: PROGRESS_BAR.src,
+  artboard: "Flip card",
+  stateMachine: "Card_SM",
+  width: 207,
+  height: 275,
+  flipTrigger: "Trigger 1",
+  bleed: 20,
+} as const;
+
 /** The robot arm behind the module's first screens — "CMD_RobotArm" in
  * `command.riv` (390x306), played by `Main`. The artboard binds the `RobotVM`
  * view model: each name in `triggers` is a trigger that plays that move, and

@@ -1,20 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { preload } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useRive } from "@rive-app/react-canvas";
+import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
-import { SlotImage } from "./SlotImage";
+import { applyArtboardBleed, artboardBleedBox } from "@/lib/rive/bleed";
+import { configureRiveRuntime, FLIP_CARD } from "@/lib/rive/runtime";
+import { LevelTwoShell, ScreenTitle, Teal } from "./LevelTwoShell";
 import { levelTwoHref } from "./levelTwo";
 
-const CARD_W = 318;
-const CARD_H = 214;
-/** Figma: the card's top edge is 274px down the frame. */
-const CARD_TOP = 274;
-const FACE = "absolute inset-0 overflow-hidden rounded-[18px] border-2 border-white shadow-[0_6px_18px_rgba(31,42,68,0.18)]";
-const HIDDEN = { backfaceVisibility: "hidden", WebkitBackfaceVisibility: "hidden" } as const;
+configureRiveRuntime();
+
+const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+/** Where the canvas sits in the card's box: past it by `FLIP_CARD.bleed` on every side. */
+const BLEED_BOX = artboardBleedBox(FLIP_CARD, FLIP_CARD.bleed);
 
 /** Where the wall meets the floor in the picture, as a share of its height. */
 const HORIZON = "67%";
@@ -36,19 +39,67 @@ function RoomBackdrop() {
 }
 
 /**
- * `/module?step=10` — "Flip the card to reveal.": a card (with two
- * more behind it) that turns over when tapped, to what a command is. Next
- * unlocks once it has been turned.
+ * The "Flip card" artboard of `progressBar.riv`, at its own size in the middle of the
+ * stage. Both faces are drawn by the artboard: each tap fires its trigger, which turns
+ * the card over (and back). It stays hidden, and takes no taps, until the file has loaded.
+ */
+function FlipCard({ onFlip }: { onFlip: () => void }) {
+  // `crossOrigin: "anonymous"` matches the credentials mode of Rive's own `fetch()`,
+  // or the browser ignores the preload and downloads the file a second time.
+  preload(FLIP_CARD.src, { as: "fetch", crossOrigin: "anonymous" });
+
+  const { rive, canvas, RiveComponent } = useRive({
+    src: FLIP_CARD.src,
+    artboard: FLIP_CARD.artboard,
+    stateMachines: FLIP_CARD.stateMachine,
+    autoplay: true,
+    layout: LAYOUT,
+  });
+
+  // The canvas is bigger than the card by the bleed on every side, so the swell of
+  // the turn isn't clipped at the artboard's edge.
+  useEffect(() => {
+    if (!rive || !canvas) return;
+    return applyArtboardBleed(rive, canvas, FLIP_CARD, FLIP_CARD.bleed);
+  }, [rive, canvas]);
+
+  const flip = () => {
+    if (!rive) return;
+    rive.stateMachineInputs(FLIP_CARD.stateMachine)?.find((input) => input.name === FLIP_CARD.flipTrigger)?.fire();
+    onFlip();
+  };
+
+  return (
+    <div className="absolute inset-0 flex items-center justify-center">
+      <motion.button
+        type="button"
+        onClick={flip}
+        disabled={!rive}
+        aria-label="Flip the card"
+        initial={{ opacity: 0, y: 40 }}
+        animate={rive ? { opacity: 1, y: 0 } : undefined}
+        transition={{ opacity: { duration: 0.3 }, y: { type: "spring", stiffness: 140, damping: 16 } }}
+        whileTap={{ scale: 0.98 }}
+        className="pointer-events-auto relative shrink-0 cursor-pointer"
+        style={{ width: FLIP_CARD.width, height: FLIP_CARD.height }}
+      >
+        <RiveComponent aria-hidden style={{ position: "absolute", pointerEvents: "none", ...BLEED_BOX }} />
+      </motion.button>
+    </div>
+  );
+}
+
+/**
+ * `/module?step=10` — "Flip the card to reveal.": a card that turns over when tapped,
+ * to what a command is. Next unlocks once it has been turned.
  */
 export function FlipCardScreen() {
   const router = useRouter();
-  const [flipped, setFlipped] = useState(false);
   const [seen, setSeen] = useState(false);
 
-  const flip = () => {
+  const onFlip = () => {
     playClickSound();
     vibrateForTap();
-    setFlipped((now) => !now);
     setSeen(true);
   };
 
@@ -64,56 +115,7 @@ export function FlipCardScreen() {
         Flip the card to <Teal>reveal.</Teal>
       </ScreenTitle>
 
-      <div
-        className="pointer-events-auto absolute"
-        style={{ top: stageTop(CARD_TOP), left: `calc(50% - ${CARD_W / 2}px)`, width: CARD_W, height: CARD_H, perspective: 1000 }}
-      >
-        {/* The two cards behind. */}
-        <div aria-hidden className="absolute inset-0 rotate-[2.5deg] rounded-[18px] border-2 border-white/70 bg-[#A8CAE7]/80 translate-x-2 translate-y-2" />
-        <div aria-hidden className="absolute inset-0 -rotate-[1.5deg] rounded-[18px] border-2 border-white/70 bg-[#C9E6DD]/80 translate-x-1 translate-y-3.5" />
-
-        <motion.button
-          type="button"
-          onClick={flip}
-          aria-label={flipped ? "Hide the definition" : "Flip the card"}
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0, rotateY: flipped ? 180 : 0 }}
-          transition={{ opacity: { duration: 0.3 }, y: { type: "spring", stiffness: 140, damping: 16 }, rotateY: { duration: 0.6, ease: [0.45, 0, 0.25, 1] } }}
-          whileTap={{ scale: 0.98 }}
-          className="absolute inset-0 cursor-pointer text-left"
-          style={{ transformStyle: "preserve-3d" }}
-        >
-          {/* Front */}
-          <span
-            className={`${FACE} flex flex-col items-center justify-center gap-2 bg-[linear-gradient(135deg,#D0D7FF_0%,#EEE9FF_48%,#D7E6FF_100%)]`}
-            style={HIDDEN}
-          >
-            <span className="flex h-[64px] w-[72px] items-center justify-center">
-              <SlotImage file="step-8.1.svg" className="max-h-full max-w-full object-contain" />
-            </span>
-            <span className="text-[20px] leading-7 font-semibold text-[#555555]">Tap to reveal</span>
-          </span>
-
-          {/* Back: what a command is, with an example. */}
-          <span
-            className={`${FACE} flex flex-col items-center justify-center gap-2.5 bg-[linear-gradient(135deg,#E5EEFF_0%,#F3F0FF_55%,#E1EDFF_100%)] px-4`}
-            style={{ ...HIDDEN, transform: "rotateY(180deg)" }}
-          >
-            <span className="text-center text-[16px] leading-[22px] font-bold text-[#444444]">
-              <Teal>A command</Teal> is an instruction that tells a computer or robot what to do.
-            </span>
-            <span className="relative flex w-full items-center gap-2 rounded-xl bg-white/90 py-3 pr-3 pl-3.5">
-              <span className="absolute -top-2.5 right-3 rounded-full bg-[#E3F6F3] px-2 py-0.5 text-[10px] leading-3 font-bold text-[#04ACAB]">Example</span>
-              <span className="flex-1 text-[13px] leading-[19px] font-medium text-[#444444]">
-                <b className="font-bold text-[#04ACAB]">Pick Up</b> tells the robot to grab the cube.
-              </span>
-              <span className="flex h-[60px] w-[54px] shrink-0 items-center justify-center">
-                <SlotImage file="step-8.2.svg" className="max-h-full max-w-full object-contain" />
-              </span>
-            </span>
-          </span>
-        </motion.button>
-      </div>
+      <FlipCard onFlip={onFlip} />
     </LevelTwoShell>
   );
 }
