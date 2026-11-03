@@ -10,7 +10,9 @@ import {
   pulseCombo,
   subscribeProgressBar,
   writeProgress,
+  writeProgressBarTheme,
 } from "@/lib/rive/progressBarHost";
+import { useTheme } from "@/context/ThemeContext";
 import type { AnswerResult } from "./RiveProgressBar";
 
 const TWEEN_MS = 700;
@@ -37,6 +39,7 @@ export function PersistentProgressBar({ value, from, answer = null, className = 
   const [host, setHost] = useState<ReturnType<typeof getProgressBarHost> | null>(null);
   const rive = host?.rive ?? null;
   const loaded = host?.loaded ?? false;
+  const darkTheme = useTheme().theme === "dark";
 
   useLayoutEffect(() => {
     const element = slot.current;
@@ -45,6 +48,11 @@ export function PersistentProgressBar({ value, from, answer = null, className = 
     setHost(getProgressBarHost());
     return detach;
   }, []);
+
+  useEffect(() => {
+    if (!rive || !loaded) return;
+    writeProgressBarTheme(darkTheme);
+  }, [rive, loaded, darkTheme]);
 
   useEffect(() => {
     if (!rive || !loaded) return;

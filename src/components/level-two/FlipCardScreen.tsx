@@ -28,13 +28,14 @@ const HORIZON = "67%";
  * The empty room, already cropped to Figma's 390 x 844 frame. It covers the whole
  * stage, so it fills the screen whatever its shape. Where that cuts it (a stage
  * wider than the frame) it is held by the horizon, which stays at the same share of
- * the screen's height as in the frame.
+ * the screen's height as in the frame. Light mode only: dark mode shows the plain
+ * background.
  */
 function RoomBackdrop() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-no-repeat"
+      className="pointer-events-none absolute inset-0 -z-10 bg-cover bg-no-repeat dark:hidden"
       style={{ backgroundImage: "url(/images/level-two/flipCard-bg.svg)", backgroundPosition: `50% ${HORIZON}` }}
     />
   );

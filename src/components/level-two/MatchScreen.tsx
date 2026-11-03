@@ -4,8 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, type Transition } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { useTheme } from "@/context/ThemeContext";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
@@ -25,19 +27,19 @@ const ACTIONS: readonly Card[] = [
 
 /** The column headers start 181px down the frame; the cards' rows follow them. */
 const CHIP_TOP = 181;
-const CHIP_H = 52;
-const CHIP_GAP = 10;
 const CARD_W = 172;
-const CARD_H = 140;
-const GAP = 14;
+/** Each theme's heights (frame px): the column headers, the gap under them, a card, and the gap between rows. Dark's are from the "Command_6" design. */
+const METRICS = {
+  light: { chipH: 52, chipGap: 10, cardH: 140, rowGap: 14 },
+  dark: { chipH: 36, chipGap: 18, cardH: 186, rowGap: 30 },
+} as const;
 /** Between the two columns: they sit out toward the screen's edges, 8px in on the 390px frame. */
 const COLUMN_GAP = 30;
 const COLUMNS_W = CARD_W * 2 + COLUMN_GAP;
-const ROW_TOP = [CHIP_TOP + CHIP_H + CHIP_GAP, CHIP_TOP + CHIP_H + CHIP_GAP + CARD_H + GAP] as const;
 /** The column headers: what each column holds. */
 const CHIPS = [
-  { side: "left", icon: "match-instructions.svg", label: "Instructions", sub: "What to do", box: "bg-[#F1EEFF]", title: "text-[#5B3FD0]" },
-  { side: "right", icon: "match-actions.svg", label: "Actions", sub: "How it looks in the robot", box: "bg-[#FFF4E3]", title: "text-[#A85B00]" },
+  { side: "left", icon: "match-instructions.svg", label: "Instructions", sub: "What to do", box: "bg-[#F1EEFF] dark:bg-[#2E2A5C]", title: "text-[#5B3FD0] dark:text-[#A79BFF]" },
+  { side: "right", icon: "match-actions.svg", label: "Actions", sub: "How it looks in the robot", box: "bg-[#FFF4E3] dark:bg-[#4A3418]", title: "text-[#A85B00] dark:text-[#FF9D3D]" },
 ] as const;
 /** A wrong pair shakes red for this long (seconds), and both cards let go this long (ms) after it was made. */
 const SHAKE_S = 0.28;
@@ -84,15 +86,19 @@ type Side = "left" | "right";
  * turns green together as it lifts (with a light shine across it), then goes
  * gray and disabled as it comes down; a wrong pair shakes red and lets go. Next
  * unlocks once all are matched. It is not graded: the screen can't be left until
- * every pair is right.
+ * every pair is right. The hint lights up a pair: the one with the card already
+ * picked, or else the first still open.
  */
 export function MatchScreen() {
   const router = useRouter();
+  const metrics = METRICS[useTheme().theme];
+  const rowTop = (row: number) => CHIP_TOP + metrics.chipH + metrics.chipGap + row * (metrics.cardH + metrics.rowGap);
   const [picked, setPicked] = useState<{ left: string | null; right: string | null }>({ left: null, right: null });
   const [matched, setMatched] = useState<readonly string[]>([]);
   // The matched cards that have gone gray.
   const [settled, setSettled] = useState<readonly string[]>([]);
   const [wrong, setWrong] = useState(false);
+  const [hinted, setHinted] = useState<readonly string[]>([]);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const timer = useRef<number | undefined>(undefined);
   const settleTimers = useRef<number[]>([]);
@@ -105,6 +111,13 @@ export function MatchScreen() {
   );
 
   const done = matched.length === INSTRUCTIONS.length * 2;
+
+  const showHint = () => {
+    const instruction =
+      INSTRUCTIONS.find((card) => card.id === picked.left || card.pair === picked.right) ??
+      INSTRUCTIONS.find((card) => !matched.includes(card.id));
+    if (instruction) setHinted([instruction.id, instruction.pair]);
+  };
 
   const pick = (side: Side, id: string) => {
     if (wrong || matched.includes(id)) return;
@@ -145,9 +158,10 @@ export function MatchScreen() {
       const matchedNow = look === "correct" || look === "done";
       // A card is picked in the other column and none yet in this one.
       const waiting = look === "idle" && !picked[side] && !!picked[side === "left" ? "right" : "left"];
+      const hintHere = look === "idle" && hinted.includes(card.id);
       const face =
         look === "idle"
-          ? `border-white duration-250 dark:border-transparent ${tint}`
+          ? `border-white duration-250 dark:border-[#818185] ${tint}`
           : look === "selected"
             ? BLUE_CARD
             : look === "correct"
@@ -156,6 +170,7 @@ export function MatchScreen() {
                 ? GRAY_CARD
                 : LOOKS.wrong.card;
       return (
+        <HintFloat className="relative" spin={false} active={hintHere}>
         <motion.button
           type="button"
           onClick={() => pick(side, card.id)}
@@ -175,10 +190,18 @@ export function MatchScreen() {
             x: { duration: waiting ? WAIT_NUDGE_S : SHAKE_S },
             scale: matchedNow ? LIFT_TRANSITION : { duration: waiting ? WAIT_NUDGE_S : 0.4 },
           }}
-          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default ${face}`}
-          style={{ width: CARD_W, height: CARD_H }}
+          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default dark:border-2 ${face}`}
+          style={{ width: CARD_W, height: metrics.cardH }}
         >
-          <span className={`flex h-[92px] w-full items-center justify-center transition-opacity duration-150 ${look === "done" ? "opacity-50" : ""}`}>
+          {/* The hint's orange fill, wiped in from the left behind the content. */}
+          <motion.span
+            aria-hidden
+            initial={false}
+            animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
+            transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
+            className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
+          />
+          <span className={`flex h-[92px] w-full items-center justify-center transition-opacity duration-150 dark:h-[112px] ${look === "done" ? "opacity-50" : ""}`}>
             <SlotImage file={card.icon} className="max-h-full max-w-full object-contain" />
           </span>
           <span className={`text-center text-[14px] leading-5 font-semibold text-[#444444] transition-opacity duration-150 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
@@ -197,6 +220,7 @@ export function MatchScreen() {
             }`}
           />
         </motion.button>
+        </HintFloat>
       );
   };
 
@@ -207,6 +231,7 @@ export function MatchScreen() {
       answer={answer}
       ctaLabel="Next"
       ctaDisabled={!done}
+      hint={{ visible: !done, onUse: showHint }}
       onContinue={() => router.push(levelTwoHref(7))}
     >
       <ScreenTitle>
@@ -216,14 +241,16 @@ export function MatchScreen() {
       {/* The column headers. */}
       <div
         className="absolute flex justify-between"
-        style={{ top: stageTop(CHIP_TOP), left: `calc(50% - ${COLUMNS_W / 2}px)`, width: COLUMNS_W, height: CHIP_H }}
+        style={{ top: stageTop(CHIP_TOP), left: `calc(50% - ${COLUMNS_W / 2}px)`, width: COLUMNS_W, height: metrics.chipH }}
       >
         {CHIPS.map((chip) => (
-          <div key={chip.side} className={`flex items-center gap-1.5 rounded-[10px] px-2 ${chip.box}`} style={{ width: CARD_W }}>
-            <SlotImage file={chip.icon} className="h-6 w-6 shrink-0 object-contain" />
-            <div className="min-w-0">
-              <p className={`text-[16px] leading-5 font-bold ${chip.title}`}>{chip.label}</p>
-              <p className="text-[10.5px] leading-[14px] font-medium whitespace-nowrap text-[#555555]">{chip.sub}</p>
+          <div key={chip.side} className="flex justify-center" style={{ width: CARD_W }}>
+            <div className={`flex w-full items-center gap-1.5 rounded-[10px] px-2 dark:w-fit dark:px-3 ${chip.box}`}>
+              <SlotImage file={chip.icon} className="h-6 w-6 shrink-0 object-contain dark:hidden" />
+              <div className="min-w-0">
+                <p className={`text-[16px] leading-5 font-bold dark:text-[14px] dark:font-semibold ${chip.title}`}>{chip.label}</p>
+                <p className="text-[10.5px] leading-[14px] font-medium whitespace-nowrap text-[#555555] dark:hidden">{chip.sub}</p>
+              </div>
             </div>
           </div>
         ))}
@@ -231,15 +258,15 @@ export function MatchScreen() {
 
       {(
         [
-          ["left", INSTRUCTIONS, "bg-[#F6F4FE] dark:bg-[#1B1830]"],
-          ["right", ACTIONS, "bg-[#FFF9F0] dark:bg-[#2A2218]"],
+          ["left", INSTRUCTIONS, "bg-[#F6F4FE] dark:bg-[#0F1F26]"],
+          ["right", ACTIONS, "bg-[#FFF9F0] dark:bg-[#0F1F26]"],
         ] as const
       ).map(([side, cards, tint], columnIndex) =>
         cards.map((card, row) => (
           <div
             key={card.id}
             className="absolute"
-            style={{ top: stageTop(ROW_TOP[row]), left: `calc(50% - ${COLUMNS_W / 2}px + ${columnIndex * (CARD_W + COLUMN_GAP)}px)` }}
+            style={{ top: stageTop(rowTop(row)), left: `calc(50% - ${COLUMNS_W / 2}px + ${columnIndex * (CARD_W + COLUMN_GAP)}px)` }}
           >
             {renderCard(side, card, row, tint)}
           </div>

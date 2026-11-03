@@ -200,6 +200,12 @@ export const writeProgress = (fill: number) => {
   if (property) property.value = fill;
 };
 
+/** Sets the bar's `darkTheme`. */
+export const writeProgressBarTheme = (darkTheme: boolean) => {
+  const property = host?.rive?.viewModelInstance?.boolean(PROGRESS_BAR.darkThemeProperty);
+  if (property) property.value = darkTheme;
+};
+
 /** Turns `fire` on and sets `trail` to `trailActive` while `combo` is `comboValue`; otherwise `fire` off and `trail` at `trailDefault`. */
 const writeComboEffects = (combo: number) => {
   const instance = host?.rive?.viewModelInstance;

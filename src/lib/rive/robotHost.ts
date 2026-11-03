@@ -47,6 +47,7 @@ const SETTLE_MS = 600;
 let host: Host | null = null;
 let pose: RobotPose = "idle";
 let wantedLabel: string | null = null;
+let wantedDarkTheme: boolean | null = null;
 /** Moves asked for before the file had loaded, or too soon after the last one. */
 let queue: RobotMove[] = [];
 let draining = false;
@@ -79,6 +80,13 @@ const applyLabel = (rive: Rive) => {
   if (!instance || wantedLabel === null) return;
   const label = instance.string(COMMAND_ROBOT.targetLabelProperty);
   if (label) label.value = wantedLabel;
+};
+
+const applyDarkTheme = (rive: Rive) => {
+  const instance = rive.viewModelInstance;
+  if (!instance || wantedDarkTheme === null) return;
+  const darkTheme = instance.boolean(COMMAND_ROBOT.darkThemeProperty);
+  if (darkTheme) darkTheme.value = wantedDarkTheme;
 };
 
 const drain = () => {
@@ -123,6 +131,7 @@ export const getRobotHost = (): Host => {
     rive.resizeDrawingSurfaceToCanvas();
     created.loaded = true;
     applyLabel(rive);
+    applyDarkTheme(rive);
     window.setTimeout(() => {
       created.settled = true;
       drain();
@@ -167,4 +176,10 @@ export const syncRobotPose = (wanted: RobotPose) => {
 export const setRobotTargetLabel = (text: string) => {
   wantedLabel = text;
   if (host?.loaded && host.rive) applyLabel(host.rive);
+};
+
+/** Sets the robot's `darkTheme`. Safe to call before the file has loaded. */
+export const writeRobotTheme = (darkTheme: boolean) => {
+  wantedDarkTheme = darkTheme;
+  if (host?.loaded && host.rive) applyDarkTheme(host.rive);
 };

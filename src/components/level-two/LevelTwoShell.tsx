@@ -74,7 +74,7 @@ export function ScreenTitle({ children, at = 116, oneLine = false }: { children:
       initial={{ opacity: 0, y: -24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: "spring", stiffness: 140, damping: 16, delay: 0.15 }}
-      className={`absolute text-center text-[28px] leading-[134%] font-semibold text-[#444444] ${oneLine ? "whitespace-nowrap" : ""}`}
+      className={`absolute text-center text-[28px] leading-[134%] font-semibold text-[#444444] dark:text-white ${oneLine ? "whitespace-nowrap" : ""}`}
       style={{ top: stageTop(at), left: 0, right: 0, marginInline: "auto", width: oneLine ? "max-content" : COLUMN_W }}
     >
       {children}
@@ -99,7 +99,7 @@ export function TitleText({ lines, underline = false }: { lines: TitleLines; und
             {span.text}
           </span>
         ) : (
-          <span key={j} className={underline ? "underline decoration-[#444444] decoration-2 underline-offset-[6px]" : undefined}>
+          <span key={j} className={underline ? "underline decoration-[#444444] decoration-2 underline-offset-[6px] dark:decoration-white" : undefined}>
             {span.text}
           </span>
         ),
@@ -108,9 +108,9 @@ export function TitleText({ lines, underline = false }: { lines: TitleLines; und
   ));
 }
 
-/** The soft blue-to-white wash behind the screens that have no robot (match them, flip the card). */
+/** The soft blue-to-white wash behind the screens that have no robot (light mode only: dark mode shows the plain background). */
 export function SoftBackdrop() {
-  return <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,#EAF3FF_0%,#F7FAFF_38%,#FFFFFF_100%)]" />;
+  return <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,#EAF3FF_0%,#F7FAFF_38%,#FFFFFF_100%)] dark:hidden" />;
 }
 
 /** Centres a row of the frame at `top` (stage px) — Hex and his line. */

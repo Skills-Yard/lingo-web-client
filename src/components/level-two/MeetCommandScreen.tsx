@@ -24,7 +24,7 @@ export function MeetCommandScreen() {
         <AudioPlayer src={COMMAND_AUDIO} />
       </div>
       <p
-        className="absolute text-center text-[20px] leading-[28px] font-semibold text-[#444444]"
+        className="absolute text-center text-[20px] leading-[28px] font-semibold text-[#444444] dark:text-white"
         style={{ bottom: aboveButtons(32), width: 340, left: "calc(50% - 170px)" }}
       >
         In Programming Languages, instructions are known as <Teal>command.</Teal>
