@@ -16,7 +16,7 @@ const TEXT_H = 46;
 export function MeetRobotScreen() {
   const router = useRouter();
   return (
-    <LevelTwoShell step={1} scene={<RobotBackdrop bottom={robotAbove(TEXT_GAP + TEXT_H)} pose="idle" />} ctaLabel="Continue" onContinue={() => router.push(levelTwoHref(2))}>
+    <LevelTwoShell step={1} scene={<RobotBackdrop bottom={robotAbove(TEXT_GAP + TEXT_H)} pose="idle" />} ctaLabel="Let’s Try" onContinue={() => router.push(levelTwoHref(2))}>
       <ScreenTitle>
         Meet your <Teal>robot.</Teal>
       </ScreenTitle>
