@@ -11,6 +11,9 @@ import {
 import { BUTTON, MODULE_BUTTON } from "@/lib/rive/runtime";
 import type { AnswerResult } from "./RiveProgressBar";
 
+/** The slot's size has settled once it hasn't changed for this long. */
+const RESIZE_SETTLE_MS = 100;
+
 /** A disabled button always looks disabled (a matching pair is an answer, but
  * the screen isn't done yet). Otherwise a checked answer sets the correct / wrong
  * art, and with none the button is at rest. */
@@ -67,12 +70,21 @@ export function PersistentModuleButtonFace({
     element.appendChild(shared.element);
     const resize = () => shared.rive?.resizeDrawingSurfaceToCanvas();
     resize();
+    // Resizing wipes the canvas, and Rive can't redraw until its next frame, so
+    // doing it on each step of a size transition (the button growing as the hint
+    // leaves) leaves the button blank until the end. Meanwhile the browser scales
+    // the last drawing with the slot; the sharp one follows once the size settles.
+    let settle: ReturnType<typeof setTimeout> | undefined;
+    const observer = new ResizeObserver(() => {
+      clearTimeout(settle);
+      settle = setTimeout(resize, RESIZE_SETTLE_MS);
+    });
+    observer.observe(element);
     // The stage is scaled as one piece, which changes the canvas's size on
     // screen without changing its layout size — so the window is watched too.
-    const observer = new ResizeObserver(resize);
-    observer.observe(element);
     window.addEventListener("resize", resize);
     return () => {
+      clearTimeout(settle);
       observer.disconnect();
       window.removeEventListener("resize", resize);
     };

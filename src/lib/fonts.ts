@@ -1,7 +1,7 @@
-import { Poppins } from "next/font/google";
+import { Fascinate, Poppins } from "next/font/google";
 
 /**
- * The app's one typeface — the only place a font is chosen.
+ * The app's typeface — this file is the only place a font is chosen.
  *
  * To change the font of the whole app, swap `Poppins` here for another
  * `next/font/google` family (and adjust `weight` to what it ships), keeping
@@ -15,4 +15,10 @@ export const appFont = Poppins({
   variable: "--font-app",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+});
+
+/** The "Lingo" wordmark on the onboarding's first screen, and nothing else. */
+export const wordmarkFont = Fascinate({
+  subsets: ["latin"],
+  weight: "400",
 });

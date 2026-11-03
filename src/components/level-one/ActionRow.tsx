@@ -21,6 +21,22 @@ const HINTS_LEFT = 1;
  */
 const CTA_WIDTH_WITH_HINT = 0.72;
 export const CTA_HEIGHT_WITH_HINT = 0.82;
+/**
+ * With no hint, the main button is this much narrower than the row, which with
+ * the row's own 6px padding leaves it 16px on screen from the screen's edges, like
+ * the app's other lone buttons (their `px-4`): the stage is scaled, so divide. Its
+ * height follows, keeping the artwork's shape.
+ */
+const CTA_SOLO_INSET = "(32px / var(--stage-scale, 1) - 12px)";
+const CTA_SOLO_WIDTH = `calc(100% - ${CTA_SOLO_INSET})`;
+const CTA_SOLO_HEIGHT = `calc(100% - ${CTA_SOLO_INSET} * ${RIVE_BUTTON_H / RIVE_BUTTON_W})`;
+/**
+ * On a screen with a hint the artwork stays stretched to its box (changing the fit
+ * would jump), and in a box this shape stretching draws it wider than fitting does:
+ * measured, 355.7 against 327.7 in a 358px box. So once the hint has gone the box
+ * is this share as wide, which draws it the same size as on a screen with no hint.
+ */
+const CTA_SOLO_WIDTH_STRETCHED = `calc((100% - ${CTA_SOLO_INSET}) * ${327.7 / 355.7})`;
 
 /**
  * The hint button is as tall as the drawn face of the main button beside it,
@@ -74,8 +90,8 @@ type ActionRowProps = {
  * The bottom row of every Level 1 screen: the hint button (where there is one)
  * and Continue as one component. The row is the same height with or without
  * the hint (the height follows its width, at the full-width button's own
- * ratio), so no screen's layout changes when it has one; with the hint, the
- * button shrinks to `CTA_WIDTH_WITH_HINT` of its width and `CTA_HEIGHT_WITH_HINT`
+ * ratio), so no screen's layout changes when it has one; alone, the button is
+ * `CTA_SOLO_INSET` narrower than the row; with the hint, it shrinks to `CTA_WIDTH_WITH_HINT` of its width and `CTA_HEIGHT_WITH_HINT`
  * of its height, standing on the row's bottom edge like the hint does, and the
  * two sit centred in the row together.
  */
@@ -111,14 +127,12 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
           onPress={playClickSound}
           disabled={ctaDisabled}
           locked={ctaLocked || held}
-          className={hint ? "min-w-0 transition-[width,height] duration-500 ease-out" : "min-w-0 flex-1"}
-          {...(hint && {
-            style: {
-              aspectRatio: "auto",
-              width: `${(withHint ? CTA_WIDTH_WITH_HINT : 1) * 100}%`,
-              height: `${(withHint ? CTA_HEIGHT_WITH_HINT : 1) * 100}%`,
-            },
-          })}
+          className={hint ? "z-2 min-w-0 transition-[width,height] duration-500 ease-out" : "min-w-0"}
+          style={{
+            aspectRatio: "auto",
+            width: withHint ? `${CTA_WIDTH_WITH_HINT * 100}%` : hint ? CTA_SOLO_WIDTH_STRETCHED : CTA_SOLO_WIDTH,
+            height: withHint ? `${CTA_HEIGHT_WITH_HINT * 100}%` : CTA_SOLO_HEIGHT,
+          }}
         >
           {ctaLabel}
         </Button3D>

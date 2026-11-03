@@ -17,7 +17,7 @@ const ENTER = { type: "spring", stiffness: 320, damping: 13 } as const;
  * closes up beside it (see the slot's margin) and the main button grows into it.
  */
 const EXIT_SCALE = [1, 1.2, 0.88, 0];
-const EXIT: Transition = { duration: 0.6, times: [0, 0.22, 0.5, 1], ease: ["easeOut", "easeInOut", "easeIn"] };
+const EXIT: Transition = { duration: 0.25, times: [0, 0.22, 0.5, 1], ease: ["easeOut", "easeInOut", "easeIn"] };
 
 /**
  * How big the hint is, as shares of the row it stands in (a square, so `width`
@@ -48,8 +48,8 @@ export function HintButton({ visible, onPress, count, size }: { visible: boolean
       aria-hidden={!visible}
       // The slot is the button's width plus the gap, always; closed, a margin the
       // same size takes all of it back. Both ends are `calc(length + percent)` so
-      // the transition runs between them. Above the main button, so it is seen
-      // folding away over the room that button grows into.
+      // the transition runs between them. Below the main button (see its `z-2`
+      // in ActionRow), which grows over it as it folds away.
       className="relative z-[1] shrink-0 transition-[margin-right] duration-500 ease-out"
       style={{
         width: `calc(${size.width} + ${GAP}px)`,

@@ -17,11 +17,12 @@ import {
   SPLASH_SHOW_SIGNUP_TRIGGER,
 } from "@/lib/rive/runtime";
 import { useScreenTop } from "@/hooks/useFullscreen";
+import { wordmarkFont } from "@/lib/fonts";
 import { hexRiveSource } from "@/lib/rive/hexFile";
 
 // The "Lingo" wordmark: 60px / 100%, #444444 in light theme and #E8E8E8 in
-// dark, in the app font.
-const WORDMARK_CLASS = `font-semibold px-[0.05em] pt-[0.05em] pb-[0.2em] text-center text-[60px] leading-none text-[#444444] dark:text-[#E8E8E8]`;
+// dark, in its own font (which only comes in one weight).
+const WORDMARK_CLASS = `${wordmarkFont.className} font-normal px-[0.05em] pt-[0.05em] pb-[0.2em] text-center text-[60px] leading-none text-[#444444] dark:text-[#E8E8E8]`;
 
 // "Welcome to" / tagline around the wordmark on the splash — same #444444.
 const SPLASH_TEXT_CLASS = "whitespace-nowrap leading-tight text-[#444444] dark:text-[#E8E8E8]";
