@@ -22,21 +22,25 @@ const HINTS_LEFT = 1;
 const CTA_WIDTH_WITH_HINT = 0.72;
 export const CTA_HEIGHT_WITH_HINT = 0.82;
 /**
- * With no hint, the main button is this much narrower than the row, which with
- * the row's own 6px padding leaves it 16px on screen from the screen's edges, like
- * the app's other lone buttons (their `px-4`): the stage is scaled, so divide. Its
- * height follows, keeping the artwork's shape.
+ * With no hint, the main button is drawn to the header's drawn width: from the
+ * cross (21.35px in) to the battery's count (19.5px in), centred on the screen, so
+ * this far (frame px) from each edge.
  */
-const CTA_SOLO_INSET = "(32px / var(--stage-scale, 1) - 12px)";
-const CTA_SOLO_WIDTH = `calc(100% - ${CTA_SOLO_INSET})`;
-const CTA_SOLO_HEIGHT = `calc(100% - ${CTA_SOLO_INSET} * ${RIVE_BUTTON_H / RIVE_BUTTON_W})`;
+const CTA_SOLO_GAP = 20.4;
 /**
- * On a screen with a hint the artwork stays stretched to its box (changing the fit
- * would jump), and in a box this shape stretching draws it wider than fitting does:
- * measured, 355.7 against 327.7 in a 358px box. So once the hint has gone the box
- * is this share as wide, which draws it the same size as on a screen with no hint.
+ * The share of its box's width the artwork draws, measured: fitted to the box (a
+ * screen with no hint) or stretched to it (one with a hint, where changing the fit
+ * would jump). The box is sized by these so both draw the same size.
  */
-const CTA_SOLO_WIDTH_STRETCHED = `calc((100% - ${CTA_SOLO_INSET}) * ${327.7 / 355.7})`;
+const ART_WIDTH_FITTED = 327.7 / 358;
+const ART_WIDTH_STRETCHED = 355.7 / 358;
+/** How much narrower the drawn button is than the row, which is 6px in from each edge. */
+const CTA_SOLO_TRIM = 2 * CTA_SOLO_GAP - 12;
+const CTA_SOLO_WIDTH = `calc((100% - ${CTA_SOLO_TRIM}px) / ${ART_WIDTH_FITTED})`;
+const CTA_SOLO_WIDTH_STRETCHED = `calc((100% - ${CTA_SOLO_TRIM}px) / ${ART_WIDTH_STRETCHED})`;
+const CTA_SOLO_HEIGHT = `calc((100% - ${CTA_SOLO_TRIM * (RIVE_BUTTON_H / RIVE_BUTTON_W)}px) / ${ART_WIDTH_FITTED})`;
+/** The same fitted button's width on a screen outside the scaled stage, `screenW` (a CSS length) wide. */
+export const soloButtonWidth = (screenW: string) => `calc(${screenW} * ${(1 - (2 * CTA_SOLO_GAP) / 390) / ART_WIDTH_FITTED})`;
 
 /**
  * The hint button is as tall as the drawn face of the main button beside it,
@@ -91,7 +95,7 @@ type ActionRowProps = {
  * and Continue as one component. The row is the same height with or without
  * the hint (the height follows its width, at the full-width button's own
  * ratio), so no screen's layout changes when it has one; alone, the button is
- * `CTA_SOLO_INSET` narrower than the row; with the hint, it shrinks to `CTA_WIDTH_WITH_HINT` of its width and `CTA_HEIGHT_WITH_HINT`
+ * drawn `CTA_SOLO_GAP` from the screen's edges; with the hint, it shrinks to `CTA_WIDTH_WITH_HINT` of its width and `CTA_HEIGHT_WITH_HINT`
  * of its height, standing on the row's bottom edge like the hint does, and the
  * two sit centred in the row together.
  */
@@ -127,7 +131,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
           onPress={playClickSound}
           disabled={ctaDisabled}
           locked={ctaLocked || held}
-          className={hint ? "z-2 min-w-0 transition-[width,height] duration-500 ease-out" : "min-w-0"}
+          className={hint ? "z-2 min-w-0 shrink-0 transition-[width,height] duration-500 ease-out" : "min-w-0 shrink-0"}
           style={{
             aspectRatio: "auto",
             width: withHint ? `${CTA_WIDTH_WITH_HINT * 100}%` : hint ? CTA_SOLO_WIDTH_STRETCHED : CTA_SOLO_WIDTH,

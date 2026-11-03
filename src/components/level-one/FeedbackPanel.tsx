@@ -131,13 +131,21 @@ export const SHEET_TITLE_SIZE = "text-[22px] leading-7";
 export const SHEET_HEX_SLOT = "relative h-[79.95px] w-[136px] shrink-0";
 export const SHEET_HEX_BOX =
   "absolute top-1/2 left-1/2 h-[159.9px] w-[219.3px] -translate-x-1/2 -translate-y-1/2";
+// The sheet shares the header's box, and these line its contents up with what is
+// drawn in the header: the text starts where the close's cross does (21.35px in),
+// and Hex, who rests 8.6px inside his slot, ends where the battery's count does
+// (19.5px in). Less the sheet's border, so one for each border width.
+export const SHEET_INSET = "pl-[19.85px] pr-[9.4px]";
+const SHEET_INSET_THICK_BORDER = "pl-[18.35px] pr-[7.9px]";
+// Hex rests 5.4px inside his slot, so this leaves 20px between the text and him.
+const SHEET_TEXT_GAP = "gap-[14.6px]";
 
 const FEEDBACK = {
   correct: {
     title: "Correct!",
     titleColor: "text-[#01A17F]",
     text: "font-medium leading-[1.4]",
-    frame: "rounded-t-[28px] border-[1.5px]",
+    frame: `rounded-t-[28px] border-[3px] ${SHEET_INSET_THICK_BORDER}`,
     panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
     bold: "[&_b]:text-[#04ACAB]",
   },
@@ -146,7 +154,7 @@ const FEEDBACK = {
     title: "Not quite",
     titleColor: "text-[#D42421]",
     text: "font-medium leading-5",
-    frame: "rounded-t-[32px] border-[3px]",
+    frame: `rounded-t-[32px] border-[3px] ${SHEET_INSET_THICK_BORDER}`,
     panel: "border-[#D42421] bg-[#FDECEC] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
     bold: "[&_b]:text-[#E5484D]",
   },
@@ -224,9 +232,9 @@ export function FeedbackPanel({
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
       // 5xl on screen, like the header; the stage is scaled, so divide.
       style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}
-      className={`absolute inset-x-0 bottom-0 z-0 mx-auto border-b-0 px-[25px] pt-5 pb-[140px] ${open ? "" : "pointer-events-none"} ${look.frame} ${look.panel}`}
+      className={`absolute inset-x-0 bottom-0 z-0 mx-auto border-b-0 pt-5 pb-[140px] ${open ? "" : "pointer-events-none"} ${look.frame} ${look.panel}`}
     >
-      <div className="flex w-full items-center justify-between">
+      <div className={`flex w-full items-center justify-between ${SHEET_TEXT_GAP}`}>
         <div className="flex min-w-0 flex-1 flex-col gap-1.5">
           <h2 className={`font-semibold tracking-[-0.1px] ${SHEET_TITLE_SIZE} ${look.titleColor}`}>{title ?? look.title}</h2>
           <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.text} ${look.bold}`}>
@@ -243,6 +251,10 @@ export function FeedbackPanel({
           </div>
         </div>
       </div>
+      {/* Carries the sheet on past the stage's bottom, which stops above the home
+          bar, and under the spring's overshoot: the screen's edge clips it, so the
+          sheet always meets the bottom of the device. */}
+      <div aria-hidden className={`absolute inset-x-[-3px] top-full h-[100px] border-x-[3px] ${look.panel}`} />
     </motion.div>
   );
 }

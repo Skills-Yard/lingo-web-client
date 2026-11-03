@@ -3,7 +3,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
-import { buttonBottomMargin } from "@/components/level-one/ActionRow";
+import { buttonBottomMargin, soloButtonWidth } from "@/components/level-one/ActionRow";
+import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
 import { Button3D } from "@/components/ui/Button3D";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
@@ -72,7 +73,7 @@ export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number
         <RiveComponent aria-hidden className="h-full w-full" />
       </div>
       <div
-        className="absolute inset-x-0 bottom-0 z-10 mx-auto px-4"
+        className="absolute inset-x-0 bottom-0 z-10 mx-auto flex justify-center"
         style={{ maxWidth: PHONE_MAX_W, marginBottom: buttonBottomMargin(`(min(100vw, ${PHONE_MAX_W}px) - 32px)`) }}
       >
         <Button3D
@@ -83,7 +84,8 @@ export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number
             router.push("/level");
           })}
           onPress={playClickSound}
-          className="w-full"
+          className="shrink-0"
+          style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}`, width: soloButtonWidth(`min(100vw, ${PHONE_MAX_W}px)`) }}
         >
           Continue
         </Button3D>

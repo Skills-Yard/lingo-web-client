@@ -7,6 +7,7 @@ import {
   OnboardingHex,
   SHEET_HEX_BOX,
   SHEET_HEX_SLOT,
+  SHEET_INSET,
   SHEET_TITLE_SIZE,
 } from "@/components/level-one/FeedbackPanel";
 import { vibrateForTap } from "@/lib/haptics";
@@ -100,10 +101,10 @@ function NicePanel() {
         // Figma's panel is 251 tall (top at 593); the button is drawn taller here
         // (and taller still on a wide screen), so the panel reaches 10px above it.
         style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))", minHeight: PANEL_MIN_HEIGHT, paddingBottom: aboveButtons(10) }}
-        className="absolute inset-x-0 bottom-0 z-0 mx-auto flex justify-center rounded-t-[28px] border-[1.5px] border-b-0 border-[#08A2AD] bg-[#DFFFF8] pt-[22px] dark:border-[#1E5F59] dark:bg-[#0F2B28]"
+        className={`absolute inset-x-0 bottom-0 z-0 mx-auto flex rounded-t-[28px] border-[1.5px] border-b-0 border-[#08A2AD] bg-[#DFFFF8] pt-[22px] dark:border-[#1E5F59] dark:bg-[#0F2B28] ${SHEET_INSET}`}
       >
-        <div className="flex h-fit w-[320px] items-center justify-between">
-          <div className="flex w-[171px] flex-col gap-1.5">
+        <div className="flex h-fit w-full items-center justify-between">
+          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
             <h2 className={`font-semibold tracking-[-0.1px] text-[#01A17F] ${SHEET_TITLE_SIZE}`}>Yayyy!</h2>
             <p className="text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80">
               You gave an instruction and the robot did it.
