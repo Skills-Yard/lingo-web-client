@@ -18,6 +18,8 @@ configureRiveRuntime();
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 /** Where the canvas sits in the card's box: past it by `FLIP_CARD.bleed` on every side. */
 const BLEED_BOX = artboardBleedBox(FLIP_CARD, FLIP_CARD.bleed);
+/** The card's height on the stage (frame px); its width follows the artboard's shape. */
+const CARD_HEIGHT = 350;
 
 /** Where the wall meets the floor in the picture, as a share of its height. */
 const HORIZON = "67%";
@@ -39,7 +41,7 @@ function RoomBackdrop() {
 }
 
 /**
- * The "Flip card" artboard of `progressBar.riv`, at its own size in the middle of the
+ * The "Flip card" artboard of `progressBar.riv`, `CARD_HEIGHT` tall in the middle of the
  * stage. Both faces are drawn by the artboard: each tap fires its trigger, which turns
  * the card over (and back). It stays hidden, and takes no taps, until the file has loaded.
  */
@@ -81,7 +83,7 @@ function FlipCard({ onFlip }: { onFlip: () => void }) {
         transition={{ opacity: { duration: 0.3 }, y: { type: "spring", stiffness: 140, damping: 16 } }}
         whileTap={{ scale: 0.98 }}
         className="pointer-events-auto relative shrink-0 cursor-pointer"
-        style={{ width: FLIP_CARD.width, height: FLIP_CARD.height }}
+        style={{ height: CARD_HEIGHT, aspectRatio: `${FLIP_CARD.width} / ${FLIP_CARD.height}` }}
       >
         <RiveComponent aria-hidden style={{ position: "absolute", pointerEvents: "none", ...BLEED_BOX }} />
       </motion.button>
