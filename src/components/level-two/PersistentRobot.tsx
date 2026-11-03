@@ -1,10 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-import { getRobotHost, ROBOT_PICTURE_HEIGHT } from "@/lib/rive/robotHost";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { useTheme } from "@/context/ThemeContext";
+import { getRobotHost, ROBOT_PICTURE_HEIGHT, writeRobotTheme } from "@/lib/rive/robotHost";
 import { COMMAND_ROBOT } from "@/lib/rive/runtime";
 
-/** The widest the picture is drawn on screen (px): a phone's width fills the screen, a wider one gets white at its sides. */
+/** The widest the picture is drawn on screen (px): a phone's width fills the screen, a wider one gets the plain background at its sides. */
 const MAX_SCREEN_W = 560;
 
 /** The picture's width on the stage (a CSS length): the stage's full width, up to `MAX_SCREEN_W` on screen
@@ -45,6 +46,11 @@ const MASK = `linear-gradient(180deg, ${FADE.map(([alpha, y]) => `rgba(0,0,0,${a
  */
 export function PersistentRobot() {
   const slot = useRef<HTMLDivElement>(null);
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    writeRobotTheme(theme === "dark");
+  }, [theme]);
 
   useLayoutEffect(() => {
     const element = slot.current;

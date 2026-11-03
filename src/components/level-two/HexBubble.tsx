@@ -72,17 +72,17 @@ function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span
       transition={leaving ? BUBBLE_EXIT : { type: "spring", stiffness: 260, damping: 20, delay: TYPE_DELAY_MS / 1000 }}
       // Figma: the short bubble ("Rectangle 142") is 77 tall with its text 9px in; the others 86.
       style={{ transformOrigin: tailAtLeft ? "0% 50%" : "100% 50%", width: size.width, minHeight: size.minHeight }}
-      className={`relative flex shrink-0 items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] ${
+      className={`relative flex shrink-0 items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] dark:bg-[#1A1C22] ${
         size.minHeight ? "py-[7px]" : size.short ? "min-h-[77px] py-2.5" : "min-h-[86px] py-[13px]"
       }`}
     >
       <span
         aria-hidden
-        className={`absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 rotate-45 bg-white ${
+        className={`absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 rotate-45 bg-white dark:bg-[#1A1C22] ${
           tailAtLeft ? "-left-[7px] rounded-bl-[3px]" : "-right-[7px] rounded-tr-[3px]"
         }`}
       />
-      <p className="relative text-center text-[16px] leading-[1.24] font-medium text-[#444444]">
+      <p className="relative text-center text-[16px] leading-[1.24] font-medium text-[#444444] dark:text-white">
         {/* The whole line is laid out from the start (the rest unseen), so
           centred lines never shift as letters arrive. */}
         {line.map((span, i) => {

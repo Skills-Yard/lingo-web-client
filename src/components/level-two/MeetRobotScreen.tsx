@@ -22,7 +22,7 @@ export function MeetRobotScreen() {
       </ScreenTitle>
 
       <p
-        className="absolute text-center text-[16px] leading-[23px] font-medium text-[#444444]"
+        className="absolute text-center text-[16px] leading-[23px] font-medium text-[#444444] dark:text-white"
         style={{ bottom: aboveButtons(TEXT_GAP), width: 372, left: "calc(50% - 186px)" }}
       >
         It picks up, puts down, and places objects at its workstation

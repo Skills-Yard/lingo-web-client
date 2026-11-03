@@ -72,7 +72,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] ${look.card} ${
-                state === "idle" ? `border-white dark:border-transparent ${choice.tint ?? "bg-white"}` : LOOKS[state].card
+                state === "idle" ? `border-white dark:border-[#818185] ${choice.tint ?? "bg-white"}` : LOOKS[state].card
               }`}
             >
               {/* The hint's orange fill, wiped in from the left behind the content. */}
