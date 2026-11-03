@@ -54,6 +54,7 @@ export function GiveCommandScreen() {
       scene={<RobotBackdrop bottom={`calc(${QUESTION_BOTTOM} + ${HEX_SLOT + ROBOT_GAP}px)`} pose="idle" />}
       ctaLabel={nice ? "Next" : "Pick Up"}
       ctaLocked={given && !nice}
+      ctaLight={!nice}
       onContinue={() => {
         if (nice) {
           router.push(levelTwoHref(3));

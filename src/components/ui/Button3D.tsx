@@ -79,6 +79,8 @@ interface Button3DProps
   riveVariant?: RiveButtonVariant;
   /** Module variant only: the latest checked answer, which sets the face's correct / wrong state. */
   answer?: AnswerResult | null;
+  /** Module variant only: at rest, the face is white instead of green. */
+  light?: boolean;
   /** Module variant only: the face's artwork is stretched to the button's box
    * (a squeezed shape) instead of fitted inside it, so the box can be narrower
    * than the artwork's shape without the artwork getting shorter. */
@@ -108,6 +110,7 @@ export function Button3D({
   shine,
   riveVariant,
   answer,
+  light,
   stretch,
   locked,
   disabled,
@@ -172,6 +175,7 @@ export function Button3D({
           variant={riveVariant}
           disabled={disabled}
           answer={answer}
+          light={light}
           stretch={stretch}
         />
         {label === null ? (

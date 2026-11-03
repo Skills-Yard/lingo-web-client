@@ -50,6 +50,8 @@ interface LevelOneShellProps {
   ctaDisabled?: boolean;
   /** Main button takes no clicks for now, but keeps its enabled look (a move is playing). */
   ctaLocked?: boolean;
+  /** Main button is white instead of green (the Pick Up button). */
+  ctaLight?: boolean;
   /** Label of the main button (default "Continue"). */
   ctaLabel?: string;
   /** Content between the header and the Continue button. */
@@ -76,7 +78,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLocked, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
+export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLocked, ctaLight, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
   const router = useRouter();
   // A question being asked again (see `moduleReview`): the bar is the review's, and
   // Back leaves the module rather than going to the screen before it.
@@ -252,6 +254,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
             ctaLabel={ctaLabel}
             ctaDisabled={ctaDisabled}
             ctaLocked={ctaLocked}
+            ctaLight={ctaLight}
             onContinue={handleContinue}
           />
         )}

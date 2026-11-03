@@ -87,6 +87,8 @@ type ActionRowProps = {
   ctaDisabled?: boolean;
   /** The main button takes no clicks, but is drawn enabled. */
   ctaLocked?: boolean;
+  /** The main button is white instead of green. */
+  ctaLight?: boolean;
   onContinue?: () => void;
 };
 
@@ -99,7 +101,7 @@ type ActionRowProps = {
  * of its height, standing on the row's bottom edge like the hint does, and the
  * two sit centred in the row together.
  */
-export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, onContinue }: ActionRowProps) {
+export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, ctaLight, onContinue }: ActionRowProps) {
   const withHint = !!hint?.visible;
   // A strike is playing for the answer just checked: the button takes no clicks, but is drawn as it was.
   const held = useSyncExternalStore(subscribeModuleButtonHold, moduleButtonHeld, () => false);
@@ -127,6 +129,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
           riveVariant="module"
           stretch={!!hint}
           answer={answer}
+          light={ctaLight}
           onClick={() => onContinue?.()}
           onPress={playClickSound}
           disabled={ctaDisabled}

@@ -16,12 +16,12 @@ const RESIZE_SETTLE_MS = 100;
 
 /** A disabled button always looks disabled (a matching pair is an answer, but
  * the screen isn't done yet). Otherwise a checked answer sets the correct / wrong
- * art, and with none the button is at rest. */
-const pickState = (disabled: boolean, answer: AnswerResult | null) => {
+ * art, and with none the button is at rest, in its `light` art if asked for. */
+const pickState = (disabled: boolean, answer: AnswerResult | null, light: boolean) => {
   const { state } = MODULE_BUTTON;
   if (disabled) return state.disabled;
   if (answer) return answer.correct ? state.correct : state.wrong;
-  return state.enabled;
+  return light ? state.light : state.enabled;
 };
 
 type PersistentModuleButtonFaceProps = {
@@ -34,6 +34,8 @@ type PersistentModuleButtonFaceProps = {
   disabled?: boolean;
   /** The latest checked answer — `buttonState` correct / wrong. */
   answer?: AnswerResult | null;
+  /** At rest, the white art instead of the green. */
+  light?: boolean;
   /** The artwork is stretched to fill the slot instead of fitted inside it. */
   stretch?: boolean;
 };
@@ -47,10 +49,11 @@ export function PersistentModuleButtonFace({
   shine,
   disabled = false,
   answer = null,
+  light = false,
   stretch = false,
 }: PersistentModuleButtonFaceProps) {
   const slot = useRef<HTMLDivElement>(null);
-  const state = pickState(disabled, answer);
+  const state = pickState(disabled, answer, light);
 
   // Layout effects, so this screen's label and state are written before it
   // first paints: the button never shows the last screen's (a leftover correct

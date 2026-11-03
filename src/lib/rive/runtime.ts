@@ -523,10 +523,12 @@ export const BUTTON = {
   shineEveryMs: 5000,
 } as const;
 
-/** The module look (`BUTTON.style.module`): its `buttonState` number picks the art. */
+/** The module look (`BUTTON.style.module`): its `buttonState` number picks the art.
+ * A button that can be pressed is green, the same art as a correct answer; `light`
+ * is the white one, kept for the Pick Up button. */
 export const MODULE_BUTTON = {
   stateProperty: "buttonState",
-  state: { disabled: 0, wrong: 2, correct: 3, enabled: 4 },
+  state: { disabled: 0, wrong: 2, correct: 3, enabled: 3, light: 4 },
 } as const;
 
 /** The reward screen's chest — "REWARD_Chest" in `hex.riv`, played by
