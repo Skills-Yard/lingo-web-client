@@ -16,8 +16,8 @@ const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
 /** Each layout's card height, the picture's box and the text's size. */
 const LAYOUT = {
-  pair: { card: "h-[184px]", picture: "h-[112px] w-full", text: "text-[18px] leading-6", gap: "gap-3.5" },
-  tiles: { card: "h-[110px]", picture: "h-[46px] w-full", text: "text-[16px] leading-5", gap: "gap-3.5" },
+  pair: { card: "h-[184px]", picture: "h-[83px] w-[95px]", text: "text-[16px] leading-none", gap: "gap-3.5", inner: "gap-3.5" },
+  tiles: { card: "h-[110px]", picture: "h-[46px] w-full", text: "text-[16px] leading-5", gap: "gap-3.5", inner: "gap-2" },
 } as const;
 
 type TileCardsProps = {
@@ -71,7 +71,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 overflow-hidden rounded-[8px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] ${look.card} ${
+              className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center ${look.inner} overflow-hidden rounded-[8px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] ${look.card} ${
                 state === "idle" ? `border-white dark:border-transparent ${choice.tint ?? "bg-white"}` : LOOKS[state].card
               }`}
             >

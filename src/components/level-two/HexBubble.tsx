@@ -24,6 +24,8 @@ type HexBubbleProps = {
 
 /** Hex starts his own exit this long after the bubble sets off. */
 const HEX_FOLLOWS_MS = 80;
+/** The share of the clip before its own that has played when the bubble starts to pop in. */
+const BUBBLE_LEAD = 0.9;
 /** The bubble's way out: a little bounce the other way (px), then off to the left. */
 const BUBBLE_WINDUP = 18;
 const BUBBLE_EXIT: Transition = { duration: 0.15, times: [0, 0.35, 1], ease: ["easeOut", "backIn"] };
@@ -83,12 +85,30 @@ function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span
   const [peak, setPeak] = useState(0);
   if (shown > peak) setPeak(shown);
   const typed = text.slice(0, Math.max(peak, shown));
+  // With a voice the bubble waits out the clips before its own: it pops in as
+  // the one before it ends (or as its own starts), not from the screen's start.
+  const comesIn =
+    voice.status === "done" ||
+    voice.clip > bubbleClip ||
+    (voice.clip === bubbleClip && voice.status !== "idle") ||
+    (voice.clip === bubbleClip - 1 && voice.clipProgress >= BUBBLE_LEAD);
+  const [appeared, setAppeared] = useState(false);
+  if (withVoice && comesIn && !appeared) setAppeared(true);
+  const visible = !withVoice || appeared;
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.85, x: tailAtLeft ? -8 : 8 }}
       // Twice the window's width is past the left edge at any scale the shell uses.
-      animate={leaving ? { opacity: 1, scale: 1, x: [0, BUBBLE_WINDUP, -2 * window.innerWidth] } : { opacity: 1, scale: 1, x: 0 }}
-      transition={leaving ? BUBBLE_EXIT : { type: "spring", stiffness: 260, damping: 20, delay: TYPE_DELAY_MS / 1000 }}
+      animate={
+        leaving
+          ? { opacity: 1, scale: 1, x: [0, BUBBLE_WINDUP, -2 * window.innerWidth] }
+          : visible
+            ? { opacity: 1, scale: 1, x: 0 }
+            : { opacity: 0, scale: 0.85, x: tailAtLeft ? -8 : 8 }
+      }
+      transition={
+        leaving ? BUBBLE_EXIT : { type: "spring", stiffness: 260, damping: 20, delay: withVoice ? 0 : TYPE_DELAY_MS / 1000 }
+      }
       // Figma: the short bubble ("Rectangle 142") is 77 tall with its text 9px in; the others 86.
       style={{ transformOrigin: tailAtLeft ? "0% 50%" : "100% 50%", width: size.width, minHeight: size.minHeight }}
       className={`relative flex shrink-0 items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] ${

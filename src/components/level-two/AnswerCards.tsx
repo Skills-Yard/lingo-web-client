@@ -81,13 +81,15 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
               />
-              <span className="flex w-full min-w-0 items-center gap-3.5">
-                {/* The picture's slot, as tall as the card's inside (76 less its border and padding): the text starts at the same place on every card. */}
-                <span className="flex h-[54px] w-[60px] shrink-0 items-center justify-center">
+              <span className="flex min-w-0 flex-1 items-center gap-[22px]">
+                {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
+                <span className="flex h-[47.31px] w-[46.68px] shrink-0 items-center justify-center">
                   <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
                 </span>
-                <span className="min-w-0 flex-1 text-[17px] leading-6 font-medium text-[#444444] dark:text-white">{choice.text}</span>
+                <span className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{choice.text}</span>
               </span>
+              {/* Figma "Ellipse 3" (34 x 34), at the row's end. */}
+              <span aria-hidden className="size-[34px] shrink-0 rounded-full" />
             </motion.button>
           </HintFloat>
         );
