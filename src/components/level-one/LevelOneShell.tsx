@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
 import { setClickSoundMuted } from "@/components/onboarding/clickSound";
-import { useVoiceover } from "@/components/onboarding/useVoiceover";
+import { isVoiceoverSettled, useVoiceover } from "@/components/onboarding/useVoiceover";
 import { questionSpoken } from "@/components/onboarding/QuestionHeading";
 import { LEVEL_ONE_STEP, MODULE_STEPS, type LevelOneStepKey } from "@/lib/moduleFlow";
 import { useReviewProgress } from "@/lib/moduleReview";
@@ -52,6 +52,10 @@ interface LevelOneShellProps {
   ctaLocked?: boolean;
   /** Main button is white instead of green (the Pick Up button). */
   ctaLight?: boolean;
+  /** Main button stays grey (disabled) until the screen's voiceover has finished. */
+  ctaWaitsForVoice?: boolean;
+  /** The `cube` property of the main button's artboard is on (the Pick Up button). */
+  ctaCube?: boolean;
   /** Label of the main button (default "Continue"). */
   ctaLabel?: string;
   /** Content between the header and the Continue button. */
@@ -78,7 +82,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLocked, ctaLight, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
+export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLocked, ctaLight, ctaWaitsForVoice, ctaCube, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
   const router = useRouter();
   // A question being asked again (see `moduleReview`): the bar is the review's, and
   // Back leaves the module rather than going to the screen before it.
@@ -259,9 +263,10 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
             hint={hint}
             answer={answer}
             ctaLabel={ctaLabel}
-            ctaDisabled={ctaDisabled}
+            ctaDisabled={ctaDisabled || (ctaWaitsForVoice && !isVoiceoverSettled(voice.status))}
             ctaLocked={ctaLocked}
             ctaLight={ctaLight}
+            ctaCube={ctaCube}
             onContinue={handleContinue}
           />
         )}

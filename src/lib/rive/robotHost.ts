@@ -152,6 +152,7 @@ export const getRobotHost = (): Host => {
 
 /** Plays `move`; held back until the file has loaded. */
 export const fireRobot = (move: RobotMove) => {
+  if (move === "reset") lastResetAt = Date.now();
   pose = POSE_AFTER[move] ?? pose;
   queue = [...queue, move];
   drain();
@@ -170,6 +171,23 @@ export const syncRobotPose = (wanted: RobotPose) => {
   }
   if (pose !== "idle") fireRobot("reset");
   MOVES_FROM_IDLE[wanted].forEach(fireRobot);
+};
+
+/** The last time a reset went out (ms), so one asked for twice in a row plays once. */
+let lastResetAt = 0;
+const RESET_DEDUPE_MS = 1500;
+
+/**
+ * Puts the robot back at rest, whatever it was left doing (a screen opened
+ * again after the cube was picked up, or part-way through it): whatever was
+ * still waiting is dropped, and the `reset` plays unless one just did.
+ */
+export const resetRobot = () => {
+  pose = "idle";
+  if (Date.now() - lastResetAt < RESET_DEDUPE_MS) return;
+  lastResetAt = Date.now();
+  queue = ["reset"];
+  drain();
 };
 
 /** Sets the text on the target box. Safe to call before the file has loaded. */

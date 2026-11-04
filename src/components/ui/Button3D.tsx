@@ -81,6 +81,8 @@ interface Button3DProps
   answer?: AnswerResult | null;
   /** Module variant only: at rest, the face is white instead of green. */
   light?: boolean;
+  /** Module variant only: the artboard's `cube` property is on. */
+  cube?: boolean;
   /** Module variant only: the face's artwork is stretched to the button's box
    * (a squeezed shape) instead of fitted inside it, so the box can be narrower
    * than the artwork's shape without the artwork getting shorter. */
@@ -111,6 +113,7 @@ export function Button3D({
   riveVariant,
   answer,
   light,
+  cube,
   stretch,
   locked,
   disabled,
@@ -176,6 +179,7 @@ export function Button3D({
           disabled={disabled}
           answer={answer}
           light={light}
+          cube={cube}
           stretch={stretch}
         />
         {label === null ? (

@@ -1,4 +1,4 @@
-import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
+import { Alignment, Fit, Layout, Rive, type ViewModelInstance } from "@rive-app/canvas";
 import { BUTTON, configureRiveRuntime, MODULE_BUTTON } from "./runtime";
 import { writeButtonStyle } from "./buttonStyle";
 import { applyArtboardBleed, artboardBleedBox } from "./bleed";
@@ -21,7 +21,7 @@ type Host = {
   loaded: boolean;
 };
 
-export type ModuleButtonData = { label: string; state: number };
+export type ModuleButtonData = { label: string; state: number; cube: boolean };
 
 let host: Host | null = null;
 
@@ -53,6 +53,16 @@ const reveal = ({ element }: Host) => {
   );
 };
 
+/** The artboard's `cube` property, on only while the Pick Up button is drawn (it is a flag; a trigger is fired as it comes on). */
+const writeCube = (instance: ViewModelInstance, on: boolean) => {
+  const flag = instance.boolean(BUTTON.cubeProperty);
+  if (flag) {
+    flag.value = on;
+    return;
+  }
+  if (on) instance.trigger(BUTTON.cubeProperty)?.trigger();
+};
+
 const apply = (loadedHost: Host, rive: Rive) => {
   const instance = rive.viewModelInstance;
   if (!instance || !wanted) return;
@@ -61,6 +71,7 @@ const apply = (loadedHost: Host, rive: Rive) => {
   if (label) label.value = wanted.label;
   const state = instance.number(MODULE_BUTTON.stateProperty);
   if (state) state.value = wanted.state;
+  writeCube(instance, wanted.cube);
   // Nothing is animating when only the data changes, so redraw explicitly.
   rive.drawFrame();
   reveal(loadedHost);

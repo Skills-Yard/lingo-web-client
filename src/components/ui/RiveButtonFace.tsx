@@ -49,6 +49,8 @@ interface RiveButtonFaceProps {
   answer?: AnswerResult | null;
   /** Module variant only: at rest, the white art instead of the green. */
   light?: boolean;
+  /** Module variant only: the artboard's `cube` property is on. */
+  cube?: boolean;
   /** Module variant only: stretch the artwork to fill the box rather than fit inside it. */
   stretch?: boolean;
 }
@@ -59,8 +61,8 @@ function fireTrigger(rive: Rive, name: string) {
 }
 
 /** The Rive-drawn face of Button3D's brand tone — fills its parent. */
-export function RiveButtonFace({ variant = "onboarding", disabled, answer, light, stretch, ...face }: RiveButtonFaceProps) {
-  if (variant === "module") return <PersistentModuleButtonFace {...face} disabled={disabled} answer={answer} light={light} stretch={stretch} />;
+export function RiveButtonFace({ variant = "onboarding", disabled, answer, light, cube, stretch, ...face }: RiveButtonFaceProps) {
+  if (variant === "module") return <PersistentModuleButtonFace {...face} disabled={disabled} answer={answer} light={light} cube={cube} stretch={stretch} />;
   return <OnboardingButtonFace {...face} />;
 }
 

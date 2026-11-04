@@ -12,7 +12,7 @@ import {
   SHEET_TITLE_SIZE,
 } from "@/components/level-one/FeedbackPanel";
 import { vibrateForTap } from "@/lib/haptics";
-import { fireRobot } from "@/lib/rive/robotHost";
+import { fireRobot, resetRobot } from "@/lib/rive/robotHost";
 import { COMMAND_ROBOT, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { HEX_SLOT, HexBubble } from "./HexBubble";
 import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, Teal } from "./LevelTwoShell";
@@ -43,6 +43,10 @@ export function GiveCommandScreen() {
   const router = useRouter();
   const [given, setGiven] = useState(false);
   const [nice, setNice] = useState(false);
+  // Opened again (Back, or from the next screen): the robot starts from rest every time.
+  useEffect(() => {
+    resetRobot();
+  }, []);
   useEffect(() => {
     if (!given) return;
     const timer = window.setTimeout(() => setNice(true), NICE_AFTER_S * 1000);
@@ -57,6 +61,8 @@ export function GiveCommandScreen() {
       ctaLabel={nice ? "Next" : "Pick Up"}
       ctaLocked={given && !nice}
       ctaLight={!nice}
+      ctaWaitsForVoice
+      ctaCube={!nice}
       onContinue={() => {
         if (nice) {
           router.push(levelTwoHref(3));

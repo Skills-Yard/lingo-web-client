@@ -13,14 +13,14 @@ import { HintButton, type HintSize } from "./HintButton";
 const HINTS_LEFT = 1;
 /**
  * With the hint showing, the main button is drawn at this share of its full
- * width and `CTA_HEIGHT_WITH_HINT` of its full height (its artwork is stretched
- * to fit), and the hint is drawn as tall as that: the two are always the same
- * height, standing on the same bottom edge, so they share one centre line, and
- * the pair is centred in the row. Under 1 they are smaller than the button on a
- * screen with no hint.
+ * width and `CTA_HEIGHT_WITH_HINT` of its full height (a little stretched: taller
+ * than its width share, so it is not squashed beside the hint), and the hint is
+ * drawn as tall as that: the two are always the same height, standing on the
+ * same bottom edge, so they share one centre line, and the pair is centred in
+ * the row. Under 1 they are smaller than the button on a screen with no hint.
  */
 const CTA_WIDTH_WITH_HINT = 0.72;
-export const CTA_HEIGHT_WITH_HINT = 0.82;
+export const CTA_HEIGHT_WITH_HINT = 0.9;
 /**
  * With no hint, the main button is drawn to the header's drawn width: from the
  * cross (21.35px in) to the battery's count (19.5px in), centred on the screen, so
@@ -43,17 +43,22 @@ const CTA_SOLO_HEIGHT = `calc((100% - ${CTA_SOLO_TRIM * (RIVE_BUTTON_H / RIVE_BU
 export const soloButtonWidth = (screenW: string) => `calc(${screenW} * ${(1 - (2 * CTA_SOLO_GAP) / 390) / ART_WIDTH_FITTED})`;
 
 /**
- * The hint button is as tall as the drawn face of the main button beside it,
- * top to bottom: the face spans `BUTTON.face` of the button's box, which is
- * `CTA_HEIGHT_WITH_HINT` of the row and stands on the row's bottom edge. It is a
- * square, so its width is that same length as a share of the row's width (the row's
- * shape is the button's own, so a share of the height is `height / width` of one).
+ * The hint button is as tall as the main button beside it looks. With the hint
+ * showing the button's artwork is stretched into its box, and what is seen of it
+ * (the face and its dark edge under it) is `FACE_HEIGHT` of the box's height and
+ * stands `FACE_BOTTOM` of it above the box's bottom, measured on screen. The hint
+ * takes that height (its own shadow edge included) and stands on the same line.
+ * It is a square, so its width is that same length as a share of the row's width
+ * (the row's shape is the button's own, so a share of the height is `height / width`
+ * of one).
  */
-const HINT_HEIGHT = (BUTTON.face.bottom - BUTTON.face.top) * CTA_HEIGHT_WITH_HINT;
+const FACE_HEIGHT = 0.831;
+const FACE_BOTTOM = 0.092;
+const HINT_HEIGHT = FACE_HEIGHT * CTA_HEIGHT_WITH_HINT;
 const HINT_SIZE: HintSize = {
   height: `${HINT_HEIGHT * 100}%`,
   width: `${HINT_HEIGHT * (RIVE_BUTTON_H / RIVE_BUTTON_W) * 100}%`,
-  lift: `${(1 - BUTTON.face.bottom) * CTA_HEIGHT_WITH_HINT * 100}%`,
+  lift: `${FACE_BOTTOM * CTA_HEIGHT_WITH_HINT * 100}%`,
 };
 
 /** The gap (px) from a module button's drawn bottom edge to the bottom of the screen. */
@@ -89,6 +94,8 @@ type ActionRowProps = {
   ctaLocked?: boolean;
   /** The main button is white instead of green. */
   ctaLight?: boolean;
+  /** The `cube` property of the main button's artboard is on. */
+  ctaCube?: boolean;
   onContinue?: () => void;
 };
 
@@ -101,7 +108,7 @@ type ActionRowProps = {
  * of its height, standing on the row's bottom edge like the hint does, and the
  * two sit centred in the row together.
  */
-export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, ctaLight, onContinue }: ActionRowProps) {
+export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, ctaLight, ctaCube, onContinue }: ActionRowProps) {
   const withHint = !!hint?.visible;
   // A strike is playing for the answer just checked: the button takes no clicks, but is drawn as it was.
   const held = useSyncExternalStore(subscribeModuleButtonHold, moduleButtonHeld, () => false);
@@ -130,6 +137,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
           stretch={!!hint}
           answer={answer}
           light={ctaLight}
+          cube={ctaCube}
           onClick={() => onContinue?.()}
           onPress={playClickSound}
           disabled={ctaDisabled}

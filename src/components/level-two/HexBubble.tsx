@@ -87,7 +87,9 @@ function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span
   const typed = text.slice(0, Math.max(peak, shown));
   // With a voice the bubble waits out the clips before its own: it pops in as
   // the one before it ends (or as its own starts), not from the screen's start.
+  // With no clip before its own it comes in at once, without waiting for the audio to load.
   const comesIn =
+    bubbleClip === 0 ||
     voice.status === "done" ||
     voice.clip > bubbleClip ||
     (voice.clip === bubbleClip && voice.status !== "idle") ||

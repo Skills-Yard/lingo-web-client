@@ -507,6 +507,8 @@ export const BUTTON = {
     onboarding: { top: "6.47%", bottom: "3.23%" },
   },
   labelProperty: "label",
+  /** Shown on the Pick Up button only (set on and off with each screen's button). */
+  cubeProperty: "cube",
   styleProperty: "switchStyle",
   style: { module: 0, onboarding: 1 },
   /** The artboard starts in the module look and morphs into the onboarding one

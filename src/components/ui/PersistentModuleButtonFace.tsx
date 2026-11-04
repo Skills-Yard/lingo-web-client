@@ -36,6 +36,8 @@ type PersistentModuleButtonFaceProps = {
   answer?: AnswerResult | null;
   /** At rest, the white art instead of the green. */
   light?: boolean;
+  /** The artboard's `cube` property is on (only the Pick Up button has it). */
+  cube?: boolean;
   /** The artwork is stretched to fill the slot instead of fitted inside it. */
   stretch?: boolean;
 };
@@ -50,6 +52,7 @@ export function PersistentModuleButtonFace({
   disabled = false,
   answer = null,
   light = false,
+  cube = false,
   stretch = false,
 }: PersistentModuleButtonFaceProps) {
   const slot = useRef<HTMLDivElement>(null);
@@ -59,8 +62,8 @@ export function PersistentModuleButtonFace({
   // first paints: the button never shows the last screen's (a leftover correct
   // / wrong state included).
   useLayoutEffect(() => {
-    writeModuleButton({ label, state });
-  }, [label, state]);
+    writeModuleButton({ label, state, cube });
+  }, [label, state, cube]);
 
   useLayoutEffect(() => {
     setModuleButtonStretch(stretch);
