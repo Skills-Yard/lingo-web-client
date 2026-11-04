@@ -84,12 +84,12 @@ export function AudioPlayer({ src }: { src: string }) {
         {BARS.map((height, i) => (
           <span
             key={i}
-            className={`w-[3px] rounded-full transition-colors duration-150 ${i < lit ? "bg-[#08A4AD]" : "bg-[#D5DADF]"}`}
+            className={`w-[3px] rounded-full transition-colors duration-150 ${i < lit ? "bg-[#08A4AD]" : "bg-[#D5DADF] dark:bg-white/20"}`}
             style={{ height }}
           />
         ))}
       </div>
-      <span className="w-9 shrink-0 text-right text-[13px] leading-none font-medium text-[#888888] tabular-nums">
+      <span className="w-9 shrink-0 text-right text-[13px] leading-none font-medium text-[#888888] tabular-nums dark:text-white/60">
         {formatTime(playing ? duration - position : duration)}
       </span>
     </div>

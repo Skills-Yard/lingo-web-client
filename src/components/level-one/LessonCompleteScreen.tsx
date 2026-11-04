@@ -64,7 +64,7 @@ export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number
   }, [rive, ready, fireTrigger]);
 
   return (
-    <main className="onboarding-light relative h-dvh w-full overflow-hidden bg-white">
+    <main className="onboarding-light relative h-dvh w-full overflow-hidden bg-white dark:bg-background">
       {/* The artboard fits the width, so it is held to a phone's width: on a
         desktop it stays the same size and sits in the middle. */}
       {/* The cap is on this box, not on `RiveComponent`: it drops its `style`

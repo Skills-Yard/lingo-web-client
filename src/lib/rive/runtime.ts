@@ -344,6 +344,7 @@ export const PROGRESS_BAR = {
   artboard: "LESSON_ProgressBar",
   stateMachine: "ProgressBar_SM",
   property: "progress",
+  darkThemeProperty: "darkTheme",
   /** CSS px of room around the bar for the effects that stray past its
    * artboard (see `applyCanvasBleed`). */
   bleed: 10,
@@ -429,6 +430,7 @@ export const COMMAND_ROBOT = {
     wrongCube: "wrongCube",
   },
   targetLabelProperty: "targetLabel",
+  darkThemeProperty: "darkTheme",
   /** How long each move takes (its clip in the file), in seconds. The next
    * trigger is only taken once the machine is back at rest, so a move fired
    * sooner than this after another is dropped. */

@@ -41,7 +41,7 @@ export function ReviewIntroScreen() {
           initial={{ opacity: 0, y: -24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 140, damping: 16, delay: 0.3 }}
-          className="mt-6 w-[340px] text-[28px] leading-[134%] font-semibold text-[#2C2C2C]"
+          className="mt-6 w-[340px] text-[28px] leading-[134%] font-semibold text-[#2C2C2C] dark:text-white"
         >
           Let’s fix the ones you <span className="text-level-gradient">missed</span>
         </motion.h1>
@@ -49,7 +49,7 @@ export function ReviewIntroScreen() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.5 }}
-          className="mt-3 w-[320px] text-[16px] leading-6 font-medium text-[#444444]"
+          className="mt-3 w-[320px] text-[16px] leading-6 font-medium text-[#444444] dark:text-white/80"
         >
           {count === 1 ? "1 question" : `${count} questions`} to go again. Keep going until you get every one right.
         </motion.p>

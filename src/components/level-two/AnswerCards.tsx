@@ -70,7 +70,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className={`relative isolate flex h-[76px] w-full cursor-pointer items-center justify-between gap-[34px] overflow-hidden rounded-[18px] border px-3.5 py-2.5 text-left shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] transition-[background-color,border-color] ${
-                state === "idle" ? "border-black/4 bg-white dark:border-white/6 dark:bg-[#15181E]" : look.card
+                state === "idle" ? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]" : look.card
               }`}
             >
               {/* The hint's orange fill, wiped in from the left behind the content. */}

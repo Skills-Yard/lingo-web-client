@@ -66,8 +66,8 @@ export type Quiz = {
   voiceover?: readonly string[];
 };
 
-const LAVENDER = "bg-[#F6F4FE] dark:bg-[#1B1830]";
-const CREAM = "bg-[#FFF9F0] dark:bg-[#2A2218]";
+const LAVENDER = "bg-[#F6F4FE] dark:bg-[#0F1F26]";
+const CREAM = "bg-[#FFF9F0] dark:bg-[#0F1F26]";
 
 /** Screen 3 — `/module?step=3`. */
 export const WHAT_JUST_HAPPENED: Quiz = {
