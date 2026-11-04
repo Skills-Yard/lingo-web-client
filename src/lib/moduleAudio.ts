@@ -2,7 +2,7 @@
 const moduleAudio = (file: string) => encodeURI(`/audios/moduleAudios/${file}`);
 
 export const MODULE_AUDIO = {
-  meetRobot: [moduleAudio("meet_your_robot.mp3"), moduleAudio("im_hex.mp3")],
+  meetRobot: [moduleAudio("meet_your_robot.mp3")],
   giveInstruction: [moduleAudio("give_instruction_to_pick _the_cube.mp3")],
   whatJustHappened: [
     moduleAudio("what_just_happened.mp3"),
@@ -39,4 +39,21 @@ export const MODULE_AUDIO = {
   examples: [moduleAudio("example_of_instruction.mp3")],
   whatAreInstructions: [moduleAudio("what_are_instruction.mp3")],
   guideHex: [moduleAudio("_guide _hex.mp3")],
+} as const;
+
+/** Onboarding's voice clips (questions only), from the same folder. */
+export const ONBOARDING_AUDIO = {
+  greeting: [moduleAudio("im_hex.mp3")],
+  readyCheck: [moduleAudio("few_quick_question.mp3"), moduleAudio("are_u_ready.mp3")],
+  career: [moduleAudio("career_chasing.mp3")],
+  pythonLevel: [moduleAudio("python_superpower_level.mp3")],
+  experience: [moduleAudio("have_u_worked_with_code_before.mp3")],
+  name: [moduleAudio("what_should_i_call_you.mp3")],
+  motivation: [moduleAudio("what_do_you_wish_to_achieve.mp3")],
+  timeCommitment: [moduleAudio("how_much_time_to_learning.mp3")],
+  learningTime: [moduleAudio("best_time_in_a_day_for_you_to_learn.mp3")],
+  notifications: [moduleAudio("get_notified_when_it's_time_to_learn.mp3")],
+  streak: [moduleAudio("stay_one_tap_away_from_your_next_lesson.mp3")],
+  threeMonths: [moduleAudio("in_3_month_u_are_bulding_a_real_project.mp3")],
+  startingPoint: [moduleAudio("how_do_you_want_to_begin_your_path.mp3")],
 } as const;

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, type Transition } from "framer-motion";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
+import { useLevelVoice } from "@/components/level-one/LevelVoice";
 import { TYPE_DELAY_MS, useTyped } from "@/components/level-one/useTyped";
 import type { BubbleSize, Span } from "./levelTwo";
 
@@ -63,7 +64,25 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
  * "Rectangle 142"), its tail pointing at Hex. The edge is a filter, not a
  * box-shadow, so it runs under the tail as well as the box. */
 function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span[]; size: BubbleSize; tailAtLeft: boolean; leaving: boolean }) {
-  const typed = useTyped(line.map((span) => span.text).join(""), true);
+  const text = line.map((span) => span.text).join("");
+  const voice = useLevelVoice();
+  // A bubble on a screen with a voice is typed to its clip (the screen's last
+  // one); it falls back to the steady pace if the voice can't play.
+  const [hasVoice] = useState(voice.clipCount > 0);
+  const withVoice = hasVoice && voice.status !== "failed";
+  const timed = useTyped(text, !withVoice);
+  const bubbleClip = voice.clipCount - 1;
+  const shown = !withVoice
+    ? timed.length
+    : voice.status === "done" || voice.clip > bubbleClip
+      ? text.length
+      : voice.clip < bubbleClip || voice.status === "idle"
+        ? 0
+        : Math.ceil(voice.clipProgress * text.length);
+  // Never un-types: the voice ending early (the answer was checked) leaves what was said.
+  const [peak, setPeak] = useState(0);
+  if (shown > peak) setPeak(shown);
+  const typed = text.slice(0, Math.max(peak, shown));
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.85, x: tailAtLeft ? -8 : 8 }}

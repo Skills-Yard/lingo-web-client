@@ -96,8 +96,15 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
   const voice = useVoiceover(voiceover, true, muted);
   const spoken = questionSpoken(voice, !!voiceover?.length);
   const levelVoice = useMemo(
-    () => ({ speaking: voice.playing, clip: Math.max(0, voice.clip), spoken }),
-    [voice.playing, voice.clip, spoken],
+    () => ({
+      speaking: voice.playing,
+      clip: Math.max(0, voice.clip),
+      spoken,
+      clipProgress: voice.clipProgress,
+      clipCount: voiceover?.length ?? 0,
+      status: voice.status,
+    }),
+    [voice.playing, voice.clip, spoken, voice.clipProgress, voice.status, voiceover?.length],
   );
   const mainRef = useRef<HTMLElement>(null);
   // The screen is laid out as the 390x844 frame and scaled as one piece, so

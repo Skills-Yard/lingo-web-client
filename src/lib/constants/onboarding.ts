@@ -1,3 +1,4 @@
+import { ONBOARDING_AUDIO } from "@/lib/moduleAudio";
 import type { LucideIcon } from "lucide-react";
 import {
   HEX_SCENE,
@@ -519,7 +520,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     bubble: () => [{ text: "Hey! I'm Hex,\nyour skills buddy" }],
     hexBeat: "hi",
     hexBleedBottom: true,
-    voiceover: ["/audios/hey.mp3"],
+    voiceover: ONBOARDING_AUDIO.greeting,
     cta: "Continue",
   },
   {
@@ -535,7 +536,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     excite: true,
     hexBeat: "ready",
     hexBleedBottom: true,
-    voiceover: ["/audios/text-2-screen.m4a", "/audios/ready.m4a"],
+    voiceover: ONBOARDING_AUDIO.readyCheck,
     voiceReads: "heading",
     bubble: () => [{ text: "Are you ready?" }],
     cta: "Yes!",
@@ -554,7 +555,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 2,
-    voiceover: ["/audios/chasing.mp3"],
+    voiceover: ONBOARDING_AUDIO.career,
     cta: "Continue",
   },
   {
@@ -592,7 +593,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     reactionsScreen: 0,
     // The artboard's reactions for the 2nd and 4th options are the other way round.
     reactionsOptionOrder: [1, 4, 3, 2],
-    voiceover: ["/audios/WYP_Ques.m4a"],
+    voiceover: ONBOARDING_AUDIO.pythonLevel,
     cta: "Continue",
   },
   {
@@ -608,7 +609,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 0,
-    voiceover: ["/audios/HYW_Ques.m4a"],
+    voiceover: ONBOARDING_AUDIO.experience,
     cta: "Continue",
   },
   {
@@ -638,7 +639,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     kind: "name-input",
     id: "name",
     prompt: "What should I call you?",
-    voiceover: ["/audios/call-u.mp3"],
+    voiceover: ONBOARDING_AUDIO.name,
     cta: "Continue",
   },
   {
@@ -656,7 +657,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 1,
-    voiceover: ["/audios/wish-to-achive.m4a"],
+    voiceover: ONBOARDING_AUDIO.motivation,
     cta: "Continue",
   },
   {
@@ -668,7 +669,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: " can you dedicate to learning each day?" },
     ],
     answerKey: "timeCommitment",
-    voiceover: ["/audios/HMT_Ques.m4a"],
+    voiceover: ONBOARDING_AUDIO.timeCommitment,
     cta: "Continue",
   },
   {
@@ -685,14 +686,14 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     hexMode: "reactions",
     reactionsArtboard: DAYNIGHT_ARTBOARD,
     reactionsStateMachine: DAYNIGHT_STATE_MACHINE,
-    voiceover: ["/audios/best_time_Ques.m4a"],
+    voiceover: ONBOARDING_AUDIO.learningTime,
     cta: "Continue",
   },
   {
     kind: "notification-permission",
     id: "notifications",
     heading: "Get notified when it’s time to learn.",
-    voiceover: ["/audios/notified.mp3"],
+    voiceover: ONBOARDING_AUDIO.notifications,
     cta: "Allow Notifications",
   },
   {
@@ -703,7 +704,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: "one tap away", highlight: true },
       { text: " from your next lesson." },
     ],
-    voiceover: ["/audios/stay.mp3"],
+    voiceover: ONBOARDING_AUDIO.streak,
     cta: "Continue",
   },
   {
@@ -717,7 +718,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
       { text: " projects on your own." },
     ],
     hexBeat: "showQuestion",
-    voiceover: ["/audios/3-month.mp3"],
+    voiceover: ONBOARDING_AUDIO.threeMonths,
     cta: "Yes!",
   },
   {
@@ -732,7 +733,7 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     ],
     options: STARTING_POINT_OPTIONS,
     answerKey: "startingPoint",
-    voiceover: ["/audios/path.mp3"],
+    voiceover: ONBOARDING_AUDIO.startingPoint,
     hexMode: "reactions",
     reactionsArtboard: REACTIONS_ARTBOARD,
     reactionsScreen: 3,

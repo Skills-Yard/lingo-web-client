@@ -14,6 +14,8 @@ const LINE = "Open Your Notebook";
 const CUE_AFTER_VOICE_MS = 2800;
 /** With no voice to wait for (it failed to play), the cue comes this long after mount. */
 const CUE_WITHOUT_VOICE_MS = 6000;
+/** With the voice playing, the line is typed over the last part of the clip, from this share of it. */
+const TYPE_FROM_CLIP = 0.5;
 
 const HEX_SIZE = 130;
 /** Hex's spots on the picture (px from its top left, 358px wide): standing
@@ -56,8 +58,12 @@ export function TeacherSpeech({
    * so Hex is already beside the bubble and the line types at once. */
   skipIntro?: boolean;
 }) {
-  const { speaking } = useLevelVoice();
+  const { speaking, clipProgress, clipCount, status } = useLevelVoice();
+  // Typed to the intro clip unless the screen opens on the quiz, or the voice can't play.
+  const synced = !skipIntro && clipCount > 0 && status !== "failed";
+  const spokenPast = status === "done" || clipProgress >= TYPE_FROM_CLIP;
   const [cued, setCued] = useState(skipIntro);
+  if (synced && spokenPast && !cued) setCued(true);
   // Jumping to the quiz while Hex is still waiting below the picture: skip the rest of the intro.
   if (skipIntro && !cued) setCued(true);
   // Hex leaves when an option is picked. If he is asked back (the quiz starts
@@ -70,12 +76,18 @@ export function TeacherSpeech({
   }
 
   useEffect(() => {
-    if (cued) return;
+    if (cued || synced) return;
     const timer = window.setTimeout(() => setCued(true), speaking ? CUE_AFTER_VOICE_MS : CUE_WITHOUT_VOICE_MS);
     return () => window.clearTimeout(timer);
-  }, [speaking, cued]);
+  }, [speaking, cued, synced]);
 
-  const typed = useTyped(LINE, cued);
+  const timed = useTyped(LINE, cued && !synced);
+  const syncedLength = status === "done" ? LINE.length : Math.ceil(Math.max(0, (clipProgress - TYPE_FROM_CLIP) / (1 - TYPE_FROM_CLIP)) * LINE.length);
+  // Never un-types: leaving for the quiz mid-line keeps what was typed.
+  const [peak, setPeak] = useState(0);
+  const shown = synced ? syncedLength : timed.length;
+  if (shown > peak) setPeak(shown);
+  const typed = LINE.slice(0, Math.max(peak, shown));
 
   return (
     <>
