@@ -12,23 +12,23 @@ import { MODULE_AUDIO } from "@/lib/moduleAudio";
 const HEADING: TextSpan[] = [{ text: "Examples", highlight: true }, { text: " of instruction" }];
 
 const EXAMPLES = [
-  { id: "parent", src: "/images/level-one/example-parent.png", label: "Parent eats the food" },
-  { id: "coach", src: "/images/level-one/example-coach.png", label: "Coach gives a command" },
-  { id: "traffic", src: "/images/level-one/example-traffic.png", label: "Traffic signal says stop" },
+  { id: "parent", src: "/images/level-one/examples/parent.png", label: "Parent eats the food" },
+  { id: "coach", src: "/images/level-one/examples/coach.png", label: "Coach gives a command" },
+  { id: "traffic", src: "/images/level-one/examples/traffic.png", label: "Traffic signal says stop" },
 ] as const;
 
 const VOICEOVER = MODULE_AUDIO.examples;
 
-const CARD_WIDTH = 215;
-/** The cards are 661x1174 / 599x1064 — about 1:1.78. */
-const CARD_HEIGHT = 382;
+/** The cards (caption and all) are 268x391 centred, 242x354 at the sides — about 1:1.46. */
+const CARD_WIDTH = 258;
+const CARD_HEIGHT = 376;
 /** Space above the cards, inside the tinted band. */
 const BAND_PAD = 32;
 /** Space below the cards: a gap, then the pagination bars. */
 const BAND_PAD_BOTTOM = 86;
 /** Distance between the centre card and each neighbour. */
-const STEP = 113;
-const SIDE_SCALE = 0.88;
+const STEP = 232;
+const SIDE_SCALE = 0.903;
 /** Time each card stays centred before the carousel moves on by itself. */
 const AUTO_ADVANCE_MS = 3600;
 const SWIPE_OFFSET = 50;
@@ -145,11 +145,9 @@ function ExamplesCarousel() {
                 initial={false}
                 animate={{
                   x: slot * STEP,
-                  y: slot === 0 ? 0 : 14,
+                  y: 0,
                   scale: slot === 0 ? 1 : SIDE_SCALE,
-                  rotate: slot * 4,
-                  opacity: slot === 0 ? 1 : 0.85,
-                  filter: slot === 0 ? "brightness(1)" : "brightness(0.9)",
+                                  opacity: 1,
                 }}
                 transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
                 style={{
@@ -166,7 +164,7 @@ function ExamplesCarousel() {
                   src={example.src}
                   alt=""
                   draggable={false}
-                  className="h-full w-full rounded-[18px] object-fill select-none drop-shadow-[0_14px_22px_rgba(4,172,171,0.28)]"
+                  className="h-full w-full object-contain select-none"
                 />
               </motion.button>
             );
