@@ -62,7 +62,7 @@ export function GiveCommandScreen() {
       ctaLocked={given && !nice}
       ctaLight={!nice}
       ctaWaitsForVoice
-      ctaCube={!nice}
+      ctaCube={false}
       onContinue={() => {
         if (nice) {
           router.push(levelTwoHref(3));
