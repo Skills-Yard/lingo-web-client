@@ -6,8 +6,6 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { useLevelMuted } from "@/components/level-one/levelMuted";
 import { vibrateForTap } from "@/lib/haptics";
 
-/** The clip, in `public/audios/level-two/` — the player plays it once it is there. */
-export const COMMAND_AUDIO = "/audios/level-two/meet-the-command.mp3";
 /** Shown until the clip has told its own length. */
 const DEFAULT_SECONDS = 4;
 /** How many bars are lit before the clip is played. */

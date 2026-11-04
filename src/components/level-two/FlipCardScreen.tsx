@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { preload } from "react-dom";
 import { useRouter } from "next/navigation";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { motion } from "framer-motion";
 import { useRive } from "@rive-app/react-canvas";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
@@ -108,6 +109,7 @@ export function FlipCardScreen() {
   return (
     <LevelTwoShell
       step={10}
+      voiceover={MODULE_AUDIO.flipCard}
       scene={<RoomBackdrop />}
       ctaLabel="Next"
       ctaDisabled={!seen}

@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { COLUMN_W } from "@/lib/questionColumn";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { moduleHref } from "@/lib/routes";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
@@ -67,6 +68,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   return (
     <LevelOneShell
       step={QUIZ_STEP}
+      voiceover={checked ? undefined : MODULE_AUDIO.instructionsAre}
       wash
       fit
       answer={answer}

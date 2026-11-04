@@ -1,0 +1,596 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Lingo Module Screens - Full Reference</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #222222; line-height: 1.35; }
+  h1 { font-size: 24pt; color: #0B7A75; border-bottom: 3px solid #04ACAB; padding-bottom: 4pt; }
+  h2 { font-size: 17pt; color: #0B7A75; margin-top: 22pt; border-bottom: 1px solid #BBBBBB; page-break-before: always; }
+  h2.nobreak { page-break-before: auto; }
+  h3 { font-size: 13pt; color: #1F4899; margin-top: 14pt; }
+  h4 { font-size: 11pt; color: #444444; margin-top: 10pt; }
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt 0; }
+  th { background: #E3F6F3; border: 1px solid #999999; padding: 4pt; text-align: left; font-size: 10pt; }
+  td { border: 1px solid #BBBBBB; padding: 4pt; vertical-align: top; font-size: 10pt; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: #F1F2F4; }
+  .note { background: #FFF4E3; border-left: 4px solid #FF8D42; padding: 5pt 8pt; margin: 8pt 0; }
+  .meta { color: #666666; font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<h1>Lingo Web Client - Module Screens: Full Reference</h1>
+<p class="meta">Route: <code>/module?step=N</code> &nbsp;|&nbsp; Branch: module-two &nbsp;|&nbsp; Generated from the source code. Screen by screen: layout, effects, animations, lighting, transitions, sounds, haptics, state and navigation.</p>
+
+<h3>Contents</h3>
+<ol>
+  <li>Module overview and screen order</li>
+  <li>Shared foundation (route, layout, shell, header, bottom row)</li>
+  <li>Shared building blocks (Hex, speech bubble, robot, answer cards, result panel, hint, confetti, XP burst)</li>
+  <li>Cross-screen systems (streak strikes, battery, review loop, sounds, haptics, voiceover)</li>
+  <li>Screens 1 to 16, one by one</li>
+  <li>Review intro screen</li>
+  <li>Lesson complete screen</li>
+  <li>Timing and constants cheat sheet</li>
+  <li>Assets and files used</li>
+  <li>Known notes and gaps found in the code</li>
+</ol>
+
+<!-- ===================================================== 1 -->
+<h2 class="nobreak">1. Module overview and screen order</h2>
+<p>The module is one Next.js page, <code>src/app/module/page.tsx</code>. The query parameter <code>step</code> picks the screen (default <code>1</code>). Any unknown step returns a 404. The progress bar total is <code>MODULE_STEPS = 16</code>. The module is always shown in <b>light theme</b> (<code>ForcedTheme theme="light"</code>), whatever theme the learner picked.</p>
+
+<table>
+<tr><th>Step</th><th>Screen title</th><th>Component</th><th>Type</th><th>Graded?</th></tr>
+<tr><td>1</td><td>Meet your robot.</td><td>MeetRobotScreen</td><td>Intro (robot at rest)</td><td>No</td></tr>
+<tr><td>2</td><td>Give an instruction</td><td>GiveCommandScreen</td><td>Interactive (Pick Up button)</td><td>No</td></tr>
+<tr><td>3</td><td>What just happened?</td><td>QuizScreen (WHAT_JUST_HAPPENED)</td><td>Quiz, list of 3</td><td>Yes</td></tr>
+<tr><td>4</td><td>Let's release the cube.</td><td>QuizScreen (ROBOT_PICKED_UP)</td><td>Quiz, pair of 2 cards</td><td>Yes</td></tr>
+<tr><td>5</td><td>It's your turn now!</td><td>QuizScreen (WHAT_NEXT)</td><td>Quiz, list of 3</td><td>Yes</td></tr>
+<tr><td>6</td><td>Can you match them?</td><td>MatchScreen</td><td>Matching game</td><td>No (must finish)</td></tr>
+<tr><td>7</td><td>Move cube to target</td><td>TargetScreen</td><td>Story (3 Hex lines)</td><td>No</td></tr>
+<tr><td>8</td><td>How to reach the target?</td><td>QuizScreen (WHERE_SHOULD_GO)</td><td>Quiz, 3 tiles</td><td>Yes</td></tr>
+<tr><td>9</td><td>Meet the Command.</td><td>MeetCommandScreen</td><td>Intro + audio clip</td><td>No</td></tr>
+<tr><td>10</td><td>Flip the card to reveal.</td><td>FlipCardScreen</td><td>Interactive (Rive card)</td><td>No</td></tr>
+<tr><td>11</td><td>Instructions are...</td><td>InstructionQuizScreen</td><td>Quiz, 3 option rows</td><td>Yes</td></tr>
+<tr><td>12</td><td>Imagine Teacher Says..</td><td>TeacherFlow step="says"</td><td>Story + voiceover</td><td>No</td></tr>
+<tr><td>13</td><td>What teacher is doing?</td><td>TeacherFlow step="quiz"</td><td>Quiz, 2 cards</td><td>Yes</td></tr>
+<tr><td>14</td><td>Examples of instruction</td><td>ExamplesScreen</td><td>Carousel + voiceover</td><td>No</td></tr>
+<tr><td>15</td><td>What are instructions?</td><td>VideoScreen</td><td>Video card + note</td><td>No</td></tr>
+<tr><td>16</td><td>Let's guide Hex</td><td>MoveHexScreen</td><td>Mini game</td><td>Yes</td></tr>
+<tr><td>review</td><td>Let's fix the ones you missed</td><td>ReviewIntroScreen</td><td>Review intro</td><td>-</td></tr>
+<tr><td>complete</td><td>Lesson complete!</td><td>LessonCompleteScreen</td><td>Result (Rive)</td><td>-</td></tr>
+</table>
+<p><b>Graded steps</b> (<code>GRADED_STEPS</code>): 3, 4, 5, 8, 11, 13, 16. Only these count towards accuracy and the review loop.</p>
+<p><b>Flow:</b> Steps 1 to 11 are "Module 2" (level-two components). Steps 12 to 16 are the screens that began as Level 1 (<code>LEVEL_ONE_STEP = {3:12, 4:13, 5:14, 6:15, 8:16}</code>). After step 16: if any graded question was missed the learner goes to <code>review</code>, otherwise to <code>complete</code>. After <code>complete</code>, Continue returns to <code>/level</code>.</p>
+
+<!-- ===================================================== 2 -->
+<h2>2. Shared foundation</h2>
+
+<h3>2.1 Route and layout (<code>src/app/module/layout.tsx</code>)</h3>
+<ul>
+  <li><b>ForcedTheme light:</b> the whole module is light only.</li>
+  <li><b>ModuleButtonWarmup:</b> starts loading the shared Rive Continue button as soon as the module opens (while hex.riv is still downloading), so the first screen's button is already drawn when it appears.</li>
+  <li><b>RobotWarmup:</b> preloads the robot arm (<code>command.riv</code>) the same way.</li>
+  <li><b>HexRiveGate:</b> holds the screens back until <code>hex.riv</code> has downloaded and parsed (once, app-wide). Meanwhile it shows <code>HexRiveLoading</code> with the download progress. If the preload fails it does not block; canvases load the file themselves.</li>
+</ul>
+
+<h3>2.2 The shell: <code>LevelOneShell</code> and <code>LevelTwoShell</code></h3>
+<p>Every screen (except Lesson Complete) sits inside <code>LevelOneShell</code>. Level-two screens use <code>LevelTwoShell</code>, which wraps it and adds a full-frame absolute stage for children plus a scene (picture behind).</p>
+<table>
+<tr><th>Feature</th><th>Behaviour</th></tr>
+<tr><td>Design frame</td><td>Everything is laid out in Figma's <b>390 x 844</b> frame. The shell measures the screen before first paint (layout effect) and scales the frame as one piece: <code>scale = min(width/390, height/844, 1.5)</code>. The stage is stretched to fill what the frame's shape leaves. CSS variables set on the stage: <code>--stage-scale</code>, <code>--stage-w</code>, <code>--stage-h</code>.</td></tr>
+<tr><td>Fit mode</td><td>With <code>fit</code>, if content is taller than the stage, the whole frame shrinks further so the screen never scrolls (re-checked on resize, after fonts load and after 400 ms). Used on step 11.</td></tr>
+<tr><td>Safe areas</td><td>Top and bottom use <code>env(safe-area-inset-*)</code> padding (notch, home bar) so installed PWAs look right.</td></tr>
+<tr><td>Wash (light)</td><td>Optional soft blue gradient behind everything: <code>#E3ECFF</code> fading to transparent, 420 px (scaled) tall, pinned to the very top (behind status bar). Used on steps 11 and 15. In dark mode it is a dark blue gradient <code>rgba(27,43,64,0.9)</code> fading out.</td></tr>
+<tr><td>Backdrop</td><td>Optional full-screen picture (light mode only), with a white strip under the home indicator.</td></tr>
+<tr><td>Out of energy</td><td>If the battery is empty the stage becomes <code>inert</code> (no taps or keys) and <code>OutOfEnergySheet</code> comes up (see 2.5).</td></tr>
+<tr><td>Voiceover</td><td>An optional list of audio clips played back to back; Hex talks while they play and heading text fills in as it is read (see 4.5).</td></tr>
+<tr><td>Back button</td><td>Level-two: goes to the previous step (step 1 goes to <code>/level</code>). In review mode it leaves to <code>/level</code>.</td></tr>
+<tr><td>Continue handling</td><td>If the screen has a checked <code>answer</code>, leaving ends any strike/loop effects first (<code>endStrikes</code>), then calls the screen's continue.</td></tr>
+</table>
+
+<h3>2.3 Header (<code>OnboardingHeader</code>, 52 px, z-60)</h3>
+<ul>
+  <li>Close cross (goes to <code>/level</code>), previous arrow, <b>Rive progress bar</b> (<code>progressBar.riv</code>, artboard <code>LESSON_ProgressBar</code>), <b>battery</b> (<code>battery.riv</code>), and a <b>mute toggle</b>.</li>
+  <li>Header is up to 1024 px wide on desktop (the 5xl width); content below stays in the 390 px column.</li>
+  <li>Progress bar reacts to each checked answer with the <code>correct</code> / <code>wrong</code> triggers; strikes are drawn on a screen-sized canvas above the content (header z-60 is above the z-10 option blocks).</li>
+  <li>The scroller reaches up behind the header (<code>-mt-20 pt-20</code>) and down under the button (<code>-mb-8 pb-8</code>) so Hex's big canvas is never clipped when he jumps.</li>
+</ul>
+
+<h3>2.4 Bottom row (<code>ActionRow</code>): hint button + Continue</h3>
+<table>
+<tr><th>State</th><th>Behaviour and effect</th></tr>
+<tr><td>Main button</td><td>Rive "AllButton" artboard (<code>ModuleButton_SM</code>), module look. <b>Green</b> when enabled (same art as "correct"), <b>grey</b> when disabled, <b>white ("light")</b> for the Pick Up button on step 2. Label is set on the artboard text.</td></tr>
+<tr><td>Press feel</td><td>Click holds the button pressed 150 ms (<code>PRESS_HOLD_MS</code>), then runs the caller's <code>onClick</code> at 330 ms (<code>CLICK_DELAY_MS</code>) so the press animation is visible before navigating. Click sound plays on press.</td></tr>
+<tr><td>Shine</td><td>A highlight sweep (<code>shine</code> trigger) plays about every 5 s.</td></tr>
+<tr><td>Electric effect</td><td>When a strike or battery charge plays, the button plays an <b>electric</b> glow clip (0.67 s) reaching about 17 units past the artboard. The button takes no clicks during it (held), but is not drawn disabled.</td></tr>
+<tr><td>Locked</td><td><code>ctaLocked</code>: drawn enabled but ignores clicks (used while a robot move or Hex line is playing).</td></tr>
+<tr><td>With hint</td><td>Main button shrinks to <b>72% width / 82% height</b> and sits next to the hint. Resize uses <code>transition-[width,height] 500ms ease-out</code>. Pair is centred in the row.</td></tr>
+<tr><td>Without hint</td><td>Button is drawn to the header's drawn width, about 20.4 px from each screen edge.</td></tr>
+<tr><td>Bottom gap</td><td>20 px (<code>BUTTON_BOTTOM_GAP</code>) from the drawn button edge to the screen bottom. The row's margin transitions over 500 ms ease-out when the hint folds away.</td></tr>
+</table>
+
+<h4>Hint button (<code>HintButton</code>)</h4>
+<ul>
+  <li>White square with an orange <b>lightbulb</b> icon (<code>#FF8D42</code>), a drop edge <code>0 4px 0 #BFC6CF</code>, and an orange badge showing the hint count (fixed at 1).</li>
+  <li><b>Enter:</b> pops in with a spring (stiffness 320, damping 13), scaling from 0 at its bottom-left corner. It first renders closed and opens on the next frame so it visibly arrives.</li>
+  <li><b>Exit (jelly):</b> over 0.25 s the scale goes 1 &rarr; 1.2 &rarr; 0.88 &rarr; 0 (swell, squash, fold into the bottom-left corner) with fading opacity, while its slot margin closes over 500 ms and the main button grows into the freed room.</li>
+  <li><b>Press:</b> scales to 0.95, sinks 4 px, shadow disappears, springs back (stiffness 500, damping 14). Focus ring is orange.</li>
+</ul>
+
+<h3>2.5 Out of energy sheet</h3>
+<ul>
+  <li>Appears 600 ms after the battery reaches 0. A dark overlay (<code>bg-black/50</code>) fades in over 0.25 s; the sheet springs up from the bottom (stiffness 320, damping 34), 28 px rounded top, max width 430 px.</li>
+  <li>Shows gems at top right and two choices: <b>Try infinite free</b> (unlimited trial) or <b>Recharge now</b> (costs gems). A tick badge marks the chosen card. "No thanks" leaves to <code>/level</code>. It cannot be dismissed otherwise.</li>
+</ul>
+
+<!-- ===================================================== 3 -->
+<h2>3. Shared building blocks</h2>
+
+<h3>3.1 Screen title (<code>ScreenTitle</code>, <code>Teal</code>, <code>TitleText</code>)</h3>
+<ul>
+  <li>Poppins 600, <b>28 px</b>, line-height 134%, colour <code>#444444</code>, centred, placed at Figma top 116 (stage top 79).</li>
+  <li><b>Animation:</b> fades from opacity 0 and slides in from 24 px above, spring (stiffness 140, damping 16), delay 0.15 s.</li>
+  <li><b>Teal words</b> use the <code>text-level-gradient</code> utility: a horizontal gradient from <code>#00B8A9</code> to <code>#1387B3</code> (33%), clipped to the text.</li>
+  <li><code>oneLine</code> titles never wrap and stay centred even if slightly wider than the column.</li>
+  <li><code>underline</code> (used on quizzes that set it) draws a 2 px underline with 6 px offset in the run's colour (teal runs <code>#04ACAB</code>, others <code>#444444</code>).</li>
+</ul>
+
+<h3>3.2 Hex with speech bubble (<code>HexBubble</code>)</h3>
+<table>
+<tr><th>Part</th><th>Details</th></tr>
+<tr><td>Hex</td><td>Rive character from <code>hex.riv</code>, played the "onboarding" way. Slot 110 x 110 px. Enters with the <code>enter</code> trigger and entry style 7. Keeps an <b>ambient idle</b> trigger firing every 4 s. Talks (random talk / talk2 / talk3) while a voiceover plays, then <code>stopTalk</code>.</td></tr>
+<tr><td>Bubble look</td><td>White rounded (10 px) box with a soft blue <b>drop edge</b> <code>drop-shadow(0 3px 0 rgba(18,140,179,0.5))</code> (a filter so the edge also runs under the tail). Tail is a rotated 15 px square pointing at Hex. Text 16 px, weight 500, <code>#444444</code>; teal spans <code>#04ACAB</code>. Height 77 (short), 86 (default) or a custom min height.</td></tr>
+<tr><td>Bubble enter</td><td>Opacity 0 &rarr; 1, scale 0.85 &rarr; 1, slides 8 px out from the tail side. Spring (stiffness 260, damping 20) after a <b>350 ms</b> delay so Hex has started moving.</td></tr>
+<tr><td>Typing effect</td><td>The line types letter by letter (55 ms per character after the 350 ms delay). The whole line is laid out from the start (unseen letters are <code>invisible</code>) so centred text never shifts.</td></tr>
+<tr><td>Leaving (when <code>leaving</code>)</td><td>The bubble does a small bounce right by 18 px, then flies off to the left (two window widths) in 0.15 s (<code>easeOut</code> then <code>backIn</code>). Hex follows 80 ms later, sliding off left in 0.2 s <code>easeIn</code> with the <code>exitLeft</code> trigger. During exit Hex is drawn over the bubble (z-10) so the bubble passes behind him.</td></tr>
+</table>
+
+<h3>3.3 Robot backdrop (<code>RobotBackdrop</code>, <code>PersistentRobot</code>, <code>robotHost</code>)</h3>
+<ul>
+  <li><b>One robot for the whole module.</b> Because each step is its own page, a per-screen robot would reload. The canvas is created once in <code>robotHost</code> and each screen just moves it into its slot (appended in a layout effect, with a <code>ResizeObserver</code> keeping the drawing surface sharp).</li>
+  <li>Rive file <code>/animations/command.riv</code>, artboard <code>CMD_RobotArm</code> (390 x 306), state machine <code>Main</code>. Whole picture is 390 x 600: wall and window drawn 210 px above the artboard, table legs and floor 84 px below.</li>
+  <li><b>Moves</b> (view-model triggers) and their lengths: <code>pickUp</code> 1.83 s, <code>putDown</code> 1.63 s, <code>placeInTarget</code> 3.3 s (2.7 s clip + 0.6 s success), <code>reset</code> 0.8 s, <code>wrongClaw</code> 1.17 s, <code>wrongCube</code> 1.17 s, <code>showHint</code> / <code>hideHint</code> (instant, run beside the others).</li>
+  <li><b>Move queue:</b> triggers fired in the same frame, or while a move is playing, are dropped by Rive. So each queued move goes out after the previous clip plus 150 ms. The very first move waits 600 ms after load for the state machine to settle.</li>
+  <li><b>Poses:</b> <code>idle</code> (cube on table), <code>holding</code> (in claw), <code>placed</code> (in target box). <code>syncRobotPose</code> brings the robot to the pose a screen opens with, from wherever the last screen left it (for example holding &rarr; reset &rarr; pickUp), so forward, Back or reload all look right.</li>
+  <li><b>Target label:</b> text on the target box is set through the view-model string <code>targetLabel</code>.</li>
+  <li><b>Hint light:</b> <code>showHint</code> lights up (glows) the target box; <code>hideHint</code> turns it off. It is turned off when the screen unmounts.</li>
+  <li><b>Fade masks (lighting/blur look):</b> two masks reproduce Figma's blurred white rectangles. The picture is revealed with an alpha ramp: <b>top fade</b> from y 90 to 270 (0 &rarr; 1: 0, 0.12, 0.3, 0.5, 0.7, 0.85, 0.94, 1) so the room fades in under the window; <b>bottom fade</b> from y 505 to 600 (1, 0.85, 0.5, 0.15, 0) so the floor fades out under the table. A second 40 px mask fades the picture in under the top bar instead of a hard line.</li>
+  <li><b>Placement modes:</b> <code>bottom</code> (the artboard's bottom rests above the first control, e.g. text or answer cards) or <code>below</code> (the arm hangs directly under Hex's bubble, used when Hex's line is at the top). The picture is cut only by the top bar plus an 8 px gap; controls may cover its bottom.</li>
+  <li>Max drawn width 560 px on screen; wider screens get white at the sides.</li>
+</ul>
+
+<h3>3.4 Answer cards, list layout (<code>AnswerCards</code>)</h3>
+<ul>
+  <li>Three white cards, <b>76 px</b> tall, 6 px apart, 18 px radius, soft shadow <code>1px 1px 20.9px -13px rgba(0,0,0,.25)</code>, picture slot 60 x 54, text 17 px / 24 px weight 500, with an optional radio look through border colour.</li>
+  <li><b>Enter:</b> fade + rise from 90 px below; opacity 0.3 s and y spring (stiffness 110, damping 13), both delayed 0.3 s.</li>
+  <li><b>Selected:</b> card "bounces" with scale [1, 0.95, 1.05, 1] in 0.4 s, border turns teal-green (<code>border-primary</code>) with a light mint fill <code>#F2FBF8</code>. <b>Press:</b> scale 0.97.</li>
+  <li><b>Correct after check:</b> green look. <b>Wrong pick:</b> red border <code>#E5484D</code> with fill <code>#FFF1F1</code>. The right answer is always shown green after a check.</li>
+  <li><b>After check:</b> cards rise by 180 px on the result panel's spring so the panel never covers them. If the right answer plays a robot move (and the quiz does not keep the cards), the cards <b>fade out completely</b> so the move can be seen.</li>
+  <li><b>Hint highlight:</b> see 3.7 (orange wipe fill + float).</li>
+</ul>
+
+<h3>3.5 Tile cards, pair and tiles layouts (<code>TileCards</code>)</h3>
+<table>
+<tr><th>Layout</th><th>Card height</th><th>Picture box</th><th>Text</th></tr>
+<tr><td>pair (2 big cards)</td><td>184 px</td><td>112 px tall</td><td>18 px / 24 px</td></tr>
+<tr><td>tiles (3 small tiles)</td><td>110 px</td><td>46 px tall</td><td>16 px / 20 px</td></tr>
+</table>
+<p>Cards have an 8 px radius, 4 px border (white at rest, tinted per choice: lavender <code>#F6F4FE</code>, cream <code>#FFF9F0</code>, mint <code>#ECF7ED</code>, peach <code>#FFF3DE</code>, blue <code>#E5EFFD</code>; dark variants exist), shadow <code>1px 1px 6px 1px rgba(0,0,0,.15)</code>. Same enter, select bounce (press scale 0.96), rise-after-check and fade-out rules as the list. Long sentences are set at 15 px.</p>
+
+<h3>3.6 Result panel (<code>FeedbackPanel</code>) and "Yayyy!" panel</h3>
+<ul>
+  <li><b>Slides up from the bottom behind the Continue button</b> (button row is z-10, panel z-0) with a spring (stiffness 360, damping 32). It stays mounted while closed (hidden) so Hex's canvas is already loaded.</li>
+  <li><b>Correct look:</b> mint panel <code>#E3F6F3</code>, border <code>#7FD8CC</code> 3 px, 28 px top radius, title green <code>#01A17F</code> (default "Correct!"), bold words teal <code>#04ACAB</code>.</li>
+  <li><b>Wrong look:</b> pink panel <code>#FDECEC</code>, border <code>#D42421</code>, 32 px top radius, title red (default "Not quite"), bold words <code>#E5484D</code>.</li>
+  <li>Title 22 px / 28 px, body 14 px, 6 px apart; Hex is drawn 2x his box at the right. A strip below the panel carries it past the stage's bottom so it always meets the device edge.</li>
+  <li><b>Panel's own Hex:</b> enters 250 ms after the sheet starts; on a right answer he plays a <b>thumbs-up</b> cue 900 ms later (after his entrance), held about 2.8 s before the ambient idle resumes.</li>
+  <li><b>"Yayyy!" panel</b> (step 2) is the same design with its own title and text, min height 251 px (Figma panel top 593), 10 px above the button.</li>
+</ul>
+
+<h3>3.7 Hint effect (<code>HintFloat</code> and the orange fill)</h3>
+<ul>
+  <li><b>Fill wipe:</b> a peach fill <code>#FFE7D1</code> (dark <code>#33220F</code>) is revealed from left to right behind the card content using <code>clip-path inset(0 100% 0 0)</code> &rarr; <code>inset(0 0% 0 0)</code> over 0.8 s with ease <code>[0.45, 0, 0.25, 1]</code>.</li>
+  <li><b>List and tile cards (spin off):</b> after the fill, the card <b>floats</b> up and down 8 px (0 &rarr; -8 &rarr; 0) over 2.4 s, repeating forever, until something is picked (then it settles in 0.25 s).</li>
+  <li><b>Spin mode (steps 11 and 13, spin on):</b> the card scales to 1.15 and <b>flips twice on its Y axis</b> (720 degrees) in 1.2 s, then eases back to scale 1 in 0.6 s, then floats. Perspective 800 px. Hex flies to the card when the flip is about 65% done so he arrives as it stops.</li>
+  <li>On step 13 the hinted card also gets a warm glow: fill <code>#FFF3E8</code> and shadow <code>0 0 14px 2px rgba(255,141,66,0.25)</code> fading in over 2.5 s.</li>
+  <li>On quizzes with <code>targetHint</code> the hint also lights the robot's target box (<code>showHint</code>).</li>
+</ul>
+
+<h3>3.8 Reward effects</h3>
+<ul>
+  <li><b>Confetti</b> (<code>Confetti</code>): a full-screen canvas burst on every right answer: 120 square pieces, 6 to 14 px, 8 colours (<code>#FFC107 #FF5722 #E91E63 #9C27B0 #3F51B5 #00BCD4 #4CAF50 #8BC34A</code>), shot up from the bottom centre with random velocity (vx up to +/-6, vy -10 to -25), gravity 0.35 per frame, random spin. Plays once each time it turns on.</li>
+  <li><b>XP burst</b> (<code>XpBurst</code>): a big <b>"+10 XP"</b> (56 px bold, orange <code>#F5A623</code>, 70% opacity at most) in the middle of the screen. It rises from 60 px below with a bouncy spring scale (0.4 to 1, stiffness 300, damping 9), fades in, holds, then leaves 110 px upward, over 1.6 s (key times 0, 0.2, 0.65, 1).</li>
+</ul>
+
+<!-- ===================================================== 4 -->
+<h2>4. Cross-screen systems</h2>
+
+<h3>4.1 Streak strikes (progress bar and battery)</h3>
+<p>The run of right answers in a row (<code>moduleStreak</code>) is celebrated on the progress bar and battery. It is stored in sessionStorage so it survives page changes and reloads. Only a <b>checked</b> answer moves it.</p>
+<table>
+<tr><th>Right answers in a row</th><th>Effect</th></tr>
+<tr><td>2nd</td><td><code>strikeDuo2</code> lightning on the bar (0.9 s)</td></tr>
+<tr><td>3rd, 6th, 9th...</td><td>Battery gains 1 unit and plays its charge animation</td></tr>
+<tr><td>4th</td><td><code>strikeMix</code> (1.6 s)</td></tr>
+<tr><td>5th</td><td><code>strikeLoop</code> switch turns on and loops for 1 s the first time, 4 s the second, 7 s afterwards</td></tr>
+<tr><td>Wrong answer</td><td>Run goes back to 0 and any strike is cancelled</td></tr>
+</table>
+<ul>
+  <li>Screens with a hint button play the <code>...Check</code> twin of each strike (the artboard is shorter there).</li>
+  <li>Each strike waits 150 ms after the correct/wrong trigger (two triggers in one frame would drop one).</li>
+  <li>The Continue button plays the electric effect and takes no clicks until the strike is over. Leaving the screen ends any loop.</li>
+</ul>
+
+<h3>4.2 Review loop (<code>moduleReview</code>)</h3>
+<ul>
+  <li>Each graded question's <b>first answer</b> is noted. A miss stays a miss.</li>
+  <li>After step 16, if anything was missed, the learner sees the Review intro, then each missed question again in order. A question missed again goes to the back of the line. The review ends when all are right, then Lesson Complete.</li>
+  <li>The progress bar in review is full at the last screen, with its total grown by the questions to redo, and it fills as each is answered right. The bar keeps what the screen opened with so it never jumps back early.</li>
+  <li><b>Accuracy</b> on the final screen = share of graded questions right the first time (100% if none answered).</li>
+</ul>
+
+<h3>4.3 Sounds</h3>
+<ul>
+  <li><b>Click sound</b> (<code>/audios/click-sound.mpeg</code>): preloaded; each tap plays a clone so quick taps overlap. Follows the header mute toggle.</li>
+  <li><b>Game tones</b> (<code>useSound</code>, WebAudio synthesised, used on step 16): <code>step</code> (200 Hz + 220 Hz blip), <code>win</code> (rising 7 note triangle arpeggio, 261 to 1046 Hz), <code>lose</code> (falling tone), plus tap, pickup, hint.</li>
+  <li><b>Lesson complete:</b> its own sound helper plus the Rive animation.</li>
+</ul>
+
+<h3>4.4 Haptics (<code>navigator.vibrate</code>, no-op where unsupported)</h3>
+<table>
+<tr><th>Event</th><th>Pattern (ms)</th></tr>
+<tr><td>Tap / button press</td><td>110</td></tr>
+<tr><td>Correct answer</td><td>250</td></tr>
+<tr><td>Wrong answer</td><td>80, 40, 80</td></tr>
+<tr><td>Lesson complete</td><td>1200</td></tr>
+<tr><td>Claim reward</td><td>350, 70, 350, 70, 600</td></tr>
+</table>
+
+<h3>4.5 Voiceover and karaoke headings</h3>
+<ul>
+  <li><code>voiceover</code> is a list of audio clips played in order once the screen opens. Hex talks while a clip plays (random talk trigger per clip). Muting pauses sound but keeps the timing.</li>
+  <li><code>SpokenText</code> fills a heading <b>letter by letter as it is spoken</b>: spoken part at full strength (teal words in the gradient), the rest faded. With explicit word times it fills each word inside its own spoken time window.</li>
+</ul>
+
+<!-- ===================================================== 5 -->
+<h2>5. Screens 1 to 16</h2>
+<p>In every level-two screen, <code>LevelTwoShell</code> gives: header with progress step, bottom button row, and a stage where children are positioned by Figma numbers (<code>stageTop(figmaTop) = figmaTop - 37</code>).</p>
+
+<!-- ---------- Screen 1 -->
+<h3>Screen 1: Meet your robot. (<code>/module?step=1</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Purpose</td><td>First look at the robot arm.</td></tr>
+<tr><td>Text</td><td>Title "Meet your <i>robot.</i>" (teal gradient on "robot."). Caption (16 px / 23 px, weight 500, <code>#444444</code>, 372 px wide, centred): "It picks up, puts down, and places objects at its workstation".</td></tr>
+<tr><td>Layout</td><td>Robot rests above the caption (caption sits 54 px above the button row and is 46 px tall).</td></tr>
+<tr><td>Robot</td><td>Pose <b>idle</b> (cube on table). Idle loop of the Rive artboard plays; no moves fired.</td></tr>
+<tr><td>Animations</td><td>Title spring drop-in (0.15 s delay). Robot picture fades in with the top and bottom alpha masks (see 3.3).</td></tr>
+<tr><td>Button</td><td>"Let's Try" (green, no hint). Goes to step 2.</td></tr>
+<tr><td>Back</td><td>Goes to <code>/level</code>.</td></tr>
+</table>
+
+<!-- ---------- Screen 2 -->
+<h3>Screen 2: Give an instruction (<code>/module?step=2</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Purpose</td><td>The learner gives their first instruction.</td></tr>
+<tr><td>Text</td><td>Title "Give an <i>instruction</i>". Hex bubble (240 px wide): "Give <i>instruction</i> to <i>Pick Up</i> the Cube" (teal words).</td></tr>
+<tr><td>Phase A (before tap)</td><td>Hex (left) with his typed bubble stands 118 px above the button. Robot rests above him, idle. Main button is the <b>white ("light") "Pick Up"</b> button.</td></tr>
+<tr><td>Tap Pick Up</td><td>Haptic tap; robot plays <code>pickUp</code> (1.83 s); Hex and bubble disappear; button is <b>locked</b> (no clicks) but keeps its look.</td></tr>
+<tr><td>Phase B (after 1.83 + 0.45 = 2.28 s)</td><td>The <b>"Yayyy!"</b> panel springs up behind the button (stiffness 360, damping 32). Text: "You gave an instruction and the robot did it." Panel's Hex enters 250 ms later and plays the thumbs-up cue (900 ms after entry). Button turns green and becomes "Next".</td></tr>
+<tr><td>Panel look</td><td>Mint <code>#DFFFF8</code>, teal border <code>#08A2AD</code> 1.5 px, 28 px top radius, title <code>#01A17F</code> 22 px.</td></tr>
+<tr><td>Next</td><td>Goes to step 3.</td></tr>
+<tr><td>Not graded</td><td>No answer is recorded; no confetti or XP.</td></tr>
+</table>
+
+<!-- ---------- Screens 3, 4, 5, 8 -->
+<h3>Shared quiz behaviour (screens 3, 4, 5, 8: <code>QuizScreen</code>)</h3>
+<ol>
+  <li><b>Open:</b> title drops in, Hex + typed bubble appear at the Figma top, cards rise in after 0.3 s. Robot starts in the quiz's <code>pose</code> (brought there from the last screen).</li>
+  <li><b>Pick:</b> tapping a card plays the click sound, a haptic tap, and the card bounces and turns green-selected. Check is disabled until something is picked.</li>
+  <li><b>Hint (all four quizzes):</b> orange wipe fill on the right card, then float. On step 8 it also lights the target box.</li>
+  <li><b>Check:</b> button label is "Check" (step 8: "Let's do it!"). On check: answer is noted for review; haptic correct/wrong; progress bar reacts and strikes may play; the hint button jelly-folds away and Continue grows; the hint glow goes out (<code>hideHint</code>); the robot plays that choice's <code>moves</code> (a wrong choice with none plays <code>wrongClaw</code>); Hex's bubble <b>bounces off to the left</b> and Hex follows; the result panel slides up; cards rise 180 px (or fade out if a right answer plays a move).</li>
+  <li><b>Right:</b> green cards, confetti, "+10 XP" burst, panel Hex thumbs-up. <b>Wrong:</b> chosen card red with the right one green, red panel with explanation.</li>
+  <li><b>Continue:</b> goes through <code>nextAfter</code> (next step normally; review logic in the review).</li>
+</ol>
+
+<h3>Screen 3: What just happened? (<code>/module?step=3</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Title</td><td>"What just <i>happened?</i>" (one line)</td></tr>
+<tr><td>Hex says</td><td>"What did the robot do after <i>Pick Up</i>?" (bubble 178 px wide, short 77 px, row top 172)</td></tr>
+<tr><td>Layout</td><td>List of 3 cards. Robot arm hangs directly under Hex's bubble.</td></tr>
+<tr><td>Robot pose</td><td><b>holding</b></td></tr>
+<tr><td>Choices</td><td>1. "Robot picked up the cube." (correct; robot plays <code>reset</code> then <code>pickUp</code> to show it again). 2. "Robot moved the table." (<code>wrongCube</code>). 3. "Nothing happened." (<code>wrongClaw</code>).</td></tr>
+<tr><td>Cards after right</td><td>Stay visible (<code>keepCards</code>) while the robot replays.</td></tr>
+<tr><td>Right panel</td><td>"Exactly!" - The robot followed the instructions and picked up the cube.</td></tr>
+<tr><td>Wrong panel</td><td>"Let's look again!" - Watch what robot does after you select the instruction.</td></tr>
+<tr><td>Hint</td><td>Yes (orange fill on the right card).</td></tr>
+</table>
+
+<h3>Screen 4: Let's release the cube. (<code>/module?step=4</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Title</td><td>"Let's <i>release</i> the cube."</td></tr>
+<tr><td>Hex says</td><td>"Which command releases the cube?" (232 px bubble, row top 162)</td></tr>
+<tr><td>Layout</td><td>Pair of two big cards (184 px): "Pick Up" (lavender, <code>wrongClaw</code>) and "Put Down" (cream, correct, plays <code>putDown</code>).</td></tr>
+<tr><td>Robot pose</td><td><b>holding</b>. A right answer fades the cards out so the cube release is seen.</td></tr>
+<tr><td>Right panel</td><td>"Exactly!" - The robot followed a different instruction and performed a different action.</td></tr>
+<tr><td>Wrong panel</td><td>"Not quite!" - Robot is not releasing it, it will grab it.</td></tr>
+<tr><td>Hint</td><td>Yes.</td></tr>
+</table>
+
+<h3>Screen 5: It's your turn now! (<code>/module?step=5</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Title</td><td>"It's <i>your turn</i> now!"</td></tr>
+<tr><td>Hex says</td><td>"Let's make the robot pick up the cube." (244 px bubble, row top 172)</td></tr>
+<tr><td>Layout</td><td>List of 3: "Pick Up the Cube" (correct, plays <code>pickUp</code>), "MOVE to the table" (<code>wrongClaw</code>), "Place the cube" (<code>wrongCube</code>).</td></tr>
+<tr><td>Robot pose</td><td><b>idle</b> (so a right answer's pick-up is visible; cards fade out).</td></tr>
+<tr><td>Right panel</td><td>"Nice!" - You told the robot to pick up the cube.</td></tr>
+<tr><td>Wrong panel</td><td>"Let's look again!" - Which command lifts the cube?</td></tr>
+<tr><td>Hint</td><td>Yes.</td></tr>
+</table>
+
+<!-- ---------- Screen 6 -->
+<h3>Screen 6: Can you match them? (<code>/module?step=6</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Purpose</td><td>Match each instruction to the action it does. Not graded, but Next stays disabled until all pairs are right.</td></tr>
+<tr><td>Background</td><td><b>SoftBackdrop</b>: a vertical gradient <code>#EAF3FF</code> (0%) &rarr; <code>#F7FAFF</code> (38%) &rarr; <code>#FFFFFF</code> (100%). No robot.</td></tr>
+<tr><td>Column headers</td><td>Left: "Instructions / What to do" (lavender chip <code>#F1EEFF</code>, title <code>#5B3FD0</code>). Right: "Actions / How it looks in the robot" (cream chip <code>#FFF4E3</code>, title <code>#A85B00</code>). Chips are 52 px tall, at Figma top 181.</td></tr>
+<tr><td>Cards</td><td>172 x 140 px, 8 px radius, 4 px border, 14 px apart, 30 px between columns. Left: Pick Up, Put Down. Right: Release the cube, Lift the cube. Pairs: Pick Up = Lift the cube; Put Down = Release the cube.</td></tr>
+<tr><td>Enter</td><td>Cards fade in and rise from 40 px below; opacity 0.3 s delayed 0.15 s + 0.1 s per row; y spring (stiffness 110, damping 13).</td></tr>
+<tr><td>Pick a card</td><td>Click sound + haptic tap. Card <b>bounces</b> (scale 1, 0.96, 1.04, 1) and turns <b>blue</b> (<code>#5B9BFF</code> border, <code>#EEF4FF</code> fill). Tapping it again unpicks.</td></tr>
+<tr><td>Waiting nudge</td><td>With a card picked in one column, the other column's open cards: one scale-up (1.05) and <b>shake</b> (x 0, -4, 4, -3, 3, 0) over 0.45 s, then a gentle <b>float</b> (y 0, -5, 0 over 1.8 s, repeat) and a <b>bright shine</b> band (white 80%, skewed -20 degrees) crossing every 1.8 s (0.9 s sweep + 0.9 s pause).</td></tr>
+<tr><td>Right pair</td><td>Both cards turn <b>green</b> and, over 1.2 s, lift 16 px while scaling to 1.06 (keys: 0, 0.2, 0.45, 1), float, then glide back to place. A light <b>shine</b> (white 20%) crosses each in 0.27 s. They turn <b>grey</b> and disabled at 540 ms as they come down (content at 50% opacity). Haptic correct. Progress bar plays "correct" (partial for non-last pairs: no strike).</td></tr>
+<tr><td>Wrong pair</td><td>Both cards turn <b>red</b> and <b>shake</b> (x 0, -7, 7, -5, 5, 0 over 0.28 s). After 300 ms both let go and fade back to normal over 0.25 s. Haptic wrong. Further taps are ignored while the red shake runs.</td></tr>
+<tr><td>Button</td><td>"Next" - disabled (grey) until all 4 cards matched. Goes to step 7.</td></tr>
+</table>
+
+<!-- ---------- Screen 7 -->
+<h3>Screen 7: Move cube to target (<code>/module?step=7</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Purpose</td><td>Story screen; Hex explains the target area in three lines, one per Continue.</td></tr>
+<tr><td>Title</td><td>"Move cube <i>to target</i>"</td></tr>
+<tr><td>Robot</td><td>Pose <b>holding</b>; the arm hangs under Hex's first bubble. From line 2 on, the <b>target box lights up</b> (<code>showHint</code> glow) with the label <b>"TARGET AREA"</b> and stays lit to the end.</td></tr>
+<tr><td>Hex lines</td><td>1. "The robot is holding the cube." (above the arm, row top 182). 2. "The target area is marked on the table." (at the bottom of the artboard, just under the target box so it never covers what it points at; 69 px below the artboard's bottom). 3. "Let's move the cube in the target area!" (above the button, 118 px).</td></tr>
+<tr><td>Bubble</td><td>167 px wide, typed letter by letter.</td></tr>
+<tr><td>Transition between lines</td><td>On Continue the bubble <b>bounces and flies off left</b>, Hex follows and slides off; after 350 ms the next line enters at its new place with a fresh Hex entrance. The button is locked during this.</td></tr>
+<tr><td>Button</td><td>"Continue" for all three lines. After the last, goes to step 8.</td></tr>
+</table>
+
+<!-- ---------- Screen 8 -->
+<h3>Screen 8: How to reach the target? (<code>/module?step=8</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Title</td><td>"How to <i>reach the target?</i>"</td></tr>
+<tr><td>Hex says</td><td>"Pick an instruction to reach the target area." (232 px, row top 176)</td></tr>
+<tr><td>Layout</td><td>Three tiles: "Pick Up" (mint, <code>wrongClaw</code>), "Put Down" (peach, <code>wrongCube</code>), "Place in Target" (blue, correct, plays <code>placeInTarget</code>).</td></tr>
+<tr><td>Robot</td><td>Pose <b>holding</b>. The target box is <b>lit from the start</b> with the label "TARGET AREA" (the <code>targetLabel</code>). On check the glow goes out first (<code>hideHint</code>) and then the robot plays its move (about 3.3 s for Place in Target). Cards fade out on a right answer.</td></tr>
+<tr><td>Button</td><td>"Let's do it!" before check, then "Continue".</td></tr>
+<tr><td>Right panel</td><td>"Exactly!" - Place in Target moves the cube to the target area.</td></tr>
+<tr><td>Wrong panel</td><td>"Not quite" (default title) - Remember: Place in Target moves the cube to the target area.</td></tr>
+<tr><td>Hint</td><td>Yes.</td></tr>
+</table>
+
+<!-- ---------- Screen 9 -->
+<h3>Screen 9: Meet the Command. (<code>/module?step=9</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Title</td><td>"Meet the <i>Command.</i>"</td></tr>
+<tr><td>Robot</td><td>Pose <b>idle</b>, resting above the audio clip (clip top at Figma 514).</td></tr>
+<tr><td>Audio player</td><td>Pill 284 x 69 px, white, 1 px border <code>#E7ECEF</code>, soft shadow <code>0 2px 10px rgba(31,42,68,.08)</code>. Teal circle play button (<code>#08A4AD</code>, 46 px) with a Play/Pause icon; a 25-bar waveform (bars 10 to 30 px, 3 px wide); and a time label (13 px, tabular numbers).</td></tr>
+<tr><td>Behaviour</td><td>Tap plays/pauses (click sound + haptic; button scales to 0.95 on press). At rest the first 6 bars are lit teal; while playing the lit bars follow the clip position (grey <code>#D5DADF</code> otherwise, 150 ms colour fade). The time counts <b>down</b> while playing. When the clip ends it resets. Follows the mute toggle. A missing or blocked clip just leaves the button as it was.</td></tr>
+<tr><td>Clip</td><td><code>/audios/level-two/meet-the-command.mp3</code> (see Known notes: this file is not in the repo).</td></tr>
+<tr><td>Text</td><td>"In Programming Languages, instructions are known as <i>command.</i>" (20 px / 28 px, weight 600, 340 px wide, 32 px above the button).</td></tr>
+<tr><td>Button</td><td>"Next". Goes to step 10.</td></tr>
+</table>
+
+<!-- ---------- Screen 10 -->
+<h3>Screen 10: Flip the card to reveal. (<code>/module?step=10</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Background</td><td><b>RoomBackdrop</b>: <code>flipCard-bg.svg</code>, an empty room cropped to the 390 x 844 frame, covering the whole stage. Where cropped, it is held on the horizon at 67% of the height.</td></tr>
+<tr><td>Card</td><td>The "Flip card" artboard (207 x 275) of <code>progressBar.riv</code>, state machine <code>Card_SM</code>, drawn 350 px tall in the middle of the stage. Both faces are drawn by the artboard (front: "Tap to reveal").</td></tr>
+<tr><td>Bleed</td><td>Canvas is 20 artboard units larger on every side so the swell of the turn is not clipped by the artboard edge.</td></tr>
+<tr><td>Enter</td><td>Hidden until the Rive file loads (button disabled), then fades in and springs up from 40 px below (stiffness 140, damping 16). The file is preloaded with matching CORS mode so it is not downloaded twice.</td></tr>
+<tr><td>Interaction</td><td>Each tap fires the <code>Trigger 1</code> flip trigger (turns the card over, and back on the next tap), plays the click sound, haptic tap and press scale 0.98.</td></tr>
+<tr><td>Button</td><td>"Next" - disabled until the card has been turned once. Goes to step 11.</td></tr>
+</table>
+
+<!-- ---------- Screen 11 -->
+<h3>Screen 11: Instructions are... (<code>/module?step=11</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Purpose</td><td>Quiz: what instructions are known as. Correct = Command.</td></tr>
+<tr><td>Shell</td><td>Level One shell with <code>wash</code> (blue gradient) and <code>fit</code> (shrinks to avoid scrolling).</td></tr>
+<tr><td>Title row</td><td>Teal-tinted 52 px badge with a "Q" image and "<i>Instructions</i> are..." (28 px). Enters from 60 px above with opacity and a spring (delayed 0.3 s).</td></tr>
+<tr><td>Hex</td><td>Large (1.1x his slot) in a 180 x 177 slot above the options, drawn by <code>HexGlide</code> (see below).</td></tr>
+<tr><td>Options</td><td>Three rows 89 px tall, 12 px radius, with a 4 px bottom edge: <b>Statement</b> (lavender), <b>Command</b> (pink <code>#FFF4F6</code>, correct), <b>Question</b> (cream). Image 33 to 48 px + 20 px label.</td></tr>
+<tr><td>Option enter</td><td>Drop-in effect (<code>optionDropIn</code>).</td></tr>
+<tr><td>Press</td><td>Row sinks onto its 4 px edge (<code>active:border-b-0</code>, scale 0.97, y +4).</td></tr>
+<tr><td>Select</td><td>Card bounces in 3D: scale [1, 0.93, 1.07, 0.99, 1] and rotateX [0, 14, -8, 3, 0] over 0.55 s, perspective 600 px; edge and fill turn green.</td></tr>
+<tr><td>Wrong pick</td><td>Red edge/fill and a red circle with a white X pops in at the row's right (scale 0 &rarr; 1, 200 ms).</td></tr>
+<tr><td>Hint</td><td>Hinted card does the 2-turn flip and float; once the flip is done, <b>Hex flies from the question slot to a spot on top of the Command card</b> (small, 72 px) with a quicker well damped spring (stiffness 170, damping 24).</td></tr>
+<tr><td>Check</td><td>Question slot closes (height 177 &rarr; 0) on the result panel's spring (360 / 32) so the options rise as the panel arrives, as if pushed. Hex stays put and sinks under the options (<code>rising</code>, z-5, ride down 37 px), while the panel brings its own Hex.</td></tr>
+<tr><td>Panel text</td><td>Right: "Yes! Instructions in a program is called <b>commands.</b>" Wrong: "Remember: Instructions in a program are called <b>commands.</b>" Default titles (Correct! / Not quite).</td></tr>
+<tr><td>Right extras</td><td>Confetti + "+10 XP". Panel Hex thumbs-up.</td></tr>
+<tr><td>Next</td><td>Continue goes via <code>nextAfter</code> to step 12 (Level 1's 3rd screen).</td></tr>
+</table>
+
+<!-- ---------- Screen 12 and 13 -->
+<h3>Screen 12: Imagine Teacher Says.. (<code>/module?step=12</code>) and Screen 13: What teacher is doing? (<code>/module?step=13</code>)</h3>
+<p>Both are the <b>same mounted component</b> (<code>TeacherFlow</code>) with a step of "says" or "quiz", so moving between them keeps the teacher picture on screen and animates it. Browser Back/Forward move the URL and the screen follows; tapping moves the screen first and the URL after.</p>
+
+<h4>Screen 12 (says)</h4>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Heading</td><td>"<i>Imagine</i> Teacher Says.." as <b>karaoke text</b>: fills in as the voice reads "Let Suppose Teacher Says" (word times 0.14-0.83, 1.47-1.8, 1.8-2.17 s of the 4.03 s clip <code>screen_3_audio.mpeg</code>). Cross-fades with the quiz heading in 0.3 s.</td></tr>
+<tr><td>Picture</td><td><code>teacher-says.png</code> in an 8 px rounded box, 358 px tall (11 px below the title), cropped from the bottom on the quiz.</td></tr>
+<tr><td>Hex</td><td>Starts <b>below the picture</b> (spot 114,362; enters from 114,420, rising in) while the voice introduces it. About 2.8 s after the voice starts (or 6 s with no voice) he glides up beside the teacher (spot 228,84) on a slow soft spring (stiffness 70, damping 16) and then <b>floats</b> up and down 7 px every 2.4 s (starting 1.2 s later).</td></tr>
+<tr><td>Speech bubble</td><td>White 18 px rounded bubble at the top right of the picture with orange quote marks. It pops in (scale 0.8 &rarr; 1, 0.25 s, delayed 350 ms) and the line "Open Your Notebook" is typed in, letter by letter. The bubble is sized by the full invisible line.</td></tr>
+<tr><td>Button</td><td>"Continue". Moves to the quiz at once (picture morphs) and the URL becomes step 13.</td></tr>
+</table>
+
+<h4>Screen 13 (quiz)</h4>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Heading</td><td>"<i>What</i> teacher is doing?"</td></tr>
+<tr><td>Picture morph</td><td>Picture crops from 358 to <b>240 px</b> tall with Hex and the bubble kept, over 0.8 s with ease [0.65, 0, 0.35, 1]. On check it crops further to 110 px on the panel's spring so the options ride up.</td></tr>
+<tr><td>Question audio</td><td><code>screen_4_audio_trim.m4a</code> (just the question), read once until checked. Hex talks while it plays. Options are not read.</td></tr>
+<tr><td>Options</td><td>Two cards 221 px tall, 19 px apart, 116 px picture: <b>Asking Question</b> (lavender) and <b>Giving Instruction</b> (cream, correct). They rise in 90 px with a spring after 0.3 s and exit 24 px down in 0.25 s if the screen steps back.</td></tr>
+<tr><td>Select</td><td>Bounce [1, 0.95, 1.05, 1]; press 0.96; green or red looks as other quizzes.</td></tr>
+<tr><td>Hint</td><td>Card does the 2-turn flip and float with an orange glow; <b>Hex flies to the top of the card</b> (small, 80/130 scale) when the flip finishes.</td></tr>
+<tr><td>Check</td><td>Hex <b>sinks behind the options</b> (spot 228,200 on the panel spring) as they rise; the panel brings its own Hex.</td></tr>
+<tr><td>Panel text</td><td>"Yes! The teacher is giving an <b>instruction.</b>" or "Remember: The teacher is giving an <b>instruction.</b>"</td></tr>
+<tr><td>Right extras</td><td>Confetti + "+10 XP".</td></tr>
+<tr><td>Back</td><td>Back to the says view (the quiz restarts fresh: selection, hint, flip, checked and the bar's answer all reset).</td></tr>
+<tr><td>Next</td><td>Continue goes to step 14.</td></tr>
+</table>
+
+<!-- ---------- Screen 14 -->
+<h3>Screen 14: Examples of instruction (<code>/module?step=14</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Heading</td><td>"<i>Examples</i> of instruction" as karaoke text read by the voice heading clip.</td></tr>
+<tr><td>Voiceover</td><td>7 clips in order: heading, then for Parent, Coach and Traffic a left line and a right line each (<code>screen5_*_audio.m4a</code>). While the voice reads an example's two lines, that card is centred and the carousel does not auto-advance.</td></tr>
+<tr><td>Band</td><td>Full stage width, tinted <code>#04ACAB</code> at 12% (dark 30%) and <b>fading out to the top and bottom</b> with a mask gradient (transparent, black 30%, black 70%, transparent). Height = 382 + 32 + 86 px; centred between heading and button.</td></tr>
+<tr><td>Cards</td><td>Three cards 215 x 382 px (about 1:1.78), radius 18 px, soft teal drop shadow <code>0 14px 22px rgba(4,172,171,.28)</code>: Parent eats the food, Coach gives a command, Traffic signal says stop.</td></tr>
+<tr><td>Carousel layout</td><td>Active card centred (scale 1, brightness 1, z-index 1). Neighbours at +/-113 px, 14 px lower, scale 0.88, <b>rotated 4 degrees</b> in/out (rotate = slot x 4), opacity 0.85, brightness 0.9. Loops forever.</td></tr>
+<tr><td>Move animation</td><td>0.9 s with ease [0.32, 0.72, 0, 1].</td></tr>
+<tr><td>Controls</td><td>Swipe or drag (offset over 50 px or velocity over 400, rubber band 0.2, snap back); tap a neighbour; arrow keys; tap a pagination bar.</td></tr>
+<tr><td>Auto-advance</td><td>Moves on every 3.6 s unless held (touching) or the voice is speaking. Off for reduced-motion users.</td></tr>
+<tr><td>Pagination</td><td>3 pills; the active one is wider (24 px vs 12 px, 500 ms) and carries a <b>countdown fill</b> that grows across it over 3.6 s (linear) and restarts on every card; it resets while held. With reduced motion it is full.</td></tr>
+<tr><td>Button</td><td>"Continue to video". Goes to step 15.</td></tr>
+</table>
+
+<!-- ---------- Screen 15 -->
+<h3>Screen 15: What are instructions? (<code>/module?step=15</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Shell</td><td>With the blue <code>wash</code>.</td></tr>
+<tr><td>Heading</td><td>"What are <i>instructions</i>?" as karaoke text. Words timed 0.49-0.76, 0.76-1.12, 1.12-1.72 s of <code>screen_6_audio.mpeg</code> (only the first 2.15 s plays: <code>#end=2.15</code>).</td></tr>
+<tr><td>Sub text</td><td>"Watch this short video to understand instructions with real examples." (16 px, <code>#666666</code>).</td></tr>
+<tr><td>Video card</td><td>340 x 309 px thumbnail (<code>video-thumbnail-new.png</code>, 8 px radius) with a soft <b>cyan glow</b> behind it: <code>#79DDFF</code> at 24% with a 75 px blur. A white 69 px play circle (border <code>#F0F0FF</code>, shadow <code>1px 1px 13.2px 3px rgba(0,0,0,.25)</code>) with a teal play icon sits at the centre; press scales to 0.95 and plays the click sound.</td></tr>
+<tr><td>Player bar</td><td>48 px bar at the bottom of the card, black 65% with a 3.35 px backdrop blur: play icon, 00:00, a track (<code>#818185</code>) with a green knob (<code>#01A17F</code>), 02:45, fullscreen icon. This is a static mock (the video does not play).</td></tr>
+<tr><td>Note box</td><td>Lavender tinted box <code>#B286FD</code> at 11%: sparkles icon, divider, bold "In this video," and "We will tell that in programming what instructions really known as."</td></tr>
+<tr><td>Button</td><td>"Continue". Goes to step 16.</td></tr>
+</table>
+
+<!-- ---------- Screen 16 -->
+<h3>Screen 16: Let's guide Hex (<code>/module?step=16</code>)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Purpose</td><td>Mini game: walk Hex to the battery. Go Straight wins; Go Back loses and offers a retry. Graded (first go counts).</td></tr>
+<tr><td>Title</td><td>"Let's <i>guide</i> Hex" (one line).</td></tr>
+<tr><td>Background</td><td><b>MeadowBackdrop</b>: <code>guide-hex-bg.webp</code> (3:2, at least 803 px wide) centred, with a white wash <b>gradient</b> over it: white 45% at the top, 60% at 55%, solid white at the bottom (lighting that fades the meadow into the button area).</td></tr>
+<tr><td>Platform</td><td><code>guide-hex-platform.webp</code>, 356 x 266 px, at Figma top 216. A 3 x 3 board; only the middle column is used: top, centre, bottom tiles at 18.3%, 47.5%, 76.6% of the height.</td></tr>
+<tr><td>Battery</td><td>66 x 60 px battery icon standing on the top tile with a <b>yellow radial glow</b> (<code>rgba(255,226,70,0.85)</code> fading to transparent at 70%) 20 px beyond the icon. When solved, it scales to 0 and fades in 0.2 s (collected).</td></tr>
+<tr><td>Hex</td><td>Starts on the centre tile. Moves with a spring (stiffness 320, damping 30) to the tile chosen. Box 100 px, lifted 10 px so he stands on the tile.</td></tr>
+<tr><td>Buttons</td><td>Two 3D buttons (150.5 x 99 px, 18 px apart) at Figma top 508: <b>Go Straight</b> (light blue <code>#EDFAFE</code>, edge <code>#BFE6F2</code>, blue gradient up arrow) and <b>Go Back</b> (cream <code>#FEF8EC</code>, edge <code>#F2DFB8</code>, orange gradient arrow flipped down). Each face stands 4 px up on a darker edge and sinks onto it when pressed (100 ms). They are disabled once Hex has left the centre.</td></tr>
+<tr><td>Sound</td><td><code>step</code> blip on each move.</td></tr>
+<tr><td>After 400 ms (Go Straight)</td><td><code>win</code> sound + haptic, battery collected, <b>Gem popup</b> opens (see below), Continue enabled.</td></tr>
+<tr><td>After 400 ms (Go Back)</td><td><code>lose</code> sound + haptic. First miss is noted as wrong for review. A <b>red result panel</b> slides up: "Oops, that's the wrong way! The battery is straight ahead. Tap anywhere on this panel to try again." Button becomes "Try again". Tapping the panel or the button resets Hex to the centre and re-enables the buttons.</td></tr>
+<tr><td>Continue</td><td>Disabled until a result exists. On the solved path it notes the answer (right if never missed) and goes via <code>nextAfter</code> to review or complete.</td></tr>
+</table>
+
+<h4>Gem popup (<code>GemPopup</code>)</h4>
+<ul>
+  <li>Dark overlay (<code>bg-black/45</code>, 0.25 s fade). Card 356 x 494 px, 32 px radius, springs in (scale 0.85 &rarr; 1, y 24 &rarr; 0, stiffness 260, damping 22) and exits with scale 0.92.</li>
+  <li>Content: "+10 XP" orange (32 px), the gem with burst image, "Congratulations!", a mint chip with the gem (tilted -19.9 degrees) and "1 Gem", a sparkle divider, and "You won 1 Gem as you followed the given command."</li>
+  <li><b>Countdown bar</b> along the bottom (6 px, teal) drains left to right over 3 s (linear); the popup closes itself at 3 s. Tap anywhere or the X to close early (click sound).</li>
+</ul>
+
+<!-- ===================================================== 6 -->
+<h2>6. Review intro screen (<code>/module?step=review</code>)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>When</td><td>After step 16 when at least one graded question was answered wrong the first time. If nothing is missed (for example link or reload with the answers gone) it redirects to complete.</td></tr>
+<tr><td>Progress bar</td><td>Full at step 16 with the total increased by the number of questions to redo.</td></tr>
+<tr><td>Layout</td><td>Hex (190 px box) at the top.</td></tr>
+<tr><td>Text</td><td>Title "Let's fix the ones you <i>missed</i>" drops in from 24 px above (spring 140 / 16, delay 0.3 s). Body "N questions to go again. Keep going until you get every one right." (or "1 question") fades up 16 px in 0.4 s, delay 0.5 s.</td></tr>
+<tr><td>Button</td><td>"Let's go" - starts the review queue and goes to the first missed step. Back goes to <code>/level</code>.</td></tr>
+</table>
+
+<!-- ===================================================== 7 -->
+<h2>7. Lesson complete screen (<code>/module?step=complete</code>)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Display</td><td>Full-screen Rive artboard <code>LESSON_Complete</code> (from <code>hex.riv</code>), fit width, held to 430 px wide and centred on a desktop. No header.</td></tr>
+<tr><td>Values written</td><td>Once ready, the artboard's data is set: <b>XP +40</b>, <b>accuracy</b> (first try percentage), <b>time 3:42</b> (222 s, fixed value). Written as numbers, or as strings ("+40", "92%", "3:42") if the artboard declares strings. Then the <code>play</code> trigger fires the celebration.</td></tr>
+<tr><td>Haptic</td><td>One long 1.2 s vibration.</td></tr>
+<tr><td>Button</td><td>"Continue" (module button, full phone width). It saves module 1 as finished (<code>completeModule</code>), resets review and streak, and returns to <code>/level</code> where Hex moves to the next block.</td></tr>
+</table>
+
+<!-- ===================================================== 8 -->
+<h2>8. Timing and constants cheat sheet</h2>
+<table>
+<tr><th>What</th><th>Value</th></tr>
+<tr><td>Title spring</td><td>stiffness 140, damping 16, delay 0.15 s, from y -24</td></tr>
+<tr><td>Cards enter</td><td>opacity 0.3 s, y spring 110/13, delay 0.3 s, from y 90</td></tr>
+<tr><td>Result panel spring</td><td>stiffness 360, damping 32 (also drives cards rising 180 px, picture crop, Hex sinking)</td></tr>
+<tr><td>Hex typing</td><td>350 ms start delay, 55 ms per character</td></tr>
+<tr><td>Hex exit follow</td><td>80 ms after bubble; bubble 0.15 s, Hex 0.2 s</td></tr>
+<tr><td>Hex ambient idle</td><td>every 4 s</td></tr>
+<tr><td>Panel Hex enter</td><td>250 ms after sheet; cue after 900 ms; cue plays about 2.8 s</td></tr>
+<tr><td>Button press</td><td>hold 150 ms, onClick at 330 ms</td></tr>
+<tr><td>Button shine</td><td>every 5 s</td></tr>
+<tr><td>Electric effect</td><td>0.67 s</td></tr>
+<tr><td>Strike delay</td><td>150 ms after correct/wrong</td></tr>
+<tr><td>Robot move gap</td><td>150 ms + clip length; first move 600 ms after load</td></tr>
+<tr><td>Hint fill</td><td>0.8 s; float 2.4 s loop; flip 1.2 s x 2 turns</td></tr>
+<tr><td>Match: wrong shake / release</td><td>0.28 s / 300 ms</td></tr>
+<tr><td>Match: right lift / grey</td><td>1.2 s / 540 ms</td></tr>
+<tr><td>Examples carousel</td><td>3.6 s auto, 0.9 s move</td></tr>
+<tr><td>Gem popup</td><td>3 s auto close</td></tr>
+<tr><td>Move Hex result delay</td><td>400 ms</td></tr>
+<tr><td>Out-of-energy delay</td><td>600 ms</td></tr>
+<tr><td>Confetti</td><td>120 pieces, gravity 0.35</td></tr>
+<tr><td>XP burst</td><td>1.6 s, "+10 XP", 56 px</td></tr>
+</table>
+
+<h3>Colour palette</h3>
+<table>
+<tr><th>Use</th><th>Colour</th></tr>
+<tr><td>Brand teal / gradient</td><td><code>#04ACAB</code>, gradient <code>#00B8A9</code> &rarr; <code>#1387B3</code></td></tr>
+<tr><td>Body text</td><td><code>#444444</code> (headings on some screens <code>#2C2C2C</code>)</td></tr>
+<tr><td>Correct</td><td>panel <code>#E3F6F3</code>, border <code>#7FD8CC</code>, title <code>#01A17F</code>, card fill <code>#F2FBF8</code>, edge <code>#008566</code></td></tr>
+<tr><td>Wrong</td><td>panel <code>#FDECEC</code>, border <code>#D42421</code>, card border <code>#E5484D</code>, fill <code>#FFF1F1</code></td></tr>
+<tr><td>Hint / XP orange</td><td><code>#FF8D42</code> (hint), fill <code>#FFE7D1</code>, XP <code>#F5A623</code></td></tr>
+<tr><td>Match selected blue</td><td>border <code>#5B9BFF</code>, fill <code>#EEF4FF</code></td></tr>
+<tr><td>Speech bubble edge</td><td><code>rgba(18,140,179,0.5)</code></td></tr>
+</table>
+
+<!-- ===================================================== 9 -->
+<h2>9. Assets and files used</h2>
+<table>
+<tr><th>Type</th><th>Files</th></tr>
+<tr><td>Rive animations</td><td><code>/animations/command.riv</code> (robot arm), <code>progressBar.riv</code> (progress bar, button "AllButton", flip card), <code>battery.riv</code>, <code>hex.riv</code> (Hex, lesson complete, others)</td></tr>
+<tr><td>Robot-screen SVGs</td><td><code>/images/level-two/step-4.x, 5.x, 6.1, 8.x, 9.x, 10.x, 11.x, 13.x, 14.x.svg</code>, <code>match-instructions.svg</code>, <code>match-actions.svg</code>, <code>flipCard-bg.svg</code></td></tr>
+<tr><td>Level 1 images</td><td><code>/images/level-one/</code>: teacher-says, asking-question, giving-instruction, statement, command, question, q-badge, example-parent/coach/traffic, video-thumbnail-new, guide-hex-bg.webp, guide-hex-platform.webp, gem, gem-burst; plus <code>/images/battery-icon.png</code></td></tr>
+<tr><td>Audio</td><td><code>/audios/click-sound.mpeg</code>, <code>screen_3_audio.mpeg</code>, <code>screen_4/screen_4_audio_trim.m4a</code>, <code>screen_5/*.m4a</code>, <code>screen_6_audio.mpeg</code>, <code>/audios/level-two/meet-the-command.mp3</code> (missing)</td></tr>
+<tr><td>Source folders</td><td><code>src/components/level-two/</code>, <code>src/components/level-one/</code>, <code>src/components/rive/</code>, <code>src/components/ui/</code>, <code>src/lib/moduleFlow.ts</code>, <code>moduleReview.ts</code>, <code>moduleStreak.ts</code>, <code>lib/rive/*</code>, <code>lib/haptics.ts</code>, <code>hooks/useSound.ts</code></td></tr>
+</table>
+
+<!-- ===================================================== 10 -->
+<h2>10. Known notes and gaps found in the code</h2>
+<div class="note"><b>These are observations from reading the source, not changes.</b></div>
+<ol>
+  <li><b>Missing audio:</b> step 9 plays <code>/audios/level-two/meet-the-command.mp3</code>, but <code>public/audios/level-two/</code> does not exist. The player renders and counts down a 4 s default, but tapping play does nothing audible.</li>
+  <li><b>Stale comments in <code>page.tsx</code>:</b> the step 4 comment says "Robot has picked it up!" but the screen's title is "Let's release the cube."; the step 5 comment says "What will happen next?" but its title is "It's your turn now!". The behaviour is correct; only the comments are out of date.</li>
+  <li><b>Unused quizzes:</b> <code>LETS_PICK_UP</code> and <code>WILL_REACH</code> are defined (WILL_REACH even says "Screen 18") but are not in the flow.</li>
+  <li><b>Video is a mock:</b> step 15's play button only plays the click sound; the player bar is static art.</li>
+  <li><b>Time on Lesson Complete is fixed</b> at 3:42 (222 s) and XP at +40; neither is measured.</li>
+  <li><b>Screen 6 is not graded</b> and has no confetti/XP; it uses the progress bar's correct/wrong reaction only (no strike for non-final pairs).</li>
+  <li><b>Hint count</b> is fixed at 1 and is not consumed.</li>
+  <li><b>Light only:</b> dark-mode classes exist in many components, but the module forces light theme for now.</li>
+</ol>
+
+<p class="meta">End of document.</p>
+</body>
+</html>

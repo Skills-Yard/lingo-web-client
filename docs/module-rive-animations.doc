@@ -1,0 +1,501 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Lingo Module - Rive Animations, Hex and Artboards</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #222222; line-height: 1.35; }
+  h1 { font-size: 24pt; color: #0B7A75; border-bottom: 3px solid #04ACAB; padding-bottom: 4pt; }
+  h2 { font-size: 17pt; color: #0B7A75; margin-top: 22pt; border-bottom: 1px solid #BBBBBB; page-break-before: always; }
+  h2.nobreak { page-break-before: auto; }
+  h3 { font-size: 13pt; color: #1F4899; margin-top: 14pt; }
+  h4 { font-size: 11pt; color: #444444; margin-top: 10pt; }
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt 0; }
+  th { background: #E3F6F3; border: 1px solid #999999; padding: 4pt; text-align: left; font-size: 10pt; }
+  td { border: 1px solid #BBBBBB; padding: 4pt; vertical-align: top; font-size: 10pt; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: #F1F2F4; }
+  pre { font-family: Consolas, "Courier New", monospace; font-size: 9pt; background: #F1F2F4; padding: 6pt; border: 1px solid #DDDDDD; }
+  .note { background: #FFF4E3; border-left: 4px solid #FF8D42; padding: 5pt 8pt; margin: 8pt 0; }
+  .meta { color: #666666; font-size: 10pt; }
+</style>
+</head>
+<body>
+
+<h1>Lingo Module - Rive Animations: Hex, Robot, Button, Progress Bar, Battery and Every Artboard</h1>
+<p class="meta">Companion to <code>module-screens.doc</code>. Everything here is read from the source code (<code>src/lib/rive/*</code>, <code>useHexRive</code>, <code>FeedbackPanel</code>, the Persistent* components and the screens). Branch: module-two.</p>
+
+<div class="note"><b>Important limit:</b> the <code>.riv</code> binaries were not opened. Artboard, state machine, view-model property and trigger <b>names</b> below are exactly the ones the code uses. What each animation looks like inside the rig (individual clips, timeline keyframes, the meaning of each <code>entryStyle</code> number) is not visible from code; where a duration is known, it is a constant written in the code. To confirm against the file, use the <code>/hex</code> debug page, which lists and plays the contents of <code>hex.riv</code>.</div>
+
+<h3>Contents</h3>
+<ol>
+  <li>Rive files and artboards used by the module (overview)</li>
+  <li>How Rive is loaded (WASM, shared file, gate, warm-ups)</li>
+  <li>Hex: the rig, the <code>Onboarding</code> view model and every trigger</li>
+  <li>Hex: how <code>useHexRive</code> and <code>OnboardingHex</code> drive him (queue, entry, idle, talk, cue, exit)</li>
+  <li>Hex: every appearance in the module, screen by screen, with its exact trigger timeline</li>
+  <li>Robot arm (<code>command.riv</code>)</li>
+  <li>Module button "AllButton" (<code>progressBar.riv</code>)</li>
+  <li>Progress bar "LESSON_ProgressBar" (<code>progressBar.riv</code>)</li>
+  <li>Battery (<code>battery.riv</code>)</li>
+  <li>Flip card (<code>progressBar.riv</code>)</li>
+  <li>Lesson complete "LESSON_Complete" (<code>hex.riv</code>)</li>
+  <li>Combined effect chain: what fires when an answer is checked</li>
+  <li>Canvas bleed and layout rules</li>
+  <li>Other artboards in the files that the module does not use</li>
+  <li>Rules and gotchas that decide whether a trigger plays</li>
+</ol>
+
+<!-- ===================================================== 1 -->
+<h2 class="nobreak">1. Rive files and artboards used by the module</h2>
+<table>
+<tr><th>File</th><th>Artboard</th><th>State machine</th><th>View model</th><th>Size</th><th>Module use</th></tr>
+<tr><td><code>hex.riv</code></td><td><code>HEX</code></td><td><code>Onboarding</code></td><td><code>Onboarding</code></td><td>drawn into 110 px slots or larger</td><td>Hex on steps 2, 3, 4, 5, 7, 8, 11, 12, 13, 16, review, and every result panel</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>LESSON_Complete</code></td><td><code>LessonComplete_SM</code></td><td><code>LessonComplete</code></td><td>full screen, fit width, max 430 px</td><td>Lesson complete screen</td></tr>
+<tr><td><code>command.riv</code></td><td><code>CMD_RobotArm</code></td><td><code>Main</code></td><td><code>RobotVM</code></td><td>390 x 306 (picture 390 x 600)</td><td>Robot on steps 1, 2, 3, 4, 5, 7, 8, 9</td></tr>
+<tr><td><code>progressBar.riv</code></td><td><code>AllButton</code></td><td><code>ModuleButton_SM</code></td><td><code>AllButtonVM</code></td><td>360 x 73</td><td>Every Continue / Check / Next button, Lesson complete's button</td></tr>
+<tr><td><code>progressBar.riv</code></td><td><code>LESSON_ProgressBar</code></td><td><code>ProgressBar_SM</code></td><td>(bound view model)</td><td>350 wide artboard</td><td>Header progress bar on every screen</td></tr>
+<tr><td><code>progressBar.riv</code></td><td><code>Flip card</code></td><td><code>Card_SM</code></td><td>(trigger input)</td><td>207 x 275</td><td>Step 10</td></tr>
+<tr><td><code>battery.riv</code></td><td><code>BatteryArtboard-Main</code></td><td><code>Battery_SM</code></td><td><code>Battery</code></td><td>268 x 150</td><td>Header battery on every screen</td></tr>
+</table>
+<p><b>Persistence model:</b> the robot, the button, the progress bar and the battery are each created <b>once per session</b> in a "host" module and moved from screen to screen (each screen is its own page, so a per-screen canvas would reload and restart). Hex is the opposite: every Hex slot mounts its own canvas, but they all instantiate from one shared, already parsed copy of <code>hex.riv</code>.</p>
+
+<!-- ===================================================== 2 -->
+<h2>2. How Rive is loaded</h2>
+<table>
+<tr><th>Piece</th><th>Details</th></tr>
+<tr><td>WASM runtime</td><td><code>configureRiveRuntime()</code> points <code>@rive-app/canvas</code> at same-origin <code>/rive/rive.wasm</code> and <code>/rive/rive_fallback.wasm</code> (about 1.9 MB) instead of unpkg. Must run before the first canvas mounts; safe to call repeatedly. Runtime version 2.42.0; the copy in <code>public/rive</code> must be updated on upgrade.</td></tr>
+<tr><td><code>hex.riv</code> preload (<code>hexFile.ts</code>)</td><td>Downloaded once, app-wide, with the WASM, using <code>fetch(..., {cache: "no-cache"})</code> (revalidates every page load; a 304 reuses cached bytes, so a redeploy is never stale). Streamed in chunks; progress = download share 95% + parse share 5%. If the server does not give a usable <code>Content-Length</code> (compressed responses), an estimate of 5,958,848 bytes is used. Then parsed once into a <code>RiveFile</code>, and one reference is held forever so the file outlives any canvas. Each canvas then instantiates its artboard from that shared file (<code>hexRiveSource()</code>: shared file, else buffer, else URL).</td></tr>
+<tr><td><code>HexRiveGate</code></td><td>The module layout renders its screens only after status leaves "loading" and shows <code>HexRiveLoading</code> with the progress meanwhile. If the preload fails, status becomes "failed", nothing is blocked, and canvases fetch the file themselves.</td></tr>
+<tr><td>Warm-ups</td><td><code>ModuleButtonWarmup</code> creates the module button host and <code>RobotWarmup</code> creates the robot host at module open, while hex.riv is still downloading, so the first screen's button and robot are already drawn.</td></tr>
+<tr><td>Hot reload</td><td>Button, progress bar and battery hosts call <code>import.meta.turbopackHot?.decline()</code>: a hot reload would otherwise create a second, unloaded instance beside the one on screen and send triggers to it.</td></tr>
+<tr><td><code>progressBar.riv</code> preload</td><td>Flip card and onboarding button faces call <code>preload(src, {as:"fetch", crossOrigin:"anonymous"})</code>; the CORS mode must match Rive's own fetch or the browser downloads the file twice.</td></tr>
+</table>
+
+<!-- ===================================================== 3 -->
+<h2>3. Hex: the rig, the Onboarding view model and every trigger</h2>
+
+<h3>3.1 The rig</h3>
+<ul>
+  <li>File <code>/animations/hex.riv</code>, artboard <code>HEX</code> (<code>HEX_ARTBOARD</code>).</li>
+  <li>The module plays one state machine on it: <b><code>Onboarding</code></b> (<code>HEX_STATE.onboarding</code>). It is stepped by triggers and numbers on the <code>Onboarding</code> view model (<code>HEX_VIEW_MODEL</code>), not by legacy inputs.</li>
+  <li>The file also has per-pose state machines (<code>HEX-Entry</code>, <code>HEX-Floating</code>, <code>HEX-Hello</code>, <code>HEX-Excited</code>, <code>HEX-Happy_Jump</code>, <code>HEX-Holding_Tab</code>, <code>HEX-Typing</code>, <code>HEX-Curious</code>, <code>HEX-Pointing</code>). These are the onboarding flow's older poses; <b>the module does not use them</b>.</li>
+</ul>
+
+<h3>3.2 View model properties used</h3>
+<table>
+<tr><th>Property</th><th>Type</th><th>Meaning</th><th>Module value</th></tr>
+<tr><td><code>entryStyle</code></td><td>number (0 to 7)</td><td>Which entrance animation <code>enter</code> plays. Set <b>before</b> firing <code>enter</code>.</td><td>7 by default (<code>HEX_ENTER_STYLE.style</code>); 6 on step 11's gliding Hex. The numeric meaning is inside the rig (onboarding uses 3 forward / 4 back for question screens, 5 greeting, 0 all-set, 2 notifications, 6 good news and day/night).</td></tr>
+<tr><td><code>darkTheme</code></td><td>boolean</td><td>Switches the rig's colours: true = dark.</td><td>Kept in step with the site theme by <code>useHexRive</code>; always <b>false</b> in the module (forced light). Skipped silently on view models without it.</td></tr>
+<tr><td><code>minutes</code>, <code>counting</code></td><td>number, boolean</td><td>Time-commitment dial.</td><td>Onboarding only; not used in the module.</td></tr>
+</table>
+
+<h3>3.3 Triggers on the Onboarding view model</h3>
+<table>
+<tr><th>Trigger</th><th>Constant</th><th>Meaning</th><th>Used in module?</th></tr>
+<tr><td><code>enter</code></td><td><code>HEX_ONBOARDING_TRIGGER.enter</code></td><td>Hex's entrance (style from <code>entryStyle</code>).</td><td><b>Yes</b>: every Hex slot, fired automatically on a new entry key.</td></tr>
+<tr><td><code>enterZoom</code></td><td>.enterZoom</td><td>Entrance that zooms Hex in (fired instead of <code>enter</code>).</td><td>No (supported through the <code>enter</code> prop of <code>OnboardingHex</code>).</td></tr>
+<tr><td><code>idle5a</code></td><td>.idleAmbient</td><td>Ambient idle flourish. Fired on a loop wherever Hex has nothing else to do.</td><td><b>Yes</b>: immediately after entry, then every 4 s.</td></tr>
+<tr><td><code>idle</code></td><td>.idle</td><td>Resting pose (stand-in for showQuestion on one onboarding screen).</td><td>No.</td></tr>
+<tr><td><code>continueThumb</code></td><td>.continueThumb</td><td><b>Thumbs up</b>: Hex approves a right answer.</td><td><b>Yes</b>: panel Hex on a right answer and on step 2's "Yayyy!".</td></tr>
+<tr><td><code>exitLeft</code></td><td>.exitLeft</td><td>Hex leaves to the left (forward).</td><td><b>Yes</b>: quiz Hex and Hex on step 7 when his bubble leaves.</td></tr>
+<tr><td><code>exitRight</code></td><td>.exitRight</td><td>Hex leaves to the right (backward).</td><td>Default <code>exit</code> of <code>OnboardingHex</code>; the module overrides it with <code>exitLeft</code>.</td></tr>
+<tr><td><code>exitBottom</code></td><td>.exitBottom</td><td>Leaves straight down (day/night scene).</td><td>No.</td></tr>
+<tr><td><code>talk</code>, <code>talk2</code>, <code>talk3</code></td><td><code>HEX_TALK_TRIGGERS</code></td><td>Three different talking animations (mouth/gesture).</td><td><b>Yes</b>: one picked at random per voiceover clip, never the same twice in a row.</td></tr>
+<tr><td><code>stopTalk</code></td><td><code>HEX_STOP_TALK_TRIGGER</code></td><td>Ends a talk; fired the moment a talk ends, before whatever follows.</td><td><b>Yes</b>.</td></tr>
+<tr><td><code>hi</code></td><td>.hi</td><td>Greeting.</td><td>No.</td></tr>
+<tr><td><code>ready</code></td><td>.ready</td><td>"Are you ready?" screen.</td><td>No.</td></tr>
+<tr><td><code>showQuestion</code></td><td>.showQuestion</td><td>A question appears.</td><td>No.</td></tr>
+<tr><td><code>selectOption</code></td><td>.selectOption</td><td>An option is picked.</td><td>No (module quizzes do not make Hex react to a pick).</td></tr>
+<tr><td><code>celebrate</code></td><td>.celebrate</td><td>"Good news" screen.</td><td>No.</td></tr>
+<tr><td><code>buildCareerPath</code></td><td>.buildCareerPath</td><td>"Building Career Path..." screen.</td><td>No.</td></tr>
+<tr><td><code>tap</code></td><td>.tap</td><td>A tap on Hex.</td><td>No.</td></tr>
+</table>
+<p><b>Timing constants (from <code>runtime.ts</code>):</b> <code>HEX_EXIT_MS = 700</code> (how long an exit plays before onboarding moves on), <code>HEX_EXIT_BOTTOM_MS = 700</code>, <code>HEX_HELLO_MS = 3000</code>, <code>HEX_TAP_MS = 1400</code>, <code>HEX_TYPING_MS = 2200</code>, <code>HEX_FIDGET_MS = 2500</code> (the last four are for the old per-pose machines, not the module).</p>
+
+<!-- ===================================================== 4 -->
+<h2>4. Hex: how he is driven</h2>
+
+<h3>4.1 <code>useHexRive</code> (the one hook every Hex canvas uses)</h3>
+<table>
+<tr><th>Behaviour</th><th>Details</th></tr>
+<tr><td>Creation</td><td><code>useRive</code> from the shared <code>RiveFile</code>, <code>autoplay: false</code>, layout <code>Fit.Contain</code> + <code>Alignment.Center</code>. Nothing plays until the hook plays its state machine.</td></tr>
+<tr><td>Play + bind</td><td>On load, and whenever <code>state</code> changes: stop every playing state machine, <code>play(state)</code> if the file has it, then <b>rebind the view model instance</b> (a machine started later is not bound on its own). <code>ready</code> = the view model instance exists.</td></tr>
+<tr><td>Trigger queue</td><td><code>fireTrigger(name)</code> queues the name; triggers go out one at a time, <b>150 ms apart</b> (<code>TRIGGER_GAP_MS</code>), because two triggers fired in the same frame are not both consumed.</td></tr>
+<tr><td>Talk handling</td><td>The hook remembers that a talk is on. Before any queued trigger that is not another talk, it automatically fires <code>stopTalk</code> first and waits one gap. A queued <code>stopTalk</code> clears the flag (no duplicate).</td></tr>
+<tr><td><code>fireNow(name)</code></td><td>Cancels the gap timer, <b>empties the queue</b>, fires <code>name</code> at once; whatever is fired after it follows it. Used for cues and exits so nothing queued delays or overrides them.</td></tr>
+<tr><td><code>reset()</code></td><td>Drops the queue, stops and restarts the machine from its entry state, rebinds, and resumes draining one gap later. A restart during an entrance keeps a pending <code>enter</code> alive.</td></tr>
+<tr><td>Entrance (<code>entryKey</code>)</td><td>Every new non-null key: set <code>entryStyle</code> to the style (override, else context, else 7), then queue the enter trigger (default <code>enter</code>). A null key means "loaded but waiting": canvas ready, no entrance.</td></tr>
+<tr><td><code>setNumber</code>, <code>setBoolean</code></td><td>Write view model properties; ignored silently if the property does not exist.</td></tr>
+<tr><td>Dark theme</td><td>Writes <code>darkTheme</code> whenever the theme changes.</td></tr>
+<tr><td>Bleed</td><td>With a <code>bleed</code> (Hex uses <code>HEX_BLEED = {x:420, y:30}</code>) the canvas reaches 420 px past his box sideways and 30 px above/below, but the artboard is fitted into the box itself, so he looks the same size while entrances and exits are not clipped at the box edge. The inset is recomputed on every Rive resize, and a <code>requestAnimationFrame</code> watcher redoes it whenever the stage scale changes (for example the browser toolbar hiding).</td></tr>
+<tr><td>Marking</td><td>The canvas is tagged <code>data-hex</code> and its box <code>data-hex-box</code> (used by a hidden dev panel).</td></tr>
+</table>
+
+<h3>4.2 <code>OnboardingHex</code> (the component every module Hex is)</h3>
+<p>Signature: <code>entryKey</code>, <code>leaving</code> (default false), <code>exit</code> ("exitLeft" or "exitRight", default exitRight), <code>enter</code> (default <code>enter</code>), <code>entryStyle</code> (default 7), <code>cue</code>, <code>cueDelayMs</code>. It uses <code>HEX_LAYOUT</code> (Contain, Center), state <code>Onboarding</code>, artboard <code>HEX</code>, view model <code>Onboarding</code>, and <code>HEX_BLEED</code>.</p>
+<table>
+<tr><th>Rule</th><th>Exact behaviour</th></tr>
+<tr><td>Entrance</td><td>When <code>entryKey</code> changes to a value: <code>entryStyle</code> set, <code>enter</code> fired.</td></tr>
+<tr><td>Ambient idle</td><td>If ready, not leaving, <code>entryKey</code> not null, no cue pending (a cue is pending while <code>cue !== null</code> and it has not finished playing) and the voiceover is not speaking: fire <code>idle5a</code> immediately (queues behind <code>enter</code>), then again every <b>4000 ms</b> (<code>IDLE_REPEAT_MS</code>). Stops when he leaves, speaks, or a cue starts.</td></tr>
+<tr><td>Talk</td><td>Driven by the level voice context (<code>speaking</code>, <code>clip</code>). When a new clip starts speaking: pick a random talk trigger different from the last one and fire it. When speaking ends: fire <code>stopTalk</code>. Resets while not ready, leaving or with a null key.</td></tr>
+<tr><td>Cue</td><td>When a cue is set and Hex is ready: after <code>cueDelayMs</code> fire it with <code>fireNow</code> (queue cleared, so idle/talk never delays it), and <b>2800 ms</b> after that (<code>CUE_PLAY_MS</code>) mark it played so ambient idle can resume. The cue ends the ambient idle while it is pending.</td></tr>
+<tr><td>Exit</td><td>When <code>leaving</code> becomes true and he is ready: <code>fireNow(exitLeft or exitRight)</code>. Ambient idle stops.</td></tr>
+<tr><td>Constants</td><td><code>ENTRY_STYLE = 7</code>, <code>IDLE_REPEAT_MS = 4000</code>, <code>ENTER_SETTLE_MS = 900</code> (about how long the entrance takes, so a cue can follow), <code>ENTER_DELAY_MS = 250</code> (panel Hex starts entering this long after being asked), <code>CUE_PLAY_MS = 2800</code>.</td></tr>
+</table>
+
+<h3>4.3 Other movers around Hex (not Rive, but part of the effect)</h3>
+<table>
+<tr><th>Component</th><th>What it does to Hex's canvas</th></tr>
+<tr><td><code>HexBubble</code></td><td>Hex in a 110 x 110 slot. When <code>leaving</code>: after 80 ms the slot slides left by two window widths in 0.2 s (<code>easeIn</code>) while <code>exitLeft</code> plays; while leaving he is z-10 over the bubble.</td></tr>
+<tr><td><code>HexGlide</code> (step 11)</td><td>One Hex that glides between slots (question slot, hint slot on the card, panel). Re-measured every animation frame; position/size springs (see 5.7).</td></tr>
+<tr><td><code>TeacherSpeech</code> (steps 12, 13)</td><td>Hex in a 130 px box, moved with springs between four spots and floated (see 5.8).</td></tr>
+<tr><td><code>FeedbackPanel</code> slot</td><td>Hex at 219.3 x 159.9 px (2x Figma's 109.65 x 79.95), centred in a slot only 136 x 79.95 wide/tall; the artboard has roughly 38% empty margin, so he is drawn about 136 px wide.</td></tr>
+</table>
+
+<!-- ===================================================== 5 -->
+<h2>5. Hex: every appearance in the module</h2>
+<p>In each table, <b>t = 0</b> is the moment named. "Entry style" is the number written to <code>entryStyle</code> before <code>enter</code>. All Hex canvases are the <code>HEX</code> artboard running <code>Onboarding</code>.</p>
+
+<h3>5.1 Summary table</h3>
+<table>
+<tr><th>Screen</th><th>Hex instance</th><th>entryKey</th><th>Entry style</th><th>Triggers fired</th><th>Exit</th></tr>
+<tr><td>2 Give an instruction</td><td>Question bubble Hex (left)</td><td><code>give-command</code></td><td>7</td><td>enter, then idle5a / 4 s</td><td>Bubble unmounts when Pick Up is tapped (no exit trigger)</td></tr>
+<tr><td>2 (after pick up)</td><td>"Yayyy!" panel Hex</td><td><code>nice</code> (after 250 ms)</td><td>7</td><td>enter, continueThumb at +900 ms</td><td>Screen change</td></tr>
+<tr><td>3, 4, 5, 8 quizzes</td><td>Question bubble Hex</td><td><code>quiz-N</code> (N = step)</td><td>7</td><td>enter, idle5a / 4 s</td><td><b>exitLeft</b> on check (80 ms after the bubble)</td></tr>
+<tr><td>3, 4, 5, 8 (on check)</td><td>Result panel Hex</td><td><code>feedback</code> (after 250 ms)</td><td>7</td><td>enter; right: continueThumb at +900 ms; wrong: idle5a</td><td>Screen change</td></tr>
+<tr><td>7 Move cube to target</td><td>Bubble Hex x 3 (one per line)</td><td><code>target-0</code>, <code>target-1</code>, <code>target-2</code></td><td>7</td><td>enter, idle5a / 4 s</td><td><b>exitLeft</b> on each Continue, new Hex enters 350 ms later</td></tr>
+<tr><td>11 Instructions are...</td><td>Gliding Hex (<code>HexGlide</code>)</td><td><code>quiz</code></td><td><b>6</b></td><td>enter, idle5a / 4 s</td><td>Stays; sinks under options on check</td></tr>
+<tr><td>11 (on check)</td><td>Result panel Hex</td><td><code>feedback</code></td><td>7</td><td>as quizzes</td><td>Screen change</td></tr>
+<tr><td>12 / 13 Teacher</td><td>Teacher Hex (<code>TeacherSpeech</code>)</td><td><code>teacher</code></td><td>7</td><td>enter; talk/talk2/talk3 + stopTalk with the voiceover; idle5a when silent</td><td>Never leaves (<code>hexAway</code> false); sinks under options on check</td></tr>
+<tr><td>13 (on check)</td><td>Result panel Hex</td><td><code>feedback</code></td><td>7</td><td>as quizzes</td><td>Screen change</td></tr>
+<tr><td>16 Let's guide Hex</td><td>Platform Hex</td><td><code>guide-hex</code></td><td>7</td><td>enter, idle5a / 4 s</td><td>None; moved by a framer-motion spring</td></tr>
+<tr><td>16 (wrong way)</td><td>Result panel Hex</td><td><code>feedback</code></td><td>7</td><td>enter, idle5a (no cue on a miss)</td><td>Closes with the panel</td></tr>
+<tr><td>review</td><td>Big Hex (190 px)</td><td><code>review</code></td><td>7</td><td>enter, idle5a / 4 s</td><td>Screen change</td></tr>
+<tr><td>1, 6, 9, 10, 14, 15</td><td colspan="5">No Hex on these screens (14 and 15 have a voiceover but nothing in the screen reacts to <code>speaking</code>).</td></tr>
+</table>
+
+<h3>5.2 Screen 2: question Hex, then "Yayyy!" Hex</h3>
+<pre>
+t=0      HexBubble mounts with entryKey "give-command"
+         bubble springs in after 350 ms; Hex: entryStyle=7, fire enter
+t=+150   idle5a queued behind enter (150 ms trigger gap); repeats every 4000 ms
+tap Pick Up:  Hex + bubble are removed (given = true); robot plays pickUp (1.83 s)
+t=+2.28s (NICE_AFTER_S = pickUp 1.83 + 0.45) NicePanel springs up
+t=+250ms HEX_AFTER_MS: panel Hex entryKey "nice" -> entryStyle=7, enter
+t=+900ms HEX_SETTLE_MS (cueDelayMs): fireNow(continueThumb)   (queue cleared)
+t=+3.7s  cue marked played -> idle5a resumes, every 4 s
+</pre>
+<p>The panel's Hex slot is 136 x 79.95 with the 219.3 x 159.9 box centred in it. The panel's Hex is not announced to the voiceover (this screen has none), so he never talks here.</p>
+
+<h3>5.3 Screens 3, 4, 5, 8: quiz Hex and result Hex</h3>
+<pre>
+open:    HexBubble entryKey "quiz-N": entryStyle=7, enter, idle5a every 4 s
+         bubble typing starts 350 ms later (55 ms per letter)
+check:   (leaving = checked)
+  t=0       bubble starts its bounce-and-fly left (0.15 s)
+  t=+80ms   hexLeaving = true -> OnboardingHex: fireNow(exitLeft)
+            Hex slot slides off left (2 x window width, 0.2 s easeIn)
+  t=0       FeedbackPanel opens (spring 360/32); hexIn = checked
+  t=+250ms  panel Hex enterNow -> entryKey "feedback": entryStyle=7, enter
+  RIGHT:    cue = continueThumb, cueDelayMs = 900
+  t=+1150ms (250 + 900) fireNow(continueThumb); thumbs up
+  t=+3950ms cue marked played -> idle5a resumes
+  WRONG:    no cue -> idle5a is queued right behind enter, then every 4 s
+</pre>
+<p>If <code>checked</code> goes back to false (it does not in the module) the panel sets <code>enterNow</code> false, the key becomes null and Hex goes quiet until a new key arrives.</p>
+
+<h3>5.4 Screen 7: three Hex entrances</h3>
+<pre>
+line 0  Hex entryKey "target-0" above the arm (top 182): enter, idle5a/4 s
+Continue -> ctaLocked, leaving = true
+  bubble bounces (+18 px) and flies left, 0.15 s
+  +80 ms Hex fireNow(exitLeft) and slides off left
+  +350 ms (HEX_LEAVE_MS): line = 1, leaving = false
+          new HexBubble (key=line) mounts with entryKey "target-1"
+          at the bottom of the artboard (just under the target box)
+          enter fires again with a fresh Hex
+line 1  target box lights (showHint) + label "TARGET AREA" on the robot
+Continue -> same exit, then "target-2" above the button (118 px up)
+Continue on the last line -> navigates to step 8
+</pre>
+
+<h3>5.5 Screens 12 and 13: the teacher's Hex and the voiceover</h3>
+<table>
+<tr><th>Moment</th><th>What happens</th></tr>
+<tr><td>Mount</td><td><code>OnboardingHex entryKey="teacher"</code>: enter at style 7. He starts <b>below</b> the picture (spot x114 y362, entering from y420, opacity 0 to 1 in 0.2 s). If the screen was opened on the quiz (or the quiz is shown) <code>skipIntro</code> puts him at the bubble spot (x228 y84) at once.</td></tr>
+<tr><td>Voiceover (step 12)</td><td><code>screen_3_audio.mpeg</code> (4.03 s). While it plays <code>speaking = true</code>: Hex fires a random <code>talk</code> / <code>talk2</code> / <code>talk3</code>; when it ends, <code>stopTalk</code>. Ambient idle is suppressed while speaking.</td></tr>
+<tr><td>Cue to move up</td><td>2800 ms after the voice starts (<code>CUE_AFTER_VOICE_MS</code>), or 6000 ms after mount with no voice (<code>CUE_WITHOUT_VOICE_MS</code>), <code>cued</code> becomes true: Hex glides to beside the teacher (x228 y84) on a slow spring (stiffness 70, damping 16, mass 1) and the speech bubble pops in (scale 0.8 to 1, 0.25 s, 350 ms delay) and types "Open Your Notebook".</td></tr>
+<tr><td>Float</td><td>Once cued, an inner wrapper floats up and down 7 px (y 0, -7, 0) every 2.4 s, easeInOut, forever, starting 1.2 s later.</td></tr>
+<tr><td>Step 13 voiceover</td><td><code>screen_4_audio_trim.m4a</code>, the question only, read once until checked: random talk trigger, <code>stopTalk</code> at the end.</td></tr>
+<tr><td>Hint</td><td>When the hinted card's flip is about 65% done, <code>hexToCard</code> sends Hex to the top edge of the right card (x262 y198, scale 80/130 = 0.615) with a quicker spring (stiffness 170, damping 24, mass 0.9), timed to land as the spin stops.</td></tr>
+<tr><td>Check</td><td><code>tucked</code>: Hex moves to x228 y200, scale 1, on the result panel spring (360/32), z-5 so the options (z-10) cover him as they rise. The panel brings its own Hex (key <code>feedback</code>).</td></tr>
+<tr><td>Back to step 12</td><td><code>hexAway</code> toggling creates a fresh Hex (<code>hexRun</code> key increments) rather than reusing the one that left; <code>skipIntro</code> remains false only on a fresh "says".</td></tr>
+</table>
+<p>Note: <code>hexAway</code> is never set by <code>TeacherFlow</code> in the module, so the exit trigger (and the 0.15 s fade after <code>LEAVE_FADE_DELAY_S = 0.8</code>) is not used here.</p>
+
+<h3>5.6 Why one voiceover can talk and the next screen cannot</h3>
+<p>Speaking is read from <code>LevelVoiceContext</code> (<code>speaking</code>, <code>clip</code>, <code>spoken</code>). Only Hexes mounted under a shell with a <code>voiceover</code> react. Steps 12, 13 have Hex plus voice (he talks). Steps 14 and 15 have voice (their headings fill karaoke-style) but no Hex mounted outside the result panel (which only exists on quiz screens), so nothing talks.</p>
+
+<h3>5.7 Screen 11: the gliding Hex (<code>HexGlide</code>)</h3>
+<table>
+<tr><th>Phase</th><th>Behaviour</th></tr>
+<tr><td>Open</td><td>Hex fills the question slot (180 x 177) drawn at <b>1.1x</b> its size (<code>HEX_SCALE</code>) around its centre, because the artboard has padding. <code>entryKey "quiz"</code>, <code>entryStyle 6</code>, trigger <code>enter</code>.</td></tr>
+<tr><td>Tracking</td><td>The target slot is re-measured every animation frame (divided by the shell's stage scale) so he keeps pace with a slot that is itself sliding. The box is framer-motion animated: x, y, width, height, opacity.</td></tr>
+<tr><td>Hint</td><td>When the hinted card has flipped (<code>onFlipEnd</code> about 0.78 s into the 1.2 s flip) <code>moved</code> becomes true and he glides to the 72 x 72 slot standing on the card's top edge (58 px above the card, 12 px from the right). Spring: stiffness 170, damping 24, mass 0.9, restDelta 0.5, restSpeed 2. Without a hint the normal glide is stiffness 70, damping 18, mass 1.</td></tr>
+<tr><td>Arrival cue</td><td>The component supports <code>arrivedCue</code> (a trigger played once he reaches the target); step 11 does not pass one.</td></tr>
+<tr><td>Check (<code>rising</code>)</td><td>He freezes at the size and position he had while his slot had room, drops to z-5, and sinks <code>rideDown = BUTTON_DROP = 37</code> px on the options' spring (stiffness 360, damping 32) so the rising options cover him. The question slot animates height 177 to 0 and top margin 8 to 0 on the same spring.</td></tr>
+<tr><td>Leaving</td><td>If <code>leaving</code> were set he fades out (opacity 0 after 0.8 s, 0.15 s long) and is removed 1.1 s later so a resizing canvas is not left behind. Not used on this screen.</td></tr>
+</table>
+
+<h3>5.8 Screen 16: Hex on the platform</h3>
+<ul>
+  <li><code>OnboardingHex entryKey="guide-hex"</code> in a 100 x 100 box, centred on a tile and lifted 10 px so he stands on it. Enter style 7; ambient <code>idle5a</code> loops.</li>
+  <li>Walking is <b>not</b> a Rive trigger. A framer-motion spring (stiffness 320, damping 30) moves the box between the three tiles of the middle column (y offsets 18.3%, 47.5%, 76.6% of the 266 px platform height). The rig just keeps idling while he slides.</li>
+  <li>Go Straight reaches the battery: at +400 ms (<code>STEP_MS</code>) the win sound plays, the battery icon scales and fades out, and the gem popup opens. Go Back: lose sound; the wrong panel's own Hex enters (key <code>feedback</code>, no cue).</li>
+</ul>
+
+<h3>5.9 Review intro</h3>
+<p>A 190 x 190 Hex (<code>entryKey="review"</code>, style 7) in the middle top of the screen; enter, then ambient idle forever. The heading drops in 0.3 s later (spring 140/16), the body fades up 0.5 s after mount.</p>
+
+<h3>5.10 Result-panel Hex rules in one place</h3>
+<table>
+<tr><th>Case</th><th>Cue</th><th>Delay</th></tr>
+<tr><td>Quiz, right</td><td><code>continueThumb</code></td><td>250 ms (enter) + 900 ms</td></tr>
+<tr><td>Quiz, wrong</td><td>none (idle only)</td><td>-</td></tr>
+<tr><td>Step 2 "Yayyy!"</td><td><code>continueThumb</code></td><td>250 ms + 900 ms</td></tr>
+<tr><td>Step 11 right</td><td><code>continueThumb</code></td><td>as quizzes</td></tr>
+<tr><td>Step 13 right</td><td><code>continueThumb</code></td><td>as quizzes</td></tr>
+<tr><td>Step 16 wrong way</td><td>none</td><td>-</td></tr>
+</table>
+
+<!-- ===================================================== 6 -->
+<h2>6. Robot arm (<code>command.riv</code>)</h2>
+
+<h3>6.1 Artboard and view model</h3>
+<table>
+<tr><th>Item</th><th>Value</th></tr>
+<tr><td>File / artboard / state machine</td><td><code>/animations/command.riv</code> / <code>CMD_RobotArm</code> / <code>Main</code></td></tr>
+<tr><td>View model</td><td><code>RobotVM</code> (autoBind): triggers below, string <code>targetLabel</code></td></tr>
+<tr><td>Artboard size</td><td>390 x 306. The room is drawn past the artboard (not clipped): wall and window 210 px above, table legs and floor 84 px below, so the picture is <b>390 x 600</b> (<code>ROBOT_PICTURE_HEIGHT</code>).</td></tr>
+<tr><td>Arm top</td><td>The arm's highest point (holding the cube) is 43 px below the artboard top (<code>armTop</code>).</td></tr>
+<tr><td>Layout</td><td><code>Fit.FitWidth</code>, <code>Alignment.TopCenter</code>; the frame starts <code>overflowTop</code> (scaled) down from the canvas top so the room above shows and the canvas is the whole picture. Re-applied after every Rive resize.</td></tr>
+</table>
+
+<h3>6.2 Triggers</h3>
+<table>
+<tr><th>Trigger</th><th>Plays</th><th>Length</th><th>Pose after</th><th>Fired by</th></tr>
+<tr><td><code>pickUp</code></td><td>Claw lowers, grabs the cube, lifts</td><td>1.83 s</td><td>holding</td><td>Step 2 Pick Up button; quiz answers "Robot picked up the cube" (step 3, after reset) and "Pick Up the Cube" (step 5); pose sync</td></tr>
+<tr><td><code>putDown</code></td><td>Releases the cube where the arm is</td><td>1.63 s</td><td>idle</td><td>Step 4 right answer</td></tr>
+<tr><td><code>placeInTarget</code></td><td>Carries the cube to the target box and lowers it; then the "Success_In" clip (0.6 s)</td><td>3.3 s (2.7 + 0.6)</td><td>placed</td><td>Step 8 right answer</td></tr>
+<tr><td><code>reset</code></td><td>Returns the cube to the table (resets the scene)</td><td>0.8 s</td><td>idle</td><td>Step 3 right answer (before pickUp); pose sync. A <code>reset</code> fired before placeInTarget has played out is dropped.</td></tr>
+<tr><td><code>wrongClaw</code></td><td>Claw does a wrong move</td><td>1.17 s</td><td>unchanged</td><td>Wrong answers by default; "Pick Up" on step 4, 8; "MOVE to the table" on 5; "Nothing happened" on 3</td></tr>
+<tr><td><code>wrongCube</code></td><td>Cube does a wrong move</td><td>1.17 s</td><td>unchanged</td><td>"Robot moved the table" (3), "Place the cube" (5), "Put Down" (8)</td></tr>
+<tr><td><code>showHint</code></td><td><b>Lights up (glow) the target box</b></td><td>0 (runs beside others)</td><td>-</td><td>Hint on quizzes with <code>targetHint</code>; step 8 from the start; step 7 from line 2</td></tr>
+<tr><td><code>hideHint</code></td><td>Turns the glow off</td><td>0</td><td>-</td><td>On check (before the move), and on unmount of a lit screen</td></tr>
+</table>
+<p><code>targetLabel</code> (string) is the text on the target box ("TARGET AREA"). It is stored and written when the file loads, and written live afterwards.</p>
+
+<h3>6.3 Move queue (why moves never overlap)</h3>
+<ul>
+  <li>Rive drops a trigger fired in the same frame as another, or while a move is still playing. So <code>fireRobot(move)</code> appends to a queue and <code>drain()</code> sends one move at a time.</li>
+  <li>After sending a move the queue waits <code>moveSeconds[move] x 1000 + 150 ms</code> (<code>MOVE_GAP_MS</code>) before the next.</li>
+  <li>The first move after load waits <b>600 ms</b> (<code>SETTLE_MS</code>): a trigger fired as the file loads is dropped because the machine is still entering its first state.</li>
+  <li><code>showHint</code> and <code>hideHint</code> have length 0, so they go out immediately and do not hold back the next move (they play beside it).</li>
+</ul>
+<p>Example, step 3 right answer: queue is <code>reset</code> (0.8 s + 0.15) then <code>pickUp</code> (1.83 s + 0.15), so the cube goes back and is picked up again about 0.95 s later. Step 8: <code>hideHint</code> first (instant), then <code>placeInTarget</code> (3.3 s).</p>
+
+<h3>6.4 Pose tracking</h3>
+<table>
+<tr><th>Function</th><th>Behaviour</th></tr>
+<tr><td><code>fireRobot(move)</code></td><td>Sets the remembered pose from <code>POSE_AFTER</code> (pickUp holding, putDown idle, placeInTarget placed, reset idle) and queues the move.</td></tr>
+<tr><td><code>syncRobotPose(wanted)</code></td><td>No-op if already there. To idle: <code>reset</code>. To holding from idle: <code>pickUp</code>; from placed or holding when a different pose is wanted: <code>reset</code> first, then the moves from idle (holding = [pickUp], placed = [pickUp, placeInTarget]). Runs when a <code>RobotBackdrop</code> mounts or <code>pose</code> changes.</td></tr>
+<tr><td>Start pose per quiz</td><td>Step 3 holding, step 4 holding, step 5 idle, step 7 holding, step 8 holding, steps 1, 2, 9 idle.</td></tr>
+</table>
+
+<h3>6.5 Robot picture lighting (masks)</h3>
+<ul>
+  <li><b>Per-slot mask (<code>PersistentRobot</code>)</b>: <code>linear-gradient(180deg, ...)</code> over the 600 px picture with alpha stops (px from picture top, alpha): (90, 0), (120, 0.12), (145, 0.3), (170, 0.5), (195, 0.7), (220, 0.85), (245, 0.94), (270, 1), hold 1 until 505, then (530, 0.85), (557, 0.5), (580, 0.15), (600, 0). Reproduces Figma's two blurred white rectangles (blurs 50 px and 26 px): the room fades in under the window and the floor fades out under the table.</li>
+  <li><b>Backdrop mask (<code>RobotBackdrop</code>)</b>: <code>linear-gradient(180deg, transparent 0, #000 40px)</code>, so the picture fades in over 40 px under the top bar. The backdrop is cut at stage top 60 (52 px top bar + 8 px gap).</li>
+  <li><b>Placement</b>: <code>bottom</code> mode rests the artboard on the first control but never lower than Figma's (picture top 96 on a 390 wide stage, crop 120); <code>below</code> mode hangs the arm from Hex's bubble at <code>stageTop(bubbleTop) + (110 + bubbleHeight)/2 + 3</code> px. Width is the stage width, capped at 560 screen px.</li>
+</ul>
+
+<h3>6.6 Hosting</h3>
+<p><code>getRobotHost()</code> creates one div + canvas (<code>position:relative; width/height 100%</code>), loads the Rive file with <code>autoplay</code> and <code>autoBind</code>, and wraps <code>resizeToCanvas</code> to re-apply the frame. <code>PersistentRobot</code> appends the shared element to its slot in a layout effect, resizes the drawing surface and observes the slot with a <code>ResizeObserver</code>. Because the same canvas moves between screens the robot's state (cube held, placed) carries from screen to screen.</p>
+
+<!-- ===================================================== 7 -->
+<h2>7. Module button "AllButton" (<code>progressBar.riv</code>)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Artboard / state machine / view model</td><td><code>AllButton</code> / <code>ModuleButton_SM</code> / <code>AllButtonVM</code> (autoBind). Artboard is 360 x 73, cropped to the drawn face; one artboard draws every button in the app.</td></tr>
+<tr><td>Properties</td><td><code>label</code> (string, the text), <code>switchStyle</code> (number: 0 module look, 1 onboarding look), <code>buttonState</code> (number, module look only).</td></tr>
+<tr><td><code>buttonState</code> values</td><td>0 disabled (grey), 2 wrong (red), 3 correct / enabled (green; a pressable button uses the same art as "correct"), 4 light (white, the Pick Up button).</td></tr>
+<tr><td>State rules (<code>pickState</code>)</td><td>disabled prop wins: 0. Else with a checked answer: correct 3 / wrong 2. Else at rest: <code>light</code> prop gives 4, otherwise 3. So after a check the button turns green or red and stays that colour until the screen leaves.</td></tr>
+<tr><td>Triggers</td><td><code>shine</code> (highlight sweep), <code>click</code> (the press), <code>electric</code> (electric glow, 0.67 s, reaches up to 17 units past the artboard).</td></tr>
+<tr><td>Shine cadence</td><td><code>BUTTON.shineEveryMs = 5000</code>: fired once on mount and then every 5 s while the face's <code>shine</code> prop is on. If asked before load, it is queued and fired on load.</td></tr>
+<tr><td>Click</td><td><code>pressCount</code> changes on each click; each change fires <code>click</code> (plus the 150 ms press hold and 330 ms delayed <code>onClick</code> of <code>Button3D</code>).</td></tr>
+<tr><td>Electric</td><td><code>electrifyModuleButton()</code> fires <code>electric</code>; dropped if the file is not loaded (a late one would play after its strike is long over). Fired with every strike and battery charge.</td></tr>
+<tr><td>Hold</td><td><code>holdModuleButton(ms)</code> sets a store flag; <code>ActionRow</code> passes <code>locked = ctaLocked || held</code>, so the button takes no clicks but is not drawn disabled. Duration on a strike = 150 ms strike delay + max(strike length, 0.67 s electric). <code>releaseModuleButton()</code> ends it.</td></tr>
+<tr><td>Anti-flash</td><td>The host element starts at <code>opacity:0</code>; it is shown two animation frames after <code>wanted</code> (label + state) is drawn, because on load Rive first paints the artboard's default text. State and label are written in <b>layout effects</b>, so a screen never paints the previous screen's label or leftover correct/wrong state.</td></tr>
+<tr><td>Redraw</td><td>Changing a property does not repaint a still artboard, so <code>rive.drawFrame()</code> is called explicitly after every write.</td></tr>
+<tr><td>Stretch</td><td><code>setModuleButtonStretch</code>: <code>Fit.Fill</code> (artwork squeezed to the box) when the hint is present, <code>Fit.Contain</code> otherwise; <code>resizeToCanvas()</code> re-applies the frame. Used so the artwork does not jump when the hint appears.</td></tr>
+<tr><td>Bleed</td><td>Canvas is 20 artboard units bigger on every side (<code>BUTTON.bleed</code>), the box stays exactly the artboard's size, so lip (5 below) and electric glow (17 around) are not clipped. Frame re-applied after every resize.</td></tr>
+<tr><td>Resize handling</td><td>The slot is observed; resizing the drawing surface wipes the canvas, so it is debounced <b>100 ms</b> (<code>RESIZE_SETTLE_MS</code>): while the button grows (hint folding away, 500 ms) the browser scales the old bitmap and the sharp one follows once the size settles. A window <code>resize</code> listener covers the scaled stage.</td></tr>
+<tr><td>Box marker</td><td>Every button box carries <code>data-button-artboard</code>; the progress bar cuts its canvas exactly at the top of the lowest such box.</td></tr>
+<tr><td>Onboarding variant</td><td>Not used by the module (loaded per button, morphs into the onboarding look when <code>switchStyle=1</code>, hidden for 0.3 s while it morphs).</td></tr>
+</table>
+
+<!-- ===================================================== 8 -->
+<h2>8. Progress bar "LESSON_ProgressBar" (<code>progressBar.riv</code>)</h2>
+<h3>8.1 View model contract</h3>
+<table>
+<tr><th>Property</th><th>Type</th><th>Meaning / value</th></tr>
+<tr><td><code>progress</code></td><td>number 0-100</td><td>The fill. Set every animation frame during a tween.</td></tr>
+<tr><td><code>combo</code></td><td>number</td><td>Held at <b>3</b> for <b>1000 ms</b> every time the fill changes, then back to 0. While it is 3 the "fire" look is on.</td></tr>
+<tr><td><code>fire</code></td><td>boolean</td><td>True while <code>combo</code> is 3; false otherwise.</td></tr>
+<tr><td><code>trail</code></td><td>number</td><td>1 while burning (<code>trailActive</code>), 3 otherwise (<code>trailDefault</code>).</td></tr>
+<tr><td><code>screenH</code></td><td>number</td><td>Held at -1 for every screen; written once on load.</td></tr>
+<tr><td><code>correct</code>, <code>wrong</code></td><td>triggers</td><td>The bar's reaction to a checked answer. The host looks for an exact name, else any property whose name matches /correct|right|success|win/ (or /wrong|incorrect|fail|lose|error/); it fires it if it is a trigger or sets it true if it is a boolean.</td></tr>
+<tr><td><code>strikeDuo2</code>, <code>strikeMix</code></td><td>triggers</td><td>Strike effects for the 2nd and 4th right answer in a row (0.9 s and 1.6 s). Their <code>...Check</code> twins (<code>strikeDuo2Check</code>, <code>strikeMixCheck</code>) are used on screens with a hint button (the artboard is shorter there).</td></tr>
+<tr><td><code>strikeLoop</code></td><td>boolean</td><td>Switch, not a trigger: stays on until turned off by hand. Turned on for the 5th right answer in a row for 1 s the first time, 4 s the second, 7 s from then on.</td></tr>
+<tr><td><code>strikeWidth</code></td><td>number</td><td>Held at 3 (<code>loopWidth</code>) while the loop plays.</td></tr>
+</table>
+<h3>8.2 Fill and timing</h3>
+<ul>
+  <li>Target fill = <code>step / total x 100</code>. The start is the last shown fill (<code>lastShownFill()</code>) so each new screen tweens from where the previous left off.</li>
+  <li>Tween: <b>700 ms</b>, delayed <b>150 ms</b>, ease-out cubic <code>1 - (1 - t)^3</code>, written to <code>progress</code> every frame. <code>pulseCombo()</code> runs when the fill changes.</li>
+  <li><code>PROGRESS_BAR.strikeDelayMs = 150</code>: a strike waits this long after <code>correct</code>/<code>wrong</code> because two triggers in one frame drop one.</li>
+  <li>The progress bar pairs with the review: on a review question the bar shows <code>{step: 16 + done, total: 16 + total}</code>.</li>
+</ul>
+<h3>8.3 Canvas and clipping</h3>
+<ul>
+  <li>The canvas is as big as the <b>screen</b>, not the slot, because strikes reach far past the artboard. It hangs from the slot (<code>left/top = -slot position</code>) out to the screen edges, and the artboard is drawn in the slot's place (<code>Fit.Contain</code>, centre).</li>
+  <li>It is cut at the bottom with CSS <code>clip-path: inset(0 0 Npx 0)</code> at the top of the lowest button artboard on screen (or <code>bottomClearance = 113</code> CSS px if none), so nothing is drawn over the button. Cut with CSS, not by resizing, because the button's top moves while the hint slides in and resizing clears the bitmap each frame.</li>
+  <li>A new canvas size is only applied when the stage size actually changes. The slot is checked every frame (<code>requestAnimationFrame</code>) for position/scale changes, since the stage scales and screens slide.</li>
+  <li>Strikes are drawn above content because the header is z-60.</li>
+</ul>
+
+<!-- ===================================================== 9 -->
+<h2>9. Battery (<code>battery.riv</code>)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Artboard / state machine / view model</td><td><code>BatteryArtboard-Main</code> / <code>Battery_SM</code> / <code>Battery</code>. 268 x 150, shown 40 px wide in the header.</td></tr>
+<tr><td>Properties</td><td><code>level</code> (0-100, the fill), <code>unlimited</code> (boolean, swaps the fill for an infinity sign), <code>darkTheme</code> (boolean), <code>charging</code> (boolean).</td></tr>
+<tr><td>Triggers</td><td><code>spend</code> (a unit is taken), <code>gain</code> (a unit is returned), <code>fullFlash</code> (sparkle across the whole battery).</td></tr>
+<tr><td>Spending</td><td>Arriving at a lesson screen not yet "paid for" spends one unit (<code>COST_PER_SCREEN = 100 / max</code>) and plays <code>spend</code>. Start fill is 18 of 20. The furthest paid screen is remembered, so Back and forward never charge twice. Reaching screen 1 restarts (every screen payable again) unless it is already the screen shown. Unlimited spends nothing.</td></tr>
+<tr><td>Charging from a streak</td><td>Every 3rd right answer in a row: <code>addBatteryUnits(1)</code> then <code>chargeBattery()</code>: fire <code>gain</code>, 150 ms later <code>fullFlash</code> (<code>triggerGapMs</code>), and <code>charging = true</code> for <b>1500 ms</b> (<code>chargingMs</code>). The module button electrifies at the same time.</td></tr>
+<tr><td>Before load</td><td>Triggers asked for before the file has loaded are held in a set and fired once on load; <code>level</code>, <code>unlimited</code> and <code>darkTheme</code> are applied on load.</td></tr>
+<tr><td>Bleed</td><td>16 artboard units on each side, because the empty-state glow spills about 7 units past the artboard. Canvas box is <code>left/top -bleed%</code>, <code>width/height 100 + 2 x bleed%</code>; <code>resizeBattery()</code> pins the artboard in the middle with margins <code>width x bleed / (artboard + 2 x bleed)</code> and is re-run on every slot resize.</td></tr>
+<tr><td>Empty</td><td>When fewer than 1 unit is left (and not unlimited) the shell makes the stage inert and, after 600 ms, shows the out-of-energy sheet.</td></tr>
+</table>
+
+<!-- ===================================================== 10 -->
+<h2>10. Flip card (<code>progressBar.riv</code>, screen 10)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Artboard / state machine</td><td><code>Flip card</code> / <code>Card_SM</code>, 207 x 275. Both faces are drawn by the artboard (front: "Tap to reveal").</td></tr>
+<tr><td>Trigger</td><td>State machine input <code>Trigger 1</code> (<code>FLIP_CARD.flipTrigger</code>): fired through <code>rive.stateMachineInputs("Card_SM")</code>. Each fire turns the card over, and back on the next fire.</td></tr>
+<tr><td>Layout</td><td><code>Fit.Contain</code>, centre; card box is 350 px tall with the artboard's aspect ratio. Canvas bleed <b>20 units</b> (<code>artboardBleedBox</code>) so the swell of the turn is not clipped at the artboard edge.</td></tr>
+<tr><td>Availability</td><td>The button is disabled and the card hidden (opacity 0) until the file loads; then it fades in over 0.3 s and springs up from 40 px (stiffness 140, damping 16).</td></tr>
+<tr><td>On tap</td><td>Fires the trigger, then the screen plays the click sound, a 110 ms haptic and sets <code>seen</code> (enables Next). Press scale 0.98. The canvas takes no pointer events itself; the button does.</td></tr>
+</table>
+
+<!-- ===================================================== 11 -->
+<h2>11. Lesson complete "LESSON_Complete" (<code>hex.riv</code>)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Artboard / state machine / view model</td><td><code>LESSON_Complete</code> / <code>LessonComplete_SM</code> / <code>LessonComplete</code>, played through <code>useHexRive</code> (shared file, <code>autoplay:false</code>, then the hook plays the machine and binds the view model). Layout <code>Fit.FitWidth</code>, centre.</td></tr>
+<tr><td>Properties written</td><td><code>xp</code> = 40, <code>accuracy</code> = first-try percentage, <code>time</code> = 222 (seconds). The writer tries a <b>number</b> property first; if the artboard declares the property as a <b>string</b> it writes display text (<code>+40</code>, <code>92%</code>, <code>3:42</code>).</td></tr>
+<tr><td>Trigger</td><td><code>play</code>, fired (through the queue, 150 ms gap) once ready, after the properties are set, together with a 1.2 s vibration.</td></tr>
+<tr><td>Layout</td><td>Held to a phone width (max 430 px) in a box centred on the page. The cap is on the wrapper because <code>RiveComponent</code> drops its <code>style</code> when it has a <code>className</code>.</td></tr>
+</table>
+
+<!-- ===================================================== 12 -->
+<h2>12. Combined effect chain: what fires when an answer is checked</h2>
+<pre>
+t=0 ms     Check pressed (Button3D press hold 150 ms, onClick at 330 ms)
+           QuizScreen.check():
+             setChecked / noteAnswer(step, correct) / haptic (250 correct, 80-40-80 wrong)
+             setAnswer({id+1, correct})
+             hideHint on the robot if the target box was lit
+             robot moves for the picked choice are queued (fireRobot)
+           ActionRow / header react to `answer`:
+             progress bar:  fireAnswer(correct)  -> trigger correct / wrong
+             module button: buttonState = 3 correct (green) or 2 wrong (red)
+             HintButton jelly-folds away (0.25 s), button grows (0.5 s ease-out)
+           HexBubble leaving: bubble flies left; Hex +80 ms: exitLeft
+           FeedbackPanel springs up (360/32); cards rise 180 px or fade out
+t=+150 ms  (PROGRESS_BAR.strikeDelayMs) streak beat plays if earned:
+             strikeDuo2[Check] (2nd in a row)   strikeMix[Check] (4th)
+             strikeLoop on for 1 / 4 / 7 s (5th)    battery gain + fullFlash (every 3rd)
+             module button: electric (0.67 s), held (no clicks) for the strike length
+t=+250 ms  panel Hex enters (enter, entryStyle 7)
+t=+1150 ms RIGHT: continueThumb (thumbs up)
+           confetti (120 pieces) + "+10 XP" burst start with the right answer
+t=...      Continue: endStrikes() stops the loop and releases the button, then navigates
+Wrong:     noteWrongAnswer() resets the run to 0, endStrikes(); no strike, no confetti
+</pre>
+
+<h3>Streak table (<code>moduleStreak</code>)</h3>
+<table>
+<tr><th>Right in a row</th><th>Progress bar</th><th>Battery</th><th>Button</th></tr>
+<tr><td>1</td><td>-</td><td>-</td><td>-</td></tr>
+<tr><td>2</td><td><code>strikeDuo2</code> (<code>...Check</code> with hint), 0.9 s</td><td>-</td><td>electric 0.67 s</td></tr>
+<tr><td>3</td><td>-</td><td><code>gain</code>, then <code>fullFlash</code> at +150 ms, <code>charging</code> 1.5 s</td><td>electric</td></tr>
+<tr><td>4</td><td><code>strikeMix</code> (<code>...Check</code>), 1.6 s</td><td>-</td><td>electric</td></tr>
+<tr><td>5</td><td><code>strikeLoop</code> on, <code>strikeWidth</code> 3, 1 s (then 4 s, then 7 s)</td><td>-</td><td>electric</td></tr>
+<tr><td>6</td><td>-</td><td>gain + fullFlash</td><td>electric</td></tr>
+</table>
+<p>Match screen (step 6): a right pair that is not the last is a <b>partial</b> answer: the progress bar plays <code>correct</code> but the run does not grow (no strike). The last pair does grow it. A wrong pair resets the run.</p>
+
+<!-- ===================================================== 13 -->
+<h2>13. Canvas bleed and layout rules</h2>
+<table>
+<tr><th>Artboard</th><th>Bleed</th><th>Why</th><th>Method</th></tr>
+<tr><td>Hex</td><td>x 420 px, y 30 px (<code>HEX_BLEED</code>)</td><td>Entrances/exits move sideways far past his box</td><td>Canvas inset <code>-30px -420px</code> around the box; Rive layout bounds inset back (<code>minX/maxX/minY/maxY</code>) on each resize</td></tr>
+<tr><td>Module button</td><td>20 artboard units</td><td>Lip 5 below, electric 17 around</td><td><code>artboardBleedBox</code> + <code>applyArtboardBleed</code></td></tr>
+<tr><td>Flip card</td><td>20 artboard units</td><td>The turn's swell</td><td>Same</td></tr>
+<tr><td>Battery</td><td>16 artboard units</td><td>Empty-state glow 7 past</td><td>Own canvas box + <code>resizeBattery</code></td></tr>
+<tr><td>Progress bar (shared)</td><td>Whole screen</td><td>Strikes reach far</td><td>Screen-sized canvas hung from the slot, <code>clip-path</code> cut at the button</td></tr>
+<tr><td>Progress bar (standalone)</td><td>10 CSS px</td><td>Effects past the artboard</td><td><code>applyCanvasBleed</code></td></tr>
+<tr><td>Robot</td><td>Whole 390 x 600 picture</td><td>Room drawn past artboard</td><td><code>Fit.FitWidth</code> + <code>minY = overflowTop x scale</code></td></tr>
+</table>
+<p><b>General rule:</b> Rive clips at the <b>canvas</b> edge, not the artboard's. Rive also resets its frame to the whole canvas on every resize, so every custom frame here is re-applied by wrapping <code>resizeToCanvas</code>. The module's stage is scaled as one piece (<code>--stage-scale</code>), so anything that measures screen px divides by that scale (<code>HexStage</code>, <code>HexGlide</code> and <code>placeCanvas</code> all do).</p>
+
+<!-- ===================================================== 14 -->
+<h2>14. Other artboards in the files that the module does not use</h2>
+<table>
+<tr><th>File</th><th>Artboard</th><th>State machine</th><th>Used by</th></tr>
+<tr><td><code>hex.riv</code></td><td><code>6.1 and 5.1 2</code></td><td><code>Reactions_SM</code> (<code>option</code> 1-4, <code>screen</code>, trigger <code>select</code>)</td><td>Onboarding grid questions</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>DayNight</code></td><td><code>DayNight_SM</code> (+ onboarding triggers <code>morning</code>, <code>noon</code>, <code>evening</code>, <code>night</code>)</td><td>Onboarding best-time question</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>09</code></td><td><code>Onboarding_complete</code></td><td>Onboarding "all set" scene</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>BG_Grid</code></td><td><code>BG_SM</code></td><td>Onboarding animated grid background</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>HEX_Notify</code> (390 x 360)</td><td><code>Notify_SM</code>; <code>Notify_VM</code> triggers <code>show</code>, <code>hide</code></td><td>Notification permission screen</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>HEX_Widget</code></td><td><code>WidgetFull_SM</code></td><td>Streak screen widget card</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>Splash Screen</code></td><td><code>Splash_SM</code>; <code>Splash_VM</code> trigger <code>showSignUpScreen</code></td><td>Splash</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>ModuleBackground 2</code></td><td><code>State Machine 1</code></td><td>Level path background (repeated down the page)</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>REWARD_Chest</code></td><td><code>RewardChest_SM</code>; <code>RewardChest</code> trigger <code>open</code></td><td>Reward screen chest</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>PathBuilding</code> (88 x 54)</td><td><code>PathBuilding_SM</code></td><td>Home screen live platform</td></tr>
+<tr><td>other files</td><td>Robu / Orbi / fox rigs</td><td>-</td><td><code>orbi_final.riv</code>, <code>foxi-9.riv</code>, <code>mera_updated_box.riv</code> (instructions intro, onboarding, reward). Not in the module.</td></tr>
+</table>
+
+<!-- ===================================================== 15 -->
+<h2>15. Rules and gotchas that decide whether a trigger plays</h2>
+<ol>
+  <li><b>One trigger per frame.</b> Two view-model triggers fired in the same frame: only one is consumed. Everything here spaces them: Hex queue 150 ms, robot clip length + 150 ms, strike 150 ms after correct/wrong, battery <code>gain</code> and <code>fullFlash</code> 150 ms apart.</li>
+  <li><b>Trigger while a move plays is dropped.</b> The robot only takes the next trigger once its state machine is back at rest, hence the queue and the per-move lengths in <code>moveSeconds</code>. If an animation clip length in the .riv changes, <code>moveSeconds</code> must change with it.</li>
+  <li><b>First trigger after load is dropped</b> (robot: 600 ms settle). Hex's first trigger is <code>enter</code>, queued after the machine is played and bound.</li>
+  <li><b>A new machine is not bound automatically.</b> After every <code>play(state)</code> Hex rebinds the view model instance.</li>
+  <li><b><code>entryStyle</code> must be set before <code>enter</code>.</b> The hook does this for every new <code>entryKey</code>.</li>
+  <li><b>Null <code>entryKey</code> = waiting.</b> The result panel mounts its Hex canvas while closed (null key) so the file is already loaded; the entrance plays only when the key arrives.</li>
+  <li><b><code>fireNow</code> clears the queue.</b> Cues and exits use it so nothing queued (talk, ambient idle) can delay or override them. The side effect: anything queued is lost.</li>
+  <li><b>Talk must be ended.</b> The hook inserts <code>stopTalk</code> before any non-talk trigger; the component fires it when the voice ends.</li>
+  <li><b>Property writes do not repaint a still artboard.</b> The button and label writers call <code>drawFrame()</code>.</li>
+  <li><b>Resizing a canvas clears it.</b> The button debounces its resize 100 ms; the progress bar cuts with CSS instead of resizing; the battery pins its frame instead of resizing the bitmap.</li>
+  <li><b>Hot reload creates a second instance.</b> The hosts decline hot updates for this reason.</li>
+  <li><b>Persistent canvases survive navigation only in the browser.</b> Hosts are module-level singletons; <code>getRobotHost</code>, <code>getModuleButtonHost</code>, <code>getProgressBarHost</code> and <code>getBatteryHost</code> are browser-only.</li>
+  <li><b>Reduced motion.</b> Within the module's screens, only the examples carousel (screen 14) honours <code>prefers-reduced-motion</code> (no auto-advance, full countdown fill); a global rule in <code>globals.css</code> also disables page view-transition animations. The Rive animations (Hex, robot, strikes) and framer-motion springs are not switched off for it.</li>
+</ol>
+
+<p class="meta">End of document.</p>
+</body>
+</html>

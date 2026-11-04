@@ -7,6 +7,7 @@ import { LevelOneShell, levelOneHref, levelOneStep, TITLE_MARGIN_TOP } from "./L
 import { useLevelVoice } from "./LevelVoice";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 
 const HEADING: TextSpan[] = [{ text: "Examples", highlight: true }, { text: " of instruction" }];
 
@@ -16,14 +17,7 @@ const EXAMPLES = [
   { id: "traffic", src: "/images/level-one/example-traffic.png", label: "Traffic signal says stop" },
 ] as const;
 
-/** The heading, then two lines for each example, in the cards' order. */
-const VOICEOVER = [
-  "/audios/screen_5/screen5_heading_audio.m4a",
-  ...["parent", "coach", "traffic"].flatMap((name) => [
-    `/audios/screen_5/screen5_${name}_left_audio.m4a`,
-    `/audios/screen_5/screen5_${name}_right_audio.m4a`,
-  ]),
-];
+const VOICEOVER = MODULE_AUDIO.examples;
 
 const CARD_WIDTH = 215;
 /** The cards are 661x1174 / 599x1064 — about 1:1.78. */

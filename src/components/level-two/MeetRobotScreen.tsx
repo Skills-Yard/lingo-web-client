@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { aboveButtons, LevelTwoShell, ScreenTitle, Teal } from "./LevelTwoShell";
 import { RobotBackdrop, robotAbove } from "./RobotBackdrop";
 import { levelTwoHref } from "./levelTwo";
@@ -16,7 +17,7 @@ const TEXT_H = 46;
 export function MeetRobotScreen() {
   const router = useRouter();
   return (
-    <LevelTwoShell step={1} scene={<RobotBackdrop bottom={robotAbove(TEXT_GAP + TEXT_H)} pose="idle" />} ctaLabel="Let’s Try" onContinue={() => router.push(levelTwoHref(2))}>
+    <LevelTwoShell step={1} voiceover={MODULE_AUDIO.meetRobot}scene={<RobotBackdrop bottom={robotAbove(TEXT_GAP + TEXT_H)} pose="idle" />} ctaLabel="Let’s Try" onContinue={() => router.push(levelTwoHref(2))}>
       <ScreenTitle>
         Meet your <Teal>robot.</Teal>
       </ScreenTitle>

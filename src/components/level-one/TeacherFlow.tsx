@@ -15,6 +15,7 @@ import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { moduleHref } from "@/lib/routes";
 import { LevelOneShell, levelOneHref, levelOneStep, TITLE_HEIGHT, TITLE_MARGIN_TOP } from "./LevelOneShell";
@@ -25,12 +26,9 @@ const CORRECT_ID = "giving";
 
 const QUIZ_HEADING: TextSpan[] = [{ text: "What", highlight: true }, { text: " teacher is doing?" }];
 const SAYS_HEADING: TextSpan[] = [{ text: "Imagine ", highlight: true }, { text: "Teacher Says.." }];
-/** When Let / Suppose / Teacher / Says are spoken in screen_3_audio.mpeg (4.03s long), measured from the clip. "Imagine" takes the time of "Let Suppose". */
-const SAYS_CLIP_SECONDS = 4.032;
-const SAYS_WORD_TIMES = [[0.14, 0.83], [1.47, 1.8], [1.8, 2.17]] as const;
-const SAYS_AUDIO = ["/audios/screen_3_audio.mpeg"];
+const SAYS_AUDIO = MODULE_AUDIO.teacherSays;
 /** Just the question; the options are not read out. */
-const QUIZ_AUDIO = ["/audios/screen_4/screen_4_audio_trim.m4a"];
+const QUIZ_AUDIO = MODULE_AUDIO.teacherDoing;
 
 const OPTIONS = [
   { id: "asking", icon: "/images/level-one/asking-question.png", title: "Asking Question", tint: "bg-[#F6F4FE] dark:bg-[#1B1830]", text: "Teacher is asking a question to the class." },
@@ -186,7 +184,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
               transition={{ duration: 0.3 }}
               className="absolute inset-x-0 top-0 text-center text-[28px] leading-[134%] font-semibold text-[#444444] dark:text-white"
             >
-              <SpokenText spans={SAYS_HEADING} timing={{ clipSeconds: SAYS_CLIP_SECONDS, times: SAYS_WORD_TIMES, before: 0 }} />
+              <SpokenText spans={SAYS_HEADING} />
             </motion.h1>
           )}
         </AnimatePresence>

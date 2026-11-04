@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { COMMAND_ROBOT } from "@/lib/rive/runtime";
 import { HexBubble } from "./HexBubble";
 import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
@@ -70,6 +71,7 @@ export function TargetScreen() {
   return (
     <LevelTwoShell
       step={7}
+      voiceover={MODULE_AUDIO.target[line]}
       scene={
         <RobotBackdrop
           below={ARM_TOP}

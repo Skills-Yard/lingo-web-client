@@ -6,14 +6,10 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { LevelOneShell, levelOneHref, levelOneStep, TITLE_MARGIN_TOP } from "./LevelOneShell";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 
 const HEADING: TextSpan[] = [{ text: "What are " }, { text: "instructions", highlight: true }, { text: "?" }];
-/** When What / are / instructions are spoken in screen_6_audio.mpeg, measured from the clip. Its progress runs against the whole 6.41s file, though only the first 2.15s plays. */
-const HEADING_TIMING = { clipSeconds: 6.408, times: [[0.49, 0.76], [0.76, 1.12], [1.12, 1.72]], before: 0 } as const;
-
-/** Only "What are instructions?" — the clip carries the next screen's question
- * too, which ends the pause 2.15s in. */
-const VIDEO_AUDIO = ["/audios/screen_6_audio.mpeg#end=2.15"];
+const VIDEO_AUDIO = MODULE_AUDIO.whatAreInstructions;
 
 /**
  * `/module?step=15` — "What are instructions?": the question, and a
@@ -32,7 +28,7 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
     >
       <div style={{ marginTop: TITLE_MARGIN_TOP }} className="flex w-full shrink-0 flex-col gap-[15px] text-center">
         <h1 className="text-[28px] leading-[134%] font-semibold text-[#444444] dark:text-white">
-          <SpokenText spans={HEADING} timing={HEADING_TIMING} />
+          <SpokenText spans={HEADING} />
         </h1>
         <p className="text-[16px] leading-6 font-medium text-[#666666] dark:text-white/70">
           Watch this short video to understand instructions with real examples.

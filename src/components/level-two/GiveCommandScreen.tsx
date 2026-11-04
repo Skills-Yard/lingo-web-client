@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import {
   OnboardingHex,
   SHEET_HEX_BOX,
@@ -51,6 +52,7 @@ export function GiveCommandScreen() {
   return (
     <LevelTwoShell
       step={2}
+      voiceover={MODULE_AUDIO.giveInstruction}
       scene={<RobotBackdrop bottom={`calc(${QUESTION_BOTTOM} + ${HEX_SLOT + ROBOT_GAP}px)`} pose="idle" />}
       ctaLabel={nice ? "Next" : "Pick Up"}
       ctaLocked={given && !nice}

@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
 import { useSound } from "@/hooks/useSound";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { moduleHref } from "@/lib/routes";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
 import { GemPopup } from "./GemPopup";
@@ -140,6 +141,7 @@ export function MoveHexScreen() {
   return (
     <LevelTwoShell
       step={levelOneStep(8)}
+      voiceover={MODULE_AUDIO.guideHex}
       scene={<MeadowBackdrop />}
       ctaLabel={failed ? "Try again" : "Continue"}
       ctaDisabled={!solved && !failed}

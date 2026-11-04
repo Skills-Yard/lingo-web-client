@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { motion, type Transition } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
@@ -203,6 +204,7 @@ export function MatchScreen() {
   return (
     <LevelTwoShell
       step={6}
+      voiceover={MODULE_AUDIO.match}
       scene={<SoftBackdrop />}
       answer={answer}
       ctaLabel="Next"

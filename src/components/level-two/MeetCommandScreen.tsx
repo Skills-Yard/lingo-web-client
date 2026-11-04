@@ -1,7 +1,8 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { AudioPlayer, COMMAND_AUDIO } from "./AudioPlayer";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
+import { AudioPlayer } from "./AudioPlayer";
 import { aboveButtons, LevelTwoShell, ScreenTitle, stageTop, Teal } from "./LevelTwoShell";
 import { RobotBackdrop, robotAboveTop } from "./RobotBackdrop";
 import { levelTwoHref } from "./levelTwo";
@@ -16,12 +17,12 @@ const PLAYER_TOP = 514;
 export function MeetCommandScreen() {
   const router = useRouter();
   return (
-    <LevelTwoShell step={9} scene={<RobotBackdrop bottom={robotAboveTop(stageTop(PLAYER_TOP))} pose="idle" />} ctaLabel="Next" onContinue={() => router.push(levelTwoHref(10))}>
+    <LevelTwoShell step={9} voiceover={MODULE_AUDIO.meetCommand}scene={<RobotBackdrop bottom={robotAboveTop(stageTop(PLAYER_TOP))} pose="idle" />} ctaLabel="Next" onContinue={() => router.push(levelTwoHref(10))}>
       <ScreenTitle>
         Meet the <Teal>Command.</Teal>
       </ScreenTitle>
       <div className="absolute inset-x-0 flex justify-center" style={{ top: stageTop(PLAYER_TOP) }}>
-        <AudioPlayer src={COMMAND_AUDIO} />
+        <AudioPlayer src={MODULE_AUDIO.commandClip} />
       </div>
       <p
         className="absolute text-center text-[20px] leading-[28px] font-semibold text-[#444444]"

@@ -59,6 +59,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
         />
       }
       answer={answer}
+      voiceover={checked ? undefined : quiz.voiceover}
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : (quiz.ctaLabel ?? "Check")}
       // Once the answer is checked the hint folds away and Continue takes its room.

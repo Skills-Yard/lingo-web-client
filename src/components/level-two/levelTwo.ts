@@ -1,5 +1,6 @@
 import { COLUMN_W } from "@/lib/questionColumn";
 import type { RobotMove, RobotPose } from "@/lib/rive/robotHost";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { moduleHref } from "@/lib/routes";
 
 /** The module's `step`th screen, or its "Lesson complete!". */
@@ -61,6 +62,8 @@ export type Quiz = {
   hint: boolean;
   /** The main button before the answer is checked (default "Check"). */
   ctaLabel?: string;
+  /** Clips read when the screen opens (the title, then Hex's line); cut off once the answer is checked. */
+  voiceover?: readonly string[];
 };
 
 const LAVENDER = "bg-[#F6F4FE] dark:bg-[#1B1830]";
@@ -87,6 +90,7 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   pose: "holding",
   keepCards: true,
   hint: true,
+  voiceover: MODULE_AUDIO.whatJustHappened,
 };
 
 /** Screen 5 — `/module?step=5`. */
@@ -108,6 +112,7 @@ export const WHAT_NEXT: Quiz = {
   wrong: "Which command lifts the cube?",
   pose: "idle",
   hint: true,
+  voiceover: MODULE_AUDIO.yourTurn,
 };
 
 /** Screen 4 — `/module?step=4`. */
@@ -128,6 +133,7 @@ export const ROBOT_PICKED_UP: Quiz = {
   wrong: "Robot is not releasing it, it will grab it.",
   pose: "holding",
   hint: true,
+  voiceover: MODULE_AUDIO.releaseCube,
 };
 
 /** Not in the flow now (Level 1's quiz is the 11th). */
@@ -172,6 +178,7 @@ export const WHERE_SHOULD_GO: Quiz = {
   pose: "holding",
   hint: true,
   ctaLabel: "Let’s do it!",
+  voiceover: MODULE_AUDIO.reachTarget,
 };
 
 /** Screen 18 — `/module?step=18`. */
