@@ -1,5 +1,6 @@
 import type { BubbleSize, Choice, Span, TitleLines } from "@/components/level-two/levelTwo";
 import { sequenceHref } from "@/lib/routes";
+import type { RoomDress } from "./SequenceRoom";
 import { struggled } from "./sequenceScore";
 
 /** The Sequence module's screens, for its progress bar. */
@@ -51,9 +52,10 @@ export const sequencePrevious = (step: number) => {
 };
 
 export const IMAGES = "/images/sequence";
-const LAVENDER = "bg-[#F6F4FE] dark:bg-[#0F1F26]";
-const CREAM = "bg-[#FFF9F0] dark:bg-[#0F1F26]";
-export const GETTING_READY_SCENE = `${IMAGES}/getting-ready-scene.webp`;
+/** The important mark beats the cards' own `dark:border-transparent`, which the first lesson keeps. */
+const DARK_BORDER = "dark:border-[#818185]!";
+const LAVENDER = `bg-[#F6F4FE] dark:bg-[#0F1F26] ${DARK_BORDER}`;
+const CREAM = `bg-[#FFF9F0] dark:bg-[#0F1F26] ${DARK_BORDER}`;
 export const SOCKS_ON_SHOES_ON = `${IMAGES}/socks-then-shoes.webp`;
 export const SHOES_THEN_SOCKS = `${IMAGES}/shoes-then-socks.webp`;
 
@@ -82,8 +84,8 @@ export type SequenceQuiz = {
   bubble: BubbleSize;
   /** Where Hex's row starts (Figma `top`). */
   bubbleTop: number;
-  /** What is behind the screen: an illustration, the robot, or the soft wash. */
-  scene: { image: string } | { robot: true } | { plain: true };
+  /** What is behind the screen: an illustration, the robot, or the soft wash. A `fixed` room keeps its place and size once checked, and the answers clear so the boy stays in view. */
+  scene: { room: { start: RoomDress; right: RoomDress; wrong: RoomDress; fixed?: boolean } } | { robot: true } | { plain: true };
   /** Two pictures to compare, above the answers. */
   pictures?: readonly [PictureCard, PictureCard];
   /** One picture above the answers; it rises as the answers do. */
@@ -98,6 +100,10 @@ export type SequenceQuiz = {
   correctId: string;
   /** The picture box's width, where a card's art is wider than the layout's. */
   pictureWidth?: number;
+  /** The picture box's height, where a card's art is larger than the layout's. */
+  pictureHeight?: number;
+  /** The height of a big card, where it should differ from the layout's. */
+  cardHeight?: number;
   rightTitle: string;
   right: string;
   wrongTitle: string;
@@ -121,17 +127,18 @@ export const PUT_ON_FIRST: SequenceQuiz = {
   resultTitle: [[{ text: "Let’s try " }, { text: "your order!", teal: true }]],
   line: [{ text: "Let’s get ready before going out." }],
   bubble: { width: 170, short: true },
-  bubbleTop: 172,
-  scene: { image: GETTING_READY_SCENE },
+  bubbleTop: 150,
+  scene: { room: { start: "bare", right: "socks", wrong: "shoesOnly", fixed: true } },
   layout: "pair",
   pictureWidth: 105,
+  cardHeight: 140,
   choices: [
     { id: "socks", text: "Put on socks", icon: `${IMAGES}/put-on-socks.webp`, tint: LAVENDER },
     { id: "shoes", text: "Put on shoes", icon: `${IMAGES}/put-on-shoes.webp`, tint: CREAM },
   ],
   correctId: "socks",
   rightTitle: "Nice!",
-  right: "You are done getting ready.",
+  right: "Socks go on first. Now the next step!",
   wrongTitle: "Not quite",
   wrong: "Shoes go on after socks. Try putting on your socks first!",
 };
@@ -147,9 +154,9 @@ export const WHAT_DID_YOU_DO: SequenceQuiz = {
   closeUp: { src: SOCKS_ON_SHOES_ON, width: 215, top: 272 },
   layout: "list",
   choices: [
-    { id: "random", text: "Performed Actions randomly", icon: "", badge: "A" },
-    { id: "order", text: "Performed Actions in Proper Order", icon: "", badge: "B" },
-    { id: "unsure", text: "Don’t Know", icon: "", badge: "C" },
+    { id: "random", text: "Performed Actions randomly", icon: `${IMAGES}/icon-random.svg` },
+    { id: "order", text: "Performed Actions in Proper Order", icon: `${IMAGES}/icon-order.svg` },
+    { id: "unsure", text: "Don’t Know", icon: `${IMAGES}/icon-unsure.svg` },
   ],
   correctId: "order",
   rightTitle: "Correct!",
@@ -197,7 +204,7 @@ export const SOCKS_FIRST: SequenceQuiz = {
   line: [{ text: "Imagine you are getting ready again. You have already put on your shoes." }],
   bubble: { width: 230 },
   bubbleTop: 150,
-  scene: { image: GETTING_READY_SCENE },
+  scene: { room: { start: "shoesOnly", right: "trySocks", wrong: "shoesOnly" } },
   question: "What happens if you try to put on your socks now?",
   layout: "list",
   choices: [
@@ -224,6 +231,8 @@ export const FIRST_COMMAND: SequenceQuiz = {
   bubbleTop: 150,
   scene: { robot: true },
   layout: "pair",
+  pictureWidth: 120,
+  pictureHeight: 100,
   choices: [
     { id: "pickup", text: "Pick Up", icon: PICK_UP_ICON, tint: LAVENDER, moves: ["pickUp"] },
     { id: "target", text: "Place in target", icon: PLACE_IN_TARGET_ICON, tint: CREAM, moves: ["wrongClaw"] },
@@ -248,8 +257,8 @@ export const REFLECT_ORDER: SequenceQuiz = {
   scene: { plain: true },
   layout: "list",
   choices: [
-    { id: "alphabetical", text: "Commands must always be written in alphabetical order.", icon: "", badge: "A" },
-    { id: "goal", text: "The proper order helps to achieve the goal.", icon: "", badge: "B" },
+    { id: "alphabetical", text: "Commands must always be written in alphabetical order.", icon: `${IMAGES}/icon-alphabet.svg` },
+    { id: "goal", text: "The proper order helps to achieve the goal.", icon: `${IMAGES}/icon-goal.svg` },
   ],
   correctId: "goal",
   rightTitle: "Exactly!",
@@ -273,9 +282,9 @@ export const REFLECT_DECIDE: SequenceQuiz = {
   scene: { plain: true },
   layout: "list",
   choices: [
-    { id: "before", text: "Think about what must happen before the next action.", icon: "", badge: "A" },
-    { id: "shortest", text: "Always choose the shortest command first.", icon: "", badge: "B" },
-    { id: "random", text: "Choose commands randomly.", icon: "", badge: "C" },
+    { id: "before", text: "Think about what must happen before the next action.", icon: `${IMAGES}/icon-think.svg` },
+    { id: "shortest", text: "Always choose the shortest command first.", icon: `${IMAGES}/icon-short.svg` },
+    { id: "random", text: "Choose commands randomly.", icon: `${IMAGES}/icon-random.svg` },
   ],
   correctId: "before",
   rightTitle: "That’s the idea!",

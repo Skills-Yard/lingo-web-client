@@ -113,6 +113,31 @@ export function configureRiveRuntime(): void {
 }
 
 /**
+ * `sequence.riv`, the Sequence module's bedroom: one artboard, whose view model
+ * `BedroomScene` has a trigger for each thing the boy does and `darkTheme` for the
+ * room's own dark look. A trigger plays in about `triggerGapMs`, and two fired
+ * together may drop one, so they are played one at a time. The art carries on
+ * below the artboard (the rest of the rug and floor), and isn't clipped there.
+ */
+export const SEQUENCE_ROOM = {
+  src: "/animations/sequence.riv",
+  artboard: "BedroomRoom",
+  stateMachine: "Bedroom_SM",
+  width: 390,
+  height: 306,
+  darkProperty: "darkTheme",
+  triggerGapMs: 900,
+  trigger: {
+    wearSocks: "wearSocks",
+    wearShoes: "wearShoes",
+    wearShoesNoSocks: "wearShoesNoSocks",
+    shoesThenTrySocks: "shoesThenTrySocks",
+    happy: "happy",
+    reset: "reset",
+  },
+} as const;
+
+/**
  * Hex — `hex.riv`, artboard "HEX". The one character rig for every onboarding
  * screen. It has no inputs or view model: each pose is its own state machine
  * (named `HEX-<Pose>`), and a screen plays exactly one of them at a time.

@@ -34,6 +34,10 @@ type TileCardsProps = {
   longText?: boolean;
   /** The picture box's width (px), where the art is wider than the layout's. */
   pictureWidth?: number;
+  /** The picture box's height (px), where the art should be larger than the layout's. */
+  pictureHeight?: number;
+  /** The card's height (px), where it should differ from the layout's. */
+  cardHeight?: number;
   onPick: (id: string) => void;
 };
 
@@ -42,7 +46,7 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -70,6 +74,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 onPick(choice.id);
               }}
               aria-pressed={state === "selected"}
+              style={cardHeight ? { height: cardHeight } : undefined}
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
@@ -85,8 +90,8 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
               />
-              <span className={`flex shrink-0 items-center justify-center ${look.picture}`} style={{ width: pictureWidth }}>
-                <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
+              <span className={`flex shrink-0 items-center justify-center ${look.picture}`} style={{ width: pictureWidth, height: pictureHeight }}>
+                <SlotImage file={choice.icon} className={pictureHeight ? "h-full w-full object-contain" : "max-h-full max-w-full object-contain"} />
               </span>
               <span
                 className={`text-center font-semibold text-[#444444] dark:text-white ${look.text} ${longText ? "text-[15px]! leading-5!" : ""}`}

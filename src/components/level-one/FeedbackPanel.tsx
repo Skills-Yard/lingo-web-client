@@ -139,13 +139,24 @@ export const SHEET_INSET = "pl-[19.85px] pr-[9.4px]";
 const SHEET_INSET_THICK_BORDER = "pl-[18.35px] pr-[7.9px]";
 // Hex rests 5.4px inside his slot, so this leaves 20px between the text and him.
 const SHEET_TEXT_GAP = "gap-[14.6px]";
+/**
+ * Figma "Frame 273", the Sequence module's sheet (390 x 236 at the frame's bottom,
+ * 32px top radius): the text (149px wide) and Hex (drawn 109.65 x 79.95) are one
+ * centred group, 34px apart, its row 94px tall and 18px from the sheet's top.
+ * The padding is less the 3px border; the Rive box spills out of the slot unseen.
+ */
+const CENTRED_SHEET = "rounded-t-[32px] border-[3px] pt-[15px] pb-[124px]";
+const CENTRED_ROW = "mx-auto flex min-h-[94px] w-[292.65px] items-center justify-center gap-[34px]";
+const CENTRED_TEXT = "flex w-[149px] shrink-0 flex-col gap-1.5";
+const CENTRED_HEX_SLOT = "relative h-[79.95px] w-[109.65px] shrink-0";
+const CENTRED_HEX_BOX = "absolute top-1/2 left-[calc(50%+1.44px)] h-[143.7px] w-[197.1px] -translate-x-1/2 -translate-y-1/2";
 
 const FEEDBACK = {
   correct: {
     title: "Correct!",
     titleColor: "text-[#01A17F]",
     text: "font-medium leading-[1.4]",
-    frame: `rounded-t-[28px] border-[3px] ${SHEET_INSET_THICK_BORDER}`,
+    frame: "rounded-t-[28px] border-[3px]",
     panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
     bold: "[&_b]:text-[#04ACAB]",
   },
@@ -154,7 +165,7 @@ const FEEDBACK = {
     title: "Not quite",
     titleColor: "text-[#D42421]",
     text: "font-medium leading-5",
-    frame: `rounded-t-[32px] border-[3px] ${SHEET_INSET_THICK_BORDER}`,
+    frame: "rounded-t-[32px] border-[3px]",
     panel: "border-[#D42421] bg-[#FDECEC] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
     bold: "[&_b]:text-[#E5484D]",
   },
@@ -194,6 +205,7 @@ export function FeedbackPanel({
   hexIn,
   hexSlot,
   hexCue = null,
+  centred = false,
   title,
   children,
 }: {
@@ -211,6 +223,8 @@ export function FeedbackPanel({
   hexSlot?: (el: HTMLDivElement | null) => void;
   /** Played by the panel's own Hex once his entrance is over. */
   hexCue?: string | null;
+  /** The Sequence module's sheet: the text and Hex as one centred group (see `CENTRED_SHEET`). */
+  centred?: boolean;
   /** The sentence under the title. */
   children: ReactNode;
 }) {
@@ -232,17 +246,17 @@ export function FeedbackPanel({
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
       // 5xl on screen, like the header; the stage is scaled, so divide.
       style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}
-      className={`absolute inset-x-0 bottom-0 z-0 mx-auto border-b-0 pt-5 pb-[140px] ${open ? "" : "pointer-events-none"} ${look.frame} ${look.panel}`}
+      className={`absolute inset-x-0 bottom-0 z-0 mx-auto border-b-0 ${open ? "" : "pointer-events-none"} ${centred ? CENTRED_SHEET : `pt-5 pb-[140px] ${SHEET_INSET_THICK_BORDER} ${look.frame}`} ${look.panel}`}
     >
-      <div className={`flex w-full items-center justify-between ${SHEET_TEXT_GAP}`}>
-        <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-          <h2 className={`font-semibold tracking-[-0.1px] ${SHEET_TITLE_SIZE} ${look.titleColor}`}>{title ?? look.title}</h2>
-          <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${look.text} ${look.bold}`}>
+      <div className={centred ? CENTRED_ROW : `flex w-full items-center justify-between ${SHEET_TEXT_GAP}`}>
+        <div className={centred ? CENTRED_TEXT : "flex min-w-0 flex-1 flex-col gap-1.5"}>
+          <h2 className={`font-semibold tracking-[-0.1px] ${SHEET_TITLE_SIZE} ${look.titleColor} ${centred ? "whitespace-nowrap" : ""}`}>{title ?? look.title}</h2>
+          <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${centred ? "font-medium leading-5" : look.text} ${look.bold}`}>
             {children}
           </p>
         </div>
-        <div aria-hidden className={`pointer-events-none ${SHEET_HEX_SLOT}`}>
-          <div ref={hexSlot} className={SHEET_HEX_BOX}>
+        <div aria-hidden className={`pointer-events-none ${centred ? CENTRED_HEX_SLOT : SHEET_HEX_SLOT}`}>
+          <div ref={hexSlot} className={centred ? CENTRED_HEX_BOX : SHEET_HEX_BOX}>
             {!hexSlot && <OnboardingHex
                 entryKey={enterNow ? "feedback" : null}
                 cue={enterNow ? hexCue : null}

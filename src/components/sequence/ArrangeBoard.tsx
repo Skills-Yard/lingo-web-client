@@ -179,7 +179,7 @@ function ArrangeCard({
       }}
       animate={{ scale: dragging ? 1.05 : 1 }}
       style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1 }}
-      className={`pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center rounded-[8px] border-4 border-white px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] enabled:cursor-grab enabled:active:cursor-grabbing dark:border-transparent ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+      className={`pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center rounded-[8px] border-4 border-white px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
       {card.art && (
         <span className={`flex w-full items-center justify-center ${compact ? "h-[24px]" : "h-[46px]"}`}>{card.art}</span>
