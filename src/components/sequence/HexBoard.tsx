@@ -5,6 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { ChevronRight } from "lucide-react";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
+import { PlatformBattery } from "@/components/ui/PlatformBattery";
 import type { Dir, HexState } from "./hexGrid";
 
 export type BoardKind = "grid" | "row";
@@ -38,8 +39,8 @@ const centreOf = (kind: BoardKind, { col, row }: Tile) =>
 const HEX_BOX = 100;
 /** How far above the tile's centre Hex's box sits, so he stands on the tile. */
 const HEX_LIFT = 10;
-/** The battery's box (the picture is 145 x 132), standing on its tile. */
-const BATTERY = { width: 66, height: 60, lift: 16 };
+/** The battery's box, matching Module 1's landscape Rive artboard. */
+const BATTERY = { width: 66, height: (66 * 150) / 268, lift: 16 };
 /** How far from his tile's centre the direction arrow stands (px, board scale). */
 const ARROW_REACH = { grid: 40, row: 42 } as const;
 
@@ -150,7 +151,7 @@ export function HexBoard({ kind, hex, battery = null, collected = false, ghost =
             transition={{ duration: 0.25 }}
           >
             <div className="absolute -inset-5 rounded-full bg-[radial-gradient(circle,rgba(255,226,70,0.85)_0%,rgba(255,226,70,0)_70%)]" />
-            <Image src="/images/battery-icon.png" alt="" fill sizes="114px" className="object-contain" />
+            <PlatformBattery />
           </motion.div>
         )}
 

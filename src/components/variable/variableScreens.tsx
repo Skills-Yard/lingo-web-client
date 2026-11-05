@@ -1,6 +1,6 @@
 "use client";
 
-import { Bottle, BottleWithAmount, Art, CalculatorApp, Classroom, AttendanceBoard, Counter, NameValue, ShopItem, useChange, useTimeline, Wallet, CARD } from "./visuals";
+import { Bottle, BottleWithAmount, CalculatorApp, Classroom, AttendanceBoard, Counter, NameValue, ShopItem, useChange, useTimeline, Wallet, CARD } from "./visuals";
 import { BridgeStage, ClassifyStage, FillSliderStage, Items, MatchPricesStage, NameValueStage, NamesStage } from "./interactions";
 import type { Option, QuizStage, ScreenDef, VisualContext } from "./quiz";
 import { STEP } from "./variable";
@@ -28,13 +28,7 @@ function BottleStory({ context }: { context: VisualContext }) {
     ],
     context.attempt,
   );
-  const drinking = useChange(0, 1, 3200, context.attempt) === 1;
-  return (
-    <div className="flex items-end gap-3">
-      <BottleWithAmount ml={ml} height={150} stream={ml === 0 || (ml > 0 && ml < 800)} marks={false} label={ml === 0 ? "Empty" : undefined} />
-      {drinking && <Art name="drinking-student" emoji="🧒" label="A student drinks from the bottle" className="h-[84px] w-[110px]" />}
-    </div>
-  );
+  return <BottleWithAmount ml={ml} height={150} stream={ml === 0 || (ml > 0 && ml < 800)} marks={false} label={ml === 0 ? "Empty" : undefined} />;
 }
 
 /** A wallet showing what the learner has: the event is shown as it happens, and the new amount once they have it right. */
@@ -157,74 +151,28 @@ function AttendanceCards() {
   );
 }
 
-/** A small mark for a picture the learner sees as a hint. */
-function HintArt({ label, emoji, name }: { label: string; emoji: string; name: string }) {
-  return <Art name={name} emoji={emoji} label={label} className="h-[84px] w-[150px]" />;
-}
-
 /* ───────────────────────── Screens ───────────────────────── */
 
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", ...stage });
 
 /** Screens that are a title and one or more stages: the questions and the interactions. */
 export const SCREENS: Readonly<Record<number, ScreenDef>> = {
-  [STEP.trek]: {
-    step: STEP.trek,
-    title: "Let's Go on a *Trekking Adventure!*",
-    stages: [
-      quiz({
-        line: "Imagine you and your friends are going on a long trek through the mountains. You will walk, explore, and enjoy the beautiful views along the way.",
-        question: "What do you think might happen when we walk for a long time?",
-        visual: () => <Art name="trek-trail" emoji="🏔️" label="A mountain trail with students walking" className="h-[112px] w-[300px]" />,
-        options: words(["We may become tired.", "We may feel thirsty.", "We may need some rest.", "All of these."]),
-        correctId: at(3),
-        alsoOk: { ids: [at(0), at(1), at(2)], title: "Good thinking!", text: "That can happen too. A long trek can make us tired, thirsty and in need of rest." },
-        rightTitle: "Exactly!",
-        right: "A long trek can make us tired and thirsty. We need to prepare for it.",
-        wrong: "Think about what happens to your body when you walk or run for a long time.",
-      }),
-    ],
-  },
-
-  [STEP.thirsty]: {
-    step: STEP.thirsty,
-    title: "We Are *Getting Thirsty!*",
-    stages: [
-      quiz({
-        line: "After walking for a long time, you and your friends start feeling thirsty.",
-        question: "What do we need right now?",
-        visual: () => <Art name="thirsty-student" emoji="🥵" label="A student pauses, looking thirsty" className="h-[96px] w-[220px]" />,
-        layout: "grid",
-        options: [
-          { id: "water", text: "Water", emoji: "💧" },
-          { id: "football", text: "A football", emoji: "⚽" },
-          { id: "notebook", text: "A notebook", emoji: "📓" },
-          { id: "jacket", text: "A jacket", emoji: "🧥" },
-        ],
-        correctId: "water",
-        rightTitle: "Yes!",
-        right: "We need water to drink.",
-        wrong: "Think about what you usually drink when you feel thirsty.",
-        hintVisual: <HintArt name="drinking-student" emoji="🧒" label="A student drinking water" />,
-        hintOnMiss: true,
-      }),
-    ],
-  },
-
   [STEP.noWater]: {
     step: STEP.noWater,
-    title: "What If There Is *No Water Nearby?*",
+    title: "What If There's *No Water?*",
     stages: [
       quiz({
-        line: "Imagine there is no river, waterfall, shop, or drinking-water source along the trekking path.",
-        question: "How can we make sure that we have water whenever we need it?",
-        visual: () => <Art name="no-water-trail" emoji="🏜️" label="An empty trail with no water nearby" className="h-[104px] w-[300px]" />,
-        options: words(["Carry water with us.", "Wait until we find a river.", "Stop drinking water.", "Go back home."]),
+        line: "No river or shop nearby. What should we do?",
+        options: [
+          { id: at(0), text: "Carry water along", icon: "/animations/svg/variable-module/screen-3/variable-3.1.svg" },
+          { id: at(1), text: "Wait for a river", icon: "/animations/svg/variable-module/screen-3/variable-3.2.svg" },
+          { id: at(2), text: "Turn back", icon: "/animations/svg/variable-module/screen-3/variable-3.3.svg" },
+        ],
         correctId: at(0),
         rightTitle: "Great thinking!",
-        right: "We should carry water with us before starting the trek.",
-        wrong: "What can we do before starting the trek so that water is available whenever we need it?",
-        hintText: "Can we take something with us before leaving?",
+        right: "We carry water before the trek.",
+        wrong: "What can we do before leaving?",
+        hintText: "What can we take along?",
         hintOnMiss: true,
       }),
     ],
@@ -232,22 +180,20 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.carry]: {
     step: STEP.carry,
-    title: "What Should *We Carry?*",
+    title: "Pick the *Right Object*",
     stages: [
       quiz({
-        line: "We have decided to carry water. But what should we use to take it along?",
-        question: "Which object is suitable for carrying drinking water?",
+        line: "We carry water. What should hold it?",
         layout: "grid",
         options: [
           { id: "bottle", text: "Water bottle", node: <Bottle ml={600} height={48} marks={false} /> },
           { id: "football", text: "Football", emoji: "⚽" },
-          { id: "notebook", text: "Notebook", emoji: "📓" },
-          { id: "lunchbox", text: "School lunchbox", emoji: "🍱" },
+          { id: "lunchbox", text: "Lunchbox", emoji: "🍱" },
         ],
         correctId: "bottle",
         rightTitle: "That's right!",
-        right: "A water bottle is designed to hold water.",
-        wrong: "Think about which object can safely hold water without spilling it.",
+        right: "A bottle is made to hold water.",
+        wrong: "Which one holds water without spilling?",
         spill: true,
       }),
     ],
@@ -258,32 +204,35 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     title: "A Bottle *Holds Water!*",
     stages: [
       quiz({
-        line: "We fill the bottle with water and carry it with us. Whenever we feel thirsty, we can drink from it.",
-        question: "What is the main purpose of the bottle?",
+        line: "We fill it and drink from it. What is it for?",
         visual: (context) => <BottleStory context={context} />,
-        options: words(["To store water.", "To create water.", "To change the colour of water.", "To make water disappear."]),
+        options: [
+          { id: at(0), text: "To store water", icon: "/animations/svg/variable-module/screen-5/variable-5.1.svg" },
+          { id: at(1), text: "To create water", icon: "/animations/svg/variable-module/screen-5/variable-5.2.svg" },
+          { id: at(2), text: "To change the colour of water", icon: "/animations/svg/variable-module/screen-5/variable-5.3.svg" },
+        ],
         correctId: at(0),
         rightTitle: "Exactly!",
-        right: "A bottle is a container that holds and stores water for us.",
-        wrong: "Look at what happened when we poured water into the bottle. Did it hold the water?",
+        right: "A bottle holds and stores water.",
+        wrong: "Did the bottle hold the water we poured?",
       }),
     ],
   },
 
   [STEP.bridge]: {
     step: STEP.bridge,
-    title: "Programs Need to Keep *Information Too!*",
+    title: "Programs *Remember Too!*",
     stages: [{ kind: "interaction", render: (api) => <BridgeStage {...api} />, nextLabel: "Let's Explore" }],
   },
 
   [STEP.fill]: {
     step: STEP.fill,
-    title: "How Much Water *Should We Carry?*",
+    title: "How Much *Water?*",
     stages: [
       {
         kind: "interaction",
         render: (api) => <FillSliderStage {...api} />,
-        finishPanel: { title: "Great!", text: "Our bottle now contains 500 ml of water." },
+        finishPanel: { title: "Great!", text: "The bottle now has 500 ml." },
       },
     ],
   },
@@ -293,36 +242,34 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     title: "We Need *More Water!*",
     stages: [
       quiz({
-        line: "We have 500 ml of water. Let's add another 250 ml.",
-        question: "How much water do we have now?",
+        line: "We have 500 ml and add 250 ml. How much now?",
         visual: (context) => <BottleChange from={500} to={750} pour context={context} />,
-        options: words(["500 ml", "650 ml", "750 ml", "1,000 ml"]),
-        correctId: at(2),
+        options: words(["500 ml", "750 ml", "1,000 ml"]),
+        correctId: at(1),
         rightTitle: "Correct!",
         right: "500 ml + 250 ml = 750 ml.",
-        wrong: "Start with 500 ml and add another 250 ml. What is the total?",
+        wrong: "Add 250 ml to what we had.",
       }),
     ],
   },
 
   [STEP.sameBottle]: {
     step: STEP.sameBottle,
-    title: "Same Bottle, *Different Amount!*",
+    title: "Same Bottle, *New Amount*",
     stages: [
       quiz({
-        line: "First, our bottle contained 500 ml. After adding water, it contained 750 ml.",
-        question: "What changed?",
+        line: "It held 500 ml, now 750 ml. What changed?",
         visual: () => (
           <div className="flex items-end gap-6">
             <BottleWithAmount ml={500} height={140} caption="Earlier" label="500 ml" />
             <BottleWithAmount ml={750} height={140} caption="Now" label="750 ml" />
           </div>
         ),
-        options: words(["The bottle.", "The amount of water.", "Both the bottle and water."]),
+        options: words(["The bottle", "The amount of water", "Both"]),
         correctId: at(1),
         rightTitle: "Exactly!",
-        right: "The bottle stayed the same, but the amount of water changed.",
-        wrong: "Compare the two bottles carefully. Are they the same bottle?",
+        right: "The bottle is the same; the amount changed.",
+        wrong: "Are these two bottles the same bottle?",
       }),
     ],
   },
@@ -332,14 +279,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     title: "Let's *Drink 200 ml!*",
     stages: [
       quiz({
-        line: "We have 750 ml of water. After drinking 200 ml, how much will remain?",
-        question: "How much water is left?",
+        line: "We have 750 ml and drink 200 ml. How much is left?",
         visual: (context) => <BottleChange from={750} to={550} context={context} />,
-        options: words(["200 ml", "500 ml", "550 ml", "750 ml"]),
-        correctId: at(2),
+        options: words(["200 ml", "550 ml", "750 ml"]),
+        correctId: at(1),
         rightTitle: "Correct!",
         right: "750 ml − 200 ml = 550 ml.",
-        wrong: "We started with 750 ml and drank 200 ml. Subtract the amount we drank.",
+        wrong: "Subtract what we drank from 750 ml.",
       }),
     ],
   },
@@ -349,25 +295,23 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     title: "The Bottle *Is Empty!*",
     stages: [
       quiz({
-        line: "We had 550 ml of water. Now imagine we drink all of it.",
-        question: "What is the amount of water remaining?",
+        line: "We drink all 550 ml. How much is left?",
         visual: (context) => <BottleChange from={550} to={0} context={context} />,
-        options: words(["550 ml", "100 ml", "0 ml", "1,000 ml"]),
-        correctId: at(2),
+        options: words(["0 ml", "550 ml", "1,000 ml"]),
+        correctId: at(0),
         rightTitle: "Yes!",
-        right: "The bottle is empty, so the remaining water is 0 ml.",
-        wrong: "If all the water is gone, how much water remains?",
+        right: "It's empty, so 0 ml remain.",
+        wrong: "If all the water is gone, how much remains?",
       }),
     ],
   },
 
   [STEP.labels]: {
     step: STEP.labels,
-    title: "Imagine Everyone *Has the Same Bottle!*",
+    title: "Which Bottle *Is Mine?*",
     stages: [
       quiz({
-        line: "You are trekking with your friends. Everyone has a similar-looking water bottle. How will you identify which bottle belongs to you?",
-        question: "What would help you identify your bottle?",
+        line: "All our bottles look the same. How can we tell ours?",
         visual: () => (
           <div className="flex items-end gap-3">
             {[
@@ -379,35 +323,34 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             ))}
           </div>
         ),
-        options: words(["A name label.", "The bottle's position.", "Its size only.", "Nothing is needed."]),
+        options: words(["A name label", "Its position", "Nothing is needed"]),
         correctId: at(0),
         rightTitle: "Exactly!",
-        right: "A name or label helps us identify something.",
-        wrong: "Imagine all three bottles look exactly the same. How would you recognise yours?",
+        right: "A name or label helps us identify things.",
+        wrong: "How would you recognise your own bottle?",
       }),
     ],
   },
 
   [STEP.meet]: {
     step: STEP.meet,
-    title: "Variables Have *Names and Values!*",
+    title: "*Name* and *Value*",
     stages: [{ kind: "interaction", render: (api) => <NameValueStage {...api} /> }],
   },
 
   [STEP.classify]: {
     step: STEP.classify,
-    title: "A Name *and a Value!*",
+    title: "Name *or Value?*",
     stages: [
       { kind: "interaction", render: (api) => <ClassifyStage {...api} /> },
       quiz({
-        line: "Now that you have sorted them, let's check.",
-        question: "Which of these is a variable name?",
+        line: "Which of these is a variable name?",
         visual: () => <NameValueCards />,
         options: words(["550 ml", "water_level", "1,000 ml"]),
         correctId: at(1),
         rightTitle: "Correct!",
-        right: "water_level is the name. 550 ml is its current value.",
-        wrong: "A variable name identifies the information. The value tells us the information itself.",
+        right: "water_level is the name; 550 ml is its value.",
+        wrong: "The name tells what it is; the value is the amount.",
       }),
     ],
   },
@@ -417,105 +360,99 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     title: "A New Day *at School!*",
     stages: [
       quiz({
-        line: "Imagine your class has 30 students. Today, the teacher is taking attendance.",
-        question: "What information should the teacher keep track of?",
+        line: "30 students, attendance time! What should we track?",
         visual: () => (
           <div className="flex items-center gap-3">
             <Classroom present={27} />
             <AttendanceBoard total={30} present={27} absent={3} />
           </div>
         ),
-        options: words(["Total number of students.", "Number of students present.", "Number of students absent.", "All of these."]),
+        options: words(["Total students", "Students present", "Students absent", "All of these"]),
         correctId: at(3),
         rightTitle: "Exactly!",
-        right: "The teacher needs to keep track of all three pieces of information.",
-        wrong: "Think about what the teacher needs to know to complete attendance.",
+        right: "We track all three pieces of information.",
+        wrong: "What does the teacher need to finish attendance?",
       }),
     ],
   },
 
   [STEP.names]: {
     step: STEP.names,
-    title: "Three Different *Pieces of Information!*",
+    title: "Three *Pieces of Data*",
     stages: [
       { kind: "interaction", render: (api) => <NamesStage {...api} /> },
       quiz({
-        line: "Each variable tracks a different piece of information. We use meaningful names so that we can understand what each value represents.",
-        question: "Which variable tells us how many students are absent?",
+        line: "Which variable tells us how many are absent?",
         visual: () => <AttendanceCards />,
         options: words(["total_students", "present_students", "absent_students"]),
         correctId: at(2),
         rightTitle: "Correct!",
-        right: "absent_students keeps track of the number of absent students.",
-        wrong: "Look at the meaning of each name. Which one refers to students who are not present?",
+        right: "absent_students counts the absent students.",
+        wrong: "Which name means students who are not here?",
       }),
     ],
   },
 
   [STEP.tomorrow]: {
     step: STEP.tomorrow,
-    title: "More Students *Come Tomorrow!*",
+    title: "More Students *Tomorrow!*",
     stages: [
       quiz({
-        line: "Today, 27 students were present and 3 were absent. Tomorrow, 2 of the absent students return.",
-        question: "Which information changes?",
+        line: "2 absent students return. Which values change?",
         visual: (context) => <ClassroomChange context={context} />,
-        options: words(["Only total_students.", "present_students and absent_students.", "All three values.", "None of them."]),
+        options: words(["Only total_students", "Present and absent counts", "All three values"]),
         correctId: at(1),
         rightTitle: "Exactly!",
-        right: "Present students increase to 29, absent students decrease to 1, and total students remain 30.",
-        wrong: "The total class size has not changed. Think about which numbers change when two absent students arrive.",
+        right: "Present goes to 29, absent to 1. Total stays 30.",
+        wrong: "The class size is the same. What changes when 2 return?",
       }),
     ],
   },
 
   [STEP.shopping]: {
     step: STEP.shopping,
-    title: "Time to Buy *Some School Supplies!*",
+    title: "Shopping *for Supplies!*",
     stages: [
       quiz({
-        line: "You visit a stationery shop. You want to buy a notebook and a pen.",
-        question: "If you want to calculate the total cost later, what information should you keep track of?",
+        line: "We buy a notebook and a pen. What should we track?",
         visual: () => <Items />,
-        options: words(["Notebook price.", "Pen price.", "Both prices."]),
+        options: words(["Notebook price", "Pen price", "Both prices"]),
         correctId: at(2),
         rightTitle: "Right!",
-        right: "We need both prices to calculate the total.",
-        wrong: "Think about which prices we need to add together.",
+        right: "We need both prices for the total.",
+        wrong: "Which prices do we add together?",
       }),
     ],
   },
 
   [STEP.prices]: {
     step: STEP.prices,
-    title: "Let's Organise *the Prices!*",
+    title: "Name *the Prices!*",
     stages: [
       { kind: "interaction", render: (api) => <MatchPricesStage {...api} /> },
       quiz({
-        line: "Both prices now have a name.",
-        question: "Which value belongs to pen_price?",
+        line: "Which value belongs to pen_price?",
         visual: () => <Items />,
         options: words(["₹50", "₹20", "₹70"]),
         correctId: at(1),
         rightTitle: "Correct!",
         right: "The pen costs ₹20.",
-        wrong: "Look at the product and its price tag again.",
+        wrong: "Look at the pen's price tag again.",
       }),
     ],
   },
 
   [STEP.total]: {
     step: STEP.total,
-    title: "How Much *Do We Need to Pay?*",
+    title: "What's the *Total Cost?*",
     stages: [
       quiz({
-        line: "We know the notebook price is ₹50 and the pen price is ₹20. Now we need to add both prices.",
-        question: "What is the total cost?",
+        line: "Notebook ₹50, pen ₹20. What's the total?",
         visual: (context) => <PriceCalc context={context} />,
-        options: words(["₹50", "₹60", "₹70", "₹80"]),
-        correctId: at(2),
+        options: words(["₹50", "₹70", "₹80"]),
+        correctId: at(1),
         rightTitle: "Excellent!",
-        right: "₹50 + ₹20 = ₹70. We can keep this result separately using a meaningful name: total_price.",
+        right: "₹50 + ₹20 = ₹70. We can store it as total_price.",
         wrong: "Add the notebook price and the pen price.",
       }),
     ],
@@ -523,122 +460,114 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.eraser]: {
     step: STEP.eraser,
-    title: "We Also *Need an Eraser!*",
+    title: "Add *an Eraser!*",
     stages: [
       quiz({
-        line: "You decide to buy an eraser costing ₹10. You already know the notebook and pen cost ₹70 together.",
-        question: "What is the new total price?",
+        line: "An eraser costs ₹10. What is the new total?",
         visual: (context) => <EraserTotal context={context} />,
-        options: words(["₹70", "₹75", "₹80", "₹90"]),
-        correctId: at(2),
+        options: words(["₹70", "₹80", "₹90"]),
+        correctId: at(1),
         rightTitle: "That's right!",
         right: "₹70 + ₹10 = ₹80.",
-        wrong: "Add the eraser's price to the previous total.",
+        wrong: "Add ₹10 to the earlier total.",
       }),
     ],
   },
 
   [STEP.pocket]: {
     step: STEP.pocket,
-    title: "Let's Manage *Your Pocket Money!*",
+    title: "Your *Pocket Money*",
     stages: [
       quiz({
-        line: "Your parents give you ₹100 as pocket money.",
-        question: "How much money do you currently have?",
+        line: "Your parents give you ₹100. How much do you have?",
         visual: (context) => <WalletChange from={100} to={100} context={context} />,
-        options: words(["₹50", "₹100", "₹150", "₹200"]),
+        options: words(["₹50", "₹100", "₹150"]),
         correctId: at(1),
         rightTitle: "Correct!",
-        right: "Your current pocket money is ₹100.",
-        wrong: "Look at the amount your parents gave you.",
+        right: "You have ₹100.",
+        wrong: "Look at what your parents gave you.",
       }),
     ],
   },
 
   [STEP.received]: {
     step: STEP.received,
-    title: "You Received *Another ₹50!*",
+    title: "Another *₹50 Arrives!*",
     stages: [
       quiz({
-        line: "Your grandparents give you ₹50 more. You previously had ₹100.",
-        question: "How much money do you have now?",
+        line: "You had ₹100 and get ₹50 more. How much now?",
         visual: (context) => <WalletChange from={100} to={150} note="+₹50" gain context={context} />,
-        options: words(["₹100", "₹125", "₹150", "₹200"]),
-        correctId: at(2),
+        options: words(["₹100", "₹150", "₹200"]),
+        correctId: at(1),
         rightTitle: "Great!",
-        right: "₹100 + ₹50 = ₹150. Your pocket money balance has increased.",
-        wrong: "Add the ₹50 you received to the ₹100 you already had.",
+        right: "₹100 + ₹50 = ₹150. Your balance grew.",
+        wrong: "Add the ₹50 to your ₹100.",
       }),
     ],
   },
 
   [STEP.spent]: {
     step: STEP.spent,
-    title: "You Bought *a Toy for ₹30!*",
+    title: "A Toy *for ₹30!*",
     stages: [
       quiz({
-        line: "You had ₹150. Now you spend ₹30 to buy a toy.",
-        question: "How much money is left?",
+        line: "You had ₹150 and spend ₹30. How much is left?",
         visual: (context) => <WalletChange from={150} to={120} note="−₹30" context={context} />,
-        options: words(["₹30", "₹100", "₹120", "₹150"]),
-        correctId: at(2),
+        options: words(["₹30", "₹120", "₹150"]),
+        correctId: at(1),
         rightTitle: "Correct!",
         right: "₹150 − ₹30 = ₹120.",
-        wrong: "Subtract the amount you spent from your previous balance.",
+        wrong: "Subtract what you spent.",
       }),
     ],
   },
 
   [STEP.follow]: {
     step: STEP.follow,
-    title: "Can You Track *Your Balance?*",
+    title: "Track *Your Balance*",
     stages: [
       quiz({
-        line: "Let's follow a new pocket money journey. You start with ₹200. First, you receive ₹50.",
-        question: "What is your balance after receiving ₹50?",
+        line: "Start with ₹200, then get ₹50. What's your balance?",
         visual: (context) => <WalletChange from={200} to={250} note="+₹50" gain context={context} />,
-        options: words(["₹150", "₹200", "₹250", "₹300"]),
-        correctId: at(2),
+        options: words(["₹150", "₹250", "₹300"]),
+        correctId: at(1),
         rightTitle: "Yes!",
         right: "₹200 + ₹50 = ₹250.",
-        wrong: "Add the money you receive to the balance.",
+        wrong: "Add money you receive.",
       }),
       quiz({
-        line: "Next, you spend ₹30.",
-        question: "What is your balance after spending ₹30?",
+        line: "Now you spend ₹30. What's your balance?",
         visual: (context) => <WalletChange from={250} to={220} note="−₹30" context={context} />,
-        options: words(["₹180", "₹220", "₹250", "₹280"]),
+        options: words(["₹180", "₹220", "₹250"]),
         correctId: at(1),
         rightTitle: "Correct!",
         right: "₹250 − ₹30 = ₹220.",
-        wrong: "Subtract the money you spend from the balance.",
+        wrong: "Subtract money you spend.",
       }),
       quiz({
-        line: "Finally, you receive ₹20.",
-        question: "What is the final balance?",
+        line: "Then you get ₹20. What's the final balance?",
         visual: (context) => <WalletChange from={220} to={240} note="+₹20" gain context={context} />,
-        options: words(["₹200", "₹220", "₹240", "₹270"]),
-        correctId: at(2),
+        options: words(["₹220", "₹240", "₹270"]),
+        correctId: at(1),
         rightTitle: "Perfect!",
         right: "Your final balance is ₹240.",
-        wrong: "Follow each event one by one. Add money when you receive it and subtract money when you spend it.",
+        wrong: "Add or subtract each event in order.",
       }),
     ],
   },
 
   [STEP.appIntro]: {
     step: STEP.appIntro,
-    title: "Can We Build a *Simple Addition App?*",
+    title: "Build an *Addition App*",
     stages: [
       quiz({
-        line: "Imagine you want to build an application that adds two numbers entered by a user. Before writing any code, we need to think about what the application must do.",
-        question: "What should the application do first?",
+        line: "The app adds two numbers. What should it do first?",
         visual: () => <CalculatorApp compact />,
-        options: words(["Display the result.", "Ask the user for the first number.", "Add two numbers immediately.", "Close the application."]),
+        options: words(["Show the result", "Ask for the first number", "Close the app"]),
         correctId: at(1),
         rightTitle: "Exactly!",
-        right: "First, we need to ask the user for the first number.",
-        wrong: "Before an application can add numbers, it needs to know which numbers to add.",
+        right: "First, it asks for the first number.",
+        wrong: "It needs numbers before it can add.",
         nextLabel: "Let's Build It",
       }),
     ],
@@ -646,104 +575,101 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.debug]: {
     step: STEP.debug,
-    title: "Can You *Find the Mistake?*",
+    title: "Find *the Mistake!*",
     stages: [
       quiz({
-        line: "A shopping application needs to calculate the total price of two items. The first item costs ₹100 and the second ₹50, so the total should be ₹150. But the application displays ₹100.",
-        question: "What is wrong with the application's calculation?",
+        line: "Prices ₹100 and ₹50, but the app shows ₹100. Why?",
         visual: () => <DebugVisual />,
-        options: words(["It used only the first price.", "It added both prices correctly.", "The first price should be ₹50.", "The total should be ₹100."]),
+        options: words(["It used only the first price", "It added both prices", "The first price should be ₹50"]),
         correctId: at(0),
         rightTitle: "Exactly!",
-        right: "The application used only the first price instead of adding both prices. The correct calculation is ₹100 + ₹50 = ₹150.",
-        wrong: "Check whether both item prices were included in the calculation.",
+        right: "It used only the first price. ₹100 + ₹50 = ₹150.",
+        wrong: "Did it include both prices?",
       }),
     ],
   },
 
   [STEP.travel]: {
     step: STEP.travel,
-    title: "Let's Build a *Travel Expense Tracker!*",
+    title: "Travel *Expense Tracker*",
     stages: [
       quiz({
-        line: "Imagine you are planning a short trip with your friends. You have ₹1,000 to spend. You spend ₹300 on travel and ₹200 on food. You want to know how much money remains.",
-        question: "Which information should the application keep track of?",
+        line: "₹1,000 budget, ₹300 travel, ₹200 food. What to track?",
         visual: () => <ExpenseTracker showLeft={false} />,
-        options: words(["Starting budget.", "Travel expense.", "Food expense.", "All of these."]),
+        options: words(["Starting budget", "Travel expense", "Food expense", "All of these"]),
         correctId: at(3),
         rightTitle: "Correct!",
-        right: "The application needs all three values to calculate the remaining budget.",
-        wrong: "Think about what the application needs to work out how much money remains.",
+        right: "We need all three to find what remains.",
+        wrong: "What do we need to work out what remains?",
       }),
       quiz({
-        line: "Now predict the amount that remains.",
-        question: "How much money remains?",
+        line: "How much money remains?",
         visual: (context) => <ExpenseTracker showLeft={context.checked && context.correct} />,
-        options: words(["₹300", "₹400", "₹500", "₹700"]),
-        correctId: at(2),
+        options: words(["₹300", "₹500", "₹700"]),
+        correctId: at(1),
         rightTitle: "Excellent!",
         right: "₹1,000 − ₹300 − ₹200 = ₹500.",
-        wrong: "Subtract the travel expense and food expense from the starting budget.",
+        wrong: "Subtract both expenses from the budget.",
       }),
     ],
   },
 
   [STEP.reflectWhy]: {
     step: STEP.reflectWhy,
-    title: "Why do programs *need variables?*",
+    title: "Why *Variables?*",
     stages: [
       quiz({
-        line: "You have explored how information is stored, identified, updated, and used in applications. Let's check your understanding.",
-        options: words(["To store and keep track of information.", "To make the screen colourful.", "To create images only.", "To turn off a computer."]),
+        line: "Think of the bottle, board and wallet. Why?",
+        options: words(["To store and track information", "To make the screen colourful", "To turn off a computer"]),
         correctId: at(0),
         rightTitle: "Exactly!",
-        right: "Programs use variables to store and keep track of information.",
-        wrong: "Think about what the bottle, the attendance board and the wallet each kept track of.",
+        right: "Variables store and track information.",
+        wrong: "What did the bottle and the wallet keep track of?",
       }),
     ],
   },
 
   [STEP.reflectChange]: {
     step: STEP.reflectChange,
-    title: "Can the value of *a variable change?*",
+    title: "Can *Values Change?*",
     stages: [
       quiz({
-        line: "Think about the water in the bottle and the money in the wallet.",
-        options: words(["Yes.", "No.", "Only once.", "Only when the computer restarts."]),
+        line: "Think of the water and the wallet. Can a value change?",
+        options: words(["Yes", "No", "Only once"]),
         correctId: at(0),
         rightTitle: "Yes!",
-        right: "A variable's value can increase, decrease, or become zero.",
-        wrong: "Remember how the water in the bottle and the money in the wallet changed.",
+        right: "A value can grow, shrink or become zero.",
+        wrong: "Remember how the water and the money changed.",
       }),
     ],
   },
 
   [STEP.reflectNames]: {
     step: STEP.reflectNames,
-    title: "Why do we give variables *meaningful names?*",
+    title: "Why *Meaningful Names?*",
     stages: [
       quiz({
-        line: "Remember the three bottles, and the attendance board.",
-        options: words(["To identify the information they represent.", "To make the program longer.", "To avoid calculations.", "To change the computer's speed."]),
+        line: "Remember the labelled bottles. Why name variables?",
+        options: words(["To know what they represent", "To make the program longer", "To avoid calculations"]),
         correctId: at(0),
         rightTitle: "Exactly!",
-        right: "A meaningful name tells us what information a value represents.",
-        wrong: "Think about why each bottle needed a name label.",
+        right: "A good name tells us what a value means.",
+        wrong: "Why did each bottle need a name label?",
       }),
     ],
   },
 
   [STEP.reflectBoth]: {
     step: STEP.reflectBoth,
-    title: "Why keep track *of both numbers?*",
+    title: "Why Keep *Both Numbers?*",
     stages: [
       quiz({
-        line: "An application needs to add two numbers. Why should it keep track of both numbers?",
-        options: words(["So it can use them in the calculation.", "So it can delete them.", "So it can display only one number.", "So it can stop running."]),
+        line: "An app must add two numbers. Why keep both?",
+        options: words(["To use them in the calculation", "To delete them", "To show only one number"]),
         correctId: at(0),
         rightTitle: "Exactly!",
-        right: "The application needs both numbers available to add them.",
-        wrong: "Think about what the application needs before it can add.",
+        right: "The app needs both numbers to add them.",
+        wrong: "What does the app need before it can add?",
       }),
     ],
   },

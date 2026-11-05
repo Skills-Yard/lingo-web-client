@@ -3,6 +3,8 @@
 import { LessonCompleteScreen } from "@/components/level-one/LessonCompleteScreen";
 import { PlanAppScreen } from "./PlanAppScreen";
 import { RecapScreen } from "./RecapScreen";
+import { ThirstyScreen } from "./ThirstyScreen";
+import { TrekScreen } from "./TrekScreen";
 import { VariableQuizScreen } from "./VariableQuizScreen";
 import { STEP, VARIABLE_LEVEL } from "./variable";
 import { SCREENS } from "./variableScreens";
@@ -12,6 +14,8 @@ import { variableAccuracy } from "./variableScore";
 export function VariableScreen({ step }: { step: string }) {
   if (step === "complete") return <LessonCompleteScreen level={VARIABLE_LEVEL} accuracy={variableAccuracy} />;
   const number = Number(step);
+  if (number === STEP.trek) return <TrekScreen />;
+  if (number === STEP.thirsty) return <ThirstyScreen />;
   if (number === STEP.plan) return <PlanAppScreen />;
   if (number === STEP.recap) return <RecapScreen />;
   const screen = SCREENS[number];

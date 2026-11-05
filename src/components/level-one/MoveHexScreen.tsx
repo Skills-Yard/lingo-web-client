@@ -4,15 +4,13 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { useRive } from "@rive-app/react-canvas";
-import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
 import { useSound } from "@/hooks/useSound";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
-import { useTheme } from "@/context/ThemeContext";
 import { moduleHref } from "@/lib/routes";
-import { BATTERY as BATTERY_RIVE, configureRiveRuntime, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { PlatformBattery } from "@/components/ui/PlatformBattery";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
 import { GemPopup } from "./GemPopup";
 import { levelOneStep } from "./LevelOneShell";
@@ -40,27 +38,14 @@ const HEX_BOX = 100;
 const HEX_LIFT = 10;
 /** The battery's box, standing on the top-middle tile: the artboard (268 x 150) drawn `drawn` wide, lying flat. */
 const BATTERY = { drawn: 48, width: 48, height: 27, lift: 10 };
-const BATTERY_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
-
-configureRiveRuntime();
-
-/** `battery.riv`, small and stood on its end. */
+/** `battery.riv`, small and lying flat on its tile. */
 function GuideBattery() {
-  const darkTheme = useTheme().theme === "dark";
-  const { rive, RiveComponent } = useRive({ src: BATTERY_RIVE.src, artboard: BATTERY_RIVE.artboard, stateMachines: BATTERY_RIVE.stateMachine, autoplay: true, autoBind: true, layout: BATTERY_LAYOUT });
-  // Sixty percent full.
-  useEffect(() => {
-    const level = rive?.viewModelInstance?.number(BATTERY_RIVE.levelProperty);
-    if (level) level.value = 60;
-    const dark = rive?.viewModelInstance?.boolean(BATTERY_RIVE.darkThemeProperty);
-    if (dark) dark.value = darkTheme;
-  }, [rive, darkTheme]);
   return (
     <div
       className="absolute top-1/2 left-1/2"
-      style={{ width: BATTERY.drawn, height: (BATTERY.drawn * BATTERY_RIVE.height) / BATTERY_RIVE.width, translate: "-50% -50%" }}
+      style={{ width: BATTERY.drawn, height: (BATTERY.drawn * 150) / 268, translate: "-50% -50%" }}
     >
-      <RiveComponent aria-hidden style={{ width: "100%", height: "100%" }} />
+      <PlatformBattery />
     </div>
   );
 }

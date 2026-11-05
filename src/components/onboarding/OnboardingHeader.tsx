@@ -1,12 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Moon, Sun } from "lucide-react";
 import { batteryCount, useBattery } from "@/components/home/batteryStore";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
-import { useTheme } from "@/context/ThemeContext";
 import { BatteryMenu } from "./BatteryMenu";
 import { WIPE } from "./themeWipe";
 
@@ -67,22 +65,6 @@ function BatteryCount() {
     >
       {batteryCount(battery)}
     </span>
-  );
-}
-
-/** Switches the learner's light / dark theme, the same size as the close button. */
-function ThemeSwitch() {
-  const { theme, toggleTheme } = useTheme();
-  const dark = theme === "dark";
-  return (
-    <button
-      type="button"
-      onClick={() => toggleTheme(WIPE)}
-      className={`h-[30px] w-[30px] shrink-0 border-0! dark:hover:bg-transparent! ${ICON_BUTTON}`}
-      aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-    >
-      {dark ? <Sun aria-hidden className="h-[22px] w-[22px] text-amber-400" strokeWidth={2.5} /> : <Moon aria-hidden className="h-[22px] w-[22px]" strokeWidth={2.5} />}
-    </button>
   );
 }
 

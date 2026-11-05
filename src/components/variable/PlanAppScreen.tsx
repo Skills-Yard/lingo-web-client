@@ -6,7 +6,8 @@ import { motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
+import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
+import { TrekBackdrop } from "./TrekScreen";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
@@ -16,17 +17,17 @@ import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable
 import { noteAnswer, noteStruggle } from "./variableScore";
 import { CalculatorApp } from "./visuals";
 
-const TITLE = parseTitle("What Steps Does *Our App Need?*");
+const TITLE = parseTitle("Plan the *App's Steps*");
 const TITLE_END = 163;
 
 const TINT = "bg-[#F6F4FE] dark:bg-[#0F1F26]";
 /** Listed out of order, so the tray doesn't give the plan away. */
 const CARDS: readonly ArrangeCardDef[] = [
   { id: "add", kind: "add", text: "Add both numbers.", tint: TINT },
-  { id: "ask-first", kind: "ask-first", text: "Ask the user for the first number.", tint: TINT },
+  { id: "ask-first", kind: "ask-first", text: "Ask for the first number.", tint: TINT },
   { id: "keep-second", kind: "keep-second", text: "Keep the second number.", tint: TINT },
   { id: "show", kind: "show", text: "Display the result.", tint: TINT },
-  { id: "ask-second", kind: "ask-second", text: "Ask the user for the second number.", tint: TINT },
+  { id: "ask-second", kind: "ask-second", text: "Ask for the second number.", tint: TINT },
   { id: "keep-first", kind: "keep-first", text: "Keep the first number.", tint: TINT },
 ];
 /** The right order, first step first. */
@@ -39,7 +40,7 @@ const BOARD_RISE = 170;
 const EXAMPLE_MS = { first: 500, second: 1500, result: 2600 } as const;
 
 /**
- * "What Steps Does Our App Need?": six steps of the addition application to be
+ * "Plan the App's Steps": six steps of the addition application to be
  * dragged into order (ask, keep, ask, keep, add, display). A right plan runs as
  * an example (10 and 20 are asked for and kept, and 30 is shown); a wrong one is
  * tried again. This is the point where the learner sees why the app has to keep
@@ -87,7 +88,7 @@ export function PlanAppScreen() {
       step={STEP.plan}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(STEP.plan))}
-      scene={<SoftBackdrop />}
+      scene={<TrekBackdrop />}
       answer={answer}
       ctaDisabled={!full}
       ctaLabel={!checked ? "Check" : correct ? "Next" : "Try again"}
@@ -102,8 +103,8 @@ export function PlanAppScreen() {
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
           >
             {correct
-              ? "You have planned the logic of an addition application."
-              : "Think about the order. Can an application add numbers before it has received both numbers?"}
+              ? "You planned the app's logic."
+              : "Can an app add before it has both numbers?"}
           </FeedbackPanel>
         </div>
       }
@@ -122,7 +123,7 @@ export function PlanAppScreen() {
         </span>
       </ScreenTitle>
       <div className="absolute inset-x-0 flex justify-center" style={{ top: TITLE_END }}>
-        <HexBubble key={attempt} entryKey={`variable-plan-${attempt}`} hex="left" line={[{ text: "Let's organise the steps needed to build our addition application." }]} size={{ width: 240 }} leaving={checked} />
+        <HexBubble key={attempt} entryKey={`variable-plan-${attempt}`} hex="left" line={[{ text: "Put the steps for our addition app in order." }]} size={{ width: 190 }} leaving={checked} />
       </div>
       {checked && correct && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="absolute inset-x-0 flex flex-col items-center gap-2" style={{ top: 210 }}>

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
 /** An answer: words, with a small picture (an emoji, or `node`) where the answer is an object to tap. */
-export type Option = { id: string; text: string; emoji?: string; node?: ReactNode };
+export type Option = { id: string; text: string; emoji?: string; node?: ReactNode; /** A picture file shown beside an answer in words. */ icon?: string };
 
 /** What a stage's picture can draw from. */
 export type VisualContext = {
@@ -12,13 +12,12 @@ export type VisualContext = {
   correct: boolean;
 };
 
-/** One question on a screen: what Hex says, the picture, the question and its answers. */
+/** One question on a screen: what Hex says, the picture and its answers. */
 export type QuizStage = {
   kind: "quiz";
   /** What Hex says (the PDF's description). A long one goes on a card in place of Hex's bubble. */
   line: string;
-  question?: string;
-  /** The picture between the line and the question. */
+  /** The picture between the line and the answers. */
   visual?: (context: VisualContext) => ReactNode;
   /** `rows`: answers in words; `grid`: objects to tap (two across). */
   layout?: "rows" | "grid";

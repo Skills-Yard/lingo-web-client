@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
 import { GemPopup } from "@/components/level-one/GemPopup";
-import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
+import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
+import { TrekBackdrop } from "./TrekScreen";
 import { variableHref } from "@/lib/routes";
 import { parseTitle } from "./quiz";
 import { STEP, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { CARD } from "./visuals";
 
-const TITLE = parseTitle("You Have *Unlocked Variables!*");
+const TITLE = parseTitle("You *Unlocked Variables!*");
 
 /** The things the chapter used, each a step toward the idea. */
 const OBJECTS = [
@@ -23,18 +24,18 @@ const OBJECTS = [
 ] as const;
 
 const TAKEAWAYS = [
-  "Programs need to keep track of information.",
-  "Variables give information meaningful names.",
+  "Programs keep track of information.",
+  "Variables give information names.",
   "A variable has a name and a value.",
-  "Variable values can change.",
-  "Different variables can keep track of different information.",
-  "Variables help applications perform calculations and solve problems.",
+  "Values can change.",
+  "Different variables track different things.",
+  "Variables help programs calculate.",
 ];
 
-const FINAL_THOUGHT = "Whenever a program needs to remember information and use it later, variables help make that possible.";
+const FINAL_THOUGHT = "Variables help programs remember information and use it later.";
 
 /**
- * "You Have Unlocked Variables!": the chapter's things connect to one central
+ * "You Unlocked Variables!": the chapter's things connect to one central
  * idea, its takeaways and its closing thought. "Complete Chapter" opens the
  * gem popup, then "Lesson complete!".
  */
@@ -51,7 +52,7 @@ export function RecapScreen() {
       step={STEP.recap}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(STEP.recap))}
-      scene={<SoftBackdrop />}
+      scene={<TrekBackdrop />}
       ctaLabel="Complete Chapter"
       onContinue={() => setGemOpen(true)}
       overlay={<GemPopup open={gemOpen} onClose={closeGem} />}

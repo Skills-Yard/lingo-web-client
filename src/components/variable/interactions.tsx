@@ -20,7 +20,7 @@ export function Narration({ text, entry }: { text: string; entry: string }) {
       </div>
     );
   }
-  const width = text.length <= 60 ? 190 : text.length <= 100 ? 240 : 256;
+  const width = text.length <= 44 ? 190 : 240;
   return (
     <div className="shrink-0">
       <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={{ width }} />
@@ -111,12 +111,9 @@ export function BridgeStage({ done, finished }: InteractionApi) {
   }, [bottle, panel, done]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration
-        text="Just like we need a bottle to keep water with us, a program needs a way to keep track of information while it works. In programming, we use something called a variable to give information a name and keep track of its value."
-        entry="variable-bridge"
-      />
+      <Narration text="A variable keeps information, like a bottle keeps water." entry="variable-bridge" />
       <div className="flex w-[340px] items-start justify-between gap-1">
-        <Tappable label="Tap the bottle" note="A real-world container for water." tapped={bottle} next={!bottle} onTap={() => setBottle(true)} className="w-[132px]">
+        <Tappable label="Tap the bottle" note="A container for water." tapped={bottle} next={!bottle} onTap={() => setBottle(true)} className="w-[132px]">
           <div className={`flex flex-col items-center gap-1 px-3 py-2 ${CARD}`}>
             <Bottle ml={600} height={104} marks={false} />
             <span className="text-[12px] leading-4 font-semibold text-[#08A4AD]">Water</span>
@@ -135,7 +132,7 @@ export function BridgeStage({ done, finished }: InteractionApi) {
         </div>
         <Tappable
           label="Tap the information panel"
-          note="A named way to keep track of information in a program."
+          note="A named place for information."
           tapped={panel}
           next={bottle && !panel}
           enabled={bottle}
@@ -148,11 +145,7 @@ export function BridgeStage({ done, finished }: InteractionApi) {
           </div>
         </Tappable>
       </div>
-      {finished && (
-        <KeyPoints
-          points={["A bottle holds water.", "A variable helps a program keep track of information.", "The information that a program works with is called data."]}
-        />
-      )}
+      {finished && <KeyPoints points={["A bottle holds water.", "A variable holds information.", "Information in a program is called data."]} />}
     </div>
   );
 }
@@ -172,7 +165,7 @@ export function FillSliderStage({ done, finished }: InteractionApi) {
   };
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="Our bottle has a capacity of 1,000 ml. Let's fill it with 500 ml of water." entry="variable-fill" />
+      <Narration text="The bottle holds 1,000 ml. Fill it with 500 ml." entry="variable-fill" />
       <div className="relative">
         <BottleWithAmount ml={ml} height={190} label={`${ml.toLocaleString("en-IN")} ml`} />
         {/* The target mark, level with 500 ml on the bottle (a share of its drawn height). */}
@@ -195,7 +188,7 @@ export function FillSliderStage({ done, finished }: InteractionApi) {
           className={`h-3 w-full cursor-pointer appearance-none rounded-full bg-[#D5DADF] accent-[#08A4AD] dark:bg-white/20 ${SLIDER_THUMB}`}
         />
         <span className="text-[13px] leading-5 font-medium text-[#6B7480] dark:text-white/60">
-          {finished ? "That's 500 ml!" : tried && ml !== 500 ? "Not yet. Slide to the 500 ml mark." : "Slide to fill the bottle"}
+          {finished ? "That's 500 ml!" : tried && ml !== 500 ? "Not yet. Slide to 500 ml." : "Slide to fill the bottle"}
         </span>
       </div>
     </div>
@@ -225,10 +218,7 @@ export function NameValueStage({ done, finished }: InteractionApi) {
   }, [name, value, done]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration
-        text="In programming, we give information a meaningful name so that we can identify and use it. For example, we can use the name water_level to keep track of how much water is in our bottle."
-        entry="variable-meet"
-      />
+      <Narration text="A variable has a name and a value. Tap each part." entry="variable-meet" />
       <div className="flex w-[340px] items-start justify-between">
         <Part label="Name" tapped={name} next={!name} onTap={() => setName(true)} note="What we call the information.">
           <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[15px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">water_level</span>
@@ -236,11 +226,11 @@ export function NameValueStage({ done, finished }: InteractionApi) {
         <motion.svg aria-hidden width={34} height={20} viewBox="0 0 34 20" className="mt-9 shrink-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
           <motion.path d="M2 10H30M24 4l6 6-6 6" stroke="#04ACAB" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 0.6 }} />
         </motion.svg>
-        <Part label="Value" tapped={value} next={name && !value} onTap={() => setValue(true)} note="The information currently associated with that name.">
+        <Part label="Value" tapped={value} next={name && !value} onTap={() => setValue(true)} note="What it holds right now.">
           <span className="text-[20px] leading-7 font-bold text-[#444444] dark:text-white">550 ml</span>
         </Part>
       </div>
-      {finished && <KeyPoints points={["A variable has a name.", "The name helps us identify the information.", "The value tells us the information currently stored or tracked."]} />}
+      {finished && <KeyPoints points={["A variable has a name.", "The name tells us what it is.", "The value is what it holds now."]} />}
     </div>
   );
 }
@@ -262,7 +252,7 @@ export function NamesStage({ done, finished }: InteractionApi) {
   const next = ATTENDANCE_NAMES.find((row) => !seen.includes(row.name))?.name;
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="We can give each piece of attendance information its own meaningful name." entry="variable-names" />
+      <Narration text="Give each piece of information its own name." entry="variable-names" />
       <div className="flex w-[340px] flex-col gap-2">
         {ATTENDANCE_NAMES.map((row) => {
           const tapped = seen.includes(row.name);
@@ -283,7 +273,7 @@ export function NamesStage({ done, finished }: InteractionApi) {
           );
         })}
       </div>
-      {finished && <KeyPoints points={["Each variable tracks a different piece of information.", "We use meaningful names so that we can understand what each value represents."]} />}
+      {finished && <KeyPoints points={["Each variable tracks one piece of information.", "Good names show what a value means."]} />}
     </div>
   );
 }
@@ -319,7 +309,7 @@ export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
   };
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="Let's look at two pieces of information." entry="variable-classify" />
+      <Narration text="Is each one a name or a value?" entry="variable-classify" />
       <div className="flex w-[340px] flex-col gap-2">
         {[1, 2].map((card) => (
           <div key={card} className={`flex items-center justify-around gap-2 px-3 py-3 ${CARD}`}>
@@ -367,7 +357,7 @@ export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
         ))}
       </div>
       <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? "A variable name identifies the information. The value tells us the information itself." : <span className="text-[#6B7480] dark:text-white/60">{selected ? "Is it a name or a value?" : "Tap a part to begin."}</span>}
+        {slip ? "The name tells what it is; the value is the amount." : <span className="text-[#6B7480] dark:text-white/60">{selected ? "Is it a name or a value?" : "Tap a part to sort it."}</span>}
       </p>
     </div>
   );
@@ -404,7 +394,7 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
   }, [full, right, done, slipped, reset]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="We can give each price a meaningful name. Drag each name to the price it belongs to." entry="variable-prices" />
+      <Narration text="Drag each name to the price it belongs to." entry="variable-prices" />
       <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }}>
         <ArrangeBoard
           cards={MATCH_CARDS}
@@ -426,7 +416,7 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
         />
       </div>
       <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? "Look at the product and its price tag again." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price now has its own name." : "Drag a name onto a price."}</span>}
+        {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
       </p>
     </div>
   );
