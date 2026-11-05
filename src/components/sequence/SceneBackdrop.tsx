@@ -16,8 +16,6 @@ const LIFT = 105;
 const LIFTED_SCALE = 0.88;
 /** The result panel's own spring (see FeedbackPanel). */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
-/** How faint it is while something else is shown over it. */
-const DIMMED_OPACITY = 0.2;
 /** The room's sides fade over at most this much, on a screen wider than it. */
 const SIDE_FADE = 60;
 
@@ -31,16 +29,16 @@ const FADE = [
 /**
  * The bedroom behind a Sequence screen, on a soft lavender wash (light mode only;
  * the room has its own dark theme). `lifted` moves it up with the answer cards, so
- * they don't cover the scene; `dimmed` leaves it faint behind a picture shown over it.
+ * they don't cover the scene.
  */
-export function SceneBackdrop({ dress, lifted = false, dimmed = false, happy = false }: { dress: RoomDress; lifted?: boolean; dimmed?: boolean; happy?: boolean }) {
+export function SceneBackdrop({ dress, lifted = false, happy = false }: { dress: RoomDress; lifted?: boolean; happy?: boolean }) {
   return (
     <>
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,#FFFFFF_0%,#E4E7FD_18%,#E9EBFE_72%,#FFFFFF_100%)] dark:hidden" />
       <motion.div
         aria-hidden
         initial={false}
-        animate={{ y: lifted ? -LIFT : 0, opacity: dimmed ? DIMMED_OPACITY : 1 }}
+        animate={{ y: lifted ? -LIFT : 0 }}
         transition={PANEL_SPRING}
         className="pointer-events-none absolute inset-x-0 -z-10 flex justify-center"
         style={{ top: stageTop(FIGMA_TOP), maskImage: FADE, WebkitMaskImage: FADE, maskComposite: "intersect", WebkitMaskComposite: "source-in" }}
