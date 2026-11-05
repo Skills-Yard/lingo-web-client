@@ -10,18 +10,18 @@ import type { Dir, HexState } from "./hexGrid";
 export type BoardKind = "grid" | "row";
 
 /** Each board's own size (px), before it is scaled to the width it is drawn at. */
-const BASE = { grid: { width: 356, height: 266 }, row: { width: 356, height: 112 } } as const;
+const BASE = { grid: { width: 356, height: 227 }, row: { width: 356, height: 112 } } as const;
 
 /**
- * The 3 x 3 picture is drawn in perspective, so its tile centres (a share of its width, by row then column)
- * and its rows' centres (a share of its height) are measured off it.
+ * Module one's 3 x 3 platform is drawn in perspective, so its tile centres (a share of its width, by row then column)
+ * and its rows' centres (a share of its height) are measured off the picture.
  */
 const GRID_X = [
-  [0.24, 0.497, 0.757],
-  [0.22, 0.5, 0.776],
-  [0.199, 0.504, 0.803],
+  [0.211, 0.496, 0.785],
+  [0.196, 0.499, 0.801],
+  [0.178, 0.499, 0.82],
 ] as const;
-const GRID_Y = [0.182, 0.468, 0.765] as const;
+const GRID_Y = [0.135, 0.424, 0.735] as const;
 /** The straight row's tiles, drawn in code: each is `ROW_TILE` square, `ROW_PAD` in from the rim. */
 const ROW_TILE = 76;
 const ROW_GAP = 8;
@@ -123,13 +123,13 @@ export function HexBoard({ kind, hex, battery = null, collected = false, ghost =
   return (
     <div className="relative shrink-0" style={{ width, height: base.height * scale }}>
       <div className="absolute top-0 left-0 origin-top-left" style={{ width: base.width, height: base.height, transform: `scale(${scale})` }}>
-        {kind === "grid" ? <Image src="/images/sequence/hex-board.webp" alt="" fill sizes="534px" priority /> : <RowBoard />}
+        {kind === "grid" ? <Image src="/images/platformlayers/3layer-platform.webp" alt="" fill sizes="534px" priority /> : <RowBoard />}
 
         {ring && (
           <motion.span
             aria-hidden
             className="absolute rounded-[18px] border-[3px] border-[#FFB300]"
-            style={{ left: centreOf(kind, ring).x - 52, top: centreOf(kind, ring).y - 34, width: 104, height: 68 }}
+            style={{ left: centreOf(kind, ring).x - 50, top: centreOf(kind, ring).y - 31, width: 100, height: 62 }}
             animate={{ scale: [1, 1.08, 1], opacity: [0.6, 1, 0.6] }}
             transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
           />

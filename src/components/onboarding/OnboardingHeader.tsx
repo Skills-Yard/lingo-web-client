@@ -153,7 +153,7 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
             )}
           </div>
 
-          <ThemeSwitch />
+
 
           {/* Each screen's `step` spends its share of the battery. Also the way
               into the hidden dev panel (see BatteryMenu). */}

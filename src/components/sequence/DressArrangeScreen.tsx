@@ -14,7 +14,7 @@ import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboard
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { DressScene, HOP_SECONDS, type DressStage } from "./DressScene";
-import { IMAGES, SEQUENCE_STEPS, SOCKS_ON_SHOES_ON, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { IMAGES, SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 const BUBBLE: BubbleSize = { width: 190 };
@@ -30,20 +30,20 @@ const CARDS: readonly ArrangeCardDef[] = [
 /** The right order, first slot first. */
 const ANSWER = ["socks", "shoes"];
 
-const GEO = arrangeGeometry({ mode: "columns", card: { width: 136, height: 104 }, count: 2 });
-/** The picture of how it went, over the faded scene (Figma `top`). */
-const RIGHT_PICTURE = { src: SOCKS_ON_SHOES_ON, width: 180, top: 272 };
+const GEO = arrangeGeometry({ mode: "rows", card: { width: 110, height: 116 }, count: 2, gap: 16, lane: 14, slotsOnTop: true, solidSlots: true });
+/** On a right order the board rises this far (px) as it fades. */
+const BOARD_RISE = 110;
 /** On a miss he tries it first: the result comes once the room has played that. */
 const WRONG_MOVE_MS = 2500;
 /** Time between one item landing and the next going on. */
 const GAP_MS = HOP_SECONDS * 1000 + 700;
 
-type Phase = "edit" | "socks" | "shoes" | "closeUp";
+type Phase = "edit" | "socks" | "shoes";
 
 /**
  * "Arrange the instructions!" for getting ready: drag PUT SOCKS and PUT SHOES
- * into their slots. The right order plays out on the scene (socks, then shoes,
- * then the result); on the wrong one the board clears and he tries the socks over
+ * into their slots. The right order plays out on the scene (socks, then
+ * shoes); on the wrong one the board clears and he tries the socks over
  * his shoes, then the result comes up.
  */
 export function DressArrangeScreen() {
@@ -59,13 +59,12 @@ export function DressArrangeScreen() {
   const [phase, setPhase] = useState<Phase>("edit");
   const correct = ANSWER.every((kind, index) => CARDS.find((card) => card.id === slots[index])?.kind === kind);
 
-  // The right order is played out one item at a time, ending on the result.
+  // The right order is played out one item at a time.
   useEffect(() => {
     if (!checked || !correct) return;
     const timers = [
       window.setTimeout(() => setPhase("socks"), 300),
       window.setTimeout(() => setPhase("shoes"), 300 + GAP_MS),
-      window.setTimeout(() => setPhase("closeUp"), 300 + 2 * GAP_MS),
     ];
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [checked, correct]);
@@ -101,8 +100,8 @@ export function DressArrangeScreen() {
     else tryAgain();
   };
 
-  const socks: DressStage = phase === "edit" ? "rug" : phase === "socks" ? "hop" : "worn";
-  const shoes: DressStage = phase === "shoes" ? "hop" : phase === "closeUp" ? "worn" : "rug";
+  const socks: DressStage = phase === "edit" ? "rug" : "worn";
+  const shoes: DressStage = phase === "shoes" ? "worn" : "rug";
   const line = useMemo(() => [{ text: `Help ${name || "your friend"} get ready` }], [name]);
 
   return (
@@ -115,7 +114,6 @@ export function DressArrangeScreen() {
           socks={correct ? socks : "rug"}
           shoes={correct ? shoes : "rug"}
           trySocks={checked && !correct}
-          closeUp={phase === "closeUp" ? RIGHT_PICTURE : null}
         />
       }
       answer={answer}
@@ -130,6 +128,7 @@ export function DressArrangeScreen() {
             open={resultShown}
             hexIn={resultShown}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            centred
           >
             {correct ? "Ready to go now." : "Not able to go outside with this. The character needs to wear socks first."}
           </FeedbackPanel>
@@ -142,8 +141,8 @@ export function DressArrangeScreen() {
       <CentredRow top={stageTop(BUBBLE_TOP)}>
         <HexBubble key={attempt} entryKey={`dress-${attempt}`} hex="left" line={line} size={BUBBLE} leaving={checked} />
       </CentredRow>
-      {/* Once checked the board fades, so what he does can be seen. */}
-      <ArrangeDock geo={GEO} fade={checked}>
+      {/* Once checked the board fades, so what he does can be seen; a right order also sends it up as it goes. */}
+      <ArrangeDock geo={GEO} rise={checked && correct ? BOARD_RISE : 0} fade={checked}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />

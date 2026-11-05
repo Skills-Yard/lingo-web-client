@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
+import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { aboveButtons } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
@@ -26,24 +27,28 @@ type ArrangeLayout = {
   lane?: number;
   /** The cards start in a tray of their own; without it they start in their slots (they can only be swapped). */
   tray?: boolean;
+  /** In `rows`, the slots stand above the tray instead of under it. */
+  slotsOnTop?: boolean;
+  /** The slots are solid wells, not dashed outlines. */
+  solidSlots?: boolean;
   /** The cards' text is a sentence: set in plain case, not the small capitals of a command's name. */
   sentence?: boolean;
 };
 
 /** Where everything stands on the board, and how big the board is. */
-export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, sentence = false }: ArrangeLayout) => {
+export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false }: ArrangeLayout) => {
   const columns = mode === "columns";
-  const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: 0 });
+  const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: tray && slotsOnTop ? card.height + lane : 0 });
   const slot = (index: number): Point =>
     columns
       ? { x: tray ? card.width + lane : 0, y: index * (card.height + gap) }
-      : { x: index * (card.width + gap), y: tray ? card.height + lane : 0 };
+      : { x: index * (card.width + gap), y: tray && !slotsOnTop ? card.height + lane : 0 };
   const board = columns
     ? { width: tray ? card.width * 2 + lane : card.width, height: count * card.height + (count - 1) * gap }
     : { width: count * card.width + (count - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
   /** A card dropped within this far (px) of a slot's corner goes in it. */
   const reach = card.height * 0.87;
-  return { count, card, tray, home, slot, board, reach, sentence };
+  return { count, card, tray, solidSlots, home, slot, board, reach, sentence };
 };
 export type ArrangeGeometry = ReturnType<typeof arrangeGeometry>;
 
@@ -65,6 +70,18 @@ const slotAt = (at: Point, geo: ArrangeGeometry) => {
     }
   }
   return nearestDistance <= geo.reach ? nearest : null;
+};
+
+/**
+ * The card the hint points at: the one that belongs in the first slot that isn't
+ * right yet, given the right `kinds`, first slot first. `null` once all are right.
+ */
+export const nextHintId = (cards: readonly ArrangeCardDef[], slots: Slots, kinds: readonly string[]) => {
+  const kindOf = (id: string | null) => cards.find((card) => card.id === id)?.kind;
+  const open = kinds.findIndex((kind, index) => kindOf(slots[index]) !== kind);
+  if (open < 0) return null;
+  const settled = slots.slice(0, open);
+  return cards.find((card) => card.kind === kinds[open] && !settled.includes(card.id))?.id ?? null;
 };
 
 /**
@@ -110,6 +127,7 @@ function ArrangeCard({
   sentence,
   at,
   disabled,
+  hinted,
   onDrop,
   onTap,
 }: {
@@ -118,6 +136,7 @@ function ArrangeCard({
   sentence: boolean;
   at: Point;
   disabled: boolean;
+  hinted: boolean;
   onDrop: (to: Point) => void;
   onTap?: () => void;
 }) {
@@ -134,6 +153,7 @@ function ArrangeCard({
   }, [at.x, at.y, x, y]);
 
   return (
+    <HintFloat className={dragging ? "relative z-20" : undefined} spin={false} active={hinted}>
     <motion.button
       type="button"
       disabled={disabled}
@@ -179,10 +199,18 @@ function ArrangeCard({
       }}
       animate={{ scale: dragging ? 1.05 : 1 }}
       style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1 }}
-      className={`pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center rounded-[8px] border-4 border-white px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center rounded-[8px] border-4 border-white px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
+      {/* The hint's orange fill, wiped in from the left behind the content. */}
+      <motion.span
+        aria-hidden
+        initial={false}
+        animate={{ clipPath: hinted ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
+        transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
+        className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
+      />
       {card.art && (
-        <span className={`flex w-full items-center justify-center ${compact ? "h-[24px]" : "h-[46px]"}`}>{card.art}</span>
+        <span className={`flex w-full items-center justify-center ${compact ? "h-[30px]" : "h-[46px]"}`}>{card.art}</span>
       )}
       <span
         className={`text-center font-semibold text-[#444444] dark:text-white ${
@@ -192,6 +220,7 @@ function ArrangeCard({
         {card.text}
       </span>
     </motion.button>
+    </HintFloat>
   );
 }
 
@@ -201,6 +230,7 @@ export function ArrangeBoard({
   slots,
   geo,
   disabled,
+  hintedId = null,
   onPlace,
   onTap,
   slotContent,
@@ -209,6 +239,8 @@ export function ArrangeBoard({
   slots: Slots;
   geo: ArrangeGeometry;
   disabled: boolean;
+  /** The card the hint points at: filled in orange and floating. */
+  hintedId?: string | null;
   onPlace: (id: string, slot: number | null) => void;
   /** Tapping a card; without it a tap does nothing (cards that can only be swapped). */
   onTap?: (id: string) => void;
@@ -221,7 +253,11 @@ export function ArrangeBoard({
         <div
           key={index}
           aria-hidden
-          className="absolute flex items-center justify-center rounded-[8px] border-2 border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
+          className={`absolute flex items-center justify-center rounded-[8px] border-2 ${
+            geo.solidSlots
+              ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+              : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
+          }`}
           style={{ left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height }}
         >
           {slotContent ? (
@@ -243,6 +279,7 @@ export function ArrangeBoard({
             sentence={geo.sentence}
             at={placed >= 0 ? geo.slot(placed) : geo.home(index)}
             disabled={disabled}
+            hinted={card.id === hintedId}
             onDrop={(to) => onPlace(card.id, slotAt(to, geo))}
             onTap={onTap ? () => onTap(card.id) : undefined}
           />
@@ -253,17 +290,19 @@ export function ArrangeBoard({
 }
 
 /**
- * Stands the board on the button row. `rise` lifts it clear of the result panel;
+ * Stands the board on the button row, or hangs it `top` stage px down. `rise` lifts it clear of the result panel;
  * `fade` clears it so what is behind can be seen.
  */
 export function ArrangeDock({
   geo,
+  top,
   withHint = false,
   rise = 0,
   fade = false,
   children,
 }: {
   geo: ArrangeGeometry;
+  top?: number;
   withHint?: boolean;
   rise?: number;
   fade?: boolean;
@@ -275,7 +314,7 @@ export function ArrangeDock({
       animate={{ y: -rise, opacity: fade ? 0 : 1 }}
       transition={PANEL_SPRING}
       className="absolute left-1/2 z-[1]"
-      style={{ bottom: aboveButtons(28, withHint), width: geo.board.width, height: geo.board.height, marginLeft: -geo.board.width / 2 }}
+      style={{ ...(top === undefined ? { bottom: aboveButtons(28, withHint) } : { top }), width: geo.board.width, height: geo.board.height, marginLeft: -geo.board.width / 2 }}
     >
       {children}
     </motion.div>

@@ -18,19 +18,21 @@ import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCar
 import { PICK_UP_ICON, PLACE_IN_TARGET_ICON, SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
-const LINE: readonly Span[] = [{ text: "Help the robot place the cube in the target area." }];
-const BUBBLE: BubbleSize = { width: 190 };
+const LINE: readonly Span[] = [{ text: "Drag to help robot place the cube in target area" }];
+const BUBBLE: BubbleSize = { width: 200 };
 const BUBBLE_TOP = 150;
 
 const art = (file: string) => <SlotImage file={file} className="max-h-full max-w-full object-contain" />;
 const CARDS: readonly ArrangeCardDef[] = [
-  { id: "pickup", kind: "pickup", text: "Pick Up", art: art(PICK_UP_ICON), tint: "bg-[#ECF7ED] dark:bg-[#10261A]" },
   { id: "target", kind: "target", text: "Place in Target", art: art(PLACE_IN_TARGET_ICON), tint: "bg-[#E5EFFD] dark:bg-[#15233A]" },
+  { id: "pickup", kind: "pickup", text: "Pick Up", art: art(PICK_UP_ICON), tint: "bg-[#ECF7ED] dark:bg-[#10261A]" },
 ];
 /** The right order, first slot first. */
 const ANSWER = ["pickup", "target"];
 
-const GEO = arrangeGeometry({ mode: "columns", card: { width: 136, height: 104 }, count: 2 });
+const GEO = arrangeGeometry({ mode: "rows", card: { width: 110, height: 116 }, count: 2, gap: 16, lane: 14, solidSlots: true });
+/** On a right order the board rises this far (px) as it fades. */
+const BOARD_RISE = 110;
 /** On a miss the robot gets it wrong first: the result comes once its clip has played. */
 const WRONG_MOVE_MS = COMMAND_ROBOT.moveSeconds.wrongClaw * 1000;
 
@@ -121,8 +123,8 @@ export function ArrangeScreen() {
       <CentredRow top={stageTop(BUBBLE_TOP)}>
         <HexBubble key={attempt} entryKey={`arrange-${attempt}`} hex="left" line={LINE} size={BUBBLE} leaving={checked} />
       </CentredRow>
-      {/* Once checked the board fades, so the robot can be seen. */}
-      <ArrangeDock geo={GEO} fade={checked}>
+      {/* Once checked the board fades, so the robot can be seen; a right order also sends it up as it goes. */}
+      <ArrangeDock geo={GEO} rise={checked && correct ? BOARD_RISE : 0} fade={checked}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />
