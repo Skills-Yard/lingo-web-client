@@ -1,5 +1,6 @@
 "use client";
 
+import { GemRive } from "@/components/ui/GemRive";
 import { useEffect, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
@@ -16,7 +17,6 @@ const APPEAR_DELAY_MS = 600;
 /** The sheet's widest width (px). */
 const SHEET_MAX_W = 430;
 
-const GEM_SRC = "/images/stats/gem.png";
 
 type Choice = "infinite" | "recharge";
 
@@ -76,8 +76,7 @@ function RechargeOption({ chosen, onChoose }: OptionProps) {
         </span>
         <span className="text-base leading-[22px] font-extrabold text-[#2C2C2C]">Recharge</span>
         <span className="flex h-5 items-center gap-1.5 text-base leading-5 font-extrabold text-[#2F80ED]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={GEM_SRC} alt="" draggable={false} className="h-5 w-5 select-none object-contain" />
+          <GemRive className="h-5 w-5" />
           {RECHARGE_COST}
         </span>
       </button>
@@ -155,8 +154,7 @@ export function OutOfEnergySheet() {
           >
             <div className="flex justify-end">
               <span className="flex items-center gap-1.5 text-base font-extrabold text-[#2F80ED]">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={GEM_SRC} alt="" draggable={false} className="h-5 w-5 select-none object-contain" />
+                <GemRive className="h-5 w-5" />
                 {LEARNER_STATS.gems}
               </span>
             </div>

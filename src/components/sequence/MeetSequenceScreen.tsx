@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import { AudioPlayer } from "@/components/level-two/AudioPlayer";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
+import { SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 import { PictureCards } from "./PictureCards";
 import { PICK_UP_ICON, PLACE_IN_TARGET_ICON, SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious, type PictureCard } from "./sequence";
 
-/** The clip on the player. It isn't recorded yet: until the file is there, Play runs a silent stand-in of `STAND_IN_SECONDS`. */
-const CLIP = "/audios/moduleAudios/meet_the_sequence.mp3";
-const STAND_IN_SECONDS = 5;
 const CARDS: readonly [PictureCard, PictureCard] = [
   { text: "Pick Up", icon: PICK_UP_ICON, tint: "bg-[#F6F4FE] dark:bg-[#0F1F26]" },
   { text: "Place in target", icon: PLACE_IN_TARGET_ICON, tint: "bg-[#FFF9F0] dark:bg-[#0F1F26]" },
@@ -49,6 +47,7 @@ export function MeetSequenceScreen() {
     <LevelTwoShell
       step={STEP.meet}
       total={SEQUENCE_STEPS}
+      voiceover={SEQUENCE_AUDIO.meetSequence}
       onBack={() => router.push(sequencePrevious(STEP.meet))}
       scene={<SoftBackdrop />}
       onContinue={() => router.push(sequenceNext(STEP.meet))}
@@ -63,7 +62,7 @@ export function MeetSequenceScreen() {
         <PictureCards cards={CARDS} height={CARDS_HEIGHT} />
       </div>
       <div className="absolute inset-x-0 flex justify-center" style={{ top: stageTop(PLAYER_TOP) }}>
-        <AudioPlayer src={CLIP} standInSeconds={STAND_IN_SECONDS} onProgress={setProgress} />
+        <AudioPlayer src={SEQUENCE_AUDIO.sequenceClip} />
       </div>
       <p
         className="absolute text-center text-[20px] leading-[28px] font-semibold"

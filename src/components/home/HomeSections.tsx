@@ -1,5 +1,6 @@
 "use client";
 
+import { GemRive } from "@/components/ui/GemRive";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -125,8 +126,7 @@ function QuestRow({ quest }: { quest: Quest }) {
         </div>
       </div>
       <span className="flex h-[23px] shrink-0 items-center gap-[3px] rounded-lg bg-[#E5EFFD] px-2 py-1 dark:bg-[#1B2B40]">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/stats/gem.png" alt="" draggable={false} className="h-[13px] w-[13px] select-none object-contain" />
+        <GemRive className="h-[13px] w-[13px]" />
         <span className="text-[11px] font-semibold leading-[15px] text-[#2F80ED] dark:text-[#5AA2FF]">+{quest.reward}</span>
       </span>
     </div>

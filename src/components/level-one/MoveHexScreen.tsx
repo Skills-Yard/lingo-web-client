@@ -4,12 +4,15 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from "react"
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useRive } from "@rive-app/react-canvas";
+import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
 import { useSound } from "@/hooks/useSound";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
+import { useTheme } from "@/context/ThemeContext";
 import { moduleHref } from "@/lib/routes";
-import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { BATTERY as BATTERY_RIVE, configureRiveRuntime, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
 import { GemPopup } from "./GemPopup";
 import { levelOneStep } from "./LevelOneShell";
@@ -21,13 +24,13 @@ const STEP = 16;
 /** How long Hex's walk to the next tile takes before the move's result shows. */
 const STEP_MS = 400;
 
-/** The platform on Figma's frame; its height follows the picture's shape (1000 x 747). */
-const PLATFORM = { top: 216, width: 356, height: 266 };
+/** The intro game's platform (350 x 295), centred where the guide platform was; its height follows the picture's shape. */
+const PLATFORM = { top: 205, width: 340, height: 287 };
 /** The middle column's tiles: how far down the platform each one's centre is (px). */
 const TILE_Y = {
-  top: PLATFORM.height * 0.183,
-  centre: PLATFORM.height * 0.475,
-  bottom: PLATFORM.height * 0.766,
+  top: PLATFORM.height * 0.22,
+  centre: PLATFORM.height * 0.43,
+  bottom: PLATFORM.height * 0.66,
 } as const;
 type Tile = keyof typeof TILE_Y;
 
@@ -35,8 +38,32 @@ type Tile = keyof typeof TILE_Y;
 const HEX_BOX = 100;
 /** How far above the tile's centre Hex's box sits, so he stands on the tile. */
 const HEX_LIFT = 10;
-/** The battery's box (the picture is 145 x 132), standing on the top-middle tile. */
-const BATTERY = { width: 66, height: 60, lift: 16 };
+/** The battery's box, standing on the top-middle tile: the artboard (268 x 150) drawn `drawn` wide, lying flat. */
+const BATTERY = { drawn: 48, width: 48, height: 27, lift: 10 };
+const BATTERY_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+
+configureRiveRuntime();
+
+/** `battery.riv`, small and stood on its end. */
+function GuideBattery() {
+  const darkTheme = useTheme().theme === "dark";
+  const { rive, RiveComponent } = useRive({ src: BATTERY_RIVE.src, artboard: BATTERY_RIVE.artboard, stateMachines: BATTERY_RIVE.stateMachine, autoplay: true, autoBind: true, layout: BATTERY_LAYOUT });
+  // Sixty percent full.
+  useEffect(() => {
+    const level = rive?.viewModelInstance?.number(BATTERY_RIVE.levelProperty);
+    if (level) level.value = 60;
+    const dark = rive?.viewModelInstance?.boolean(BATTERY_RIVE.darkThemeProperty);
+    if (dark) dark.value = darkTheme;
+  }, [rive, darkTheme]);
+  return (
+    <div
+      className="absolute top-1/2 left-1/2"
+      style={{ width: BATTERY.drawn, height: (BATTERY.drawn * BATTERY_RIVE.height) / BATTERY_RIVE.width, translate: "-50% -50%" }}
+    >
+      <RiveComponent aria-hidden style={{ width: "100%", height: "100%" }} />
+    </div>
+  );
+}
 
 const BUTTONS_TOP = 508;
 /**
@@ -47,6 +74,8 @@ const BUTTONS_TOP = 508;
 export type MoveHexFlow = {
   step: number;
   total: number;
+  /** Read when the screen opens, in place of the first lesson's. */
+  voiceover?: readonly string[];
   onBack: () => void;
   tip: ReactNode;
   rightTitle: string;
@@ -60,21 +89,18 @@ export type MoveHexFlow = {
 
 const WRONG_WAY = "Oops, that’s the wrong way! The battery is straight ahead. Tap anywhere on this panel to try again.";
 
-/**
- * The picture is wider than the screen, so it is kept tall enough for its horizon
- * to sit where Figma's does and is cut at the sides; a white wash pales it, down to
- * plain white where the buttons start.
- */
+/** Like the robot screens' picture: it starts under the top bar (52px) and the gap below it (8px). It stays clear for 35px then fades in over 185px, and fades out again from 330px to 448px (stage 508, where the buttons start), instead of ending in a hard line. */
+const TOP_BAR_CLEARANCE = 60;
+const EDGE_MASK = "linear-gradient(180deg, transparent 35px, #000 220px, #000 330px, transparent 448px)";
+
+/** The meadow picture fills the stage under the top bar, cut at the sides or bottom where its shape differs. */
 export function MeadowBackdrop() {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-white">
-      <div
-        className="absolute top-0 left-1/2 aspect-[3/2] w-[max(100%,803px)] -translate-x-1/2 bg-cover"
-        style={{ backgroundImage: "url(/images/level-one/guide-hex-bg.webp)" }}
-      >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.45)_0%,rgba(255,255,255,0.6)_55%,#ffffff_100%)]" />
-      </div>
-    </div>
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 bg-[#F1F8C8] bg-cover bg-top bg-no-repeat"
+      style={{ top: TOP_BAR_CLEARANCE, backgroundImage: "url(/images/level-one/guide-hex-meadow.png)", maskImage: EDGE_MASK, WebkitMaskImage: EDGE_MASK }}
+    />
   );
 }
 
@@ -171,7 +197,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
       step={flow?.step ?? levelOneStep(8)}
       total={flow?.total}
       onBack={flow?.onBack}
-      voiceover={MODULE_AUDIO.guideHex}
+      voiceover={flow?.voiceover ?? MODULE_AUDIO.guideHex}
       scene={<MeadowBackdrop />}
       ctaLabel={failed ? "Try again" : flow && !solved ? "Let’s Try" : "Continue"}
       ctaDisabled={!intro && !solved && !failed}
@@ -220,7 +246,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
         className="absolute left-1/2 -translate-x-1/2"
         style={{ top: stageTop(PLATFORM.top), width: PLATFORM.width, height: PLATFORM.height }}
       >
-        <Image src="/images/level-one/guide-hex-platform.webp" alt="" fill sizes="534px" priority />
+        <Image src="/images/platformlayers/3layer-platform.webp" alt="" fill sizes="534px" priority className="object-contain" />
 
         <motion.div
           aria-hidden
@@ -236,7 +262,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
           transition={{ duration: 0.2 }}
         >
           <div className="absolute -inset-5 rounded-full bg-[radial-gradient(circle,rgba(255,226,70,0.85)_0%,rgba(255,226,70,0)_70%)]" />
-          <Image src="/images/battery-icon.png" alt="" fill sizes="114px" className="object-contain" />
+          <GuideBattery />
         </motion.div>
 
         <motion.div
