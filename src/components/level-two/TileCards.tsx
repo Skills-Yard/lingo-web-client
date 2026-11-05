@@ -32,6 +32,8 @@ type TileCardsProps = {
   withHint: boolean;
   /** The text is a sentence: set smaller and left to wrap. */
   longText?: boolean;
+  /** The picture box's width (px), where the art is wider than the layout's. */
+  pictureWidth?: number;
   onPick: (id: string) => void;
 };
 
@@ -40,7 +42,7 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -83,7 +85,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
               />
-              <span className={`flex shrink-0 items-center justify-center ${look.picture}`}>
+              <span className={`flex shrink-0 items-center justify-center ${look.picture}`} style={{ width: pictureWidth }}>
                 <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
               </span>
               <span

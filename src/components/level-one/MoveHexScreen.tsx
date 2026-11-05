@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -9,6 +9,7 @@ import { useSound } from "@/hooks/useSound";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { moduleHref } from "@/lib/routes";
+import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
 import { GemPopup } from "./GemPopup";
 import { levelOneStep } from "./LevelOneShell";
@@ -38,6 +39,25 @@ const HEX_LIFT = 10;
 const BATTERY = { width: 66, height: 60, lift: 16 };
 
 const BUTTONS_TOP = 508;
+/**
+ * The game played as part of another module: the board opens on a tip with Hex
+ * on the top tile, "Let's Try" sets the battery there and brings him to the middle,
+ * and the result is a panel (no gem popup) reported through `onAnswer` and `onDone`.
+ */
+export type MoveHexFlow = {
+  step: number;
+  total: number;
+  onBack: () => void;
+  tip: ReactNode;
+  rightTitle: string;
+  right: string;
+  wrongTitle: string;
+  wrong: string;
+  /** Each result, right or wrong. */
+  onAnswer: (correct: boolean) => void;
+  onDone: () => void;
+};
+
 const WRONG_WAY = "Oops, that’s the wrong way! The battery is straight ahead. Tap anywhere on this panel to try again.";
 
 /**
@@ -94,37 +114,45 @@ function MoveButton({ label, look, disabled, onPress, children }: { label: strin
  * once. Go Straight reaches the battery, which opens the gem popup and unlocks
  * Continue; Go Back misses it, which offers Try again.
  */
-export function MoveHexScreen() {
+export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
   const router = useRouter();
   const [muted] = useLevelMuted();
   const triggerSound = useSound(!muted);
-  const [tile, setTile] = useState<Tile>("centre");
+  // With a flow it opens on its tip; "Let's Try" starts the game.
+  const [intro, setIntro] = useState(!!flow);
+  const [tile, setTile] = useState<Tile>(flow ? "top" : "centre");
   const [result, setResult] = useState<"solved" | "failed" | null>(null);
   // The gem popup opens once, the moment Hex reaches the battery; closing it
   // (or its 3 second countdown running out) leaves Continue to go on.
   const [gemOpen, setGemOpen] = useState(false);
-  const closeGem = useCallback(() => setGemOpen(false), []);
+  // In a flow the popup comes after the result panel, so closing it moves on.
+  const closeGem = useCallback(() => {
+    setGemOpen(false);
+    flow?.onDone();
+  }, [flow]);
   // A miss counts against this question: the first go is what is noted, and
   // Continue asks to be shown it again unless the first go made it.
   const missed = useRef(false);
 
   useEffect(() => {
-    if (tile === "centre") return;
+    if (tile === "centre" || intro) return;
     const timer = window.setTimeout(() => {
       if (tile === "top") {
         triggerSound("win");
         setResult("solved");
-        setGemOpen(true);
+        if (flow) flow.onAnswer(true);
+        else setGemOpen(true);
         return;
       }
       triggerSound("lose");
       setResult("failed");
+      flow?.onAnswer(false);
       if (missed.current) return;
       missed.current = true;
-      noteAnswer(STEP, false);
+      if (!flow) noteAnswer(STEP, false);
     }, STEP_MS);
     return () => window.clearTimeout(timer);
-  }, [tile, triggerSound]);
+  }, [tile, intro, flow, triggerSound]);
 
   const walk = (to: Tile) => {
     triggerSound("step");
@@ -140,26 +168,44 @@ export function MoveHexScreen() {
 
   return (
     <LevelTwoShell
-      step={levelOneStep(8)}
+      step={flow?.step ?? levelOneStep(8)}
+      total={flow?.total}
+      onBack={flow?.onBack}
       voiceover={MODULE_AUDIO.guideHex}
       scene={<MeadowBackdrop />}
-      ctaLabel={failed ? "Try again" : "Continue"}
-      ctaDisabled={!solved && !failed}
+      ctaLabel={failed ? "Try again" : flow && !solved ? "Let’s Try" : "Continue"}
+      ctaDisabled={!intro && !solved && !failed}
       // The wrong-result panel sits below the Continue row, like on the quizzes;
       // a tap on it takes Hex back to try again. The gem popup is above all.
       overlay={
         <>
           <div className="absolute inset-0 z-[9]" style={{ pointerEvents: failed ? "auto" : "none" }} onClick={tryAgain}>
-            <FeedbackPanel correct={false} open={failed} hexIn={failed}>
-              {WRONG_WAY}
+            <FeedbackPanel correct={false} title={flow?.wrongTitle} open={failed} hexIn={failed}>
+              {flow?.wrong ?? WRONG_WAY}
             </FeedbackPanel>
           </div>
+          {flow && (
+            <div className="pointer-events-none absolute inset-0">
+              <FeedbackPanel correct title={flow.rightTitle} open={solved} hexIn={solved} hexCue={HEX_ONBOARDING_TRIGGER.continueThumb}>
+                {flow.right}
+              </FeedbackPanel>
+            </div>
+          )}
           <GemPopup open={gemOpen} onClose={closeGem} />
         </>
       }
       onContinue={() => {
+        if (intro) {
+          setIntro(false);
+          setTile("centre");
+          return;
+        }
         if (failed) {
           tryAgain();
+          return;
+        }
+        if (flow) {
+          setGemOpen(true);
           return;
         }
         noteAnswer(STEP, !missed.current);
@@ -186,7 +232,7 @@ export function MoveHexScreen() {
             marginLeft: -BATTERY.width / 2,
           }}
           initial={false}
-          animate={solved ? { scale: 0, opacity: 0 } : { scale: 1, opacity: 1 }}
+          animate={solved || intro ? { scale: 0, opacity: 0 } : { scale: 1, opacity: 1 }}
           transition={{ duration: 0.2 }}
         >
           <div className="absolute -inset-5 rounded-full bg-[radial-gradient(circle,rgba(255,226,70,0.85)_0%,rgba(255,226,70,0)_70%)]" />
@@ -205,6 +251,11 @@ export function MoveHexScreen() {
         </motion.div>
       </div>
 
+      {intro ? (
+        <div className="absolute left-1/2 w-[340px] -translate-x-1/2" style={{ top: stageTop(BUTTONS_TOP) }}>
+          {flow?.tip}
+        </div>
+      ) : (
       <div className="absolute left-1/2 flex w-[319px] -translate-x-1/2 gap-[18px]" style={{ top: stageTop(BUTTONS_TOP) }}>
         <MoveButton label="Go Straight" look="bg-[#EDFAFE] shadow-[0_4px_0_#BFE6F2]" disabled={tile !== "centre"} onPress={() => walk("top")}>
           <MoveArrow id="guide-hex-straight" from="#74EBF7" to="#0F88E5" stroke="#1F4899" />
@@ -213,6 +264,7 @@ export function MoveHexScreen() {
           <MoveArrow id="guide-hex-back" from="#FA8728" to="#FEEAA2" stroke="#CD5B25" flipped />
         </MoveButton>
       </div>
+      )}
     </LevelTwoShell>
   );
 }
