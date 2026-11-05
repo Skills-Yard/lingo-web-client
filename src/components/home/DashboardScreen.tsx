@@ -1,5 +1,6 @@
 "use client";
 
+import { GemRive } from "@/components/ui/GemRive";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -153,7 +154,7 @@ export function DashboardScreen({ name = "Alex" }: { name?: string }) {
             className="bg-[#FFF1E6] dark:bg-[#2E2219]"
           />
           <StatTile
-            icon={img("/images/gem.png", "h-7 w-7")}
+            icon={<GemRive className="h-7 w-7" />}
             value={String(LEARNER_STATS.gems)}
             label="Gems"
             color="#7B5CF0"

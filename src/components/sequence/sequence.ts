@@ -116,7 +116,7 @@ export type SequenceQuiz = {
   /** The main button before the answer is checked (default "Continue"). */
   ctaLabel?: string;
   /** Clips read when the screen opens (the title, then Hex's line). */
-  voiceover: readonly string[];
+  voiceover?: readonly string[];
   /** Read instead once the answer is checked, where the screen has a new title. */
   resultVoiceover?: readonly string[];
 };

@@ -9,10 +9,6 @@ import { SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 import { PictureCards } from "./PictureCards";
 import { PICK_UP_ICON, PLACE_IN_TARGET_ICON, SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious, type PictureCard } from "./sequence";
 
-/** The clip on the player. It isn't recorded yet: until the file is there, Play runs a silent stand-in of `STAND_IN_SECONDS`. */
-const CLIP = "/audios/moduleAudios/meet_the_sequence.mp3";
-const STAND_IN_SECONDS = 5;
-const STEP = 6;
 const CARDS: readonly [PictureCard, PictureCard] = [
   { text: "Pick Up", icon: PICK_UP_ICON, tint: "bg-[#F6F4FE] dark:bg-[#0F1F26]" },
   { text: "Place in target", icon: PLACE_IN_TARGET_ICON, tint: "bg-[#FFF9F0] dark:bg-[#0F1F26]" },
@@ -52,7 +48,7 @@ export function MeetSequenceScreen() {
       step={STEP.meet}
       total={SEQUENCE_STEPS}
       voiceover={SEQUENCE_AUDIO.meetSequence}
-      onBack={() => router.push(sequencePrevious(STEP))}
+      onBack={() => router.push(sequencePrevious(STEP.meet))}
       scene={<SoftBackdrop />}
       onContinue={() => router.push(sequenceNext(STEP.meet))}
     >
