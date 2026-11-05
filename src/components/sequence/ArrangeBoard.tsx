@@ -27,12 +27,16 @@ type ArrangeLayout = {
   lane?: number;
   /** The cards start in a tray of their own; without it they start in their slots (they can only be swapped). */
   tray?: boolean;
+  /** In `rows`, the slots stand above the tray instead of under it. */
+  slotsOnTop?: boolean;
+  /** The slots are solid wells, not dashed outlines. */
+  solidSlots?: boolean;
   /** The cards' text is a sentence: set in plain case, not the small capitals of a command's name. */
   sentence?: boolean;
 };
 
 /** Where everything stands on the board, and how big the board is. */
-export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, sentence = false }: ArrangeLayout) => {
+export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false }: ArrangeLayout) => {
   const columns = mode === "columns";
   const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: tray && slotsOnTop ? card.height + lane : 0 });
   const slot = (index: number): Point =>
@@ -44,7 +48,7 @@ export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "
     : { width: count * card.width + (count - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
   /** A card dropped within this far (px) of a slot's corner goes in it. */
   const reach = card.height * 0.87;
-  return { count, card, tray, home, slot, board, reach, sentence };
+  return { count, card, tray, solidSlots, home, slot, board, reach, sentence };
 };
 export type ArrangeGeometry = ReturnType<typeof arrangeGeometry>;
 
