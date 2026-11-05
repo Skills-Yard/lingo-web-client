@@ -7,7 +7,7 @@ import { ArrowUp, RotateCw } from "lucide-react";
 import { aboveButtons, Teal } from "@/components/level-two/LevelTwoShell";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
-import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef, type Slots } from "./ArrangeBoard";
+import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, type ArrangeCardDef, type Slots } from "./ArrangeBoard";
 import { HexBoard } from "./HexBoard";
 import { HexScreen, ReplayButton } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
@@ -28,6 +28,8 @@ const CARDS: readonly ArrangeCardDef[] = [
 ];
 /** The mistake it starts with: forward, forward, right takes Hex up to the corner. */
 const BROKEN: Slots = ["forward-1", "forward-2", "right-1"];
+/** The right order, first slot first. */
+const ANSWER: readonly Command[] = ["forward", "right", "forward"];
 const GEO = arrangeGeometry({ mode: "rows", card: { width: 104, height: 64 }, count: 3, gap: 10, tray: false });
 /** Once checked the cards rise this far (px), to stand clear above the result panel, even with its longest text. */
 const BOARD_RISE = 200;
@@ -58,6 +60,7 @@ export function FixScreen() {
   const [correct, setCorrect] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [hinted, setHinted] = useState(false);
+  const [hintCard, setHintCard] = useState<string | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
   const pending = useRef<number[]>([]);
   const commands = kindsOf(slots);
@@ -132,6 +135,7 @@ export function FixScreen() {
         visible: phase === "edit",
         onUse: () => {
           setHinted(true);
+          setHintCard(nextHintId(CARDS, slots, ANSWER));
           noteStruggle(STEP.fix, "hint");
         },
       }}
@@ -150,7 +154,7 @@ export function FixScreen() {
       </motion.div>
       <ArrangeDock geo={GEO} withHint rise={phase === "checked" ? BOARD_RISE : 0}>
         {/* Cards can only be swapped: dropped anywhere but a slot, one snaps back. */}
-        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} onPlace={(id, slot) => slot !== null && placeIn(id, slot)} />
+        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={phase === "edit" && nextHintId(CARDS, slots, ANSWER) === hintCard ? hintCard : null} onPlace={(id, slot) => slot !== null && placeIn(id, slot)} />
       </ArrangeDock>
     </HexScreen>
   );
