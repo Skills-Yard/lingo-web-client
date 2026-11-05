@@ -52,9 +52,9 @@ const WRONG_MS = 300;
  */
 const LIFT = [null, -16, -12, 0];
 const LIFT_SCALE = [null, 1.06, 1.06, 1];
-const LIFT_TRANSITION: Transition = { duration: 1.2, times: [0, 0.2, 0.45, 1], ease: ["easeOut", "easeInOut", "easeInOut"] };
+const LIFT_TRANSITION: Transition = { duration: 0.9, times: [0, 0.2, 0.45, 1], ease: ["easeOut", "easeInOut", "easeInOut"] };
 /** They go gray this long (ms) after the match: as they start to come down. */
-const GRAY_AFTER_MS = 540;
+const GRAY_AFTER_MS = 405;
 /** The shine: a slim slanted band, very light, crossing each matched card from left to right as they lift. */
 const SHINE_OFF = { x: -60, opacity: 0 };
 const SHINE_ON = { x: [-60, CARD_W + 20], opacity: [0, 1, 1, 0] };
@@ -211,7 +211,7 @@ export function MatchScreen() {
           <motion.span
             aria-hidden
             initial={false}
-            animate={matchedNow || waiting ? SHINE_ON : SHINE_OFF}
+            animate={waiting ? SHINE_ON : SHINE_OFF}
             transition={waiting ? WAIT_SHINE_TRANSITION : SHINE_TRANSITION}
             style={{ skewX: -20 }}
             className={`pointer-events-none absolute inset-y-0 left-0 w-14 ${
