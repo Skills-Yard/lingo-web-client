@@ -35,8 +35,6 @@ export type Choice = {
   icon: string;
   tint?: string;
   moves?: readonly RobotMove[];
-  /** A letter in a circle in place of the picture, for answers that are only words. */
-  badge?: string;
 };
 
 export type Quiz = {

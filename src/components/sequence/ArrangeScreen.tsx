@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
@@ -12,7 +12,7 @@ import type { BubbleSize, Span } from "@/components/level-two/levelTwo";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
-import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { COMMAND_ROBOT, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { PICK_UP_ICON, PLACE_IN_TARGET_ICON, SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
@@ -30,40 +30,52 @@ const CARDS: readonly ArrangeCardDef[] = [
 const ANSWER = ["pickup", "target"];
 
 const GEO = arrangeGeometry({ mode: "columns", card: { width: 136, height: 104 }, count: 2 });
-/** On a miss the board rises this far (px), so the result panel doesn't cover it. */
-const BOARD_RISE = 110;
+/** On a miss the robot gets it wrong first: the result comes once its clip has played. */
+const WRONG_MOVE_MS = COMMAND_ROBOT.moveSeconds.wrongClaw * 1000;
 
 /**
  * "Arrange the instructions!": drag each instruction into its numbered slot (a
  * tap sends it to the first open slot, and back out again). With both placed the
- * main button checks the order: the right one and the robot carries it out; a
- * wrong one is tried again from the start.
+ * main button checks the order and the board clears so the robot can be seen: on
+ * the right one it carries it out; on a wrong one it plays its wrong move, then the
+ * result comes up and it is tried again from the start.
  */
 export function ArrangeScreen() {
   const router = useRouter();
   const { slots, placeIn, tapCard, reset, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const [checked, setChecked] = useState(false);
+  const [resultShown, setResultShown] = useState(false);
+  const resultTimer = useRef<number | undefined>(undefined);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [attempt, setAttempt] = useState(0);
   const correct = ANSWER.every((kind, index) => CARDS.find((card) => card.id === slots[index])?.kind === kind);
+
+  useEffect(() => () => window.clearTimeout(resultTimer.current), []);
+
+  const showResult = () => {
+    setResultShown(true);
+    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
+  };
 
   const check = () => {
     setChecked(true);
     noteFirstTry(STEP.arrange, correct);
     if (!correct) noteStruggle(STEP.arrange, "miss");
     vibrateForAnswer(correct);
-    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
     if (correct) {
+      showResult();
       fireRobot("pickUp");
       fireRobot("placeInTarget");
     } else {
       fireRobot("wrongClaw");
+      resultTimer.current = window.setTimeout(showResult, WRONG_MOVE_MS);
     }
   };
 
   const tryAgain = () => {
     reset();
     setChecked(false);
+    setResultShown(false);
     setAnswer(null);
     setAttempt((previous) => previous + 1);
   };
@@ -81,16 +93,16 @@ export function ArrangeScreen() {
       onBack={() => router.push(sequencePrevious(STEP.arrange))}
       scene={<RobotBackdrop below={robotBelowDialogue(BUBBLE_TOP, BUBBLE)} pose="idle" />}
       answer={answer}
-      ctaDisabled={!full}
-      ctaLabel={!checked ? "Check" : correct ? "Next" : "Try again"}
+      ctaDisabled={!full || (checked && !resultShown)}
+      ctaLabel={!resultShown ? "Check" : correct ? "Next" : "Try again"}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
             title={correct ? "Perfect!" : "Not quite"}
-            open={checked}
-            hexIn={checked}
+            open={resultShown}
+            hexIn={resultShown}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
             centred
           >
@@ -107,8 +119,8 @@ export function ArrangeScreen() {
       <CentredRow top={stageTop(BUBBLE_TOP)}>
         <HexBubble key={attempt} entryKey={`arrange-${attempt}`} hex="left" line={LINE} size={BUBBLE} leaving={checked} />
       </CentredRow>
-      {/* A right order fades the board, so the robot carrying it out can be seen. */}
-      <ArrangeDock geo={GEO} rise={checked && !correct ? BOARD_RISE : 0} fade={checked && correct}>
+      {/* Once checked the board fades, so the robot can be seen. */}
+      <ArrangeDock geo={GEO} fade={checked}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />

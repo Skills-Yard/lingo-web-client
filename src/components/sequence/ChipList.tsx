@@ -120,7 +120,7 @@ function Chip({
         home();
       }}
       style={{ x, y, width: CHIP.width, height: CHIP.height, zIndex: dragging ? 2 : 1 }}
-      className={`pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center gap-0.5 rounded-[10px] border-[3px] border-white shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] enabled:cursor-grab enabled:active:cursor-grabbing dark:border-transparent ${
+      className={`pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center gap-0.5 rounded-[10px] border-[3px] border-white shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${
         item.command === "forward" ? "bg-[#EDFAFE] dark:bg-[#15233A]" : "bg-[#FEF8EC] dark:bg-[#2A2218]"
       }`}
     >

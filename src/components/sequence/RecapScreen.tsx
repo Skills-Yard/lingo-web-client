@@ -7,7 +7,8 @@ import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { sequenceHref } from "@/lib/routes";
-import { GETTING_READY_SCENE, SEQUENCE_STEPS, STEP, sequencePrevious } from "./sequence";
+import { SEQUENCE_STEPS, STEP, sequencePrevious } from "./sequence";
+import { SequenceRoom } from "./SequenceRoom";
 
 const LEARNED = [
   "A task can require multiple commands.",
@@ -51,8 +52,9 @@ export function RecapScreen() {
       <div className="absolute left-1/2 w-[340px] -translate-x-1/2" style={{ top: VIDEO_TOP }}>
         <div className="relative w-full" style={{ height: VIDEO_HEIGHT }}>
           <div aria-hidden className="absolute inset-0 bg-[#79DDFF]/24 blur-[60px]" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={GETTING_READY_SCENE} alt="A boy getting ready to go out" draggable={false} className="relative h-full w-full rounded-lg object-cover object-[50%_72%]" />
+          <div role="img" aria-label="A boy getting ready to go out" className="absolute inset-0 overflow-hidden rounded-lg">
+            <SequenceRoom dress="dressed" happy fit="cover" />
+          </div>
           <button
             type="button"
             aria-label="Play video"

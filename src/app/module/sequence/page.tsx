@@ -31,11 +31,11 @@ function sequenceScreen(step: string) {
     case "1":
       return <SequenceQuizScreen key="quiz-1" quiz={PUT_ON_FIRST} />;
     case "2":
-      return <PutOnScreen stage="socks" />;
+      return <PutOnScreen key="put-on-socks" stage="socks" />;
     case "3":
-      return <PutOnScreen stage="shoes" />;
+      return <PutOnScreen key="put-on-shoes" stage="shoes" />;
     case "4":
-      return <PutOnScreen stage="ready" />;
+      return <PutOnScreen key="put-on-ready" stage="ready" />;
     case "5":
       return <SequenceQuizScreen key="quiz-5" quiz={WHAT_DID_YOU_DO} />;
     case "6":

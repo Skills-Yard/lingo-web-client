@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
@@ -14,7 +14,7 @@ import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboard
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { DressScene, HOP_SECONDS, type DressStage } from "./DressScene";
-import { IMAGES, SEQUENCE_STEPS, SHOES_THEN_SOCKS, SOCKS_ON_SHOES_ON, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { IMAGES, SEQUENCE_STEPS, SOCKS_ON_SHOES_ON, STEP, sequenceNext, sequencePrevious } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 const BUBBLE: BubbleSize = { width: 190 };
@@ -31,11 +31,10 @@ const CARDS: readonly ArrangeCardDef[] = [
 const ANSWER = ["socks", "shoes"];
 
 const GEO = arrangeGeometry({ mode: "columns", card: { width: 136, height: 104 }, count: 2 });
-/** The board rises this far (px) once checked, so the result panel doesn't cover it. */
-const BOARD_RISE = 140;
 /** The picture of how it went, over the faded scene (Figma `top`). */
 const RIGHT_PICTURE = { src: SOCKS_ON_SHOES_ON, width: 180, top: 272 };
-const WRONG_PICTURE = { src: SHOES_THEN_SOCKS, width: 190, top: 272 };
+/** On a miss he tries it first: the result comes once the room has played that. */
+const WRONG_MOVE_MS = 2500;
 /** Time between one item landing and the next going on. */
 const GAP_MS = HOP_SECONDS * 1000 + 700;
 
@@ -44,7 +43,8 @@ type Phase = "edit" | "socks" | "shoes" | "closeUp";
 /**
  * "Arrange the instructions!" for getting ready: drag PUT SOCKS and PUT SHOES
  * into their slots. The right order plays out on the scene (socks, then shoes,
- * then the result); the wrong one shows him trying the socks over his shoes.
+ * then the result); on the wrong one the board clears and he tries the socks over
+ * his shoes, then the result comes up.
  */
 export function DressArrangeScreen() {
   const router = useRouter();
@@ -52,6 +52,8 @@ export function DressArrangeScreen() {
   const name = useMemo(() => parseOnboardingAnswers(json).name?.trim(), [json]);
   const { slots, placeIn, tapCard, reset, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const [checked, setChecked] = useState(false);
+  const [resultShown, setResultShown] = useState(false);
+  const resultTimer = useRef<number | undefined>(undefined);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [phase, setPhase] = useState<Phase>("edit");
@@ -68,20 +70,26 @@ export function DressArrangeScreen() {
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [checked, correct]);
 
+  useEffect(() => () => window.clearTimeout(resultTimer.current), []);
+
+  const showResult = () => {
+    setResultShown(true);
+    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
+  };
+
   const check = () => {
     setChecked(true);
     noteFirstTry(STEP.dress, correct);
-    if (!correct) {
-      noteStruggle(STEP.dress, "miss");
-      setPhase("closeUp");
-    }
+    if (!correct) noteStruggle(STEP.dress, "miss");
     vibrateForAnswer(correct);
-    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
+    if (correct) showResult();
+    else resultTimer.current = window.setTimeout(showResult, WRONG_MOVE_MS);
   };
 
   const tryAgain = () => {
     reset();
     setChecked(false);
+    setResultShown(false);
     setAnswer(null);
     setPhase("edit");
     setAttempt((previous) => previous + 1);
@@ -94,7 +102,7 @@ export function DressArrangeScreen() {
   };
 
   const socks: DressStage = phase === "edit" ? "rug" : phase === "socks" ? "hop" : "worn";
-  const shoes: DressStage = phase === "shoes" ? "hop" : phase === "closeUp" && correct ? "worn" : "rug";
+  const shoes: DressStage = phase === "shoes" ? "hop" : phase === "closeUp" ? "worn" : "rug";
   const line = useMemo(() => [{ text: `Help ${name || "your friend"} get ready` }], [name]);
 
   return (
@@ -106,20 +114,21 @@ export function DressArrangeScreen() {
         <DressScene
           socks={correct ? socks : "rug"}
           shoes={correct ? shoes : "rug"}
-          closeUp={phase === "closeUp" ? (correct ? RIGHT_PICTURE : WRONG_PICTURE) : null}
+          trySocks={checked && !correct}
+          closeUp={phase === "closeUp" ? RIGHT_PICTURE : null}
         />
       }
       answer={answer}
-      ctaDisabled={!full}
-      ctaLabel={!checked ? "Check" : correct ? "Next" : "Try again"}
+      ctaDisabled={!full || (checked && !resultShown)}
+      ctaLabel={!resultShown ? "Check" : correct ? "Next" : "Try again"}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
             title={correct ? "Perfect!" : "Oops!"}
-            open={checked}
-            hexIn={checked}
+            open={resultShown}
+            hexIn={resultShown}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
           >
             {correct ? "Ready to go now." : "Not able to go outside with this. The character needs to wear socks first."}
@@ -133,8 +142,8 @@ export function DressArrangeScreen() {
       <CentredRow top={stageTop(BUBBLE_TOP)}>
         <HexBubble key={attempt} entryKey={`dress-${attempt}`} hex="left" line={line} size={BUBBLE} leaving={checked} />
       </CentredRow>
-      {/* A right order fades the board, so the socks and shoes going on can be seen. */}
-      <ArrangeDock geo={GEO} rise={checked && !correct ? BOARD_RISE : 0} fade={checked && correct}>
+      {/* Once checked the board fades, so what he does can be seen. */}
+      <ArrangeDock geo={GEO} fade={checked}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />
