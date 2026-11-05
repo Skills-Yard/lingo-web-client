@@ -65,7 +65,7 @@ const WRONG_WAY = "Oops, that’s the wrong way! The battery is straight ahead. 
  * to sit where Figma's does and is cut at the sides; a white wash pales it, down to
  * plain white where the buttons start.
  */
-function MeadowBackdrop() {
+export function MeadowBackdrop() {
   return (
     <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 bg-white">
       <div
@@ -79,7 +79,7 @@ function MeadowBackdrop() {
 }
 
 /** The arrow of a move button, pointing up (Figma's 29 x 46 vector). */
-function MoveArrow({ id, from, to, stroke, flipped = false }: { id: string; from: string; to: string; stroke: string; flipped?: boolean }) {
+export function MoveArrow({ id, from, to, stroke, flipped = false }: { id: string; from: string; to: string; stroke: string; flipped?: boolean }) {
   return (
     <svg aria-hidden width={29} height={46} viewBox="0 0 29 46" className={flipped ? "-scale-y-100" : undefined}>
       <defs>
@@ -94,7 +94,7 @@ function MoveArrow({ id, from, to, stroke, flipped = false }: { id: string; from
 }
 
 /** A 3D move button: its face stands 4px up on a darker edge, and sinks onto it when pressed. */
-function MoveButton({ label, look, disabled, onPress, children }: { label: string; look: string; disabled: boolean; onPress: () => void; children: React.ReactNode }) {
+export function MoveButton({ label, look, disabled, onPress, children }: { label: string; look: string; disabled: boolean; onPress: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"

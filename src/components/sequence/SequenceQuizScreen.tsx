@@ -2,36 +2,45 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { AnswerCards } from "@/components/level-two/AnswerCards";
+import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
+import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
 import { RobotBackdrop, robotBelowDialogue } from "@/components/level-two/RobotBackdrop";
+import { SlotImage } from "@/components/level-two/SlotImage";
 import { TileCards } from "@/components/level-two/TileCards";
+import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { PictureCards } from "./PictureCards";
 import { SceneBackdrop } from "./SceneBackdrop";
 import { SEQUENCE_STEPS, sequenceNext, sequencePrevious, type SequenceQuiz } from "./sequence";
-import { noteFirstTry } from "./sequenceScore";
+import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 /** A list of answers only has to clear the result panel; there is a picture to keep in view above it. */
-const LIST_RISE = 165;
+const LIST_RISE = 150;
+/** A row of the list of answers, and the gap between rows (see `AnswerCards`). */
+const LIST_ROW = 76;
+const LIST_ROW_GAP = 6;
 /** Where the pictures to compare start (Figma `top`), their height, and how far they rise as Hex leaves. */
 const PICTURES_TOP = 248;
 const PICTURES_HEIGHT = 200;
 const PICTURES_RISE = 90;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
+/** The answers' own way in, so a question standing on them comes in with them. */
+const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
 
 /**
  * A Sequence question: the title, Hex asking it, and the answers. The main
  * button checks the pick and the result panel slides up. A right answer moves
- * on; a wrong one is tried again on the spot, so unlike the first lesson's
- * quizzes the right card isn't shown and nothing goes to a review.
+ * on; a wrong one is tried again on the spot (unless the question is `noRetry`,
+ * where every pick moves on), so unlike the first lesson's quizzes the right
+ * card isn't shown and nothing goes to a review.
  */
 export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const router = useRouter();
@@ -48,6 +57,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const check = () => {
     setChecked(true);
     noteFirstTry(quiz.step, correct);
+    if (!correct) noteStruggle(quiz.step, "miss");
     vibrateForAnswer(correct);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
     quiz.choices.find((choice) => choice.id === selectedId)?.moves?.forEach((move) => fireRobot(move));
@@ -62,13 +72,24 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
 
   const onContinue = () => {
     if (!checked) check();
-    else if (correct) router.push(sequenceNext(quiz.step));
+    else if (correct || quiz.noRetry) router.push(sequenceNext(quiz.step));
     else tryAgain();
   };
 
+  const useHint = () => {
+    setHinted(true);
+    noteStruggle(quiz.step, "hint");
+  };
+
   const title = checked && quiz.resultTitle ? quiz.resultTitle : quiz.title;
+  const titleSize = quiz.titleSize ?? (quiz.smallTitle ? 26 : undefined);
   // After a wrong answer the right card isn't revealed: the learner gets to try again.
   const shownCorrectId = checked && !correct ? "" : quiz.correctId;
+  const wrongNote = !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
+  // The hint is Hex saying it, in place of his line.
+  const line = hinted && quiz.hintText ? [{ text: quiz.hintText }] : quiz.line;
+  const withHint = !quiz.noHint;
+  const listHeight = quiz.choices.length * LIST_ROW + (quiz.choices.length - 1) * LIST_ROW_GAP;
 
   return (
     <LevelTwoShell
@@ -86,31 +107,31 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       }
       answer={answer}
       ctaDisabled={selectedId === null}
-      ctaLabel={!checked ? (quiz.ctaLabel ?? "Continue") : correct ? "Next" : "Try again"}
-      hint={{ visible: !checked, onUse: () => setHinted(true) }}
+      ctaLabel={!checked ? (quiz.ctaLabel ?? "Continue") : quiz.noRetry ? "Continue" : correct ? "Next" : "Try again"}
+      hint={withHint ? { visible: !checked, onUse: useHint } : undefined}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
-            title={correct ? quiz.rightTitle : quiz.wrongTitle}
+            title={correct ? quiz.rightTitle : (wrongNote?.title ?? quiz.wrongTitle)}
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
             centred
           >
-            {correct ? quiz.right : quiz.wrong}
+            {correct ? quiz.right : (wrongNote?.text ?? quiz.wrong)}
           </FeedbackPanel>
         </div>
       }
     >
-      <ScreenTitle key={quiz.resultTitle && checked ? "result" : "ask"} oneLine>
-        <span className={quiz.smallTitle ? "text-[26px]" : undefined}>
+      <ScreenTitle key={quiz.resultTitle && checked ? "result" : "ask"} oneLine={!quiz.wrapTitle}>
+        <span style={titleSize ? { fontSize: titleSize } : undefined}>
           <TitleText lines={title} />
         </span>
       </ScreenTitle>
       <CentredRow top={stageTop(quiz.bubbleTop)}>
-        <HexBubble key={attempt} entryKey={`sequence-${quiz.step}-${attempt}`} hex="left" line={quiz.line} size={quiz.bubble} leaving={checked} />
+        <HexBubble key={attempt} entryKey={`sequence-${quiz.step}-${attempt}`} hex="left" line={line} size={quiz.bubble} leaving={checked} />
       </CentredRow>
       {quiz.pictures && (
         <motion.div
@@ -123,6 +144,53 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           <PictureCards cards={quiz.pictures} height={PICTURES_HEIGHT} />
         </motion.div>
       )}
+      {quiz.closeUp && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1, y: checked ? -PICTURES_RISE : 0 }}
+          transition={{ ...PANEL_SPRING, opacity: { duration: 0.3, delay: 0.2 } }}
+          className="absolute inset-x-0 flex justify-center"
+          style={{ top: stageTop(quiz.closeUp.top) }}
+        >
+          <div
+            className="rounded-[16px] border-4 border-white bg-[#F6F4FE] p-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent dark:bg-[#0F1F26]"
+            style={{ width: quiz.closeUp.width }}
+          >
+            <SlotImage file={quiz.closeUp.src} className="h-auto w-full" />
+          </div>
+        </motion.div>
+      )}
+      <AnimatePresence>
+        {quiz.wrongPicture && checked && !correct && (
+          <motion.div
+            key="wrong-picture"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ type: "spring", stiffness: 260, damping: 22 }}
+            className="absolute inset-x-0 flex justify-center"
+            style={{ top: stageTop(quiz.wrongPicture.top) }}
+          >
+            <div
+              className="rounded-[16px] border-4 border-white bg-white p-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent dark:bg-[#15181E]"
+              style={{ width: quiz.wrongPicture.width }}
+            >
+              <SlotImage file={quiz.wrongPicture.src} className="h-auto w-full" />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {quiz.question && (
+        <motion.p
+          initial={{ opacity: 0, y: 90 }}
+          animate={{ opacity: 1, y: checked ? -LIST_RISE : 0 }}
+          transition={checked ? PANEL_SPRING : ANSWERS_IN}
+          className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
+          style={{ bottom: `calc(${aboveButtons(GAP_ABOVE_BUTTONS, withHint)} + ${listHeight + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
+        >
+          {quiz.question}
+        </motion.p>
+      )}
       {quiz.layout === "list" ? (
         <AnswerCards
           choices={quiz.choices}
@@ -131,7 +199,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           checked={checked}
           fadeOut={fadeCards}
           hinted={hinted}
-          withHint
+          withHint={withHint}
           rise={LIST_RISE}
           onPick={setSelectedId}
         />
@@ -144,7 +212,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           checked={checked}
           fadeOut={fadeCards}
           hinted={hinted}
-          withHint
+          withHint={withHint}
           pictureWidth={quiz.pictureWidth}
           pictureHeight={quiz.pictureHeight}
           onPick={setSelectedId}

@@ -17,12 +17,12 @@ const PLAYER_TOP = 514;
 export function MeetCommandScreen() {
   const router = useRouter();
   return (
-    <LevelTwoShell step={9} voiceover={MODULE_AUDIO.meetCommand}scene={<RobotBackdrop bottom={robotAboveTop(stageTop(PLAYER_TOP))} pose="idle" />} ctaLabel="Next" onContinue={() => router.push(levelTwoHref(10))}>
+    <LevelTwoShell step={9} scene={<RobotBackdrop bottom={robotAboveTop(stageTop(PLAYER_TOP))} pose="idle" />} ctaLabel="Next" onContinue={() => router.push(levelTwoHref(10))}>
       <ScreenTitle>
         Meet the <Teal>Command.</Teal>
       </ScreenTitle>
       <div className="absolute inset-x-0 flex justify-center" style={{ top: stageTop(PLAYER_TOP) }}>
-        <AudioPlayer src={MODULE_AUDIO.commandClip} />
+        <AudioPlayer src={MODULE_AUDIO.meetCommand[0]} />
       </div>
       <p
         className="absolute text-center text-[20px] leading-[28px] font-semibold text-[#444444] dark:text-white"

@@ -29,7 +29,15 @@ export type TitleLines = readonly (readonly Span[])[];
  * exists). `moves` is what the robot plays, in order, when this answer is
  * checked — right or wrong; a wrong answer with none plays the claw's.
  */
-export type Choice = { id: string; text: string; icon: string; tint?: string; moves?: readonly RobotMove[] };
+export type Choice = {
+  id: string;
+  text: string;
+  icon: string;
+  tint?: string;
+  moves?: readonly RobotMove[];
+  /** A letter in a circle in place of the picture, for answers that are only words. */
+  badge?: string;
+};
 
 export type Quiz = {
   title: TitleLines;
