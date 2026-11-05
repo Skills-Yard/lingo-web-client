@@ -16,12 +16,14 @@ const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
 /** Each layout's card height, the picture's box and the text's size. */
 const LAYOUT = {
-  pair: { card: "h-[184px]", picture: "h-[83px] w-[95px]", text: "text-[16px] leading-none", gap: "gap-3.5", inner: "gap-3.5" },
-  tiles: { card: "h-[110px]", picture: "h-[46px] w-full", text: "text-[16px] leading-5", gap: "gap-3.5", inner: "gap-2" },
+  pair: { card: "h-[184px]", picture: "h-[83px] w-[95px]", text: "text-[16px] leading-none", box: "flex items-stretch gap-3.5", inner: "gap-3.5" },
+  tiles: { card: "h-[110px]", picture: "h-[46px] w-full", text: "text-[16px] leading-5", box: "flex items-stretch gap-3.5", inner: "gap-2" },
+  /** Four answers, two across and two down. */
+  grid: { card: "h-[104px]", picture: "h-[48px] w-[56px]", text: "text-[15px] leading-5", box: "grid grid-cols-2 gap-3.5", inner: "gap-1.5" },
 } as const;
 
 type TileCardsProps = {
-  layout: "pair" | "tiles";
+  layout: "pair" | "tiles" | "grid";
   choices: readonly Choice[];
   correctId: string;
   selectedId: string | null;
@@ -57,7 +59,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
-      className={`pointer-events-auto absolute z-[1] flex items-stretch ${look.gap}`}
+      className={`pointer-events-auto absolute z-[1] ${look.box}`}
       style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W }}
     >
       {choices.map((choice) => {

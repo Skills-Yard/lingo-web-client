@@ -110,6 +110,44 @@ Built from the "3. Variable" spec (its screen number is in brackets; screens wit
 | `/module/variable?step=34` | "You Have Unlocked Variables!" (then the gem popup) [31] |
 | `/module/variable?step=complete` | "Lesson complete!" |
 
+## Data Types module
+
+Built from the "4. DataTypes" spec (its screen number is in brackets; screens with an interaction and a question have two stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, sorting groups, and the Hex result panel. `step` numbers are the module's own order (`STEP` in `components/datatypes/datatypes.ts`).
+
+| Route | Screen |
+|---|---|
+| `/module/datatypes?step=1` | "Let's Organise Our School Event!" [1] |
+| `/module/datatypes?step=2` | "Meet Aarav!" [2] |
+| `/module/datatypes?step=3` | "Let's Find the Similar Ones!" (free grouping, not marked, recorded) [3] |
+| `/module/datatypes?step=4` | "Not All Information Tells Us the Same Thing!" (tap the groups, then a question) [4] |
+| `/module/datatypes?step=5` | "Numbers Help Us Count Things!" [5] |
+| `/module/datatypes?step=6` | "Look at These Numbers!" (tap the decimals) [6] |
+| `/module/datatypes?step=7` | "Meet Integers!" [7] |
+| `/module/datatypes?step=8` | "What If We Need More Precision?" (Float, then a question) [8] |
+| `/module/datatypes?step=9` | "Can You Classify These Numbers?" (Integer or Float) [9] |
+| `/module/datatypes?step=10` | "Can a Program Understand Names Too?" [10] |
+| `/module/datatypes?step=11` | "Text Is More Than Just Names!" [11] |
+| `/module/datatypes?step=12` | "Meet Strings!" [12] |
+| `/module/datatypes?step=13` | "They Look Similar, But Are They the Same?" (12 and "12", two questions) [13] |
+| `/module/datatypes?step=14` | "Let's Check Today's Attendance!" [14] |
+| `/module/datatypes?step=15` | "Many Applications Need Yes or No Answers!" (skipped after a clean 14) [15] |
+| `/module/datatypes?step=16` | "Meet Boolean!" [16] |
+| `/module/datatypes?step=17` | "You Have Discovered Four Data Types!" [17] |
+| `/module/datatypes?step=18` | "Look Beyond the Appearance!" (match to types, then a question) [18] |
+| `/module/datatypes?step=19` | "The Kind of Data Changes How We Use It!" [19] |
+| `/module/datatypes?step=20` | "Can You Organise Aarav's Information?" (skipped after clean 9 and 18) [20] |
+| `/module/datatypes?step=21` | "What Information Does a Weather App Need?" [21] |
+| `/module/datatypes?step=22` | "Plan Before You Build!" (ends on the weather card preview) [22] |
+| `/module/datatypes?step=23` | "Can You Find the Mistake?" (find it, then fix its type) [23] |
+| `/module/datatypes?step=24` | "Let's Organise a Game Profile!" (sort, then a question) [24] |
+| `/module/datatypes?step=25` | Reflection: which type suits an age of 12? [25, question 1] |
+| `/module/datatypes?step=26` | Reflection: which type suits a height of 152.5 cm? [25, question 2] |
+| `/module/datatypes?step=27` | Reflection: why is the ID "0045" text? [25, question 3] |
+| `/module/datatypes?step=28` | Reflection: which type is True or False? [25, question 4] |
+| `/module/datatypes?step=29` | Reflection: types for a city, a temperature and a rain status [25, question 5] |
+| `/module/datatypes?step=30` | "You Have Unlocked Data Types!" (then the gem popup) [26] |
+| `/module/datatypes?step=complete` | "Lesson complete!" |
+
 ## Other pages
 
 | Route | Page |
@@ -131,6 +169,9 @@ Built from the "3. Variable" spec (its screen number is in brackets; screens wit
 | Sequence module: score and branches | Kept in session storage (`lingo.sequence-*`), cleared when the module is opened from the path |
 | Variable module: skips | Screens 11, 21 and 24 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint |
 | Variable module: detours | A learner who misses (or uses the hint on) 8, 10, 14, 16, 20, 21, 23, 24, 27 or 28 is sent once to the screen that taught the idea (7, 13, 19, 8, 10, 26, 20), then on from the screen after the one they missed |
+| Data Types module: skips | Screens 15, 20 and the five reflection screens (25-29) are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `components/datatypes/datatypes.ts`) |
+| Data Types module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`) |
+| Data Types module: score and branches | Kept in session storage (`lingo.datatypes-*`), cleared when the module is opened from the path |
 | Variable module: score and branches | Kept in session storage (`lingo.variable-*`), cleared when the module is opened from the path |
 | `/module` with no params | Opens Level 1, step 1 |
 | Any other level or step | 404 (only Level 1 exists so far) |

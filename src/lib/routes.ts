@@ -12,6 +12,9 @@ export const sequenceHref = (step: number | "complete") => `/module/sequence?ste
 /** `/module/variable?step=` — one screen of the Variable module (1-based, or `complete`). */
 export const variableHref = (step: number | "complete") => `/module/variable?step=${step}`;
 
+/** `/module/datatypes?step=` — one screen of the Data Types module (1-based, or `complete`). */
+export const datatypesHref = (step: number | "complete") => `/module/datatypes?step=${step}`;
+
 /** `/energy?from=` — the battery's screen; `from` is where its cross returns to. */
 export const energyHref = (from: string) => `/energy?from=${encodeURIComponent(from)}`;
 
