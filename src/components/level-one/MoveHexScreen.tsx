@@ -180,13 +180,13 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
       overlay={
         <>
           <div className="absolute inset-0 z-[9]" style={{ pointerEvents: failed ? "auto" : "none" }} onClick={tryAgain}>
-            <FeedbackPanel correct={false} title={flow?.wrongTitle} open={failed} hexIn={failed}>
+            <FeedbackPanel correct={false} title={flow?.wrongTitle} open={failed} hexIn={failed} centred={!!flow}>
               {flow?.wrong ?? WRONG_WAY}
             </FeedbackPanel>
           </div>
           {flow && (
             <div className="pointer-events-none absolute inset-0">
-              <FeedbackPanel correct title={flow.rightTitle} open={solved} hexIn={solved} hexCue={HEX_ONBOARDING_TRIGGER.continueThumb}>
+              <FeedbackPanel correct title={flow.rightTitle} open={solved} hexIn={solved} hexCue={HEX_ONBOARDING_TRIGGER.continueThumb} centred>
                 {flow.right}
               </FeedbackPanel>
             </div>

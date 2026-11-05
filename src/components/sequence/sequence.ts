@@ -46,6 +46,8 @@ export type SequenceQuiz = {
   correctId: string;
   /** The picture box's width, where a card's art is wider than the layout's. */
   pictureWidth?: number;
+  /** The picture box's height, where a card's art is larger than the layout's. */
+  pictureHeight?: number;
   rightTitle: string;
   right: string;
   wrongTitle: string;
@@ -132,6 +134,8 @@ export const FIRST_COMMAND: SequenceQuiz = {
   bubbleTop: 150,
   scene: { robot: true },
   layout: "pair",
+  pictureWidth: 120,
+  pictureHeight: 100,
   choices: [
     { id: "pickup", text: "Pick Up", icon: PICK_UP_ICON, tint: LAVENDER, moves: ["pickUp"] },
     { id: "target", text: "Place in target", icon: PLACE_IN_TARGET_ICON, tint: CREAM, moves: ["wrongClaw"] },

@@ -20,7 +20,7 @@ import { SEQUENCE_STEPS, sequenceNext, sequencePrevious, type SequenceQuiz } fro
 import { noteFirstTry } from "./sequenceScore";
 
 /** A list of answers only has to clear the result panel; there is a picture to keep in view above it. */
-const LIST_RISE = 150;
+const LIST_RISE = 165;
 /** Where the pictures to compare start (Figma `top`), their height, and how far they rise as Hex leaves. */
 const PICTURES_TOP = 248;
 const PICTURES_HEIGHT = 200;
@@ -42,6 +42,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   const correct = selectedId === quiz.correctId;
+  // Like the first lesson: a right answer that plays a robot move clears the cards so it can be seen.
+  const fadeCards = checked && correct && !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length;
 
   const check = () => {
     setChecked(true);
@@ -95,6 +97,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            centred
           >
             {correct ? quiz.right : quiz.wrong}
           </FeedbackPanel>
@@ -126,7 +129,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           correctId={shownCorrectId}
           selectedId={selectedId}
           checked={checked}
-          fadeOut={false}
+          fadeOut={fadeCards}
           hinted={hinted}
           withHint
           rise={LIST_RISE}
@@ -139,10 +142,11 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           correctId={shownCorrectId}
           selectedId={selectedId}
           checked={checked}
-          fadeOut={false}
+          fadeOut={fadeCards}
           hinted={hinted}
           withHint
           pictureWidth={quiz.pictureWidth}
+          pictureHeight={quiz.pictureHeight}
           onPick={setSelectedId}
         />
       )}

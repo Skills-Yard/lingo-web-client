@@ -220,8 +220,9 @@ export function ArrangeScreen() {
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            centred
           >
-            {correct ? "The robot followed your order, and the cube reached the target." : "The robot can’t place a cube it hasn’t picked up. What should it do first?"}
+            {correct ? "The robot followed your order. Cube placed!" : "The robot must pick up the cube before placing it."}
           </FeedbackPanel>
         </div>
       }
