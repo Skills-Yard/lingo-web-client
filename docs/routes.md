@@ -36,6 +36,19 @@
 | `/module?level=1&step=6` | Instruction = command |
 | `/module?level=1&step=7` | Move-Hex game board |
 
+## Sequence module
+
+| Route | Screen |
+|---|---|
+| `/module/sequence?step=1` | "What to put on first?" (socks and shoes) |
+| `/module/sequence?step=2` | "Compare both attempts" |
+| `/module/sequence?step=3` | "What if socks go first?" |
+| `/module/sequence?step=4` | "What's the first command" (robot) |
+| `/module/sequence?step=5` | "Arrange the instructions!" (drag and drop) |
+| `/module/sequence?step=6` | "Meet the Sequence." |
+| `/module/sequence?step=7` | "Let's guide Hex" |
+| `/module/sequence?step=complete` | "Lesson complete!" |
+
 ## Other pages
 
 | Route | Page |

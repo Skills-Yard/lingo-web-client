@@ -166,6 +166,8 @@ export const fireRobot = (move: RobotMove) => {
 export const syncRobotPose = (wanted: RobotPose) => {
   if (pose === wanted) return;
   if (wanted === "idle") {
+    // The file ignores `reset` while the claw holds the cube: it has to let go first.
+    if (pose === "holding") fireRobot("putDown");
     fireRobot("reset");
     return;
   }

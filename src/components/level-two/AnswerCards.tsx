@@ -30,6 +30,8 @@ type AnswerCardsProps = {
   hinted: boolean;
   /** The screen has the hint button beside its main button. */
   withHint: boolean;
+  /** How far they rise once the result panel is up (default `CARDS_RISE`). */
+  rise?: number;
   onPick: (id: string) => void;
 };
 
@@ -38,11 +40,11 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, onPick }: AnswerCardsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -CARDS_RISE : 0 }}
+      animate={{ opacity: 1, y: checked ? -rise : 0 }}
       transition={
         checked
           ? PANEL_SPRING

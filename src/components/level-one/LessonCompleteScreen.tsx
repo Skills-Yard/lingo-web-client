@@ -34,7 +34,16 @@ const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(se
  * Continue records module `level` as finished and goes back to the path,
  * where Hex moves on to the next block.
  */
-export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number; onContinue?: () => void }) {
+export function LessonCompleteScreen({
+  level = 1,
+  accuracy: readAccuracy = firstTryAccuracy,
+  onContinue,
+}: {
+  level?: number;
+  /** Reads the share (0-100) of questions answered right the first time. */
+  accuracy?: () => number;
+  onContinue?: () => void;
+}) {
   const router = useRouter();
   const { rive, RiveComponent, ready, fireTrigger } = useHexRive(
     LAYOUT,
@@ -56,12 +65,12 @@ export function LessonCompleteScreen({ level = 1, onContinue }: { level?: number
     };
     set(LESSON_COMPLETE.xpProperty, LESSON_XP, `+${LESSON_XP}`);
     // The questions answered right the first time, of all of them.
-    const accuracy = firstTryAccuracy();
+    const accuracy = readAccuracy();
     set(LESSON_COMPLETE.accuracyProperty, accuracy, `${accuracy}%`);
     set(LESSON_COMPLETE.timeProperty, LESSON_SECONDS, formatTime(LESSON_SECONDS));
     fireTrigger(LESSON_COMPLETE.playTrigger);
     vibrateForLessonComplete();
-  }, [rive, ready, fireTrigger]);
+  }, [rive, ready, fireTrigger, readAccuracy]);
 
   return (
     <main className="onboarding-light relative h-dvh w-full overflow-hidden bg-white dark:bg-background">

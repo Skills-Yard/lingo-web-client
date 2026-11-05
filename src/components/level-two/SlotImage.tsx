@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 const DIR = "/images/level-two/";
 
 /**
- * A picture from `public/images/level-two/` that is drawn once the file is
+ * A picture from `public/images/level-two/` (or at a full path, starting with `/`) that is drawn once the file is
  * there: until then it leaves nothing but the (fixed-size) slot its parent
  * gives it, instead of a broken-image icon.
  */
@@ -20,6 +20,6 @@ export function SlotImage({ file, className }: { file: string; className?: strin
   if (missing) return null;
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img ref={ref} src={`${DIR}${file}`} alt="" draggable={false} onError={() => setMissing(true)} className={`select-none ${className ?? ""}`} />
+    <img ref={ref} src={file.startsWith("/") ? file : `${DIR}${file}`} alt="" draggable={false} onError={() => setMissing(true)} className={`select-none ${className ?? ""}`} />
   );
 }

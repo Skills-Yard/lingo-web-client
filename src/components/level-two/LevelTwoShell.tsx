@@ -10,7 +10,7 @@ import { BUTTON } from "@/lib/rive/runtime";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { FRAME_TOP_SHIFT, levelTwoHref, type TitleLines } from "./levelTwo";
 
-type LevelTwoShellProps = Omit<ComponentProps<typeof LevelOneShell>, "step" | "total" | "onBack" | "children"> & {
+type LevelTwoShellProps = Omit<ComponentProps<typeof LevelOneShell>, "step" | "children"> & {
   step: number;
   /** The picture behind the screen (see RobotBackdrop). */
   scene: ReactNode;
@@ -24,13 +24,13 @@ type LevelTwoShellProps = Omit<ComponentProps<typeof LevelOneShell>, "step" | "t
  * for what stands on the button row): the shell scales that frame as one
  * piece, so it looks the same on every device.
  */
-export function LevelTwoShell({ step, scene, children, ...shell }: LevelTwoShellProps) {
+export function LevelTwoShell({ step, total = MODULE_STEPS, onBack, scene, children, ...shell }: LevelTwoShellProps) {
   const router = useRouter();
   return (
     <LevelOneShell
       step={step}
-      total={MODULE_STEPS}
-      onBack={() => router.push(step > 1 ? levelTwoHref(step - 1) : "/level")}
+      total={total}
+      onBack={onBack ?? (() => router.push(step > 1 ? levelTwoHref(step - 1) : "/level"))}
       {...shell}
     >
       {scene}

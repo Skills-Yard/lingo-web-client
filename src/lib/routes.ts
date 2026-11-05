@@ -6,6 +6,9 @@ export const onboardingHref = (step?: string) =>
 /** `/module?step=` — one screen of the module (1-based, or `reward` / `complete`). */
 export const moduleHref = (step: number | string) => `/module?step=${step}`;
 
+/** `/module/sequence?step=` — one screen of the Sequence module (1-based, or `complete`). */
+export const sequenceHref = (step: number | "complete") => `/module/sequence?step=${step}`;
+
 /** `/energy?from=` — the battery's screen; `from` is where its cross returns to. */
 export const energyHref = (from: string) => `/energy?from=${encodeURIComponent(from)}`;
 
