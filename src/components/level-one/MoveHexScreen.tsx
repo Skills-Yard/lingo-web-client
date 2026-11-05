@@ -74,6 +74,8 @@ const BUTTONS_TOP = 508;
 export type MoveHexFlow = {
   step: number;
   total: number;
+  /** Read when the screen opens, in place of the first lesson's. */
+  voiceover?: readonly string[];
   onBack: () => void;
   tip: ReactNode;
   rightTitle: string;
@@ -195,7 +197,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
       step={flow?.step ?? levelOneStep(8)}
       total={flow?.total}
       onBack={flow?.onBack}
-      voiceover={MODULE_AUDIO.guideHex}
+      voiceover={flow?.voiceover ?? MODULE_AUDIO.guideHex}
       scene={<MeadowBackdrop />}
       ctaLabel={failed ? "Try again" : flow && !solved ? "Let’s Try" : "Continue"}
       ctaDisabled={!intro && !solved && !failed}

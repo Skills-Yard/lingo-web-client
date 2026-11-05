@@ -41,6 +41,25 @@ export const MODULE_AUDIO = {
   guideHex: [moduleAudio("_guide _hex.mp3")],
 } as const;
 
+/** The Sequence module's voice clips, in `public/audios/sequenceModuleAudios/`. */
+const sequenceAudio = (file: string) => encodeURI(`/audios/sequenceModuleAudios/${file}`);
+
+export const SEQUENCE_AUDIO = {
+  /** One list per quiz: the title, then Hex's line. */
+  putOnFirst: [sequenceAudio("What_to_put_on_first.mp3"), sequenceAudio("Lets_get_ready_before_going_out.mp3")],
+  /** The title once the first question is answered. */
+  tryYourOrder: [sequenceAudio("Lets_try_your_order.mp3")],
+  compareAttempts: [sequenceAudio("Look_closely_now.mp3")],
+  socksFirst: [sequenceAudio("What_if_socks_go_first.mp3"), sequenceAudio("Lets_get_ready_again_Your_shoes_are_already_on.mp3")],
+  firstCommand: [sequenceAudio("Whats_the_first_command.mp3"), sequenceAudio("Move_the_cube_into_the_target_area.mp3")],
+  arrange: [sequenceAudio("Arrange_the_instructions.mp3"), sequenceAudio("Drag_to_help_robot_place_the_cube_in_target_area.mp3")],
+  /** Hex's line on "Meet the Sequence." */
+  meetSequence: [sequenceAudio("Order_matters_as_some_instructions_come_first_then_another.mp3")],
+  /** The player on "Meet the Sequence." */
+  sequenceClip: sequenceAudio("A_sequence_is_a_set_of_instructions_arranged_in_a_particular_order.mp3"),
+  guideHex: [sequenceAudio("Lets_guide_Hex.mp3")],
+} as const;
+
 /** Onboarding's voice clips (questions only), from the same folder. */
 export const ONBOARDING_AUDIO = {
   greeting: [moduleAudio("im_hex.mp3")],

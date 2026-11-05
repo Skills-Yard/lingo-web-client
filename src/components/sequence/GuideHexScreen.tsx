@@ -4,6 +4,7 @@ import { Lightbulb } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { MoveHexScreen } from "@/components/level-one/MoveHexScreen";
 import { useCallback } from "react";
+import { SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 import { SEQUENCE_STEPS, sequenceNext, sequencePrevious } from "./sequence";
 import { noteFirstTry } from "./sequenceScore";
 
@@ -30,6 +31,7 @@ export function GuideHexScreen() {
       flow={{
         step: STEP,
         total: SEQUENCE_STEPS,
+        voiceover: SEQUENCE_AUDIO.guideHex,
         onBack: () => router.push(sequencePrevious(STEP)),
         tip: <GuideTip />,
         rightTitle: "Great!",

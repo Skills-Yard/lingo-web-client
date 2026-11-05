@@ -1,4 +1,5 @@
 import type { BubbleSize, Choice, Span, TitleLines } from "@/components/level-two/levelTwo";
+import { SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 import { sequenceHref } from "@/lib/routes";
 
 /** The Sequence module's screens, for its progress bar. */
@@ -52,6 +53,10 @@ export type SequenceQuiz = {
   wrong: string;
   /** The main button before the answer is checked (default "Continue"). */
   ctaLabel?: string;
+  /** Clips read when the screen opens (the title, then Hex's line). */
+  voiceover: readonly string[];
+  /** Read instead once the answer is checked, where the screen has a new title. */
+  resultVoiceover?: readonly string[];
 };
 
 /** Screen 1 — "What to put on first?" */
@@ -74,6 +79,8 @@ export const PUT_ON_FIRST: SequenceQuiz = {
   right: "You are done getting ready.",
   wrongTitle: "Not quite",
   wrong: "Shoes go on after socks. Try putting on your socks first!",
+  voiceover: SEQUENCE_AUDIO.putOnFirst,
+  resultVoiceover: SEQUENCE_AUDIO.tryYourOrder,
 };
 
 /** Screen 2 — "Compare both attempts". */
@@ -99,6 +106,7 @@ export const COMPARE_ATTEMPTS: SequenceQuiz = {
   right: "The actions were the same, but their order changed the result.",
   wrongTitle: "Not quite",
   wrong: "Both attempts use the same actions and share a goal. Look at what came first.",
+  voiceover: SEQUENCE_AUDIO.compareAttempts,
 };
 
 /** Screen 3 — "What if socks go first?" */
@@ -120,6 +128,7 @@ export const SOCKS_FIRST: SequenceQuiz = {
   right: "Some actions need to happen before others.",
   wrongTitle: "Not quite",
   wrong: "Doing the steps in the wrong order makes getting ready harder.",
+  voiceover: SEQUENCE_AUDIO.socksFirst,
 };
 
 /** Screen 4 — "What's the first command?" */
@@ -142,4 +151,5 @@ export const FIRST_COMMAND: SequenceQuiz = {
   wrongTitle: "Almost!",
   wrong: "The robot isn’t holding the cube yet. What should it do first?",
   ctaLabel: "Next",
+  voiceover: SEQUENCE_AUDIO.firstCommand,
 };

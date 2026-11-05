@@ -72,6 +72,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
     <LevelTwoShell
       step={quiz.step}
       total={SEQUENCE_STEPS}
+      voiceover={checked ? quiz.resultVoiceover : quiz.voiceover}
       onBack={() => router.push(sequencePrevious(quiz.step))}
       scene={
         "image" in quiz.scene ? (
