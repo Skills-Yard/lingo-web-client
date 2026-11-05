@@ -32,6 +32,8 @@ type AnswerCardsProps = {
   withHint: boolean;
   /** How far they rise once the result panel is up (default `CARDS_RISE`). */
   rise?: number;
+  /** Shorter rows (56px) for answers that are only words, so four fit above the button. */
+  compact?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -40,7 +42,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, onPick }: AnswerCardsProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
@@ -71,7 +73,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`relative isolate flex h-[76px] w-full cursor-pointer items-center justify-between gap-[34px] overflow-hidden rounded-[18px] border px-3.5 py-2.5 text-left shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] transition-[background-color,border-color] ${
+              className={`relative isolate flex ${compact ? "h-[56px] gap-3 py-1.5" : "h-[76px] gap-[34px] py-2.5"} w-full cursor-pointer items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] transition-[background-color,border-color] ${
                 state === "idle" ? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]" : look.card
               }`}
             >
@@ -83,11 +85,11 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
               />
-              <span className="flex min-w-0 flex-1 items-center gap-[22px]">
+              <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`}>
                 {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
-                <span className="flex h-[47.31px] w-[46.68px] shrink-0 items-center justify-center">
+                <span className={`flex shrink-0 items-center justify-center ${compact ? "size-[36px]" : "h-[47.31px] w-[46.68px]"}`}>
                   {choice.badge ? (
-                    <span className="flex size-[38px] items-center justify-center rounded-full bg-[#EEF1F4] text-[16px] font-semibold text-[#5C6670] dark:bg-white/10 dark:text-white/80">
+                    <span className={`flex items-center justify-center rounded-full bg-[#EEF1F4] ${compact ? "size-[32px] text-[14px]" : "size-[38px] text-[16px]"} font-semibold text-[#5C6670] dark:bg-white/10 dark:text-white/80`}>
                       {choice.badge}
                     </span>
                   ) : (
@@ -97,7 +99,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 <span className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{choice.text}</span>
               </span>
               {/* Figma "Ellipse 3" (34 x 34), at the row's end. */}
-              <span aria-hidden className="size-[34px] shrink-0 rounded-full" />
+              {!compact && <span aria-hidden className="size-[34px] shrink-0 rounded-full" />}
             </motion.button>
           </HintFloat>
         );

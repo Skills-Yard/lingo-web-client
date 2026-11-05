@@ -26,10 +26,12 @@ type ArrangeLayout = {
   lane?: number;
   /** The cards start in a tray of their own; without it they start in their slots (they can only be swapped). */
   tray?: boolean;
+  /** The cards' text is a sentence: set in plain case, not the small capitals of a command's name. */
+  sentence?: boolean;
 };
 
 /** Where everything stands on the board, and how big the board is. */
-export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true }: ArrangeLayout) => {
+export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, sentence = false }: ArrangeLayout) => {
   const columns = mode === "columns";
   const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: 0 });
   const slot = (index: number): Point =>
@@ -41,7 +43,7 @@ export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "
     : { width: count * card.width + (count - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
   /** A card dropped within this far (px) of a slot's corner goes in it. */
   const reach = card.height * 0.87;
-  return { count, card, tray, home, slot, board, reach };
+  return { count, card, tray, home, slot, board, reach, sentence };
 };
 export type ArrangeGeometry = ReturnType<typeof arrangeGeometry>;
 
@@ -105,6 +107,7 @@ export function useArrange(ids: readonly string[], count: number, initial?: Slot
 function ArrangeCard({
   card,
   size,
+  sentence,
   at,
   disabled,
   onDrop,
@@ -112,6 +115,7 @@ function ArrangeCard({
 }: {
   card: ArrangeCardDef;
   size: { width: number; height: number };
+  sentence: boolean;
   at: Point;
   disabled: boolean;
   onDrop: (to: Point) => void;
@@ -181,7 +185,9 @@ function ArrangeCard({
         <span className={`flex w-full items-center justify-center ${compact ? "h-[24px]" : "h-[46px]"}`}>{card.art}</span>
       )}
       <span
-        className={`text-center font-semibold text-[#444444] dark:text-white ${compact ? "text-[11px] leading-[14px] tracking-[0.2px] uppercase" : "text-[14px] leading-[18px]"}`}
+        className={`text-center font-semibold text-[#444444] dark:text-white ${
+          compact ? (sentence ? "text-[12px] leading-4" : "text-[11px] leading-[14px] tracking-[0.2px] uppercase") : "text-[14px] leading-[18px]"
+        }`}
       >
         {card.text}
       </span>
@@ -197,6 +203,7 @@ export function ArrangeBoard({
   disabled,
   onPlace,
   onTap,
+  slotContent,
 }: {
   cards: readonly ArrangeCardDef[];
   slots: Slots;
@@ -205,6 +212,8 @@ export function ArrangeBoard({
   onPlace: (id: string, slot: number | null) => void;
   /** Tapping a card; without it a tap does nothing (cards that can only be swapped). */
   onTap?: (id: string) => void;
+  /** What an empty slot shows in place of its number (its card, when it holds one, is drawn over it). */
+  slotContent?: (index: number) => ReactNode;
 }) {
   return (
     <>
@@ -215,9 +224,13 @@ export function ArrangeBoard({
           className="absolute flex items-center justify-center rounded-[8px] border-2 border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
           style={{ left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height }}
         >
-          <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
-            {index + 1}
-          </span>
+          {slotContent ? (
+            slotContent(index)
+          ) : (
+            <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
+              {index + 1}
+            </span>
+          )}
         </div>
       ))}
       {cards.map((card, index) => {
@@ -227,6 +240,7 @@ export function ArrangeBoard({
             key={card.id}
             card={card}
             size={geo.card}
+            sentence={geo.sentence}
             at={placed >= 0 ? geo.slot(placed) : geo.home(index)}
             disabled={disabled}
             onDrop={(to) => onPlace(card.id, slotAt(to, geo))}
