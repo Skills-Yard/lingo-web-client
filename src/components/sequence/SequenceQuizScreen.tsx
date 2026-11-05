@@ -31,6 +31,8 @@ const LIST_ROW_GAP = 6;
 const PICTURES_TOP = 248;
 const PICTURES_HEIGHT = 200;
 const PICTURES_RISE = 90;
+/** A single picture also shrinks (from its top) as it rises, so the raised answers don't reach it. */
+const CLOSE_UP_CHECKED_SCALE = 0.9;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in, so a question standing on them comes in with them. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
@@ -52,7 +54,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const [attempt, setAttempt] = useState(0);
   const correct = selectedId === quiz.correctId;
   // Like the first lesson: a right answer that plays a robot move clears the cards so it can be seen.
-  const fadeCards = checked && correct && !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length;
+  const fixedRoom = "room" in quiz.scene && !!quiz.scene.room.fixed;
+  const fadeCards = checked && (fixedRoom || (correct && !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length));
 
   const check = () => {
     setChecked(true);
@@ -98,8 +101,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       voiceover={checked ? quiz.resultVoiceover : quiz.voiceover}
       onBack={() => router.push(sequencePrevious(quiz.step))}
       scene={
-        "image" in quiz.scene ? (
-          <SceneBackdrop src={quiz.scene.image} lifted={checked} />
+        "room" in quiz.scene ? (
+          <SceneBackdrop dress={!checked ? quiz.scene.room.start : correct ? quiz.scene.room.right : quiz.scene.room.wrong} lifted={checked && !fixedRoom} />
         ) : "robot" in quiz.scene ? (
           <RobotBackdrop below={robotBelowDialogue(quiz.bubbleTop, quiz.bubble)} pose="idle" />
         ) : (
@@ -148,13 +151,13 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       {quiz.closeUp && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1, y: checked ? -PICTURES_RISE : 0 }}
+          animate={{ opacity: 1, scale: checked ? CLOSE_UP_CHECKED_SCALE : 1, y: checked ? -PICTURES_RISE : 0 }}
           transition={{ ...PANEL_SPRING, opacity: { duration: 0.3, delay: 0.2 } }}
           className="absolute inset-x-0 flex justify-center"
-          style={{ top: stageTop(quiz.closeUp.top) }}
+          style={{ top: stageTop(quiz.closeUp.top), transformOrigin: "50% 0" }}
         >
           <div
-            className="rounded-[16px] border-4 border-white bg-[#F6F4FE] p-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent dark:bg-[#0F1F26]"
+            className="rounded-[16px] border-4 border-white bg-[#F6F4FE] p-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-[#818185] dark:bg-[#0F1F26]"
             style={{ width: quiz.closeUp.width }}
           >
             <SlotImage file={quiz.closeUp.src} className="h-auto w-full" />
@@ -173,7 +176,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
             style={{ top: stageTop(quiz.wrongPicture.top) }}
           >
             <div
-              className="rounded-[16px] border-4 border-white bg-white p-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent dark:bg-[#15181E]"
+              className="rounded-[16px] border-4 border-white bg-white p-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-[#818185] dark:bg-[#15181E]"
               style={{ width: quiz.wrongPicture.width }}
             >
               <SlotImage file={quiz.wrongPicture.src} className="h-auto w-full" />
@@ -216,6 +219,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           withHint={withHint}
           pictureWidth={quiz.pictureWidth}
           pictureHeight={quiz.pictureHeight}
+          cardHeight={quiz.cardHeight}
           onPick={setSelectedId}
         />
       )}

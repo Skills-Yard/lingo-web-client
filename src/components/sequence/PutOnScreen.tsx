@@ -6,8 +6,8 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
 import type { BubbleSize, Span, TitleLines } from "@/components/level-two/levelTwo";
-import { DressScene, HOP_SECONDS, type DressStage } from "./DressScene";
-import { SEQUENCE_STEPS, SOCKS_ON_SHOES_ON, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { DressScene, type DressStage } from "./DressScene";
+import { SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
 
 export type PutOnStage = "socks" | "shoes" | "ready";
 
@@ -18,7 +18,7 @@ const CONFIG: Record<PutOnStage, Config> = {
     step: STEP.socks,
     title: [[{ text: "Let’s Put On " }, { text: "Socks First!!", teal: true }]],
     titleSize: 26,
-    line: [{ text: "Watch what happens when you put on your socks first." }],
+    line: [{ text: "Your socks are on. That is the right first step!" }],
     bubble: { width: 190 },
   },
   shoes: {
@@ -37,34 +37,28 @@ const CONFIG: Record<PutOnStage, Config> = {
 };
 
 const BUBBLE_TOP = 150;
-/** The picture of the result, in front of the scene (Figma `top`). */
-const CLOSE_UP = { src: SOCKS_ON_SHOES_ON, width: 285, top: 262 };
-/** The pause before the socks start to move, and after they land. */
-const SOCKS_WAIT_MS = 900;
-const LAND_MS = 700;
 /** How long the screen's own animation and text take before Continue unlocks on the last one. */
 const READY_MS = 3000;
+/** How long the shoes going on is left to play before Continue unlocks. */
+const SHOES_MS = 3000;
 
-type Phase = "wait" | "hop" | "closeUp" | "done";
+type Phase = "wait" | "playing" | "done";
 
 /**
- * The three "Let's see what happens" screens: the character puts on his socks,
- * then (on a tap of "Put On Shoes") his shoes, and is ready to go. There is no
- * question: the learner watches, and Continue unlocks once it has played.
+ * The three "Let's see what happens" screens: the character has his socks on from
+ * the first screen, then (on a tap of "Put On Shoes") puts on his shoes, and is
+ * ready to go. There is no question: the learner watches, and Continue unlocks
+ * once anything there is to watch has played.
  */
 export function PutOnScreen({ stage }: { stage: PutOnStage }) {
   const router = useRouter();
   const config = CONFIG[stage];
-  const [phase, setPhase] = useState<Phase>(stage === "ready" ? "closeUp" : "wait");
+  const [phase, setPhase] = useState<Phase>(stage === "ready" ? "playing" : stage === "socks" ? "done" : "wait");
   const pending = useRef<number[]>([]);
 
-  // The socks and the last screen play on their own; the shoes wait for their button.
+  // The last screen plays on its own; the shoes wait for their button.
   useEffect(() => {
     const timers: number[] = [];
-    if (stage === "socks") {
-      timers.push(window.setTimeout(() => setPhase("hop"), SOCKS_WAIT_MS));
-      timers.push(window.setTimeout(() => setPhase("done"), SOCKS_WAIT_MS + HOP_SECONDS * 1000 + LAND_MS));
-    }
     if (stage === "ready") timers.push(window.setTimeout(() => setPhase("done"), READY_MS));
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [stage]);
@@ -75,9 +69,8 @@ export function PutOnScreen({ stage }: { stage: PutOnStage }) {
   }, []);
 
   const putOnShoes = () => {
-    setPhase("hop");
-    pending.current.push(window.setTimeout(() => setPhase("closeUp"), HOP_SECONDS * 1000 + LAND_MS));
-    pending.current.push(window.setTimeout(() => setPhase("done"), HOP_SECONDS * 1000 + LAND_MS + 1300));
+    setPhase("playing");
+    pending.current.push(window.setTimeout(() => setPhase("done"), SHOES_MS));
   };
 
   const onContinue = () => {
@@ -85,19 +78,16 @@ export function PutOnScreen({ stage }: { stage: PutOnStage }) {
     else router.push(sequenceNext(config.step));
   };
 
-  const lifted = (running: DressStage): DressStage => (phase === "wait" ? "rug" : phase === "hop" ? running : "worn");
-  const socks: DressStage = stage === "socks" ? lifted("hop") : "worn";
-  const shoes: DressStage = stage === "shoes" ? lifted("hop") : stage === "ready" ? "worn" : "rug";
-  const showCloseUp = stage === "ready" || (stage === "shoes" && (phase === "closeUp" || phase === "done"));
+  const shoes: DressStage = stage === "ready" ? "worn" : stage === "socks" || phase === "wait" ? "rug" : phase === "playing" ? "hop" : "worn";
 
   return (
     <LevelTwoShell
       step={config.step}
       total={SEQUENCE_STEPS}
       onBack={() => router.push(sequencePrevious(config.step))}
-      scene={<DressScene socks={socks} shoes={shoes} closeUp={showCloseUp ? CLOSE_UP : null} bounce={stage === "ready"} />}
+      scene={<DressScene socks="worn" shoes={shoes} happy={stage === "ready"} />}
       ctaLabel={stage === "shoes" && phase === "wait" ? "Put On Shoes" : "Continue"}
-      ctaDisabled={stage === "shoes" ? phase === "hop" || phase === "closeUp" : phase !== "done"}
+      ctaDisabled={stage === "shoes" ? phase === "playing" : phase !== "done"}
       onContinue={onContinue}
     >
       <ScreenTitle oneLine>

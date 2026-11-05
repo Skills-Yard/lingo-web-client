@@ -10,7 +10,7 @@ import { vibrateForAnswer } from "@/lib/haptics";
 import { HexBoard } from "./HexBoard";
 import { CommandChips, HexScreen } from "./HexScreen";
 import { endOf, GRID, GRID_START, tileName, trace, type Command, type Dir } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { IMAGES, STEP, sequenceNext } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
@@ -76,7 +76,6 @@ const LIST_RISE = 150;
 const BOARD_WIDTH = 260;
 const BOARD_TOP = 130;
 const CHIPS_TOP = 330;
-const LETTERS = ["A", "B", "C"];
 const ORANGE = "#FF8D42";
 const TEAL = "#04ACAB";
 
@@ -95,7 +94,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
   const [hinted, setHinted] = useState(false);
 
   const correctId = useMemo(() => tileName(endOf(GRID_START, config.commands, GRID)), [config.commands]);
-  const choices: readonly Choice[] = config.options.map((name, index) => ({ id: name, text: name, icon: "", badge: LETTERS[index] }));
+  const choices: readonly Choice[] = config.options.map((name) => ({ id: name, text: name, icon: `${IMAGES}/icon-tile-${name.toLowerCase()}.svg` }));
   const correct = selectedId === correctId;
   // The way he faces to begin with, and after his first turn (if there is one).
   const ghostDirs = useMemo(() => {

@@ -36,6 +36,8 @@ type TileCardsProps = {
   pictureWidth?: number;
   /** The picture box's height (px), where the art should be larger than the layout's. */
   pictureHeight?: number;
+  /** The card's height (px), where it should differ from the layout's. */
+  cardHeight?: number;
   onPick: (id: string) => void;
 };
 
@@ -44,7 +46,7 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -72,6 +74,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 onPick(choice.id);
               }}
               aria-pressed={state === "selected"}
+              style={cardHeight ? { height: cardHeight } : undefined}
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}

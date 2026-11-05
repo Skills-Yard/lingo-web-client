@@ -40,7 +40,7 @@ export function CommandChips({ commands, active = -1 }: { commands: readonly Com
           className={`flex items-center gap-1.5 rounded-full border-2 py-1 pr-3 pl-1 text-[11px] leading-4 font-semibold tracking-[0.2px] transition-colors ${
             index === active
               ? "border-[#04ACAB] bg-[#E3F6F3] text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]"
-              : "border-white bg-white text-[#444444] shadow-[1px_1px_4px_rgba(0,0,0,0.15)] dark:border-transparent dark:bg-[#15181E] dark:text-white"
+              : "border-white bg-white text-[#444444] shadow-[1px_1px_4px_rgba(0,0,0,0.15)] dark:border-[#818185] dark:bg-[#15181E] dark:text-white"
           }`}
         >
           <span className="flex size-[18px] items-center justify-center rounded-full bg-[#D9DEE3] text-[10px] text-[#5C6670] dark:bg-white/15 dark:text-white/70">
