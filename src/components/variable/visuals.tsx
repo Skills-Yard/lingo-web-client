@@ -4,45 +4,9 @@ import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { animate, AnimatePresence, motion } from "framer-motion";
 import { Calculator as CalculatorIcon } from "lucide-react";
 
-/** Where the module's pictures go: `public/images/variable/<name>.webp`. Until one is there, `Art` shows a placeholder. */
-const IMAGES = "/images/variable";
-
 /** A card, in the style of the picture cards of the other modules. */
 export const CARD =
   "rounded-[16px] border-4 border-white bg-[#F6F4FE] shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent dark:bg-[#0F1F26]";
-
-/**
- * A picture the module still needs (a scene, a character): `public/images/variable/<name>.webp`
- * is drawn once the file is there; until then a placeholder (an emoji and what
- * the picture is meant to show) stands in, in the same box.
- */
-export function Art({ name, emoji, label, className = "" }: { name: string; emoji: string; label: string; className?: string }) {
-  const ref = useRef<HTMLImageElement>(null);
-  const [missing, setMissing] = useState(false);
-  // The failed request can finish before React has attached `onError`.
-  useEffect(() => {
-    const img = ref.current;
-    if (img?.complete && img.naturalWidth === 0) setMissing(true);
-  }, []);
-  if (!missing) {
-    return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img ref={ref} src={`${IMAGES}/${name}.webp`} alt={label} draggable={false} onError={() => setMissing(true)} className={`select-none object-contain ${className}`} />
-    );
-  }
-  return (
-    <div
-      role="img"
-      aria-label={label}
-      className={`flex flex-col items-center justify-center gap-1 rounded-[16px] border-2 border-dashed border-[#B9C2D0] bg-white/60 px-3 text-center dark:border-white/25 dark:bg-white/5 ${className}`}
-    >
-      <span aria-hidden className="text-[44px] leading-none">
-        {emoji}
-      </span>
-      <span className="text-[11px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{label}</span>
-    </div>
-  );
-}
 
 /** A number that counts up or down to `value` when it changes. */
 export function Counter({ value, prefix = "", suffix = "", seconds = 1.1 }: { value: number; prefix?: string; suffix?: string; seconds?: number }) {
