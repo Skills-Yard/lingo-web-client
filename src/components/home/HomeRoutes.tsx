@@ -4,7 +4,9 @@ import { useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { resetReview } from "@/lib/moduleReview";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
-import { energyReturnPath, moduleHref, onboardingHref } from "@/lib/routes";
+import { energyReturnPath, moduleHref, onboardingHref, sequenceHref } from "@/lib/routes";
+import { SEQUENCE_LEVEL } from "@/components/sequence/sequence";
+import { resetFirstTry } from "@/components/sequence/sequenceScore";
 import { CareerDetailScreen } from "./CareerDetailScreen";
 import { careerById } from "./careersData";
 import { CareersScreen } from "./CareersScreen";
@@ -22,9 +24,10 @@ export function LevelRoute() {
   const router = useRouter();
   return (
     <HomeScreen
-      onStart={() => {
+      onStart={(module) => {
         resetReview();
-        router.push(moduleHref(1));
+        resetFirstTry();
+        router.push(module === SEQUENCE_LEVEL ? sequenceHref(1) : moduleHref(1));
       }}
     />
   );
