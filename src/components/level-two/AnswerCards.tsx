@@ -86,7 +86,13 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               <span className="flex min-w-0 flex-1 items-center gap-[22px]">
                 {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
                 <span className="flex h-[47.31px] w-[46.68px] shrink-0 items-center justify-center">
-                  <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
+                  {choice.badge ? (
+                    <span className="flex size-[38px] items-center justify-center rounded-full bg-[#EEF1F4] text-[16px] font-semibold text-[#5C6670] dark:bg-white/10 dark:text-white/80">
+                      {choice.badge}
+                    </span>
+                  ) : (
+                    <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
+                  )}
                 </span>
                 <span className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{choice.text}</span>
               </span>
