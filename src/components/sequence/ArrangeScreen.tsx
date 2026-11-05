@@ -6,6 +6,7 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
+import { SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 import { RobotBackdrop, robotBelowDialogue } from "@/components/level-two/RobotBackdrop";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import type { BubbleSize, Span } from "@/components/level-two/levelTwo";
@@ -92,6 +93,7 @@ export function ArrangeScreen() {
     <LevelTwoShell
       step={STEP.arrange}
       total={SEQUENCE_STEPS}
+      voiceover={checked ? undefined : SEQUENCE_AUDIO.arrange}
       onBack={() => router.push(sequencePrevious(STEP.arrange))}
       scene={<RobotBackdrop below={robotBelowDialogue(BUBBLE_TOP, BUBBLE)} pose="idle" />}
       answer={answer}

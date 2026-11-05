@@ -1,5 +1,6 @@
 "use client";
 
+import { GemRive } from "@/components/ui/GemRive";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, motion } from "framer-motion";
 import { BatteryLow, Infinity as InfinityIcon, Play, X, Zap } from "lucide-react";
@@ -135,8 +136,7 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
               Energy
             </h1>
             <span className="relative flex items-center gap-1.5 text-base font-extrabold text-[#2F80ED] dark:text-[#5AA2FF]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/images/stats/gem.png" alt="" draggable={false} className="h-5 w-5 select-none object-contain" />
+              <GemRive className="h-5 w-5" />
               {LEARNER_STATS.gems}
             </span>
           </div>
@@ -210,8 +210,7 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
                 title="Recharge"
                 tag={
                   <span className="flex items-center gap-1.5 text-[#2F80ED] dark:text-[#5AA2FF]">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src="/images/stats/gem.png" alt="" draggable={false} className="h-4 w-4 select-none object-contain" />
+                    <GemRive className="h-4 w-4" />
                     {RECHARGE_COST}
                   </span>
                 }

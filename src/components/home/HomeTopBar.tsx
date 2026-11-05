@@ -1,5 +1,6 @@
 "use client";
 
+import { GemRive } from "@/components/ui/GemRive";
 import type { ReactNode } from "react";
 import { BatteryMenu } from "@/components/onboarding/BatteryMenu";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
@@ -55,7 +56,7 @@ export function HomeStats() {
         {statImg("/images/streak.png", "h-6 w-auto")}
       </StatItem>
       <StatItem value={String(LEARNER_STATS.gems)} label="gems" color="#7B5CF0" darkColor="#A48BFF">
-        {statImg("/images/gem.png", "h-6 w-6")}
+        <GemRive className="h-6 w-6" />
       </StatItem>
       <StatItem value={String(LEARNER_STATS.hints)} label="hints" color="#F2A900" darkColor="#FFC93C">
         {statImg("/images/idea.png", "h-6 w-auto")}
@@ -91,8 +92,7 @@ export function LevelStats({ className = "" }: { className?: string }) {
   return (
     <div className={`flex items-center gap-2 font-sans ${className}`}>
       <MiniStat value={String(LEARNER_STATS.gems)} color="#2F80ED" darkColor="#5AA2FF">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/images/stats/gem.png" alt="Gems" draggable={false} className="h-[20px] w-[20px] select-none object-contain" />
+        <GemRive className="h-[20px] w-[20px]" />
       </MiniStat>
       <BatteryMenu className="relative" buttonClassName="block text-left">
         <MiniStat value={batteryLabel(battery)} color="#01A17F" darkColor="#01A17F">

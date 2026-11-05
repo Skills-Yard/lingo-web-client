@@ -1,5 +1,6 @@
 "use client";
 
+import { GemRive } from "@/components/ui/GemRive";
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkle, X } from "lucide-react";
@@ -10,7 +11,6 @@ const AUTO_CLOSE_MS = 3000;
 
 /** The gem with its burst of confetti, and the gem alone (from the level images). */
 const GEM_BURST_SRC = "/images/level-one/gem-burst.png";
-const GEM_SRC = "/images/level-one/gem.png";
 
 /**
  * "Congratulations! +10 XP, 1 Gem" — the reward popup for finishing the game,
@@ -82,8 +82,7 @@ export function GemPopup({ open, onClose }: { open: boolean; onClose: () => void
             </h2>
 
             <span className="absolute top-[280px] left-1/2 flex h-[63.61px] w-[154px] -translate-x-1/2 items-center justify-center rounded-lg bg-[#E9F8F4] px-3 py-2 dark:bg-[#0F2B28]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={GEM_SRC} alt="" draggable={false} className="h-[38.99px] w-[32.14px] -rotate-[19.93deg] object-contain" />
+              <GemRive className="h-[38.99px] w-[32.14px] -rotate-[19.93deg]" />
               <span className={`w-[73px] text-[24px] leading-8 font-semibold`}>1 Gem</span>
             </span>
 

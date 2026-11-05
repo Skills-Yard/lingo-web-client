@@ -4,9 +4,11 @@ import { useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { resetReview } from "@/lib/moduleReview";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
-import { energyReturnPath, moduleHref, onboardingHref, sequenceHref } from "@/lib/routes";
+import { energyReturnPath, moduleHref, onboardingHref, sequenceHref, variableHref } from "@/lib/routes";
 import { SEQUENCE_LEVEL } from "@/components/sequence/sequence";
 import { resetFirstTry } from "@/components/sequence/sequenceScore";
+import { VARIABLE_LEVEL } from "@/components/variable/variable";
+import { resetVariableScore } from "@/components/variable/variableScore";
 import { CareerDetailScreen } from "./CareerDetailScreen";
 import { careerById } from "./careersData";
 import { CareersScreen } from "./CareersScreen";
@@ -27,7 +29,8 @@ export function LevelRoute() {
       onStart={(module) => {
         resetReview();
         resetFirstTry();
-        router.push(module === SEQUENCE_LEVEL ? sequenceHref(1) : moduleHref(1));
+        resetVariableScore();
+        router.push(module === VARIABLE_LEVEL ? variableHref(1) : module === SEQUENCE_LEVEL ? sequenceHref(1) : moduleHref(1));
       }}
     />
   );
