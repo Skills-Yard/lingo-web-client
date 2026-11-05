@@ -3,7 +3,7 @@
 import type { ComponentProps, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Lightbulb, RotateCcw } from "lucide-react";
+import { ArrowUp, Lightbulb, RotateCcw, RotateCw, type LucideIcon } from "lucide-react";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { MeadowBackdrop } from "@/components/level-one/MoveHexScreen";
@@ -30,26 +30,40 @@ export function TipCard({ children }: { children: string }) {
   );
 }
 
-/** The commands as numbered pills, the one being carried out (if any) lit. */
+/** Each command as it looks on the Hex Order cards. */
+const COMMAND_LOOK: Record<Command, { Icon: LucideIcon; tint: string; icon: string }> = {
+  forward: { Icon: ArrowUp, tint: "bg-[#EDFAFE] dark:bg-[#15233A]", icon: "text-[#0F88E5]" },
+  right: { Icon: RotateCw, tint: "bg-[#FEF8EC] dark:bg-[#2A2218]", icon: "text-[#E07B1F]" },
+};
+
+/**
+ * The commands in the order they run, in one row: the Hex Order screen's cards,
+ * numbered at the corner as they can't be moved. Four take narrower cards than
+ * two. The one being carried out (if any) is ringed.
+ */
 export function CommandChips({ commands, active = -1 }: { commands: readonly Command[]; active?: number }) {
+  const width = commands.length > 3 ? 80 : 108;
   return (
-    <div className="flex flex-wrap justify-center gap-1.5">
-      {commands.map((command, index) => (
-        <span
-          key={index}
-          className={`flex items-center gap-1.5 rounded-full border-2 py-1 pr-3 pl-1 text-[11px] leading-4 font-semibold tracking-[0.2px] transition-colors ${
-            index === active
-              ? "border-[#04ACAB] bg-[#E3F6F3] text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]"
-              : "border-white bg-white text-[#444444] shadow-[1px_1px_4px_rgba(0,0,0,0.15)] dark:border-[#818185] dark:bg-[#15181E] dark:text-white"
-          }`}
-        >
-          <span className="flex size-[18px] items-center justify-center rounded-full bg-[#D9DEE3] text-[10px] text-[#5C6670] dark:bg-white/15 dark:text-white/70">
-            {index + 1}
-          </span>
-          {COMMAND_LABEL[command]}
-        </span>
-      ))}
-    </div>
+    <ol className="flex justify-center gap-1.5">
+      {commands.map((command, index) => {
+        const { Icon, tint, icon } = COMMAND_LOOK[command];
+        return (
+          <li
+            key={index}
+            style={{ width }}
+            className={`relative flex h-[84px] flex-col items-center justify-center gap-1 rounded-[8px] border-4 border-white px-0.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-[#818185] ${tint} ${
+              index === active ? "ring-2 ring-[#04ACAB]" : ""
+            }`}
+          >
+            <span className="absolute -top-2 -left-2 flex size-5 items-center justify-center rounded-full border-2 border-white bg-[#D9DEE3] text-[10px] font-semibold text-[#5C6670] dark:border-[#818185] dark:bg-[#3A3F47] dark:text-white">
+              {index + 1}
+            </span>
+            <Icon aria-hidden className={`size-7 shrink-0 ${icon}`} strokeWidth={3} />
+            <span className="text-center text-[11px] leading-[14px] font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">{COMMAND_LABEL[command]}</span>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
