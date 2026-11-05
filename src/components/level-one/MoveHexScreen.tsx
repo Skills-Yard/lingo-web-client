@@ -94,7 +94,7 @@ const TOP_BAR_CLEARANCE = 60;
 const EDGE_MASK = "linear-gradient(180deg, transparent 35px, #000 220px, #000 330px, transparent 448px)";
 
 /** The meadow picture fills the stage under the top bar, cut at the sides or bottom where its shape differs. */
-function MeadowBackdrop() {
+export function MeadowBackdrop() {
   return (
     <div
       aria-hidden
@@ -105,7 +105,7 @@ function MeadowBackdrop() {
 }
 
 /** The arrow of a move button, pointing up (Figma's 29 x 46 vector). */
-function MoveArrow({ id, from, to, stroke, flipped = false }: { id: string; from: string; to: string; stroke: string; flipped?: boolean }) {
+export function MoveArrow({ id, from, to, stroke, flipped = false }: { id: string; from: string; to: string; stroke: string; flipped?: boolean }) {
   return (
     <svg aria-hidden width={29} height={46} viewBox="0 0 29 46" className={flipped ? "-scale-y-100" : undefined}>
       <defs>
@@ -120,7 +120,7 @@ function MoveArrow({ id, from, to, stroke, flipped = false }: { id: string; from
 }
 
 /** A 3D move button: its face stands 4px up on a darker edge, and sinks onto it when pressed. */
-function MoveButton({ label, look, disabled, onPress, children }: { label: string; look: string; disabled: boolean; onPress: () => void; children: React.ReactNode }) {
+export function MoveButton({ label, look, disabled, onPress, children }: { label: string; look: string; disabled: boolean; onPress: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
@@ -206,13 +206,13 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
       overlay={
         <>
           <div className="absolute inset-0 z-[9]" style={{ pointerEvents: failed ? "auto" : "none" }} onClick={tryAgain}>
-            <FeedbackPanel correct={false} title={flow?.wrongTitle} open={failed} hexIn={failed}>
+            <FeedbackPanel correct={false} title={flow?.wrongTitle} open={failed} hexIn={failed} centred={!!flow}>
               {flow?.wrong ?? WRONG_WAY}
             </FeedbackPanel>
           </div>
           {flow && (
             <div className="pointer-events-none absolute inset-0">
-              <FeedbackPanel correct title={flow.rightTitle} open={solved} hexIn={solved} hexCue={HEX_ONBOARDING_TRIGGER.continueThumb}>
+              <FeedbackPanel correct title={flow.rightTitle} open={solved} hexIn={solved} hexCue={HEX_ONBOARDING_TRIGGER.continueThumb} centred>
                 {flow.right}
               </FeedbackPanel>
             </div>
