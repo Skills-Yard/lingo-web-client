@@ -12,7 +12,7 @@ import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { useTheme } from "@/context/ThemeContext";
 import { moduleHref } from "@/lib/routes";
-import { BATTERY as BATTERY_RIVE, configureRiveRuntime } from "@/lib/rive/runtime";
+import { BATTERY as BATTERY_RIVE, configureRiveRuntime, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
 import { GemPopup } from "./GemPopup";
 import { levelOneStep } from "./LevelOneShell";
