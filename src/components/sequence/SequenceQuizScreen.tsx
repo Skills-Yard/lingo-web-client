@@ -5,15 +5,13 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
+import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
 import { RobotBackdrop, robotBelowDialogue } from "@/components/level-two/RobotBackdrop";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { TileCards } from "@/components/level-two/TileCards";
-import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
-import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
@@ -24,9 +22,6 @@ import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 /** A list of answers only has to clear the result panel; there is a picture to keep in view above it. */
 const LIST_RISE = 150;
-/** A row of the list of answers, and the gap between rows (see `AnswerCards`). */
-const LIST_ROW = 76;
-const LIST_ROW_GAP = 6;
 /** Where the pictures to compare start (Figma `top`), their height, and how far they rise as Hex leaves. */
 const PICTURES_TOP = 248;
 const PICTURES_HEIGHT = 200;
@@ -34,8 +29,6 @@ const PICTURES_RISE = 90;
 /** A single picture also shrinks (from its top) as it rises, so the raised answers don't reach it. */
 const CLOSE_UP_CHECKED_SCALE = 0.9;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
-/** The answers' own way in, so a question standing on them comes in with them. */
-const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
 
 /**
  * A Sequence question: the title, Hex asking it, and the answers. The main
@@ -92,7 +85,6 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   // The hint is Hex saying it, in place of his line.
   const line = hinted && quiz.hintText ? [{ text: quiz.hintText }] : quiz.line;
   const withHint = !quiz.noHint;
-  const listHeight = quiz.choices.length * LIST_ROW + (quiz.choices.length - 1) * LIST_ROW_GAP;
 
   return (
     <LevelTwoShell
@@ -184,17 +176,6 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           </motion.div>
         )}
       </AnimatePresence>
-      {quiz.question && (
-        <motion.p
-          initial={{ opacity: 0, y: 90 }}
-          animate={{ opacity: 1, y: checked ? -LIST_RISE : 0 }}
-          transition={checked ? PANEL_SPRING : ANSWERS_IN}
-          className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
-          style={{ bottom: `calc(${aboveButtons(GAP_ABOVE_BUTTONS, withHint)} + ${listHeight + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
-        >
-          {quiz.question}
-        </motion.p>
-      )}
       {quiz.layout === "list" ? (
         <AnswerCards
           choices={quiz.choices}
