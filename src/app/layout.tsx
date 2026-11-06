@@ -3,6 +3,7 @@ import "./globals.css";
 import { appFont } from "@/lib/fonts";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { InstallHint } from "@/components/pwa/InstallHint";
+import { BatteryDoctorOverlay } from "@/components/rive/BatteryDoctorOverlay";
 
 export const metadata: Metadata = {
   title: "Lingo - Instructions Intro",
@@ -36,7 +37,10 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          {children}
+          <BatteryDoctorOverlay />
+        </ThemeProvider>
         <InstallHint />
       </body>
     </html>

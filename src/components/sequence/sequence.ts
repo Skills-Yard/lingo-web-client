@@ -93,8 +93,6 @@ export type SequenceQuiz = {
   closeUp?: ScenePicture;
   /** What is shown, in front of the scene, after a wrong answer (the character trying it again). */
   wrongPicture?: ScenePicture;
-  /** A question set just above the answers, where Hex's line is the set-up. */
-  question?: string;
   /** The answers: two big cards or a list of rows. */
   layout: "pair" | "list";
   choices: readonly Choice[];
@@ -215,7 +213,6 @@ export const SOCKS_FIRST: SequenceQuiz = {
   bubble: { width: 230 },
   bubbleTop: 150,
   scene: { room: { start: "shoesOnly", right: "trySocks", wrong: "shoesOnly" } },
-  question: "What happens if you try to put on your socks now?",
   layout: "list",
   choices: [
     { id: "harder", text: "It will be difficult to put on the socks.", icon: `${IMAGES}/put-on-socks.webp` },

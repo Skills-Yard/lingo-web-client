@@ -54,6 +54,7 @@ const restore = (): BatteryState => {
 let state = FRESH;
 let restored = false;
 const listeners = new Set<() => void>();
+const chargeListeners = new Set<() => void>();
 
 const read = (): BatteryState => {
   if (!restored && typeof window !== "undefined") {
@@ -64,6 +65,7 @@ const read = (): BatteryState => {
 };
 
 const write = (next: BatteryState) => {
+  const charged = next.level > state.level;
   state = next;
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -71,12 +73,21 @@ const write = (next: BatteryState) => {
     // Same as `restore`.
   }
   listeners.forEach((listener) => listener());
+  if (charged) chargeListeners.forEach((listener) => listener());
 };
 
 const subscribe = (listener: () => void) => {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
+  };
+};
+
+/** Subscribe to actual battery increases, regardless of which screen caused them. */
+export const subscribeBatteryCharge = (listener: () => void) => {
+  chargeListeners.add(listener);
+  return () => {
+    chargeListeners.delete(listener);
   };
 };
 

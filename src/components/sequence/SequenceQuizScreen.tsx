@@ -5,15 +5,13 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
+import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
 import { RobotBackdrop, robotBelowDialogue } from "@/components/level-two/RobotBackdrop";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { TileCards } from "@/components/level-two/TileCards";
-import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
-import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
@@ -36,8 +34,6 @@ const PICTURES_RISE = 90;
 /** A single picture also shrinks (from its top) as it rises, so the raised answers don't reach it. */
 const CLOSE_UP_CHECKED_SCALE = 0.9;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
-/** The answers' own way in, so a question standing on them comes in with them. */
-const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
 
 /**
  * A Sequence question: the title, Hex asking it, and the answers. The main

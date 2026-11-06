@@ -1,6 +1,5 @@
 import { ChevronLeft, Bookmark } from "lucide-react";
 import { RiveProgressBar, type AnswerResult } from "@/components/ui/RiveProgressBar";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 interface IntroHeaderProps {
   stepNumber: number;
@@ -58,7 +57,6 @@ export function IntroHeader({
         >
           <Bookmark className={`w-4 h-4 ${bookmarked ? "fill-current" : ""}`} />
         </button>
-        <ThemeToggle className="w-10 h-10 rounded-lg" />
       </div>
     </header>
   );
