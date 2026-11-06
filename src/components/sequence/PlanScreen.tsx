@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUp, RotateCw } from "lucide-react";
 import { Teal } from "@/components/level-two/LevelTwoShell";
+import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
@@ -12,7 +13,7 @@ import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
 import { STEP, sequenceNext } from "./sequence";
-import { noteFirstTry, noteStruggle } from "./sequenceScore";
+import { claimReward, noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
 export type PlanRoute = "base" | "complex";
@@ -85,6 +86,8 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
   const nextId = useRef(0);
+  // Each route pays its own battery, once per run of the module.
+  const { win, popup } = useBatteryClaim(`sequence-plan-${route}`, claimReward);
   const commands = items.map((item) => item.command);
   const editing = phase === "edit";
 
@@ -109,6 +112,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
       }
       vibrateForAnswer(right);
       setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: right }));
+      if (right) win();
     });
   };
 
@@ -139,6 +143,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
         open: phase === "checked",
       }}
       celebrate={phase === "checked" && correct}
+      overlay={popup}
       answer={answer}
       ctaLabel={phase !== "checked" ? "Run" : correct ? "Next" : "Try again"}
       ctaDisabled={editing ? items.length === 0 || running : phase === "running"}

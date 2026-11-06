@@ -6,16 +6,19 @@ import { motion } from "framer-motion";
 import { ArrowUp, RotateCw } from "lucide-react";
 import { aboveButtons, Teal } from "@/components/level-two/LevelTwoShell";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, type ArrangeCardDef, type Slots } from "./ArrangeBoard";
 import { HexBoard } from "./HexBoard";
 import { HexScreen, ReplayButton } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
 import { STEP, sequenceNext } from "./sequence";
-import { noteFirstTry, noteStruggle } from "./sequenceScore";
+import { claimReward, noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
 const BATTERY = { col: 1, row: 1 };
+/** Pays the battery once per run of the module, when Hex gets there. */
+const REWARD_ID = "sequence-fix";
 const DESCRIPTION = "HEX followed every command, but it didn’t reach the battery. Can you fix the sequence?";
 const HINT = "Think about which direction HEX needs to move before it starts moving forward.";
 
@@ -63,6 +66,7 @@ export function FixScreen() {
   const [hintCard, setHintCard] = useState<string | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
   const pending = useRef<number[]>([]);
+  const { win, popup } = useBatteryClaim(REWARD_ID, claimReward);
   const commands = kindsOf(slots);
 
   // On opening, the broken sequence plays once, so the learner sees what went wrong.
@@ -96,6 +100,7 @@ export function FixScreen() {
       }
       vibrateForAnswer(right);
       setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: right }));
+      if (right) win();
     });
   };
 
@@ -130,6 +135,7 @@ export function FixScreen() {
         open: phase === "checked",
       }}
       celebrate={phase === "checked" && correct}
+      overlay={popup}
       answer={answer}
       hint={{
         visible: phase === "edit",
