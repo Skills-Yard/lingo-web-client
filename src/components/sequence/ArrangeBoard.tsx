@@ -144,7 +144,7 @@ function ArrangeCard({
   const y = useMotionValue(at.y);
   const drag = useRef<{ startX: number; startY: number; fromX: number; fromY: number; scale: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
-  const compact = size.height < 80;
+  const compact = size.height < 90;
 
   useEffect(() => {
     if (drag.current) return;
@@ -210,7 +210,7 @@ function ArrangeCard({
         className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
       />
       {card.art && (
-        <span className={`flex w-full items-center justify-center ${compact ? "h-[30px]" : "h-[46px]"}`}>{card.art}</span>
+        <span className={`flex w-full items-center justify-center ${compact ? "min-h-[30px]" : "min-h-[46px]"}`}>{card.art}</span>
       )}
       <span
         className={`text-center font-semibold text-[#444444] dark:text-white ${
