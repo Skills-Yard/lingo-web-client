@@ -5,17 +5,15 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
+import { SeenBadge } from "./FlipCarousel";
 import type { InteractionApi } from "./screen";
-import { CARD, CREAM, Pic, ExprBig, ShareScene, WHITE } from "./visuals";
+import { EDGE_CURRENT, EDGE_IDLE, TINT } from "./SituationsStage";
+import { CARD, CREAM, Pic, ExprBig, ShareScene, WHITE, isOperator } from "./visuals";
 
 const SHAKE = [0, -7, 7, -5, 5, 0];
 /** A wrong try shakes red for this long (ms). */
 const WRONG_MS = 800;
-const BLUE_CARD = "border-[#5B9BFF] bg-[#EEF4FF] dark:bg-[#15213A]";
 const PILL = "cursor-pointer rounded-full bg-[#08A4AD] px-6 py-2 text-[16px] leading-6 font-bold text-white shadow-[0_3px_0_#067F86] active:translate-y-px active:shadow-[0_2px_0_#067F86]";
-
-/** Symbols and the words `and`, `or`, `not` are drawn as operators (teal); numbers and names as values. */
-const isOperator = (token: string) => /^([+\-*/%<>=!()]+|and|or|not)$/.test(token);
 
 type SlotKind = "value" | "operator" | "any";
 
@@ -216,9 +214,10 @@ export function ShareStage({ api, total, students, after }: { api: InteractionAp
     <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
       <ShareScene pile={pile} trays={Array.from({ length: students }, () => rounds)} />
       {over ? (
-        <p className="rounded-[12px] bg-white px-3 py-1.5 text-center text-[15px] leading-5 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]">
-          Each student has {rounds}. Left over: {pile}.
-        </p>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-center gap-2">
+          <span className="rounded-full bg-[#E3F6F3] px-3.5 py-1 text-[14px] leading-5 font-bold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FE0D6]">Each student has {rounds}</span>
+          <span className="rounded-full bg-[#FFF4E3] px-3.5 py-1 text-[14px] leading-5 font-bold text-[#B85A28] dark:bg-[#4A3418] dark:text-[#FFB267]">Left over: {pile}</span>
+        </motion.div>
       ) : (
         <button type="button" onClick={share} className={PILL}>
           Give one to each student
@@ -269,9 +268,9 @@ export function FillRowsStage({ api, rows, per, after }: { api: InteractionApi; 
               type="button"
               onClick={() => fill(row)}
               aria-label={`Row ${row + 1}`}
-              className={`flex h-[40px] cursor-pointer items-center gap-1 rounded-[8px] border-2 border-dashed px-2 ${full ? "border-[#7FD8CC] bg-[#E3F6F3] dark:bg-[#0F2B28]" : "border-[#C9CED6] bg-white/60 dark:bg-white/5"}`}
+              className={`flex h-[44px] cursor-pointer items-center gap-2 rounded-[10px] border-2 px-2 transition-colors ${full ? "border-[#7FD8CC] bg-[#E3F6F3] dark:bg-[#0F2B28]" : "border-dashed border-[#C9CED6] bg-white/70 dark:bg-white/5"}`}
             >
-              <span className="w-[44px] text-left text-[11px] leading-4 font-bold text-[#6B7480] dark:text-white/60">Row {row + 1}</span>
+              <span className={`w-[48px] rounded-full px-2 py-0.5 text-center text-[11px] leading-4 font-bold transition-colors ${full ? "bg-[#04ACAB] text-white" : "bg-[#EEF0F4] text-[#6B7480] dark:bg-white/10 dark:text-white/60"}`}>Row {row + 1}</span>
               <span className="flex flex-1 items-center justify-center gap-1">
                 {Array.from({ length: per }, (_, seat) =>
                   full ? (
@@ -283,7 +282,7 @@ export function FillRowsStage({ api, rows, per, after }: { api: InteractionApi; 
                   ),
                 )}
               </span>
-              <motion.span animate={{ opacity: full ? 1 : 0 }} transition={{ delay: per * 0.16 }} className="w-[20px] text-center text-[16px] leading-5 font-bold text-[#04908F]">
+              <motion.span animate={{ opacity: full ? 1 : 0, scale: full ? 1 : 0.5 }} transition={{ delay: per * 0.16 }} className="flex size-6 items-center justify-center rounded-full bg-[#04ACAB] text-center text-[13px] leading-5 font-bold text-white">
                 {per}
               </motion.span>
             </button>
@@ -295,6 +294,17 @@ export function FillRowsStage({ api, rows, per, after }: { api: InteractionApi; 
       </p>
       {finished && after}
     </div>
+  );
+}
+
+/** A small green tick in the corner of a key that has been looked at. */
+function SeenTick() {
+  return (
+    <span aria-hidden className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-[#01A17F] ring-2 ring-white dark:ring-[#0F1F26]">
+      <svg viewBox="0 0 24 24" className="size-3" fill="none" stroke="white" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M5 12.5l4.5 4.5L19 7.5" />
+      </svg>
+    </span>
   );
 }
 
@@ -313,6 +323,13 @@ export type SymbolItem = {
 };
 
 export type SymbolGroup = { title?: string; items: readonly SymbolItem[]; columns: number };
+
+/** The colours of a group's keys (the first group teal, a second violet, a third orange): the key, its 3D edge, and its title. */
+const KEY_COLORS = [
+  { key: "bg-[#08A4AD] shadow-[0_3px_0_#067F86]", title: "text-[#08A4AD]", dot: "bg-[#08A4AD]" },
+  { key: "bg-[#7B61FF] shadow-[0_3px_0_#5B3FD0]", title: "text-[#7B61FF]", dot: "bg-[#7B61FF]" },
+  { key: "bg-[#E8743B] shadow-[0_3px_0_#B85A28]", title: "text-[#E8743B]", dot: "bg-[#E8743B]" },
+] as const;
 
 /**
  * Big symbols to tap: each shows what it means with an example (and how it reads
@@ -358,36 +375,41 @@ export function SymbolStage({
   return (
     <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
       {header?.(current)}
-      {groups.map((group, index) => (
-        <div key={index} className="flex w-full flex-col gap-1">
-          {group.title && <span className="text-[12px] leading-4 font-bold tracking-[0.4px] text-[#6B7480] uppercase dark:text-white/60">{group.title}</span>}
-          <div className="grid gap-2" style={{ gridTemplateColumns: `repeat(${group.columns}, minmax(0, 1fr))` }}>
-            {group.items.map((item) => {
-              const tapped = seen.includes(item.id);
-              const selected = currentId === item.id;
-              return (
-                <motion.button
-                  key={item.id}
-                  type="button"
-                  onClick={() => tap(item)}
-                  animate={{ scale: selected ? [1, 0.92, 1.08, 1] : 1 }}
-                  transition={{ duration: 0.35 }}
-                  whileTap={{ scale: 0.94 }}
-                  className={`flex cursor-pointer items-center justify-center rounded-[10px] font-bold ${big ? "h-[56px] text-[28px]" : "h-[44px] text-[20px]"} ${
-                    selected
-                      ? "bg-[#FFB300] text-white shadow-[0_3px_0_#C98A00]"
-                      : tapped
-                        ? "bg-[#04ACAB] text-white shadow-[0_3px_0_#067F86]"
-                        : "bg-[#08A4AD] text-white shadow-[0_3px_0_#067F86]"
-                  }`}
-                >
-                  {item.symbol}
-                </motion.button>
-              );
-            })}
+      {groups.map((group, index) => {
+        const colors = KEY_COLORS[index % KEY_COLORS.length];
+        return (
+          <div key={index} className="flex w-full flex-col gap-1.5">
+            {group.title && (
+              <span className={`flex items-center gap-1.5 text-[12px] leading-4 font-bold tracking-[0.4px] uppercase ${groups.length > 1 ? colors.title : "text-[#6B7480] dark:text-white/60"}`}>
+                <span className={`size-1.5 rounded-full ${groups.length > 1 ? colors.dot : "bg-[#6B7480]"}`} />
+                {group.title}
+              </span>
+            )}
+            <div className="grid gap-2.5" style={{ gridTemplateColumns: `repeat(${group.columns}, minmax(0, 1fr))` }}>
+              {group.items.map((item) => {
+                const tapped = seen.includes(item.id);
+                const selected = currentId === item.id;
+                return (
+                  <motion.button
+                    key={item.id}
+                    type="button"
+                    onClick={() => tap(item)}
+                    animate={{ scale: selected ? [1, 0.92, 1.08, 1] : 1 }}
+                    transition={{ duration: 0.35 }}
+                    whileTap={{ scale: 0.94, y: 2 }}
+                    className={`relative flex cursor-pointer items-center justify-center rounded-[12px] px-1 leading-none font-bold text-white transition-shadow ${item.symbol.length <= 4 ? "font-mono" : ""} ${
+                      item.symbol.length > 6 ? "h-[56px] text-[17px]" : big ? "h-[56px] text-[28px]" : "h-[44px] text-[20px]"
+                    } ${selected ? "bg-[#FFB300] shadow-[0_3px_0_#C98A00,0_0_0_4px_rgba(255,179,0,0.28)]" : colors.key}`}
+                  >
+                    {item.symbol}
+                    {tapped && !selected && <SeenTick />}
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
       <div className="flex min-h-[78px] w-full items-center justify-center">
         <AnimatePresence mode="wait">
           <motion.div
@@ -396,16 +418,23 @@ export function SymbolStage({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`flex w-full flex-col items-center gap-0.5 rounded-[12px] px-3 py-2 text-center ${current ? "bg-white shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E]" : ""}`}
+            className={`flex w-full flex-col items-center gap-0.5 rounded-[12px] border-2 px-3 py-2 text-center ${
+              current
+                ? `bg-white shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] ${current.result === undefined ? "border-transparent" : current.result ? "border-[#01A17F]/40" : "border-[#D42421]/40"}`
+                : "border-transparent"
+            }`}
           >
             {current ? (
               <>
                 <span className="text-[15px] leading-5 font-bold text-[#2F5D59] dark:text-[#BFE6E2]">{current.title}</span>
                 {current.example && (
-                  <span className="flex items-center gap-2 text-[18px] leading-6 font-bold text-[#444444] dark:text-white">
+                  <span className="flex items-center gap-2 font-mono text-[18px] leading-6 font-bold text-[#444444] dark:text-white">
                     {current.example}
                     {current.result !== undefined && (
-                      <span className={`rounded-full px-2.5 py-0 text-[13px] leading-5 font-bold text-white ${current.result ? "bg-[#01A17F]" : "bg-[#D42421]"}`}>{current.result ? "True" : "False"}</span>
+                      <span className={`flex items-center gap-1 rounded-full px-2.5 font-sans text-[13px] leading-5 font-bold text-white ${current.result ? "bg-[#01A17F]" : "bg-[#D42421]"}`}>
+                        <span aria-hidden>{current.result ? "✓" : "✕"}</span>
+                        {current.result ? "True" : "False"}
+                      </span>
                     )}
                   </span>
                 )}
@@ -447,7 +476,14 @@ export function StepStage({ api, tokens, steps, after }: { api: InteractionApi; 
     <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
       <div className={`flex w-full flex-col items-center gap-2 px-3 py-3 ${CARD} ${WHITE}`}>
         <ExprBig tokens={tokens} lit={step?.lit ?? []} result={step?.result} />
-        <p className="min-h-[44px] text-center text-[15px] leading-[22px] font-semibold text-[#2F5D59] dark:text-[#BFE6E2]">{step ? step.text : "Tap the button to see the steps."}</p>
+        <div className="flex items-center gap-1.5" aria-hidden>
+          {steps.map((_, index) => (
+            <span key={index} className={`h-1.5 rounded-full transition-all duration-300 ${index <= at ? "w-5 bg-[#08A4AD]" : "w-1.5 bg-[#D5DAE1] dark:bg-white/20"}`} />
+          ))}
+        </div>
+        <p className={`flex min-h-[44px] w-full items-center justify-center rounded-[10px] px-3 py-1.5 text-center text-[15px] leading-[22px] font-semibold transition-colors ${step ? "bg-[#EAF7F6] text-[#2F5D59] dark:bg-[#0F2B28] dark:text-[#BFE6E2]" : "text-[#6B7480] dark:text-white/60"}`}>
+          {step ? step.text : "Tap the button to see the steps."}
+        </p>
       </div>
       {!last && (
         <button type="button" onClick={next} className={PILL}>
@@ -517,7 +553,15 @@ export function OrderStage({
               whileTap={{ scale: 0.98 }}
               className={`flex min-h-[46px] cursor-pointer items-center gap-2.5 px-3 py-1.5 text-left ${CARD} ${place >= 0 ? LOOKS.correct.card : wrong === index ? LOOKS.wrong.card : CREAM}`}
             >
-              <span className={`flex size-[24px] shrink-0 items-center justify-center rounded-full text-[13px] leading-none font-bold ${place >= 0 ? "bg-[#01A17F] text-white" : "border-2 border-dashed border-[#C9CED6] text-transparent"}`}>{place >= 0 ? place + 1 : ""}</span>
+              <motion.span
+                key={place >= 0 ? "placed" : "open"}
+                initial={place >= 0 ? { scale: 0.5 } : false}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 380, damping: 16 }}
+                className={`flex size-[26px] shrink-0 items-center justify-center rounded-full text-[14px] leading-none font-bold ${place >= 0 ? "bg-[#01A17F] text-white shadow-[0_2px_0_#018066]" : "border-2 border-dashed border-[#C9CED6] text-transparent"}`}
+              >
+                {place >= 0 ? place + 1 : ""}
+              </motion.span>
               <span className="text-[14px] leading-5 font-semibold text-[#444444] dark:text-white">{steps[index]}</span>
             </motion.button>
           );
@@ -527,6 +571,9 @@ export function OrderStage({
     </div>
   );
 }
+
+/** The pastels the scenes' cards take in turn. */
+const SCENE_TINTS = [TINT.lavender, TINT.cream, TINT.mint, TINT.blue] as const;
 
 /** A picture card to tap that shows a line under the row (used for "tap each scene"). */
 export type SceneItem = { id: string; pic: string; label: string; caption: string };
@@ -554,18 +601,23 @@ export function ScenesStage({ api, scenes, columns = 2, prompt = "Tap each scene
   return (
     <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
       <div className={`grid w-full gap-2.5 ${columns === 4 ? "grid-cols-4" : "grid-cols-2"}`}>
-        {scenes.map((scene) => (
+        {scenes.map((scene, index) => (
           <motion.button
             key={scene.id}
             type="button"
             onClick={() => tap(scene)}
-            animate={{ scale: currentId === scene.id ? [1, 0.95, 1.05, 1] : 1 }}
-            transition={{ duration: 0.35 }}
+            initial={{ opacity: 0, y: 14, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: currentId === scene.id ? [1, 0.95, 1.05, 1.03] : 1 }}
+            transition={{ duration: 0.35, delay: currentId === scene.id ? 0 : index * 0.08 }}
             whileTap={{ scale: 0.97 }}
-            className={`flex min-h-[96px] cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 ${CARD} ${currentId === scene.id ? BLUE_CARD : seen.includes(scene.id) ? LOOKS.correct.card : CREAM}`}
+            aria-pressed={currentId === scene.id}
+            className={`relative flex min-h-[104px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[10px] border-4 px-2 py-2 transition-[border-color,box-shadow] duration-200 ${SCENE_TINTS[index % SCENE_TINTS.length]} ${currentId === scene.id ? EDGE_CURRENT : EDGE_IDLE}`}
           >
-            <Pic src={scene.pic} className="h-11 w-11" />
+            <span className="flex size-14 items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
+              <Pic src={scene.pic} className="size-9" />
+            </span>
             <span className="text-[13px] leading-4 font-bold text-[#444444] dark:text-white">{scene.label}</span>
+            {seen.includes(scene.id) && <SeenBadge className="top-1 right-1" />}
           </motion.button>
         ))}
       </div>

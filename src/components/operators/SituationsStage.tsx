@@ -15,16 +15,39 @@ export type SituationItem = { id: string; icon: string; verb: string; thing: str
 /** Hex has started his line; the card is picked out this long after the stage opens (ms). */
 const HIGHLIGHT_MS = 500;
 /** The picked-out card grows a little, so the highlight reads at a glance. */
-const CURRENT_SCALE = 1.04;
+export const CURRENT_SCALE = 1.04;
 
-const TINT: Record<SituationTint, string> = {
+export const TINT: Record<SituationTint, string> = {
   lavender: "bg-[#F4F1FF] dark:bg-[#1F1B3A]",
   cream: "bg-[#FFF6EA] dark:bg-[#3A2C14]",
   mint: "bg-[#EBF6F0] dark:bg-[#0F2B28]",
   blue: "bg-[#E6F0FF] dark:bg-[#15213A]",
 };
-const EDGE_IDLE = "border-white shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent";
-const EDGE_CURRENT = "border-[#08A4AD] shadow-[0_0_0_3px_rgba(8,164,173,0.18),0_6px_16px_rgba(8,164,173,0.25)]";
+export const EDGE_IDLE = "border-white shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent";
+export const EDGE_CURRENT = "border-[#08A4AD] shadow-[0_0_0_3px_rgba(8,164,173,0.18),0_6px_16px_rgba(8,164,173,0.25)]";
+
+/**
+ * The timing of a card's turn: the card is picked out a moment after the stage
+ * opens (while Hex speaks), and the main button then goes on to the question,
+ * once Hex has said his line. Returns whether the card is picked out.
+ */
+export function useTurn({ lineTyped = true, holdButton, next }: InteractionApi) {
+  const [lit, setLit] = useState(false);
+  const goOn = useCallback(() => next?.(), [next]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setLit(true), HIGHLIGHT_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (!holdButton || !lineTyped || !lit) return;
+    holdButton(goOn);
+    return () => holdButton(null);
+  }, [holdButton, lineTyped, lit, goOn]);
+
+  return lit;
+}
 
 /**
  * The situations of a screen as a grid of cards, not tapped: this stage is the
@@ -34,22 +57,7 @@ const EDGE_CURRENT = "border-[#08A4AD] shadow-[0_0_0_3px_rgba(8,164,173,0.18),0_
  * before each question, so the cards are picked out one by one.
  */
 export function SituationsStage({ api, situations, focus }: { api: InteractionApi; situations: readonly SituationItem[]; /** The card whose turn it is. */ focus: number }) {
-  const { lineTyped = true, holdButton, next } = api;
-  const [lit, setLit] = useState(false);
-  const goOn = useCallback(() => next?.(), [next]);
-
-  // Hex speaks and the card is picked out with him.
-  useEffect(() => {
-    const timer = window.setTimeout(() => setLit(true), HIGHLIGHT_MS);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  // The main button goes on to the question, once Hex has said his line and the card is picked out.
-  useEffect(() => {
-    if (!holdButton || !lineTyped || !lit) return;
-    holdButton(goOn);
-    return () => holdButton(null);
-  }, [holdButton, lineTyped, lit, goOn]);
+  const lit = useTurn(api);
 
   return (
     <div className="pointer-events-auto grid w-[340px] grid-cols-2 gap-3">

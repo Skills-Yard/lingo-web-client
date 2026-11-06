@@ -2,7 +2,8 @@
 
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
 import { FlipCarouselStage } from "./FlipCarousel";
-import { ExpressionStage, FillRowsStage, ScenesStage, ShareStage, SymbolStage } from "./interactions";
+import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "./interactions";
+import { JobTurnStage, OperatorTurnStage, type JobItem, type OperatorItem } from "./OperatorCardsStage";
 import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { InteractionStage, ScreenDef } from "./screen";
@@ -25,6 +26,81 @@ const situationTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: SITUATION_LINES[focus],
   render: (api) => <SituationsStage api={api} situations={SITUATIONS} focus={focus} />,
+});
+
+/** The four operators of "Meet the Operators!", in the order their questions come. */
+const OPERATORS: readonly OperatorItem[] = [
+  { id: "add", symbol: "+", name: "Addition", title: "Combines values", example: "3 + 2", tint: "mint" },
+  { id: "sub", symbol: "-", name: "Subtraction", title: "Subtracts values", example: "5 - 2", tint: "cream" },
+  { id: "mul", symbol: "*", name: "Multiplication", title: "Multiplies values", example: "3 * 2", tint: "lavender" },
+  { id: "div", symbol: "/", name: "Division", title: "Divides values", example: "6 / 2", tint: "blue" },
+];
+
+/** What Hex says as each operator's turn comes. */
+const OPERATOR_LINES: readonly string[] = [
+  "In programming, these symbols are called operators. First, +: it combines values.",
+  "Next, -: it subtracts one value from another.",
+  "Now *: it multiplies values.",
+  "Last, /: it divides one value by another.",
+];
+
+/** The turn of one operator: its card is picked out while Hex introduces it, and Continue goes on to the next one. */
+const operatorTurn = (focus: number): InteractionStage => ({
+  kind: "interaction",
+  line: OPERATOR_LINES[focus],
+  render: (api) => <OperatorTurnStage api={api} operators={OPERATORS} focus={focus} />,
+});
+
+/** The two big jobs of "Calculate or Compare?", in the order they are introduced. */
+const JOBS: readonly JobItem[] = [
+  { id: "calculate", pic: P.computer, name: "Calculate", title: "How much? How many? What remains?", example: "20 + 5 = 25", tint: "mint" },
+  { id: "compare", pic: P.light, name: "Compare", title: "Which is greater? Are they equal?", example: "20 > 5", tint: "lavender" },
+];
+
+/** What Hex says as each job's turn comes. */
+const JOB_LINES: readonly string[] = [
+  "A program does two big things with values. First, it calculates, with arithmetic operators.",
+  "The second big thing is to compare values, with comparison operators.",
+];
+
+/** The turn of one job: its card is picked out while Hex introduces it, and Continue goes on to the next. */
+const jobTurn = (focus: number): InteractionStage => ({
+  kind: "interaction",
+  line: JOB_LINES[focus],
+  render: (api) => <JobTurnStage api={api} jobs={JOBS} focus={focus} />,
+});
+
+/** The three answers of "Same Numbers, Three Answers!" (23 chocolates in groups of 4), in the order they are introduced. */
+const DIVISIONS: readonly OperatorItem[] = [
+  { id: "div", symbol: "/", name: "Division", title: "Ordinary division, with decimals", example: "23 / 4 = 5.75", tint: "blue" },
+  { id: "floor", symbol: "//", name: "Floor division", title: "Floor division: complete groups", example: "23 // 4 = 5", tint: "mint" },
+  { id: "mod", symbol: "%", name: "Modulus", title: "Modulus: the remainder", example: "23 % 4 = 3", tint: "cream" },
+];
+
+/** What Hex says as each of them comes. */
+const DIVISION_LINES: readonly string[] = [
+  "23 chocolates, 4 in each group. First, /: ordinary division, with decimals.",
+  "Next, //: floor division. It counts the complete groups.",
+  "Last, %: modulus. It gives what is left over.",
+];
+
+/** The part of the chocolates each one is about: all of them, the complete groups, what is left over. */
+const DIVISION_PART = ["all", "groups", "left"] as const;
+
+/** The turn of one of them: its card is picked out while Hex introduces it (and the chocolates it is about), and Continue goes on to the next. */
+const divisionTurn = (focus: number): InteractionStage => ({
+  kind: "interaction",
+  line: DIVISION_LINES[focus],
+  render: (api) => (
+    <OperatorTurnStage
+      api={api}
+      operators={DIVISIONS}
+      focus={focus}
+      columns={3}
+      // Before its card is picked out the chocolates still show the turn before, so the change reads as a fade.
+      header={(lit) => <GroupsPicture total={23} size={4} emphasis={DIVISION_PART[lit ? focus : Math.max(0, focus - 1)]} still={focus > 0} />}
+    />
+  ),
 });
 
 /** Screens 1-14 (phases 1 to 3: everyday actions, meeting operators, arithmetic). */
@@ -230,36 +306,10 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     step: STEP.meet,
     title: "Meet the *Operators!*",
     stages: [
-      {
-        kind: "interaction",
-        line: "In programming, these symbols are called operators. Tap each one.",
-        render: (api) => (
-          <SymbolStage
-            api={api}
-            groups={[
-              {
-                columns: 4,
-                items: [
-                  { id: "add", symbol: "+", title: "Combines values", example: "3 + 2" },
-                  { id: "sub", symbol: "-", title: "Subtracts values", example: "5 - 2" },
-                  { id: "mul", symbol: "*", title: "Multiplies values", example: "3 * 2" },
-                  { id: "div", symbol: "/", title: "Divides values", example: "6 / 2" },
-                ],
-              },
-            ]}
-            footer={
-              <div className="flex items-center gap-2 text-[14px] leading-5 font-bold text-[#444444] dark:text-white">
-                <span className="rounded-lg bg-[#F1EEFF] px-2.5 py-1 dark:bg-[#2E2A5C]">Information</span>
-                <span className="text-[#08A4AD]">→</span>
-                <span className="rounded-lg bg-[#08A4AD] px-2.5 py-1 text-white">Operation</span>
-                <span className="text-[#08A4AD]">→</span>
-                <span className="rounded-lg bg-[#E3F6F3] px-2.5 py-1 dark:bg-[#0F2B28]">Result</span>
-              </div>
-            }
-          />
-        ),
-        finishPanel: { title: "Operators!", text: "An operator tells a program what operation to perform on values." },
-      },
+      operatorTurn(0),
+      operatorTurn(1),
+      operatorTurn(2),
+      operatorTurn(3),
     ],
   },
 
@@ -268,20 +318,8 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     step: STEP.calcCompare,
     title: "Calculate *or Compare?*",
     stages: [
-      {
-        kind: "interaction",
-        line: "A program does two big things with values. Tap both.",
-        render: (api) => (
-          <ScenesStage
-            api={api}
-            scenes={[
-              { id: "calculate", pic: P.computer, label: "Calculate", caption: "How much? How many? What remains? 20 + 5 = 25" },
-              { id: "compare", pic: P.light, label: "Compare", caption: "Which is greater? Are they equal? 20 > 5" },
-            ]}
-          />
-        ),
-        finishPanel: { title: "Two big jobs!", text: "Arithmetic operators calculate values. Comparison operators compare them." },
-      },
+      jobTurn(0),
+      jobTurn(1),
       quiz({
         line: "Which job answers the question “Which is greater?”",
         layout: "grid",
@@ -455,32 +493,9 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     step: STEP.three,
     title: "Same Numbers, *Three Answers!*",
     stages: [
-      {
-        kind: "interaction",
-        line: "23 chocolates, 4 per group. Tap each symbol.",
-        render: (api) => (
-          <SymbolStage
-            api={api}
-            header={(current) => (
-              <div className="flex flex-col items-center gap-1.5">
-                <GroupsPicture total={23} size={4} />
-                <ExprBig tokens={["23", current?.symbol ?? "?", "4"]} size={26} />
-              </div>
-            )}
-            groups={[
-              {
-                columns: 3,
-                items: [
-                  { id: "div", symbol: "/", title: "Ordinary division, with decimals", example: "23 / 4 = 5.75" },
-                  { id: "floor", symbol: "//", title: "Floor division: complete groups", example: "23 // 4 = 5" },
-                  { id: "mod", symbol: "%", title: "Modulus: the remainder", example: "23 % 4 = 3" },
-                ],
-              },
-            ]}
-          />
-        ),
-        finishPanel: { title: "Three answers!", text: "/ gives 5.75. // gives 5 complete groups. % gives the 3 left over." },
-      },
+      divisionTurn(0),
+      divisionTurn(1),
+      divisionTurn(2),
       quiz({
         line: "What does 23 // 4 = 5 tell us?",
         options: neutral(["5 complete groups of 4.", "5 chocolates are left over.", "The decimal answer, 5.75."]),
