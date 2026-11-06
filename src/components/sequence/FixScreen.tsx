@@ -13,12 +13,10 @@ import { HexBoard } from "./HexBoard";
 import { HexScreen, ReplayButton } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
 import { STEP, sequenceNext } from "./sequence";
-import { claimReward, noteFirstTry, noteStruggle } from "./sequenceScore";
+import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
 const BATTERY = { col: 1, row: 1 };
-/** Pays the battery once per run of the module, when Hex gets there. */
-const REWARD_ID = "sequence-fix";
 const HINT = "Think about which direction HEX needs to move before it starts moving forward.";
 
 const FORWARD_TINT = "bg-[#EDFAFE] dark:bg-[#15233A]";
@@ -68,7 +66,7 @@ export function FixScreen() {
   const [hintCard, setHintCard] = useState<string | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
   const pending = useRef<number[]>([]);
-  const { win, popup } = useBatteryClaim(REWARD_ID, claimReward);
+  const { win, popup } = useBatteryClaim();
   const commands = kindsOf(slots);
 
   // On opening, the broken sequence plays once, so the learner sees what went wrong.

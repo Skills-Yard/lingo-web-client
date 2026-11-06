@@ -51,8 +51,22 @@ const answersHeight = (stage: QuizStage) =>
     : stage.options.length * ROW_H + (stage.options.length - 1) * ROW_GAP;
 
 /** An interaction stage's own picture and controls. */
-function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, finished })}</>;
+function InteractionHost({
+  stage,
+  slip,
+  done,
+  dismissHex,
+  finished,
+  hexSpoken,
+}: {
+  stage: InteractionStage;
+  slip: () => void;
+  done: () => void;
+  dismissHex: () => void;
+  finished: boolean;
+  hexSpoken: boolean;
+}) {
+  return <>{stage.render({ slip, done, dismissHex, finished, hexSpoken })}</>;
 }
 
 /**
@@ -76,6 +90,10 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
   const [finished, setFinished] = useState(false);
+  // Hex has said his line (the answers of a stage that waits for him come in then).
+  const [hexSpoken, setHexSpoken] = useState(false);
+  // An interaction has sent Hex's line away early, to talk through its own Hex lower down.
+  const [hexDismissed, setHexDismissed] = useState(false);
   // The picture is shrunk to fit the room between Hex's line and the question, if it is taller than that.
   const [roomHeight, setRoomHeight] = useState(0);
   const [pictureHeight, setPictureHeight] = useState(0);
@@ -122,6 +140,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   });
   const slip = useCallback(() => slipNow.current(), []);
   const done = useCallback(() => finishNow.current(), []);
+  const dismissHex = useCallback(() => setHexDismissed(true), []);
 
   const check = () => {
     setChecked(true);
@@ -147,6 +166,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     setHinted(false);
     setAttempt(0);
     setFinished(false);
+    setHexSpoken(false);
+    setHexDismissed(false);
   };
 
   const onContinue = () => {
@@ -162,7 +183,10 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   };
 
   const title = parseTitle(screen.title);
-  const titleEnd = title.twoLines ? TITLE_END.two : TITLE_END.one;
+  // A screen can set its title's size: it is then on one line, as the design has it.
+  const titleLines = screen.titleSize === undefined && title.twoLines;
+  const titleSize = screen.titleSize ?? title.size;
+  const titleEnd = titleLines ? TITLE_END.two : TITLE_END.one;
   const panel = quiz
     ? checked
       ? { right: correct, title: correct ? quiz.rightTitle : (quiz.wrongTitle ?? "Not quite"), text: correct ? quiz.right : quiz.wrong }
@@ -173,7 +197,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
 
   // Hex's line for this stage (the hint replaces it).
   const line = quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
-  const gone = quiz ? checked : finished;
+  const gone = quiz ? checked : finished || hexDismissed;
 
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
   const tiles = !!quiz && quiz.layout === "grid";
@@ -190,9 +214,14 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       step={screen.step}
       total={DATATYPES_STEPS}
       onBack={() => router.push(datatypesPrevious(screen.step))}
-      scene={<SoftBackdrop />}
+      scene={
+        <>
+          <SoftBackdrop />
+          {screen.backdrop}
+        </>
+      }
       answer={answer}
-      ctaDisabled={quiz ? selectedId === null : !finished}
+      ctaDisabled={quiz ? selectedId === null : !finished && !interaction?.ready}
       ctaLabel={
         quiz
           ? !checked
@@ -221,8 +250,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         </div>
       }
     >
-      <ScreenTitle key={screen.step} oneLine={!title.twoLines}>
-        <span style={{ fontSize: title.size }}>
+      <ScreenTitle key={screen.step} oneLine={!titleLines}>
+        <span style={{ fontSize: titleSize }}>
           {title.parts.map((part, index) =>
             index % 2 === 1 ? (
               <span key={index} className="text-level-gradient">
@@ -252,14 +281,15 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               entryKey={`datatypes-${screen.step}-${stageIndex}-${attempt}`}
               hex="left"
               line={[{ text: line }]}
-              size={bubbleSize(line)}
+              size={interaction?.bubbleWidth ? { width: interaction.bubbleWidth } : bubbleSize(line)}
               leaving={gone}
+              onSpoken={() => setHexSpoken(true)}
             />
           </motion.div>
         )}
-        <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">
-          <div ref={pictureRef} className="flex flex-col items-center gap-2" style={{ transform: `scale(${fit})` }}>
-            {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} finished={finished} />}
+        <div ref={roomRef} className={`flex min-h-0 w-full flex-1 flex-col items-center ${interaction?.alignTop ? "justify-start" : "justify-center"}`}>
+          <div ref={pictureRef} className="flex flex-col items-center gap-2 transition-transform duration-300 ease-out" style={{ transform: `scale(${fit})`, transformOrigin: interaction?.alignTop ? "top center" : "center" }}>
+            {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} />}
           </div>
         </div>
       </div>
@@ -287,6 +317,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               fadeOut={false}
               hinted={hinted}
               withHint={hasHint}
+              bounceIn={quiz.optionsAfterHex}
+              revealed={hexSpoken}
               onPick={setSelectedId}
             />
           ) : (
@@ -299,6 +331,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               hinted={hinted}
               withHint={hasHint}
               rise={LIST_RISE}
+              bounceIn={quiz.optionsAfterHex}
+              revealed={hexSpoken}
               onPick={setSelectedId}
             />
           )}

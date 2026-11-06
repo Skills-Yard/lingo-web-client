@@ -1,12 +1,14 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { GroupStage, TINTS, type GroupItem } from "./GroupStage";
+import { GroupTourStage, INK, type TourGroup } from "./GroupTourStage";
 import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, CountScene, CREAM, LAVENDER, NamesList, NumberLine, RulerScale, TwelveCards, TypedCards, WeatherCard } from "./visuals";
+import { AttendanceBoard, CARD, EventScene, InfoTiles, LAVENDER, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -34,39 +36,100 @@ function Note({ children }: { children: ReactNode }) {
 
 const WHY_WRONG = "Look at what each value is. Is it a quantity, a decimal, text or a logical state?";
 
-/** Screens that are a headline and one or more stages: the questions and the interactions (the story screens, 1 and 2, are in `storyScreens.tsx`). */
+/** Screen 3's nine values, in the order of the design's grid (their tints only tell them apart). */
+const SIMILAR_VALUES: readonly GroupItem[] = [
+  { id: "12", label: "12", tint: "blue" },
+  { id: "25", label: "25", tint: "lavender" },
+  { id: "aarav", label: "Aarav", tint: "green" },
+  { id: "148.5", label: "148.5", tint: "cream" },
+  { id: "kabir", label: "Kabir", tint: "blue" },
+  { id: "mia", label: "Mia", tint: "cream" },
+  { id: "162", label: "162", tint: "lavender" },
+  { id: "40", label: "40", tint: "cream" },
+  { id: "156", label: "156", tint: "green" },
+];
+
+/** Screen 4's three groups: what each holds, and what Hex says about it once it is tapped. */
+const TOUR_GROUPS: readonly TourGroup[] = [
+  { id: "a", name: "Group A", tint: "lavender", ink: INK.violet, values: ["Aarav", "Kabir", "Mia"], caption: "These values identify people using their names." },
+  { id: "b", name: "Group B", tint: "cream", ink: INK.orange, values: ["12", "25", "40"], caption: "These values represent quantities or amounts." },
+  { id: "c", name: "Group C", tint: "blue", ink: INK.blue, values: ["Yes", "No", "Yes"], caption: "These values tell us whether something is true or false." },
+];
+
+/** Screen 5's three details of the event (the icons are screen 2's, the same files). */
+const PLAN_TILES: readonly InfoTile[] = [
+  { id: "students", text: "Students Registered?", icon: P.planStudents, tint: TINTS.green },
+  { id: "tickets", text: "Tickets Sold?", icon: P.planTickets, tint: TINTS.cream },
+  { id: "prizes", text: "Prizes Available?", icon: P.planPrizes, tint: TINTS.lavender },
+];
+
+/** Screen 6's four values, each with the picture of what it measures. */
+const VALUE_TILES: readonly InfoTile[] = [
+  { id: "students", text: "12 students", icon: P.valueStudents, tint: TINTS.lavender },
+  { id: "tickets", text: "25 tickets", icon: P.valueTickets, tint: TINTS.cream },
+  { id: "height", text: "148.5 cm height", icon: P.valueHeight, tint: TINTS.green },
+  { id: "weight", text: "36.7 kg weight", icon: P.valueWeight, tint: TINTS.blue },
+];
+
+/** Screens that are a headline and one or more stages: the questions and the interactions. */
 export const SCREENS: Readonly<Record<number, ScreenDef>> = {
+  // Screens 1 and 2 set the scene, then Hex finishes his line and the answers bounce in one by one.
+  [STEP.eventInfo]: {
+    step: STEP.eventInfo,
+    title: "What details are *needed?*",
+    backdrop: <EventScene />,
+    stages: [
+      quiz({
+        line: "Student details are needed before the school event begins.",
+        layout: "grid",
+        optionsAfterHex: true,
+        options: [
+          { id: "name", text: "Name", icon: P.needName, tint: TINTS.blue },
+          { id: "age", text: "Age", icon: P.needAge, tint: TINTS.green },
+          { id: "height", text: "Height", icon: P.needHeight, tint: TINTS.cream },
+          { id: "all", text: "All", icon: P.needAll, tint: TINTS.lavender },
+        ],
+        correctId: "all",
+        rightTitle: "Exactly!",
+        right: "The event needs every detail: a name, an age and a height.",
+        wrong: "Look at the registration form. How many details does it ask for?",
+      }),
+    ],
+  },
+
+  [STEP.meetAarav]: {
+    step: STEP.meetAarav,
+    title: "What do you *notice?*",
+    stages: [
+      quiz({
+        line: "Notice the difference among his details!",
+        visual: () => <StudentProfileCard />,
+        optionsAfterHex: true,
+        options: [
+          { id: "same", text: "They all look same", icon: P.lookSame },
+          { id: "different", text: "They are different from each other", icon: P.lookDifferent },
+          { id: "numbers", text: "They are all numbers", icon: P.allNumbers },
+        ],
+        correctId: "different",
+        rightTitle: "Exactly!",
+        right: "A name, an age, a height and a permission: each detail is a different kind of information.",
+        wrong: "Compare the details one by one. Is a name like an age?",
+        hintText: "Read each detail on the profile. Do they all look alike?",
+      }),
+    ],
+  },
+
   [STEP.sortSimilar]: {
     step: STEP.sortSimilar,
-    title: "Let's Find the *Similar Ones!*",
+    title: "Let’s find *similar* ones!",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
-        line: "Drag the values that belong together into the same group.",
-        render: (api) => (
-          <SortStage
-            api={api}
-            mode="free"
-            cardWidth={104}
-            prompt="Group them any way you think fits."
-            items={[
-              { id: "12", label: "12", bucket: "" },
-              { id: "25", label: "25", bucket: "" },
-              { id: "40", label: "40", bucket: "" },
-              { id: "aarav", label: "Aarav", bucket: "" },
-              { id: "mia", label: "Mia", bucket: "" },
-              { id: "kabir", label: "Kabir", bucket: "" },
-              { id: "148.5", label: "148.5", bucket: "" },
-              { id: "165.2", label: "165.2", bucket: "" },
-            ]}
-            buckets={[
-              { id: "a", label: "" },
-              { id: "b", label: "" },
-              { id: "c", label: "" },
-            ]}
-            onSorted={noteGrouping}
-          />
-        ),
+        line: "Explore these values and find which ones belong together.",
+        bubbleWidth: 190,
+        alignTop: true,
+        render: (api) => <GroupStage api={api} items={SIMILAR_VALUES} onSorted={noteGrouping} />,
         finishPanel: { title: "Interesting!", text: "You started grouping information by what it represents. Let's look at your groups." },
       },
     ],
@@ -74,95 +137,49 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.groups]: {
     step: STEP.groups,
-    title: "Not All Information *Tells Us the Same Thing!*",
+    title: "Information can *differ!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
-        line: "Tap each group to see what it tells us.",
-        render: (api) => (
-          <RevealStage
-            api={api}
-            columns={3}
-            items={[
-              { id: "a", label: "12, 25, 40", icon: P.integer, caption: "These values represent quantities or amounts." },
-              { id: "b", label: "Aarav, Mia, Kabir", icon: P.string, caption: "These values identify people using their names." },
-              { id: "c", label: "Yes, No, Yes", icon: P.boolean, caption: "These values tell us whether something is true or false." },
-            ]}
-          />
-        ),
+        line: "Let’s understand what each group tells us.",
+        alignTop: true,
+        render: (api) => <GroupTourStage api={api} groups={TOUR_GROUPS} />,
       },
-      quiz({
-        line: "Are these three groups representing the same kind of information?",
-        layout: "grid",
-        options: options([
-          ["Yes, they are the same.", P.repeat],
-          ["No, they are different.", P.think],
-        ]),
-        correctId: at(1),
-        rightTitle: "No!",
-        right: "They represent different kinds of information.",
-        wrong: "Look at what each group tells us: amounts, names, true or false.",
-      }),
     ],
   },
 
+  // Screens 5 and 6 are only looked at: Hex says his line, the cards bounce in, and Continue is there from the start.
   [STEP.counting]: {
     step: STEP.counting,
-    title: "Numbers Help Us *Count Things!*",
+    title: "Let’s *plan* a school event!",
+    titleSize: 28,
+    backdrop: <SchoolScene />,
     stages: [
-      quiz({
-        line: "What do all these values have in common?",
-        visual: ({ attempt }) => <CountScene replay={attempt} />,
-        options: options([
-          ["They represent quantities.", P.integer],
-          ["They represent people's names.", P.string],
-          ["They represent colours.", P.food],
-          ["They represent yes/no answers.", P.boolean],
-        ]),
-        correctId: at(0),
-        rightTitle: "Exactly!",
-        right: "These numbers represent quantities that we can count.",
-        wrong: "Look at what each number counts.",
-      }),
+      {
+        kind: "interaction",
+        line: "You need to know few details for this event",
+        bubbleWidth: 190,
+        alignTop: true,
+        ready: true,
+        render: ({ hexSpoken }) => <InfoTiles layout="row" shown={hexSpoken} tiles={PLAN_TILES} />,
+      },
     ],
   },
 
   [STEP.wholeDecimal]: {
     step: STEP.wholeDecimal,
-    title: "Look at These *Numbers!*",
+    title: "Are all *numbers* same?",
+    titleSize: 28,
+    backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
-        line: "Tap the values that have a part after the decimal point.",
-        render: (api) => (
-          <MultiPickStage
-            api={api}
-            columns={2}
-            correct={["h", "w"]}
-            hint="Look for the decimal point."
-            items={[
-              { id: "s", label: "12", sub: "students", icon: P.programmer },
-              { id: "t", label: "25", sub: "tickets", icon: P.star },
-              { id: "h", label: "148.5", sub: "cm height", icon: P.run },
-              { id: "w", label: "36.7", sub: "kg weight", icon: P.rock },
-            ]}
-            footer={
-              <div className="flex w-[330px] flex-col items-center gap-2">
-                <div className="grid w-full grid-cols-2 gap-2">
-                  <div className={`flex flex-col items-center px-2 py-1.5 ${CARD} ${LAVENDER}`}>
-                    <span className="text-[11px] leading-4 font-bold text-[#6B7480] uppercase dark:text-white/60">Whole numbers</span>
-                    <span className="text-[16px] leading-6 font-bold text-[#444444] dark:text-white">12, 25</span>
-                  </div>
-                  <div className={`flex flex-col items-center px-2 py-1.5 ${CARD} ${CREAM}`}>
-                    <span className="text-[11px] leading-4 font-bold text-[#6B7480] uppercase dark:text-white/60">With decimal parts</span>
-                    <span className="text-[16px] leading-6 font-bold text-[#444444] dark:text-white">148.5, 36.7</span>
-                  </div>
-                </div>
-              </div>
-            }
-          />
-        ),
-        finishPanel: { title: "That's right!", text: "148.5 and 36.7 have decimal parts. Some numbers are whole, others have decimal parts." },
+        line: "Here are some values from different situations.",
+        bubbleWidth: 190,
+        alignTop: true,
+        ready: true,
+        render: ({ hexSpoken }) => <InfoTiles layout="grid" shown={hexSpoken} tiles={VALUE_TILES} />,
       },
     ],
   },

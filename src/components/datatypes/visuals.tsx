@@ -3,8 +3,10 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Calculator, Check, FileText, TriangleAlert, X } from "lucide-react";
+import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
+import { COLUMN_W } from "@/lib/questionColumn";
 import { P } from "./pictures";
 
 /** A card, in the style of the Sequence module's picture cards. */
@@ -55,7 +57,12 @@ const EVENT_SCENE_FADE = [
  * in the shell's scene slot. In dark mode it is dimmed, and darkens to the page
  * behind the title, so the title stays readable.
  */
-export function EventScene() {
+export const EventScene = () => <SceneBackdrop file={P.eventScene} />;
+
+/** Screens 5 and 6: the same school yard, empty, for the cards to stand over (drawn the same way, from the same place). */
+export const SchoolScene = () => <SceneBackdrop file={P.schoolScene} />;
+
+function SceneBackdrop({ file }: { file: string }) {
   return (
     <motion.div
       aria-hidden
@@ -65,7 +72,7 @@ export function EventScene() {
       className="pointer-events-none absolute inset-x-0 -z-10 flex justify-center"
       style={{ top: stageTop(EVENT_SCENE.top), maskImage: EVENT_SCENE_FADE, WebkitMaskImage: EVENT_SCENE_FADE, maskComposite: "intersect", WebkitMaskComposite: "source-in" }}
     >
-      <SlotImage file={P.eventScene} className="h-auto w-[390px] max-w-none shrink-0 dark:brightness-[0.55]" />
+      <SlotImage file={file} className="h-auto w-[390px] max-w-none shrink-0 dark:brightness-[0.55]" />
       <div className="absolute inset-x-0 top-0 hidden h-[110px] bg-gradient-to-b from-background via-background/80 to-transparent dark:block" />
     </motion.div>
   );
@@ -85,28 +92,31 @@ export function StudentProfileCard() {
   );
 }
 
-/** Screen 5: things to count, each with its number coming in beside it. */
-export function CountScene({ replay = 0 }: { replay?: number }) {
-  const rows = [
-    { pic: P.programmer, label: "Students", count: 30 },
-    { pic: P.star, label: "Tickets", count: 45 },
-    { pic: P.gem, label: "Prizes", count: 12 },
-  ];
+export type InfoTile = { id: string; text: string; icon: string; tint: string };
+
+/** How each arrangement of cards stands: the same sizes as the answer tiles of the question screens (three across, or two by two). */
+const INFO_LAYOUT = {
+  /** Screen 5: three small tiles in a row. */
+  row: { box: "flex gap-3.5", card: "h-[110px] gap-2", picture: "h-[46px] w-full", text: "text-[16px] leading-5" },
+  /** Screen 6: four big cards, two across and two down. */
+  grid: { box: "grid grid-cols-2 gap-3.5", card: "h-[184px] gap-3.5", picture: "h-[83px] w-full", text: "text-[16px] leading-none" },
+} as const;
+
+/**
+ * Screens 5 and 6: cards to look at, nothing to pick. Each bounces in, one by one,
+ * once Hex has finished his line.
+ */
+export function InfoTiles({ tiles, layout, shown }: { tiles: readonly InfoTile[]; layout: keyof typeof INFO_LAYOUT; shown: boolean }) {
+  const look = INFO_LAYOUT[layout];
   return (
-    <div key={replay} className="flex w-[316px] flex-col gap-2">
-      {rows.map((row, index) => (
-        <div key={row.label} className={`flex items-center gap-3 px-3 py-1.5 ${CARD} ${CREAM}`}>
-          <Pic src={row.pic} className="h-9 w-9" />
-          <span className="flex-1 text-[16px] leading-6 font-semibold text-[#444444] dark:text-white">{row.label}</span>
-          <motion.span
-            initial={{ opacity: 0, scale: 0.4 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 + index * 0.7, type: "spring", stiffness: 260, damping: 14 }}
-            className="min-w-[52px] rounded-full bg-[#08A4AD] px-3 py-0.5 text-center text-[18px] leading-7 font-bold text-white"
-          >
-            {row.count}
-          </motion.span>
-        </div>
+    <div className={look.box} style={{ width: COLUMN_W }}>
+      {tiles.map((tile, index) => (
+        <BounceIn key={tile.id} index={index} shown={shown} className="flex min-w-0 flex-1">
+          <div className={`flex min-w-0 flex-1 flex-col items-center justify-center px-1.5 ${CARD} ${tile.tint} ${look.card}`}>
+            <Pic src={tile.icon} className={look.picture} />
+            <span className={`text-center font-semibold text-[#444444] dark:text-white ${look.text}`}>{tile.text}</span>
+          </div>
+        </BounceIn>
       ))}
     </div>
   );

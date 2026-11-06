@@ -9,15 +9,12 @@ import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { ROW_START, type HexState } from "./hexGrid";
 import { STEP, sequenceNext } from "./sequence";
-import { claimReward } from "./sequenceScore";
 
 /** The battery is this many tiles from Hex: that many commands reach it. */
 const DISTANCE = 3;
 /** How long a step takes before the next can be given (ms), and before the battery is taken. */
 const STEP_MS = 720;
 const BATTERY_TILE = { col: DISTANCE, row: 0 };
-/** Pays the battery once per run of the module (what `claimReward` has always keyed it by). */
-const REWARD_ID = "sequence-one-command";
 
 const TIPS = [
   "The battery is three tiles away. One move won’t be enough!",
@@ -38,7 +35,7 @@ export function OneCommandScreen() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const pending = useRef<number[]>([]);
-  const { win, popup } = useBatteryClaim(REWARD_ID, claimReward);
+  const { win, popup } = useBatteryClaim();
 
   useEffect(() => {
     const timers = pending.current;

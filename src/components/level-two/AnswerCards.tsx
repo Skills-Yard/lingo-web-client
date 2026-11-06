@@ -5,6 +5,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
+import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
@@ -34,6 +35,10 @@ type AnswerCardsProps = {
   rise?: number;
   /** Shorter rows (56px) for answers that are only words, so four fit above the button. */
   compact?: boolean;
+  /** The rows bounce in one by one instead of the whole list rising together. */
+  bounceIn?: boolean;
+  /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
+  revealed?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -42,10 +47,10 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 90 }}
+      initial={bounceIn ? false : { opacity: 0, y: 90 }}
       animate={{ opacity: 1, y: checked ? -rise : 0 }}
       transition={
         checked
@@ -55,11 +60,11 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
       className="pointer-events-auto absolute z-[1] flex flex-col gap-1.5"
       style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W }}
     >
-      {choices.map((choice) => {
+      {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
         const look = LOOKS[state];
         const hintHere = hinted && selectedId === null && choice.id === correctId;
-        return (
+        const row = (
           <HintFloat key={choice.id} className="relative w-full" spin={false} active={hintHere}>
             <motion.button
               type="button"
@@ -96,6 +101,13 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               {!compact && <span aria-hidden className="size-[34px] shrink-0 rounded-full" />}
             </motion.button>
           </HintFloat>
+        );
+        return bounceIn ? (
+          <BounceIn key={choice.id} index={index} shown={revealed} className="w-full">
+            {row}
+          </BounceIn>
+        ) : (
+          row
         );
       })}
     </motion.div>

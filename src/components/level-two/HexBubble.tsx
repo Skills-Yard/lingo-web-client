@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, type Transition } from "framer-motion";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { useLevelVoice } from "@/components/level-one/LevelVoice";
@@ -20,6 +20,8 @@ type HexBubbleProps = {
   cue?: string | null;
   /** The bubble bounces off to the left behind Hex, then he follows (the result panel brings its own Hex). */
   leaving?: boolean;
+  /** Called once, when the whole line has been said (typed, or read out by the voice). */
+  onSpoken?: () => void;
 };
 
 /** Hex starts his own exit this long after the bubble sets off. */
@@ -35,7 +37,7 @@ const HEX_EXIT: Transition = { duration: 0.2, ease: "easeIn" };
 
 /** Hex beside his line: the line is typed in letter by letter, the way module
  * 1's teacher line is. */
-export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false }: HexBubbleProps) {
+export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onSpoken }: HexBubbleProps) {
   const hexAtLeft = hex === "left";
   const [hexLeaving, setHexLeaving] = useState(false);
   useEffect(() => {
@@ -57,7 +59,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
       >
         <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />
       </motion.div>
-      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tailAtLeft={hexAtLeft} leaving={leaving} />
+      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tailAtLeft={hexAtLeft} leaving={leaving} onSpoken={onSpoken} />
     </div>
   );
 }
@@ -65,7 +67,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
 /** The bubble's own look: plain white over a soft blue drop edge (the Figma
  * "Rectangle 142"), its tail pointing at Hex. The edge is a filter, not a
  * box-shadow, so it runs under the tail as well as the box. */
-function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span[]; size: BubbleSize; tailAtLeft: boolean; leaving: boolean }) {
+function SpeechBubble({ line, size, tailAtLeft, leaving, onSpoken }: { line: readonly Span[]; size: BubbleSize; tailAtLeft: boolean; leaving: boolean; onSpoken?: () => void }) {
   const text = line.map((span) => span.text).join("");
   const voice = useLevelVoice();
   // A bubble on a screen with a voice is typed to its clip (the screen's last
@@ -85,6 +87,15 @@ function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span
   const [peak, setPeak] = useState(0);
   if (shown > peak) setPeak(shown);
   const typed = text.slice(0, Math.max(peak, shown));
+  // The line is said once its last letter is in. The bubble is keyed by its text, so a new line starts over.
+  const spokenAll = text.length > 0 && typed.length >= text.length;
+  const onSpokenRef = useRef(onSpoken);
+  useEffect(() => {
+    onSpokenRef.current = onSpoken;
+  });
+  useEffect(() => {
+    if (spokenAll) onSpokenRef.current?.();
+  }, [spokenAll]);
   // With a voice the bubble waits out the clips before its own: it pops in as
   // the one before it ends (or as its own starts), not from the screen's start.
   // With no clip before its own it comes in at once, without waiting for the audio to load.

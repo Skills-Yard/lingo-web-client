@@ -13,7 +13,7 @@ import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
 import { STEP, sequenceNext } from "./sequence";
-import { claimReward, noteFirstTry, noteStruggle } from "./sequenceScore";
+import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
 export type PlanRoute = "base" | "complex";
@@ -87,8 +87,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
   const [hinted, setHinted] = useState(false);
   const nextId = useRef(0);
-  // Each route pays its own battery, once per run of the module.
-  const { win, popup } = useBatteryClaim(`sequence-plan-${route}`, claimReward);
+  const { win, popup } = useBatteryClaim();
   const commands = items.map((item) => item.command);
   const editing = phase === "edit";
   // As many places as the shortest route takes; the command buttons stand 20px under them.

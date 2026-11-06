@@ -32,6 +32,8 @@ export type QuizStage = {
   wrong: string;
   /** The hint button's help: a sentence in place of Hex's line. */
   hintText?: string;
+  /** The answers stay hidden until Hex has finished his line, then bounce in one by one (screens 1 and 2). */
+  optionsAfterHex?: boolean;
   /** The main button before the answer is checked (default "Continue") and after a right one (default "Next"). */
   ctaLabel?: string;
   nextLabel?: string;
@@ -43,7 +45,11 @@ export type InteractionApi = {
   slip: () => void;
   /** The learner has done it. */
   done: () => void;
+  /** Sends Hex's line above the picture away, for a stage that talks through its own Hex lower down (screen 4). */
+  dismissHex: () => void;
   finished: boolean;
+  /** Hex has finished his line (a stage whose cards wait for him comes in then). */
+  hexSpoken: boolean;
 };
 
 /** Something to do instead of a question: tap, sort, match. The main button waits until it is done. */
@@ -51,6 +57,12 @@ export type InteractionStage = {
   kind: "interaction";
   /** What Hex says above it, if he does (short). */
   line?: string;
+  /** Hex's bubble width (px), where the design breaks the line differently from the usual widths. */
+  bubbleWidth?: number;
+  /** The picture stands at the top of the room under Hex's line, instead of in the middle of it (a design with fixed places). */
+  alignTop?: boolean;
+  /** Nothing to do, only to look at (screens 5 and 6): Continue is there from the start and Hex's line stays. */
+  ready?: boolean;
   render: (api: InteractionApi) => ReactNode;
   /** Hex's panel on finishing, if the interaction has one. */
   finishPanel?: { title: string; text: string };
@@ -65,23 +77,11 @@ export type ScreenDef = {
   step: number;
   /** The title; the words between asterisks are picked out in teal ("Let's *Go*"). */
   title: string;
-  stages: readonly Stage[];
-};
-
-/**
- * A story screen: a title, Hex's line and a picture, with no question: the main
- * button just goes on (it is not marked, and does not count in the score).
- */
-export type StoryScreenDef = {
-  step: number;
-  /** The title; the words between asterisks are picked out in teal. */
-  title: string;
-  /** What Hex says (about 50 letters or fewer: the bubble is sized for that). */
-  line: string;
+  /** Sets the title at this size (px) on one line, instead of fitting it by its length (see `parseTitle`). */
+  titleSize?: number;
   /** A picture behind the whole screen, the title and Hex included (it goes in the shell's scene slot). */
   backdrop?: ReactNode;
-  /** A picture centred under Hex's line, from this Figma `top`. */
-  picture?: { node: ReactNode; top: number };
+  stages: readonly Stage[];
 };
 
 /** A title cut into its plain and teal parts (every other part is teal), and set to fit: one line at 28px, 24px, or two lines at 24px. */

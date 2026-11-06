@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { resetReview } from "@/lib/moduleReview";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
 import { datatypesHref, energyReturnPath, moduleHref, onboardingHref, sequenceHref, variableHref } from "@/lib/routes";
+import { resetLevelOneScore } from "@/components/level-one/levelOneScore";
 import { SEQUENCE_LEVEL } from "@/components/sequence/sequence";
 import { resetFirstTry } from "@/components/sequence/sequenceScore";
 import { VARIABLE_LEVEL } from "@/components/variable/variable";
