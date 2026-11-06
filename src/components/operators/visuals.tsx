@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Lock, LockOpen } from "lucide-react";
 import { CARD, CREAM, LAVENDER, Pic, WHITE } from "@/components/datatypes/visuals";
 import { P } from "./pictures";
@@ -40,6 +40,142 @@ export function ValueCards({ items, between, replay = 0, width = 316 }: { items:
           </motion.div>
         </Fragment>
       ))}
+    </div>
+  );
+}
+
+/** A flat notebook, drawn here until the module has art of its own. */
+export function NotebookIcon() {
+  return (
+    <svg viewBox="0 0 32 32" className="size-full" aria-hidden>
+      <rect x="6" y="3" width="20" height="26" rx="3" fill="#4C8DFF" />
+      <rect x="6" y="3" width="5" height="26" rx="2.5" fill="#2F6FE0" />
+      <rect x="14" y="9" width="9" height="2.5" rx="1.25" fill="white" opacity="0.95" />
+      <rect x="14" y="14" width="9" height="2.5" rx="1.25" fill="white" opacity="0.65" />
+      <rect x="14" y="19" width="6" height="2.5" rx="1.25" fill="white" opacity="0.65" />
+    </svg>
+  );
+}
+
+/** A flat pen, drawn here until the module has art of its own. */
+export function PenIcon() {
+  return (
+    <svg viewBox="0 0 32 32" className="size-full" aria-hidden>
+      <g transform="rotate(45 16 16)">
+        <rect x="13" y="3" width="6" height="19" rx="2" fill="#FF8A3D" />
+        <rect x="13" y="3" width="6" height="5" rx="2" fill="#E8743B" />
+        <path d="M13 22h6l-3 7z" fill="#FFD9B8" />
+        <path d="M15 26.5h2l-1 2.5z" fill="#444444" />
+      </g>
+    </svg>
+  );
+}
+
+/** A flat shopping bag, drawn here until the module has art of its own. */
+export function BagIcon() {
+  return (
+    <svg viewBox="0 0 32 32" className="size-full" aria-hidden>
+      <path d="M11 11V9a5 5 0 0 1 10 0v2" fill="none" stroke="#C25E1F" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M6 11h20l-1.6 15.2A2.5 2.5 0 0 1 21.9 28H10.1a2.5 2.5 0 0 1-2.5-1.8z" fill="#FF8A3D" />
+      <path d="M6 11h20l-.4 3.5H6.4z" fill="#E8743B" />
+    </svg>
+  );
+}
+
+/** A line of the information sheet: its picture, what it is, its value. */
+export type InfoRow = { icon: ReactNode; label: string; value: string };
+
+/** What is still to be found: its picture and name, and its value once it is known (until then a "?"). */
+export type InfoMissing = { icon: ReactNode; label: string; value?: string };
+
+/** The delay of the sheet's n-th line coming in. */
+const rowIn = (index: number) => ({ delay: 0.15 + index * 0.25, duration: 0.35 });
+
+/**
+ * What we know, as one sheet: a line to a piece of information (picture, name,
+ * value), and under it, if there is one, a dashed line for what we do not have
+ * yet. The lines come in one after the other; once the missing value is given
+ * the dashed line turns into a solid one with the answer in it. `compact` drops
+ * the heading and tightens the lines, for a screen with something to do under it.
+ */
+export function InfoSheet({
+  title = "What we know",
+  rows,
+  missing,
+  compact = false,
+  replay = 0,
+}: {
+  title?: string;
+  rows: readonly InfoRow[];
+  missing?: InfoMissing;
+  compact?: boolean;
+  replay?: number;
+}) {
+  const reducedMotion = useReducedMotion();
+  const found = missing?.value !== undefined;
+  const icon = compact ? "size-8 p-1" : "size-9 p-1.5";
+  const label = compact ? "text-[13px] leading-5" : "text-[14px] leading-5";
+  const value = compact ? "text-[18px] leading-6" : "text-[20px] leading-6";
+  const pad = compact ? "py-1" : "py-1.5";
+  return (
+    <div key={replay} className={`flex w-[316px] flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
+      {!compact && (
+        <motion.span
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-center gap-1.5 self-start rounded-full bg-[#E3F6F3] py-1 pr-3 pl-1.5 text-[11px] leading-4 font-bold tracking-[0.5px] text-[#08A4AD] uppercase dark:bg-[#0F2B28]"
+        >
+          <span className="flex size-4 items-center justify-center rounded-full bg-[#08A4AD]">
+            <svg viewBox="0 0 24 24" className="size-2.5" fill="none" stroke="white" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+          </span>
+          {title}
+        </motion.span>
+      )}
+      <div className={`flex flex-col px-3 ${CARD} ${LAVENDER}`}>
+        {rows.map((row, index) => (
+          <motion.div
+            key={row.label}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={rowIn(index)}
+            className={`flex items-center gap-3 ${pad} ${index > 0 ? "border-t border-[#E4DFF7] dark:border-white/10" : ""}`}
+          >
+            <span className={`flex shrink-0 items-center justify-center rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.12)] dark:bg-[#15181E] ${icon}`}>{row.icon}</span>
+            <span className={`flex-1 font-semibold text-[#6B7480] dark:text-white/60 ${label}`}>{row.label}</span>
+            <span className={`font-bold text-[#444444] dark:text-white ${value}`}>{row.value}</span>
+          </motion.div>
+        ))}
+      </div>
+      {missing && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={rowIn(rows.length)}
+          className={`flex items-center gap-3 rounded-[8px] border-2 px-4 transition-colors duration-300 ${pad} ${found ? "border-[#08A4AD] bg-[#E3F6F3] dark:bg-[#0F2B28]" : "border-dashed border-[#08A4AD]/60 bg-white/70 dark:bg-[#15181E]/70"}`}
+        >
+          <span className={`flex shrink-0 items-center justify-center rounded-full ${icon} ${found ? "bg-white dark:bg-[#15181E]" : "bg-[#E3F6F3] dark:bg-[#0F2B28]"}`}>
+            <span className={`flex size-full items-center justify-center transition-[opacity,filter] duration-300 ${found ? "" : "opacity-40 grayscale"}`}>{missing.icon}</span>
+          </span>
+          <span className={`flex-1 font-semibold text-[#6B7480] dark:text-white/60 ${label}`}>{missing.label}</span>
+          {found ? (
+            <motion.span key="found" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 14 }} className={`font-bold text-[#04908F] ${value}`}>
+              {missing.value}
+            </motion.span>
+          ) : (
+            <motion.span
+              key="unknown"
+              animate={reducedMotion ? undefined : { scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              className="text-[22px] leading-6 font-bold text-[#08A4AD]"
+            >
+              ?
+            </motion.span>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 }

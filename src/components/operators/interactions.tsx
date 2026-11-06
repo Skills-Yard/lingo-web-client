@@ -6,7 +6,7 @@ import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import type { InteractionApi } from "./screen";
-import { CARD, CREAM, LAVENDER, Pic, ExprBig, ShareScene, WHITE } from "./visuals";
+import { CARD, CREAM, Pic, ExprBig, ShareScene, WHITE } from "./visuals";
 
 const SHAKE = [0, -7, 7, -5, 5, 0];
 /** A wrong try shakes red for this long (ms). */
@@ -16,6 +16,23 @@ const PILL = "cursor-pointer rounded-full bg-[#08A4AD] px-6 py-2 text-[16px] lea
 
 /** Symbols and the words `and`, `or`, `not` are drawn as operators (teal); numbers and names as values. */
 const isOperator = (token: string) => /^([+\-*/%<>=!()]+|and|or|not)$/.test(token);
+
+type SlotKind = "value" | "operator" | "any";
+
+/** What each place of an expression takes, where every right way agrees: a value or an operator. */
+const slotKinds = (accept: readonly (readonly string[])[]): SlotKind[] =>
+  accept[0].map((_, place) => {
+    const operators = new Set(accept.map((way) => isOperator(way[place])));
+    return operators.size > 1 ? "any" : operators.has(true) ? "operator" : "value";
+  });
+
+/** The sizes of the places and blocks: long expressions (a * b + c * d) get smaller ones so they fit a line. */
+const SIZE = {
+  roomy: { slot: "h-12 w-11", placed: "h-12 min-w-11 text-[21px]", tray: "h-12 min-w-12 text-[21px]" },
+  tight: { slot: "h-10 w-9", placed: "h-10 min-w-9 text-[17px]", tray: "h-11 min-w-11 text-[19px]" },
+} as const;
+const VALUE_BLOCK = "border-2 border-[#E4DFF7] bg-[#F6F4FE] text-[#444444] shadow-[0_3px_0_#D3CCF0] dark:border-[#3B3670] dark:bg-[#2E2A5C] dark:text-white dark:shadow-[0_3px_0_#1B1840]";
+const OPERATOR_BLOCK = "bg-[#08A4AD] text-white shadow-[0_3px_0_#067F86]";
 
 /** What a stage tells the learner when something is not right yet. */
 function Note({ children }: { children: ReactNode }) {
@@ -59,9 +76,13 @@ export function ExpressionStage({
 }) {
   const { slip, done, finished } = api;
   const length = accept[0].length;
+  const kinds = slotKinds(accept);
+  const size = SIZE[length > 5 ? "tight" : "roomy"];
   const [chosen, setChosen] = useState<readonly number[]>([]);
   const [ok, setOk] = useState(false);
   const [bad, setBad] = useState(false);
+  // The place the next block goes to, picked out while there is one to fill.
+  const nextPlace = ok || bad || finished || chosen.length >= length ? -1 : chosen.length;
 
   const check = (next: readonly number[]) => {
     const written = next.map((index) => tokens[index]);
@@ -99,27 +120,54 @@ export function ExpressionStage({
       <motion.div
         animate={{ x: bad ? SHAKE : 0 }}
         transition={{ duration: 0.4 }}
-        className={`flex min-h-[58px] w-full flex-wrap items-center justify-center gap-1.5 px-2 py-2 ${CARD} ${ok ? LOOKS.correct.card : bad ? LOOKS.wrong.card : WHITE}`}
+        className={`flex min-h-[68px] w-full flex-wrap items-center justify-center gap-1.5 px-3 py-2 ${CARD} ${ok ? LOOKS.correct.card : bad ? LOOKS.wrong.card : WHITE}`}
       >
         {Array.from({ length }, (_, place) => {
           const index = chosen[place];
           return index === undefined ? (
-            <span key={place} className="h-[36px] w-[30px] rounded-[8px] border-2 border-dashed border-[#C9CED6]" />
+            <span
+              key={place}
+              className={`shrink-0 rounded-[10px] border-2 border-dashed transition-colors ${size.slot} ${
+                place === nextPlace
+                  ? "border-[#08A4AD] bg-[#08A4AD]/10 motion-safe:animate-pulse"
+                  : kinds[place] === "operator"
+                    ? "border-[#08A4AD]/40"
+                    : "border-[#C9CED6] dark:border-white/20"
+              }`}
+            />
           ) : (
             <motion.button
               key={place}
               type="button"
               initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 420, damping: 22 }}
               onClick={() => takeOut(index)}
               aria-label={`${tokens[index]} (tap to take out)`}
-              className={`h-[36px] min-w-[30px] cursor-pointer rounded-[8px] px-1.5 text-[18px] leading-none font-bold ${isOperator(tokens[index]) ? "bg-[#08A4AD] text-white" : "bg-[#F1EEFF] text-[#444444] dark:bg-[#2E2A5C] dark:text-white"}`}
+              className={`cursor-pointer rounded-[10px] px-2 leading-none font-bold ${size.placed} ${isOperator(tokens[index]) ? OPERATOR_BLOCK : VALUE_BLOCK}`}
             >
               {tokens[index]}
             </motion.button>
           );
         })}
-        {result !== undefined && ok && <span className="px-1 text-[20px] leading-6 font-bold text-[#04908F]">= {result}</span>}
+        {result !== undefined && (
+          <span className="flex items-center gap-1.5 pl-1">
+            <span className="text-[22px] leading-6 font-bold text-[#08A4AD]">=</span>
+            {ok ? (
+              <motion.span
+                key="result"
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 260, damping: 14 }}
+                className="rounded-[10px] bg-[#04908F] px-3 py-1.5 text-[20px] leading-6 font-bold text-white"
+              >
+                {result}
+              </motion.span>
+            ) : (
+              <span className="rounded-[10px] bg-[#E3F6F3] px-3 py-1.5 text-[20px] leading-6 font-bold text-[#08A4AD] dark:bg-[#0F2B28]">?</span>
+            )}
+          </span>
+        )}
       </motion.div>
       <div className="flex flex-wrap justify-center gap-2">
         {tokens.map((token, index) => {
@@ -130,11 +178,9 @@ export function ExpressionStage({
               type="button"
               onClick={() => pick(index)}
               disabled={used}
-              animate={{ opacity: used ? 0.25 : 1 }}
-              whileTap={{ scale: 0.92 }}
-              className={`h-[44px] min-w-[44px] cursor-pointer rounded-[10px] px-2.5 text-[20px] leading-none font-bold disabled:cursor-default ${
-                isOperator(token) ? "bg-[#08A4AD] text-white shadow-[0_3px_0_#067F86]" : `${CARD} ${LAVENDER} text-[#444444] dark:text-white`
-              }`}
+              animate={{ opacity: used ? 0.25 : 1, y: used ? 3 : 0 }}
+              whileTap={{ scale: 0.92, y: 2 }}
+              className={`cursor-pointer rounded-[10px] px-2.5 leading-none font-bold disabled:cursor-default ${size.tray} ${isOperator(token) ? OPERATOR_BLOCK : VALUE_BLOCK}`}
             >
               {token}
             </motion.button>

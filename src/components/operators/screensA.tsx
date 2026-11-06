@@ -5,8 +5,27 @@ import { FlipCarouselStage } from "./FlipCarousel";
 import { ExpressionStage, FillRowsStage, ScenesStage, ShareStage, SymbolStage } from "./interactions";
 import { STEP } from "./operators";
 import { P } from "./pictures";
-import type { ScreenDef } from "./screen";
-import { ExprBig, GroupsPicture, PlantGrid, ShareScene, ValueCards, Versus, WalletScene } from "./visuals";
+import type { InteractionStage, ScreenDef } from "./screen";
+import { SituationsStage, type SituationItem } from "./SituationsStage";
+import { BagIcon, ExprBig, GroupsPicture, InfoSheet, NotebookIcon, PenIcon, PlantGrid, Pic, ShareScene, ValueCards, Versus, WalletScene } from "./visuals";
+
+/** The four situations of "Explore the situations!", in the order their questions come. */
+const SITUATIONS: readonly SituationItem[] = [
+  { id: "money", icon: P.iconMoney, verb: "Combining", thing: "money", tint: "lavender" },
+  { id: "chocolate", icon: P.iconChocolate, verb: "Sharing", thing: "chocolate", tint: "cream" },
+  { id: "heights", icon: P.iconHeight, verb: "Comparing", thing: "heights", tint: "mint" },
+  { id: "spending", icon: P.iconWallet, verb: "Spending", thing: "money", tint: "blue" },
+];
+
+/** What Hex says as each situation's turn comes. */
+const SITUATION_LINES: readonly string[] = ["We saw four situations. Let's find the action in each, starting here.", "Now the next situation.", "And another one.", "Now the last one."];
+
+/** The turn of one situation: its card is picked out while Hex speaks, and Continue goes on to its question. */
+const situationTurn = (focus: number): InteractionStage => ({
+  kind: "interaction",
+  line: SITUATION_LINES[focus],
+  render: (api) => <SituationsStage api={api} situations={SITUATIONS} focus={focus} />,
+});
 
 /** Screens 1-14 (phases 1 to 3: everyday actions, meeting operators, arithmetic). */
 export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
@@ -22,10 +41,10 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
           <FlipCarouselStage
             api={api}
             cards={[
-              { id: "money", pic: P.money, verb: "Combining", label: "Money", caption: "Two stacks of money are put together.", tint: "teal" },
-              { id: "chocolates", pic: P.chocolate, verb: "Sharing", label: "Chocolates", caption: "Chocolates are shared among students.", tint: "pink" },
-              { id: "wallet", pic: P.gift, verb: "Spending", label: "Money", caption: "Money is spent from a wallet.", tint: "amber" },
-              { id: "heights", pic: P.person, verb: "Comparing", label: "Heights", caption: "Two people compare how tall they are.", tint: "blue" },
+              { id: "money", image: P.cardMoney, verb: "Combining", label: "Money", caption: "Two stacks of money are put together.", tint: "teal" },
+              { id: "chocolates", image: P.cardChocolates, verb: "Sharing", label: "Chocolates", caption: "Chocolates are shared among students.", tint: "pink" },
+              { id: "wallet", image: P.cardSpending, verb: "Spending", label: "Money", caption: "Money is spent from a wallet.", tint: "amber" },
+              { id: "heights", image: P.cardHeights, verb: "Comparing", label: "Heights", caption: "Two people compare how tall they are.", tint: "blue" },
             ]}
           />
         ),
@@ -37,8 +56,9 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
   // 2. Different situations, different actions.
   [STEP.actions]: {
     step: STEP.actions,
-    title: "What Are We *Actually Doing?*",
+    title: "Explore the *situations!*",
     stages: [
+      situationTurn(0),
       quiz({
         line: "You have ₹50 and receive another ₹30.",
         visual: ({ attempt }) => (
@@ -57,6 +77,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         right: "Adding: we put the two amounts together.",
         wrong: "Are the amounts put together, taken away, shared or compared?",
       }),
+      situationTurn(1),
       quiz({
         line: "You have 20 chocolates to share equally among 4 students.",
         visual: ({ attempt }) => (
@@ -75,6 +96,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         right: "Dividing: we share equally.",
         wrong: "Everyone should get the same. What do we do to share?",
       }),
+      situationTurn(2),
       quiz({
         line: "One student is 150 cm tall and another is 140 cm.",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.person, label: "Student 1", value: "150 cm" }} right={{ pic: P.person, label: "Student 2", value: "140 cm" }} />,
@@ -85,6 +107,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         right: "Comparing: we see who is taller.",
         wrong: "We are not changing the heights. We are looking at the two.",
       }),
+      situationTurn(3),
       quiz({
         line: "You have ₹500 and spend ₹100.",
         visual: ({ attempt }) => (
@@ -114,13 +137,14 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "We have all this information. Can we find the money left without doing anything with it?",
         visual: ({ attempt }) => (
-          <ValueCards
+          <InfoSheet
             replay={attempt}
-            items={[
-              { pic: P.money, label: "Money available", value: "₹500" },
-              { pic: P.notebook, label: "Book price", value: "₹150" },
-              { pic: P.pen, label: "Pen price", value: "₹50" },
+            rows={[
+              { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money available", value: "₹500" },
+              { icon: <NotebookIcon />, label: "Book price", value: "₹150" },
+              { icon: <PenIcon />, label: "Pen price", value: "₹50" },
             ]}
+            missing={{ icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money left" }}
           />
         ),
         layout: "grid",
@@ -145,11 +169,12 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
           <ExpressionStage
             api={api}
             lead={
-              <ValueCards
-                items={[
-                  { pic: P.money, label: "Wallet", value: "₹500" },
-                  { pic: P.notebook, label: "Book", value: "₹150" },
-                  { pic: P.pen, label: "Pen", value: "₹50" },
+              <InfoSheet
+                compact
+                rows={[
+                  { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Wallet", value: "₹500" },
+                  { icon: <NotebookIcon />, label: "Book", value: "₹150" },
+                  { icon: <PenIcon />, label: "Pen", value: "₹50" },
                 ]}
               />
             }
@@ -171,11 +196,13 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
           <ExpressionStage
             api={api}
             lead={
-              <ValueCards
-                items={[
-                  { pic: P.money, label: "Wallet", value: "₹500" },
-                  { pic: P.gift, label: "Bag", value: "₹200" },
+              <InfoSheet
+                compact
+                rows={[
+                  { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Wallet", value: "₹500" },
+                  { icon: <BagIcon />, label: "Book + Pen", value: "₹200" },
                 ]}
+                missing={{ icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money left", value: api.finished ? "₹300" : undefined }}
               />
             }
             tokens={["500", "200", "-", "+"]}
@@ -188,6 +215,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       },
       quiz({
         line: "Which mathematical actions did we use?",
+        keepLine: true,
         options: neutral(["Addition and subtraction.", "Multiplication and division.", "Only comparing."]),
         correctId: at(0),
         rightTitle: "Exactly!",
