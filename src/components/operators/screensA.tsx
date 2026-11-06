@@ -1,6 +1,7 @@
 "use client";
 
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
+import { FlipCarouselStage } from "./FlipCarousel";
 import { ExpressionStage, FillRowsStage, ScenesStage, ShareStage, SymbolStage } from "./interactions";
 import { STEP } from "./operators";
 import { P } from "./pictures";
@@ -12,19 +13,19 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
   // 1. We do these things every day.
   [STEP.everyday]: {
     step: STEP.everyday,
-    title: "Have You Ever Done *These Things?*",
+    title: "Have you *tried* these?",
     stages: [
       {
         kind: "interaction",
-        line: "Tap each scene. What are we trying to do here?",
+        line: "Think about everyday things you do without even noticing.",
         render: (api) => (
-          <ScenesStage
+          <FlipCarouselStage
             api={api}
-            scenes={[
-              { id: "money", pic: P.money, label: "Money", caption: "Two stacks of money are put together." },
-              { id: "chocolates", pic: P.chocolate, label: "Chocolates", caption: "Chocolates are shared among students." },
-              { id: "heights", pic: P.person, label: "Heights", caption: "Two people compare how tall they are." },
-              { id: "wallet", pic: P.gift, label: "Wallet", caption: "Money is spent from a wallet." },
+            cards={[
+              { id: "money", pic: P.money, verb: "Combining", label: "Money", caption: "Two stacks of money are put together.", tint: "teal" },
+              { id: "chocolates", pic: P.chocolate, verb: "Sharing", label: "Chocolates", caption: "Chocolates are shared among students.", tint: "pink" },
+              { id: "wallet", pic: P.gift, verb: "Spending", label: "Money", caption: "Money is spent from a wallet.", tint: "amber" },
+              { id: "heights", pic: P.person, verb: "Comparing", label: "Heights", caption: "Two people compare how tall they are.", tint: "blue" },
             ]}
           />
         ),
@@ -40,7 +41,6 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "You have ₹50 and receive another ₹30.",
-        question: "What are we doing?",
         visual: ({ attempt }) => (
           <ValueCards
             replay={attempt}
@@ -59,7 +59,6 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "You have 20 chocolates to share equally among 4 students.",
-        question: "What are we doing?",
         visual: ({ attempt }) => (
           <ValueCards
             replay={attempt}
@@ -78,7 +77,6 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "One student is 150 cm tall and another is 140 cm.",
-        question: "What are we doing?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.person, label: "Student 1", value: "150 cm" }} right={{ pic: P.person, label: "Student 2", value: "140 cm" }} />,
         layout: "grid",
         options: neutral(["Adding", "Subtracting", "Dividing", "Comparing"]),
@@ -89,7 +87,6 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "You have ₹500 and spend ₹100.",
-        question: "What are we doing?",
         visual: ({ attempt }) => (
           <ValueCards
             replay={attempt}
