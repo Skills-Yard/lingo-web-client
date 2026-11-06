@@ -6,7 +6,7 @@ import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, CountScene, CREAM, LAVENDER, NamesList, NumberLine, ProfileCard, RegistrationDesk, RulerScale, TwelveCards, TypedCards, WeatherCard } from "./visuals";
+import { AttendanceBoard, CARD, CountScene, CREAM, LAVENDER, NamesList, NumberLine, RulerScale, TwelveCards, TypedCards, WeatherCard } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -34,50 +34,8 @@ function Note({ children }: { children: ReactNode }) {
 
 const WHY_WRONG = "Look at what each value is. Is it a quantity, a decimal, text or a logical state?";
 
-/** Screens that are a headline and one or more stages: the questions and the interactions. */
+/** Screens that are a headline and one or more stages: the questions and the interactions (the story screens, 1 and 2, are in `storyScreens.tsx`). */
 export const SCREENS: Readonly<Record<number, ScreenDef>> = {
-  [STEP.eventInfo]: {
-    step: STEP.eventInfo,
-    title: "Let's Organise Our *School Event!*",
-    stages: [
-      quiz({
-        line: "What information might the school need?",
-        visual: () => <RegistrationDesk />,
-        options: options([
-          ["Student's name.", P.string],
-          ["Student's age.", P.star],
-          ["Student's height.", P.run],
-          ["All of these.", P.think],
-        ]),
-        correctId: at(3),
-        rightTitle: "Exactly!",
-        right: "The school needs different information about each student.",
-        wrong: "Think about what the school needs to know to identify a student.",
-      }),
-    ],
-  },
-
-  [STEP.meetAarav]: {
-    step: STEP.meetAarav,
-    title: "Meet *Aarav!*",
-    stages: [
-      quiz({
-        line: "Do you notice something interesting about these four values?",
-        visual: ({ attempt }) => <ProfileCard replay={attempt} />,
-        options: options([
-          ["They all look the same.", P.repeat],
-          ["They are different kinds of information.", P.think],
-          ["They are all numbers.", P.integer],
-          ["They are all words.", P.string],
-        ]),
-        correctId: at(1),
-        rightTitle: "Exactly!",
-        right: "A name, an age, a height and a yes/no are different kinds of information.",
-        wrong: "Look carefully. Is a person's name the same kind of information as their height?",
-      }),
-    ],
-  },
-
   [STEP.sortSimilar]: {
     step: STEP.sortSimilar,
     title: "Let's Find the *Similar Ones!*",
