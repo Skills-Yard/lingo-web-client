@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { Calculator, Check, FileText, TriangleAlert, X } from "lucide-react";
+import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { P } from "./pictures";
 
@@ -37,40 +38,50 @@ export function FieldRow({ label, children, delay = 0, tone = "plain" }: { label
   );
 }
 
-/** Screen 1: the registration desk: a student, and a form with empty fields. */
-export function RegistrationDesk() {
+/** Screen 1's scene is drawn this wide (frame px; keep it the same as the image's `w-[390px]` below; the art is 1560 x 2180), starting at this Figma `top`: just above the title. */
+const EVENT_SCENE = { top: 101, width: 390 } as const;
+/** On a screen wider than the scene its sides fade into the page, over at most this much. */
+const SIDE_FADE = 60;
+const SIDE_BAND = `min(${SIDE_FADE}px, max(0px, var(--stage-w, ${EVENT_SCENE.width}px) - ${EVENT_SCENE.width}px))`;
+/** The scene melts into the page at its top and its foot, so the title, Hex and Continue stand on a clean ground. */
+const EVENT_SCENE_FADE = [
+  "linear-gradient(180deg, transparent 0, #000 40px, #000 calc(100% - 90px), transparent 100%)",
+  `linear-gradient(90deg, transparent calc(50% - ${EVENT_SCENE.width / 2}px), #000 calc(50% - ${EVENT_SCENE.width / 2}px + ${SIDE_BAND}), #000 calc(50% + ${EVENT_SCENE.width / 2}px - ${SIDE_BAND}), transparent calc(50% + ${EVENT_SCENE.width / 2}px))`,
+].join(", ");
+
+/**
+ * Screen 1: the school event, a student at the registration desk. It is the
+ * screen's backdrop (the title and Hex's line are set over its sky), so it goes
+ * in the shell's scene slot. In dark mode it is dimmed, and darkens to the page
+ * behind the title, so the title stays readable.
+ */
+export function EventScene() {
   return (
-    <div className={`flex items-center gap-3 px-3 py-3 ${CARD} ${LAVENDER}`} style={{ width: 316 }}>
-      <Pic src={P.programmer} className="h-[84px] w-[84px]" />
-      <div className="flex flex-1 flex-col gap-1.5">
-        <span className="text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">Event registration</span>
-        {["Name", "Age", "Height"].map((label, index) => (
-          <FieldRow key={label} label={label} delay={0.2 + index * 0.25} />
-        ))}
-      </div>
-    </div>
+    <motion.div
+      aria-hidden
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+      className="pointer-events-none absolute inset-x-0 -z-10 flex justify-center"
+      style={{ top: stageTop(EVENT_SCENE.top), maskImage: EVENT_SCENE_FADE, WebkitMaskImage: EVENT_SCENE_FADE, maskComposite: "intersect", WebkitMaskComposite: "source-in" }}
+    >
+      <SlotImage file={P.eventScene} className="h-auto w-[390px] max-w-none shrink-0 dark:brightness-[0.55]" />
+      <div className="absolute inset-x-0 top-0 hidden h-[110px] bg-gradient-to-b from-background via-background/80 to-transparent dark:block" />
+    </motion.div>
   );
 }
 
-/** Screen 2: Aarav's profile, one piece of information after another. */
-export function ProfileCard({ replay = 0 }: { replay?: number }) {
-  const rows = [
-    ["Name", "Aarav"],
-    ["Age", "12"],
-    ["Height", "148.5 cm"],
-    ["Permission", "Yes"],
-  ] as const;
+/** Screen 2: Aarav's student profile card (name, age, height, permission), settling in under Hex. */
+export function StudentProfileCard() {
   return (
-    <div key={replay} className={`flex items-center gap-3 px-3 py-3 ${CARD} ${LAVENDER}`} style={{ width: 316 }}>
-      <Pic src={P.programmer} className="h-[84px] w-[84px]" />
-      <div className="flex flex-1 flex-col gap-1.5">
-        {rows.map(([label, value], index) => (
-          <FieldRow key={label} label={label} delay={0.3 + index * 0.6}>
-            {value}
-          </FieldRow>
-        ))}
-      </div>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 16, scale: 0.94 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 140, damping: 16, delay: 0.3 }}
+      className="w-[300px]"
+    >
+      <SlotImage file={P.studentProfile} className="h-auto w-full" />
+    </motion.div>
   );
 }
 

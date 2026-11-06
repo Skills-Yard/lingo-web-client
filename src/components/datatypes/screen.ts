@@ -68,6 +68,22 @@ export type ScreenDef = {
   stages: readonly Stage[];
 };
 
+/**
+ * A story screen: a title, Hex's line and a picture, with no question: the main
+ * button just goes on (it is not marked, and does not count in the score).
+ */
+export type StoryScreenDef = {
+  step: number;
+  /** The title; the words between asterisks are picked out in teal. */
+  title: string;
+  /** What Hex says (about 50 letters or fewer: the bubble is sized for that). */
+  line: string;
+  /** A picture behind the whole screen, the title and Hex included (it goes in the shell's scene slot). */
+  backdrop?: ReactNode;
+  /** A picture centred under Hex's line, from this Figma `top`. */
+  picture?: { node: ReactNode; top: number };
+};
+
 /** A title cut into its plain and teal parts (every other part is teal), and set to fit: one line at 28px, 24px, or two lines at 24px. */
 export const parseTitle = (title: string) => {
   const parts = title.split("*");

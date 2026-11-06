@@ -2,6 +2,7 @@ const SEQUENCE = "/images/sequence";
 const COMMAND = "/images/level-two";
 const LEVEL_ONE = "/images/level-one";
 const ROOT = "/images";
+const DATATYPES = "/images/datatypes";
 
 /**
  * Every picture on an option or a card, as a stand-in from the Sequence and
@@ -10,6 +11,9 @@ const ROOT = "/images";
  * types have the same picture wherever they appear.
  */
 export const P = {
+  // The module's own art: the scenes of the story screens (1 and 2).
+  eventScene: `${DATATYPES}/event-scene.webp`,
+  studentProfile: `${DATATYPES}/student-profile.webp`,
   // The four data types.
   integer: `${COMMAND}/cube.png`,
   float: `${ROOT}/coins.png`,

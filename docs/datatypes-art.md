@@ -14,4 +14,15 @@ To use a real picture, put the file in `public/images/datatypes/` and change tha
 | `programmer`, `teacher` | a student | the Level 1 illustrations |
 | `star`, `gem`, `run`, `rock`, `tree`, `food`, `box`, `computer`, `command`, `idea`, `question`, `statement`, `stop` | tickets, prizes, height, weight, colours, a computer, a switch and so on | the existing icons |
 
-The scenes (registration desk, student profile, counting, ruler, names list, attendance board, weather card) are drawn in code in `src/components/datatypes/visuals.tsx`.
+## The module's own art (screens 1 and 2)
+
+The two story screens ("Let's organise an event!" and "Explore student's details!") use real illustrations, in `public/images/datatypes/` and listed in `P`:
+
+| Key | File | Used by |
+|---|---|---|
+| `eventScene` | `event-scene.webp` (1170 x 1635, from the 1560 x 2180 PNG) | screen 1: a full-width backdrop behind the title and Hex, fading into the page at its top and foot (`EventScene`) |
+| `studentProfile` | `student-profile.webp` (1000 x 547, transparent corners) | screen 2: the student profile card, 300px wide under Hex's line (`StudentProfileCard`) |
+
+To replace either, overwrite the file (keep the same shape: the scene's size is set from its 1560 x 2180 proportions) or point the line in `pictures.ts` at a new one. The faint semi-transparent specks around the card's edge in the original PNG were removed when it was converted.
+
+The other scenes (counting, ruler, names list, attendance board, weather card) are drawn in code in `src/components/datatypes/visuals.tsx`.
