@@ -4,7 +4,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import { useRouter } from "next/navigation";
 import { resetReview } from "@/lib/moduleReview";
 import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboardingAnswers";
-import { datatypesHref, energyReturnPath, moduleHref, onboardingHref, operatorsHref, sequenceHref, variableHref } from "@/lib/routes";
+import { conditionsHref, datatypesHref, energyReturnPath, moduleHref, onboardingHref, operatorsHref, sequenceHref, variableHref } from "@/lib/routes";
 import { SEQUENCE_LEVEL } from "@/components/sequence/sequence";
 import { resetFirstTry } from "@/components/sequence/sequenceScore";
 import { VARIABLE_LEVEL } from "@/components/variable/variable";
@@ -13,6 +13,8 @@ import { DATATYPES_LEVEL, resetDatatypesFlow } from "@/components/datatypes/data
 import { resetDatatypesScore } from "@/components/datatypes/datatypesScore";
 import { OPERATORS_LEVEL, resetOperatorsFlow } from "@/components/operators/operators";
 import { resetOperatorsScore } from "@/components/operators/operatorsScore";
+import { CONDITIONS_LEVEL, resetConditionsFlow } from "@/components/conditions/conditions";
+import { resetConditionsScore } from "@/components/conditions/conditionsScore";
 import { CareerDetailScreen } from "./CareerDetailScreen";
 import { careerById } from "./careersData";
 import { CareersScreen } from "./CareersScreen";
@@ -38,16 +40,20 @@ export function LevelRoute() {
         resetDatatypesFlow();
         resetOperatorsScore();
         resetOperatorsFlow();
+        resetConditionsScore();
+        resetConditionsFlow();
         const open =
-          module === OPERATORS_LEVEL
-            ? operatorsHref(1)
-            : module === DATATYPES_LEVEL
-              ? datatypesHref(1)
-              : module === VARIABLE_LEVEL
-                ? variableHref(1)
-                : module === SEQUENCE_LEVEL
-                  ? sequenceHref(1)
-                  : moduleHref(1);
+          module === CONDITIONS_LEVEL
+            ? conditionsHref(1)
+            : module === OPERATORS_LEVEL
+              ? operatorsHref(1)
+              : module === DATATYPES_LEVEL
+                ? datatypesHref(1)
+                : module === VARIABLE_LEVEL
+                  ? variableHref(1)
+                  : module === SEQUENCE_LEVEL
+                    ? sequenceHref(1)
+                    : moduleHref(1);
         router.push(open);
       }}
     />

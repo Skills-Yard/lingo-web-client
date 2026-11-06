@@ -196,6 +196,52 @@ Built from the "5. Operators" spec: one step for each of its 40 screens (the ste
 | `/module/operators?step=40` | "From Calculation to Decision" (then the gem popup) |
 | `/module/operators?step=complete` | "Lesson complete!" |
 
+## Conditions module
+
+Built from the "6. Conditions" spec: one step for each of its 38 screens (the step number is the PDF's screen number; a screen with several parts has several stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, and the Hex result panel. The wording is shortened from the PDF, and no `if`/`else` is taught. `step` numbers are `STEP` in `components/conditions/conditions.ts`.
+
+| Route | Screen |
+|---|---|
+| `/module/conditions?step=1` | "How Does a Computer Know It's Correct?" (marks vs the pass mark, then four test values) |
+| `/module/conditions?step=2` | "A Condition Is Something We Check" |
+| `/module/conditions?step=3` | "Can a Statement Be True and False?" (reveal, then predict) |
+| `/module/conditions?step=4` | "Information Is Not a Condition" |
+| `/module/conditions?step=5` | "A Condition Is Constructed" (the seven-step path, then put the steps in order) |
+| `/module/conditions?step=6` | "What Makes a Number Positive?" (number line) |
+| `/module/conditions?step=7` | "The Positive-Number Condition" (number > 0: build, then test) |
+| `/module/conditions?step=8` | "What Makes a Number Negative?" (number < 0; skipped after a clean 7) |
+| `/module/conditions?step=9` | "Is the Number Equal to 7?" (== and =) |
+| `/module/conditions?step=10` | "What About Every Number Except 7?" (!=; skipped after a clean 9) |
+| `/module/conditions?step=11` | "What Does “At Least 10” Mean?" (>=) |
+| `/module/conditions?step=12` | "What Does “At Most 10” Mean?" (<=; skipped after a clean 11) |
+| `/module/conditions?step=13` | "How Can We Spot an Even Number?" (share into two groups) |
+| `/module/conditions?step=14` | "How Do We Check What Remains?" (number % 2 == 0) |
+| `/module/conditions?step=15` | "What Happens When a Number Is Odd?" (number % 2 != 0; skipped after a clean 14) |
+| `/module/conditions?step=16` | "Can You Build the Condition?" (four challenges; hints on the first two) |
+| `/module/conditions?step=17` | "What If One Requirement Is Not Enough?" (dessert order, all four combinations) |
+| `/module/conditions?step=18` | "When Are Both Requirements True?" (AND table, `ice_cream and pastry`) |
+| `/module/conditions?step=19` | "When Is the Extra Class On?" (Anjali or Ravi) |
+| `/module/conditions?step=20` | "Does OR Need Everyone?" (OR table, `anjali_comes or ravi_comes`) |
+| `/module/conditions?step=21` | "One Word Changes Everything!" (AND vs OR; skipped after clean 18 and 20) |
+| `/module/conditions?step=22` | "Is a Number in a Range?" (number line) |
+| `/module/conditions?step=23` | "Both Boundaries Included" (>= 10 and <= 20) |
+| `/module/conditions?step=24` | "What If 20 Is Not Allowed?" (>= 10 and < 20) |
+| `/module/conditions?step=25` | "What If Neither Boundary Is Allowed?" (> 10 and < 20, then pick the condition; skipped after a clean 24) |
+| `/module/conditions?step=26` | "What If a Number Is Outside 10 to 20?" (< 10 or > 20) |
+| `/module/conditions?step=27` | "What Happens When We Reverse a Statement?" |
+| `/module/conditions?step=28` | "How Do We Reverse a Condition?" (`not ravi_comes`, truth table) |
+| `/module/conditions?step=29` | "What If a Number Is NOT Greater Than 10?" (`not (number > 10)`; skipped after a clean 28) |
+| `/module/conditions?step=30` | "Can One Condition Hold Two Requirements?" (marks and attendance) |
+| `/module/conditions?step=31` | "What If Either One Is Enough?" (score == 100 or bonus) |
+| `/module/conditions?step=32` | "What If a Requirement Has Groups?" (parentheses) |
+| `/module/conditions?step=33` | "Can You Translate This Requirement?" (workshop eligibility) |
+| `/module/conditions?step=34` | "Can You Find What Is Wrong?" (boundary bug) |
+| `/module/conditions?step=35` | "Does This Condition Fit the Rule?" (and/or bug; skipped after a clean 34) |
+| `/module/conditions?step=36` | "You Are the Condition Designer!" (eight builds) |
+| `/module/conditions?step=37` | "You Can Now Construct Conditions!" (toolkit, then "Complete Chapter" opens the gem popup) |
+| `/module/conditions?step=38` | "What Comes Next?" (three condition cards and the "Selection / Decision Making" pathway; Continue ends the lesson) |
+| `/module/conditions?step=complete` | "Lesson complete!" |
+
 ## Other pages
 
 | Route | Page |
@@ -224,6 +270,10 @@ Built from the "5. Operators" spec: one step for each of its 40 screens (the ste
 | Operators module: skips | Screens 20, 23, 24, 30 and 31 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `components/operators/operators.ts`; a skipped screen counts as answered for the skips after it) |
 | Operators module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`). Screen 13 goes back to 12 (as the spec says); screen 38 goes to 12 for trouble with the remainder questions and to 26 for trouble with the comparison ones |
 | Operators module: score and branches | Kept in session storage (`lingo.operators-*`), cleared when the module is opened from the path |
+| Conditions module: skips | Screens 8, 10, 12, 15, 21, 25, 29 and 35 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `components/conditions/conditions.ts`; a skipped screen counts as answered for the skips after it) |
+| Conditions module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`). Screen 16 goes to 14 for trouble with the divisibility challenges and to 7 for the comparison ones |
+| Conditions module: ending | "Complete Chapter" on 37 opens the gem popup; closing it opens screen 38, whose Continue ends on "Lesson complete!" |
+| Conditions module: score and branches | Kept in session storage (`lingo.conditions-*`), cleared when the module is opened from the path |
 | `/module` with no params | Opens Level 1, step 1 |
 | Any other level or step | 404 (only Level 1 exists so far) |
 | Adding an onboarding step | Its `?step=` name is its id from `ONBOARDING_STEPS`, in kebab-case |
