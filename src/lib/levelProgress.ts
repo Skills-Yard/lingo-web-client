@@ -4,15 +4,28 @@ const JUST_DONE_KEY = "lingo:module-just-done";
 /** Modules there are screens for (`/module`, `/module/sequence`, `/module/variable`, `/module/datatypes`). */
 export const PLAYABLE_MODULES = 4;
 
-/** How many modules the learner has finished (0 when none / storage is
- * unavailable). Kept in local storage so the path remembers it. */
+/** How many modules the learner has finished (0 when none set yet). Kept in local storage so the path remembers it. */
 export function readModulesDone(): number {
   try {
-    const value = Number(window.localStorage.getItem(DONE_KEY));
+    const raw = window.localStorage.getItem(DONE_KEY);
+    if (!raw) return 0; // Default to 0: learner starts at Level 1 (Operators)
+    const value = Number(raw);
     return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0;
   } catch {
     return 0;
   }
+}
+
+/** Subscribe to module progress changes across tabs or within the current window. */
+export function subscribeModulesDone(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const handler = () => callback();
+  window.addEventListener("storage", handler);
+  window.addEventListener("lingo:modules-done-changed", handler);
+  return () => {
+    window.removeEventListener("storage", handler);
+    window.removeEventListener("lingo:modules-done-changed", handler);
+  };
 }
 
 /** Records module `level` (1-based) as finished, and that the path should
@@ -23,6 +36,7 @@ export function completeModule(level: number): void {
     if (level <= readModulesDone()) return;
     window.localStorage.setItem(DONE_KEY, String(level));
     window.sessionStorage.setItem(JUST_DONE_KEY, "1");
+    window.dispatchEvent(new Event("lingo:modules-done-changed"));
   } catch {
     // The path just stays where it was.
   }
@@ -53,6 +67,7 @@ export function setModulesDone(count: number): void {
     if (count > 0) window.localStorage.setItem(DONE_KEY, String(count));
     else window.localStorage.removeItem(DONE_KEY);
     window.sessionStorage.removeItem(JUST_DONE_KEY);
+    window.dispatchEvent(new Event("lingo:modules-done-changed"));
   } catch {
     // The path just stays where it was.
   }
