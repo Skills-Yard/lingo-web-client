@@ -117,6 +117,8 @@ export type SequenceQuiz = {
   noHint?: boolean;
   /** What the hint says in Hex's bubble (it also lights up the right card). */
   hintText?: string;
+  /** Hex and his line stay where they are once checked, instead of leaving to the left. */
+  hexStays?: boolean;
   /** The main button before the answer is checked (default "Continue"). */
   ctaLabel?: string;
   /** Clips read when the screen opens (the title, then Hex's line). */
@@ -277,6 +279,7 @@ export const REFLECT_ORDER: SequenceQuiz = {
   wrong: "Order isn’t about the alphabet. A good order is what helped the robot and Hex reach their goals.",
   noRetry: true,
   noHint: true,
+  hexStays: true,
   ctaLabel: "Check",
 };
 

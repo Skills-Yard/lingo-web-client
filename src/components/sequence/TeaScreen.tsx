@@ -30,9 +30,13 @@ const CARDS: readonly ArrangeCardDef[] = [
   { id: "bag", kind: "bag", text: "Add the tea bag", art: emoji("🍃"), tint: "bg-[#ECF7ED] dark:bg-[#10261A]" },
 ];
 
-const GEO = arrangeGeometry({ mode: "columns", card: { width: 150, height: 112 }, count: 3, gap: 10, lane: 24 });
-/** Once checked the board rises this far (px), so the result panel doesn't cover it. */
-const BOARD_RISE = 160;
+/** In a row, as on "Arrange the instructions!": the slots across the top, the cards in a tray under them. */
+const GEO = arrangeGeometry({ mode: "rows", card: { width: 108, height: 124 }, count: 3, gap: 8, lane: 14, slotsOnTop: true, solidSlots: true });
+/**
+ * Once checked the board rises this far (px): the filled slots (the tray is empty by then)
+ * stand between Hex's line, which stays, and the result panel, so the learner's order stays in view.
+ */
+const BOARD_RISE = 180;
 
 /**
  * "One last challenge.": the same idea away from the robot. Three tea-making
@@ -96,7 +100,7 @@ export function TeaScreen() {
         One last <Teal>challenge.</Teal>
       </ScreenTitle>
       <CentredRow top={stageTop(BUBBLE_TOP)}>
-        <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} leaving={checked} />
+        <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} />
       </CentredRow>
       <ArrangeDock geo={GEO} rise={checked ? BOARD_RISE : 0}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
