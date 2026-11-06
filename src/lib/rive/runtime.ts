@@ -424,6 +424,10 @@ export const FLIP_CARD = {
   height: 275,
   flipTrigger: "Trigger 1",
   bleed: 20,
+  /** The `FlipCard` view model's number for which card it draws: 0 is the module's
+   * "what a command is" card, 1 the Sequence module's "Why does order matter?". */
+  cardTypeProperty: "cardType",
+  cardType: { command: 0, order: 1 },
 } as const;
 
 /** The robot arm behind the module's first screens — "CMD_RobotArm" in

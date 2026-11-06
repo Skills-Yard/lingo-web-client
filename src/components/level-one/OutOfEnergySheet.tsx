@@ -119,7 +119,7 @@ export function OutOfEnergySheet() {
   const goOn = () => {
     // Either one lifts the block: the sheet leaves as the battery stops being empty.
     if (choice === "infinite") setBatteryUnlimited(true);
-    else refillBattery();
+    else refillBattery({ celebrate: true });
   };
 
   const leave = () => {

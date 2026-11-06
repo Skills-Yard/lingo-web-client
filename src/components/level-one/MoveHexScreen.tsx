@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -12,9 +12,10 @@ import { moduleHref } from "@/lib/routes";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { PlatformBattery } from "@/components/ui/PlatformBattery";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
-import { GemPopup } from "./GemPopup";
 import { levelOneStep } from "./LevelOneShell";
+import { claimReward } from "./levelOneScore";
 import { useLevelMuted } from "./levelMuted";
+import { useBatteryClaim } from "./useBatteryClaim";
 
 /** Its place in the module. */
 const STEP = 16;
@@ -54,7 +55,8 @@ const BUTTONS_TOP = 508;
 /**
  * The game played as part of another module: the board opens on a tip with Hex
  * on the top tile, "Let's Try" sets the battery there and brings him to the middle,
- * and the result is a panel (no gem popup) reported through `onAnswer` and `onDone`.
+ * and the result is a panel reported through `onAnswer`; Continue then opens the gem
+ * popup and, once the battery is claimed, goes on through `onDone`.
  */
 export type MoveHexFlow = {
   step: number;
@@ -69,8 +71,13 @@ export type MoveHexFlow = {
   wrong: string;
   /** Each result, right or wrong. */
   onAnswer: (correct: boolean) => void;
+  /** The battery this game pays when Hex gets there: the module's own once-per-run claim. */
+  reward: { id: string; claim: (id: string) => boolean };
   onDone: () => void;
 };
+
+/** Module 1's game pays its battery once per run of the module. */
+const LEVEL_ONE_REWARD = "level-one-guide-hex";
 
 const WRONG_WAY = "Oops, that’s the wrong way! The battery is straight ahead. Tap anywhere on this panel to try again.";
 
@@ -134,13 +141,10 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
   const [tile, setTile] = useState<Tile>(flow ? "top" : "centre");
   const [result, setResult] = useState<"solved" | "failed" | null>(null);
   // The gem popup opens once, the moment Hex reaches the battery; closing it
-  // (or its 3 second countdown running out) leaves Continue to go on.
-  const [gemOpen, setGemOpen] = useState(false);
-  // In a flow the popup comes after the result panel, so closing it moves on.
-  const closeGem = useCallback(() => {
-    setGemOpen(false);
-    flow?.onDone();
-  }, [flow]);
+  // (or its 3 second countdown running out) claims the battery and plays the
+  // Battery Doctor, and leaves Continue to go on. In a flow the popup comes
+  // after the result panel, and the end of the Doctor moves on.
+  const { win, popup } = useBatteryClaim(flow?.reward.id ?? LEVEL_ONE_REWARD, flow?.reward.claim ?? claimReward, flow?.onDone);
   // A miss counts against this question: the first go is what is noted, and
   // Continue asks to be shown it again unless the first go made it.
   const missed = useRef(false);
@@ -152,7 +156,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
         triggerSound("win");
         setResult("solved");
         if (flow) flow.onAnswer(true);
-        else setGemOpen(true);
+        else win();
         return;
       }
       triggerSound("lose");
@@ -163,7 +167,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
       if (!flow) noteAnswer(STEP, false);
     }, STEP_MS);
     return () => window.clearTimeout(timer);
-  }, [tile, intro, flow, triggerSound]);
+  }, [tile, intro, flow, triggerSound, win]);
 
   const walk = (to: Tile) => {
     triggerSound("step");
@@ -202,7 +206,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
               </FeedbackPanel>
             </div>
           )}
-          <GemPopup open={gemOpen} onClose={closeGem} />
+          {popup}
         </>
       }
       onContinue={() => {
@@ -216,7 +220,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
           return;
         }
         if (flow) {
-          setGemOpen(true);
+          win();
           return;
         }
         noteAnswer(STEP, !missed.current);

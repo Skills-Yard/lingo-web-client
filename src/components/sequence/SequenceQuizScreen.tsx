@@ -22,6 +22,8 @@ import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 /** A list of answers only has to clear the result panel; there is a picture to keep in view above it. */
 const LIST_RISE = 150;
+/** With nothing but Hex's line above it, the list rises further, well clear of the panel. */
+const LIST_RISE_OPEN = 210;
 /** Where the pictures to compare start (Figma `top`), their height, and how far they rise as Hex leaves. */
 const PICTURES_TOP = 248;
 const PICTURES_HEIGHT = 200;
@@ -85,6 +87,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   // The hint is Hex saying it, in place of his line.
   const line = hinted && quiz.hintText ? [{ text: quiz.hintText }] : quiz.line;
   const withHint = !quiz.noHint;
+  const listRise = quiz.pictures || quiz.closeUp ? LIST_RISE : LIST_RISE_OPEN;
 
   return (
     <LevelTwoShell
@@ -127,7 +130,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
         </span>
       </ScreenTitle>
       <CentredRow top={stageTop(quiz.bubbleTop)}>
-        <HexBubble key={attempt} entryKey={`sequence-${quiz.step}-${attempt}`} hex="left" line={line} size={quiz.bubble} leaving={checked} />
+        <HexBubble key={attempt} entryKey={`sequence-${quiz.step}-${attempt}`} hex="left" line={line} size={quiz.bubble} leaving={checked && !quiz.hexStays} />
       </CentredRow>
       {quiz.pictures && (
         <motion.div
@@ -185,7 +188,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           fadeOut={fadeCards}
           hinted={hinted}
           withHint={withHint}
-          rise={LIST_RISE}
+          rise={listRise}
           onPick={setSelectedId}
         />
       ) : (

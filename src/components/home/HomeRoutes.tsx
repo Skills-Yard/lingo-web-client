@@ -30,6 +30,7 @@ export function LevelRoute() {
     <HomeScreen
       onStart={(module) => {
         resetReview();
+        resetLevelOneScore();
         resetFirstTry();
         resetVariableScore();
         resetDatatypesScore();

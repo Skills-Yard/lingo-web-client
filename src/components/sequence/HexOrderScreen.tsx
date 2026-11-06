@@ -4,16 +4,19 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUp, RotateCw } from "lucide-react";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, type Command } from "./hexGrid";
 import { STEP, sequenceNext } from "./sequence";
-import { noteFirstTry, noteStruggle } from "./sequenceScore";
+import { claimReward, noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
 const BATTERY = { col: 1, row: 1 };
+/** Pays the battery once per run of the module, when Hex gets there. */
+const REWARD_ID = "sequence-hex-order";
 const HINT = "Look at the direction HEX is facing after the first command.";
 
 /** The right order, first slot first. */
@@ -54,6 +57,7 @@ export function HexOrderScreen() {
   const [hinted, setHinted] = useState(false);
   const [hintCard, setHintCard] = useState<string | null>(null);
   const pending = useRef<number[]>([]);
+  const { win, popup } = useBatteryClaim(REWARD_ID, claimReward);
 
   useEffect(() => {
     const timers = pending.current;
@@ -78,6 +82,7 @@ export function HexOrderScreen() {
       if (!right) noteStruggle(STEP.hexOrder, "miss");
       vibrateForAnswer(right);
       setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: right }));
+      if (right) win();
     });
   };
 
@@ -112,7 +117,7 @@ export function HexOrderScreen() {
       title="Can you put the commands in the right order?"
       titleSize={22}
       wrapTitle
-      board={<HexBoard kind="grid" hex={hex} battery={BATTERY} width={290} entryKey="hex-order" />}
+      board={<HexBoard kind="grid" hex={hex} battery={BATTERY} collected={phase === "checked" && correct} width={290} entryKey="hex-order" />}
       boardTop={PICTURE_TOP}
       tip={hinted && phase === "edit" ? HINT : undefined}
       tipTop={TIP_TOP}
@@ -125,6 +130,7 @@ export function HexOrderScreen() {
         open: phase === "checked",
       }}
       celebrate={phase === "checked" && correct}
+      overlay={popup}
       answer={answer}
       hint={{
         visible: phase === "edit",

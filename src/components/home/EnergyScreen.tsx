@@ -104,7 +104,7 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
     setYellow(from);
     setCelebrating(true);
     vibrateForClaim();
-    addBatteryUnits(BONUS_UNITS);
+    addBatteryUnits(BONUS_UNITS, { celebrate: true });
     animate(from, to, {
       duration: YELLOW_SECONDS,
       ease: EASE,
@@ -215,7 +215,7 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
                   </span>
                 }
                 disabled={full || battery.unlimited}
-                onClick={refillBattery}
+                onClick={() => refillBattery({ celebrate: true })}
               />
             </motion.div>
 
@@ -228,7 +228,7 @@ export function EnergyScreen({ onClose }: { onClose: () => void }) {
                 tag="Watch ad"
                 tagClassName="text-[#818185] dark:text-[#9FA19F]"
                 disabled={full || battery.unlimited}
-                onClick={() => addBatteryUnits(BONUS_UNITS)}
+                onClick={() => addBatteryUnits(BONUS_UNITS, { celebrate: true })}
               />
             </motion.div>
 

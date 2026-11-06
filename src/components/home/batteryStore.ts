@@ -24,6 +24,30 @@ export type BatteryState = {
   charged: number;
 };
 
+/** A charge the learner asked for, handed to whoever plays the Battery Doctor. */
+export type BatteryCharge = {
+  /** Tells one charge from the next. */
+  id: number;
+  /** Whole units in the battery before the charge. */
+  fromUnits: number;
+  /** Whole units the charge added. */
+  units: number;
+  /** Called by the Doctor once it has played. */
+  onCelebrated?: () => void;
+};
+
+/** Which charges play the Battery Doctor: only the ones that ask for it. */
+type ChargeOptions = {
+  /** Plays the full-screen Battery Doctor when this charge raises the fill. */
+  celebrate?: boolean;
+  /**
+   * With `celebrate`: runs once the Doctor has played, or at once when there
+   * is nothing to play (the battery was already full). So whatever must wait
+   * for the show, like going on to the next screen, never waits for nothing.
+   */
+  onCelebrated?: () => void;
+};
+
 const FRESH: BatteryState = { level: BATTERY_START, unlimited: false, charged: 0 };
 
 const STORAGE_KEY = "lingo.battery";
@@ -54,6 +78,10 @@ const restore = (): BatteryState => {
 let state = FRESH;
 let restored = false;
 const listeners = new Set<() => void>();
+const chargeListeners = new Set<(charge: BatteryCharge) => void>();
+let chargeCount = 0;
+
+const unitsLeft = (level: number) => Math.round((level / 100) * max);
 
 const read = (): BatteryState => {
   if (!restored && typeof window !== "undefined") {
@@ -63,7 +91,8 @@ const read = (): BatteryState => {
   return state;
 };
 
-const write = (next: BatteryState) => {
+const write = (next: BatteryState, { celebrate = false, onCelebrated }: ChargeOptions = {}) => {
+  const before = state;
   state = next;
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -71,6 +100,16 @@ const write = (next: BatteryState) => {
     // Same as `restore`.
   }
   listeners.forEach((listener) => listener());
+  if (!celebrate) return;
+  const fromUnits = unitsLeft(before.level);
+  const units = unitsLeft(next.level) - fromUnits;
+  if (units <= 0 || chargeListeners.size === 0) {
+    onCelebrated?.();
+    return;
+  }
+  chargeCount += 1;
+  const charge: BatteryCharge = { id: chargeCount, fromUnits, units, onCelebrated };
+  chargeListeners.forEach((listener) => listener(charge));
 };
 
 const subscribe = (listener: () => void) => {
@@ -80,10 +119,16 @@ const subscribe = (listener: () => void) => {
   };
 };
 
+/** Subscribe to the charges that asked for the Battery Doctor (`celebrate`), and only those. */
+export const subscribeBatteryCharge = (listener: (charge: BatteryCharge) => void) => {
+  chargeListeners.add(listener);
+  return () => {
+    chargeListeners.delete(listener);
+  };
+};
+
 /** The learner's battery, shared by every screen that shows it. */
 export const useBattery = (): BatteryState => useSyncExternalStore(subscribe, read, () => FRESH);
-
-const unitsLeft = (level: number) => Math.round((level / 100) * max);
 
 /** "14/20", or the infinity sign when unlimited. */
 export const batteryLabel = ({ level, unlimited }: BatteryState) =>
@@ -116,13 +161,17 @@ export const chargeBatteryScreen = (step: number): boolean => {
   return spends;
 };
 
-/** Whole battery units (of `max`) added to the fill, capped at full. */
-export const addBatteryUnits = (units: number) => {
+/**
+ * Whole battery units (of `max`) added to the fill, capped at full. Silent
+ * unless `celebrate`: the Battery Doctor plays only for the charges that ask.
+ */
+export const addBatteryUnits = (units: number, options: ChargeOptions = {}) => {
   const saved = read();
-  write({ ...saved, level: Math.min(100, saved.level + (units / max) * 100) });
+  write({ ...saved, level: Math.min(100, saved.level + (units / max) * 100) }, options);
 };
 
-export const refillBattery = () => write({ ...read(), level: 100 });
+/** Fills the battery. Silent unless `celebrate`, as `addBatteryUnits`. */
+export const refillBattery = (options: ChargeOptions = {}) => write({ ...read(), level: 100 }, options);
 
 /** Sets the battery to exactly `units` (of `max`) and ends unlimited — for testing what happens as it runs out. */
 export const setBatteryUnits = (units: number) =>
