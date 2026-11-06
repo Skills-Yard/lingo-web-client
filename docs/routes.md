@@ -148,6 +148,54 @@ Built from the "4. DataTypes" spec (its screen number is in brackets; screens wi
 | `/module/datatypes?step=30` | "You Have Unlocked Data Types!" (then the gem popup) [26] |
 | `/module/datatypes?step=complete` | "Lesson complete!" |
 
+## Operators module
+
+Built from the "5. Operators" spec: one step for each of its 40 screens (the step number is the PDF's screen number; a screen with several parts has several stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, and the Hex result panel. The wording is shortened from the PDF. `step` numbers are `STEP` in `components/operators/operators.ts`.
+
+| Route | Screen |
+|---|---|
+| `/module/operators?step=1` | "Have You Ever Done These Things?" (tap four scenes) |
+| `/module/operators?step=2` | "What Are We Actually Doing?" (four situations: adding, dividing, comparing, subtracting) |
+| `/module/operators?step=3` | "Remember What We Learned?" (information cards, then Yes/No) |
+| `/module/operators?step=4` | "How Much Money Will Remain?" (build 150 + 50, then 500 - 200, then a question) |
+| `/module/operators?step=5` | "Meet the Operators!" (tap + - * /) |
+| `/module/operators?step=6` | "Calculate or Compare?" |
+| `/module/operators?step=7` | "What Happens When Values Come Together?" (wallet: add, subtract, two more situations) |
+| `/module/operators?step=8` | "What If Every Group Has the Same Quantity?" (fill four rows of chairs, then 4 * 5) |
+| `/module/operators?step=9` | "Can Everyone Get the Same Number?" (predict, share 20 chocolates, / gives 5.0) |
+| `/module/operators?step=10` | "When Sharing Is Not Equal" (share 23 among 4: 5 each, 3 left) |
+| `/module/operators?step=11` | "Same Numbers, Three Answers!" (/, // and %) |
+| `/module/operators?step=12` | "Not Enough for Even One Group?" (1 chocolate, 2 students) |
+| `/module/operators?step=13` | "How Much Remains?" (four // and % challenges) |
+| `/module/operators?step=14` | "Growing Bigger, Faster!" (**) |
+| `/module/operators?step=15` | "Can You Calculate the Total Bill?" (build 3 * 20 + 2 * 10) |
+| `/module/operators?step=16` | "Does Calculation Order Matter?" (2 + 3 * 4 and (2 + 3) * 4, step by step) |
+| `/module/operators?step=17` | "Arrange the Calculation" (2 * 50 + 20, then 2 * (50 + 20)) |
+| `/module/operators?step=18` | "Understand the Situation!" (which expression fits) |
+| `/module/operators?step=19` | "Who Is Older?" (True and False from a real situation) |
+| `/module/operators?step=20` | "True or False?" (four statements; skipped after a clean 19) |
+| `/module/operators?step=21` | "Let the Computer Compare!" (the six comparison symbols) |
+| `/module/operators?step=22` | "Always Read Left to Right" (open and closed side) |
+| `/module/operators?step=23` | "Read What the Expression Says" (six expressions; skipped after a clean 22) |
+| `/module/operators?step=24` | "Write What the Sentence Says" (five builds; skipped after clean 22 and 23) |
+| `/module/operators?step=25` | "Six Ways to Compare Values!" (== vs =) |
+| `/module/operators?step=26` | "The Number Line Challenge" |
+| `/module/operators?step=27` | "At Least 100 Points!" (>= with the level gate) |
+| `/module/operators?step=28` | "Understanding the Maximum Limit" (<= with the ride) |
+| `/module/operators?step=29` | "A Comparison Produces an Answer" (True or False, Boolean) |
+| `/module/operators?step=30` | "Read, Understand and Evaluate" (four expressions: read, then True or False) |
+| `/module/operators?step=31` | "Choose the Right Operation" (nine situations; skipped after clean 18 and 30) |
+| `/module/operators?step=32` | "Construct the Expression" (150 - (4 * 25 + 3 * 10), then 120 - 130) |
+| `/module/operators?step=33` | "Create a Shopping Calculator" (put the steps in order) |
+| `/module/operators?step=34` | "Build a Budget Checker" (total_bill <= 500) |
+| `/module/operators?step=35` | "The Incorrect Shopping Bill" (find the mistake, then fix it) |
+| `/module/operators?step=36` | "The Boundary Bug" (score > 100 to score >= 100) |
+| `/module/operators?step=37` | "Plan a Class Trip" (// % * <= in five questions) |
+| `/module/operators?step=38` | "Why Did You Choose These Operations?" (six reasoning picks) |
+| `/module/operators?step=39` | "You Can Now Make Values Work!" (the toolkit of 13 operators) |
+| `/module/operators?step=40` | "From Calculation to Decision" (then the gem popup) |
+| `/module/operators?step=complete` | "Lesson complete!" |
+
 ## Other pages
 
 | Route | Page |
@@ -173,6 +221,9 @@ Built from the "4. DataTypes" spec (its screen number is in brackets; screens wi
 | Data Types module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`) |
 | Data Types module: score and branches | Kept in session storage (`lingo.datatypes-*`), cleared when the module is opened from the path |
 | Variable module: score and branches | Kept in session storage (`lingo.variable-*`), cleared when the module is opened from the path |
+| Operators module: skips | Screens 20, 23, 24, 30 and 31 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `components/operators/operators.ts`; a skipped screen counts as answered for the skips after it) |
+| Operators module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`). Screen 13 goes back to 12 (as the spec says); screen 38 goes to 12 for trouble with the remainder questions and to 26 for trouble with the comparison ones |
+| Operators module: score and branches | Kept in session storage (`lingo.operators-*`), cleared when the module is opened from the path |
 | `/module` with no params | Opens Level 1, step 1 |
 | Any other level or step | 404 (only Level 1 exists so far) |
 | Adding an onboarding step | Its `?step=` name is its id from `ONBOARDING_STEPS`, in kebab-case |

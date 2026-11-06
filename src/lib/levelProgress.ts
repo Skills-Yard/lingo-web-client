@@ -1,8 +1,8 @@
 const DONE_KEY = "lingo:modules-done";
 const JUST_DONE_KEY = "lingo:module-just-done";
 
-/** Modules there are screens for (`/module`, `/module/sequence`, `/module/variable`, `/module/datatypes`). */
-export const PLAYABLE_MODULES = 4;
+/** Modules there are screens for (`/module`, `/module/sequence`, `/module/variable`, `/module/datatypes`, `/module/operators`). */
+export const PLAYABLE_MODULES = 5;
 
 /** How many modules the learner has finished (0 when none / storage is
  * unavailable). Kept in local storage so the path remembers it. */
