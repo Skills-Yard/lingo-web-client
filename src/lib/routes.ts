@@ -18,6 +18,9 @@ export const datatypesHref = (step: number | "complete") => `/module/datatypes?s
 /** `/module/operators?step=` — one screen of the Operators module (1-based, or `complete`). */
 export const operatorsHref = (step: number | "complete") => `/module/operators?step=${step}`;
 
+/** `/module/conditions?step=` — one screen of the Conditions module (1-based, or `complete`). */
+export const conditionsHref = (step: number | "complete") => `/module/conditions?step=${step}`;
+
 /** `/energy?from=` — the battery's screen; `from` is where its cross returns to. */
 export const energyHref = (from: string) => `/energy?from=${encodeURIComponent(from)}`;
 

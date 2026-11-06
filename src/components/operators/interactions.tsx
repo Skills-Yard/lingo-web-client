@@ -14,7 +14,8 @@ const WRONG_MS = 800;
 const BLUE_CARD = "border-[#5B9BFF] bg-[#EEF4FF] dark:bg-[#15213A]";
 const PILL = "cursor-pointer rounded-full bg-[#08A4AD] px-6 py-2 text-[16px] leading-6 font-bold text-white shadow-[0_3px_0_#067F86] active:translate-y-px active:shadow-[0_2px_0_#067F86]";
 
-const isOperator = (token: string) => /^[+\-*/%<>=!()]+$/.test(token);
+/** Symbols and the words `and`, `or`, `not` are drawn as operators (teal); numbers and names as values. */
+const isOperator = (token: string) => /^([+\-*/%<>=!()]+|and|or|not)$/.test(token);
 
 /** What a stage tells the learner when something is not right yet. */
 function Note({ children }: { children: ReactNode }) {
@@ -488,7 +489,7 @@ export type SceneItem = { id: string; pic: string; label: string; caption: strin
  * Scenes to explore: tap each one and a line says what is going on in it. Done
  * once all have been tapped.
  */
-export function ScenesStage({ api, scenes, columns = 2 }: { api: InteractionApi; scenes: readonly SceneItem[]; columns?: 2 | 4 }) {
+export function ScenesStage({ api, scenes, columns = 2, prompt = "Tap each scene." }: { api: InteractionApi; scenes: readonly SceneItem[]; columns?: 2 | 4; /** What the line says before anything is tapped. */ prompt?: string }) {
   const { done, finished } = api;
   const [seen, setSeen] = useState<readonly string[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -532,7 +533,7 @@ export function ScenesStage({ api, scenes, columns = 2 }: { api: InteractionApi;
             transition={{ duration: 0.2 }}
             className={`rounded-[12px] px-3 py-2 text-center text-[15px] leading-5 font-semibold ${current ? "bg-white text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]" : "text-[#6B7480] dark:text-white/60"}`}
           >
-            {current ? current.caption : "Tap each scene."}
+            {current ? current.caption : prompt}
           </motion.p>
         </AnimatePresence>
       </div>
