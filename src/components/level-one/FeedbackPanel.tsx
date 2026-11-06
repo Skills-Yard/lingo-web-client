@@ -128,17 +128,16 @@ export function OnboardingHex({
 // Figma's box; the box is centred on it and spills out unseen, which keeps the
 // text clear of him and the sheet's height unchanged.
 export const SHEET_TITLE_SIZE = "text-[22px] leading-7";
-export const SHEET_HEX_SLOT = "relative h-[79.95px] w-[136px] shrink-0";
+export const SHEET_HEX_SLOT = "relative h-[79.95px] w-[110px] shrink-0";
 export const SHEET_HEX_BOX =
   "absolute top-1/2 left-1/2 h-[159.9px] w-[219.3px] -translate-x-1/2 -translate-y-1/2";
-// The sheet shares the header's box, and these line its contents up with what is
-// drawn in the header: the text starts where the close's cross does (21.35px in),
-// and Hex, who rests 8.6px inside his slot, ends where the battery's count does
-// (19.5px in). Less the sheet's border, so one for each border width.
-export const SHEET_INSET = "pl-[19.85px] pr-[9.4px]";
-const SHEET_INSET_THICK_BORDER = "pl-[18.35px] pr-[7.9px]";
-// Hex rests 5.4px inside his slot, so this leaves 20px between the text and him.
-const SHEET_TEXT_GAP = "gap-[14.6px]";
+// The same room on both sides, lined up with the Continue button's drawn edges:
+// the text starts 17px in from the sheet's edge and Hex (his slot is as wide as
+// he is drawn) ends 17px in from the other. Less the sheet's border, so one for
+// each border width.
+export const SHEET_INSET = "px-[15.5px]";
+const SHEET_INSET_THICK_BORDER = "px-[14px]";
+const SHEET_TEXT_GAP = "gap-5";
 /**
  * Figma "Frame 273", the Sequence module's sheet (390 x 236 at the frame's bottom,
  * 32px top radius): the text (149px wide) and Hex (drawn 109.65 x 79.95) are one
@@ -146,8 +145,9 @@ const SHEET_TEXT_GAP = "gap-[14.6px]";
  * The padding is less the 3px border; the Rive box spills out of the slot unseen.
  */
 const CENTRED_SHEET = "rounded-t-[32px] border-[3px] pt-[15px] pb-[124px]";
-const CENTRED_ROW = "mx-auto flex min-h-[94px] w-[292.65px] items-center justify-center gap-[34px]";
-const CENTRED_TEXT = "flex w-[149px] shrink-0 flex-col gap-1.5";
+// The text column is wider than Figma's 149px, so a long sentence wraps over fewer lines and the sheet stays low.
+const CENTRED_ROW = "mx-auto flex min-h-[94px] w-[324px] items-center justify-center gap-[24px]";
+const CENTRED_TEXT = "flex w-[190px] shrink-0 flex-col gap-1.5";
 const CENTRED_HEX_SLOT = "relative h-[79.95px] w-[109.65px] shrink-0";
 const CENTRED_HEX_BOX = "absolute top-1/2 left-[calc(50%+1.44px)] h-[143.7px] w-[197.1px] -translate-x-1/2 -translate-y-1/2";
 

@@ -135,6 +135,8 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
             )}
           </div>
 
+
+
           {/* Each screen's `step` spends its share of the battery. Also the way
               into the hidden dev panel (see BatteryMenu). */}
           <BatteryMenu className="relative shrink-0" buttonClassName="block" onBack={onPrevious ?? onBack}>

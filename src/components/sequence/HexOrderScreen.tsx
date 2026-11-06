@@ -117,7 +117,7 @@ export function HexOrderScreen() {
       title="Can you put the commands in the right order?"
       titleSize={22}
       wrapTitle
-      board={<HexBoard kind="grid" hex={hex} battery={BATTERY} width={290} entryKey="hex-order" />}
+      board={<HexBoard kind="grid" hex={hex} battery={BATTERY} collected={phase === "checked" && correct} width={290} entryKey="hex-order" />}
       boardTop={PICTURE_TOP}
       tip={hinted && phase === "edit" ? HINT : undefined}
       tipTop={TIP_TOP}

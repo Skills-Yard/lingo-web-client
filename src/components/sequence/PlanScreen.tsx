@@ -28,6 +28,8 @@ const ROUTES = {
       </>
     ),
     battery: { col: 2, row: 1 },
+    /** forward, right, forward, forward */
+    slots: 4,
     tip: "Build a sequence of commands that takes HEX to the battery.",
   },
   complex: {
@@ -38,16 +40,14 @@ const ROUTES = {
       </>
     ),
     battery: { col: 2, row: 0 },
+    /** forward, forward, right, forward, forward */
+    slots: 5,
     tip: "Nice! Now plan a longer route that takes HEX to the battery.",
   },
 } as const;
 
-/** The most commands the list holds. */
-const MAX_COMMANDS = 8;
-const LIST = chipListSize(MAX_COMMANDS);
 const BOARD_TOP = 130;
 const LIST_TOP = 424;
-const PALETTE_TOP = 548;
 
 /** A command to add to the list: pressed, it sinks onto its edge. */
 function PaletteButton({ command, disabled, onPress }: { command: Command; disabled: boolean; onPress: () => void }) {
@@ -85,16 +85,21 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
   const [correct, setCorrect] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
+  const [hinted, setHinted] = useState(false);
   const nextId = useRef(0);
   // Each route pays its own battery, once per run of the module.
   const { win, popup } = useBatteryClaim(`sequence-plan-${route}`, claimReward);
   const commands = items.map((item) => item.command);
   const editing = phase === "edit";
+  // As many places as the shortest route takes; the command buttons stand 20px under them.
+  const maxCommands = config.slots;
+  const list = chipListSize(maxCommands);
+  const paletteTop = LIST_TOP + list.height + 20;
 
   const add = (command: Command) => {
     playClickSound();
     vibrateForTap();
-    setItems((now) => (now.length >= MAX_COMMANDS ? now : [...now, { id: nextId.current++, command }]));
+    setItems((now) => (now.length >= maxCommands ? now : [...now, { id: nextId.current++, command }]));
   };
 
   const run = () => {
@@ -134,7 +139,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
       title={config.title}
       board={<HexBoard kind="grid" hex={hex} battery={config.battery} collected={phase === "checked" && correct} ring={editing ? ring : null} width={260} entryKey={`hex-plan-${route}`} />}
       boardTop={BOARD_TOP}
-      tip={config.tip}
+      tip={hinted && editing ? config.tip : undefined}
       tipTop={342}
       panel={{
         correct,
@@ -145,6 +150,13 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
       celebrate={phase === "checked" && correct}
       overlay={popup}
       answer={answer}
+      hint={{
+        visible: editing && !hinted,
+        onUse: () => {
+          setHinted(true);
+          noteStruggle(config.step, "hint");
+        },
+      }}
       ctaLabel={phase !== "checked" ? "Run" : correct ? "Next" : "Try again"}
       ctaDisabled={editing ? items.length === 0 || running : phase === "running"}
       onContinue={onContinue}
@@ -152,9 +164,10 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
       <p className="absolute inset-x-0 text-center text-[13px] leading-4 font-semibold tracking-[0.4px] text-[#6B7480] uppercase dark:text-white/60" style={{ top: LIST_TOP - 22 }}>
         {items.length === 0 ? "Tap a command to add it" : "Your sequence"}
       </p>
-      <div className="absolute left-1/2 -translate-x-1/2" style={{ top: LIST_TOP, width: LIST.width, height: LIST.height }}>
+      <div className="absolute left-1/2 -translate-x-1/2" style={{ top: LIST_TOP, width: list.width, height: list.height }}>
         <ChipList
           items={items}
+          max={maxCommands}
           disabled={!editing}
           onMove={(from, to) => setItems((now) => moveItem(now, from, to))}
           onRemove={(index) => {
@@ -164,9 +177,9 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
           }}
         />
       </div>
-      <div className="absolute inset-x-0 flex justify-center gap-4" style={{ top: PALETTE_TOP }}>
-        <PaletteButton command="forward" disabled={!editing || items.length >= MAX_COMMANDS} onPress={() => add("forward")} />
-        <PaletteButton command="right" disabled={!editing || items.length >= MAX_COMMANDS} onPress={() => add("right")} />
+      <div className="absolute inset-x-0 flex justify-center gap-4" style={{ top: paletteTop }}>
+        <PaletteButton command="forward" disabled={!editing || items.length >= maxCommands} onPress={() => add("forward")} />
+        <PaletteButton command="right" disabled={!editing || items.length >= maxCommands} onPress={() => add("right")} />
       </div>
     </HexScreen>
   );
