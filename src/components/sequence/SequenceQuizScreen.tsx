@@ -24,9 +24,6 @@ import { noteFirstTry, noteStruggle } from "./sequenceScore";
 const LIST_RISE = 150;
 /** With nothing but Hex's line above it, the list rises further, well clear of the panel. */
 const LIST_RISE_OPEN = 210;
-/** A row of the list of answers, and the gap between rows (see `AnswerCards`). */
-const LIST_ROW = 76;
-const LIST_ROW_GAP = 6;
 /** Where the pictures to compare start (Figma `top`), their height, and how far they rise as Hex leaves. */
 const PICTURES_TOP = 248;
 const PICTURES_HEIGHT = 200;
@@ -90,7 +87,6 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   // The hint is Hex saying it, in place of his line.
   const line = hinted && quiz.hintText ? [{ text: quiz.hintText }] : quiz.line;
   const withHint = !quiz.noHint;
-  const listHeight = quiz.choices.length * LIST_ROW + (quiz.choices.length - 1) * LIST_ROW_GAP;
   const listRise = quiz.pictures || quiz.closeUp ? LIST_RISE : LIST_RISE_OPEN;
 
   return (
@@ -183,17 +179,6 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           </motion.div>
         )}
       </AnimatePresence>
-      {quiz.question && (
-        <motion.p
-          initial={{ opacity: 0, y: 90 }}
-          animate={{ opacity: 1, y: checked ? -listRise : 0 }}
-          transition={checked ? PANEL_SPRING : ANSWERS_IN}
-          className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
-          style={{ bottom: `calc(${aboveButtons(GAP_ABOVE_BUTTONS, withHint)} + ${listHeight + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
-        >
-          {quiz.question}
-        </motion.p>
-      )}
       {quiz.layout === "list" ? (
         <AnswerCards
           choices={quiz.choices}
