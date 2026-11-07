@@ -75,12 +75,15 @@ const SIMILAR_TILES: readonly InfoTile[] = [
   { id: "prices", text: "Prices", icon: P.similarPrices, tint: TINTS.blue },
 ];
 
-/** Screen 5.2's three questions those values answer (their icons are screen 5's, the same files). */
-const SIMILAR_ROWS: readonly InfoRow[] = [
+/** The three questions under screen 5's tiles (the same icons as the tiles). */
+const PLAN_ROWS: readonly InfoRow[] = [
   { id: "students", text: "How many students registered?", icon: P.planStudents },
   { id: "tickets", text: "How many tickets were sold?", icon: P.planTickets },
   { id: "prizes", text: "How many prizes are available?", icon: P.planPrizes },
 ];
+
+/** Screen 5.2's four answers (what the values share), with pictures that don't hint at the right one. The first is right. */
+const SIMILAR_OPTIONS = neutral(["They represent quantities.", "They represent people’s names.", "They represent colours.", "They represent yes/no answers."]);
 
 /** Screen 6's four values, each with the picture of what it measures. */
 const VALUE_TILES: readonly InfoTile[] = [
@@ -163,12 +166,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Let’s understand what each group tells us.",
         alignTop: true,
+        // Nothing has to be tapped: once Hex has said his line, Continue reads the groups one by one, then goes on.
+        ready: true,
         render: (api) => <GroupTourStage api={api} groups={TOUR_GROUPS} />,
       },
     ],
   },
 
-  // Screens 5 and 6 are only looked at: Hex says his line, the cards bounce in, and Continue is there from the start.
+  // Screen 5 is only looked at: Hex says his line, the cards bounce in, and Continue waits for him. Then 5.2 is a question.
   [STEP.counting]: {
     step: STEP.counting,
     title: "Let’s *plan* a school event!",
@@ -181,32 +186,32 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         ready: true,
-        render: ({ hexSpoken }) => <InfoTiles layout="row" shown={hexSpoken} tiles={PLAN_TILES} />,
+        render: ({ hexSpoken }) => (
+          <div className="flex flex-col items-center gap-6">
+            <InfoTiles layout="row" shown={hexSpoken} tiles={PLAN_TILES} />
+            <InfoRows rows={PLAN_ROWS} shown={hexSpoken} firstIndex={PLAN_TILES.length} />
+          </div>
+        ),
       },
-      // 5.2: the same school yard, a new heading. Continue brings up Hex's "Exactly!", then goes on.
-      {
-        kind: "interaction",
+      // 5.2: the same school yard, a new heading, and a question: the three values stand above the four answers.
+      quiz({
         title: "How are they *similar?*",
         titleSize: 28,
         line: "Look closely and find what these values share.",
-        bubbleWidth: 190,
-        alignTop: true,
-        ready: true,
-        render: ({ hexSpoken }) => (
-          <div className="flex flex-col items-center gap-6">
-            <InfoTiles layout="row" shown={hexSpoken} tiles={SIMILAR_TILES} />
-            <InfoRows rows={SIMILAR_ROWS} shown={hexSpoken} firstIndex={SIMILAR_TILES.length} />
-          </div>
-        ),
-        finishPanel: { title: "Exactly!", text: "These numbers represent quantities that we can count." },
+        visual: ({ hexSpoken = true }) => <InfoTiles layout="row" shown={hexSpoken} tiles={SIMILAR_TILES} />,
+        options: SIMILAR_OPTIONS,
+        correctId: at(0),
+        rightTitle: "Exactly!",
+        right: "These numbers represent quantities that we can count.",
+        wrong: "Look closely at the values. What do they all tell us?",
         nextLabel: "Continue",
-      },
+      }),
     ],
   },
 
   [STEP.wholeDecimal]: {
     step: STEP.wholeDecimal,
-    title: "Are all *numbers* same?",
+    title: "Look at these *numbers*",
     titleSize: 28,
     backdrop: <SchoolScene />,
     stages: [
@@ -414,7 +419,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Add 12 and 3 as numbers. What do we get?",
-        visual: ({ attempt }) => <TwelveCards replay={attempt} />,
+        visual: ({ attempt }) => <TwelveCards mode="numbers" replay={attempt} />,
         layout: "grid",
         options: tinted(neutral(["9", "15", "123", "36"])),
         correctId: at(1),
@@ -424,7 +429,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "Now join the text “12” and the text “3”. What text do we get?",
-        visual: ({ attempt }) => <TwelveCards replay={attempt} />,
+        visual: ({ attempt }) => <TwelveCards mode="text" replay={attempt} />,
         layout: "grid",
         options: tinted(neutral(["“15”", "“123”", "“312”", "“9”"])),
         correctId: at(1),

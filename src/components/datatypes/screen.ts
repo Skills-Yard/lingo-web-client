@@ -11,6 +11,8 @@ export type VisualContext = {
   picked: string | null;
   checked: boolean;
   correct: boolean;
+  /** Hex has finished his line (a picture whose cards wait for him comes in then). Left out by screens that don't pass it. */
+  hexSpoken?: boolean;
 };
 
 /** A stage can have a title of its own, in place of the screen's (a screen's second part, such as 5.2, is headed differently from its first). */
@@ -57,6 +59,12 @@ export type InteractionApi = {
   finished: boolean;
   /** Hex has finished his line (a stage whose cards wait for him comes in then). */
   hexSpoken: boolean;
+  /**
+   * A stage that steps through its own parts (screen 4's groups) takes Continue over: `handler` runs on
+   * each press and says whether it used the press (`true`), or Continue should go on to the next screen
+   * (`false`). `null` gives Continue back. Left out by screens that don't pass it.
+   */
+  takeContinue?: (handler: (() => boolean) | null) => void;
 };
 
 /** Something to do instead of a question: tap, sort, match. The main button waits until it is done. */
@@ -68,7 +76,7 @@ export type InteractionStage = StageTitle & {
   bubbleWidth?: number;
   /** The picture stands at the top of the room under Hex's line, instead of in the middle of it (a design with fixed places). */
   alignTop?: boolean;
-  /** Nothing to do, only to look at (screens 5 and 6): Continue waits only for Hex to finish his line, and his line stays. With a `finishPanel`, the first Continue brings the panel up (as if it were done) and the next one goes on. */
+  /** Nothing to do, only to look at (screens 5 and 6): Continue waits only for Hex to finish his line, and his line stays. */
   ready?: boolean;
   render: (api: InteractionApi) => ReactNode;
   /** Hex's panel on finishing, if the interaction has one. */

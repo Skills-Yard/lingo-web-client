@@ -119,9 +119,9 @@ Built from the "4. DataTypes" spec (its screen number is in brackets; screens wi
 | `/module/datatypes?step=1` | "Let's Organise Our School Event!" [1] |
 | `/module/datatypes?step=2` | "Meet Aarav!" [2] |
 | `/module/datatypes?step=3` | "Let's Find the Similar Ones!" (free grouping into three groups of three, not marked, recorded) [3] |
-| `/module/datatypes?step=4` | "Information can differ!" (tap each of the three groups and Hex says what it tells us; one stage, no question after it) [4] |
-| `/module/datatypes?step=5` | "Let's plan a school event!" (three cards to look at: Students Registered?, Tickets Sold?, Prizes Available?; they bounce in after Hex, Continue waits until Hex has finished his line), then stage 5.2 "How are they similar?" (30 Students, 43 Tickets, 12 Prices and three question rows; the first Continue brings up "Exactly!", the next goes on) [5] |
-| `/module/datatypes?step=6` | "Are all numbers same?" (four cards to look at: 12 students, 25 tickets, 148.5 cm height, 36.7 kg weight; same behaviour as screen 5) [6] |
+| `/module/datatypes?step=4` | "Information can differ!" (Hex says his line, then each of the three groups is read by tapping it or by Continue, which goes through Group A, B, C one by one and then on to the next screen; nothing has to be tapped; one stage, no question after it) [4] |
+| `/module/datatypes?step=5` | "Let's plan a school event!" (three cards to look at: Students Registered?, Tickets Sold?, Prizes Available?, with three rows under them: "How many students registered?", "How many tickets were sold?", "How many prizes are available?"; they bounce in after Hex, Continue waits until Hex has finished his line), then stage 5.2 "How are they similar?" (a question: 30 Students, 43 Tickets, 12 Prices above, and four answers: "They represent quantities." (right), "...people's names.", "...colours.", "...yes/no answers.") [5] |
+| `/module/datatypes?step=6` | "Look at these numbers" (four cards to look at: 12 students, 25 tickets, 148.5 cm height, 36.7 kg weight; same behaviour as screen 5) [6] |
 | `/module/datatypes?step=7` | "Meet Integers!" [7] |
 | `/module/datatypes?step=8` | "Need more precision?" (Float, then a question) [8] |
 | `/module/datatypes?step=9` | "Sort the numbers!" (Integer or Float) [9] |
