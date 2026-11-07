@@ -1,30 +1,126 @@
 "use client";
 
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
-import { ExpressionStage, FillRowsStage, ScenesStage, ShareStage, SymbolStage } from "./interactions";
+import { FlipCarouselStage } from "./FlipCarousel";
+import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "./interactions";
+import { JobTurnStage, OperatorTurnStage, type JobItem, type OperatorItem } from "./OperatorCardsStage";
 import { STEP } from "./operators";
 import { P } from "./pictures";
-import type { ScreenDef } from "./screen";
-import { ExprBig, GroupsPicture, PlantGrid, ShareScene, ValueCards, Versus, WalletScene } from "./visuals";
+import type { InteractionStage, ScreenDef } from "./screen";
+import { SituationsStage, type SituationItem } from "./SituationsStage";
+import { BagIcon, ExprBig, GroupsPicture, InfoSheet, NotebookIcon, PenIcon, PlantGrid, Pic, ShareScene, ValueCards, Versus, WalletScene } from "./visuals";
+
+/** The four situations of "Explore the situations!", in the order their questions come. */
+const SITUATIONS: readonly SituationItem[] = [
+  { id: "money", icon: P.iconMoney, verb: "Combining", thing: "money", tint: "lavender" },
+  { id: "chocolate", icon: P.iconChocolate, verb: "Sharing", thing: "chocolate", tint: "cream" },
+  { id: "heights", icon: P.iconHeight, verb: "Comparing", thing: "heights", tint: "mint" },
+  { id: "spending", icon: P.iconWallet, verb: "Spending", thing: "money", tint: "blue" },
+];
+
+/** What Hex says as each situation's turn comes. */
+const SITUATION_LINES: readonly string[] = ["We saw four situations. Let's find the action in each, starting here.", "Now the next situation.", "And another one.", "Now the last one."];
+
+/** The turn of one situation: its card is picked out while Hex speaks, and Continue goes on to its question. */
+const situationTurn = (focus: number): InteractionStage => ({
+  kind: "interaction",
+  line: SITUATION_LINES[focus],
+  render: (api) => <SituationsStage api={api} situations={SITUATIONS} focus={focus} />,
+});
+
+/** The four operators of "Meet the Operators!", in the order their questions come. */
+const OPERATORS: readonly OperatorItem[] = [
+  { id: "add", symbol: "+", name: "Addition", title: "Combines values", example: "3 + 2", tint: "mint" },
+  { id: "sub", symbol: "-", name: "Subtraction", title: "Subtracts values", example: "5 - 2", tint: "cream" },
+  { id: "mul", symbol: "*", name: "Multiplication", title: "Multiplies values", example: "3 * 2", tint: "lavender" },
+  { id: "div", symbol: "/", name: "Division", title: "Divides values", example: "6 / 2", tint: "blue" },
+];
+
+/** What Hex says as each operator's turn comes. */
+const OPERATOR_LINES: readonly string[] = [
+  "In programming, these symbols are called operators. First, +: it combines values.",
+  "Next, -: it subtracts one value from another.",
+  "Now *: it multiplies values.",
+  "Last, /: it divides one value by another.",
+];
+
+/** The turn of one operator: its card is picked out while Hex introduces it, and Continue goes on to the next one. */
+const operatorTurn = (focus: number): InteractionStage => ({
+  kind: "interaction",
+  line: OPERATOR_LINES[focus],
+  render: (api) => <OperatorTurnStage api={api} operators={OPERATORS} focus={focus} />,
+});
+
+/** The two big jobs of "Calculate or Compare?", in the order they are introduced. */
+const JOBS: readonly JobItem[] = [
+  { id: "calculate", pic: P.computer, name: "Calculate", title: "How much? How many? What remains?", example: "20 + 5 = 25", tint: "mint" },
+  { id: "compare", pic: P.light, name: "Compare", title: "Which is greater? Are they equal?", example: "20 > 5", tint: "lavender" },
+];
+
+/** What Hex says as each job's turn comes. */
+const JOB_LINES: readonly string[] = [
+  "A program does two big things with values. First, it calculates, with arithmetic operators.",
+  "The second big thing is to compare values, with comparison operators.",
+];
+
+/** The turn of one job: its card is picked out while Hex introduces it, and Continue goes on to the next. */
+const jobTurn = (focus: number): InteractionStage => ({
+  kind: "interaction",
+  line: JOB_LINES[focus],
+  render: (api) => <JobTurnStage api={api} jobs={JOBS} focus={focus} />,
+});
+
+/** The three answers of "Same Numbers, Three Answers!" (23 chocolates in groups of 4), in the order they are introduced. */
+const DIVISIONS: readonly OperatorItem[] = [
+  { id: "div", symbol: "/", name: "Division", title: "Ordinary division, with decimals", example: "23 / 4 = 5.75", tint: "blue" },
+  { id: "floor", symbol: "//", name: "Floor division", title: "Floor division: complete groups", example: "23 // 4 = 5", tint: "mint" },
+  { id: "mod", symbol: "%", name: "Modulus", title: "Modulus: the remainder", example: "23 % 4 = 3", tint: "cream" },
+];
+
+/** What Hex says as each of them comes. */
+const DIVISION_LINES: readonly string[] = [
+  "23 chocolates, 4 in each group. First, /: ordinary division, with decimals.",
+  "Next, //: floor division. It counts the complete groups.",
+  "Last, %: modulus. It gives what is left over.",
+];
+
+/** The part of the chocolates each one is about: all of them, the complete groups, what is left over. */
+const DIVISION_PART = ["all", "groups", "left"] as const;
+
+/** The turn of one of them: its card is picked out while Hex introduces it (and the chocolates it is about), and Continue goes on to the next. */
+const divisionTurn = (focus: number): InteractionStage => ({
+  kind: "interaction",
+  line: DIVISION_LINES[focus],
+  render: (api) => (
+    <OperatorTurnStage
+      api={api}
+      operators={DIVISIONS}
+      focus={focus}
+      columns={3}
+      // Before its card is picked out the chocolates still show the turn before, so the change reads as a fade.
+      header={(lit) => <GroupsPicture total={23} size={4} emphasis={DIVISION_PART[lit ? focus : Math.max(0, focus - 1)]} still={focus > 0} />}
+    />
+  ),
+});
 
 /** Screens 1-14 (phases 1 to 3: everyday actions, meeting operators, arithmetic). */
 export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
   // 1. We do these things every day.
   [STEP.everyday]: {
     step: STEP.everyday,
-    title: "Have You Ever Done *These Things?*",
+    title: "Have you *tried* these?",
     stages: [
       {
         kind: "interaction",
-        line: "Tap each scene. What are we trying to do here?",
+        line: "Think about everyday things you do without even noticing.",
         render: (api) => (
-          <ScenesStage
+          <FlipCarouselStage
             api={api}
-            scenes={[
-              { id: "money", pic: P.money, label: "Money", caption: "Two stacks of money are put together." },
-              { id: "chocolates", pic: P.chocolate, label: "Chocolates", caption: "Chocolates are shared among students." },
-              { id: "heights", pic: P.person, label: "Heights", caption: "Two people compare how tall they are." },
-              { id: "wallet", pic: P.gift, label: "Wallet", caption: "Money is spent from a wallet." },
+            cards={[
+              { id: "money", image: P.cardMoney, verb: "Combining", label: "Money", caption: "Two stacks of money are put together.", tint: "teal" },
+              { id: "chocolates", image: P.cardChocolates, verb: "Sharing", label: "Chocolates", caption: "Chocolates are shared among students.", tint: "pink" },
+              { id: "wallet", image: P.cardSpending, verb: "Spending", label: "Money", caption: "Money is spent from a wallet.", tint: "amber" },
+              { id: "heights", image: P.cardHeights, verb: "Comparing", label: "Heights", caption: "Two people compare how tall they are.", tint: "blue" },
             ]}
           />
         ),
@@ -36,11 +132,11 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
   // 2. Different situations, different actions.
   [STEP.actions]: {
     step: STEP.actions,
-    title: "What Are We *Actually Doing?*",
+    title: "Explore the *situations!*",
     stages: [
+      situationTurn(0),
       quiz({
         line: "You have ₹50 and receive another ₹30.",
-        question: "What are we doing?",
         visual: ({ attempt }) => (
           <ValueCards
             replay={attempt}
@@ -57,9 +153,9 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         right: "Adding: we put the two amounts together.",
         wrong: "Are the amounts put together, taken away, shared or compared?",
       }),
+      situationTurn(1),
       quiz({
         line: "You have 20 chocolates to share equally among 4 students.",
-        question: "What are we doing?",
         visual: ({ attempt }) => (
           <ValueCards
             replay={attempt}
@@ -76,9 +172,9 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         right: "Dividing: we share equally.",
         wrong: "Everyone should get the same. What do we do to share?",
       }),
+      situationTurn(2),
       quiz({
         line: "One student is 150 cm tall and another is 140 cm.",
-        question: "What are we doing?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.person, label: "Student 1", value: "150 cm" }} right={{ pic: P.person, label: "Student 2", value: "140 cm" }} />,
         layout: "grid",
         options: neutral(["Adding", "Subtracting", "Dividing", "Comparing"]),
@@ -87,9 +183,9 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         right: "Comparing: we see who is taller.",
         wrong: "We are not changing the heights. We are looking at the two.",
       }),
+      situationTurn(3),
       quiz({
         line: "You have ₹500 and spend ₹100.",
-        question: "What are we doing?",
         visual: ({ attempt }) => (
           <ValueCards
             replay={attempt}
@@ -117,13 +213,14 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "We have all this information. Can we find the money left without doing anything with it?",
         visual: ({ attempt }) => (
-          <ValueCards
+          <InfoSheet
             replay={attempt}
-            items={[
-              { pic: P.money, label: "Money available", value: "₹500" },
-              { pic: P.notebook, label: "Book price", value: "₹150" },
-              { pic: P.pen, label: "Pen price", value: "₹50" },
+            rows={[
+              { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money available", value: "₹500" },
+              { icon: <NotebookIcon />, label: "Book price", value: "₹150" },
+              { icon: <PenIcon />, label: "Pen price", value: "₹50" },
             ]}
+            missing={{ icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money left" }}
           />
         ),
         layout: "grid",
@@ -148,11 +245,12 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
           <ExpressionStage
             api={api}
             lead={
-              <ValueCards
-                items={[
-                  { pic: P.money, label: "Wallet", value: "₹500" },
-                  { pic: P.notebook, label: "Book", value: "₹150" },
-                  { pic: P.pen, label: "Pen", value: "₹50" },
+              <InfoSheet
+                compact
+                rows={[
+                  { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Wallet", value: "₹500" },
+                  { icon: <NotebookIcon />, label: "Book", value: "₹150" },
+                  { icon: <PenIcon />, label: "Pen", value: "₹50" },
                 ]}
               />
             }
@@ -174,11 +272,13 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
           <ExpressionStage
             api={api}
             lead={
-              <ValueCards
-                items={[
-                  { pic: P.money, label: "Wallet", value: "₹500" },
-                  { pic: P.gift, label: "Bag", value: "₹200" },
+              <InfoSheet
+                compact
+                rows={[
+                  { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Wallet", value: "₹500" },
+                  { icon: <BagIcon />, label: "Book + Pen", value: "₹200" },
                 ]}
+                missing={{ icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money left", value: api.finished ? "₹300" : undefined }}
               />
             }
             tokens={["500", "200", "-", "+"]}
@@ -191,6 +291,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       },
       quiz({
         line: "Which mathematical actions did we use?",
+        keepLine: true,
         options: neutral(["Addition and subtraction.", "Multiplication and division.", "Only comparing."]),
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -205,36 +306,10 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     step: STEP.meet,
     title: "Meet the *Operators!*",
     stages: [
-      {
-        kind: "interaction",
-        line: "In programming, these symbols are called operators. Tap each one.",
-        render: (api) => (
-          <SymbolStage
-            api={api}
-            groups={[
-              {
-                columns: 4,
-                items: [
-                  { id: "add", symbol: "+", title: "Combines values", example: "3 + 2" },
-                  { id: "sub", symbol: "-", title: "Subtracts values", example: "5 - 2" },
-                  { id: "mul", symbol: "*", title: "Multiplies values", example: "3 * 2" },
-                  { id: "div", symbol: "/", title: "Divides values", example: "6 / 2" },
-                ],
-              },
-            ]}
-            footer={
-              <div className="flex items-center gap-2 text-[14px] leading-5 font-bold text-[#444444] dark:text-white">
-                <span className="rounded-lg bg-[#F1EEFF] px-2.5 py-1 dark:bg-[#2E2A5C]">Information</span>
-                <span className="text-[#08A4AD]">→</span>
-                <span className="rounded-lg bg-[#08A4AD] px-2.5 py-1 text-white">Operation</span>
-                <span className="text-[#08A4AD]">→</span>
-                <span className="rounded-lg bg-[#E3F6F3] px-2.5 py-1 dark:bg-[#0F2B28]">Result</span>
-              </div>
-            }
-          />
-        ),
-        finishPanel: { title: "Operators!", text: "An operator tells a program what operation to perform on values." },
-      },
+      operatorTurn(0),
+      operatorTurn(1),
+      operatorTurn(2),
+      operatorTurn(3),
     ],
   },
 
@@ -243,20 +318,8 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     step: STEP.calcCompare,
     title: "Calculate *or Compare?*",
     stages: [
-      {
-        kind: "interaction",
-        line: "A program does two big things with values. Tap both.",
-        render: (api) => (
-          <ScenesStage
-            api={api}
-            scenes={[
-              { id: "calculate", pic: P.computer, label: "Calculate", caption: "How much? How many? What remains? 20 + 5 = 25" },
-              { id: "compare", pic: P.light, label: "Compare", caption: "Which is greater? Are they equal? 20 > 5" },
-            ]}
-          />
-        ),
-        finishPanel: { title: "Two big jobs!", text: "Arithmetic operators calculate values. Comparison operators compare them." },
-      },
+      jobTurn(0),
+      jobTurn(1),
       quiz({
         line: "Which job answers the question “Which is greater?”",
         layout: "grid",
@@ -430,32 +493,9 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     step: STEP.three,
     title: "Same Numbers, *Three Answers!*",
     stages: [
-      {
-        kind: "interaction",
-        line: "23 chocolates, 4 per group. Tap each symbol.",
-        render: (api) => (
-          <SymbolStage
-            api={api}
-            header={(current) => (
-              <div className="flex flex-col items-center gap-1.5">
-                <GroupsPicture total={23} size={4} />
-                <ExprBig tokens={["23", current?.symbol ?? "?", "4"]} size={26} />
-              </div>
-            )}
-            groups={[
-              {
-                columns: 3,
-                items: [
-                  { id: "div", symbol: "/", title: "Ordinary division, with decimals", example: "23 / 4 = 5.75" },
-                  { id: "floor", symbol: "//", title: "Floor division: complete groups", example: "23 // 4 = 5" },
-                  { id: "mod", symbol: "%", title: "Modulus: the remainder", example: "23 % 4 = 3" },
-                ],
-              },
-            ]}
-          />
-        ),
-        finishPanel: { title: "Three answers!", text: "/ gives 5.75. // gives 5 complete groups. % gives the 3 left over." },
-      },
+      divisionTurn(0),
+      divisionTurn(1),
+      divisionTurn(2),
       quiz({
         line: "What does 23 // 4 = 5 tell us?",
         options: neutral(["5 complete groups of 4.", "5 chocolates are left over.", "The decimal answer, 5.75."]),

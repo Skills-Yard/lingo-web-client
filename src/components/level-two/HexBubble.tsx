@@ -20,6 +20,8 @@ type HexBubbleProps = {
   cue?: string | null;
   /** The bubble bounces off to the left behind Hex, then he follows (the result panel brings its own Hex). */
   leaving?: boolean;
+  /** Called once the whole line has been typed (or said). Keep it stable: it is an effect's dependency. */
+  onTyped?: () => void;
 };
 
 /** Hex starts his own exit this long after the bubble sets off. */
@@ -35,7 +37,7 @@ const HEX_EXIT: Transition = { duration: 0.2, ease: "easeIn" };
 
 /** Hex beside his line: the line is typed in letter by letter, the way module
  * 1's teacher line is. */
-export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false }: HexBubbleProps) {
+export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onTyped }: HexBubbleProps) {
   const hexAtLeft = hex === "left";
   const [hexLeaving, setHexLeaving] = useState(false);
   useEffect(() => {
@@ -44,7 +46,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
     return () => window.clearTimeout(timer);
   }, [leaving]);
   return (
-    <div className={`flex w-fit items-center ${hexAtLeft ? "" : "flex-row-reverse"}`}>
+    <div className={`flex w-fit max-w-full items-center ${hexAtLeft ? "" : "flex-row-reverse"}`}>
       {/* Leaving, he is drawn over the bubble, so it passes behind him. */}
       <motion.div
         aria-hidden
@@ -57,7 +59,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
       >
         <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />
       </motion.div>
-      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tailAtLeft={hexAtLeft} leaving={leaving} />
+      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tailAtLeft={hexAtLeft} leaving={leaving} onTyped={onTyped} />
     </div>
   );
 }
@@ -65,7 +67,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
 /** The bubble's own look: plain white over a soft blue drop edge (the Figma
  * "Rectangle 142"), its tail pointing at Hex. The edge is a filter, not a
  * box-shadow, so it runs under the tail as well as the box. */
-function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span[]; size: BubbleSize; tailAtLeft: boolean; leaving: boolean }) {
+function SpeechBubble({ line, size, tailAtLeft, leaving, onTyped }: { line: readonly Span[]; size: BubbleSize; tailAtLeft: boolean; leaving: boolean; onTyped?: () => void }) {
   const text = line.map((span) => span.text).join("");
   const voice = useLevelVoice();
   // A bubble on a screen with a voice is typed to its clip (the screen's last
@@ -85,6 +87,10 @@ function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span
   const [peak, setPeak] = useState(0);
   if (shown > peak) setPeak(shown);
   const typed = text.slice(0, Math.max(peak, shown));
+  const fullyTyped = text.length > 0 && typed.length >= text.length;
+  useEffect(() => {
+    if (fullyTyped) onTyped?.();
+  }, [fullyTyped, onTyped]);
   // With a voice the bubble waits out the clips before its own: it pops in as
   // the one before it ends (or as its own starts), not from the screen's start.
   // With no clip before its own it comes in at once, without waiting for the audio to load.
@@ -113,7 +119,8 @@ function SpeechBubble({ line, size, tailAtLeft, leaving }: { line: readonly Span
       }
       // Figma: the short bubble ("Rectangle 142") is 77 tall with its text 9px in; the others 86.
       style={{ transformOrigin: tailAtLeft ? "0% 50%" : "100% 50%", width: size.width, minHeight: size.minHeight }}
-      className={`relative flex shrink-0 items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] dark:bg-[#1A1C22] ${
+      // Its width is what it likes to have; a narrower screen takes from it (the line wraps more) instead of the bubble running off the edge.
+      className={`relative flex min-w-0 shrink items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] dark:bg-[#1A1C22] ${
         size.minHeight ? "py-[7px]" : size.short ? "min-h-[77px] py-2.5" : "min-h-[86px] py-[13px]"
       }`}
     >

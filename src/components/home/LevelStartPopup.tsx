@@ -3,68 +3,114 @@
 import { motion } from "framer-motion";
 
 const POPUP_W = 210;
-/** How far below the platform's top-face centre the popup's top edge sits —
- * under the slab, so it reads as hanging from the bottom of the platform. */
-const BELOW_PLATFORM = 62;
-const STAGE_MARGIN = 10;
+const STAGE_MARGIN = 8;
 
 type LevelStartPopupProps = {
-  /** Top-face centre of the platform it belongs to, in world px. */
+  /** Target anchor X where the pointer tip should point (in stage px) */
   cx: number;
+  /** Target anchor Y where the pointer tip should point (in stage px) */
   cy: number;
   stageWidth: number;
   title: string;
   xp: number;
   onStart: () => void;
-  /** Seconds to wait before appearing (Hex is still hopping onto the platform). */
+  onClose?: () => void;
   delay?: number;
+  /** Distance from anchor to popup edge (defaults to 8px) */
+  offset?: number;
+  /** Whether the popup appears below (default) or above the anchor */
+  placement?: "bottom" | "top";
 };
 
 /**
- * The mini popup under the live platform: the lesson's title and a purple
- * Start button with the XP it earns. It stays inside the stage, and its
- * pointer keeps aiming at the platform even when the popup has to shift.
+ * Precision level start popup: speech bubble anchored directly to the clicked platform.
+ * Pointer arrow precisely touches (cx, cy).
  */
-export function LevelStartPopup({ cx, cy, stageWidth, title, xp, onStart, delay = 0 }: LevelStartPopupProps) {
+export function LevelStartPopup({
+  cx,
+  cy,
+  stageWidth = 390,
+  title,
+  xp,
+  onStart,
+  onClose,
+  delay = 0,
+  offset = 4,
+  placement = "bottom",
+}: LevelStartPopupProps) {
+  // Constrain popup horizontally within stage margins
   const left = Math.min(
     Math.max(cx - POPUP_W / 2, STAGE_MARGIN),
     stageWidth - STAGE_MARGIN - POPUP_W,
   );
-  const pointerX = cx - left;
+  // Pointer arrow position along popup's top/bottom edge
+  const pointerX = Math.min(Math.max(cx - left, 18), POPUP_W - 18);
+
+  const isTop = placement === "top";
+  // If placement is bottom, popup sits below cy:
+  const top = isTop ? cy - 124 - offset : cy + offset;
 
   return (
-    <motion.div
-      data-level-popup
-      role="dialog"
-      aria-label={title}
-      initial={{ opacity: 0, scale: 0.85, y: -8 }}
-      animate={{
-        opacity: 1,
-        scale: 1,
-        y: 0,
-        transition: { type: "spring", stiffness: 420, damping: 30, delay },
-      }}
-      exit={{ opacity: 0, scale: 0.9, y: -6 }}
-      transition={{ type: "spring", stiffness: 420, damping: 30 }}
-      className="absolute z-20 rounded-xl bg-white px-4 pt-3.5 pb-4 text-center shadow-[0_6px_24px_rgba(0,0,0,0.18)] dark:bg-[#1c2e36]"
-      style={{ left, top: cy + BELOW_PLATFORM, width: POPUP_W, transformOrigin: `${pointerX}px 0` }}
-    >
-      <span
+    <>
+      {/* Invisible backdrop to dismiss popup when tapping anywhere outside */}
+      <div
+        className="fixed -inset-[200vmax] z-[55]"
+        onClick={onClose}
         aria-hidden
-        className="absolute -top-1.5 h-3 w-3 rotate-45 rounded-[2px] bg-white dark:bg-[#1c2e36]"
-        style={{ left: pointerX - 6 }}
       />
-      <p className="text-[15px] leading-[1.3] font-medium text-[#2C2C2C] dark:text-white">{title}</p>
-      <button
-        type="button"
-        onClick={onStart}
-        className="mt-3 flex h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#5D4CFE] text-[16px] font-medium text-white transition-transform active:scale-95"
+
+      {/* The Popover Card */}
+      <motion.div
+        data-level-popup
+        role="dialog"
+        aria-label={title}
+        initial={{ opacity: 0, scale: 0.88, y: isTop ? 6 : -6 }}
+        animate={{
+          opacity: 1,
+          scale: 1,
+          y: 0,
+          transition: { type: "spring", stiffness: 420, damping: 28, delay },
+        }}
+        exit={{ opacity: 0, scale: 0.9, y: isTop ? 4 : -4 }}
+        transition={{ type: "spring", stiffness: 420, damping: 28 }}
+        className="absolute z-[60] rounded-2xl bg-white px-4 pt-3.5 pb-4 text-center shadow-[0_8px_30px_rgba(0,0,0,0.18)] dark:bg-[#1E293B] border border-black/5 dark:border-white/10"
+        style={{
+          left,
+          top,
+          width: POPUP_W,
+          transformOrigin: `${pointerX}px ${isTop ? "100%" : "0%"}`,
+        }}
       >
-        Start
-        <span className="rounded-full bg-white/20 px-2 py-0.5 text-[12px] leading-none font-semibold">
-          +{xp} XP
-        </span>
-      </button>
-    </motion.div>
+        {/* Pointer Arrow pointing to the platform */}
+        {isTop ? (
+          <span
+            aria-hidden
+            className="absolute -bottom-1.5 h-3.5 w-3.5 rotate-45 rounded-[2px] bg-white border-r border-b border-black/5 dark:bg-[#1E293B] dark:border-white/10"
+            style={{ left: pointerX - 7 }}
+          />
+        ) : (
+          <span
+            aria-hidden
+            className="absolute -top-1.5 h-3.5 w-3.5 rotate-45 rounded-[2px] bg-white border-l border-t border-black/5 dark:bg-[#1E293B] dark:border-white/10"
+            style={{ left: pointerX - 7 }}
+          />
+        )}
+
+        <p className="text-[14px] leading-[1.3] font-semibold text-[#1E293B] dark:text-white px-1">
+          {title}
+        </p>
+        
+        <button
+          type="button"
+          onClick={onStart}
+          className="mt-3 flex h-10 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-[#5D4CFE] text-[15px] font-medium text-white shadow-[0_4px_12px_rgba(93,76,254,0.35)] transition-transform hover:bg-[#5240FB] active:scale-95"
+        >
+          Start
+          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] leading-none font-bold">
+            +{xp} XP
+          </span>
+        </button>
+      </motion.div>
+    </>
   );
 }

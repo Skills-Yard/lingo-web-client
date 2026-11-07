@@ -44,6 +44,12 @@ export type InteractionApi = {
   /** The learner has done it. */
   done: () => void;
   finished: boolean;
+  /** Hex has finished typing the stage's line (also true when there is none), so something can wait for the line to be read. Left out by the screens that do not say. */
+  lineTyped?: boolean;
+  /** Takes over the main button: it is enabled, and each press calls `press` instead of going on. Pass null to hand it back (disabled again until the interaction is done). Left out by the screens that do not say. */
+  holdButton?: (press: (() => void) | null) => void;
+  /** Goes on to the stage after this one at once, with nothing recorded and no panel. Left out by the screens that do not say. */
+  next?: () => void;
 };
 
 /** Something to do instead of a question: tap, sort, match. The main button waits until it is done. */
