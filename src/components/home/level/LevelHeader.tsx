@@ -6,12 +6,19 @@ import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { BatteryMenu } from "@/components/onboarding/BatteryMenu";
 import { batteryCount, useBattery } from "../batteryStore";
 import { LEARNER_STATS } from "../learnerStats";
+import { LevelPathOptions } from "./LevelPathOptions";
 
 interface LevelHeaderProps {
   onBack: () => void;
   title?: string;
   onDoubleClickTitle?: () => void;
   onDoubleClickStats?: () => void;
+  /** How many modules the learner has finished. */
+  modulesDone: number;
+  onCompleteModule: () => void;
+  onUndoModule: () => void;
+  /** Puts the learner on module `module` (1-based). */
+  onPickModule: (module: number) => void;
 }
 
 export function LevelHeader({
@@ -19,11 +26,16 @@ export function LevelHeader({
   title = "Data Analytics",
   onDoubleClickTitle,
   onDoubleClickStats,
+  modulesDone,
+  onCompleteModule,
+  onUndoModule,
+  onPickModule,
 }: LevelHeaderProps) {
   const battery = useBattery();
 
   return (
-    <header className="relative z-50 py-5 flex items-center justify-between px-3 sm:px-5  bg-gradient-to-b from-white/95 via-white/80 to-transparent dark:from-[#0B132B]/95 dark:via-[#0B132B]/80">
+    // Same gap above as the modules' headers: `--screen-top`.
+    <header className="relative z-50 pt-(--screen-top) pb-5 flex items-center justify-between px-3 sm:px-5  bg-gradient-to-b from-white/95 via-white/80 to-transparent dark:from-[#0B132B]/95 dark:via-[#0B132B]/80">
       <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 min-w-0 shrink">
         <button
           type="button"
@@ -57,7 +69,19 @@ export function LevelHeader({
           <span className="text-[14px] sm:text-[17px] leading-none">{LEARNER_STATS.hints}</span>
         </div>
 
-        <BatteryMenu className="relative" buttonClassName="block text-left">
+        <BatteryMenu
+          className="relative"
+          buttonClassName="block text-left"
+          extraOptions={(close) => (
+            <LevelPathOptions
+              done={modulesDone}
+              onComplete={onCompleteModule}
+              onUndo={onUndoModule}
+              onPickModule={onPickModule}
+              onClose={close}
+            />
+          )}
+        >
           <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#01A17F] dark:text-[#34D399] cursor-pointer hover:opacity-85 transition-opacity">
             <PersistentBattery className="w-7 sm:w-9" />
             <span className="text-[14px] sm:text-[17px] leading-none">{batteryCount(battery)}</span>

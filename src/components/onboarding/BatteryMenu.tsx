@@ -10,8 +10,9 @@ import { setBatteryUnlimited, useBattery } from "@/components/home/batteryStore"
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { energyHref } from "@/lib/routes";
 
-const BUTTON =
-  "mt-2 flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-lg bg-[#F7F8FA] px-3 text-[16px] font-medium text-[#2C2C2C] active:scale-[0.98] dark:bg-[#16262D] dark:text-white";
+/** An option in the panel; exported so a screen's extra options (see `extraOptions`) match. */
+export const PANEL_BUTTON =
+  "mt-2 flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-lg bg-[#F7F8FA] px-3 text-[16px] font-medium text-[#2C2C2C] active:scale-[0.98] disabled:cursor-default disabled:opacity-35 disabled:active:scale-100 dark:bg-[#16262D] dark:text-white";
 
 /** How long the battery is held before the dev panel opens. */
 const HOLD_MS = 600;
@@ -26,6 +27,9 @@ type BatteryMenuProps = {
   buttonClassName?: string;
   /** Adds a Back option to the panel. */
   onBack?: () => void;
+  /** More options for a screen that needs them, below the built-in ones.
+   * Given a function that closes the panel. */
+  extraOptions?: (close: () => void) => ReactNode;
 };
 
 /**
@@ -33,7 +37,7 @@ type BatteryMenuProps = {
  * hold opens a hidden testing panel (theme, full screen, infinite battery);
  * nothing about it looks pressable (no pointer, hover or focus ring).
  */
-export function BatteryMenu({ children, className = "", buttonClassName = "", onBack }: BatteryMenuProps) {
+export function BatteryMenu({ children, className = "", buttonClassName = "", onBack, extraOptions }: BatteryMenuProps) {
   const fullscreen = useFullscreen();
   const { unlimited } = useBattery();
   const [open, setOpen] = useState(false);
@@ -103,8 +107,14 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
-            style={{ transformOrigin: "100% 0%", top: anchor.top, right: anchor.right }}
-            className="fixed z-[2147483647] w-[270px] rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
+            // Long option lists scroll inside the panel instead of running off the screen.
+            style={{
+              transformOrigin: "100% 0%",
+              top: anchor.top,
+              right: anchor.right,
+              maxHeight: `calc(100dvh - ${anchor.top}px - 12px)`,
+            }}
+            className="scrollbar-none fixed z-[2147483647] w-[270px] overflow-y-auto overscroll-contain rounded-xl border border-black/10 bg-white p-3 shadow-[0_12px_32px_rgba(0,0,0,0.18)] dark:border-white/12 dark:bg-[#1A1C22] dark:shadow-[0_12px_32px_rgba(0,0,0,0.55)]"
           >
             <p className="text-[13px] leading-[18px] text-[#818185] dark:text-[#9FA19F]">
               For testing by devs only. Temporary.
@@ -116,22 +126,23 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
                   setOpen(false);
                   onBack();
                 }}
-                className={BUTTON}
+                className={PANEL_BUTTON}
               >
                 <ChevronLeft className="h-5 w-5" />
                 Back
               </button>
             )}
             {fullscreen.available && (
-              <button type="button" onClick={fullscreen.toggle} className={BUTTON}>
+              <button type="button" onClick={fullscreen.toggle} className={PANEL_BUTTON}>
                 {fullscreen.active ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                 {fullscreen.active ? "Exit full screen" : "Full screen"}
               </button>
             )}
-            <button type="button" onClick={() => setBatteryUnlimited(!unlimited)} className={BUTTON}>
+            <button type="button" onClick={() => setBatteryUnlimited(!unlimited)} className={PANEL_BUTTON}>
               <InfinityIcon className="h-5 w-5" />
               {unlimited ? "Back to normal battery" : "Infinite battery"}
             </button>
+            {extraOptions?.(() => setOpen(false))}
           </motion.div>
         )}
       </AnimatePresence>,

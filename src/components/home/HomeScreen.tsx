@@ -79,6 +79,15 @@ export function HomeScreen({
     scroller.scrollTo({ top: targetY, behavior: "smooth" });
   }, [activeLevelNumber, stageScale]);
 
+  // Puts the path at `count` finished modules. The progress flag stops the
+  // stale-progress reset above from sending a pick of Module 3 back to the start.
+  const goToModulesDone = (count: number) => {
+    const next = Math.max(0, Math.min(count, PLATFORM_CONFIGS.length));
+    window.localStorage.setItem("lingo:progress-started", "1");
+    setModulesDone(next);
+    setModulesCompleted(next);
+  };
+
   const handleStartLesson = (levelNum: number) => {
     setSelectedLevel(null);
     window.localStorage.setItem("lingo:progress-started", "1");
@@ -108,6 +117,10 @@ export function HomeScreen({
             setModulesCompleted(next);
           }}
           onDoubleClickStats={() => toggleTheme()}
+          modulesDone={modulesCompleted}
+          onCompleteModule={() => goToModulesDone(modulesCompleted + 1)}
+          onUndoModule={() => goToModulesDone(modulesCompleted - 1)}
+          onPickModule={(module) => goToModulesDone(module - 1)}
         />
 
         {/* Category Tabs */}
