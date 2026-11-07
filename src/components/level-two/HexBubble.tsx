@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, type Transition } from "framer-motion";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { useLevelVoice } from "@/components/level-one/LevelVoice";
@@ -12,15 +12,17 @@ export const HEX_SLOT = 110;
 
 type HexBubbleProps = {
   entryKey: string;
-  /** Which side Hex stands on; the bubble's tail points back at him. */
-  hex: "left" | "right";
+  /** Where Hex stands; the bubble's tail points back at him. `top`: Hex above the bubble, both centred. */
+  hex: "left" | "right" | "top";
   line: readonly Span[];
   size: BubbleSize;
   /** A trigger Hex plays once he has entered. */
   cue?: string | null;
   /** The bubble bounces off to the left behind Hex, then he follows (the result panel brings its own Hex). */
   leaving?: boolean;
-  /** Called once the whole line has been typed (or said). Keep it stable: it is an effect's dependency. */
+  /** Called once, when the whole line has been said (typed, or read out by the voice). */
+  onSpoken?: () => void;
+  /** The same as `onSpoken`. */
   onTyped?: () => void;
 };
 
@@ -37,8 +39,9 @@ const HEX_EXIT: Transition = { duration: 0.2, ease: "easeIn" };
 
 /** Hex beside his line: the line is typed in letter by letter, the way module
  * 1's teacher line is. */
-export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onTyped }: HexBubbleProps) {
+export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onSpoken, onTyped }: HexBubbleProps) {
   const hexAtLeft = hex === "left";
+  const hexOnTop = hex === "top";
   const [hexLeaving, setHexLeaving] = useState(false);
   useEffect(() => {
     if (!leaving) return;
@@ -46,7 +49,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
     return () => window.clearTimeout(timer);
   }, [leaving]);
   return (
-    <div className={`flex w-fit max-w-full items-center ${hexAtLeft ? "" : "flex-row-reverse"}`}>
+    <div className={`flex w-fit max-w-full items-center ${hexOnTop ? "flex-col" : hexAtLeft ? "" : "flex-row-reverse"}`}>
       {/* Leaving, he is drawn over the bubble, so it passes behind him. */}
       <motion.div
         aria-hidden
@@ -59,7 +62,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
       >
         <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />
       </motion.div>
-      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tailAtLeft={hexAtLeft} leaving={leaving} onTyped={onTyped} />
+      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tail={hex} leaving={leaving} onSpoken={onSpoken ?? onTyped} />
     </div>
   );
 }
@@ -67,7 +70,11 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
 /** The bubble's own look: plain white over a soft blue drop edge (the Figma
  * "Rectangle 142"), its tail pointing at Hex. The edge is a filter, not a
  * box-shadow, so it runs under the tail as well as the box. */
-function SpeechBubble({ line, size, tailAtLeft, leaving, onTyped }: { line: readonly Span[]; size: BubbleSize; tailAtLeft: boolean; leaving: boolean; onTyped?: () => void }) {
+function SpeechBubble({ line, size, tail, leaving, onSpoken }: { line: readonly Span[]; size: BubbleSize; tail: "left" | "right" | "top"; leaving: boolean; onSpoken?: () => void }) {
+  const tailAtLeft = tail === "left";
+  const tailOnTop = tail === "top";
+  // Where the bubble pops in from: beside Hex, or (Hex above it) from just under him.
+  const offset = tailOnTop ? { x: 0, y: -8 } : { x: tailAtLeft ? -8 : 8, y: 0 };
   const text = line.map((span) => span.text).join("");
   const voice = useLevelVoice();
   // A bubble on a screen with a voice is typed to its clip (the screen's last
@@ -87,10 +94,15 @@ function SpeechBubble({ line, size, tailAtLeft, leaving, onTyped }: { line: read
   const [peak, setPeak] = useState(0);
   if (shown > peak) setPeak(shown);
   const typed = text.slice(0, Math.max(peak, shown));
-  const fullyTyped = text.length > 0 && typed.length >= text.length;
+  // The line is said once its last letter is in. The bubble is keyed by its text, so a new line starts over.
+  const spokenAll = text.length > 0 && typed.length >= text.length;
+  const onSpokenRef = useRef(onSpoken);
   useEffect(() => {
-    if (fullyTyped) onTyped?.();
-  }, [fullyTyped, onTyped]);
+    onSpokenRef.current = onSpoken;
+  });
+  useEffect(() => {
+    if (spokenAll) onSpokenRef.current?.();
+  }, [spokenAll]);
   // With a voice the bubble waits out the clips before its own: it pops in as
   // the one before it ends (or as its own starts), not from the screen's start.
   // With no clip before its own it comes in at once, without waiting for the audio to load.
@@ -105,20 +117,20 @@ function SpeechBubble({ line, size, tailAtLeft, leaving, onTyped }: { line: read
   const visible = !withVoice || appeared;
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.85, x: tailAtLeft ? -8 : 8 }}
+      initial={{ opacity: 0, scale: 0.85, ...offset }}
       // Twice the window's width is past the left edge at any scale the shell uses.
       animate={
         leaving
           ? { opacity: 1, scale: 1, x: [0, BUBBLE_WINDUP, -2 * window.innerWidth] }
           : visible
-            ? { opacity: 1, scale: 1, x: 0 }
-            : { opacity: 0, scale: 0.85, x: tailAtLeft ? -8 : 8 }
+            ? { opacity: 1, scale: 1, x: 0, y: 0 }
+            : { opacity: 0, scale: 0.85, ...offset }
       }
       transition={
         leaving ? BUBBLE_EXIT : { type: "spring", stiffness: 260, damping: 20, delay: withVoice ? 0 : TYPE_DELAY_MS / 1000 }
       }
       // Figma: the short bubble ("Rectangle 142") is 77 tall with its text 9px in; the others 86.
-      style={{ transformOrigin: tailAtLeft ? "0% 50%" : "100% 50%", width: size.width, minHeight: size.minHeight }}
+      style={{ transformOrigin: tailOnTop ? "50% 0%" : tailAtLeft ? "0% 50%" : "100% 50%", width: size.width, minHeight: size.minHeight }}
       // Its width is what it likes to have; a narrower screen takes from it (the line wraps more) instead of the bubble running off the edge.
       className={`relative flex min-w-0 shrink items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] dark:bg-[#1A1C22] ${
         size.minHeight ? "py-[7px]" : size.short ? "min-h-[77px] py-2.5" : "min-h-[86px] py-[13px]"
@@ -126,8 +138,12 @@ function SpeechBubble({ line, size, tailAtLeft, leaving, onTyped }: { line: read
     >
       <span
         aria-hidden
-        className={`absolute top-1/2 h-[15px] w-[15px] -translate-y-1/2 rotate-45 bg-white dark:bg-[#1A1C22] ${
-          tailAtLeft ? "-left-[7px] rounded-bl-[3px]" : "-right-[7px] rounded-tr-[3px]"
+        className={`absolute h-[15px] w-[15px] rotate-45 bg-white dark:bg-[#1A1C22] ${
+          tailOnTop
+            ? "-top-[7px] left-1/2 -ml-[7px] rounded-tl-[3px]"
+            : tailAtLeft
+              ? "top-1/2 -left-[7px] -translate-y-1/2 rounded-bl-[3px]"
+              : "top-1/2 -right-[7px] -translate-y-1/2 rounded-tr-[3px]"
         }`}
       />
       <p className="relative text-center text-[16px] leading-[1.24] font-medium text-[#444444] dark:text-white">

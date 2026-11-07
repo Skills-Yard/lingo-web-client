@@ -52,9 +52,12 @@ const answersHeight = (stage: QuizStage) => {
   return stage.options.length * row + (stage.options.length - 1) * ROW_GAP;
 };
 
+/** Hex's line is never sent away here, and no stage waits for it to be said. */
+const KEEP_HEX = () => {};
+
 /** An interaction stage's own picture and controls. */
 function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, finished })}</>;
+  return <>{stage.render({ slip, done, dismissHex: KEEP_HEX, finished, hexSpoken: true })}</>;
 }
 
 /**

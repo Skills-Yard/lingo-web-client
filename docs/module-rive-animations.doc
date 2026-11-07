@@ -39,6 +39,7 @@
   <li>Battery (<code>battery.riv</code>)</li>
   <li>Flip card (<code>progressBar.riv</code>)</li>
   <li>Lesson complete "LESSON_Complete" (<code>hex.riv</code>)</li>
+  <li>Reward chest "REWARD_BG" and "REWARD_Chest" (<code>hex.riv</code>), after Lesson complete</li>
   <li>Combined effect chain: what fires when an answer is checked</li>
   <li>Canvas bleed and layout rules</li>
   <li>Other artboards in the files that the module does not use</li>
@@ -51,6 +52,8 @@
 <tr><th>File</th><th>Artboard</th><th>State machine</th><th>View model</th><th>Size</th><th>Module use</th></tr>
 <tr><td><code>hex.riv</code></td><td><code>HEX</code></td><td><code>Onboarding</code></td><td><code>Onboarding</code></td><td>drawn into 110 px slots or larger</td><td>Hex on steps 2, 3, 4, 5, 7, 8, 11, 12, 13, 16, review, and every result panel</td></tr>
 <tr><td><code>hex.riv</code></td><td><code>LESSON_Complete</code></td><td><code>LessonComplete_SM</code></td><td><code>LessonComplete</code></td><td>full screen, fit width, max 430 px</td><td>Lesson complete screen</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>REWARD_BG</code></td><td><code>REWARD_BG_SM</code></td><td>none</td><td>full screen, <code>Fit.Cover</code></td><td>Reward screen backdrop (a looping sunburst)</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>REWARD_Chest</code></td><td><code>State Machine 1</code></td><td><code>reward</code></td><td>box 150 vw wide (max 640 px), <code>Fit.Contain</code></td><td>Reward screen chest</td></tr>
 <tr><td><code>command.riv</code></td><td><code>CMD_RobotArm</code></td><td><code>Main</code></td><td><code>RobotVM</code></td><td>390 x 306 (picture 390 x 600)</td><td>Robot on steps 1, 2, 3, 4, 5, 7, 8, 9</td></tr>
 <tr><td><code>progressBar.riv</code></td><td><code>AllButton</code></td><td><code>ModuleButton_SM</code></td><td><code>AllButtonVM</code></td><td>360 x 73</td><td>Every Continue / Check / Next button, Lesson complete's button</td></tr>
 <tr><td><code>progressBar.riv</code></td><td><code>LESSON_ProgressBar</code></td><td><code>ProgressBar_SM</code></td><td>(bound view model)</td><td>350 wide artboard</td><td>Header progress bar on every screen</td></tr>
@@ -407,6 +410,17 @@ Continue on the last line -> navigates to step 8
 <tr><td>Properties written</td><td><code>xp</code> = 40, <code>accuracy</code> = first-try percentage, <code>time</code> = 222 (seconds). The writer tries a <b>number</b> property first; if the artboard declares the property as a <b>string</b> it writes display text (<code>+40</code>, <code>92%</code>, <code>3:42</code>).</td></tr>
 <tr><td>Trigger</td><td><code>play</code>, fired (through the queue, 150 ms gap) once ready, after the properties are set, together with a 1.2 s vibration.</td></tr>
 <tr><td>Layout</td><td>Held to a phone width (max 430 px) in a box centred on the page. The cap is on the wrapper because <code>RiveComponent</code> drops its <code>style</code> when it has a <code>className</code>.</td></tr>
+</table>
+
+<!-- ===================================================== 11b -->
+<h2>11b. Reward chest "REWARD_BG" + "REWARD_Chest" (<code>hex.riv</code>)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Where</td><td>After "Lesson complete!" in every module (Module 1, Sequence, Variable, Data Types: they all use <code>LessonCompleteScreen</code>). Continue on the results records the module as finished and shows the reward on the same URL; Continue on the reward goes back to <code>/level</code>. Code: <code>RewardScreen</code>, constants <code>REWARD_SCREEN</code> in <code>lib/rive/runtime.ts</code>.</td></tr>
+<tr><td>Backdrop</td><td><code>REWARD_BG</code> (390 x 844) plays <code>REWARD_BG_SM</code> (no inputs, loops <code>REWARD_BG_LOOP</code>) on its own full-screen canvas, <code>Fit.Cover</code>. It has no view model, so it is loaded with <code>useRive</code> directly rather than <code>useHexRive</code>.</td></tr>
+<tr><td>Chest</td><td><code>REWARD_Chest</code> (440 x 430, the box in its middle) plays <code>State Machine 1</code> (no inputs) through <code>useHexRive</code>, bound to the view model <code>reward</code>, whose only property is the <b>number</b> <code>tap</code> (not a trigger). It is drawn 150 vw wide (max 640 px) so the box is large; the empty margins are clipped by the screen.</td></tr>
+<tr><td>Taps</td><td>Each tap <b>anywhere on the screen</b> (mouse, touch or keyboard: a full-screen button sits over the chest) sets <code>tap</code> to the next of <b>1, 2, 3</b>. 1 and 2 are two wobbles; 3 opens the lid and shows the gems, and the chest stays open. A fourth tap does nothing. The machine copes with quick taps: three taps 250 ms apart still end open. A short buzz on taps 1 and 2, the long claim buzz on the third.</td></tr>
+<tr><td>Continue</td><td>Nothing else is on the screen. About 1.9 s after the third tap (the lid has settled) the Continue button slides in. It is the same solo button as on Lesson complete (<code>SoloContinue</code>).</td></tr>
 </table>
 
 <!-- ===================================================== 12 -->

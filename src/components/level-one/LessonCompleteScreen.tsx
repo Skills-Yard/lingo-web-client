@@ -1,50 +1,76 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
-import { buttonBottomMargin, soloButtonWidth } from "@/components/level-one/ActionRow";
-import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
-import { Button3D } from "@/components/ui/Button3D";
-import { playClickSound } from "@/components/onboarding/clickSound";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { LESSON_COMPLETE } from "@/lib/rive/runtime";
 import { vibrateForLessonComplete } from "@/lib/haptics";
 import { completeModule } from "@/lib/levelProgress";
 import { firstTryAccuracy, resetReview } from "@/lib/moduleReview";
+import { RewardScreen } from "./RewardScreen";
+import { PHONE_MAX_W, SoloContinue } from "./SoloContinue";
 
 /** The lesson's results, shown by the artboard. */
 const LESSON_XP = 40;
 /** The seconds the lesson took. */
 const LESSON_SECONDS = 222;
 
-/** The widest phone (px) — past it the screen stops growing. */
-const PHONE_MAX_W = 430;
-
 const LAYOUT =new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
 
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 /**
- * `/module?step=complete` — "Lesson complete!": the "LESSON_Complete"
- * Rive artboard. Once it is ready, its `xp`, `accuracy` (the share of questions
- * answered right the first time) and `time` are set and
- * its `play` trigger fired. Each value is written as a number, or as display
- * text (`+40`, `92%`, `3:42`) if the artboard declares that property as a string.
- * Continue records module `level` as finished and goes back to the path,
+ * `/module?step=complete` — "Lesson complete!", then the reward: Continue on the
+ * results records module `level` as finished and opens the reward chest
+ * (`RewardScreen`); Continue there goes back to the path (or runs `onContinue`),
  * where Hex moves on to the next block.
  */
 export function LessonCompleteScreen({
   level = 1,
-  accuracy: readAccuracy = firstTryAccuracy,
+  accuracy,
   onContinue,
 }: {
   level?: number;
   /** Reads the share (0-100) of questions answered right the first time. */
   accuracy?: () => number;
+  /** What Continue on the reward screen does, instead of going back to the path. */
   onContinue?: () => void;
 }) {
   const router = useRouter();
+  const [rewarding, setRewarding] = useState(false);
+
+  if (rewarding) {
+    return (
+      <RewardScreen
+        onContinue={
+          onContinue ??
+          (() => {
+            resetReview();
+            router.push("/level");
+          })
+        }
+      />
+    );
+  }
+  return (
+    <LessonResults
+      accuracy={accuracy}
+      onContinue={() => {
+        completeModule(level);
+        setRewarding(true);
+      }}
+    />
+  );
+}
+
+/**
+ * The "LESSON_Complete" Rive artboard. Once it is ready, its `xp`, `accuracy`
+ * (the share of questions answered right the first time) and `time` are set and
+ * its `play` trigger fired. Each value is written as a number, or as display
+ * text (`+40`, `92%`, `3:42`) if the artboard declares that property as a string.
+ */
+function LessonResults({ accuracy: readAccuracy = firstTryAccuracy, onContinue }: { accuracy?: () => number; onContinue: () => void }) {
   const { rive, RiveComponent, ready, fireTrigger } = useHexRive(
     LAYOUT,
     LESSON_COMPLETE.stateMachine,
@@ -81,24 +107,7 @@ export function LessonCompleteScreen({
       <div className="absolute inset-y-0 left-1/2 w-full -translate-x-1/2" style={{ maxWidth: PHONE_MAX_W }}>
         <RiveComponent aria-hidden className="h-full w-full" />
       </div>
-      <div
-        className="absolute inset-x-0 bottom-0 z-10 mx-auto flex justify-center"
-        style={{ maxWidth: PHONE_MAX_W, marginBottom: buttonBottomMargin(`(min(100vw, ${PHONE_MAX_W}px) - 32px)`) }}
-      >
-        <Button3D
-          riveVariant="module"
-          onClick={onContinue ?? (() => {
-            completeModule(level);
-            resetReview();
-            router.push("/level");
-          })}
-          onPress={playClickSound}
-          className="shrink-0"
-          style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}`, width: soloButtonWidth(`min(100vw, ${PHONE_MAX_W}px)`) }}
-        >
-          Continue
-        </Button3D>
-      </div>
+      <SoloContinue onClick={onContinue} />
     </main>
   );
 }

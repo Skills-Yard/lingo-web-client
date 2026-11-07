@@ -12,12 +12,10 @@ import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, type Command } from "./hexGrid";
 import { STEP, sequenceNext } from "./sequence";
-import { claimReward, noteFirstTry, noteStruggle } from "./sequenceScore";
+import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
 const BATTERY = { col: 1, row: 1 };
-/** Pays the battery once per run of the module, when Hex gets there. */
-const REWARD_ID = "sequence-hex-order";
 
 /** The right order, first slot first. */
 const ANSWER: readonly Command[] = ["forward", "right", "forward"];
@@ -54,7 +52,7 @@ export function HexOrderScreen() {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [hintCard, setHintCard] = useState<string | null>(null);
   const pending = useRef<number[]>([]);
-  const { win, popup } = useBatteryClaim(REWARD_ID, claimReward);
+  const { win, popup } = useBatteryClaim();
 
   useEffect(() => {
     const timers = pending.current;

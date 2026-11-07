@@ -118,10 +118,10 @@ Built from the "4. DataTypes" spec (its screen number is in brackets; screens wi
 |---|---|
 | `/module/datatypes?step=1` | "Let's Organise Our School Event!" [1] |
 | `/module/datatypes?step=2` | "Meet Aarav!" [2] |
-| `/module/datatypes?step=3` | "Let's Find the Similar Ones!" (free grouping, not marked, recorded) [3] |
-| `/module/datatypes?step=4` | "Not All Information Tells Us the Same Thing!" (tap the groups, then a question) [4] |
-| `/module/datatypes?step=5` | "Numbers Help Us Count Things!" [5] |
-| `/module/datatypes?step=6` | "Look at These Numbers!" (tap the decimals) [6] |
+| `/module/datatypes?step=3` | "Let's Find the Similar Ones!" (free grouping into three groups of three, not marked, recorded) [3] |
+| `/module/datatypes?step=4` | "Information can differ!" (tap each of the three groups and Hex says what it tells us; one stage, no question after it) [4] |
+| `/module/datatypes?step=5` | "Let's plan a school event!" (three cards to look at: Students Registered?, Tickets Sold?, Prizes Available?; they bounce in after Hex, Continue is there from the start) [5] |
+| `/module/datatypes?step=6` | "Are all numbers same?" (four cards to look at: 12 students, 25 tickets, 148.5 cm height, 36.7 kg weight; same behaviour as screen 5) [6] |
 | `/module/datatypes?step=7` | "Meet Integers!" [7] |
 | `/module/datatypes?step=8` | "What If We Need More Precision?" (Float, then a question) [8] |
 | `/module/datatypes?step=9` | "Can You Classify These Numbers?" (Integer or Float) [9] |

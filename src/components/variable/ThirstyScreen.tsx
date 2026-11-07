@@ -25,6 +25,10 @@ const CARD_GAP = 10;
 const ICON = { width: 53, height: 49 };
 /** The result panel makes room by raising the cards this far (px). */
 const RISE = 150;
+/** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives, not after it. */
+const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
+/** The cards' own way in (and back down for another try). */
+const CARDS_IN = { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } as const;
 const CORRECT_ID = "water";
 
 const CHOICES = [
@@ -110,7 +114,7 @@ export function ThirstyScreen() {
       <motion.div
         initial={{ opacity: 0, y: 90 }}
         animate={{ opacity: 1, y: checked ? -RISE : 0 }}
-        transition={{ type: "spring", stiffness: 110, damping: 13, delay: 0.3 }}
+        transition={checked ? PANEL_SPRING : CARDS_IN}
         className="pointer-events-auto absolute z-[1] grid grid-cols-3"
         style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS), left: COLUMN_LEFT, width: COLUMN_W, gap: CARD_GAP }}
       >

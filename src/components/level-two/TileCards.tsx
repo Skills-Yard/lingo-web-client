@@ -6,6 +6,7 @@ import { vibrateForTap } from "@/lib/haptics";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { CARDS_RISE, GAP_ABOVE_BUTTONS } from "./AnswerCards";
+import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
@@ -40,6 +41,10 @@ type TileCardsProps = {
   pictureHeight?: number;
   /** The card's height (px), where it should differ from the layout's. */
   cardHeight?: number;
+  /** The cards bounce in one by one instead of the whole row rising together. */
+  bounceIn?: boolean;
+  /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
+  revealed?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -48,11 +53,11 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, bounceIn = false, revealed = true, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
-      initial={{ opacity: 0, y: 90 }}
+      initial={bounceIn ? false : { opacity: 0, y: 90 }}
       animate={{ opacity: 1, y: checked ? -CARDS_RISE : 0 }}
       transition={
         checked
@@ -62,10 +67,10 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
       className={`pointer-events-auto absolute z-[1] ${look.box}`}
       style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W }}
     >
-      {choices.map((choice) => {
+      {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
         const hintHere = hinted && selectedId === null && choice.id === correctId;
-        return (
+        const card = (
           <HintFloat key={choice.id} className="relative flex min-w-0 flex-1" spin={false} active={hintHere}>
             <motion.button
               type="button"
@@ -102,6 +107,13 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
               </span>
             </motion.button>
           </HintFloat>
+        );
+        return bounceIn ? (
+          <BounceIn key={choice.id} index={index} shown={revealed} className="flex min-w-0 flex-1">
+            {card}
+          </BounceIn>
+        ) : (
+          card
         );
       })}
     </motion.div>

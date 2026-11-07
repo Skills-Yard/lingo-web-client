@@ -13,7 +13,6 @@ import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { PlatformBattery } from "@/components/ui/PlatformBattery";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
 import { levelOneStep } from "./LevelOneShell";
-import { claimReward } from "./levelOneScore";
 import { useLevelMuted } from "./levelMuted";
 import { useBatteryClaim } from "./useBatteryClaim";
 
@@ -71,13 +70,8 @@ export type MoveHexFlow = {
   wrong: string;
   /** Each result, right or wrong. */
   onAnswer: (correct: boolean) => void;
-  /** The battery this game pays when Hex gets there: the module's own once-per-run claim. */
-  reward: { id: string; claim: (id: string) => boolean };
   onDone: () => void;
 };
-
-/** Module 1's game pays its battery once per run of the module. */
-const LEVEL_ONE_REWARD = "level-one-guide-hex";
 
 const WRONG_WAY = "Oops, that’s the wrong way! The battery is straight ahead. Tap anywhere on this panel to try again.";
 
@@ -144,7 +138,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
   // (or its 3 second countdown running out) claims the battery and plays the
   // Battery Doctor, and leaves Continue to go on. In a flow the popup comes
   // after the result panel, and the end of the Doctor moves on.
-  const { win, popup } = useBatteryClaim(flow?.reward.id ?? LEVEL_ONE_REWARD, flow?.reward.claim ?? claimReward, flow?.onDone);
+  const { win, popup } = useBatteryClaim(flow?.onDone);
   // A miss counts against this question: the first go is what is noted, and
   // Continue asks to be shown it again unless the first go made it.
   const missed = useRef(false);

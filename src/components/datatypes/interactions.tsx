@@ -19,11 +19,11 @@ export const TYPES = [
 
 const BLUE_CARD = "border-[#5B9BFF] bg-[#EEF4FF] dark:bg-[#15213A]";
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
-const SHAKE = [0, -7, 7, -5, 5, 0];
+export const SHAKE = [0, -7, 7, -5, 5, 0];
 /** A press that moves less than this far (px) is a tap, not a drag. */
 const TAP_SLOP = 6;
 /** A wrong card shakes red for this long (ms). */
-const WRONG_MS = 600;
+export const WRONG_MS = 600;
 
 /** The places things are sorted into: each its own colour, as the Command module's column headers have. */
 const TONES = [
@@ -34,7 +34,7 @@ const TONES = [
 ] as const;
 
 /** A card that can be dragged, or tapped; it settles back where it was if it isn't dropped on a place. */
-function DragCard({
+export function DragCard({
   children,
   className,
   style,
@@ -107,7 +107,7 @@ export type SortItem = {
   label: string;
   sub?: string;
   icon?: string;
-  /** The group it belongs to (`free` sorting has no right group: anything goes). */
+  /** The group it belongs to. */
   bucket: string;
   /** What is said when it is put in the wrong group. */
   hint?: string;
@@ -116,34 +116,28 @@ export type SortBucket = { id: string; label: string; icon?: string };
 
 /**
  * Sorting: cards are dragged into groups (or a card is tapped, then the group).
- * In `check` mode a right drop stays and a wrong one shakes red and comes back
- * with a hint (and counts as a slip); the stage is done when everything is in its
- * group. In `free` mode anything goes where it is put (and can be taken out again)
- * and it is done when every card is placed: nothing is marked.
+ * A right drop stays and a wrong one shakes red and comes back with a hint (and
+ * counts as a slip); the stage is done when everything is in its group. (Grouping
+ * with no right answer is `GroupStage`.)
  */
 export function SortStage({
   api,
   items,
   buckets,
-  mode = "check",
   prompt = "Drag each card to its group.",
   cardWidth = 104,
   decimalHint = false,
   after,
-  onSorted,
 }: {
   api: InteractionApi;
   items: readonly SortItem[];
   buckets: readonly SortBucket[];
-  mode?: "check" | "free";
   prompt?: string;
   cardWidth?: number;
   /** After a slip the decimal points in the cards are picked out. */
   decimalHint?: boolean;
   /** What shows once it is done. */
   after?: ReactNode;
-  /** Told how the cards ended up (item id to group id). */
-  onSorted?: (placed: Readonly<Record<string, string>>) => void;
 }) {
   const { slip, done, finished } = api;
   const [placed, setPlaced] = useState<Record<string, string>>({});
@@ -152,23 +146,19 @@ export function SortStage({
   const [note, setNote] = useState("");
   const [slipped, setSlipped] = useState(false);
   const bucketEls = useRef<Record<string, HTMLDivElement | null>>({});
-  const free = mode === "free";
   const all = items.length === Object.keys(placed).length;
 
   useEffect(() => {
     if (!all) return;
-    const timer = window.setTimeout(() => {
-      onSorted?.(placed);
-      done();
-    }, 450);
+    const timer = window.setTimeout(done, 450);
     return () => window.clearTimeout(timer);
-  }, [all, done, onSorted, placed]);
+  }, [all, done]);
 
   const place = (id: string, bucket: string) => {
     const item = items.find((candidate) => candidate.id === id);
     if (!item || finished) return;
     setSelected(null);
-    if (free || item.bucket === bucket) {
+    if (item.bucket === bucket) {
       playClickSound();
       vibrateForTap();
       setNote("");
@@ -256,40 +246,17 @@ export function SortStage({
                 <span className={`text-[13px] leading-5 font-bold ${tone.title}`}>{bucket.label || `Group ${index + 1}`}</span>
               </div>
               <div className="flex flex-wrap justify-center gap-1">
-                {inside.map((item) =>
-                  free && !finished ? (
-                    <motion.button
-                      key={item.id}
-                      type="button"
-                      initial={{ scale: 0.6, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      onClick={(event) => {
-                        // With a card picked, a tap anywhere in the group puts it there; otherwise a tap takes this one out.
-                        if (selected) return;
-                        event.stopPropagation();
-                        setPlaced((now) => {
-                          const next = { ...now };
-                          delete next[item.id];
-                          return next;
-                        });
-                      }}
-                      aria-label={`${item.label} (tap to take out)`}
-                      className="pointer-events-auto rounded-[8px] border-2 border-[#B8A9F5] bg-[#F1EEFF] px-2 py-0.5 text-[13px] leading-5 font-semibold text-[#444444] dark:bg-[#2E2A5C] dark:text-white"
-                    >
-                      {item.label}
-                    </motion.button>
-                  ) : (
-                    // A card that is in its group stays: it takes no taps, so a tap on the group still reaches the group.
-                    <motion.span
-                      key={item.id}
-                      initial={{ scale: 0.6, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className={`pointer-events-none rounded-[8px] border-2 px-2 py-0.5 text-[13px] leading-5 font-semibold text-[#444444] dark:text-white ${LOOKS.correct.card}`}
-                    >
-                      {item.label}
-                    </motion.span>
-                  ),
-                )}
+                {inside.map((item) => (
+                  // A card that is in its group stays: it takes no taps, so a tap on the group still reaches the group.
+                  <motion.span
+                    key={item.id}
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className={`pointer-events-none rounded-[8px] border-2 px-2 py-0.5 text-[13px] leading-5 font-semibold text-[#444444] dark:text-white ${LOOKS.correct.card}`}
+                  >
+                    {item.label}
+                  </motion.span>
+                ))}
               </div>
             </div>
           );

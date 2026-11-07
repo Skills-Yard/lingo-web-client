@@ -6,11 +6,9 @@ import { MoveHexScreen } from "@/components/level-one/MoveHexScreen";
 import { useCallback } from "react";
 import { SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 import { SEQUENCE_STEPS, sequenceNext, sequencePrevious } from "./sequence";
-import { claimReward, noteFirstTry } from "./sequenceScore";
+import { noteFirstTry } from "./sequenceScore";
 
 const STEP = 7;
-/** The battery this screen pays when Hex gets there (once per run of the module). */
-const REWARD = { id: "sequence-guide-hex", claim: claimReward };
 
 /** What Hex is about to do, on the first look at the board. */
 function GuideTip() {
@@ -41,7 +39,6 @@ export function GuideHexScreen() {
         wrongTitle: "Oops!",
         wrong: "You missed the energy.",
         onAnswer,
-        reward: REWARD,
         onDone: () => router.push(sequenceNext(STEP)),
       }}
     />
