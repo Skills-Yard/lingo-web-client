@@ -23,7 +23,7 @@ export function LevelHeader({
   const battery = useBattery();
 
   return (
-    <header className="relative z-50 flex items-center justify-between px-3 sm:px-5 pt-2.5 sm:pt-3 pb-1.5 sm:pb-2 bg-gradient-to-b from-white/95 via-white/80 to-transparent dark:from-[#0B132B]/95 dark:via-[#0B132B]/80">
+    <header className="relative z-50 py-5 flex items-center justify-between px-3 sm:px-5  bg-gradient-to-b from-white/95 via-white/80 to-transparent dark:from-[#0B132B]/95 dark:via-[#0B132B]/80">
       <div className="flex items-center gap-1.5 xs:gap-2 sm:gap-2.5 min-w-0 shrink">
         <button
           type="button"

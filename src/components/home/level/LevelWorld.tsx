@@ -134,7 +134,7 @@ export function LevelWorld({
         />
       ))}
 
-      {/* Buildings 1 to 19 */}
+      {/* Buildings (First 5 Levels) */}
       {BUILDING_CONFIGS.map((b) => (
         <div
           key={b.id}
