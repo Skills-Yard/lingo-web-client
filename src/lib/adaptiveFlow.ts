@@ -15,9 +15,10 @@ type AdaptiveFlowOptions = {
   /**
    * Where a learner who missed a screen (or used its hint) is sent back to, once:
    * the earlier screen that taught the idea. They then go on from the screen after
-   * the one they missed.
+   * the one they missed. A function chooses the screen from how the learner did
+   * (or none, with `undefined`).
    */
-  detours: Readonly<Record<number, number>>;
+  detours: Readonly<Record<number, number | (() => number | undefined)>>;
   /** Right the first time and without the hint. */
   cleanRight: (step: number) => boolean;
   /** Needed a wrong attempt or the hint. */
@@ -69,7 +70,9 @@ export function createAdaptiveFlow({ steps, hrefOf, home, skips, detours, cleanR
       return href(detour.resume);
     }
     const after = plainNext(step);
-    const back = detours[step];
+    // A screen can pick where to send the learner from what went wrong on it (a function), or always the same place.
+    const rule = detours[step];
+    const back = typeof rule === "function" ? rule() : rule;
     const visited = read<Record<number, true>>(detouredKey) ?? {};
     if (back !== undefined && struggled(step) && !visited[step]) {
       write(detouredKey, { ...visited, [step]: true });

@@ -153,6 +153,8 @@ const MODULE_LESSONS = [
   { title: "Sequence", xp: 50 },
   { title: "Variables", xp: 50 },
   { title: "Data Types", xp: 50 },
+  { title: "Operators", xp: 50 },
+  { title: "Conditions", xp: 50 },
 ] as const;
 const COMING_SOON = { title: "Coming soon", xp: 0 } as const;
 
