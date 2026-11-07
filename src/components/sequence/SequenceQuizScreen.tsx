@@ -84,8 +84,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   // After a wrong answer the right card isn't revealed: the learner gets to try again.
   const shownCorrectId = checked && !correct ? "" : quiz.correctId;
   const wrongNote = !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
-  // The hint is Hex saying it, in place of his line.
-  const line = hinted && quiz.hintText ? [{ text: quiz.hintText }] : quiz.line;
+  const line = quiz.line;
   const withHint = !quiz.noHint;
   const listRise = quiz.pictures || quiz.closeUp ? LIST_RISE : LIST_RISE_OPEN;
 

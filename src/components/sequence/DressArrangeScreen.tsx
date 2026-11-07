@@ -130,7 +130,7 @@ export function DressArrangeScreen() {
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
             centred
           >
-            {correct ? "Ready to go now." : "Not able to go outside with this. The character needs to wear socks first."}
+            {correct ? "Socks first, then shoes. Ready to go!" : "Socks must go on before shoes."}
           </FeedbackPanel>
         </div>
       }

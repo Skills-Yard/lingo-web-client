@@ -22,7 +22,6 @@ type Config = {
   commands: readonly Command[];
   /** The tiles offered, in order; one is where Hex ends up. */
   options: readonly string[];
-  hint: string;
   right: { title: string; text: string };
   wrong: string;
 };
@@ -37,9 +36,8 @@ const CONFIG: Record<PredictVariant, Config> = {
     ),
     commands: ["right", "forward"],
     options: ["Centre-left", "Bottom-middle", "Bottom-right"],
-    hint: "After turning right, which direction will MOVE FORWARD take HEX?",
-    right: { title: "Good prediction!", text: "You thought about how the first command changed HEX’s direction." },
-    wrong: "Look at how the turn changed the way HEX faces.",
+    right: { title: "Good!", text: "The turn changed which way HEX faces." },
+    wrong: "Watch which way HEX faces after the turn.",
   },
   // After a right first try: a longer sequence.
   longer: {
@@ -51,9 +49,8 @@ const CONFIG: Record<PredictVariant, Config> = {
     ),
     commands: ["forward", "right", "forward", "forward"],
     options: ["Centre", "Top-right", "Centre-right"],
-    hint: "Follow the commands one at a time. Which way is HEX facing after each one?",
-    right: { title: "Great prediction!", text: "You followed every command in order, turns included." },
-    wrong: "Follow the commands one at a time and watch which way HEX faces.",
+    right: { title: "Great!", text: "You followed every command, turns included." },
+    wrong: "Follow one command at a time. Which way does HEX face?",
   },
   // After a miss or a hint: a simpler two-command one.
   simpler: {
@@ -65,9 +62,8 @@ const CONFIG: Record<PredictVariant, Config> = {
     ),
     commands: ["forward", "forward"],
     options: ["Top-left", "Centre-left", "Top-right"],
-    hint: "Each MOVE FORWARD takes HEX one tile in the direction he faces. Count the tiles.",
-    right: { title: "That’s it!", text: "Each MOVE FORWARD took HEX one tile in the direction he faces." },
-    wrong: "Each MOVE FORWARD takes HEX one tile up. Count the tiles.",
+    right: { title: "That’s it!", text: "Each MOVE FORWARD takes HEX one tile." },
+    wrong: "Each MOVE FORWARD is one tile up. Count them.",
   },
 };
 
@@ -76,10 +72,10 @@ const BOARD_TOP = 138;
 const CHIPS_TOP = 350;
 /** The answers wear the tint of the Hex Order cards, with the same border in dark. */
 const OPTION_TINT = "bg-[#EDFAFE] dark:bg-[#15233A] dark:border-[#818185]!";
-/** The question, or the hint in its place, stands under the command cards. */
+/** The question stands under the command cards. */
 const QUESTION_TOP = CHIPS_TOP + 92;
-/** How long the hint can be read before the right answer is picked for the learner. */
-const HINT_READ_MS = 1800;
+/** A beat before the hint picks the right answer for the learner. */
+const HINT_READ_MS = 600;
 const ORANGE = "#FF8D42";
 const TEAL = "#04ACAB";
 
@@ -87,7 +83,7 @@ const TEAL = "#04ACAB";
  * "Think before you move!": the commands are shown, and the learner picks where
  * Hex will end up, before he moves. Checking plays the commands on the board.
  * A wrong pick draws the way Hex faced at the start and after the turn. The hint
- * button shows the hint, then picks the right answer once it has been read.
+ * button picks the right answer for the learner.
  */
 export function PredictScreen({ variant }: { variant: PredictVariant }) {
   const router = useRouter();
@@ -163,8 +159,6 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
         />
       }
       boardTop={BOARD_TOP}
-      tip={hinted && !checked ? config.hint : undefined}
-      tipTop={QUESTION_TOP}
       panel={{
         correct,
         title: correct ? config.right.title : "Not quite",
@@ -181,7 +175,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
       <div className="absolute inset-x-0 flex justify-center px-4" style={{ top: CHIPS_TOP }}>
         <CommandChips commands={config.commands} />
       </div>
-      {!hinted && !checked && (
+      {!checked && (
         <p
           className="absolute left-1/2 w-[340px] -translate-x-1/2 rounded-[12px] bg-white px-3.5 py-3 text-center text-[14px] leading-5 font-semibold text-[#444444] shadow-[1px_1px_6px_rgba(0,0,0,0.12)] dark:bg-[#15181E] dark:text-white"
           style={{ top: QUESTION_TOP }}

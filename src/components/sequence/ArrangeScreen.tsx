@@ -104,15 +104,15 @@ export function ArrangeScreen() {
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
-            title={correct ? "Perfect!" : "Not quite"}
+            title={correct ? "Perfect!" : "Oops!"}
             open={resultShown}
             hexIn={resultShown}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
             centred
           >
             {correct
-              ? "First, the robot picked up the cube. Then it placed the cube on the target."
-              : "The robot needs to be holding the cube before it can place it. Which command should come first?"}
+              ? "The robot picked up the cube, then placed it."
+              : "You can’t place a cube you’re not holding. What comes first?"}
           </FeedbackPanel>
         </div>
       }

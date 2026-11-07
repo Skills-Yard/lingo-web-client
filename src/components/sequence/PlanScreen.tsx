@@ -30,7 +30,6 @@ const ROUTES = {
     battery: { col: 2, row: 1 },
     /** forward, right, forward, forward */
     slots: 4,
-    tip: "Build a sequence of commands that takes HEX to the battery.",
   },
   complex: {
     step: STEP.planNext,
@@ -42,7 +41,6 @@ const ROUTES = {
     battery: { col: 2, row: 0 },
     /** forward, forward, right, forward, forward */
     slots: 5,
-    tip: "Nice! Now plan a longer route that takes HEX to the battery.",
   },
 } as const;
 
@@ -85,7 +83,6 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
   const [correct, setCorrect] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
-  const [hinted, setHinted] = useState(false);
   const nextId = useRef(0);
   // Each route pays its own battery, once per run of the module.
   const { win, popup } = useBatteryClaim(`sequence-plan-${route}`, claimReward);
@@ -139,24 +136,15 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
       title={config.title}
       board={<HexBoard kind="grid" hex={hex} battery={config.battery} collected={phase === "checked" && correct} ring={editing ? ring : null} width={260} entryKey={`hex-plan-${route}`} />}
       boardTop={BOARD_TOP}
-      tip={hinted && editing ? config.tip : undefined}
-      tipTop={342}
       panel={{
         correct,
-        title: correct ? "Great!" : "Not quite",
-        text: correct ? "You arranged the commands before executing them." : "Let’s inspect your sequence. Which command first sent HEX in the wrong direction?",
+        title: correct ? "Great!" : "Not yet",
+        text: correct ? "You planned the commands before running them." : "Check where HEX first went off track.",
         open: phase === "checked",
       }}
       celebrate={phase === "checked" && correct}
       overlay={popup}
       answer={answer}
-      hint={{
-        visible: editing && !hinted,
-        onUse: () => {
-          setHinted(true);
-          noteStruggle(config.step, "hint");
-        },
-      }}
       ctaLabel={phase !== "checked" ? "Run" : correct ? "Next" : "Try again"}
       ctaDisabled={editing ? items.length === 0 || running : phase === "running"}
       onContinue={onContinue}

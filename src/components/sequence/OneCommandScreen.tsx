@@ -67,16 +67,15 @@ export function OneCommandScreen() {
       step={STEP.oneCommand}
       title={
         <>
-          How will <Teal>HEX</Teal> reach the battery?
+          How will <Teal>HEX</Teal> get the battery?
         </>
       }
-      titleSize={26}
-      wrapTitle
+      titleSize={22}
       board={<HexBoard kind="row" hex={hex} battery={BATTERY_TILE} collected={done} width={356} entryKey="hex-one-command" />}
       boardTop={200}
       tip={TIPS[moves]}
       tipTop={340}
-      panel={{ correct: true, title: "Great!", text: "HEX needed more than one command to reach its goal.", open: done }}
+      panel={{ correct: true, title: "Nice!", text: "More than one command was needed.", open: done }}
       celebrate={done}
       overlay={popup}
       ctaDisabled={!done}
