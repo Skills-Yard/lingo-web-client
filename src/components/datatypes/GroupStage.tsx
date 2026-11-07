@@ -5,19 +5,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { DragCard } from "./interactions";
+import { CARD_LOOK, EMPTY_SLOT, RECEIVING, TINTS, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
 import { Pic } from "./visuals";
 
-/** The cards' tints: they only tell the cards apart, they never say which ones belong together (screen 1's answer tiles use them too). */
-export const TINTS = {
-  blue: "bg-[#E5EFFD] dark:bg-[#15233A]",
-  lavender: "bg-[#F6F4FE] dark:bg-[#0F1F26]",
-  green: "bg-[#ECF7ED] dark:bg-[#10261A]",
-  cream: "bg-[#FFF3DE] dark:bg-[#2A2218]",
-} as const;
-
-export type GroupTint = keyof typeof TINTS;
 export type GroupItem = { id: string; label: string; tint: GroupTint };
 
 /** The three groups, side by side as columns. */
@@ -27,8 +19,6 @@ type SlotId = (typeof SLOTS)[number];
 /** Where a card was put, kept in the order they were put (a record would sort "12" and "25" ahead of the names). */
 type Placement = { id: string; slot: SlotId };
 
-/** A card, as the design has it: 104 x 52, a 4px white edge, Poppins 600 16px. */
-export const CARD_LOOK = "flex h-[52px] w-[104px] items-center justify-center rounded-[8px] border-4 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)]";
 /** The columns stand under the cards' own three columns, the same width and gap. */
 const COLUMNS = "grid grid-cols-[repeat(3,104px)] gap-[14px]";
 /** How far from a column a drop still counts for it (px): half a gap each side, and room above (within the gap under the grid) and under its pile. */
@@ -158,14 +148,12 @@ export function GroupStage({
               onClick={() => selected && place(selected, slot)}
               animate={{ height: columnHeight }}
               transition={{ duration: 0.2 }}
-              className={`relative w-[104px] rounded-[12px] transition-colors ${
-                receiving ? "cursor-pointer bg-[#EAF2FE]/70 outline-2 outline-offset-2 outline-[#5B9BFF] outline-dashed dark:bg-white/10" : ""
-              }`}
+              className={`relative w-[104px] rounded-[12px] transition-colors ${receiving ? RECEIVING : ""}`}
               initial={false}
             >
               {/* An empty group is a gray slot at the column's foot, where its first card will land. */}
               {empty && (
-                <div className="absolute inset-x-0 bottom-0 flex h-[52px] items-center justify-center rounded-[8px] border-[3px] border-b-4 border-[#C4C4C4] bg-[#F0F0F0] shadow-[inset_0_6px_6px_-3px_rgba(0,0,0,0.18)] dark:border-white/20 dark:bg-white/10">
+                <div className={`absolute inset-x-0 bottom-0 ${EMPTY_SLOT}`}>
                   <Pic src={P.dropSlot} className="h-6 w-6" />
                 </div>
               )}
