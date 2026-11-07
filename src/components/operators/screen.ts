@@ -8,8 +8,11 @@ import type { InteractionStage, QuizStage as BaseQuizStage, ScreenDef as BaseScr
 export { parseTitle } from "@/components/datatypes/screen";
 export type { InteractionApi, InteractionStage, Option, VisualContext } from "@/components/datatypes/screen";
 
-/** A question. `compact` sets the rows of answers shorter (56px), for answers that are only words, so four fit. */
-export type QuizStage = BaseQuizStage & { compact?: boolean };
+/**
+ * A question. `compact` sets the rows of answers shorter (56px), for answers that are only words, so four fit.
+ * `keepLine` leaves Hex and his line where they are once the answer is checked, instead of the bubble going off to the left.
+ */
+export type QuizStage = BaseQuizStage & { compact?: boolean; keepLine?: boolean };
 
 export type Stage = QuizStage | InteractionStage;
 

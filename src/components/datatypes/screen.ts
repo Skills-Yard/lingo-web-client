@@ -57,6 +57,12 @@ export type InteractionApi = {
   /** Sends Hex's line above the picture away, for a stage that talks through its own Hex lower down (screen 4). */
   dismissHex: () => void;
   finished: boolean;
+  /** Hex has finished typing the stage's line (also true when there is none), so something can wait for the line to be read. Left out by the screens that do not say. */
+  lineTyped?: boolean;
+  /** Takes over the main button: it is enabled, and each press calls `press` instead of going on. Pass null to hand it back (disabled again until the interaction is done). Left out by the screens that do not say. */
+  holdButton?: (press: (() => void) | null) => void;
+  /** Goes on to the stage after this one at once, with nothing recorded and no panel. Left out by the screens that do not say. */
+  next?: () => void;
   /** Hex has finished his line (a stage whose cards wait for him comes in then). */
   hexSpoken: boolean;
   /**

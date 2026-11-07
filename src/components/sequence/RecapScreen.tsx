@@ -11,10 +11,10 @@ import { SEQUENCE_STEPS, STEP, sequencePrevious } from "./sequence";
 import { SequenceRoom } from "./SequenceRoom";
 
 const LEARNED = [
-  "A task can require multiple commands.",
-  "The order of commands can change the result.",
-  "Some actions depend on earlier actions.",
-  "A well-planned sequence helps achieve a goal.",
+  "Tasks can need many commands.",
+  "Order can change the result.",
+  "Some actions need earlier ones.",
+  "A good sequence reaches the goal.",
 ];
 /** Stage px down (the title ends at about 117). */
 const VIDEO_TOP = 140;

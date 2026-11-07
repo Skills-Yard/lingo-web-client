@@ -10,12 +10,12 @@ export interface PlatformConfig {
 export const WORLD_STAGE_HEIGHT = 2270;
 
 export const PLATFORM_CONFIGS: PlatformConfig[] = [
-  { id: 1, baseX: 281, baseY: 166, title: "Arithmetic Operations (+, -, *, /)", xp: 50, placement: "bottom" },
-  { id: 2, baseX: 134, baseY: 281, title: "Assignment & Math Expressions", xp: 50, placement: "bottom" },
-  { id: 3, baseX: 276, baseY: 390, title: "Comparison Operators (==, !=, <, >)", xp: 50, placement: "bottom" },
-  { id: 4, baseX: 126, baseY: 503, title: "Logical Operators (and, or, not)", xp: 50, placement: "bottom" },
-  { id: 5, baseX: 266, baseY: 613, title: "Membership Operators (in, not in)", xp: 50, placement: "bottom" },
-  { id: 6, baseX: 122, baseY: 721, title: "Identity & Bitwise Operators", xp: 50, placement: "bottom" },
+  { id: 1, baseX: 281, baseY: 166, title: "Commands", xp: 50, placement: "bottom" },
+  { id: 2, baseX: 134, baseY: 281, title: "Sequence", xp: 50, placement: "bottom" },
+  { id: 3, baseX: 276, baseY: 390, title: "Variable", xp: 50, placement: "bottom" },
+  { id: 4, baseX: 126, baseY: 503, title: "Data Types", xp: 50, placement: "bottom" },
+  { id: 5, baseX: 266, baseY: 613, title: "Operators", xp: 50, placement: "bottom" },
+  { id: 6, baseX: 122, baseY: 721, title: "Conditions", xp: 50, placement: "bottom" },
   { id: 7, baseX: 270, baseY: 831, title: "Variable Types & Type Casting", xp: 50, placement: "bottom" },
   { id: 8, baseX: 126, baseY: 941, title: "String Manipulation & Slicing", xp: 50, placement: "bottom" },
   { id: 9, baseX: 272, baseY: 1051, title: "String Methods & Formatting", xp: 50, placement: "bottom" },
@@ -79,25 +79,11 @@ export interface BuildingConfig {
 }
 
 export const BUILDING_CONFIGS: BuildingConfig[] = [
-  { id: 1, nearLevel: 2, side: "left", top: 150, left: 15, width: 98, height: 88, src: "/images/level-platfrom/Group 305.svg", alt: "Arithmetic Operators" },
+  { id: 1, nearLevel: 2, side: "left", top: 150, left: 15, width: 98, height: 88, src: "/images/level-platfrom/Group 335.svg", alt: "Command" },
   { id: 2, nearLevel: 3, side: "right", top: 255, left: 290, width: 105, height: 99, src: "/images/level-platfrom/Group 311.svg", alt: "Comparison Operators" },
-  { id: 3, nearLevel: 4, side: "left", top: 375, left: 5, width: 91, height: 88, src: "/images/level-platfrom/Group 317.svg", alt: "Logical Operators" },
+  { id: 3, nearLevel: 4, side: "left", top: 375, left: 5, width: 91, height: 88, src: "/images/level-platfrom/Group 333.svg", alt: "Logical Operators" },
   { id: 4, nearLevel: 5, side: "right", top: 475, left: 279, width: 106, height: 99, src: "/images/level-platfrom/Group 312.svg", alt: "Membership Operators" },
   { id: 5, nearLevel: 6, side: "left", top: 591, left: 15, width: 98, height: 88, src: "/images/level-platfrom/Group 305.svg", alt: "Arithmetic Operators" },
-  { id: 6, nearLevel: 7, side: "right", top: 696, left: 290, width: 105, height: 99, src: "/images/level-platfrom/Group 311.svg", alt: "Comparison Operators" },
-  { id: 7, nearLevel: 8, side: "left", top: 813, left: 5, width: 91, height: 88, src: "/images/level-platfrom/Group 317.svg", alt: "Logical Operators" },
-  { id: 8, nearLevel: 9, side: "right", top: 913, left: 279, width: 106, height: 99, src: "/images/level-platfrom/Group 312.svg", alt: "Membership Operators" },
-  { id: 9, nearLevel: 10, side: "left", top: 1031, left: 15, width: 98, height: 88, src: "/images/level-platfrom/Group 305.svg", alt: "Arithmetic Operators" },
-  { id: 10, nearLevel: 11, side: "right", top: 1136, left: 290, width: 105, height: 99, src: "/images/level-platfrom/Group 311.svg", alt: "Comparison Operators" },
-  { id: 11, nearLevel: 12, side: "left", top: 1253, left: 5, width: 91, height: 88, src: "/images/level-platfrom/Group 317.svg", alt: "Logical Operators" },
-  { id: 12, nearLevel: 13, side: "right", top: 1353, left: 279, width: 106, height: 99, src: "/images/level-platfrom/Group 312.svg", alt: "Membership Operators" },
-  { id: 13, nearLevel: 14, side: "left", top: 1471, left: 15, width: 98, height: 88, src: "/images/level-platfrom/Group 305.svg", alt: "Arithmetic Operators" },
-  { id: 14, nearLevel: 15, side: "right", top: 1576, left: 290, width: 105, height: 99, src: "/images/level-platfrom/Group 311.svg", alt: "Comparison Operators" },
-  { id: 15, nearLevel: 16, side: "left", top: 1693, left: 5, width: 91, height: 88, src: "/images/level-platfrom/Group 317.svg", alt: "Logical Operators" },
-  { id: 16, nearLevel: 17, side: "right", top: 1793, left: 279, width: 106, height: 99, src: "/images/level-platfrom/Group 312.svg", alt: "Membership Operators" },
-  { id: 17, nearLevel: 18, side: "left", top: 1911, left: 15, width: 98, height: 88, src: "/images/level-platfrom/Group 305.svg", alt: "Arithmetic Operators" },
-  { id: 18, nearLevel: 19, side: "right", top: 2016, left: 290, width: 105, height: 99, src: "/images/level-platfrom/Group 311.svg", alt: "Comparison Operators" },
-  { id: 19, nearLevel: 20, side: "left", top: 2133, left: 5, width: 91, height: 88, src: "/images/level-platfrom/Group 317.svg", alt: "Logical Operators" },
 ];
 
 export interface DecorationConfig {

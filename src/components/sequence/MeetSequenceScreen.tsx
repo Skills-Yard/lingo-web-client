@@ -56,7 +56,7 @@ export function MeetSequenceScreen() {
         Meet the <Teal>Sequence.</Teal>
       </ScreenTitle>
       <CentredRow top={stageTop(160)}>
-        <HexBubble entryKey="meet-sequence" hex="left" line={[{ text: "Order matters as some instructions come first then another." }]} size={{ width: 230 }} />
+        <HexBubble entryKey="meet-sequence" hex="left" line={[{ text: "The order of instructions matters!" }]} size={{ width: 230 }} />
       </CentredRow>
       <div className="absolute inset-x-0 flex justify-center" style={{ top: stageTop(CARDS_TOP) }}>
         <PictureCards cards={CARDS} height={CARDS_HEIGHT} />

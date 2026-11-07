@@ -22,6 +22,8 @@ type HexBubbleProps = {
   leaving?: boolean;
   /** Called once, when the whole line has been said (typed, or read out by the voice). */
   onSpoken?: () => void;
+  /** The same as `onSpoken`. */
+  onTyped?: () => void;
 };
 
 /** Hex starts his own exit this long after the bubble sets off. */
@@ -37,7 +39,7 @@ const HEX_EXIT: Transition = { duration: 0.2, ease: "easeIn" };
 
 /** Hex beside his line: the line is typed in letter by letter, the way module
  * 1's teacher line is. */
-export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onSpoken }: HexBubbleProps) {
+export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onSpoken, onTyped }: HexBubbleProps) {
   const hexAtLeft = hex === "left";
   const hexOnTop = hex === "top";
   const [hexLeaving, setHexLeaving] = useState(false);
@@ -47,7 +49,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
     return () => window.clearTimeout(timer);
   }, [leaving]);
   return (
-    <div className={`flex w-fit items-center ${hexOnTop ? "flex-col" : hexAtLeft ? "" : "flex-row-reverse"}`}>
+    <div className={`flex w-fit max-w-full items-center ${hexOnTop ? "flex-col" : hexAtLeft ? "" : "flex-row-reverse"}`}>
       {/* Leaving, he is drawn over the bubble, so it passes behind him. */}
       <motion.div
         aria-hidden
@@ -60,7 +62,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
       >
         <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />
       </motion.div>
-      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tail={hex} leaving={leaving} onSpoken={onSpoken} />
+      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tail={hex} leaving={leaving} onSpoken={onSpoken ?? onTyped} />
     </div>
   );
 }
@@ -129,7 +131,8 @@ function SpeechBubble({ line, size, tail, leaving, onSpoken }: { line: readonly 
       }
       // Figma: the short bubble ("Rectangle 142") is 77 tall with its text 9px in; the others 86.
       style={{ transformOrigin: tailOnTop ? "50% 0%" : tailAtLeft ? "0% 50%" : "100% 50%", width: size.width, minHeight: size.minHeight }}
-      className={`relative flex shrink-0 items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] dark:bg-[#1A1C22] ${
+      // Its width is what it likes to have; a narrower screen takes from it (the line wraps more) instead of the bubble running off the edge.
+      className={`relative flex min-w-0 shrink items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] dark:bg-[#1A1C22] ${
         size.minHeight ? "py-[7px]" : size.short ? "min-h-[77px] py-2.5" : "min-h-[86px] py-[13px]"
       }`}
     >

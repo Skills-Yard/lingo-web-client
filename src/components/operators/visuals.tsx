@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useEffect, useState, type ReactNode } from "react";
-import { motion } from "framer-motion";
+import { motion, useReducedMotion } from "framer-motion";
 import { Lock, LockOpen } from "lucide-react";
 import { CARD, CREAM, LAVENDER, Pic, WHITE } from "@/components/datatypes/visuals";
 import { P } from "./pictures";
@@ -27,19 +27,168 @@ export function ValueCards({ items, between, replay = 0, width = 316 }: { items:
     <div key={replay} className="flex items-center justify-center gap-1.5" style={{ width }}>
       {items.map((item, index) => (
         <Fragment key={item.label}>
-          {index > 0 && between && <span className="text-[16px] leading-6 font-bold text-[#08A4AD]">{between}</span>}
+          {index > 0 && between && (
+            <motion.span
+              initial={{ opacity: 0, scale: 0.4 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.15 + index * 0.3 - 0.1, type: "spring", stiffness: 300, damping: 18 }}
+              className="flex h-6 min-w-6 shrink-0 items-center justify-center rounded-full bg-[#08A4AD] px-1.5 text-[12px] leading-none font-bold text-white shadow-[0_2px_0_#067F86]"
+            >
+              {between}
+            </motion.span>
+          )}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 + index * 0.3, duration: 0.35 }}
-            className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 px-1.5 py-2 ${CARD} ${TONE[item.tone ?? "plain"]}`}
+            initial={{ opacity: 0, y: 12, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.15 + index * 0.3, type: "spring", stiffness: 260, damping: 20 }}
+            className={`flex min-w-0 flex-1 flex-col items-center gap-1 px-1.5 py-2 ${CARD} ${TONE[item.tone ?? "plain"]}`}
           >
-            {item.pic && <Pic src={item.pic} className="h-8 w-8" />}
+            {item.pic && (
+              <span className="flex size-9 items-center justify-center rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
+                <Pic src={item.pic} className="size-6" />
+              </span>
+            )}
             <span className="text-center text-[11px] leading-4 font-semibold tracking-[0.3px] text-[#6B7480] uppercase dark:text-white/60">{item.label}</span>
             {item.value && <span className="text-center text-[19px] leading-6 font-bold text-[#444444] dark:text-white">{item.value}</span>}
           </motion.div>
         </Fragment>
       ))}
+    </div>
+  );
+}
+
+/** A flat notebook, drawn here until the module has art of its own. */
+export function NotebookIcon() {
+  return (
+    <svg viewBox="0 0 32 32" className="size-full" aria-hidden>
+      <rect x="6" y="3" width="20" height="26" rx="3" fill="#4C8DFF" />
+      <rect x="6" y="3" width="5" height="26" rx="2.5" fill="#2F6FE0" />
+      <rect x="14" y="9" width="9" height="2.5" rx="1.25" fill="white" opacity="0.95" />
+      <rect x="14" y="14" width="9" height="2.5" rx="1.25" fill="white" opacity="0.65" />
+      <rect x="14" y="19" width="6" height="2.5" rx="1.25" fill="white" opacity="0.65" />
+    </svg>
+  );
+}
+
+/** A flat pen, drawn here until the module has art of its own. */
+export function PenIcon() {
+  return (
+    <svg viewBox="0 0 32 32" className="size-full" aria-hidden>
+      <g transform="rotate(45 16 16)">
+        <rect x="13" y="3" width="6" height="19" rx="2" fill="#FF8A3D" />
+        <rect x="13" y="3" width="6" height="5" rx="2" fill="#E8743B" />
+        <path d="M13 22h6l-3 7z" fill="#FFD9B8" />
+        <path d="M15 26.5h2l-1 2.5z" fill="#444444" />
+      </g>
+    </svg>
+  );
+}
+
+/** A flat shopping bag, drawn here until the module has art of its own. */
+export function BagIcon() {
+  return (
+    <svg viewBox="0 0 32 32" className="size-full" aria-hidden>
+      <path d="M11 11V9a5 5 0 0 1 10 0v2" fill="none" stroke="#C25E1F" strokeWidth="2.2" strokeLinecap="round" />
+      <path d="M6 11h20l-1.6 15.2A2.5 2.5 0 0 1 21.9 28H10.1a2.5 2.5 0 0 1-2.5-1.8z" fill="#FF8A3D" />
+      <path d="M6 11h20l-.4 3.5H6.4z" fill="#E8743B" />
+    </svg>
+  );
+}
+
+/** A line of the information sheet: its picture, what it is, its value. */
+export type InfoRow = { icon: ReactNode; label: string; value: string };
+
+/** What is still to be found: its picture and name, and its value once it is known (until then a "?"). */
+export type InfoMissing = { icon: ReactNode; label: string; value?: string };
+
+/** The delay of the sheet's n-th line coming in. */
+const rowIn = (index: number) => ({ delay: 0.15 + index * 0.25, duration: 0.35 });
+
+/**
+ * What we know, as one sheet: a line to a piece of information (picture, name,
+ * value), and under it, if there is one, a dashed line for what we do not have
+ * yet. The lines come in one after the other; once the missing value is given
+ * the dashed line turns into a solid one with the answer in it. `compact` drops
+ * the heading and tightens the lines, for a screen with something to do under it.
+ */
+export function InfoSheet({
+  title = "What we know",
+  rows,
+  missing,
+  compact = false,
+  replay = 0,
+}: {
+  title?: string;
+  rows: readonly InfoRow[];
+  missing?: InfoMissing;
+  compact?: boolean;
+  replay?: number;
+}) {
+  const reducedMotion = useReducedMotion();
+  const found = missing?.value !== undefined;
+  const icon = compact ? "size-8 p-1" : "size-9 p-1.5";
+  const label = compact ? "text-[13px] leading-5" : "text-[14px] leading-5";
+  const value = compact ? "text-[18px] leading-6" : "text-[20px] leading-6";
+  const pad = compact ? "py-1" : "py-1.5";
+  return (
+    <div key={replay} className={`flex w-[316px] flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
+      {!compact && (
+        <motion.span
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="flex items-center gap-1.5 self-start rounded-full bg-[#E3F6F3] py-1 pr-3 pl-1.5 text-[11px] leading-4 font-bold tracking-[0.5px] text-[#08A4AD] uppercase dark:bg-[#0F2B28]"
+        >
+          <span className="flex size-4 items-center justify-center rounded-full bg-[#08A4AD]">
+            <svg viewBox="0 0 24 24" className="size-2.5" fill="none" stroke="white" strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M5 12.5l4.5 4.5L19 7.5" />
+            </svg>
+          </span>
+          {title}
+        </motion.span>
+      )}
+      <div className={`flex flex-col px-3 ${CARD} ${LAVENDER}`}>
+        {rows.map((row, index) => (
+          <motion.div
+            key={row.label}
+            initial={{ opacity: 0, x: -12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={rowIn(index)}
+            className={`flex items-center gap-3 ${pad} ${index > 0 ? "border-t border-[#E4DFF7] dark:border-white/10" : ""}`}
+          >
+            <span className={`flex shrink-0 items-center justify-center rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.12)] dark:bg-[#15181E] ${icon}`}>{row.icon}</span>
+            <span className={`flex-1 font-semibold text-[#6B7480] dark:text-white/60 ${label}`}>{row.label}</span>
+            <span className={`font-bold text-[#444444] dark:text-white ${value}`}>{row.value}</span>
+          </motion.div>
+        ))}
+      </div>
+      {missing && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={rowIn(rows.length)}
+          className={`flex items-center gap-3 rounded-[8px] border-2 px-4 transition-colors duration-300 ${pad} ${found ? "border-[#08A4AD] bg-[#E3F6F3] dark:bg-[#0F2B28]" : "border-dashed border-[#08A4AD]/60 bg-white/70 dark:bg-[#15181E]/70"}`}
+        >
+          <span className={`flex shrink-0 items-center justify-center rounded-full ${icon} ${found ? "bg-white dark:bg-[#15181E]" : "bg-[#E3F6F3] dark:bg-[#0F2B28]"}`}>
+            <span className={`flex size-full items-center justify-center transition-[opacity,filter] duration-300 ${found ? "" : "opacity-40 grayscale"}`}>{missing.icon}</span>
+          </span>
+          <span className={`flex-1 font-semibold text-[#6B7480] dark:text-white/60 ${label}`}>{missing.label}</span>
+          {found ? (
+            <motion.span key="found" initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 14 }} className={`font-bold text-[#04908F] ${value}`}>
+              {missing.value}
+            </motion.span>
+          ) : (
+            <motion.span
+              key="unknown"
+              animate={reducedMotion ? undefined : { scale: [1, 1.2, 1] }}
+              transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
+              className="text-[22px] leading-6 font-bold text-[#08A4AD]"
+            >
+              ?
+            </motion.span>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 }
@@ -61,7 +210,9 @@ export function WalletScene({ amount, change, showTotal = false, replay = 0 }: {
   const now = change.sign === "+" ? amount + change.value : amount - change.value;
   return (
     <div className={`relative flex w-[316px] items-center gap-3 px-4 py-2.5 ${CARD} ${CREAM}`}>
-      <Pic src={P.money} className="h-12 w-12" />
+      <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
+        <Pic src={P.iconWallet} className="size-10" />
+      </span>
       <div className="flex flex-1 flex-col">
         <span className="text-[11px] leading-4 font-semibold tracking-[0.3px] text-[#6B7480] uppercase dark:text-white/60">Wallet</span>
         <span className="text-[26px] leading-8 font-bold text-[#444444] dark:text-white">₹{moved && showTotal ? now : amount}</span>
@@ -79,16 +230,32 @@ export function WalletScene({ amount, change, showTotal = false, replay = 0 }: {
   );
 }
 
-/** A big expression, with some of its parts picked out and, if it has one, its result. `tight` keeps it on one line. */
+/** Symbols and the words `and`, `or`, `not` are operators (drawn teal); numbers and names are values. */
+export const isOperator = (token: string) => /^([+\-*/%<>=!()]+|and|or|not)$/.test(token);
+
+/**
+ * A big expression: the operators in teal, the parts being worked on picked out
+ * on a yellow pad, and, if it has one, its result in a teal pill. `tight` keeps
+ * it on one line.
+ */
 export function ExprBig({ tokens, lit = [], result, size = 34, tight = false }: { tokens: readonly string[]; lit?: readonly number[]; result?: string; size?: number; tight?: boolean }) {
   return (
     <div className={`flex items-center justify-center font-bold text-[#444444] dark:text-white ${tight ? "flex-nowrap gap-x-0.5 whitespace-nowrap" : "flex-wrap gap-x-2"}`} style={{ fontSize: size, lineHeight: 1.2 }}>
       {tokens.map((token, index) => (
-        <span key={index} className={`rounded-md px-1 transition-colors ${lit.includes(index) ? "bg-[#FFD36B] text-[#444444]" : ""}`}>
+        <span
+          key={index}
+          className={`rounded-lg px-1.5 transition-[background-color,box-shadow] duration-200 ${
+            lit.includes(index) ? "bg-[#FFD36B] text-[#444444] shadow-[0_2px_0_#E0A81C]" : isOperator(token) ? "text-[#08A4AD]" : ""
+          }`}
+        >
           {token}
         </span>
       ))}
-      {result !== undefined && <span className="text-[#08A4AD]">= {result}</span>}
+      {result !== undefined && (
+        <motion.span key={result} initial={{ opacity: 0, scale: 0.7 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 18 }} className="rounded-lg bg-[#E3F6F3] px-2 text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FE0D6]">
+          = {result}
+        </motion.span>
+      )}
     </div>
   );
 }
@@ -136,6 +303,9 @@ export function Pile({ count, lit = 0, columns = 10 }: { count: number; lit?: nu
 export function Tray({ label, count, lit = false, children }: { label: string; count: number; lit?: boolean; children?: ReactNode }) {
   return (
     <div className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[10px] border-2 px-1 py-1.5 transition-colors ${lit ? "border-[#FFB300] bg-[#FFF8E1] dark:bg-[#2A2218]" : "border-[#B8A9F5] bg-[#F1EEFF] dark:bg-[#2E2A5C]"}`}>
+      <span className="flex size-7 items-center justify-center rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
+        <Pic src={P.student} className="size-5" />
+      </span>
       <span className="text-[11px] leading-4 font-bold text-[#5B3FD0] dark:text-[#A79BFF]">{label}</span>
       <div className="flex min-h-[28px] items-center justify-center">{children ?? <Pile count={count} columns={5} />}</div>
       <span className="text-[16px] leading-5 font-bold text-[#444444] dark:text-white">{count}</span>
@@ -159,31 +329,42 @@ export function ShareScene({ pile, trays, label = "Student" }: { pile: number; t
   );
 }
 
-/** Chocolates (or anything) set out in groups of `size`: the complete groups, and what is left over. */
-export function GroupsPicture({ total, size, replay = 0 }: { total: number; size: number; replay?: number }) {
+/**
+ * Chocolates (or anything) set out in groups of `size`: the complete groups, and
+ * what is left over. `emphasis` picks out one part and fades the other; `still`
+ * shows the groups at once, without bringing them in.
+ */
+export function GroupsPicture({
+  total,
+  size,
+  replay = 0,
+  emphasis = "all",
+  still = false,
+}: {
+  total: number;
+  size: number;
+  replay?: number;
+  emphasis?: "all" | "groups" | "left";
+  still?: boolean;
+}) {
   const groups = Math.floor(total / size);
   const left = total % size;
+  const entrance = (delay: number) => ({ initial: still ? false : { opacity: 0, scale: 0.7 }, animate: { opacity: 1, scale: 1 }, transition: { delay } }) as const;
+  const fade = (faded: boolean) => `transition-opacity duration-300 ${faded ? "opacity-30" : ""}`;
   return (
     <div key={replay} className="flex w-[316px] flex-wrap items-center justify-center gap-2">
       {Array.from({ length: groups }, (_, index) => (
-        <motion.div
-          key={index}
-          initial={{ opacity: 0, scale: 0.7 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15 + index * 0.25 }}
-          className="rounded-[10px] border-2 border-[#04ACAB] bg-[#E3F6F3] p-1.5 dark:bg-[#0F2B28]"
-        >
-          <Pile count={size} columns={Math.min(size, 6)} />
+        <motion.div key={index} {...entrance(0.15 + index * 0.25)}>
+          <div className={`rounded-[10px] border-2 border-[#04ACAB] bg-[#E3F6F3] p-1.5 dark:bg-[#0F2B28] ${fade(emphasis === "left")}`}>
+            <Pile count={size} columns={Math.min(size, 6)} />
+          </div>
         </motion.div>
       ))}
       {left > 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.7 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.15 + groups * 0.25 }}
-          className="rounded-[10px] border-2 border-dashed border-[#FFB300] bg-[#FFF8E1] p-1.5 dark:bg-[#2A2218]"
-        >
-          <Pile count={left} columns={Math.min(left, 6)} />
+        <motion.div {...entrance(0.15 + groups * 0.25)}>
+          <div className={`rounded-[10px] border-2 border-dashed border-[#FFB300] bg-[#FFF8E1] p-1.5 dark:bg-[#2A2218] ${fade(emphasis === "groups")}`}>
+            <Pile count={left} columns={Math.min(left, 6)} />
+          </div>
         </motion.div>
       )}
     </div>
@@ -289,8 +470,9 @@ export function CompareDemo({ left, symbol, right, result, replay = 0 }: { left:
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        className={`rounded-full px-4 py-0.5 text-[16px] leading-6 font-bold text-white ${result ? "bg-[#01A17F]" : "bg-[#D42421]"}`}
+        className={`flex items-center gap-1.5 rounded-full px-4 py-0.5 text-[16px] leading-6 font-bold text-white ${result ? "bg-[#01A17F] shadow-[0_2px_0_#018066]" : "bg-[#D42421] shadow-[0_2px_0_#A31B19]"}`}
       >
+        <span aria-hidden>{result ? "✓" : "✕"}</span>
         {result ? "True" : "False"}
       </motion.span>
     </div>
@@ -313,13 +495,15 @@ export function TripFacts() {
   return (
     <div className="grid w-[316px] grid-cols-2 gap-1.5">
       {[
-        ["Students", "32", P.student],
-        ["Per bus", "10", P.person],
-        ["Cost per bus", "₹2,000", P.money],
-        ["Budget", "₹7,000", P.gift],
-      ].map(([label, value, pic]) => (
-        <div key={label} className={`flex items-center gap-2 px-2 py-1 ${CARD} ${LAVENDER}`}>
-          <Pic src={pic} className="h-7 w-7" />
+        ["Students", "32", P.student, "bg-[#F6F4FE] dark:bg-[#1F1B3A]"],
+        ["Per bus", "10", P.person, "bg-[#E6F0FF] dark:bg-[#15213A]"],
+        ["Cost per bus", "₹2,000", P.iconWallet, "bg-[#FFF6EA] dark:bg-[#3A2C14]"],
+        ["Budget", "₹7,000", P.iconMoney, "bg-[#EBF6F0] dark:bg-[#0F2B28]"],
+      ].map(([label, value, pic, tint]) => (
+        <div key={label} className={`flex items-center gap-2 px-2 py-1.5 ${CARD} ${tint}`}>
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
+            <Pic src={pic} className="size-6" />
+          </span>
           <div className="flex flex-col">
             <span className="text-[10px] leading-3 font-semibold tracking-[0.3px] text-[#6B7480] uppercase dark:text-white/60">{label}</span>
             <span className="text-[16px] leading-5 font-bold text-[#444444] dark:text-white">{value}</span>
@@ -335,8 +519,9 @@ export function BillCard({ lines, total, wrong = false }: { lines: readonly (rea
   return (
     <div className={`flex w-[316px] flex-col gap-1 px-3 py-2 ${CARD} ${CREAM}`}>
       {lines.map(([what, price]) => (
-        <div key={what} className="flex items-center justify-between text-[14px] leading-5 font-medium text-[#444444] dark:text-white">
+        <div key={what} className="flex items-baseline gap-2 text-[14px] leading-5 font-medium text-[#444444] dark:text-white">
           <span>{what}</span>
+          <span aria-hidden className="min-w-3 flex-1 border-b-2 border-dotted border-[#D9D2C4] dark:border-white/20" />
           <span className="font-semibold">{price}</span>
         </div>
       ))}

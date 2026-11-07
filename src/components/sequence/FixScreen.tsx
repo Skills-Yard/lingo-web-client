@@ -17,7 +17,6 @@ import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
 const BATTERY = { col: 1, row: 1 };
-const HINT = "Think about which direction HEX needs to move before it starts moving forward.";
 
 const FORWARD_TINT = "bg-[#EDFAFE] dark:bg-[#15233A]";
 const RIGHT_TINT = "bg-[#FEF8EC] dark:bg-[#2A2218]";
@@ -62,7 +61,6 @@ export function FixScreen() {
   const [phase, setPhase] = useState<Phase>("edit");
   const [correct, setCorrect] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
   const [hintCard, setHintCard] = useState<string | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
   const pending = useRef<number[]>([]);
@@ -126,12 +124,10 @@ export function FixScreen() {
       }
       board={<HexBoard kind="grid" hex={hex} battery={BATTERY} collected={phase === "checked" && correct} ring={phase === "edit" ? ring : null} width={280} entryKey="hex-fix" />}
       boardTop={130}
-      tip={hinted && phase === "edit" ? HINT : undefined}
-      tipTop={350}
       panel={{
         correct,
         title: correct ? "Exactly!" : "Not quite",
-        text: correct ? "You found the problem in the order of the commands." : "Did HEX move in the direction you expected? Look at his first move, then change the rest.",
+        text: correct ? "You fixed the order of the commands." : "Check HEX’s first move, then change the rest.",
         open: phase === "checked",
       }}
       celebrate={phase === "checked" && correct}
@@ -140,7 +136,6 @@ export function FixScreen() {
       hint={{
         visible: phase === "edit",
         onUse: () => {
-          setHinted(true);
           setHintCard(nextHintId(CARDS, slots, ANSWER));
           noteStruggle(STEP.fix, "hint");
         },

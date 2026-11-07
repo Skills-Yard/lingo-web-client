@@ -172,8 +172,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         rightTitle: "Great thinking!",
         right: "We carry water before the trek.",
         wrong: "What can we do before leaving?",
-        hintText: "What can we take along?",
-        hintOnMiss: true,
       }),
     ],
   },

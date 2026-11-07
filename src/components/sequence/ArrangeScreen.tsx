@@ -30,7 +30,7 @@ const CARDS: readonly ArrangeCardDef[] = [
 /** The right order, first slot first. */
 const ANSWER = ["pickup", "target"];
 
-const GEO = arrangeGeometry({ mode: "rows", card: { width: 110, height: 116 }, count: 2, gap: 16, lane: 14, solidSlots: true });
+const GEO = arrangeGeometry({ mode: "rows", card: { width: 110, height: 116 }, count: 2, gap: 16, lane: 14, slotsOnTop: true, solidSlots: true });
 /** On a right order the board rises this far (px) as it fades. */
 const BOARD_RISE = 110;
 /** On a miss the robot gets it wrong first: the result comes once its clip has played. */
@@ -104,15 +104,15 @@ export function ArrangeScreen() {
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
-            title={correct ? "Perfect!" : "Not quite"}
+            title={correct ? "Perfect!" : "Oops!"}
             open={resultShown}
             hexIn={resultShown}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
             centred
           >
             {correct
-              ? "First, the robot picked up the cube. Then it placed the cube on the target."
-              : "The robot needs to be holding the cube before it can place it. Which command should come first?"}
+              ? "The robot picked up the cube, then placed it."
+              : "You can’t place a cube you’re not holding. What comes first?"}
           </FeedbackPanel>
         </div>
       }
