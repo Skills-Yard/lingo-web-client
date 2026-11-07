@@ -30,7 +30,7 @@ const CARDS: readonly ArrangeCardDef[] = [
 /** The right order, first slot first. */
 const ANSWER = ["pickup", "target"];
 
-const GEO = arrangeGeometry({ mode: "rows", card: { width: 110, height: 116 }, count: 2, gap: 16, lane: 14, solidSlots: true });
+const GEO = arrangeGeometry({ mode: "rows", card: { width: 110, height: 116 }, count: 2, gap: 16, lane: 14, slotsOnTop: true, solidSlots: true });
 /** On a right order the board rises this far (px) as it fades. */
 const BOARD_RISE = 110;
 /** On a miss the robot gets it wrong first: the result comes once its clip has played. */
