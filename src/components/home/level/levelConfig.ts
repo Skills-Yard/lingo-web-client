@@ -10,12 +10,12 @@ export interface PlatformConfig {
 export const WORLD_STAGE_HEIGHT = 2270;
 
 export const PLATFORM_CONFIGS: PlatformConfig[] = [
-  { id: 1, baseX: 281, baseY: 166, title: "Arithmetic Operations (+, -, *, /)", xp: 50, placement: "bottom" },
-  { id: 2, baseX: 134, baseY: 281, title: "Assignment & Math Expressions", xp: 50, placement: "bottom" },
-  { id: 3, baseX: 276, baseY: 390, title: "Comparison Operators (==, !=, <, >)", xp: 50, placement: "bottom" },
-  { id: 4, baseX: 126, baseY: 503, title: "Logical Operators (and, or, not)", xp: 50, placement: "bottom" },
-  { id: 5, baseX: 266, baseY: 613, title: "Membership Operators (in, not in)", xp: 50, placement: "bottom" },
-  { id: 6, baseX: 122, baseY: 721, title: "Identity & Bitwise Operators", xp: 50, placement: "bottom" },
+  { id: 1, baseX: 281, baseY: 166, title: "Commands", xp: 50, placement: "bottom" },
+  { id: 2, baseX: 134, baseY: 281, title: "Sequence", xp: 50, placement: "bottom" },
+  { id: 3, baseX: 276, baseY: 390, title: "Variable", xp: 50, placement: "bottom" },
+  { id: 4, baseX: 126, baseY: 503, title: "Data Types", xp: 50, placement: "bottom" },
+  { id: 5, baseX: 266, baseY: 613, title: "Operators", xp: 50, placement: "bottom" },
+  { id: 6, baseX: 122, baseY: 721, title: "Conditions", xp: 50, placement: "bottom" },
   { id: 7, baseX: 270, baseY: 831, title: "Variable Types & Type Casting", xp: 50, placement: "bottom" },
   { id: 8, baseX: 126, baseY: 941, title: "String Manipulation & Slicing", xp: 50, placement: "bottom" },
   { id: 9, baseX: 272, baseY: 1051, title: "String Methods & Formatting", xp: 50, placement: "bottom" },
