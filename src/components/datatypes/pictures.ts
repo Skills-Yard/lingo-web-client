@@ -31,6 +31,10 @@ export const P = {
   planStudents: `${DATATYPES}/datatypeModule-2.2.svg`,
   planTickets: `${DATATYPES}/datatypeModule-2.1.svg`,
   planPrizes: `${DATATYPES}/datatypeModule-2.3.svg`,
+  // Screen 5.2's three number badges ("How are they similar?"): 30 students, 43 tickets, 12 prices.
+  similarStudents: `${DATATYPES}/datatypeModule-5.2.1.svg`,
+  similarTickets: `${DATATYPES}/datatypeModule-5.2.2.svg`,
+  similarPrices: `${DATATYPES}/datatypeModule-5.2.3.svg`,
   // Screen 6's four cards (values from different situations): students, tickets, height, weight.
   valueStudents: `${DATATYPES}/datatypeModule-6.1.svg`,
   valueTickets: `${DATATYPES}/datatypeModule-6.2.svg`,

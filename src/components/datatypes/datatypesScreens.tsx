@@ -8,7 +8,7 @@ import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, EventScene, InfoTiles, LAVENDER, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type InfoTile } from "./visuals";
+import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, LAVENDER, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type InfoRow, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -51,9 +51,9 @@ const SIMILAR_VALUES: readonly GroupItem[] = [
 
 /** Screen 4's three groups: what each holds, and what Hex says about it once it is tapped. */
 const TOUR_GROUPS: readonly TourGroup[] = [
-  { id: "a", name: "Group A", tint: "lavender", ink: INK.violet, values: ["Aarav", "Kabir", "Mia"], caption: "These values identify people using their names." },
-  { id: "b", name: "Group B", tint: "cream", ink: INK.orange, values: ["12", "25", "40"], caption: "These values represent quantities or amounts." },
-  { id: "c", name: "Group C", tint: "blue", ink: INK.blue, values: ["Yes", "No", "Yes"], caption: "These values tell us whether something is true or false." },
+  { id: "a", name: "Group A", tint: "lavender", ink: INK.violet, values: ["Aarav", "Kabir", "Mia"], caption: "These values identify people using their names.", hex: "left" },
+  { id: "b", name: "Group B", tint: "cream", ink: INK.orange, values: ["12", "25", "40"], caption: "These values represent quantities or amounts.", hex: "center" },
+  { id: "c", name: "Group C", tint: "blue", ink: INK.blue, values: ["Yes", "No", "Yes"], caption: "These values tell us whether something is true or false.", hex: "right" },
 ];
 
 /** Screen 5's three details of the event (the icons are screen 2's, the same files). */
@@ -61,6 +61,20 @@ const PLAN_TILES: readonly InfoTile[] = [
   { id: "students", text: "Students Registered?", icon: P.planStudents, tint: TINTS.green },
   { id: "tickets", text: "Tickets Sold?", icon: P.planTickets, tint: TINTS.cream },
   { id: "prizes", text: "Prizes Available?", icon: P.planPrizes, tint: TINTS.lavender },
+];
+
+/** Screen 5.2's three values, each under its number badge (the badges' colours go with the tints). */
+const SIMILAR_TILES: readonly InfoTile[] = [
+  { id: "students", text: "Students", icon: P.similarStudents, tint: TINTS.green },
+  { id: "tickets", text: "Tickets", icon: P.similarTickets, tint: TINTS.cream },
+  { id: "prices", text: "Prices", icon: P.similarPrices, tint: TINTS.blue },
+];
+
+/** Screen 5.2's three questions those values answer (their icons are screen 5's, the same files). */
+const SIMILAR_ROWS: readonly InfoRow[] = [
+  { id: "students", text: "How many students registered?", icon: P.planStudents },
+  { id: "tickets", text: "How many tickets were sold?", icon: P.planTickets },
+  { id: "prizes", text: "How many prizes are available?", icon: P.planPrizes },
 ];
 
 /** Screen 6's four values, each with the picture of what it measures. */
@@ -163,6 +177,24 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         alignTop: true,
         ready: true,
         render: ({ hexSpoken }) => <InfoTiles layout="row" shown={hexSpoken} tiles={PLAN_TILES} />,
+      },
+      // 5.2: the same school yard, a new heading. Continue brings up Hex's "Exactly!", then goes on.
+      {
+        kind: "interaction",
+        title: "How are they *similar?*",
+        titleSize: 28,
+        line: "Look closely and find what these values share.",
+        bubbleWidth: 190,
+        alignTop: true,
+        ready: true,
+        render: ({ hexSpoken }) => (
+          <div className="flex flex-col items-center gap-6">
+            <InfoTiles layout="row" shown={hexSpoken} tiles={SIMILAR_TILES} />
+            <InfoRows rows={SIMILAR_ROWS} shown={hexSpoken} firstIndex={SIMILAR_TILES.length} />
+          </div>
+        ),
+        finishPanel: { title: "Exactly!", text: "These numbers represent quantities that we can count." },
+        nextLabel: "Continue",
       },
     ],
   },

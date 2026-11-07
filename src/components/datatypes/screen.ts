@@ -13,8 +13,15 @@ export type VisualContext = {
   correct: boolean;
 };
 
+/** A stage can have a title of its own, in place of the screen's (a screen's second part, such as 5.2, is headed differently from its first). */
+type StageTitle = {
+  title?: string;
+  /** Sets the stage's own title at this size (px) on one line, as `ScreenDef.titleSize` does. */
+  titleSize?: number;
+};
+
 /** One question on a screen: what Hex says, the picture, and the answers. */
-export type QuizStage = {
+export type QuizStage = StageTitle & {
   kind: "quiz";
   /** What Hex says: short (about 60 letters, up to 100). */
   line: string;
@@ -53,7 +60,7 @@ export type InteractionApi = {
 };
 
 /** Something to do instead of a question: tap, sort, match. The main button waits until it is done. */
-export type InteractionStage = {
+export type InteractionStage = StageTitle & {
   kind: "interaction";
   /** What Hex says above it, if he does (short). */
   line?: string;
@@ -61,7 +68,7 @@ export type InteractionStage = {
   bubbleWidth?: number;
   /** The picture stands at the top of the room under Hex's line, instead of in the middle of it (a design with fixed places). */
   alignTop?: boolean;
-  /** Nothing to do, only to look at (screens 5 and 6): Continue is there from the start and Hex's line stays. */
+  /** Nothing to do, only to look at (screens 5 and 6): Continue waits only for Hex to finish his line, and his line stays. With a `finishPanel`, the first Continue brings the panel up (as if it were done) and the next one goes on. */
   ready?: boolean;
   render: (api: InteractionApi) => ReactNode;
   /** Hex's panel on finishing, if the interaction has one. */

@@ -122,6 +122,28 @@ export function InfoTiles({ tiles, layout, shown }: { tiles: readonly InfoTile[]
   );
 }
 
+export type InfoRow = { id: string; text: string; icon: string };
+
+/**
+ * Screen 5.2: the questions the values answer, as plain rows (a picture and the
+ * words, in the answer rows' look, but nothing to pick). They bounce in after the
+ * tiles above them: `firstIndex` is how many cards came in before the first row.
+ */
+export function InfoRows({ rows, shown, firstIndex = 0 }: { rows: readonly InfoRow[]; shown: boolean; firstIndex?: number }) {
+  return (
+    <div className="flex flex-col gap-2.5" style={{ width: COLUMN_W }}>
+      {rows.map((row, index) => (
+        <BounceIn key={row.id} index={firstIndex + index} shown={shown} className="w-full">
+          <div className="flex h-[60px] w-full items-center gap-3.5 rounded-[18px] border border-black/4 bg-white px-3.5 shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] dark:border-[#818185] dark:bg-[#15181E]">
+            <Pic src={row.icon} className="h-[40px] w-[40px]" />
+            <span className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{row.text}</span>
+          </div>
+        </BounceIn>
+      ))}
+    </div>
+  );
+}
+
 /** A number written with its decimal point picked out, where there is one. */
 export function Decimal({ value }: { value: string }) {
   const [whole, decimal] = value.split(".");

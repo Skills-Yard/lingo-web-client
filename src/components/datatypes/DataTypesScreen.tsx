@@ -119,6 +119,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const interaction = stage.kind === "interaction" ? stage : null;
   const correct = !!quiz && selectedId === quiz.correctId;
   const hasHint = !!quiz?.hintText;
+  // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none).
+  const lookReady = !!interaction?.ready && (hexSpoken || !interaction.line);
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -171,8 +173,11 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   };
 
   const onContinue = () => {
-    if (!quiz) advance();
-    else if (!checked) check();
+    if (!quiz) {
+      // A look-only stage with a result panel shows it first; Continue then goes on.
+      if (interaction?.ready && interaction.finishPanel && !finished) done();
+      else advance();
+    } else if (!checked) check();
     else if (correct) advance();
     else tryAgain();
   };
@@ -182,10 +187,13 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     noteStruggle(screen.step, "hint");
   };
 
-  const title = parseTitle(screen.title);
+  // A stage can be headed differently from its screen (and then sets its own title size).
+  const ownTitle = stage.title !== undefined;
+  const title = parseTitle(stage.title ?? screen.title);
   // A screen can set its title's size: it is then on one line, as the design has it.
-  const titleLines = screen.titleSize === undefined && title.twoLines;
-  const titleSize = screen.titleSize ?? title.size;
+  const setSize = ownTitle ? stage.titleSize : screen.titleSize;
+  const titleLines = setSize === undefined && title.twoLines;
+  const titleSize = setSize ?? title.size;
   const titleEnd = titleLines ? TITLE_END.two : TITLE_END.one;
   const panel = quiz
     ? checked
@@ -221,7 +229,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         </>
       }
       answer={answer}
-      ctaDisabled={quiz ? selectedId === null : !finished && !interaction?.ready}
+      ctaDisabled={quiz ? selectedId === null : !finished && !lookReady}
       ctaLabel={
         quiz
           ? !checked
@@ -250,7 +258,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         </div>
       }
     >
-      <ScreenTitle key={screen.step} oneLine={!titleLines}>
+      <ScreenTitle key={ownTitle ? `${screen.step}-${stageIndex}` : screen.step} oneLine={!titleLines}>
         <span style={{ fontSize: titleSize }}>
           {title.parts.map((part, index) =>
             index % 2 === 1 ? (

@@ -17,6 +17,8 @@ export type TourGroup = {
   values: readonly string[];
   /** What Hex says about the group once it is tapped. */
   caption: string;
+  /** Where Hex stands once it is tapped: under the group, at its side (`left`, `right`) or centred above his bubble. */
+  hex: "left" | "center" | "right";
 };
 
 /** The groups' own colours: the name's ink goes with the group's tint. */
@@ -28,9 +30,16 @@ export const INK = {
 
 /** The outline of the group being read (the brand's green-teal). */
 const READING = "border-[#10B48C]";
-/** Hex's row, below the groups: his slot, so the groups don't move when he arrives. */
-const HEX_ROW_H = 110;
+/** Hex's row, below the groups: his slot (beside his bubble, or with it under him), so the groups don't move when he arrives. */
+const HEX_ROW_H = { beside: 110, stacked: 190 } as const;
 const ENTRY_KEY = "datatypes-groups-tour";
+
+/** How Hex stands for a group's place: the side of the bubble he is on, and where in the row they sit. */
+const HEX_PLACE = {
+  left: { side: "left", row: "justify-start" },
+  center: { side: "top", row: "justify-center" },
+  right: { side: "right", row: "justify-end" },
+} as const;
 
 /** Hex's bubble width by the length of his line, as on the other screens. */
 const bubbleWidth = (line: string) => (line.length <= 50 ? 190 : 240);
@@ -39,13 +48,16 @@ const bubbleWidth = (line: string) => (line.length <= 50 ? 190 : 240);
  * "Information can differ!": three groups of values stand side by side, each under
  * a coloured name. The learner taps a group: it is outlined, Hex's line above
  * goes away, and Hex speaks from below the groups about what that group tells
- * us. It is done once every group has been read.
+ * us, standing under the group (each group has its own place for him). It is
+ * done once every group has been read.
  */
 export function GroupTourStage({ api, groups }: { api: InteractionApi; groups: readonly TourGroup[] }) {
   const { done, dismissHex } = api;
   const [seen, setSeen] = useState<readonly string[]>([]);
   const [current, setCurrent] = useState<string | null>(null);
   const shown = groups.find((group) => group.id === current);
+  const place = shown ? HEX_PLACE[shown.hex] : null;
+  const hexRowHeight = groups.some((group) => group.hex === "center") ? HEX_ROW_H.stacked : HEX_ROW_H.beside;
 
   useEffect(() => {
     if (seen.length < groups.length) return;
@@ -97,8 +109,9 @@ export function GroupTourStage({ api, groups }: { api: InteractionApi; groups: r
       </div>
 
       {/* Hex's own row is kept free from the start, so the groups stay where they are when he arrives. */}
-      <div className="mt-1 flex items-center" style={{ height: HEX_ROW_H }}>
-        {shown && <HexBubble entryKey={ENTRY_KEY} hex="left" line={[{ text: shown.caption }]} size={{ width: bubbleWidth(shown.caption) }} />}
+      <div className={`mt-1 flex items-start ${place?.row ?? ""}`} style={{ height: hexRowHeight }}>
+        {/* Keyed by where he stands, so he comes in afresh when he moves to another group's side. */}
+        {shown && place && <HexBubble key={place.side} entryKey={ENTRY_KEY} hex={place.side} line={[{ text: shown.caption }]} size={{ width: bubbleWidth(shown.caption) }} />}
       </div>
     </div>
   );

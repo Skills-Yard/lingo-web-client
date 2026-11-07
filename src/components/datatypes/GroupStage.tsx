@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { DragCard, SHAKE, WRONG_MS } from "./interactions";
+import { DragCard } from "./interactions";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
 import { Pic } from "./visuals";
@@ -37,6 +37,8 @@ const DROP_SLACK = { x: 7, top: 10, bottom: 48 } as const;
 const CARD_H = 52;
 /** How much of each card shows above the one in front of it (px). */
 const STEP = 36;
+/** The columns are at least as tall as a pile of this many cards (an even share of the nine), so the first few cards never move the screen about. */
+const MIN_PILE = 3;
 /** A card behind another shows only its top strip: its label moves up, from the middle of the card to the middle of that strip. */
 const LABEL_BEHIND_SHIFT = STEP / 2 - CARD_H / 2;
 const PILE_SPRING = { type: "spring", stiffness: 380, damping: 22 } as const;
@@ -44,13 +46,13 @@ const PILE_SPRING = { type: "spring", stiffness: 380, damping: 22 } as const;
 /**
  * Grouping with no right answer ("Let's find similar ones!"): nine cards stand in
  * a 3 x 3 grid above three columns, and the learner drags them (or taps a card,
- * then a column) into whichever groups they think fit. Each group takes an equal
- * share (3 of the 9): a full group shakes and refuses another until a card is
- * taken out of it. A group is a pile, not a queue: a card put in a column lands in
- * front at its foot, and the ones already there slide up behind it, each showing
- * its label (in the order they came). A tap on a card takes it out again. It is
- * done when every card is in a column (the empty grid then folds away); nothing
- * is marked, and `onSorted` is told how they were grouped.
+ * then a column) into whichever groups they think fit. A group takes as many cards
+ * as the learner likes (even all nine, or none). A group is a pile, not a queue: a
+ * card put in a column lands in front at its foot, and the ones already there slide
+ * up behind it, each showing its label (in the order they came). The columns grow
+ * with the biggest pile. A tap on a card takes it out again. It is done when every
+ * card is in a column (the empty grid then folds away); nothing is marked, and
+ * `onSorted` is told how they were grouped.
  */
 export function GroupStage({
   api,
@@ -66,20 +68,11 @@ export function GroupStage({
   const [placements, setPlacements] = useState<readonly Placement[]>([]);
   const [selected, setSelected] = useState<string | null>(null);
   const slotEls = useRef<Record<string, HTMLDivElement | null>>({});
-  const [refused, setRefused] = useState<SlotId | null>(null);
   const placed = useMemo(() => Object.fromEntries(placements.map(({ id, slot }) => [id, slot])), [placements]);
   const all = items.every((item) => item.id in placed);
-  // Every group takes the same number (9 cards, 3 groups: 3 each), so the cards always fill the groups exactly.
-  const capacity = Math.ceil(items.length / SLOTS.length);
-  // A column is as tall as a full pile, so a pile growing in it never moves the screen about.
-  const columnHeight = CARD_H + (capacity - 1) * STEP;
-  const roomIn = (slot: SlotId) => placements.filter((placement) => placement.slot === slot).length < capacity;
-
-  useEffect(() => {
-    if (refused === null) return;
-    const timer = window.setTimeout(() => setRefused(null), WRONG_MS);
-    return () => window.clearTimeout(timer);
-  }, [refused]);
+  // All three columns share one height: that of the biggest pile (at least a pile of MIN_PILE), so their empty slots stay level.
+  const biggestPile = Math.max(MIN_PILE, ...SLOTS.map((slot) => placements.filter((placement) => placement.slot === slot).length));
+  const columnHeight = CARD_H + (biggestPile - 1) * STEP;
 
   useEffect(() => {
     if (!all) return;
@@ -92,11 +85,6 @@ export function GroupStage({
 
   const place = (id: string, slot: SlotId) => {
     if (finished) return;
-    // A full group says no and the card stays where it is (a picked card stays picked).
-    if (!roomIn(slot)) {
-      setRefused(slot);
-      return;
-    }
     playClickSound();
     vibrateForTap();
     setSelected(null);
@@ -157,8 +145,8 @@ export function GroupStage({
         {SLOTS.map((slot, index) => {
           const inside = placements.filter((placement) => placement.slot === slot).flatMap((placement) => items.filter((item) => item.id === placement.id));
           const empty = inside.length === 0;
-          // Only a group with room for another card lights up for a picked card.
-          const receiving = selected !== null && roomIn(slot);
+          // Every group lights up for a picked card.
+          const receiving = selected !== null;
           return (
             <motion.div
               key={slot}
@@ -168,12 +156,12 @@ export function GroupStage({
               role="group"
               aria-label={`Group ${index + 1}`}
               onClick={() => selected && place(selected, slot)}
-              animate={{ x: refused === slot ? SHAKE : 0 }}
-              transition={{ x: { duration: 0.35 } }}
+              animate={{ height: columnHeight }}
+              transition={{ duration: 0.2 }}
               className={`relative w-[104px] rounded-[12px] transition-colors ${
                 receiving ? "cursor-pointer bg-[#EAF2FE]/70 outline-2 outline-offset-2 outline-[#5B9BFF] outline-dashed dark:bg-white/10" : ""
               }`}
-              style={{ height: columnHeight }}
+              initial={false}
             >
               {/* An empty group is a gray slot at the column's foot, where its first card will land. */}
               {empty && (
