@@ -1,8 +1,9 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { GroupStage, TINTS, type GroupItem } from "./GroupStage";
-import { GroupTourStage, INK, type TourGroup } from "./GroupTourStage";
+import { GroupStage, type GroupItem } from "./GroupStage";
+import { GroupTourStage, type TourGroup } from "./GroupTourStage";
+import { INK, TINTS, tintAt } from "./look";
 import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
@@ -18,11 +19,15 @@ const at = (index: number) => String(index);
 const NEUTRAL = [P.order, P.actions, P.goal, P.short] as const;
 const neutral = (texts: readonly string[]) => options(texts.map((text, index) => [text, NEUTRAL[index % NEUTRAL.length]] as const));
 
+/** Answer tiles in the first screens' tints (screen 1's tiles): the tints go round the four and say nothing about which is right. */
+const tinted = (choices: readonly Option[]): Option[] => choices.map((choice, index) => ({ ...choice, tint: tintAt(index) }));
+
 /** The four types as answers: each always with its own picture. */
-const TYPE_OPTIONS: Option[] = TYPES.map((type) => ({ id: type.id, text: type.label, icon: type.icon }));
+const TYPE_OPTIONS: Option[] = tinted(TYPES.map((type) => ({ id: type.id, text: type.label, icon: type.icon })));
 const TYPE_BUCKETS: readonly SortBucket[] = TYPES.map((type) => ({ id: type.id, label: type.label, icon: type.icon }));
 
-const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", ...stage });
+/** A question: its answers, like screens 1 and 2's, come in once Hex has finished his line. */
+const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", optionsAfterHex: true, ...stage });
 
 /** The big, plain sentence under a "Meet ..." screen, as on "Meet the Sequence.". */
 function Key({ children }: { children: ReactNode }) {
@@ -219,10 +224,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
   [STEP.integers]: {
     step: STEP.integers,
     title: "Meet *Integers!*",
+    titleSize: 28,
+    backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
         line: "A whole number, with no decimal part, is an Integer.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <RevealStage
             api={api}
@@ -245,11 +254,15 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.floats]: {
     step: STEP.floats,
-    title: "What If We Need *More Precision?*",
+    title: "Need more *precision?*",
+    titleSize: 28,
+    backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
         line: "148.5 cm or 152.8 cm: a whole number isn't enough detail.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <RevealStage
             api={api}
@@ -279,11 +292,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.classifyNumbers]: {
     step: STEP.classifyNumbers,
-    title: "Can You Classify *These Numbers?*",
+    title: "Sort the *numbers!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Drag each number to Integer or Float.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <SortStage
             api={api}
@@ -308,7 +324,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.names]: {
     step: STEP.names,
-    title: "Can a Program Understand *Names Too?*",
+    title: "What about *names?*",
+    titleSize: 28,
     stages: [
       quiz({
         line: "What kind of information are these names?",
@@ -329,11 +346,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.textLooks]: {
     step: STEP.textLooks,
-    title: "Text Is More Than *Just Names!*",
+    title: "Which ones are *text?*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Which of these can be treated as text? Tap them.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <MultiPickStage
             api={api}
@@ -359,10 +379,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
   [STEP.strings]: {
     step: STEP.strings,
     title: "Meet *Strings!*",
+    titleSize: 28,
+    backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
         line: "Information that is text is called a String.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <RevealStage
             api={api}
@@ -385,13 +409,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.twelve]: {
     step: STEP.twelve,
-    title: "They Look Similar, *But Are They the Same?*",
+    title: "Same look, *same type?*",
+    titleSize: 28,
     stages: [
       quiz({
         line: "Add 12 and 3 as numbers. What do we get?",
         visual: ({ attempt }) => <TwelveCards replay={attempt} />,
         layout: "grid",
-        options: neutral(["9", "15", "123", "36"]),
+        options: tinted(neutral(["9", "15", "123", "36"])),
         correctId: at(1),
         rightTitle: "Yes!",
         right: "As numbers, 12 + 3 = 15.",
@@ -401,7 +426,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Now join the text “12” and the text “3”. What text do we get?",
         visual: ({ attempt }) => <TwelveCards replay={attempt} />,
         layout: "grid",
-        options: neutral(["“15”", "“123”", "“312”", "“9”"]),
+        options: tinted(neutral(["“15”", "“123”", "“312”", "“9”"])),
         correctId: at(1),
         rightTitle: "Exactly!",
         right: "A value's look doesn't always tell its type. We must know what it means.",
@@ -412,7 +437,9 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.attendance]: {
     step: STEP.attendance,
-    title: "Let's Check Today's *Attendance!*",
+    title: "Check the *attendance!*",
+    titleSize: 28,
+    backdrop: <SchoolScene />,
     stages: [
       quiz({
         line: "What kind of information is the teacher collecting?",
@@ -433,11 +460,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.twoStates]: {
     step: STEP.twoStates,
-    title: "Many Applications Need *Yes or No Answers!*",
+    title: "Yes or no *answers!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Tap each picture to switch its state.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <ToggleStage
             api={api}
@@ -469,10 +499,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
   [STEP.boolean]: {
     step: STEP.boolean,
     title: "Meet *Boolean!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Information with only two values is a Boolean: True or False.",
+        alignTop: true,
         render: (api) => (
           <RevealStage
             api={api}
@@ -504,11 +536,15 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.fourTypes]: {
     step: STEP.fourTypes,
-    title: "You Have Discovered *Four Data Types!*",
+    title: "Four *data types!*",
+    titleSize: 28,
+    backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
         line: "Tap each card to see what it holds.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <RevealStage
             api={api}
@@ -528,11 +564,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.beyond]: {
     step: STEP.beyond,
-    title: "Look Beyond *the Appearance!*",
+    title: "Look beyond *looks!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Match each card to its type.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <SortStage
             api={api}
@@ -561,11 +600,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.shopping]: {
     step: STEP.shopping,
-    title: "The Kind of Data *Changes How We Use It!*",
+    title: "Data decides *its use!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Which values can we add up? Drag each to its use.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <SortStage
             api={api}
@@ -589,11 +631,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.profile]: {
     step: STEP.profile,
-    title: "Can You Organise *Aarav's Information?*",
+    title: "Organise *Aarav's info!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Drag each piece of information to its type.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <SortStage
             api={api}
@@ -616,11 +661,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.weather]: {
     step: STEP.weather,
-    title: "What Information *Does a Weather App Need?*",
+    title: "Build a *weather app!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "What kind of data should each field use?",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <SortStage
             api={api}
@@ -642,11 +690,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.plan]: {
     step: STEP.plan,
-    title: "Plan Before *You Build!*",
+    title: "Plan before *you build!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Choose the type for each field.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <SortStage
             api={api}
@@ -669,18 +720,19 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.debug]: {
     step: STEP.debug,
-    title: "Can You Find *the Mistake?*",
+    title: "Find the *mistake!*",
+    titleSize: 28,
     stages: [
       quiz({
         line: "Which field has been classified incorrectly?",
         visual: () => <TypedCards />,
         layout: "grid",
-        options: [
+        options: tinted([
           { id: "name", text: "Name.", icon: P.statement },
           { id: "age", text: "Age.", icon: P.question },
           { id: "height", text: "Height.", icon: P.idea },
           { id: "present", text: "Is_present.", icon: P.command },
-        ],
+        ]),
         correctId: "height",
         rightTitle: "Exactly!",
         right: "148.5 has a decimal part, so it should be a Float, not an Integer.",
@@ -689,6 +741,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       {
         kind: "interaction",
         line: "Now replace the wrong type with the right one.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" />,
         finishPanel: { title: "Fixed!", text: "Height is now a Float." },
       },
@@ -697,11 +751,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.game]: {
     step: STEP.game,
-    title: "Let's Organise *a Game Profile!*",
+    title: "Sort a *game profile!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Sort the five values of the player's profile by type.",
+        bubbleWidth: 190,
+        alignTop: true,
         render: (api) => (
           <SortStage
             api={api}
@@ -731,7 +788,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectInt]: {
     step: STEP.reflectInt,
-    title: "Test Your *Data Thinking!*",
+    title: "Test your *thinking!*",
+    titleSize: 28,
     stages: [
       quiz({
         line: "Which data type suits a student's age of 12?",
@@ -747,7 +805,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectFloat]: {
     step: STEP.reflectFloat,
-    title: "Test Your *Data Thinking!*",
+    title: "Test your *thinking!*",
+    titleSize: 28,
     stages: [
       quiz({
         line: "Which data type suits a height of 152.5 cm?",
@@ -763,7 +822,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectId]: {
     step: STEP.reflectId,
-    title: "Test Your *Data Thinking!*",
+    title: "Test your *thinking!*",
+    titleSize: 28,
     stages: [
       quiz({
         line: "The student ID is “0045”. Why should it be treated as text?",
@@ -778,7 +838,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectBool]: {
     step: STEP.reflectBool,
-    title: "Test Your *Data Thinking!*",
+    title: "Test your *thinking!*",
+    titleSize: 28,
     stages: [
       quiz({
         line: "Which data type represents True or False?",
@@ -794,11 +855,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectApp]: {
     step: STEP.reflectApp,
-    title: "Test Your *Data Thinking!*",
+    title: "Test your *thinking!*",
+    titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "An app needs a city name, a temperature and a rain status. Which types fit?",
+        alignTop: true,
         render: (api) => (
           <SortStage
             api={api}
@@ -817,4 +880,3 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     ],
   },
 };
-

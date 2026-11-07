@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { CARD_LOOK, TINTS, type GroupTint } from "./GroupStage";
+import { CARD_LOOK, EDGE_READING, TINTS, type GroupTint } from "./look";
 import type { InteractionApi } from "./screen";
 
 export type TourGroup = {
@@ -21,15 +21,6 @@ export type TourGroup = {
   hex: "left" | "center" | "right";
 };
 
-/** The groups' own colours: the name's ink goes with the group's tint. */
-export const INK = {
-  violet: "text-[#8E82FF]",
-  orange: "text-[#FF8D42]",
-  blue: "text-[#5B9BFF]",
-} as const;
-
-/** The outline of the group being read (the brand's green-teal). */
-const READING = "border-[#10B48C]";
 /** Hex's row, below the groups: his slot (beside his bubble, or with it under him), so the groups don't move when he arrives. */
 const HEX_ROW_H = { beside: 110, stacked: 190 } as const;
 const ENTRY_KEY = "datatypes-groups-tour";
@@ -90,7 +81,7 @@ export function GroupTourStage({ api, groups }: { api: InteractionApi; groups: r
               whileTap={{ scale: 0.97 }}
               // 118 wide: the 104px cards, the outline and a little air each side.
               className={`flex w-[118px] cursor-pointer flex-col items-center gap-[18px] rounded-[12px] border-2 px-[5px] py-[7px] transition-colors ${
-                reading ? `${READING} bg-white/50 dark:bg-white/5` : "border-transparent"
+                reading ? `${EDGE_READING} bg-white/50 dark:bg-white/5` : "border-transparent"
               }`}
             >
               {/* The group's name box: 90 x 40, 8px radius, Poppins 600 16px. */}
