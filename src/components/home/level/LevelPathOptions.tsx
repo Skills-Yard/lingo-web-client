@@ -1,7 +1,8 @@
 "use client";
 
 import { Check, MapPin, Moon, Sun, Undo2 } from "lucide-react";
-import { PANEL_BUTTON } from "@/components/onboarding/BatteryMenu";
+import { PanelButton } from "@/components/onboarding/BatteryMenu";
+import type { PanelTint } from "@/components/onboarding/BatteryMenu";
 import { useTheme } from "@/context/ThemeContext";
 import { PLAYABLE_MODULES } from "@/lib/levelProgress";
 import { PLATFORM_CONFIGS } from "./levelConfig";
@@ -10,6 +11,9 @@ import { PLATFORM_CONFIGS } from "./levelConfig";
 const THEME_WIPE = { wipe: { light: "#ffffff", dark: "#0B132B" } } as const;
 
 const MODULE_NUMBERS = Array.from({ length: PLAYABLE_MODULES }, (_, i) => i + 1);
+
+/** The modules take the answer cards' three fills in turn, as Level 1's options do. */
+const MODULE_TINTS: PanelTint[] = ["lavender", "rose", "cream"];
 
 const Divider = () => <div className="mt-3 border-t border-black/8 dark:border-white/12" />;
 
@@ -35,40 +39,43 @@ export function LevelPathOptions({ done, onComplete, onUndo, onPickModule, onClo
 
   return (
     <>
-      <button type="button" className={PANEL_BUTTON} onClick={() => toggleTheme(THEME_WIPE)}>
+      <PanelButton onClick={() => toggleTheme(THEME_WIPE)}>
         {dark ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5" />}
         {dark ? "Light mode" : "Dark mode"}
-      </button>
+      </PanelButton>
 
       <Divider />
 
-      <button type="button" className={PANEL_BUTTON} onClick={onComplete} disabled={done >= PLATFORM_CONFIGS.length}>
+      <PanelButton onClick={onComplete} disabled={done >= PLATFORM_CONFIGS.length}>
         <Check className="h-5 w-5" />
         Complete module
-      </button>
-      <button type="button" className={PANEL_BUTTON} onClick={onUndo} disabled={done <= 0}>
+      </PanelButton>
+      <PanelButton onClick={onUndo} disabled={done <= 0}>
         <Undo2 className="h-5 w-5" />
         Undo module
-      </button>
+      </PanelButton>
 
       <Divider />
 
-      {MODULE_NUMBERS.map((module) => (
-        <button
-          key={module}
-          type="button"
-          className={PANEL_BUTTON}
-          aria-pressed={module === playing}
-          onClick={() => {
-            onPickModule(module);
-            onClose();
-          }}
-        >
-          <MapPin className={`h-5 w-5 ${module === playing ? "text-[#6F5CFF]" : ""}`} />
-          <span className="flex-1 text-left">Module {module}</span>
-          {module === playing && <Check className="h-4 w-4 text-[#6F5CFF]" />}
-        </button>
-      ))}
+      {MODULE_NUMBERS.map((module) => {
+        const current = module === playing;
+        return (
+          <PanelButton
+            key={module}
+            tint={MODULE_TINTS[(module - 1) % MODULE_TINTS.length]}
+            selected={current}
+            aria-pressed={current}
+            onClick={() => {
+              onPickModule(module);
+              onClose();
+            }}
+          >
+            <MapPin className={`h-5 w-5 ${current ? "text-[#008566] dark:text-[#34D399]" : ""}`} />
+            <span className="flex-1 text-left">Module {module}</span>
+            {current && <Check className="h-4 w-4 text-[#008566] dark:text-[#34D399]" />}
+          </PanelButton>
+        );
+      })}
     </>
   );
 }

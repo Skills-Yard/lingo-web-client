@@ -5,14 +5,45 @@ import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import type { HTMLMotionProps } from "framer-motion";
 import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize } from "lucide-react";
 import { setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { energyHref } from "@/lib/routes";
 
-/** An option in the panel; exported so a screen's extra options (see `extraOptions`) match. */
-export const PANEL_BUTTON =
-  "mt-2 flex h-11 w-full cursor-pointer items-center gap-2.5 rounded-lg bg-[#F7F8FA] px-3 text-[16px] font-medium text-[#2C2C2C] active:scale-[0.98] disabled:cursor-default disabled:opacity-35 disabled:active:scale-100 dark:bg-[#16262D] dark:text-white";
+/** The fills of Level 1's answer cards (see InstructionQuizScreen), at rest. */
+const TINTS = {
+  lavender: "bg-[#F6F4FE]",
+  rose: "bg-[#FFF4F6]",
+  cream: "bg-[#FFF9F0]",
+} as const;
+
+export type PanelTint = keyof typeof TINTS;
+
+/** Level 1's answer card is `selected` once picked: a green edge and fill. */
+const SELECTED = "border-[#008566] bg-[#F2FBF8]! dark:bg-[#0F2921]!";
+
+type PanelButtonProps = Omit<HTMLMotionProps<"button">, "whileTap"> & {
+  tint?: PanelTint;
+  /** The option that is on / current: drawn like a picked answer card. */
+  selected?: boolean;
+};
+
+/**
+ * An option in the panel, as 3D as the answer cards of Level 1's "Instructions
+ * are…" screen: a tinted card on a 4px khaki edge that the card sinks onto when
+ * pressed. Exported so a screen's extra options (see `extraOptions`) match.
+ */
+export function PanelButton({ tint = "lavender", selected = false, className = "", ...props }: PanelButtonProps) {
+  return (
+    <motion.button
+      type="button"
+      whileTap={props.disabled ? undefined : { scale: 0.97, y: 4 }}
+      className={`mt-2.5 flex h-12 w-full cursor-pointer items-center gap-2.5 rounded-[12px] border-b-4 px-3 text-[16px] font-medium text-[#2C2C2C] shadow-[0_3px_0_rgba(0,0,0,0.06)] transition-[color,background-color,border-color,box-shadow] active:border-b-0 active:shadow-none disabled:cursor-default disabled:opacity-35 disabled:active:border-b-4 disabled:active:shadow-[0_3px_0_rgba(0,0,0,0.06)] dark:bg-[#15181E] dark:text-white ${TINTS[tint]} ${selected ? SELECTED : "border-[#BDBA99]"} ${className}`}
+      {...props}
+    />
+  );
+}
 
 /** How long the battery is held before the dev panel opens. */
 const HOLD_MS = 600;
@@ -120,28 +151,26 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
               For testing by devs only. Temporary.
             </p>
             {onBack && (
-              <button
-                type="button"
+              <PanelButton
                 onClick={() => {
                   setOpen(false);
                   onBack();
                 }}
-                className={PANEL_BUTTON}
               >
                 <ChevronLeft className="h-5 w-5" />
                 Back
-              </button>
+              </PanelButton>
             )}
             {fullscreen.available && (
-              <button type="button" onClick={fullscreen.toggle} className={PANEL_BUTTON}>
+              <PanelButton onClick={fullscreen.toggle}>
                 {fullscreen.active ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
                 {fullscreen.active ? "Exit full screen" : "Full screen"}
-              </button>
+              </PanelButton>
             )}
-            <button type="button" onClick={() => setBatteryUnlimited(!unlimited)} className={PANEL_BUTTON}>
+            <PanelButton onClick={() => setBatteryUnlimited(!unlimited)}>
               <InfinityIcon className="h-5 w-5" />
               {unlimited ? "Back to normal battery" : "Infinite battery"}
-            </button>
+            </PanelButton>
             {extraOptions?.(() => setOpen(false))}
           </motion.div>
         )}
