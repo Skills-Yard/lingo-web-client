@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Maximize, Play, Sparkles } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED } from "@/components/ui/raised";
 import { LevelOneShell, levelOneHref, levelOneStep, TITLE_MARGIN_TOP } from "./LevelOneShell";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
@@ -48,7 +49,7 @@ export function VideoScreen({ onContinue }: { onContinue?: () => void }) {
           type="button"
           aria-label="Play video"
           onClick={playClickSound}
-          className="absolute top-[106px] left-1/2 flex h-[69px] w-[69px] -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-[2.5px] border-[#F0F0FF] bg-white shadow-[1px_1px_13.2px_3px_rgba(0,0,0,0.25)] transition-transform active:scale-95"
+          className={`absolute top-[106px] left-1/2 flex h-[69px] w-[69px] -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-[2.5px] border-[#F0F0FF] bg-white ${RAISED} ${EDGE.pale}`}
         >
           <Play className="ml-1 h-[26px] w-[26px] fill-[#00B8A9] text-[#00B8A9]" />
         </button>

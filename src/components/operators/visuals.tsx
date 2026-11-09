@@ -3,10 +3,10 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Lock, LockOpen } from "lucide-react";
-import { CARD, CREAM, LAVENDER, Pic, WHITE } from "@/components/datatypes/visuals";
+import { CARD, CARD_FACE, CREAM, LAVENDER, Pic, WHITE } from "@/components/datatypes/visuals";
 import { P } from "./pictures";
 
-export { CARD, CREAM, LAVENDER, Pic, WHITE };
+export { CARD, CARD_FACE, CREAM, LAVENDER, Pic, WHITE };
 
 /** A piece of information as a named card: what it is, and its value. */
 export type ValueCard = { pic?: string; label: string; value?: string; tone?: "plain" | "good" | "warn" };

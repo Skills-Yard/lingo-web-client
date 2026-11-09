@@ -30,8 +30,11 @@ export const INK = {
 
 /** A card, as the design has it: a 4px white edge, a soft shadow, Poppins 600 16px inside (its size is the screen's to give). */
 export const CARD_BODY = "flex items-center justify-center rounded-[8px] border-4 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)]";
+/** A card that is pressed: without the soft shadow, which its 3D edge (see `RAISED`) stands in for. */
+export const CARD_BODY_FLAT = "flex items-center justify-center rounded-[8px] border-4";
 /** Screen 3's card: 104 x 52. */
 export const CARD_LOOK = `${CARD_BODY} h-[52px] w-[104px]`;
+export const CARD_LOOK_FLAT = `${CARD_BODY_FLAT} h-[52px] w-[104px]`;
 
 /** A card's edge at rest, and when it is the one picked up (screen 3's blue). */
 export const EDGE_IDLE = "border-white dark:border-transparent";

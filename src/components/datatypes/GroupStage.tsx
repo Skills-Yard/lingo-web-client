@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { DragCard } from "./interactions";
-import { CARD_LOOK, EMPTY_SLOT, RECEIVING, TINTS, type GroupTint } from "./look";
+import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
+import { CARD_LOOK_FLAT, EMPTY_SLOT, RECEIVING, TINTS, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
 import { Pic } from "./visuals";
@@ -119,7 +120,7 @@ export function GroupStage({
                         const slot = slotAt(clientX, clientY);
                         if (slot) place(item.id, slot);
                       }}
-                      className={`${CARD_LOOK} ${TINTS[item.tint]} ${selected === item.id ? "border-[#5B9BFF]" : "border-white dark:border-transparent"}`}
+                      className={`${CARD_LOOK_FLAT} ${RAISED_DRAG} ${TINTS[item.tint]} ${selected === item.id ? `border-[#5B9BFF] ${EDGE.blue}` : `border-white dark:border-transparent ${EDGE.khaki}`}`}
                     >
                       <span className="text-[16px] leading-[110%] font-semibold text-[#444444] dark:text-white">{item.label}</span>
                     </DragCard>
@@ -178,7 +179,7 @@ export function GroupStage({
                         takeOut(item.id);
                       }}
                       aria-label={`${item.label} (tap to take out)`}
-                      className={`${CARD_LOOK} ${TINTS[item.tint]} pointer-events-auto absolute bottom-0 left-0 border-white enabled:cursor-pointer dark:border-transparent`}
+                      className={`${CARD_LOOK_FLAT} ${RAISED} ${EDGE.khaki} ${TINTS[item.tint]} pointer-events-auto absolute bottom-0 left-0 border-white enabled:cursor-pointer dark:border-transparent`}
                     >
                       {/* A card behind another shows only its top strip, so its label moves up into it. */}
                       <motion.span

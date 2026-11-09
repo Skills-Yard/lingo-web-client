@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { batteryCount, useBattery } from "@/components/home/batteryStore";
+import { EDGE, RAISED_SMALL } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
@@ -10,9 +11,11 @@ import { WIPE } from "./themeWipe";
 
 export { WIPE };
 
-/** The close button's look. */
-const ICON_BUTTON =
-  "flex items-center justify-center rounded-[6px] border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
+/** The close button's look: a raised face in its own 30 x 30 box, with the cross inside. */
+const ICON_BUTTON = `flex cursor-pointer items-center justify-center rounded-[8px] bg-white text-[#444444] dark:bg-[#15181E] dark:text-white/70 ${RAISED_SMALL} ${EDGE.khaki}`;
+
+/** The battery's: the same face, a little wider than the battery and count, which the negative margins take back so the row does not move. */
+const BATTERY_BUTTON = `-mx-1.5 -my-1 block rounded-[10px] bg-white px-1.5 py-1 dark:bg-[#15181E] ${RAISED_SMALL} ${EDGE.khaki}`;
 
 interface OnboardingHeaderProps {
   onBack: () => void;
@@ -112,7 +115,7 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
           <button
             type="button"
             onClick={onBack}
-            className={`h-[30px] w-[30px] shrink-0 border-0! dark:hover:bg-transparent! ${ICON_BUTTON}`}
+            className={`h-[30px] w-[30px] shrink-0 ${ICON_BUTTON}`}
             aria-label="Close"
           >
             {/* The cross is 19.3px across with a 3px stroke, in the 30 x 30 box: the row sits 5.35px up, so the cross itself meets the page margin. */}
@@ -139,7 +142,7 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
 
           {/* Each screen's `step` spends its share of the battery. Also the way
               into the hidden dev panel (see BatteryMenu). */}
-          <BatteryMenu className="relative shrink-0" buttonClassName="block" onBack={onPrevious ?? onBack}>
+          <BatteryMenu className="relative shrink-0" buttonClassName={BATTERY_BUTTON} onBack={onPrevious ?? onBack}>
             <span className="flex h-[25px] items-center gap-1">
               <PersistentBattery step={batteryStep ?? progress?.step} className="w-[40px]" />
               <BatteryCount />

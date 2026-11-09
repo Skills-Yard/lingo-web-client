@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED_SMALL } from "@/components/ui/raised";
 import { useLevelMuted } from "@/components/level-one/levelMuted";
 import { vibrateForTap } from "@/lib/haptics";
 
@@ -140,7 +141,7 @@ export function AudioPlayer({ src, standInSeconds, onProgress }: AudioPlayerProp
         type="button"
         onClick={toggle}
         aria-label={playing ? "Pause" : "Play"}
-        className="flex h-[46px] w-[46px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#08A4AD] text-white transition-transform active:scale-95"
+        className={`flex h-[46px] w-[46px] shrink-0 cursor-pointer items-center justify-center rounded-full bg-[#08A4AD] text-white ${RAISED_SMALL} ${EDGE.teal}`}
       >
         {playing ? <Pause className="h-5 w-5 fill-white" /> : <Play className="ml-0.5 h-5 w-5 fill-white" />}
       </button>

@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { GroupStage, type GroupItem } from "./GroupStage";
+import { FloatLesson } from "./FloatLesson";
 import { GroupTourStage, type TourGroup } from "./GroupTourStage";
 import { INK, TINTS, tintAt } from "./look";
 import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
@@ -9,7 +10,7 @@ import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, IntegerLesson, LAVENDER, NamesList, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
+import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, IntegerLesson, LAVENDER, NamesList, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -252,29 +253,16 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.floats]: {
     step: STEP.floats,
-    title: "Need more *precision?*",
+    title: "Can we be more *precise?*",
     titleSize: 28,
-    backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
-        line: "148.5 cm or 152.8 cm: a whole number isn't enough detail.",
+        line: "Whole numbers can miss details like a height of 148.5 cm!!",
         bubbleWidth: 190,
         alignTop: true,
-        render: (api) => (
-          <RevealStage
-            api={api}
-            columns={3}
-            need={1}
-            header={() => <RulerScale />}
-            items={[
-              { id: "h", label: "148.5", sub: "Height", caption: "Height: 148.5" },
-              { id: "w", label: "36.7", sub: "Weight", caption: "Weight: 36.7" },
-              { id: "p", label: "49.99", sub: "Price", caption: "Price: 49.99" },
-            ]}
-            footer={<Key>Numbers with decimal values are called Float.</Key>}
-          />
-        ),
+        ready: true,
+        render: ({ hexSpoken }) => <FloatLesson shown={hexSpoken} />,
       },
       quiz({
         line: "A height of 148.5 cm. Which type suits it best?",

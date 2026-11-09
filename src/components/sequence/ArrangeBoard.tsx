@@ -5,6 +5,7 @@ import { animate, motion, useMotionValue } from "framer-motion";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { aboveButtons } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED_DRAG } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
 
 /** A card to drag: `kind` is what it is (two cards can be the same kind), `id` which one it is. */
@@ -199,7 +200,7 @@ function ArrangeCard({
       }}
       animate={{ scale: dragging ? 1.05 : 1 }}
       style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1 }}
-      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center rounded-[8px] border-4 border-white px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center rounded-[8px] border-4 border-white px-1.5 ${RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
       {/* The hint's orange fill, wiped in from the left behind the content. */}
       <motion.span

@@ -12,6 +12,8 @@ import { P } from "./pictures";
 
 /** A card, in the style of the Sequence module's picture cards. */
 export const CARD = "rounded-[8px] border-4 border-white shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent";
+/** A card that is pressed: `CARD` without its soft shadow, which the 3D edge (see `RAISED`) stands in for. */
+export const CARD_FACE = "rounded-[8px] border-4 border-white dark:border-transparent";
 export const LAVENDER = "bg-[#F6F4FE] dark:bg-[#0F1F26]";
 export const CREAM = "bg-[#FFF9F0] dark:bg-[#0F1F26]";
 export const WHITE = "bg-white dark:bg-[#15181E]";
@@ -145,56 +147,6 @@ export function InfoRows({ rows, shown, firstIndex = 0 }: { rows: readonly InfoR
           </div>
         </BounceIn>
       ))}
-    </div>
-  );
-}
-
-/** A number written with its decimal point picked out, where there is one. */
-export function Decimal({ value }: { value: string }) {
-  const [whole, decimal] = value.split(".");
-  if (decimal === undefined) return <>{value}</>;
-  return (
-    <>
-      {whole}
-      <span className="text-[#FF8D42]">.{decimal}</span>
-    </>
-  );
-}
-
-/** Screen 8: a measuring scale stopping at two heights; the decimal parts are picked out. */
-export function RulerScale({ replay = 0 }: { replay?: number }) {
-  const [at, setAt] = useState(0);
-  useEffect(() => {
-    const timers = [window.setTimeout(() => setAt(1), 700), window.setTimeout(() => setAt(2), 2700)];
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
-      setAt(0);
-    };
-  }, [replay]);
-  const heights = [140, 148.5, 152.8] as const;
-  const x = ((heights[at] - 140) / 20) * 288;
-  return (
-    <div className={`flex w-[316px] flex-col items-center gap-1 px-3 pt-2 pb-3 ${CARD} ${WHITE}`}>
-      <span className="text-[26px] leading-8 font-bold text-[#444444] dark:text-white">
-        {at === 0 ? "…" : <Decimal value={heights[at].toFixed(1)} />} <span className="text-[16px] font-semibold text-[#8A94A0]">cm</span>
-      </span>
-      <div className="relative h-9 w-[288px]">
-        <div className="absolute inset-x-0 top-5 h-[3px] rounded-full bg-[#D5DADF] dark:bg-white/20" />
-        {Array.from({ length: 21 }, (_, index) => (
-          <span key={index} className="absolute top-4 w-[2px] rounded-full bg-[#8D9BAA]" style={{ left: (index / 20) * 288 - 1, height: index % 5 === 0 ? 14 : 8 }} />
-        ))}
-        <motion.span
-          className="absolute top-0 -ml-[7px] h-0 w-0 border-x-[7px] border-t-[11px] border-x-transparent border-t-[#08A4AD]"
-          initial={false}
-          animate={{ x }}
-          transition={{ duration: 1.4, ease: "easeInOut" }}
-        />
-      </div>
-      <div className="flex w-[288px] justify-between text-[11px] leading-4 font-semibold text-[#8A94A0]">
-        {[140, 145, 150, 155, 160].map((tick) => (
-          <span key={tick}>{tick}</span>
-        ))}
-      </div>
     </div>
   );
 }

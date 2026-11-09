@@ -6,7 +6,8 @@ import { Check } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { CARD_BODY, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
+import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
+import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
 import { CARD, LAVENDER, Pic } from "./visuals";
@@ -216,8 +217,8 @@ export function SortStage({
                   if (target) place(item.id, target.id);
                 }}
                 style={{ width: cardWidth }}
-                className={`${CARD_BODY} min-h-[52px] flex-col gap-0.5 px-1.5 py-1 ${
-                  wrongId === item.id ? LOOKS.wrong.card : `${TINTS.lavender} ${selected === item.id ? EDGE_PICKED : EDGE_IDLE}`
+                className={`${CARD_BODY_FLAT} ${RAISED_DRAG} min-h-[52px] flex-col gap-0.5 px-1.5 py-1 ${
+                  wrongId === item.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${TINTS.lavender} ${selected === item.id ? `${EDGE_PICKED} ${EDGE.blue}` : `${EDGE_IDLE} ${EDGE.khaki}`}`
                 }`}
               >
                 {item.icon && <Pic src={item.icon} className="h-7 w-7" />}
@@ -343,8 +344,8 @@ export function MultiPickStage({
             animate={{ x: wrongId === item.id ? SHAKE : 0, scale: got.includes(item.id) ? [1, 1.05, 1] : 1 }}
             transition={{ duration: 0.35 }}
             whileTap={{ scale: 0.97 }}
-            className={`${CARD_BODY} min-h-[64px] cursor-pointer flex-col gap-0.5 px-2 py-2 ${
-              got.includes(item.id) ? LOOKS.correct.card : wrongId === item.id ? LOOKS.wrong.card : `${tintAt(index)} ${EDGE_IDLE}`
+            className={`${CARD_BODY_FLAT} ${RAISED} min-h-[64px] cursor-pointer flex-col gap-0.5 px-2 py-2 ${
+              got.includes(item.id) ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrongId === item.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
             }`}
           >
             {item.icon && <Pic src={item.icon} className="h-8 w-8" />}
@@ -417,7 +418,7 @@ export function RevealStage({
               transition={{ duration: 0.35 }}
               whileTap={{ scale: 0.97 }}
               // The card being read has screen 4's green-teal edge; one that has been read keeps its tint and gets a small tick.
-              className={`${CARD_BODY} relative min-h-[64px] cursor-pointer flex-col gap-0.5 px-1 py-1.5 ${tone ? TINTS[tone] : tintAt(index)} ${current === item.id ? EDGE_READING : EDGE_IDLE}`}
+              className={`${CARD_BODY_FLAT} ${RAISED} relative min-h-[64px] cursor-pointer flex-col gap-0.5 px-1 py-1.5 ${tone ? TINTS[tone] : tintAt(index)} ${current === item.id ? `${EDGE_READING} ${EDGE.mint}` : `${EDGE_IDLE} ${EDGE.khaki}`}`}
             >
               {tapped && <Check aria-hidden className="absolute top-0.5 right-0.5 size-3.5 text-[#10B48C]" strokeWidth={3} />}
               {item.icon && <Pic src={item.icon} className="h-7 w-7" />}
@@ -475,7 +476,7 @@ export function ToggleStage({ api, items }: { api: InteractionApi; items: readon
               setFlipped((now) => (now.includes(item.id) ? now : [...now, item.id]));
             }}
             whileTap={{ scale: 0.96 }}
-            className={`${CARD_BODY} min-h-[110px] cursor-pointer flex-col gap-1 px-2 py-2 ${tintAt(index)} ${EDGE_IDLE}`}
+            className={`${CARD_BODY_FLAT} ${RAISED} min-h-[110px] cursor-pointer flex-col gap-1 px-2 py-2 ${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`}
           >
             <Pic src={item.icon} className="h-10 w-10" />
             <span className="text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{item.title}</span>
@@ -544,8 +545,8 @@ export function ChooseTypeStage({
             animate={{ x: wrong === type.id ? SHAKE : 0 }}
             transition={{ duration: 0.35 }}
             whileTap={{ scale: 0.97 }}
-            className={`${CARD_BODY} h-[64px] cursor-pointer gap-2 px-2 ${
-              chosen === type.id ? LOOKS.correct.card : wrong === type.id ? LOOKS.wrong.card : `${tintAt(index)} ${EDGE_IDLE}`
+            className={`${CARD_BODY_FLAT} ${RAISED} h-[64px] cursor-pointer gap-2 px-2 ${
+              chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
             }`}
           >
             <Pic src={type.icon} className="h-8 w-8" />

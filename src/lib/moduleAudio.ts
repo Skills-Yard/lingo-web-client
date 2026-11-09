@@ -60,6 +60,14 @@ export const SEQUENCE_AUDIO = {
   guideHex: [sequenceAudio("Lets_guide_Hex.mp3")],
 } as const;
 
+const datatypesAudio = (file: string) => encodeURI(`/audios/datatypesAudios/${file}`);
+
+/** The Data Types module's voice clips, in `public/audios/datatypesAudios/` (not recorded yet: the player's stand-in plays the length meanwhile). */
+export const DATATYPES_AUDIO = {
+  /** The player on "Can we be more precise?" */
+  floatClip: datatypesAudio("In_Python_numbers_with_decimal_values_are_represented_using_a_data_type_called_Float.mp3"),
+} as const;
+
 /** Onboarding's voice clips (questions only), from the same folder. */
 export const ONBOARDING_AUDIO = {
   greeting: [moduleAudio("im_hex.mp3")],
