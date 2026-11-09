@@ -180,13 +180,21 @@ const XP_BOUNCE = { type: "spring", stiffness: 300, damping: 9, delay: 0.15 } as
 /** A big "+10 XP" in the middle of the screen for a right answer: comes up to
  * the centre with a bounce, fading in, then fades out moving upward. */
 export function XpBurst({ show }: { show: boolean }) {
-  if (!show) return null;
+  // Once it starts it plays to the end, even if `show` turns off meanwhile (the learner pressed Next).
+  const [playing, setPlaying] = useState(show);
+  const [wasShown, setWasShown] = useState(show);
+  if (show !== wasShown) {
+    setWasShown(show);
+    if (show) setPlaying(true);
+  }
+  if (!playing) return null;
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
       <motion.span
         initial={{ opacity: 0, y: 60, scale: 0.4 }}
         animate={{ opacity: [0, XP_OPACITY, XP_OPACITY, 0], y: [60, 0, 0, -110], scale: 1 }}
         transition={{ opacity: XP_RISE, y: XP_RISE, scale: XP_BOUNCE }}
+        onAnimationComplete={() => setPlaying(false)}
         className="text-[56px] leading-none font-bold whitespace-nowrap text-[#F5A623]"
       >
         +10 XP

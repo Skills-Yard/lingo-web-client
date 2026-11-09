@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
@@ -27,13 +27,16 @@ const CHEST_W = "min(150vw, 640px)";
 const CHEST_RATIO = "440 / 430";
 /** How long the lid takes to open and settle (ms) before Continue comes in. */
 const OPEN_SETTLE_MS = 1900;
+/** What the hint under the chest says: first the ask, then (once the first tap is in) to go on. */
+const HINT_FIRST = "Tap the box to open it!";
+const HINT_KEEP_GOING = "Keep tapping!";
 
 /**
  * "Open your reward!": the sunburst backdrop ("REWARD_BG") with the chest
  * ("REWARD_Chest") on it, both from `hex.riv`. Each tap anywhere on the screen
  * (mouse, touch or keyboard) sets the chest's `tap` to the next of 1, 2, 3 (so
  * each plays its own animation), and the third opens it. Only then does Continue
- * come in; there is nothing else on the screen.
+ * come in. Until then a hint under the chest says to tap it.
  */
 export function RewardScreen({ onContinue }: { onContinue: () => void }) {
   const { RiveComponent: Backdrop } = useRive({
@@ -79,6 +82,21 @@ export function RewardScreen({ onContinue }: { onContinue: () => void }) {
         onClick={tap}
         className="absolute inset-0 cursor-pointer touch-manipulation select-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-4 focus-visible:ring-white/70 focus-visible:outline-none focus-visible:ring-inset disabled:cursor-default"
       />
+      {/* Takes no taps itself: they go through to the button under it. */}
+      <AnimatePresence>
+        {ready && !open && (
+          <motion.p
+            key="hint"
+            className="pointer-events-none absolute inset-x-0 top-[70%] px-6 text-center text-[22px] leading-7 font-semibold text-white [text-shadow:0_2px_8px_rgba(0,0,0,0.25)]"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0, scale: [1, 1.05, 1] }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ opacity: { duration: 0.3 }, y: { duration: 0.3 }, scale: { duration: 1.4, repeat: Infinity, ease: "easeInOut" } }}
+          >
+            {taps === 0 ? HINT_FIRST : HINT_KEEP_GOING}
+          </motion.p>
+        )}
+      </AnimatePresence>
       {settled && (
         // Covers the screen: the animated wrapper is the box the button's `bottom` is measured from.
         <motion.div className="absolute inset-0" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", stiffness: 220, damping: 22 }}>

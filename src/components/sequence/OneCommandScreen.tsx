@@ -35,7 +35,7 @@ export function OneCommandScreen() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const pending = useRef<number[]>([]);
-  const { win, popup } = useBatteryClaim();
+  const { win, popup } = useBatteryClaim(undefined, { rationed: true });
 
   useEffect(() => {
     const timers = pending.current;

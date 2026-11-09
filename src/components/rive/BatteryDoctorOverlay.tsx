@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EventType, Fit, Alignment, Layout } from "@rive-app/canvas";
+import { X } from "lucide-react";
 import { subscribeBatteryCharge, type BatteryCharge } from "@/components/home/batteryStore";
 import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 
@@ -60,6 +61,16 @@ function BatteryDoctorPlayer({ charge, onDone }: { charge: BatteryCharge; onDone
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/75" style={{ zIndex: 2147483647 }}>
       <RiveComponent aria-hidden style={{ position: "absolute", inset: 0, display: "block", width: "100%", height: "100%" }} />
+      {/* The charge is already in the battery, so closing early only skips the show. */}
+      <button
+        type="button"
+        aria-label="Skip"
+        onClick={finish}
+        className="absolute right-4 flex size-10 cursor-pointer items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm transition-transform active:scale-95"
+        style={{ top: "calc(env(safe-area-inset-top) + 16px)" }}
+      >
+        <X aria-hidden className="size-5" strokeWidth={2.5} />
+      </button>
     </div>
   );
 }

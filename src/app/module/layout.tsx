@@ -1,3 +1,4 @@
+import { CelebrationProvider } from "@/components/level-one/Celebration";
 import { HexRiveGate } from "@/components/rive/HexRiveGate";
 import { ModuleButtonWarmup } from "@/components/rive/ModuleButtonWarmup";
 import { RobotWarmup } from "@/components/rive/RobotWarmup";
@@ -8,7 +9,9 @@ export default function ModuleLayout({ children }: { children: React.ReactNode }
     <>
       <ModuleButtonWarmup />
       <RobotWarmup />
-      <HexRiveGate>{children}</HexRiveGate>
+      <CelebrationProvider>
+        <HexRiveGate>{children}</HexRiveGate>
+      </CelebrationProvider>
     </>
   );
 }

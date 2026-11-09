@@ -69,7 +69,11 @@ const CONFIG: Record<PredictVariant, Config> = {
 
 const BOARD_WIDTH = 320;
 const BOARD_TOP = 138;
-const CHIPS_TOP = 350;
+/** The answers come first, right under the board, and are big; the commands and the question follow under them. */
+const OPTIONS_TOP = 352;
+const OPTION_HEIGHT = 128;
+const OPTION_PICTURE_HEIGHT = 60;
+const CHIPS_TOP = OPTIONS_TOP + OPTION_HEIGHT + 18;
 /** The answers wear the tint of the Hex Order cards, with the same border in dark. */
 const OPTION_TINT = "bg-[#EDFAFE] dark:bg-[#15233A] dark:border-[#818185]!";
 /** The question stands under the command cards. */
@@ -193,6 +197,9 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
         hinted={false}
         withHint
         longText
+        top={OPTIONS_TOP}
+        cardHeight={OPTION_HEIGHT}
+        pictureHeight={OPTION_PICTURE_HEIGHT}
         onPick={pick}
       />
     </HexScreen>
