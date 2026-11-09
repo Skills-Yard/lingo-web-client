@@ -109,16 +109,6 @@ export const FINAL_ROAD = {
 
 export const WORLD_STAGE_HEIGHT = FINAL_ROAD.top + FINAL_ROAD_VISIBLE_HEIGHT + 4;
 
-/** Entry gate (`Gate/Entry_Gate.svg`): scenery at the top of the road, never a tap target. */
-export const GATE = {
-  src: `${ART}/Gate/Entry_Gate.svg`,
-  alt: "Entry gate",
-  left: 210,
-  top: 45,
-  width: 124,
-  height: 125,
-};
-
 type RoofIcon = {
   src: string;
   alt: string;
@@ -137,6 +127,17 @@ const roofIcon = (file: string, alt: string, width: number, height: number, dx: 
   dx,
   dy,
 });
+
+/** Entry gate (`Gate/Entry_Gate.svg`): scenery at the top of the road, never a tap target. */
+export const GATE = {
+  src: `${ART}/Gate/Entry_Gate.svg`,
+  alt: "Entry gate",
+  left: 215,
+  top: 48,
+  width: 124,
+  height: 125,
+  roof: roofIcon("Icon_Roof_Gate.svg", "Start", 78, 49, 22.5, 12),
+};
 
 /** The roof icon each level's building carries; levels without one have no building yet. */
 const ROOF_ICONS: { level: number; roof: RoofIcon }[] = [

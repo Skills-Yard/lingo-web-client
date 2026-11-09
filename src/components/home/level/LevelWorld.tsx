@@ -107,6 +107,18 @@ export function LevelWorld({
           alt={GATE.alt}
           className="h-full w-full object-contain drop-shadow-[0_10px_20px_rgba(0,225,255,0.12)]"
         />
+        <img
+          src={GATE.roof.src}
+          alt=""
+          aria-hidden
+          className="absolute"
+          style={{
+            top: `${GATE.roof.dy}px`,
+            left: `${GATE.roof.dx}px`,
+            width: `${GATE.roof.width}px`,
+            height: `${GATE.roof.height}px`,
+          }}
+        />
       </div>
 
       {/* Roads: the gate to level 1, then each level to the next */}
