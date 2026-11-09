@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Route } from "lucide-react";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
-import { CARD, LAVENDER } from "@/components/operators/visuals";
+import { CARD, LAVENDER } from "@/components/kit/content/from-operators/visuals";
 import { conditionsHref } from "@/lib/routes";
 import { CONDITIONS_STEPS, STEP, conditionsPrevious } from "./conditions";
-import { parseTitle } from "./screen";
+import { parseTitle } from "@/components/kit/content/from-conditions/screen";
 
 const TITLE = parseTitle("What *Comes Next?*");
 

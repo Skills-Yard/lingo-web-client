@@ -7,15 +7,15 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "./TrekScreen";
+import { TrekBackdrop } from "@/components/kit/content/from-variable/screenVisuals";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
-import { parseTitle } from "./quiz";
+import { parseTitle } from "@/components/kit/content/from-variable/quiz";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
-import { CalculatorApp } from "./visuals";
+import { CalculatorApp } from "@/components/kit/content/from-variable/visuals";
 
 const TITLE = parseTitle("Plan the *App's Steps*");
 const TITLE_END = 163;

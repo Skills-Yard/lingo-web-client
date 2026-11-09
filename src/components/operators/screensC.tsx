@@ -1,11 +1,13 @@
 "use client";
 
-import { at, neutral, quiz, trueFalse } from "./helpers";
-import { ExpressionStage, OrderStage, SymbolStage, sumOfProducts } from "./interactions";
+import { at, neutral, quiz, trueFalse } from "@/components/kit/content/from-operators/helpers";
+import { Stack } from "@/components/kit/layout/Stack";
+import { CompareHeader } from "@/components/kit/content/from-operators/headers";
+import { ExpressionStage, OrderStage, SymbolStage, sumOfProducts } from "@/components/kit/content/from-operators/interactions";
 import { STEP } from "./operators";
-import { P } from "./pictures";
-import type { QuizStage, ScreenDef } from "./screen";
-import { BillCard, CompareDemo, ExprBig, GateCard, TripFacts, ValueCards } from "./visuals";
+import { P } from "@/components/kit/content/from-operators/pictures";
+import type { QuizStage, ScreenDef } from "@/components/kit/content/from-operators/screen";
+import { BillCard, ExprBig, GateCard, TripFacts, ValueCards } from "@/components/kit/content/from-operators/visuals";
 
 /** Reads a question about an expression: Step 1 says it, Step 2 decides if it is True. */
 const readThenEvaluate = (
@@ -71,11 +73,7 @@ export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {
             api={api}
             big={false}
             prompt="Tap each score."
-            header={(current) => {
-              if (!current) return <ExprBig tokens={["score", ">=", "100"]} size={30} />;
-              const [left, symbol, right] = (current.example ?? "").split(" ");
-              return <CompareDemo left={left} symbol={symbol} right={right} result={current.result ?? true} />;
-            }}
+            header={(current) => <CompareHeader current={current} idle={<ExprBig tokens={["score", ">=", "100"]} size={30} />} />}
             groups={[
               {
                 columns: 2,
@@ -233,11 +231,7 @@ export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {
             api={api}
             big={false}
             prompt="Tap each bill."
-            header={(current) => {
-              if (!current) return <ExprBig tokens={["total_bill", "<=", "500"]} size={28} />;
-              const [left, symbol, right] = (current.example ?? "").split(" ");
-              return <CompareDemo left={left} symbol={symbol} right={right} result={current.result ?? true} />;
-            }}
+            header={(current) => <CompareHeader current={current} idle={<ExprBig tokens={["total_bill", "<=", "500"]} size={28} />} />}
             groups={[
               {
                 columns: 3,
@@ -271,7 +265,7 @@ export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "3 notebooks at ₹20 and 2 pens at ₹10. The app shows ₹35. What is wrong?",
         visual: () => (
-          <div className="flex flex-col items-center gap-2">
+          <Stack gap={8} fit>
             <BillCard
               wrong
               total="₹35"
@@ -281,7 +275,7 @@ export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {
               ]}
             />
             <ExprBig tokens={["3", "+", "20", "+", "2", "+", "10"]} size={20} />
-          </div>
+          </Stack>
         ),
         options: neutral(["The program should multiply quantities and prices.", "The program should subtract all prices.", "The program should compare quantities and prices."]),
         correctId: at(0),
@@ -314,10 +308,10 @@ export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "“At least 100” unlocks a level. A score of 100 stays locked. Which fix?",
         visual: () => (
-          <div className="flex flex-col items-center gap-2">
+          <Stack gap={8} fit>
             <ExprBig tokens={["score", ">", "100"]} size={30} />
             <GateCard score={100} open={false} />
-          </div>
+          </Stack>
         ),
         options: neutral(["score < 100", "score >= 100", "score != 100"]),
         correctId: at(1),

@@ -1,0 +1,4212 @@
+{
+  "id": "conditions",
+  "title": "Conditions",
+  "level": 6,
+  "steps": 38,
+  "flow": {
+    "skips": {
+      "8": [
+        7
+      ],
+      "10": [
+        9
+      ],
+      "12": [
+        11
+      ],
+      "15": [
+        14
+      ],
+      "21": [
+        18,
+        20
+      ],
+      "25": [
+        24
+      ],
+      "29": [
+        28
+      ],
+      "35": [
+        34
+      ]
+    },
+    "detours": {
+      "3": 2,
+      "4": 2,
+      "5": 4,
+      "7": 6,
+      "8": 7,
+      "9": 7,
+      "10": 9,
+      "11": 7,
+      "12": 11,
+      "14": 13,
+      "15": 14,
+      "16": {
+        "$ref": "conditions.challengeDetour"
+      },
+      "18": 17,
+      "19": 18,
+      "20": 19,
+      "21": 18,
+      "23": 22,
+      "24": 23,
+      "25": 24,
+      "26": 20,
+      "28": 27,
+      "29": 28,
+      "30": 23,
+      "31": 20,
+      "32": 30,
+      "33": 32,
+      "34": 23,
+      "35": 21,
+      "36": 33
+    }
+  },
+  "afterGem": 38,
+  "screens": {
+    "1": {
+      "step": 1,
+      "title": "How Does a Computer *Know It's Correct?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "A student scored 85. The pass mark is 40. Is 85 alone enough to tell?",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/level-one/programmer.png",
+                  "label": "Student's marks",
+                  "value": "85"
+                }
+              ]
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "No. Knowing the marks alone is not enough.",
+          "wrong": "Does 85 say anything about the pass mark?"
+        },
+        {
+          "kind": "quiz",
+          "line": "What else do we need to know?",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/level-one/programmer.png",
+                  "label": "Student's marks",
+                  "value": "85"
+                }
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "The passing requirement.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "The student's name.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "The school's name.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "The passing requirement: 40 marks.",
+          "wrong": "What do we compare the marks with?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Now what should the computer check?",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/level-one/programmer.png",
+                  "label": "Student's marks",
+                  "value": "85"
+                },
+                {
+                  "pic": "/images/statement.png",
+                  "label": "Passing marks",
+                  "value": "40"
+                }
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Whether the marks are at least 40.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Whether the marks are exactly 85.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Whether the marks are below 40.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "It checks the marks against the requirement.",
+          "wrong": "The requirement is the passing mark."
+        },
+        {
+          "kind": "interaction",
+          "line": "Change the marks. Is the passing requirement satisfied?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "marks >= 40"
+                }
+              },
+              "rows": [
+                {
+                  "label": "25",
+                  "sub": "25 >= 40",
+                  "answer": "False"
+                },
+                {
+                  "label": "39",
+                  "sub": "39 >= 40",
+                  "answer": "False"
+                },
+                {
+                  "label": "40",
+                  "sub": "40 >= 40",
+                  "answer": "True"
+                },
+                {
+                  "label": "85",
+                  "sub": "85 >= 40",
+                  "answer": "True"
+                }
+              ],
+              "hint": "Is the marks at least 40?"
+            }
+          },
+          "finishPanel": {
+            "title": "Checked!",
+            "text": "A program often checks information against a requirement to see if it is satisfied."
+          }
+        }
+      ]
+    },
+    "2": {
+      "step": 2,
+      "title": "A Condition Is *Something We Check*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Each question asks us to check something. Tap each one.",
+          "content": {
+            "$": "kit:scenes-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "prompt": "Tap each question.",
+              "scenes": [
+                {
+                  "id": "positive",
+                  "pic": "/images/question.png",
+                  "label": "Is the number positive?",
+                  "caption": "Whether the number is greater than zero."
+                },
+                {
+                  "id": "age",
+                  "pic": "/images/question.png",
+                  "label": "Is age at least 18?",
+                  "caption": "Whether age is 18 or greater."
+                },
+                {
+                  "id": "even",
+                  "pic": "/images/question.png",
+                  "label": "Is the number even?",
+                  "caption": "Whether the remainder after dividing by 2 is zero."
+                },
+                {
+                  "id": "verified",
+                  "pic": "/images/question.png",
+                  "label": "Is the account verified?",
+                  "caption": "Whether the verification status is True."
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Things we can check!",
+            "text": "Each question can be answered as correct or incorrect."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "In programming, what is a condition?",
+          "visual": {
+            "$": "kit:check-flow",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "question": "Is age at least 18?"
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "An expression that is True or False.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "A number stored in a program.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "A name for a value.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "A condition checks whether a statement or requirement is True or False.",
+          "wrong": "A condition is something we can check, and the check gives an answer."
+        }
+      ]
+    },
+    "3": {
+      "step": 3,
+      "title": "Can a Statement Be *True and False?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Evaluate each question. Tap a row.",
+          "content": {
+            "$": "kit:table-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:result-cards"
+              },
+              "headers": [
+                "Question",
+                "Answer"
+              ],
+              "rows": [
+                [
+                  "Is 10 greater than 5?",
+                  "True"
+                ],
+                [
+                  "Is 3 equal to 7?",
+                  "False"
+                ],
+                [
+                  "Is 15 less than 20?",
+                  "True"
+                ]
+              ],
+              "hidden": [
+                1
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "One result!",
+            "text": "A condition gives one Boolean result. It can't be True and False at once."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Three new questions. Predict each result.",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "rows": [
+                {
+                  "label": "Is 12 greater than 20?",
+                  "answer": "False"
+                },
+                {
+                  "label": "Is 9 equal to 9?",
+                  "answer": "True"
+                },
+                {
+                  "label": "Is 2 less than 1?",
+                  "answer": "False"
+                }
+              ],
+              "hint": "Is the statement correct?"
+            }
+          },
+          "finishPanel": {
+            "title": "True or False!",
+            "text": "Conditions are evaluated as Boolean results: True or False."
+          }
+        }
+      ]
+    },
+    "4": {
+      "step": 4,
+      "title": "Information Is Not *a Condition*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Information tells us what we have. Tap each to see a check we could ask.",
+          "content": {
+            "$": "kit:scenes-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "prompt": "Tap each card.",
+              "scenes": [
+                {
+                  "id": "marks",
+                  "pic": "/images/statement.png",
+                  "label": "Marks = 85",
+                  "caption": "Are marks at least 40?"
+                },
+                {
+                  "id": "age",
+                  "pic": "/images/level-one/programmer.png",
+                  "label": "Age = 17",
+                  "caption": "Is age at least 18?"
+                },
+                {
+                  "id": "number",
+                  "pic": "/images/level-two/cube.png",
+                  "label": "Number = 12",
+                  "caption": "Is the number even?"
+                },
+                {
+                  "id": "account",
+                  "pic": "/images/computer.png",
+                  "label": "Account = Active",
+                  "caption": "Is the account active?"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Does age = 17 check a requirement?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "No. It only tells us what we have. age >= 18 would check a requirement.",
+          "wrong": "Does it ask a question, or just state a value?"
+        },
+        {
+          "kind": "quiz",
+          "line": "What is the difference between information and a condition?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Information tells what we have; a condition checks a requirement.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "They are the same thing.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "A condition stores a number.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "A condition checks whether information satisfies a requirement.",
+          "wrong": "One of them stores a value, and the other asks a question about it."
+        }
+      ]
+    },
+    "5": {
+      "step": 5,
+      "title": "A Condition Is *Constructed*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A condition is built step by step, not memorised. Follow the path.",
+          "content": {
+            "$": "kit:path-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "steps": [
+                {
+                  "title": "Identify what to check",
+                  "text": "Is a number positive?"
+                },
+                {
+                  "title": "Understand the meaning",
+                  "text": "What makes a number positive?"
+                },
+                {
+                  "title": "Find the relationship",
+                  "text": "A positive number is greater than zero."
+                },
+                {
+                  "title": "Pick the operator",
+                  "text": "Greater than is >."
+                },
+                {
+                  "title": "Say it in words",
+                  "text": "The number must be greater than zero."
+                },
+                {
+                  "title": "Translate into Python",
+                  "text": "number > 0",
+                  "code": true
+                },
+                {
+                  "title": "Test it",
+                  "text": "Try positive, negative and zero."
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is greater than 5. Put the steps in order.",
+          "content": {
+            "$": "kit:order-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "steps": [
+                "Identify what to check.",
+                "Understand what the requirement means.",
+                "Find the relationship: greater than 5.",
+                "Pick the operator: >.",
+                "Say it in words.",
+                "Translate it into Python: number > 5.",
+                "Test it with values."
+              ],
+              "shown": [
+                3,
+                0,
+                5,
+                2,
+                6,
+                1,
+                4
+              ],
+              "hint": "Understand the requirement first. The Python comes near the end."
+            }
+          },
+          "finishPanel": {
+            "title": "Understand first!",
+            "text": "We understand the requirement, then build its Python."
+          }
+        }
+      ]
+    },
+    "6": {
+      "step": 6,
+      "title": "What Makes a Number *Positive?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "1, 2, 3, 4, 5 are positive numbers. Where are they compared with zero?",
+          "visual": {
+            "$": "kit:zero-line",
+            "props": {
+              "side": "positive"
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "After zero, on the right.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Before zero, on the left.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "They are zero.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "All positive numbers appear after zero on the number line.",
+          "wrong": "Look at the number line. Which side of zero are they on?"
+        }
+      ]
+    },
+    "7": {
+      "step": 7,
+      "title": "The Positive-Number *Condition*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Numbers to the right of zero are greater than zero. So a positive number must be…",
+          "visual": {
+            "$": "kit:zero-line",
+            "props": {
+              "side": "positive"
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Greater than zero.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Less than zero.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Equal to zero.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "A positive number is greater than zero.",
+          "wrong": "Positive numbers come after zero."
+        },
+        {
+          "kind": "interaction",
+          "line": "The number must be greater than zero. Build it in Python.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "0",
+                ">",
+                "<",
+                "=="
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">",
+                  "0"
+                ]
+              ],
+              "hint": "Greater than zero: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "number > 0",
+            "text": "> means greater than, because the number must be greater than zero."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Test it. Is number > 0 True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number > 0"
+                }
+              },
+              "rows": [
+                {
+                  "label": "8",
+                  "sub": "8 > 0",
+                  "answer": "True"
+                },
+                {
+                  "label": "2",
+                  "sub": "2 > 0",
+                  "answer": "True"
+                },
+                {
+                  "label": "0",
+                  "sub": "0 > 0",
+                  "answer": "False"
+                },
+                {
+                  "label": "-5",
+                  "sub": "-5 > 0",
+                  "answer": "False"
+                }
+              ],
+              "hint": "Is the number greater than zero?"
+            }
+          },
+          "finishPanel": {
+            "title": "Zero is neither!",
+            "text": "Zero is neither positive nor negative."
+          }
+        }
+      ]
+    },
+    "8": {
+      "step": 8,
+      "title": "What Makes a Number *Negative?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "-1, -2, -3… are on the left of zero. How do they compare with zero?",
+          "visual": {
+            "$": "kit:zero-line",
+            "props": {
+              "side": "negative"
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "They are smaller than zero.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "They are greater than zero.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "They are equal to zero.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Negative numbers are smaller than zero.",
+          "wrong": "They come before zero on the number line."
+        },
+        {
+          "kind": "interaction",
+          "line": "The number must be less than zero. Build it in Python.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "0",
+                "<",
+                ">",
+                "=="
+              ],
+              "accept": [
+                [
+                  "number",
+                  "<",
+                  "0"
+                ]
+              ],
+              "hint": "Smaller than zero: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "number < 0",
+            "text": "< means less than, because the number must be smaller than zero."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Test it. Is number < 0 True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number < 0"
+                }
+              },
+              "rows": [
+                {
+                  "label": "-8",
+                  "sub": "-8 < 0",
+                  "answer": "True"
+                },
+                {
+                  "label": "-1",
+                  "sub": "-1 < 0",
+                  "answer": "True"
+                },
+                {
+                  "label": "0",
+                  "sub": "0 < 0",
+                  "answer": "False"
+                },
+                {
+                  "label": "5",
+                  "sub": "5 < 0",
+                  "answer": "False"
+                }
+              ],
+              "hint": "Is the number smaller than zero?"
+            }
+          }
+        }
+      ]
+    },
+    "9": {
+      "step": 9,
+      "title": "Is the Number *Equal to 7?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "We want exactly 7. Is 8 acceptable?",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/question.png",
+                  "label": "We want",
+                  "value": "exactly 7"
+                }
+              ]
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Only 7 is exactly equal to 7.",
+          "wrong": "We don't want a number greater or smaller than 7."
+        },
+        {
+          "kind": "interaction",
+          "line": "The number must be equal to 7. Build it in Python.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "7",
+                "==",
+                "=",
+                "!="
+              ],
+              "accept": [
+                [
+                  "number",
+                  "==",
+                  "7"
+                ]
+              ],
+              "hint": "Exactly equal: use ==, not a single =."
+            }
+          },
+          "finishPanel": {
+            "title": "number == 7",
+            "text": "== checks equality. A single = is for assignment, not for comparing."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Test it. Is number == 7 True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number == 7"
+                }
+              },
+              "rows": [
+                {
+                  "label": "7",
+                  "sub": "7 == 7",
+                  "answer": "True"
+                },
+                {
+                  "label": "8",
+                  "sub": "8 == 7",
+                  "answer": "False"
+                },
+                {
+                  "label": "6",
+                  "sub": "6 == 7",
+                  "answer": "False"
+                },
+                {
+                  "label": "-7",
+                  "sub": "-7 == 7",
+                  "answer": "False"
+                }
+              ],
+              "hint": "Is the number exactly 7?"
+            }
+          },
+          "finishPanel": {
+            "title": "Only 7!",
+            "text": "The condition is True only when the number is exactly 7."
+          }
+        }
+      ]
+    },
+    "10": {
+      "step": 10,
+      "title": "What About *Every Number Except 7?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "A game accepts every number except 7. Is 7 acceptable?",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/stop.png",
+                  "label": "Not allowed",
+                  "value": "7"
+                }
+              ]
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Every number except 7 is fine. 7 is rejected.",
+          "wrong": "The game accepts every number except 7."
+        },
+        {
+          "kind": "interaction",
+          "line": "The number must be different from 7. Build it in Python.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "7",
+                "!=",
+                "==",
+                "<"
+              ],
+              "accept": [
+                [
+                  "number",
+                  "!=",
+                  "7"
+                ]
+              ],
+              "hint": "Different from 7: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "number != 7",
+            "text": "!= means not equal to. It checks that two values are different."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Test it. Is number != 7 True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number != 7"
+                }
+              },
+              "rows": [
+                {
+                  "label": "5",
+                  "sub": "5 != 7",
+                  "answer": "True"
+                },
+                {
+                  "label": "7",
+                  "sub": "7 != 7",
+                  "answer": "False"
+                },
+                {
+                  "label": "8",
+                  "sub": "8 != 7",
+                  "answer": "True"
+                },
+                {
+                  "label": "0",
+                  "sub": "0 != 7",
+                  "answer": "True"
+                }
+              ],
+              "hint": "Is the number different from 7?"
+            }
+          },
+          "finishPanel": {
+            "title": "Not 7!",
+            "text": "The condition is True whenever the number is different from 7."
+          }
+        }
+      ]
+    },
+    "11": {
+      "step": 11,
+      "title": "What Does “At Least 10” *Mean?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A competition needs a score of at least 10. Who can qualify?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:value-cards",
+                "props": {
+                  "items": [
+                    {
+                      "pic": "/images/gem.png",
+                      "label": "Minimum score",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "rows": [
+                {
+                  "label": "Score 8",
+                  "answer": "No"
+                },
+                {
+                  "label": "Score 9",
+                  "answer": "No"
+                },
+                {
+                  "label": "Score 10",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Score 11",
+                  "answer": "Yes"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "At least 10 means 10 or more.",
+              "prompt": "Can they qualify?"
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "The score must be greater than or equal to 10. Build it.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "10",
+                ">=",
+                ">",
+                "=="
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">=",
+                  "10"
+                ]
+              ],
+              "hint": "At least includes 10: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "number >= 10",
+            "text": ">= combines greater than and equal to."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Boundary test. Is number >= 10 True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number >= 10"
+                }
+              },
+              "rows": [
+                {
+                  "label": "9",
+                  "sub": "9 >= 10",
+                  "answer": "False"
+                },
+                {
+                  "label": "10",
+                  "sub": "10 >= 10",
+                  "answer": "True"
+                },
+                {
+                  "label": "11",
+                  "sub": "11 >= 10",
+                  "answer": "True"
+                }
+              ],
+              "hint": "Is the number 10 or more?"
+            }
+          },
+          "finishPanel": {
+            "title": "Boundary included!",
+            "text": "At least means the minimum boundary is included."
+          }
+        }
+      ]
+    },
+    "12": {
+      "step": 12,
+      "title": "What Does “At Most 10” *Mean?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A bag holds at most 10 chocolates. Which amounts fit?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:value-cards",
+                "props": {
+                  "items": [
+                    {
+                      "pic": "/images/food.png",
+                      "label": "Bag holds at most",
+                      "value": "10"
+                    }
+                  ]
+                }
+              },
+              "rows": [
+                {
+                  "label": "8 chocolates",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "9 chocolates",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "10 chocolates",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "11 chocolates",
+                  "answer": "No"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "At most 10 means 10 or fewer.",
+              "prompt": "Can the bag hold it?"
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "The number must be less than or equal to 10. Build it.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "10",
+                "<=",
+                "<",
+                "=="
+              ],
+              "accept": [
+                [
+                  "number",
+                  "<=",
+                  "10"
+                ]
+              ],
+              "hint": "At most includes 10: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "number <= 10",
+            "text": "<= means less than or equal to."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Boundary test. Is number <= 10 True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number <= 10"
+                }
+              },
+              "rows": [
+                {
+                  "label": "9",
+                  "sub": "9 <= 10",
+                  "answer": "True"
+                },
+                {
+                  "label": "10",
+                  "sub": "10 <= 10",
+                  "answer": "True"
+                },
+                {
+                  "label": "11",
+                  "sub": "11 <= 10",
+                  "answer": "False"
+                }
+              ],
+              "hint": "Is the number 10 or fewer?"
+            }
+          },
+          "finishPanel": {
+            "title": "Boundary included!",
+            "text": "At most means the maximum boundary is included."
+          }
+        }
+      ]
+    },
+    "13": {
+      "step": 13,
+      "title": "How Can We Spot an *Even Number?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Share each number of objects into two equal groups. Tap a number.",
+          "content": {
+            "$": "kit:pair-up-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "numbers": [
+                6,
+                8,
+                10,
+                7
+              ]
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "What is common among even numbers like 6, 8 and 10?",
+          "options": [
+            {
+              "id": "0",
+              "text": "They share into two equal groups with nothing left.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "They are all bigger than 5.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "They always leave one over.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Even numbers are completely divisible by 2. There is no remainder.",
+          "wrong": "Look at what happened to 6, 8 and 10, and then to 7."
+        }
+      ]
+    },
+    "14": {
+      "step": 14,
+      "title": "How Do We Check *What Remains?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "% gives the remainder. Predict each remainder.",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "rows": [
+                {
+                  "label": "8 % 2",
+                  "answer": "0"
+                },
+                {
+                  "label": "10 % 2",
+                  "answer": "0"
+                },
+                {
+                  "label": "7 % 2",
+                  "answer": "1"
+                }
+              ],
+              "choices": [
+                "0",
+                "1"
+              ],
+              "hint": "Share into groups of 2. What is left?"
+            }
+          },
+          "finishPanel": {
+            "title": "Remainders!",
+            "text": "Even numbers leave a remainder of 0 when divided by 2."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "The remainder must be zero. First find it, then check it.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "%",
+                "2",
+                "==",
+                "0",
+                "!=",
+                "1"
+              ],
+              "accept": [
+                [
+                  "number",
+                  "%",
+                  "2",
+                  "==",
+                  "0"
+                ]
+              ],
+              "hint": "First number % 2, then == 0."
+            }
+          },
+          "finishPanel": {
+            "title": "number % 2 == 0",
+            "text": "% 2 finds the remainder. == 0 checks that nothing remains."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Test it. Is number % 2 == 0 True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number % 2 == 0",
+                  "size": 26
+                }
+              },
+              "rows": [
+                {
+                  "label": "12",
+                  "sub": "12 % 2 == 0",
+                  "answer": "True"
+                },
+                {
+                  "label": "15",
+                  "sub": "15 % 2 == 0",
+                  "answer": "False"
+                },
+                {
+                  "label": "18",
+                  "sub": "18 % 2 == 0",
+                  "answer": "True"
+                },
+                {
+                  "label": "21",
+                  "sub": "21 % 2 == 0",
+                  "answer": "False"
+                }
+              ],
+              "hint": "What remains when you divide by 2?"
+            }
+          },
+          "finishPanel": {
+            "title": "Even!",
+            "text": "A number is even when its remainder after division by 2 is zero."
+          }
+        }
+      ]
+    },
+    "15": {
+      "step": 15,
+      "title": "What Happens When a Number Is *Odd?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Share 7, then 9 objects into two groups. Predict each remainder.",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "rows": [
+                {
+                  "label": "7 % 2",
+                  "answer": "1"
+                },
+                {
+                  "label": "9 % 2",
+                  "answer": "1"
+                },
+                {
+                  "label": "8 % 2",
+                  "answer": "0"
+                }
+              ],
+              "choices": [
+                "0",
+                "1"
+              ],
+              "hint": "Share into two groups. What is left?"
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "An odd number leaves a remainder that is not zero. Build it.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "%",
+                "2",
+                "!=",
+                "0",
+                "==",
+                "1"
+              ],
+              "accept": [
+                [
+                  "number",
+                  "%",
+                  "2",
+                  "!=",
+                  "0"
+                ]
+              ],
+              "hint": "The remainder must not be zero: use !=."
+            }
+          },
+          "finishPanel": {
+            "title": "number % 2 != 0",
+            "text": "% 2 finds the remainder. != 0 checks that it is not zero."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Test it. Is number % 2 != 0 True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number % 2 != 0",
+                  "size": 26
+                }
+              },
+              "rows": [
+                {
+                  "label": "7",
+                  "sub": "7 % 2 != 0",
+                  "answer": "True"
+                },
+                {
+                  "label": "8",
+                  "sub": "8 % 2 != 0",
+                  "answer": "False"
+                },
+                {
+                  "label": "11",
+                  "sub": "11 % 2 != 0",
+                  "answer": "True"
+                },
+                {
+                  "label": "14",
+                  "sub": "14 % 2 != 0",
+                  "answer": "False"
+                },
+                {
+                  "label": "-5",
+                  "sub": "-5 % 2 != 0",
+                  "answer": "True"
+                }
+              ],
+              "hint": "Does it leave a remainder when divided by 2?"
+            }
+          },
+          "finishPanel": {
+            "title": "Odd!",
+            "text": "An odd integer has a nonzero remainder when divided by 2."
+          }
+        }
+      ]
+    },
+    "16": {
+      "step": 16,
+      "title": "Can You Build the *Condition?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is divisible by 5.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "%",
+                "5",
+                "==",
+                "0",
+                "!="
+              ],
+              "accept": [
+                [
+                  "number",
+                  "%",
+                  "5",
+                  "==",
+                  "0"
+                ]
+              ],
+              "hint": "Divisible means no remainder: % first, then == 0.",
+              "prompt": "Hint: % finds the remainder, == checks equality."
+            }
+          },
+          "finishPanel": {
+            "title": "number % 5 == 0",
+            "text": "% 5 finds the remainder, and == 0 says nothing is left. So 5 divides the number."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is not divisible by 3.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "%",
+                "3",
+                "!=",
+                "0",
+                "=="
+              ],
+              "accept": [
+                [
+                  "number",
+                  "%",
+                  "3",
+                  "!=",
+                  "0"
+                ]
+              ],
+              "hint": "Not divisible means something is left: % first, then != 0.",
+              "prompt": "Hint: % finds the remainder, != checks it is not zero."
+            }
+          },
+          "finishPanel": {
+            "title": "number % 3 != 0",
+            "text": "% 3 finds the remainder, and != 0 says something is left. So 3 doesn't divide it."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is greater than 100.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "100",
+                ">",
+                "<",
+                "==",
+                ">=",
+                "%",
+                "2"
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">",
+                  "100"
+                ]
+              ],
+              "hint": "Greater than means more than, and 100 itself is not included."
+            }
+          },
+          "finishPanel": {
+            "title": "number > 100",
+            "text": "> is used because the number must be bigger than 100. >= would let 100 in."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is equal to 50.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "50",
+                "==",
+                "=",
+                "!=",
+                ">",
+                "%",
+                "2"
+              ],
+              "accept": [
+                [
+                  "number",
+                  "==",
+                  "50"
+                ]
+              ],
+              "hint": "Equal to compares two values: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "number == 50",
+            "text": "== compares the number with 50. A single = would give a value a name instead."
+          }
+        }
+      ]
+    },
+    "17": {
+      "step": 17,
+      "title": "What If One Requirement *Is Not Enough?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "“I need ice cream AND pastry. Both.” Try each case.",
+          "content": {
+            "$": "kit:combo-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "inputs": [
+                {
+                  "id": "ice",
+                  "label": "Ice cream",
+                  "pic": "/images/food.png",
+                  "on": "Available",
+                  "off": "Not available"
+                },
+                {
+                  "id": "pastry",
+                  "label": "Pastry",
+                  "pic": "/images/box.png",
+                  "on": "Available",
+                  "off": "Not available"
+                }
+              ],
+              "rule": {
+                "$ref": "kit:all_on"
+              },
+              "ask": "Is my complete dessert order satisfied?",
+              "hint": "I asked for both. Do I have both?",
+              "explain": {
+                "$fn": {
+                  "arity": 2,
+                  "body": {
+                    "$by": [
+                      "arg1"
+                    ],
+                    "cases": {
+                      "false": "Something is missing: not satisfied.",
+                      "true": "Both are here: satisfied."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "finishPanel": {
+            "title": "Both needed!",
+            "text": "Both requirements must be satisfied."
+          }
+        }
+      ]
+    },
+    "18": {
+      "step": 18,
+      "title": "When Are *Both Requirements True?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "All four possibilities. Tap each row to see the order.",
+          "content": {
+            "$": "kit:table-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "headers": [
+                "Ice cream",
+                "Pastry",
+                "Complete order?"
+              ],
+              "rows": [
+                [
+                  "True",
+                  "True",
+                  "True"
+                ],
+                [
+                  "True",
+                  "False",
+                  "False"
+                ],
+                [
+                  "False",
+                  "True",
+                  "False"
+                ],
+                [
+                  "False",
+                  "False",
+                  "False"
+                ]
+              ],
+              "hidden": [
+                2
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "AND!",
+            "text": "AND gives True only when both conditions are True."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Python's word for “both” is and. Build the condition.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "ice_cream",
+                "pastry",
+                "and",
+                "or",
+                "not"
+              ],
+              "accept": [
+                [
+                  "ice_cream",
+                  "and",
+                  "pastry"
+                ],
+                [
+                  "pastry",
+                  "and",
+                  "ice_cream"
+                ]
+              ],
+              "hint": "Both must be True: connect them with and."
+            }
+          },
+          "finishPanel": {
+            "title": "ice_cream and pastry",
+            "text": "and connects two conditions when both requirements must be satisfied."
+          }
+        }
+      ]
+    },
+    "19": {
+      "step": 19,
+      "title": "When Is the *Extra Class On?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "“Extra class on Sunday if Anjali OR Ravi comes.” Try each case.",
+          "content": {
+            "$": "kit:combo-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "inputs": [
+                {
+                  "id": "anjali",
+                  "label": "Anjali",
+                  "pic": "/images/level-one/programmer.png",
+                  "on": "Comes",
+                  "off": "Does not come"
+                },
+                {
+                  "id": "ravi",
+                  "label": "Ravi",
+                  "pic": "/images/run.png",
+                  "on": "Comes",
+                  "off": "Does not come"
+                }
+              ],
+              "rule": {
+                "$ref": "kit:any_on"
+              },
+              "ask": "Can the extra class happen?",
+              "hint": "The class needs just one of them. Is anyone coming?",
+              "explain": {
+                "$fn": {
+                  "arity": 2,
+                  "body": {
+                    "$by": [
+                      "arg1"
+                    ],
+                    "cases": {
+                      "false": "Nobody comes: no class.",
+                      "true": "At least one comes: the class happens."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "finishPanel": {
+            "title": "Only one needed!",
+            "text": "Only one of the two needs to come for the requirement to be True."
+          }
+        }
+      ]
+    },
+    "20": {
+      "step": 20,
+      "title": "Does OR Need *Everyone?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "All four possibilities. Tap each row.",
+          "content": {
+            "$": "kit:table-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "headers": [
+                "Anjali comes",
+                "Ravi comes",
+                "Extra class"
+              ],
+              "rows": [
+                [
+                  "True",
+                  "True",
+                  "True"
+                ],
+                [
+                  "True",
+                  "False",
+                  "True"
+                ],
+                [
+                  "False",
+                  "True",
+                  "True"
+                ],
+                [
+                  "False",
+                  "False",
+                  "False"
+                ]
+              ],
+              "hidden": [
+                2
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "OR!",
+            "text": "OR gives True when at least one condition is True."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Python's word for “at least one” is or. Build the condition.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "anjali_comes",
+                "ravi_comes",
+                "or",
+                "and",
+                "not"
+              ],
+              "accept": [
+                [
+                  "anjali_comes",
+                  "or",
+                  "ravi_comes"
+                ],
+                [
+                  "ravi_comes",
+                  "or",
+                  "anjali_comes"
+                ]
+              ],
+              "hint": "One is enough: connect them with or."
+            }
+          },
+          "finishPanel": {
+            "title": "anjali_comes or ravi_comes",
+            "text": "or connects conditions when at least one requirement must be satisfied."
+          }
+        }
+      ]
+    },
+    "21": {
+      "step": 21,
+      "title": "One Word Changes *Everything!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Same two conditions, two words. Tap each row.",
+          "content": {
+            "$": "kit:table-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "headers": [
+                "First",
+                "Second",
+                "AND",
+                "OR"
+              ],
+              "rows": [
+                [
+                  "True",
+                  "True",
+                  "True",
+                  "True"
+                ],
+                [
+                  "True",
+                  "False",
+                  "False",
+                  "True"
+                ],
+                [
+                  "False",
+                  "True",
+                  "False",
+                  "True"
+                ],
+                [
+                  "False",
+                  "False",
+                  "False",
+                  "False"
+                ]
+              ],
+              "hidden": [
+                2,
+                3
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "AND vs OR",
+            "text": "AND needs both True. OR needs at least one True."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "“Both items are required.” Which operator fits?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "and",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "or",
+              "image": "/images/sequence/icon-actions.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "and: both conditions must be True.",
+          "wrong": "Both must be satisfied, not just one."
+        },
+        {
+          "kind": "quiz",
+          "line": "“Either one is enough.” Which operator fits?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "and",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "or",
+              "image": "/images/sequence/icon-actions.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "or: at least one condition must be True.",
+          "wrong": "Only one needs to be satisfied."
+        },
+        {
+          "kind": "quiz",
+          "line": "Ice cream: True. Pastry: False. The order still counts. Which operator?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "and",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "or",
+              "image": "/images/sequence/icon-actions.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "or: one True condition is enough.",
+          "wrong": "With and, one False would break the order."
+        }
+      ]
+    },
+    "22": {
+      "step": 22,
+      "title": "Is a Number *in a Range?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A score must be between 10 and 20, both included. Who qualifies?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:range-line",
+                "props": {
+                  "min": 5,
+                  "max": 25,
+                  "low": 10,
+                  "high": 20
+                }
+              },
+              "rows": [
+                {
+                  "label": "Score 8",
+                  "answer": "No"
+                },
+                {
+                  "label": "Score 12",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Score 19",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Score 10",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Score 20",
+                  "answer": "Yes"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "Is it inside the highlighted range, ends included?",
+              "prompt": "Does it qualify?"
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "What two requirements must a valid score meet?",
+          "visual": {
+            "$": "kit:range-line",
+            "props": {
+              "min": 5,
+              "max": 25,
+              "low": 10,
+              "high": 20
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "At least 10 and at most 20.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Less than 10 or more than 20.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Equal to 10 and equal to 20.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "A range needs two comparisons: at least 10, and at most 20.",
+          "wrong": "A valid score is not below 10 and not above 20."
+        }
+      ]
+    },
+    "23": {
+      "step": 23,
+      "title": "Both Boundaries *Included*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Step 1: the lower boundary. The number must be at least 10.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "10",
+                ">=",
+                ">",
+                "<="
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">=",
+                  "10"
+                ]
+              ],
+              "hint": "At least 10 includes 10: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "number >= 10",
+            "text": ">= includes the lower boundary."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Step 2: the upper boundary. The number must be at most 20.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "20",
+                "<=",
+                "<",
+                ">="
+              ],
+              "accept": [
+                [
+                  "number",
+                  "<=",
+                  "20"
+                ]
+              ],
+              "hint": "At most 20 includes 20: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "number <= 20",
+            "text": "<= includes the upper boundary."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Step 3: must both be True? Yes. Combine them.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "number",
+                "10",
+                "20",
+                ">=",
+                "<=",
+                "and",
+                "or"
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">=",
+                  "10",
+                  "and",
+                  "number",
+                  "<=",
+                  "20"
+                ],
+                [
+                  "number",
+                  "<=",
+                  "20",
+                  "and",
+                  "number",
+                  ">=",
+                  "10"
+                ]
+              ],
+              "hint": "Both must be True: connect them with and."
+            }
+          },
+          "finishPanel": {
+            "title": "Both must be True",
+            "text": "and requires both comparisons to be True."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Test it. Is the condition True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number >= 10 and number <= 20",
+                  "size": 20
+                }
+              },
+              "rows": [
+                {
+                  "label": "9",
+                  "sub": "9 >= 10 and 9 <= 20",
+                  "answer": "False"
+                },
+                {
+                  "label": "10",
+                  "sub": "10 >= 10 and 10 <= 20",
+                  "answer": "True"
+                },
+                {
+                  "label": "15",
+                  "sub": "15 >= 10 and 15 <= 20",
+                  "answer": "True"
+                },
+                {
+                  "label": "20",
+                  "sub": "20 >= 10 and 20 <= 20",
+                  "answer": "True"
+                },
+                {
+                  "label": "21",
+                  "sub": "21 >= 10 and 21 <= 20",
+                  "answer": "False"
+                }
+              ],
+              "hint": "Is it at least 10, and at most 20?"
+            }
+          },
+          "finishPanel": {
+            "title": "Both included!",
+            "text": "Both 10 and 20 are included."
+          }
+        }
+      ]
+    },
+    "24": {
+      "step": 24,
+      "title": "What If *20 Is Not Allowed?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "At least 10 but less than 20. Which are acceptable?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:range-line",
+                "props": {
+                  "min": 5,
+                  "max": 25,
+                  "low": 10,
+                  "high": 20,
+                  "highOpen": true
+                }
+              },
+              "rows": [
+                {
+                  "label": "10",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "15",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "19",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "20",
+                  "answer": "No"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "At least 10 allows 10. Less than 20 does not allow 20.",
+              "prompt": "Is it acceptable?"
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Build it: at least 10, and less than 20.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "number",
+                "10",
+                "20",
+                ">=",
+                "<",
+                "and",
+                "or"
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">=",
+                  "10",
+                  "and",
+                  "number",
+                  "<",
+                  "20"
+                ],
+                [
+                  "number",
+                  "<",
+                  "20",
+                  "and",
+                  "number",
+                  ">=",
+                  "10"
+                ]
+              ],
+              "hint": "Use >= for the first boundary and < for the second."
+            }
+          },
+          "finishPanel": {
+            "title": "number >= 10 and number < 20",
+            "text": "The exact words decide whether a boundary is included or excluded."
+          }
+        }
+      ]
+    },
+    "25": {
+      "step": 25,
+      "title": "What If *Neither Boundary Is Allowed?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Greater than 10 and smaller than 20. Which are allowed?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:range-line",
+                "props": {
+                  "min": 5,
+                  "max": 25,
+                  "low": 10,
+                  "high": 20,
+                  "lowOpen": true,
+                  "highOpen": true
+                }
+              },
+              "rows": [
+                {
+                  "label": "10",
+                  "answer": "No"
+                },
+                {
+                  "label": "11",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "19",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "20",
+                  "answer": "No"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "Greater than 10 leaves out 10. Smaller than 20 leaves out 20.",
+              "prompt": "Is it allowed?"
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Build it: greater than 10, and smaller than 20.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "number",
+                "10",
+                "20",
+                ">",
+                "<",
+                "and",
+                "or"
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">",
+                  "10",
+                  "and",
+                  "number",
+                  "<",
+                  "20"
+                ],
+                [
+                  "number",
+                  "<",
+                  "20",
+                  "and",
+                  "number",
+                  ">",
+                  "10"
+                ]
+              ],
+              "hint": "Use > and < so both boundaries stay out."
+            }
+          },
+          "finishPanel": {
+            "title": "number > 10 and number < 20",
+            "text": "> and < leave both boundaries out."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "“At least 10 and at most 20.” Which condition?",
+          "options": [
+            {
+              "id": "0",
+              "text": "number >= 10 and number <= 20",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "number >= 10 and number < 20",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "number > 10 and number < 20",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": ">= and <= include both boundaries.",
+          "wrong": "At least and at most both include their number."
+        },
+        {
+          "kind": "quiz",
+          "line": "“At least 10 but less than 20.” Which condition?",
+          "options": [
+            {
+              "id": "0",
+              "text": "number > 10 and number < 20",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "number >= 10 and number <= 20",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "number >= 10 and number < 20",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "The comparison symbols control whether the boundary values are included.",
+          "wrong": "10 is allowed, 20 is not."
+        }
+      ]
+    },
+    "26": {
+      "step": 26,
+      "title": "What If a Number Is *Outside 10 to 20?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Accepted only if smaller than 10 OR greater than 20. Which are accepted?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:range-line",
+                "props": {
+                  "min": 5,
+                  "max": 25,
+                  "low": 10,
+                  "high": 20,
+                  "outside": true,
+                  "lowOpen": true,
+                  "highOpen": true
+                }
+              },
+              "rows": [
+                {
+                  "label": "5",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "15",
+                  "answer": "No"
+                },
+                {
+                  "label": "25",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "10",
+                  "answer": "No"
+                },
+                {
+                  "label": "20",
+                  "answer": "No"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "Is it smaller than 10, or greater than 20?",
+              "prompt": "Is it accepted?"
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Build it: smaller than 10, or greater than 20.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "number",
+                "10",
+                "20",
+                "<",
+                ">",
+                "or",
+                "and"
+              ],
+              "accept": [
+                [
+                  "number",
+                  "<",
+                  "10",
+                  "or",
+                  "number",
+                  ">",
+                  "20"
+                ],
+                [
+                  "number",
+                  ">",
+                  "20",
+                  "or",
+                  "number",
+                  "<",
+                  "10"
+                ]
+              ],
+              "hint": "A number can be outside on either side: use or."
+            }
+          },
+          "finishPanel": {
+            "title": "number < 10 or number > 20",
+            "text": "Each side is one comparison, joined by or."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Why is OR the right word here?",
+          "options": [
+            {
+              "id": "0",
+              "text": "A number can be outside on either side.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Both comparisons must be True.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "It makes the range wider.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Outside the range means being on the left or on the right.",
+          "wrong": "Can a number be smaller than 10 and greater than 20 at once?"
+        }
+      ]
+    },
+    "27": {
+      "step": 27,
+      "title": "What Happens When We *Reverse a Statement?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Switch the statement between True and False. What does the reversed one become?",
+          "content": {
+            "$": "kit:combo-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "inputs": [
+                {
+                  "id": "ravi",
+                  "label": "Ravi will come to class",
+                  "pic": "/images/level-one/programmer.png",
+                  "on": "True",
+                  "off": "False"
+                }
+              ],
+              "rule": {
+                "$ref": "kit:first_off"
+              },
+              "ask": "“Ravi will NOT come to class.” Is this True?",
+              "yes": "True",
+              "no": "False",
+              "hint": "Flip it: if the first statement is True, the reversed one is…?",
+              "explain": {
+                "$fn": {
+                  "arity": 2,
+                  "body": {
+                    "$by": [
+                      "arg1"
+                    ],
+                    "cases": {
+                      "false": "The reversed statement is False.",
+                      "true": "The reversed statement is True."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "finishPanel": {
+            "title": "NOT reverses!",
+            "text": "NOT reverses a Boolean result."
+          }
+        }
+      ]
+    },
+    "28": {
+      "step": 28,
+      "title": "How Do We Reverse *a Condition?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Python reverses with the word not. Build: not ravi_comes.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "ravi_comes",
+                "not",
+                "and",
+                "or"
+              ],
+              "accept": [
+                [
+                  "not",
+                  "ravi_comes"
+                ]
+              ],
+              "hint": "Put not before the condition it reverses."
+            }
+          },
+          "finishPanel": {
+            "title": "not ravi_comes",
+            "text": "If ravi_comes is True, the whole expression is False. If it is False, the expression is True."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "The truth table for not. Tap each row.",
+          "content": {
+            "$": "kit:table-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "headers": [
+                "Condition",
+                "NOT condition"
+              ],
+              "rows": [
+                [
+                  "True",
+                  "False"
+                ],
+                [
+                  "False",
+                  "True"
+                ]
+              ],
+              "hidden": [
+                1
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "NOT!",
+            "text": "The not operator reverses the Boolean result of the expression after it."
+          }
+        }
+      ]
+    },
+    "29": {
+      "step": 29,
+      "title": "What If a Number Is *NOT Greater Than 10?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "15 > 10 is True. What does not (15 > 10) give?",
+          "visual": {
+            "$": "kit:condition",
+            "props": {
+              "text": "not (15 > 10)",
+              "size": 32
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "True",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "False",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "False. not reverses the result of 15 > 10.",
+          "wrong": "First find 15 > 10, then reverse it."
+        },
+        {
+          "kind": "interaction",
+          "line": "Test it. Is not (number > 10) True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "not (number > 10)",
+                  "size": 26
+                }
+              },
+              "rows": [
+                {
+                  "label": "15",
+                  "sub": "not (15 > 10)",
+                  "answer": "False"
+                },
+                {
+                  "label": "8",
+                  "sub": "not (8 > 10)",
+                  "answer": "True"
+                },
+                {
+                  "label": "10",
+                  "sub": "not (10 > 10)",
+                  "answer": "True"
+                }
+              ],
+              "hint": "First find number > 10, then reverse the result."
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Build it: not, then the comparison in parentheses.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "not",
+                "(",
+                "number",
+                ">",
+                "10",
+                ")",
+                "<",
+                "and"
+              ],
+              "accept": [
+                [
+                  "not",
+                  "(",
+                  "number",
+                  ">",
+                  "10",
+                  ")"
+                ]
+              ],
+              "hint": "Put the comparison in parentheses, with not in front."
+            }
+          },
+          "finishPanel": {
+            "title": "not (number > 10)",
+            "text": "The parentheses group the comparison so not applies to all of it. != checks inequality directly; not reverses another condition."
+          }
+        }
+      ]
+    },
+    "30": {
+      "step": 30,
+      "title": "Can One Condition Hold *Two Requirements?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Marks at least 40 AND attendance at least 75. Must both be met?",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/statement.png",
+                  "label": "Marks",
+                  "value": "at least 40"
+                },
+                {
+                  "pic": "/images/level-one/programmer.png",
+                  "label": "Attendance",
+                  "value": "at least 75"
+                }
+              ]
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Yes. There are two requirements, and both are needed.",
+          "wrong": "It says AND. Does one requirement alone do?"
+        },
+        {
+          "kind": "interaction",
+          "line": "Build each requirement, then connect them.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "marks",
+                "attendance",
+                "40",
+                "75",
+                ">=",
+                ">=",
+                "and",
+                "or"
+              ],
+              "accept": [
+                [
+                  "marks",
+                  ">=",
+                  "40",
+                  "and",
+                  "attendance",
+                  ">=",
+                  "75"
+                ],
+                [
+                  "attendance",
+                  ">=",
+                  "75",
+                  "and",
+                  "marks",
+                  ">=",
+                  "40"
+                ]
+              ],
+              "hint": "Both must be True: connect them with and."
+            }
+          },
+          "finishPanel": {
+            "title": "Smaller parts!",
+            "text": "marks >= 40 and attendance >= 75. A complex condition connects smaller conditions."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Does each student qualify?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "rows": [
+                {
+                  "label": "Marks 50, attendance 80",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Marks 50, attendance 60",
+                  "answer": "No"
+                },
+                {
+                  "label": "Marks 30, attendance 90",
+                  "answer": "No"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "Both requirements must be met.",
+              "prompt": "Do they qualify?"
+            }
+          }
+        }
+      ]
+    },
+    "31": {
+      "step": 31,
+      "title": "What If *Either One Is Enough?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Reward if the score is exactly 100 OR all bonus tasks are done. Must both happen?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "No. Either one is enough.",
+          "wrong": "It says OR. Is one enough?"
+        },
+        {
+          "kind": "interaction",
+          "line": "Build it: score exactly 100, or the bonus tasks done.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "score",
+                "100",
+                "==",
+                "bonus_tasks_completed",
+                "or",
+                "and",
+                "!="
+              ],
+              "accept": [
+                [
+                  "score",
+                  "==",
+                  "100",
+                  "or",
+                  "bonus_tasks_completed"
+                ],
+                [
+                  "bonus_tasks_completed",
+                  "or",
+                  "score",
+                  "==",
+                  "100"
+                ]
+              ],
+              "hint": "Either is enough: connect them with or."
+            }
+          },
+          "finishPanel": {
+            "title": "Alternatives!",
+            "text": "score == 100 or bonus_tasks_completed. or can join different kinds of conditions, not just comparisons."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Does the student get the reward?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "rows": [
+                {
+                  "label": "Score 100, bonus not done",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Score 80, all bonus done",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Score 100, all bonus done",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Score 80, bonus not done",
+                  "answer": "No"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "One True requirement is enough.",
+              "prompt": "Do they get it?"
+            }
+          }
+        }
+      ]
+    },
+    "32": {
+      "step": 32,
+      "title": "What If a Requirement Has *Groups?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Age 10 to 20, inclusive, OR special permission. Group the age part.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "(",
+                "age",
+                ">=",
+                "10",
+                "and",
+                "age",
+                "<=",
+                "20",
+                ")",
+                "or",
+                "special_permission",
+                "not"
+              ],
+              "accept": [
+                [
+                  "(",
+                  "age",
+                  ">=",
+                  "10",
+                  "and",
+                  "age",
+                  "<=",
+                  "20",
+                  ")",
+                  "or",
+                  "special_permission"
+                ],
+                [
+                  "special_permission",
+                  "or",
+                  "(",
+                  "age",
+                  ">=",
+                  "10",
+                  "and",
+                  "age",
+                  "<=",
+                  "20",
+                  ")"
+                ]
+              ],
+              "hint": "The age range goes in parentheses, then or special_permission."
+            }
+          },
+          "finishPanel": {
+            "title": "Groups!",
+            "text": "The parentheses group the two age requirements. That group is then joined to special_permission with or."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Test different combinations. Does the student qualify?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "rows": [
+                {
+                  "label": "Age 15, no permission",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Age 25, permission",
+                  "answer": "Yes"
+                },
+                {
+                  "label": "Age 25, no permission",
+                  "answer": "No"
+                },
+                {
+                  "label": "Age 8, permission",
+                  "answer": "Yes"
+                }
+              ],
+              "choices": [
+                "Yes",
+                "No"
+              ],
+              "hint": "Is the age in range, or is there permission?",
+              "prompt": "Do they qualify?"
+            }
+          },
+          "finishPanel": {
+            "title": "Organised!",
+            "text": "Parentheses help organise complex conditions into meaningful groups."
+          }
+        }
+      ]
+    },
+    "33": {
+      "step": 33,
+      "title": "Can You Translate *This Requirement?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Age 15 to 20 AND registered, OR special permission. Which go together?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Age 15 to 20 and registration.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Registration and special permission.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Age 15 to 20 and special permission.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Age and registration must be met together. Special permission is a separate alternative.",
+          "wrong": "Which two parts are joined by AND?"
+        },
+        {
+          "kind": "interaction",
+          "line": "Build the whole condition. Group what must be True together.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "(",
+                "age",
+                ">=",
+                "15",
+                "and",
+                "age",
+                "<=",
+                "20",
+                "and",
+                "registered",
+                ")",
+                "or",
+                "special_permission"
+              ],
+              "accept": [
+                [
+                  "(",
+                  "age",
+                  ">=",
+                  "15",
+                  "and",
+                  "age",
+                  "<=",
+                  "20",
+                  "and",
+                  "registered",
+                  ")",
+                  "or",
+                  "special_permission"
+                ],
+                [
+                  "special_permission",
+                  "or",
+                  "(",
+                  "age",
+                  ">=",
+                  "15",
+                  "and",
+                  "age",
+                  "<=",
+                  "20",
+                  "and",
+                  "registered",
+                  ")"
+                ]
+              ],
+              "hint": "Age and registered go in the parentheses. Then or special_permission."
+            }
+          },
+          "finishPanel": {
+            "title": "One condition!",
+            "text": "A long requirement splits into smaller logical parts that combine into one condition."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "A student has special permission but is outside the age range. Can they join?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Yes. Special permission can satisfy the condition on its own.",
+          "wrong": "Which part of the condition does special permission satisfy?"
+        }
+      ]
+    },
+    "34": {
+      "step": 34,
+      "title": "Can You Find *What Is Wrong?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "At least 10 and at most 20. A learner wrote this. Is it True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number > 10 and number < 20",
+                  "size": 22
+                }
+              },
+              "rows": [
+                {
+                  "label": "9",
+                  "sub": "9 > 10 and 9 < 20",
+                  "answer": "False"
+                },
+                {
+                  "label": "10",
+                  "sub": "10 > 10 and 10 < 20",
+                  "answer": "False"
+                },
+                {
+                  "label": "15",
+                  "sub": "15 > 10 and 15 < 20",
+                  "answer": "True"
+                },
+                {
+                  "label": "20",
+                  "sub": "20 > 10 and 20 < 20",
+                  "answer": "False"
+                },
+                {
+                  "label": "21",
+                  "sub": "21 > 10 and 21 < 20",
+                  "answer": "False"
+                }
+              ],
+              "hint": "Check both comparisons for that number."
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "What is wrong with this condition?",
+          "visual": {
+            "$": "kit:condition",
+            "props": {
+              "text": "number > 10 and number < 20",
+              "size": 22
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "It excludes both 10 and 20.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "It lets 21 in.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "It uses or instead of and.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "The requirement includes both boundaries, but this condition leaves them out.",
+          "wrong": "Look at what happened to 10 and 20."
+        },
+        {
+          "kind": "interaction",
+          "line": "Fix it: at least 10 and at most 20.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "number",
+                "10",
+                "20",
+                ">=",
+                "<=",
+                "and",
+                ">"
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">=",
+                  "10",
+                  "and",
+                  "number",
+                  "<=",
+                  "20"
+                ],
+                [
+                  "number",
+                  "<=",
+                  "20",
+                  "and",
+                  "number",
+                  ">=",
+                  "10"
+                ]
+              ],
+              "hint": "Both boundaries must be included: use >= and <=."
+            }
+          },
+          "finishPanel": {
+            "title": "Fixed!",
+            "text": "A condition can look almost correct but still fail at the boundary values."
+          }
+        }
+      ]
+    },
+    "35": {
+      "step": 35,
+      "title": "Does This Condition *Fit the Rule?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Between 10 and 20, both included. A learner wrote this. Is it True?",
+          "content": {
+            "$": "kit:predict-test-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$": "kit:condition",
+                "props": {
+                  "text": "number >= 10 or number <= 20",
+                  "size": 22
+                }
+              },
+              "rows": [
+                {
+                  "label": "5",
+                  "sub": "5 >= 10 or 5 <= 20",
+                  "answer": "True"
+                },
+                {
+                  "label": "25",
+                  "sub": "25 >= 10 or 25 <= 20",
+                  "answer": "True"
+                },
+                {
+                  "label": "15",
+                  "sub": "15 >= 10 or 15 <= 20",
+                  "answer": "True"
+                }
+              ],
+              "hint": "With or, one True comparison is enough."
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "5 and 25 are outside the range, yet get True. Why?",
+          "options": [
+            {
+              "id": "0",
+              "text": "With or, one True comparison is enough.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "The numbers are too big.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "<= is the wrong symbol.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "One comparison can be True even when the number is outside the required range.",
+          "wrong": "Check each comparison for 5 and for 25."
+        },
+        {
+          "kind": "interaction",
+          "line": "Fix it: both range requirements must be True together.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "number",
+                "10",
+                "20",
+                ">=",
+                "<=",
+                "and",
+                "or"
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">=",
+                  "10",
+                  "and",
+                  "number",
+                  "<=",
+                  "20"
+                ],
+                [
+                  "number",
+                  "<=",
+                  "20",
+                  "and",
+                  "number",
+                  ">=",
+                  "10"
+                ]
+              ],
+              "hint": "Both must be True at the same time: use and."
+            }
+          },
+          "finishPanel": {
+            "title": "Both together!",
+            "text": "Both range requirements must be satisfied at the same time."
+          }
+        }
+      ]
+    },
+    "36": {
+      "step": 36,
+      "title": "You Are the *Condition Designer!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Check whether a person is at least 18 years old.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "age",
+                "18",
+                ">=",
+                ">",
+                "=="
+              ],
+              "accept": [
+                [
+                  "age",
+                  ">=",
+                  "18"
+                ]
+              ],
+              "hint": "At least 18 includes 18: which symbol?"
+            }
+          },
+          "finishPanel": {
+            "title": "age >= 18",
+            "text": ">= is used because 18 itself is old enough: at least 18."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is negative.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "0",
+                "<",
+                ">",
+                "=="
+              ],
+              "accept": [
+                [
+                  "number",
+                  "<",
+                  "0"
+                ]
+              ],
+              "hint": "Negative means smaller than zero."
+            }
+          },
+          "finishPanel": {
+            "title": "number < 0",
+            "text": "< is used because negative numbers are smaller than zero."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is even.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "%",
+                "2",
+                "==",
+                "0",
+                "!="
+              ],
+              "accept": [
+                [
+                  "number",
+                  "%",
+                  "2",
+                  "==",
+                  "0"
+                ]
+              ],
+              "hint": "Even means nothing remains when dividing by 2."
+            }
+          },
+          "finishPanel": {
+            "title": "number % 2 == 0",
+            "text": "% 2 finds the remainder, and == 0 says nothing is left."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is greater than 50 but at most 100.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "number",
+                "number",
+                "50",
+                "100",
+                ">",
+                "<=",
+                "and",
+                "or",
+                "<"
+              ],
+              "accept": [
+                [
+                  "number",
+                  ">",
+                  "50",
+                  "and",
+                  "number",
+                  "<=",
+                  "100"
+                ],
+                [
+                  "number",
+                  "<=",
+                  "100",
+                  "and",
+                  "number",
+                  ">",
+                  "50"
+                ]
+              ],
+              "hint": "Two parts, both True: greater than 50, and at most 100."
+            }
+          },
+          "finishPanel": {
+            "title": "A range!",
+            "text": "number > 50 and number <= 100. > leaves 50 out, <= keeps 100 in, and and needs both."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "A student can take part if they completed the project OR scored at least 80.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "project_completed",
+                "score",
+                "80",
+                ">=",
+                "or",
+                "and",
+                ">"
+              ],
+              "accept": [
+                [
+                  "project_completed",
+                  "or",
+                  "score",
+                  ">=",
+                  "80"
+                ],
+                [
+                  "score",
+                  ">=",
+                  "80",
+                  "or",
+                  "project_completed"
+                ]
+              ],
+              "hint": "Either one is enough: connect them with or."
+            }
+          },
+          "finishPanel": {
+            "title": "Alternatives!",
+            "text": "project_completed or score >= 80. or: either is enough; >= because at least 80 includes 80."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Eligible if age is 18 to 30, inclusive, AND the account is verified.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "age",
+                "age",
+                "18",
+                "30",
+                ">=",
+                "<=",
+                "and",
+                "and",
+                "account_verified",
+                "or"
+              ],
+              "accept": [
+                [
+                  "age",
+                  ">=",
+                  "18",
+                  "and",
+                  "age",
+                  "<=",
+                  "30",
+                  "and",
+                  "account_verified"
+                ],
+                [
+                  "account_verified",
+                  "and",
+                  "age",
+                  ">=",
+                  "18",
+                  "and",
+                  "age",
+                  "<=",
+                  "30"
+                ]
+              ],
+              "hint": "All three parts must be True: use and between them."
+            }
+          },
+          "finishPanel": {
+            "title": "Three parts!",
+            "text": "age >= 18 and age <= 30 and account_verified. and needs all three to be True."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Check whether a number is NOT between 10 and 20, including both.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "not",
+                "(",
+                "number",
+                "number",
+                "10",
+                "20",
+                ">=",
+                "<=",
+                "and",
+                ")",
+                "or"
+              ],
+              "accept": [
+                [
+                  "not",
+                  "(",
+                  "number",
+                  ">=",
+                  "10",
+                  "and",
+                  "number",
+                  "<=",
+                  "20",
+                  ")"
+                ]
+              ],
+              "hint": "Build the range inside parentheses, then put not in front."
+            }
+          },
+          "finishPanel": {
+            "title": "Reversed range!",
+            "text": "not (number >= 10 and number <= 20). not reverses the whole range check; the parentheses group it."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Score at least 80 AND project done, OR special permission.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "(",
+                "score",
+                ">=",
+                "80",
+                "and",
+                "project_completed",
+                ")",
+                "or",
+                "special_permission",
+                "not"
+              ],
+              "accept": [
+                [
+                  "(",
+                  "score",
+                  ">=",
+                  "80",
+                  "and",
+                  "project_completed",
+                  ")",
+                  "or",
+                  "special_permission"
+                ],
+                [
+                  "special_permission",
+                  "or",
+                  "(",
+                  "score",
+                  ">=",
+                  "80",
+                  "and",
+                  "project_completed",
+                  ")"
+                ]
+              ],
+              "hint": "The AND part goes in parentheses, then or special_permission."
+            }
+          },
+          "finishPanel": {
+            "title": "Well designed!",
+            "text": "(score >= 80 and project_completed) or special_permission. The group needs both; permission is an alternative."
+          }
+        }
+      ]
+    },
+    "37": {
+      "step": 37,
+      "title": "You Can Now Construct *Conditions!*",
+      "finish": "gem",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Your toolkit. Tap an operator to see what it does.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "big": false,
+              "need": 5,
+              "prompt": "Tap each operator.",
+              "groups": [
+                {
+                  "title": "Comparison operators",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "gt",
+                      "symbol": ">",
+                      "title": "Greater than",
+                      "example": "10 > 5",
+                      "result": true
+                    },
+                    {
+                      "id": "lt",
+                      "symbol": "<",
+                      "title": "Less than",
+                      "example": "5 < 10",
+                      "result": true
+                    },
+                    {
+                      "id": "eq",
+                      "symbol": "==",
+                      "title": "Equal to",
+                      "example": "10 == 10",
+                      "result": true
+                    },
+                    {
+                      "id": "ne",
+                      "symbol": "!=",
+                      "title": "Not equal to",
+                      "example": "10 != 5",
+                      "result": true
+                    },
+                    {
+                      "id": "ge",
+                      "symbol": ">=",
+                      "title": "Greater than or equal to",
+                      "example": "10 >= 10",
+                      "result": true
+                    },
+                    {
+                      "id": "le",
+                      "symbol": "<=",
+                      "title": "Less than or equal to",
+                      "example": "5 <= 10",
+                      "result": true
+                    }
+                  ]
+                },
+                {
+                  "title": "Logical operators",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "and",
+                      "symbol": "and",
+                      "title": "Both conditions must be True",
+                      "example": "True and False = False"
+                    },
+                    {
+                      "id": "or",
+                      "symbol": "or",
+                      "title": "At least one must be True",
+                      "example": "True or False = True"
+                    },
+                    {
+                      "id": "not",
+                      "symbol": "not",
+                      "title": "Reverses the Boolean result",
+                      "example": "not True = False"
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Three kinds of condition you can build. Tap each.",
+          "content": {
+            "$": "kit:reveal-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 3,
+              "items": [
+                {
+                  "id": "math",
+                  "label": "Even number",
+                  "icon": "/images/level-two/cube.png",
+                  "caption": "number % 2 == 0"
+                },
+                {
+                  "id": "range",
+                  "label": "Range",
+                  "icon": "/images/gem.png",
+                  "caption": "number >= 10 and number <= 20"
+                },
+                {
+                  "id": "complex",
+                  "label": "Complex",
+                  "icon": "/images/box.png",
+                  "caption": "(age >= 18 and age <= 30) or special_permission"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "You can build conditions!",
+            "text": "A good programmer understands the requirement, splits it into parts, picks the operators and builds the condition."
+          },
+          "nextLabel": "Complete Chapter"
+        }
+      ]
+    },
+    "38": {
+      "step": 38,
+      "component": "conditions.NextScreen"
+    }
+  }
+}

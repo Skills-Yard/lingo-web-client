@@ -58,7 +58,7 @@ export const STEP = {
  * answered right the first time with no hint. A screen that was itself skipped
  * counts as answered (it was skipped because the ones before it were).
  */
-const SKIPS: Readonly<Record<number, readonly number[]>> = {
+export const SKIPS: Readonly<Record<number, readonly number[]>> = {
   [STEP.negative]: [STEP.positiveCondition],
   [STEP.notEqual]: [STEP.equal],
   [STEP.atMost]: [STEP.atLeast],
@@ -72,10 +72,43 @@ const SKIPS: Readonly<Record<number, readonly number[]>> = {
 const cleanRight = (step: number): boolean => answeredClean(step) || (SKIPS[step]?.every(cleanRight) ?? false);
 
 /** The challenge: trouble with the first two (divisibility) goes back to the remainder screen, trouble with the last two (comparisons) to the positive-number condition. */
-const challengeDetour = () => {
+export const challengeDetour = () => {
   if ([0, 1].some((stage) => missedStage(STEP.challenge, stage))) return STEP.remainder;
   if ([2, 3].some((stage) => missedStage(STEP.challenge, stage))) return STEP.positiveCondition;
   return undefined;
+};
+
+/** Where a learner who missed (or used the hint on) a screen is sent back to, once: the screen that taught the idea (a function picks it from how the learner did). */
+export const DETOURS: Readonly<Record<number, number | (() => number | undefined)>> = {
+  [STEP.trueFalse]: STEP.whatIs,
+  [STEP.infoVsCondition]: STEP.whatIs,
+  [STEP.construct]: STEP.infoVsCondition,
+  [STEP.positiveCondition]: STEP.positiveMeaning,
+  [STEP.negative]: STEP.positiveCondition,
+  [STEP.equal]: STEP.positiveCondition,
+  [STEP.notEqual]: STEP.equal,
+  [STEP.atLeast]: STEP.positiveCondition,
+  [STEP.atMost]: STEP.atLeast,
+  [STEP.remainder]: STEP.evenIdea,
+  [STEP.odd]: STEP.remainder,
+  [STEP.challenge]: challengeDetour,
+  [STEP.andTable]: STEP.twoRequirements,
+  [STEP.orClass]: STEP.andTable,
+  [STEP.orTable]: STEP.orClass,
+  [STEP.andVsOr]: STEP.andTable,
+  [STEP.inclusive]: STEP.range,
+  [STEP.firstIncluded]: STEP.inclusive,
+  [STEP.bothExcluded]: STEP.firstIncluded,
+  [STEP.outside]: STEP.orTable,
+  [STEP.notPython]: STEP.reverse,
+  [STEP.notComparison]: STEP.notPython,
+  [STEP.marksAttendance]: STEP.inclusive,
+  [STEP.alternatives]: STEP.orTable,
+  [STEP.groups]: STEP.marksAttendance,
+  [STEP.workshop]: STEP.groups,
+  [STEP.boundaryBug]: STEP.inclusive,
+  [STEP.andOrBug]: STEP.andVsOr,
+  [STEP.designer]: STEP.workshop,
 };
 
 const flow = createAdaptiveFlow({
@@ -83,37 +116,7 @@ const flow = createAdaptiveFlow({
   hrefOf: conditionsHref,
   home: "/level",
   skips: SKIPS,
-  detours: {
-    [STEP.trueFalse]: STEP.whatIs,
-    [STEP.infoVsCondition]: STEP.whatIs,
-    [STEP.construct]: STEP.infoVsCondition,
-    [STEP.positiveCondition]: STEP.positiveMeaning,
-    [STEP.negative]: STEP.positiveCondition,
-    [STEP.equal]: STEP.positiveCondition,
-    [STEP.notEqual]: STEP.equal,
-    [STEP.atLeast]: STEP.positiveCondition,
-    [STEP.atMost]: STEP.atLeast,
-    [STEP.remainder]: STEP.evenIdea,
-    [STEP.odd]: STEP.remainder,
-    [STEP.challenge]: challengeDetour,
-    [STEP.andTable]: STEP.twoRequirements,
-    [STEP.orClass]: STEP.andTable,
-    [STEP.orTable]: STEP.orClass,
-    [STEP.andVsOr]: STEP.andTable,
-    [STEP.inclusive]: STEP.range,
-    [STEP.firstIncluded]: STEP.inclusive,
-    [STEP.bothExcluded]: STEP.firstIncluded,
-    [STEP.outside]: STEP.orTable,
-    [STEP.notPython]: STEP.reverse,
-    [STEP.notComparison]: STEP.notPython,
-    [STEP.marksAttendance]: STEP.inclusive,
-    [STEP.alternatives]: STEP.orTable,
-    [STEP.groups]: STEP.marksAttendance,
-    [STEP.workshop]: STEP.groups,
-    [STEP.boundaryBug]: STEP.inclusive,
-    [STEP.andOrBug]: STEP.andVsOr,
-    [STEP.designer]: STEP.workshop,
-  },
+  detours: DETOURS,
   cleanRight,
   struggled,
   detourKey: "lingo.conditions-detour",

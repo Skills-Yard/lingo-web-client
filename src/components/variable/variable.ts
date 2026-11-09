@@ -52,7 +52,7 @@ export const STEP = {
  * Repeats a learner who has the idea can do without: a screen is skipped when
  * every screen listed for it was answered right the first time, with no hint.
  */
-const SKIPS: Readonly<Record<number, readonly number[]>> = {
+export const SKIPS: Readonly<Record<number, readonly number[]>> = {
   [STEP.empty]: [STEP.addWater, STEP.drink],
   [STEP.eraser]: [STEP.shopping, STEP.total],
   [STEP.spent]: [STEP.pocket, STEP.received],
@@ -63,7 +63,7 @@ const SKIPS: Readonly<Record<number, readonly number[]>> = {
  * the earlier screen that taught the idea. They then go on from the screen after
  * the one they missed.
  */
-const DETOURS: Readonly<Record<number, number>> = {
+export const DETOURS: Readonly<Record<number, number>> = {
   [STEP.addWater]: STEP.fill,
   [STEP.drink]: STEP.fill,
   [STEP.classify]: STEP.meet,

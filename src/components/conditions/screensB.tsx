@@ -1,11 +1,11 @@
 "use client";
 
-import { P } from "@/components/operators/pictures";
+import { P } from "@/components/kit/content/from-operators/pictures";
 import { STEP } from "./conditions";
-import { at, build, Condition, eitherOrder, neutral, options, predict, quiz, testRows } from "./helpers";
-import { ComboStage, PairUpStage, TableStage } from "./interactions";
-import type { ScreenDef } from "./screen";
-import { RangeLine } from "./visuals";
+import { ALL_ON, ANY_ON, at, build, Condition, eitherOrder, neutral, options, predict, quiz, testRows } from "@/components/kit/content/from-conditions/helpers";
+import { ComboStage, PairUpStage, TableStage } from "@/components/kit/content/from-conditions/interactions";
+import type { ScreenDef } from "@/components/kit/content/from-conditions/screen";
+import { RangeLine } from "@/components/kit/content/from-conditions/visuals";
 
 /** The inclusive range 10 to 20, as the lines in the range screens draw it. */
 const RANGE = { min: 5, max: 25, low: 10, high: 20 } as const;
@@ -151,7 +151,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
               { id: "ice", label: "Ice cream", pic: P.chocolate, on: "Available", off: "Not available" },
               { id: "pastry", label: "Pastry", pic: P.gift, on: "Available", off: "Not available" },
             ]}
-            rule={(states) => states.every(Boolean)}
+            rule={ALL_ON}
             ask="Is my complete dessert order satisfied?"
             hint="I asked for both. Do I have both?"
             explain={(_, result) => (result ? "Both are here: satisfied." : "Something is missing: not satisfied.")}
@@ -213,7 +213,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
               { id: "anjali", label: "Anjali", pic: P.student, on: "Comes", off: "Does not come" },
               { id: "ravi", label: "Ravi", pic: P.person, on: "Comes", off: "Does not come" },
             ]}
-            rule={(states) => states.some(Boolean)}
+            rule={ANY_ON}
             ask="Can the extra class happen?"
             hint="The class needs just one of them. Is anyone coming?"
             explain={(_, result) => (result ? "At least one comes: the class happens." : "Nobody comes: no class.")}

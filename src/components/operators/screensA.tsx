@@ -1,14 +1,14 @@
 "use client";
 
-import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
-import { FlipCarouselStage } from "./FlipCarousel";
-import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "./interactions";
-import { JobTurnStage, OperatorTurnStage, type JobItem, type OperatorItem } from "./OperatorCardsStage";
+import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "@/components/kit/content/from-operators/helpers";
+import { FlipCarouselStage } from "@/components/kit/content/from-operators/FlipCarousel";
+import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "@/components/kit/content/from-operators/interactions";
+import { JobTurnStage, OperatorTurnStage, type JobItem, type OperatorItem } from "@/components/kit/content/from-operators/OperatorCardsStage";
 import { STEP } from "./operators";
-import { P } from "./pictures";
-import type { InteractionStage, ScreenDef } from "./screen";
-import { SituationsStage, type SituationItem } from "./SituationsStage";
-import { BagIcon, ExprBig, GroupsPicture, InfoSheet, NotebookIcon, PenIcon, PlantGrid, Pic, ShareScene, ValueCards, Versus, WalletScene } from "./visuals";
+import { P } from "@/components/kit/content/from-operators/pictures";
+import type { InteractionStage, ScreenDef } from "@/components/kit/content/from-operators/screen";
+import { SituationsStage, type SituationItem } from "@/components/kit/content/from-operators/SituationsStage";
+import { BagIcon, ExprBig, GroupsPicture, InfoSheet, NotebookIcon, PenIcon, PlantGrid, Pic, ShareScene, ValueCards, Versus, WalletScene } from "@/components/kit/content/from-operators/visuals";
 
 /** The four situations of "Explore the situations!", in the order their questions come. */
 const SITUATIONS: readonly SituationItem[] = [

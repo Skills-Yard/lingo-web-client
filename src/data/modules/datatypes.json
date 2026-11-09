@@ -1,0 +1,2075 @@
+{
+  "id": "datatypes",
+  "title": "Data Types",
+  "level": 4,
+  "steps": 30,
+  "flow": {
+    "skips": {
+      "15": [
+        14
+      ],
+      "20": [
+        9,
+        18
+      ],
+      "25": [
+        9,
+        20
+      ],
+      "26": [
+        8,
+        9
+      ],
+      "27": [
+        18,
+        24
+      ],
+      "28": [
+        14,
+        16
+      ],
+      "29": [
+        21,
+        22
+      ]
+    },
+    "detours": {
+      "9": 6,
+      "13": 12,
+      "18": 17,
+      "20": 17,
+      "21": 17,
+      "22": 9,
+      "23": 8,
+      "24": 20,
+      "25": 7,
+      "26": 8,
+      "27": 12,
+      "28": 16,
+      "29": 21
+    }
+  },
+  "screens": {
+    "1": {
+      "step": 1,
+      "title": "What details are *needed?*",
+      "backdrop": {
+        "$": "kit:event-scene"
+      },
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Student details are needed before the school event begins.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "name",
+              "text": "Name",
+              "image": "/images/datatypes/datatypeModule-1.1.svg",
+              "tint": "blue"
+            },
+            {
+              "id": "age",
+              "text": "Age",
+              "image": "/images/datatypes/datatypeModule-1.2.svg",
+              "tint": "green"
+            },
+            {
+              "id": "height",
+              "text": "Height",
+              "image": "/images/datatypes/datatypeModule-1.3.svg",
+              "tint": "cream"
+            },
+            {
+              "id": "all",
+              "text": "All",
+              "image": "/images/datatypes/datatypeModule-1.4.svg",
+              "tint": "lavender"
+            }
+          ],
+          "correctId": "all",
+          "rightTitle": "Exactly!",
+          "right": "The event needs every detail: a name, an age and a height.",
+          "wrong": "Look at the registration form. How many details does it ask for?"
+        }
+      ]
+    },
+    "2": {
+      "step": 2,
+      "title": "What do you *notice?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Notice the difference among his details!",
+          "visual": {
+            "$": "kit:student-profile-card"
+          },
+          "options": [
+            {
+              "id": "same",
+              "text": "They all look same",
+              "image": "/images/datatypes/datatypeModule-2.1.svg"
+            },
+            {
+              "id": "different",
+              "text": "They are different from each other",
+              "image": "/images/datatypes/datatypeModule-2.2.svg"
+            },
+            {
+              "id": "numbers",
+              "text": "They are all numbers",
+              "image": "/images/datatypes/datatypeModule-2.3.svg"
+            }
+          ],
+          "correctId": "different",
+          "rightTitle": "Exactly!",
+          "right": "A name, an age, a height and a permission: each detail is a different kind of information.",
+          "wrong": "Compare the details one by one. Is a name like an age?",
+          "hintText": "Read each detail on the profile. Do they all look alike?"
+        }
+      ]
+    },
+    "3": {
+      "step": 3,
+      "title": "Let’s find *similar* ones!",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Explore these values and find which ones belong together.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:group-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "items": [
+                {
+                  "id": "12",
+                  "label": "12",
+                  "tint": "blue"
+                },
+                {
+                  "id": "25",
+                  "label": "25",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "aarav",
+                  "label": "Aarav",
+                  "tint": "green"
+                },
+                {
+                  "id": "148.5",
+                  "label": "148.5",
+                  "tint": "cream"
+                },
+                {
+                  "id": "kabir",
+                  "label": "Kabir",
+                  "tint": "blue"
+                },
+                {
+                  "id": "mia",
+                  "label": "Mia",
+                  "tint": "cream"
+                },
+                {
+                  "id": "162",
+                  "label": "162",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "40",
+                  "label": "40",
+                  "tint": "cream"
+                },
+                {
+                  "id": "156",
+                  "label": "156",
+                  "tint": "green"
+                }
+              ],
+              "onSorted": {
+                "$ref": "datatypes.noteGrouping"
+              }
+            }
+          },
+          "finishPanel": {
+            "title": "Interesting!",
+            "text": "You started grouping information by what it represents. Let's look at your groups."
+          }
+        }
+      ]
+    },
+    "4": {
+      "step": 4,
+      "title": "Information can *differ!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Let’s understand what each group tells us.",
+          "alignTop": true,
+          "ready": true,
+          "content": {
+            "$": "kit:group-tour-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "groups": [
+                {
+                  "id": "a",
+                  "name": "Group A",
+                  "tint": "lavender",
+                  "ink": "text-[#8E82FF]",
+                  "values": [
+                    "Aarav",
+                    "Kabir",
+                    "Mia"
+                  ],
+                  "caption": "These values identify people using their names.",
+                  "hex": "left"
+                },
+                {
+                  "id": "b",
+                  "name": "Group B",
+                  "tint": "cream",
+                  "ink": "text-[#FF8D42]",
+                  "values": [
+                    "12",
+                    "25",
+                    "40"
+                  ],
+                  "caption": "These values represent quantities or amounts.",
+                  "hex": "center"
+                },
+                {
+                  "id": "c",
+                  "name": "Group C",
+                  "tint": "blue",
+                  "ink": "text-[#5B9BFF]",
+                  "values": [
+                    "Yes",
+                    "No",
+                    "Yes"
+                  ],
+                  "caption": "These values tell us whether something is true or false.",
+                  "hex": "right"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "5": {
+      "step": 5,
+      "title": "Let’s *plan* a school event!",
+      "titleSize": 28,
+      "backdrop": {
+        "$": "kit:school-scene"
+      },
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "You need to know few details for this event",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "ready": true,
+          "content": {
+            "$": "kit:stack",
+            "props": {
+              "gap": 24,
+              "fit": true
+            },
+            "children": [
+              {
+                "$": "kit:info-tiles",
+                "props": {
+                  "layout": "row",
+                  "shown": {
+                    "$ctx": "api.hexSpoken"
+                  },
+                  "tiles": [
+                    {
+                      "id": "students",
+                      "text": "Students Registered?",
+                      "icon": "/images/datatypes/datatypeModule-2.2.svg",
+                      "tint": "bg-[#ECF7ED] dark:bg-[#10261A]"
+                    },
+                    {
+                      "id": "tickets",
+                      "text": "Tickets Sold?",
+                      "icon": "/images/datatypes/datatypeModule-2.1.svg",
+                      "tint": "bg-[#FFF3DE] dark:bg-[#2A2218]"
+                    },
+                    {
+                      "id": "prizes",
+                      "text": "Prizes Available?",
+                      "icon": "/images/datatypes/datatypeModule-2.3.svg",
+                      "tint": "bg-[#F6F4FE] dark:bg-[#0F1F26]"
+                    }
+                  ]
+                }
+              },
+              {
+                "$": "kit:info-rows",
+                "props": {
+                  "rows": [
+                    {
+                      "id": "students",
+                      "text": "How many students registered?",
+                      "icon": "/images/datatypes/datatypeModule-2.2.svg"
+                    },
+                    {
+                      "id": "tickets",
+                      "text": "How many tickets were sold?",
+                      "icon": "/images/datatypes/datatypeModule-2.1.svg"
+                    },
+                    {
+                      "id": "prizes",
+                      "text": "How many prizes are available?",
+                      "icon": "/images/datatypes/datatypeModule-2.3.svg"
+                    }
+                  ],
+                  "shown": {
+                    "$ctx": "api.hexSpoken"
+                  },
+                  "firstIndex": 3
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "title": "How are they *similar?*",
+          "titleSize": 28,
+          "line": "Look closely and find what these values share.",
+          "visual": {
+            "$": "kit:info-tiles",
+            "props": {
+              "layout": "row",
+              "shown": {
+                "$ctx": "hexSpoken"
+              },
+              "tiles": [
+                {
+                  "id": "students",
+                  "text": "Students",
+                  "icon": "/images/datatypes/datatypeModule-5.2.1.svg",
+                  "tint": "bg-[#ECF7ED] dark:bg-[#10261A]"
+                },
+                {
+                  "id": "tickets",
+                  "text": "Tickets",
+                  "icon": "/images/datatypes/datatypeModule-5.2.2.svg",
+                  "tint": "bg-[#FFF3DE] dark:bg-[#2A2218]"
+                },
+                {
+                  "id": "prices",
+                  "text": "Prices",
+                  "icon": "/images/datatypes/datatypeModule-5.2.3.svg",
+                  "tint": "bg-[#E5EFFD] dark:bg-[#15233A]"
+                }
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "They represent quantities.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "They represent people’s names.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "They represent colours.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "They represent yes/no answers.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "These numbers represent quantities that we can count.",
+          "wrong": "Look closely at the values. What do they all tell us?",
+          "nextLabel": "Continue"
+        }
+      ]
+    },
+    "6": {
+      "step": 6,
+      "title": "Look at these *numbers*",
+      "titleSize": 28,
+      "backdrop": {
+        "$": "kit:school-scene"
+      },
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Here are some values from different situations.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "ready": true,
+          "content": {
+            "$": "kit:info-tiles",
+            "props": {
+              "layout": "grid",
+              "shown": {
+                "$ctx": "api.hexSpoken"
+              },
+              "tiles": [
+                {
+                  "id": "students",
+                  "text": "12 students",
+                  "icon": "/images/datatypes/datatypeModule-6.1.svg",
+                  "tint": "bg-[#F6F4FE] dark:bg-[#0F1F26]"
+                },
+                {
+                  "id": "tickets",
+                  "text": "25 tickets",
+                  "icon": "/images/datatypes/datatypeModule-6.2.svg",
+                  "tint": "bg-[#FFF3DE] dark:bg-[#2A2218]"
+                },
+                {
+                  "id": "height",
+                  "text": "148.5 cm height",
+                  "icon": "/images/datatypes/datatypeModule-6.3.svg",
+                  "tint": "bg-[#ECF7ED] dark:bg-[#10261A]"
+                },
+                {
+                  "id": "weight",
+                  "text": "36.7 kg weight",
+                  "icon": "/images/datatypes/datatypeModule-6.4.svg",
+                  "tint": "bg-[#E5EFFD] dark:bg-[#15233A]"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "7": {
+      "step": 7,
+      "title": "Meet *Integers!*",
+      "titleSize": 28,
+      "backdrop": {
+        "$": "kit:school-scene"
+      },
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A whole number, with no decimal part, is an Integer.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:reveal-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 5,
+              "need": 3,
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$": "kit:number-line",
+                    "props": {
+                      "current": {
+                        "$ctx": "arg0"
+                      }
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "id": "0",
+                  "label": "0",
+                  "caption": "Zero: nothing left."
+                },
+                {
+                  "id": "1",
+                  "label": "1",
+                  "caption": "One: a single ticket."
+                },
+                {
+                  "id": "12",
+                  "label": "12",
+                  "caption": "Number of books: 12"
+                },
+                {
+                  "id": "25",
+                  "label": "25",
+                  "caption": "Number of students: 25"
+                },
+                {
+                  "id": "-5",
+                  "label": "-5",
+                  "caption": "Temperature change: -5 degrees"
+                }
+              ],
+              "footer": {
+                "$": "kit:key-text",
+                "children": [
+                  "Integer (int) represents whole-number values."
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "8": {
+      "step": 8,
+      "title": "Need more *precision?*",
+      "titleSize": 28,
+      "backdrop": {
+        "$": "kit:school-scene"
+      },
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "148.5 cm or 152.8 cm: a whole number isn't enough detail.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:reveal-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 3,
+              "need": 1,
+              "header": {
+                "$fn": {
+                  "arity": 0,
+                  "body": {
+                    "$": "kit:ruler-scale"
+                  }
+                }
+              },
+              "items": [
+                {
+                  "id": "h",
+                  "label": "148.5",
+                  "sub": "Height",
+                  "caption": "Height: 148.5"
+                },
+                {
+                  "id": "w",
+                  "label": "36.7",
+                  "sub": "Weight",
+                  "caption": "Weight: 36.7"
+                },
+                {
+                  "id": "p",
+                  "label": "49.99",
+                  "sub": "Price",
+                  "caption": "Price: 49.99"
+                }
+              ],
+              "footer": {
+                "$": "kit:key-text",
+                "children": [
+                  "Numbers with decimal values are called Float."
+                ]
+              }
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "A height of 148.5 cm. Which type suits it best?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "integer",
+              "text": "Integer",
+              "image": "/images/level-two/cube.png",
+              "tint": "blue"
+            },
+            {
+              "id": "float",
+              "text": "Float",
+              "image": "/images/coins.png",
+              "tint": "lavender"
+            },
+            {
+              "id": "string",
+              "text": "String",
+              "image": "/images/sequence/icon-alphabet.svg",
+              "tint": "green"
+            },
+            {
+              "id": "boolean",
+              "text": "Boolean",
+              "image": "/images/trafficSignal.png",
+              "tint": "cream"
+            }
+          ],
+          "correctId": "float",
+          "rightTitle": "Correct!",
+          "right": "A decimal measurement like 148.5 is a Float.",
+          "wrong": "Does 148.5 have a decimal part? Which type holds decimals?"
+        }
+      ]
+    },
+    "9": {
+      "step": 9,
+      "title": "Sort the *numbers!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Drag each number to Integer or Float.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:sort-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "decimalHint": true,
+              "cardWidth": 104,
+              "prompt": "Drag each card to its group.",
+              "items": [
+                {
+                  "id": "15",
+                  "label": "15",
+                  "bucket": "integer",
+                  "hint": "Check whether the value contains a decimal part."
+                },
+                {
+                  "id": "25.5",
+                  "label": "25.5",
+                  "bucket": "float",
+                  "hint": "Check whether the value contains a decimal part."
+                },
+                {
+                  "id": "100",
+                  "label": "100",
+                  "bucket": "integer",
+                  "hint": "Check whether the value contains a decimal part."
+                },
+                {
+                  "id": "9.75",
+                  "label": "9.75",
+                  "bucket": "float",
+                  "hint": "Check whether the value contains a decimal part."
+                },
+                {
+                  "id": "0",
+                  "label": "0",
+                  "bucket": "integer",
+                  "hint": "Check whether the value contains a decimal part."
+                },
+                {
+                  "id": "42.8",
+                  "label": "42.8",
+                  "bucket": "float",
+                  "hint": "Check whether the value contains a decimal part."
+                }
+              ],
+              "buckets": [
+                {
+                  "id": "integer",
+                  "label": "Integer",
+                  "icon": "/images/level-two/cube.png"
+                },
+                {
+                  "id": "float",
+                  "label": "Float",
+                  "icon": "/images/coins.png"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Excellent!",
+            "text": "You can now tell whole numbers from decimal numbers."
+          }
+        }
+      ]
+    },
+    "10": {
+      "step": 10,
+      "title": "What about *names?*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "What kind of information are these names?",
+          "visual": {
+            "$": "kit:names-list",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Numerical information.",
+              "image": "/images/level-two/cube.png"
+            },
+            {
+              "id": "1",
+              "text": "Textual information.",
+              "image": "/images/sequence/icon-alphabet.svg"
+            },
+            {
+              "id": "2",
+              "text": "Decimal information.",
+              "image": "/images/coins.png"
+            },
+            {
+              "id": "3",
+              "text": "Yes/no information.",
+              "image": "/images/trafficSignal.png"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "These are names written as text.",
+          "wrong": "Look at the names. Are they numbers?"
+        }
+      ]
+    },
+    "11": {
+      "step": 11,
+      "title": "Which ones are *text?*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Which of these can be treated as text? Tap them.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:multi-pick-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 2,
+              "correct": [
+                "a",
+                "b",
+                "c",
+                "d",
+                "e",
+                "f"
+              ],
+              "hint": "Text can hold letters, digits and symbols.",
+              "items": [
+                {
+                  "id": "a",
+                  "label": "Aarav",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "b",
+                  "label": "Class 6A",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "c",
+                  "label": "Delhi",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "d",
+                  "label": "SY001",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "e",
+                  "label": "Welcome to Learny!",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "f",
+                  "label": "9876543210",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                }
+              ],
+              "footer": {
+                "$": "kit:key-text",
+                "children": [
+                  "A value is not a number just because it has digits. A phone number or a student ID identifies someone: we don’t add or subtract it."
+                ]
+              }
+            }
+          },
+          "finishPanel": {
+            "title": "All of them!",
+            "text": "Text can contain letters, numbers, spaces and special characters."
+          }
+        }
+      ]
+    },
+    "12": {
+      "step": 12,
+      "title": "Meet *Strings!*",
+      "titleSize": 28,
+      "backdrop": {
+        "$": "kit:school-scene"
+      },
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Information that is text is called a String.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:reveal-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 3,
+              "need": 3,
+              "tone": "cream",
+              "items": [
+                {
+                  "id": "a",
+                  "label": "“Aarav”",
+                  "caption": "A name, written as text."
+                },
+                {
+                  "id": "b",
+                  "label": "“Delhi”",
+                  "caption": "A city, written as text."
+                },
+                {
+                  "id": "c",
+                  "label": "“Class 6A”",
+                  "caption": "Words and a number, as text."
+                },
+                {
+                  "id": "d",
+                  "label": "“SY001”",
+                  "caption": "An ID: letters and digits, as text."
+                },
+                {
+                  "id": "e",
+                  "label": "“Hello Learny!”",
+                  "caption": "Words, a space and a symbol."
+                }
+              ],
+              "footer": {
+                "$": "kit:key-text",
+                "children": [
+                  "String (str) represents text information."
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "13": {
+      "step": 13,
+      "title": "Same look, *same type?*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Add 12 and 3 as numbers. What do we get?",
+          "visual": {
+            "$": "kit:twelve-cards",
+            "props": {
+              "mode": "numbers",
+              "replay": {
+                "$ctx": "attempt"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "9",
+              "image": "/images/sequence/icon-order.svg",
+              "tint": "blue"
+            },
+            {
+              "id": "1",
+              "text": "15",
+              "image": "/images/sequence/icon-actions.svg",
+              "tint": "lavender"
+            },
+            {
+              "id": "2",
+              "text": "123",
+              "image": "/images/sequence/icon-goal.svg",
+              "tint": "green"
+            },
+            {
+              "id": "3",
+              "text": "36",
+              "image": "/images/sequence/icon-short.svg",
+              "tint": "cream"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Yes!",
+          "right": "As numbers, 12 + 3 = 15.",
+          "wrong": "Add the two numbers: 12 and 3."
+        },
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Now join the text “12” and the text “3”. What text do we get?",
+          "visual": {
+            "$": "kit:twelve-cards",
+            "props": {
+              "mode": "text",
+              "replay": {
+                "$ctx": "attempt"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "“15”",
+              "image": "/images/sequence/icon-order.svg",
+              "tint": "blue"
+            },
+            {
+              "id": "1",
+              "text": "“123”",
+              "image": "/images/sequence/icon-actions.svg",
+              "tint": "lavender"
+            },
+            {
+              "id": "2",
+              "text": "“312”",
+              "image": "/images/sequence/icon-goal.svg",
+              "tint": "green"
+            },
+            {
+              "id": "3",
+              "text": "“9”",
+              "image": "/images/sequence/icon-short.svg",
+              "tint": "cream"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "A value's look doesn't always tell its type. We must know what it means.",
+          "wrong": "Joining text puts the characters side by side."
+        }
+      ]
+    },
+    "14": {
+      "step": 14,
+      "title": "Check the *attendance!*",
+      "titleSize": 28,
+      "backdrop": {
+        "$": "kit:school-scene"
+      },
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "What kind of information is the teacher collecting?",
+          "visual": {
+            "$": "kit:attendance-board"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "A person's name.",
+              "image": "/images/sequence/icon-alphabet.svg"
+            },
+            {
+              "id": "1",
+              "text": "A numerical quantity.",
+              "image": "/images/level-two/cube.png"
+            },
+            {
+              "id": "2",
+              "text": "A yes/no status.",
+              "image": "/images/trafficSignal.png"
+            },
+            {
+              "id": "3",
+              "text": "A decimal measurement.",
+              "image": "/images/coins.png"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "This information tells us whether something is true or false.",
+          "wrong": "How many different answers are possible: present or absent?"
+        }
+      ]
+    },
+    "15": {
+      "step": 15,
+      "title": "Yes or no *answers!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Tap each picture to switch its state.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:toggle-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "items": [
+                {
+                  "id": "a",
+                  "title": "Student attendance",
+                  "on": "Present",
+                  "off": "Absent",
+                  "icon": "/images/level-one/programmer.png"
+                },
+                {
+                  "id": "b",
+                  "title": "Payment",
+                  "on": "Complete",
+                  "off": "Pending",
+                  "icon": "/images/coins.png"
+                },
+                {
+                  "id": "c",
+                  "title": "Login status",
+                  "on": "Logged in",
+                  "off": "Logged out",
+                  "icon": "/images/computer.png"
+                },
+                {
+                  "id": "d",
+                  "title": "Light switch",
+                  "on": "On",
+                  "off": "Off",
+                  "icon": "/images/idea.png"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "What do all these situations have in common?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Each has two possible states.",
+              "image": "/images/trafficSignal.png"
+            },
+            {
+              "id": "1",
+              "text": "Each is a number.",
+              "image": "/images/level-two/cube.png"
+            },
+            {
+              "id": "2",
+              "text": "Each is a name.",
+              "image": "/images/sequence/icon-alphabet.svg"
+            },
+            {
+              "id": "3",
+              "text": "Each is a decimal value.",
+              "image": "/images/coins.png"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Each situation has two possible logical states.",
+          "wrong": "Look at the two states each picture can show."
+        }
+      ]
+    },
+    "16": {
+      "step": 16,
+      "title": "Meet *Boolean!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Information with only two values is a Boolean: True or False.",
+          "alignTop": true,
+          "content": {
+            "$": "kit:reveal-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 2,
+              "header": {
+                "$fn": {
+                  "arity": 0,
+                  "body": {
+                    "$": "kit:name-value-card",
+                    "props": {
+                      "rows": [
+                        {
+                          "name": "Is_present",
+                          "value": "True",
+                          "tone": "on"
+                        },
+                        {
+                          "name": "Is_payment_complete",
+                          "value": "False",
+                          "tone": "off"
+                        },
+                        {
+                          "name": "Is_logged_in",
+                          "value": "True",
+                          "tone": "on"
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              "items": [
+                {
+                  "id": "t",
+                  "label": "TRUE",
+                  "sub": "light on",
+                  "icon": "/images/trafficSignal.png",
+                  "caption": "True: Aarav is present."
+                },
+                {
+                  "id": "f",
+                  "label": "FALSE",
+                  "sub": "light off",
+                  "icon": "/images/stop.png",
+                  "caption": "False: Aarav is not present."
+                }
+              ],
+              "footer": {
+                "$": "kit:key-text",
+                "children": [
+                  "Boolean (bool) represents a logical value: True or False."
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "17": {
+      "step": 17,
+      "title": "Four *data types!*",
+      "titleSize": 28,
+      "backdrop": {
+        "$": "kit:school-scene"
+      },
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Tap each card to see what it holds.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:reveal-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 2,
+              "items": [
+                {
+                  "id": "int",
+                  "label": "Integer",
+                  "sub": "int",
+                  "icon": "/images/level-two/cube.png",
+                  "caption": "Whole-number values: 10, 25, 100."
+                },
+                {
+                  "id": "float",
+                  "label": "Float",
+                  "sub": "float",
+                  "icon": "/images/coins.png",
+                  "caption": "Decimal-number values: 10.5, 25.75, 100.2."
+                },
+                {
+                  "id": "str",
+                  "label": "String",
+                  "sub": "str",
+                  "icon": "/images/sequence/icon-alphabet.svg",
+                  "caption": "Text information: Aarav, Delhi, Class 6A."
+                },
+                {
+                  "id": "bool",
+                  "label": "Boolean",
+                  "sub": "bool",
+                  "icon": "/images/trafficSignal.png",
+                  "caption": "Logical values: True, False."
+                }
+              ],
+              "footer": {
+                "$": "kit:key-text",
+                "children": [
+                  "A data type tells a program what kind of value it is working with."
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "18": {
+      "step": 18,
+      "title": "Look beyond *looks!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Match each card to its type.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:sort-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "cardWidth": 150,
+              "prompt": "Drag each card to its type.",
+              "items": [
+                {
+                  "id": "age",
+                  "label": "Age: 12",
+                  "bucket": "integer",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "id",
+                  "label": "Student ID: “0012”",
+                  "bucket": "string",
+                  "hint": "It is written as text, in quotes."
+                },
+                {
+                  "id": "height",
+                  "label": "Height: 148.5",
+                  "bucket": "float",
+                  "hint": "Does it have a decimal part?"
+                },
+                {
+                  "id": "present",
+                  "label": "Is_present: True",
+                  "bucket": "boolean",
+                  "hint": "Is it a yes/no state?"
+                }
+              ],
+              "buckets": [
+                {
+                  "id": "integer",
+                  "label": "Integer",
+                  "icon": "/images/level-two/cube.png"
+                },
+                {
+                  "id": "float",
+                  "label": "Float",
+                  "icon": "/images/coins.png"
+                },
+                {
+                  "id": "string",
+                  "label": "String",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "boolean",
+                  "label": "Boolean",
+                  "icon": "/images/trafficSignal.png"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Why is Student ID text, even though it has digits?",
+          "options": [
+            {
+              "id": "0",
+              "text": "It identifies a student.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "It is a decimal number.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "It is a height.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "It is True or False.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Because it identifies a student.",
+          "right": "It's not a quantity we calculate. It also keeps the leading zero.",
+          "wrong": "Are we calculating a student's ID, or using it to identify them?"
+        }
+      ]
+    },
+    "19": {
+      "step": 19,
+      "title": "Data decides *its use!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Which values can we add up? Drag each to its use.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:sort-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "cardWidth": 104,
+              "prompt": "Drag each card to what we do with it.",
+              "items": [
+                {
+                  "id": "nb",
+                  "label": "Notebook price",
+                  "sub": "₹50",
+                  "bucket": "total",
+                  "hint": "A price is a number, so we can add it."
+                },
+                {
+                  "id": "pen",
+                  "label": "Pen price",
+                  "sub": "₹20",
+                  "bucket": "total",
+                  "hint": "A price is a number, so we can add it."
+                },
+                {
+                  "id": "name",
+                  "label": "Student name",
+                  "sub": "Aarav",
+                  "bucket": "display",
+                  "hint": "A name is text. We show it, we don't add it."
+                }
+              ],
+              "buckets": [
+                {
+                  "id": "total",
+                  "label": "Calculate a total",
+                  "icon": "/images/level-two/cube.png"
+                },
+                {
+                  "id": "display",
+                  "label": "Display information",
+                  "icon": "/images/statement.png"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Nice!",
+            "text": "Prices are numbers, so we add them. A name is text, so we show it."
+          }
+        }
+      ]
+    },
+    "20": {
+      "step": 20,
+      "title": "Organise *Aarav's info!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Drag each piece of information to its type.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:sort-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "cardWidth": 104,
+              "prompt": "Drag each card to its type.",
+              "items": [
+                {
+                  "id": "name",
+                  "label": "Name",
+                  "sub": "Aarav",
+                  "bucket": "string",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "age",
+                  "label": "Age",
+                  "sub": "12",
+                  "bucket": "integer",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "height",
+                  "label": "Height",
+                  "sub": "148.5",
+                  "bucket": "float",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "present",
+                  "label": "Is_present",
+                  "sub": "True",
+                  "bucket": "boolean",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "id",
+                  "label": "Student ID",
+                  "sub": "“0012”",
+                  "bucket": "string",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                }
+              ],
+              "buckets": [
+                {
+                  "id": "integer",
+                  "label": "Integer",
+                  "icon": "/images/level-two/cube.png"
+                },
+                {
+                  "id": "float",
+                  "label": "Float",
+                  "icon": "/images/coins.png"
+                },
+                {
+                  "id": "string",
+                  "label": "String",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "boolean",
+                  "label": "Boolean",
+                  "icon": "/images/trafficSignal.png"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Great!",
+            "text": "You organised the student's information by its data type."
+          }
+        }
+      ]
+    },
+    "21": {
+      "step": 21,
+      "title": "Build a *weather app!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "What kind of data should each field use?",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:sort-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "cardWidth": 150,
+              "prompt": "Drag each field to its data type.",
+              "items": [
+                {
+                  "id": "city",
+                  "label": "City name",
+                  "bucket": "string",
+                  "hint": "A name is text."
+                },
+                {
+                  "id": "temp",
+                  "label": "Temperature",
+                  "bucket": "float",
+                  "hint": "Temperatures can have decimals."
+                },
+                {
+                  "id": "rain",
+                  "label": "Number of rainy days",
+                  "bucket": "integer",
+                  "hint": "Days are counted in whole numbers."
+                },
+                {
+                  "id": "now",
+                  "label": "Is it raining?",
+                  "bucket": "boolean",
+                  "hint": "It is a yes/no state."
+                }
+              ],
+              "buckets": [
+                {
+                  "id": "integer",
+                  "label": "Integer",
+                  "icon": "/images/level-two/cube.png"
+                },
+                {
+                  "id": "float",
+                  "label": "Float",
+                  "icon": "/images/coins.png"
+                },
+                {
+                  "id": "string",
+                  "label": "String",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "boolean",
+                  "label": "Boolean",
+                  "icon": "/images/trafficSignal.png"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Excellent!",
+            "text": "Your app needs four different kinds of information."
+          }
+        }
+      ]
+    },
+    "22": {
+      "step": 22,
+      "title": "Plan before *you build!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Choose the type for each field.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:sort-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "cardWidth": 150,
+              "prompt": "Drag each field to its data type.",
+              "items": [
+                {
+                  "id": "city",
+                  "label": "City",
+                  "sub": "Delhi",
+                  "bucket": "string",
+                  "hint": "A name is text."
+                },
+                {
+                  "id": "temp",
+                  "label": "Temperature",
+                  "sub": "28.5°C",
+                  "bucket": "float",
+                  "hint": "It has a decimal part."
+                },
+                {
+                  "id": "rain",
+                  "label": "Rainy days",
+                  "sub": "3",
+                  "bucket": "integer",
+                  "hint": "A whole number of days."
+                },
+                {
+                  "id": "now",
+                  "label": "Is raining",
+                  "sub": "False",
+                  "bucket": "boolean",
+                  "hint": "It is a yes/no state."
+                }
+              ],
+              "buckets": [
+                {
+                  "id": "integer",
+                  "label": "Integer",
+                  "icon": "/images/level-two/cube.png"
+                },
+                {
+                  "id": "float",
+                  "label": "Float",
+                  "icon": "/images/coins.png"
+                },
+                {
+                  "id": "string",
+                  "label": "String",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "boolean",
+                  "label": "Boolean",
+                  "icon": "/images/trafficSignal.png"
+                }
+              ],
+              "after": {
+                "$": "kit:weather-card"
+              }
+            }
+          },
+          "finishPanel": {
+            "title": "Perfect!",
+            "text": "You know what kind of information each part needs."
+          }
+        }
+      ]
+    },
+    "23": {
+      "step": 23,
+      "title": "Find the *mistake!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Which field has been classified incorrectly?",
+          "visual": {
+            "$": "kit:typed-cards"
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "name",
+              "text": "Name.",
+              "image": "/images/statement.png",
+              "tint": "blue"
+            },
+            {
+              "id": "age",
+              "text": "Age.",
+              "image": "/images/question.png",
+              "tint": "lavender"
+            },
+            {
+              "id": "height",
+              "text": "Height.",
+              "image": "/images/idea.png",
+              "tint": "green"
+            },
+            {
+              "id": "present",
+              "text": "Is_present.",
+              "image": "/images/command.png",
+              "tint": "cream"
+            }
+          ],
+          "correctId": "height",
+          "rightTitle": "Exactly!",
+          "right": "148.5 has a decimal part, so it should be a Float, not an Integer.",
+          "wrong": "Look carefully at the height value. Does it have a decimal part?"
+        },
+        {
+          "kind": "interaction",
+          "line": "Now replace the wrong type with the right one.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:choose-type-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "field": "Height",
+              "value": "148.5",
+              "from": "Integer",
+              "correct": "float",
+              "hint": "Which type holds decimal numbers?"
+            }
+          },
+          "finishPanel": {
+            "title": "Fixed!",
+            "text": "Height is now a Float."
+          }
+        }
+      ]
+    },
+    "24": {
+      "step": 24,
+      "title": "Sort a *game profile!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Sort the five values of the player's profile by type.",
+          "bubbleWidth": 190,
+          "alignTop": true,
+          "content": {
+            "$": "kit:sort-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "cardWidth": 104,
+              "prompt": "Drag each card to its type.",
+              "items": [
+                {
+                  "id": "name",
+                  "label": "Player name",
+                  "sub": "ShadowX",
+                  "bucket": "string",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "score",
+                  "label": "Current score",
+                  "sub": "1250",
+                  "bucket": "integer",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "percent",
+                  "label": "Completion %",
+                  "sub": "87.5",
+                  "bucket": "float",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "done",
+                  "label": "Level completed?",
+                  "sub": "False",
+                  "bucket": "boolean",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                },
+                {
+                  "id": "id",
+                  "label": "Player ID",
+                  "sub": "“G007”",
+                  "bucket": "string",
+                  "hint": "Look at what each value is. Is it a quantity, a decimal, text or a logical state?"
+                }
+              ],
+              "buckets": [
+                {
+                  "id": "integer",
+                  "label": "Integer",
+                  "icon": "/images/level-two/cube.png"
+                },
+                {
+                  "id": "float",
+                  "label": "Float",
+                  "icon": "/images/coins.png"
+                },
+                {
+                  "id": "string",
+                  "label": "String",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "boolean",
+                  "label": "Boolean",
+                  "icon": "/images/trafficSignal.png"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Why is Player ID a String rather than an Integer?",
+          "options": [
+            {
+              "id": "0",
+              "text": "It identifies a player, not a quantity.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "It is a decimal number.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "It is a yes/no value.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "It is a very big number.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Excellent!",
+          "right": "You applied data type thinking to a completely different app.",
+          "wrong": "Is it a quantity we calculate, or a name for a player?"
+        }
+      ]
+    },
+    "25": {
+      "step": 25,
+      "title": "Test your *thinking!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Which data type suits a student's age of 12?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "integer",
+              "text": "Integer",
+              "image": "/images/level-two/cube.png",
+              "tint": "blue"
+            },
+            {
+              "id": "float",
+              "text": "Float",
+              "image": "/images/coins.png",
+              "tint": "lavender"
+            },
+            {
+              "id": "string",
+              "text": "String",
+              "image": "/images/sequence/icon-alphabet.svg",
+              "tint": "green"
+            },
+            {
+              "id": "boolean",
+              "text": "Boolean",
+              "image": "/images/trafficSignal.png",
+              "tint": "cream"
+            }
+          ],
+          "correctId": "integer",
+          "rightTitle": "Correct!",
+          "right": "12 is a whole number: an Integer.",
+          "wrong": "Is 12 a whole number or a decimal?"
+        }
+      ]
+    },
+    "26": {
+      "step": 26,
+      "title": "Test your *thinking!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Which data type suits a height of 152.5 cm?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "integer",
+              "text": "Integer",
+              "image": "/images/level-two/cube.png",
+              "tint": "blue"
+            },
+            {
+              "id": "float",
+              "text": "Float",
+              "image": "/images/coins.png",
+              "tint": "lavender"
+            },
+            {
+              "id": "string",
+              "text": "String",
+              "image": "/images/sequence/icon-alphabet.svg",
+              "tint": "green"
+            },
+            {
+              "id": "boolean",
+              "text": "Boolean",
+              "image": "/images/trafficSignal.png",
+              "tint": "cream"
+            }
+          ],
+          "correctId": "float",
+          "rightTitle": "Correct!",
+          "right": "152.5 has a decimal part: a Float.",
+          "wrong": "Does 152.5 have a decimal part?"
+        }
+      ]
+    },
+    "27": {
+      "step": 27,
+      "title": "Test your *thinking!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "The student ID is “0045”. Why should it be treated as text?",
+          "options": [
+            {
+              "id": "0",
+              "text": "It identifies a student.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "It represents a height.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "It is a decimal number.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "It represents True or False.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Correct!",
+          "right": "It identifies a student. It isn't a quantity we calculate.",
+          "wrong": "Are we calculating with the ID, or using it to identify someone?"
+        }
+      ]
+    },
+    "28": {
+      "step": 28,
+      "title": "Test your *thinking!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "quiz",
+          "optionsAfterHex": true,
+          "line": "Which data type represents True or False?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "integer",
+              "text": "Integer",
+              "image": "/images/level-two/cube.png",
+              "tint": "blue"
+            },
+            {
+              "id": "float",
+              "text": "Float",
+              "image": "/images/coins.png",
+              "tint": "lavender"
+            },
+            {
+              "id": "string",
+              "text": "String",
+              "image": "/images/sequence/icon-alphabet.svg",
+              "tint": "green"
+            },
+            {
+              "id": "boolean",
+              "text": "Boolean",
+              "image": "/images/trafficSignal.png",
+              "tint": "cream"
+            }
+          ],
+          "correctId": "boolean",
+          "rightTitle": "Correct!",
+          "right": "A Boolean is either True or False.",
+          "wrong": "Which type has only two values?"
+        }
+      ]
+    },
+    "29": {
+      "step": 29,
+      "title": "Test your *thinking!*",
+      "titleSize": 28,
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "An app needs a city name, a temperature and a rain status. Which types fit?",
+          "alignTop": true,
+          "content": {
+            "$": "kit:sort-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "cardWidth": 104,
+              "prompt": "Drag each field to its data type.",
+              "items": [
+                {
+                  "id": "city",
+                  "label": "City name",
+                  "bucket": "string",
+                  "hint": "A name is text."
+                },
+                {
+                  "id": "temp",
+                  "label": "Temperature",
+                  "bucket": "float",
+                  "hint": "Temperatures can have decimals."
+                },
+                {
+                  "id": "rain",
+                  "label": "Rain status",
+                  "bucket": "boolean",
+                  "hint": "It is a yes/no state."
+                }
+              ],
+              "buckets": [
+                {
+                  "id": "integer",
+                  "label": "Integer",
+                  "icon": "/images/level-two/cube.png"
+                },
+                {
+                  "id": "float",
+                  "label": "Float",
+                  "icon": "/images/coins.png"
+                },
+                {
+                  "id": "string",
+                  "label": "String",
+                  "icon": "/images/sequence/icon-alphabet.svg"
+                },
+                {
+                  "id": "boolean",
+                  "label": "Boolean",
+                  "icon": "/images/trafficSignal.png"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Correct!",
+            "text": "City name: String. Temperature: Float. Rain status: Boolean."
+          }
+        }
+      ]
+    },
+    "30": {
+      "step": 30,
+      "component": "datatypes.RecapScreen"
+    }
+  }
+}

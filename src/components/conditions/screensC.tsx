@@ -1,13 +1,13 @@
 "use client";
 
-import { RevealStage } from "@/components/datatypes/interactions";
-import { SymbolStage } from "@/components/operators/interactions";
-import { P } from "@/components/operators/pictures";
-import { ValueCards } from "@/components/operators/visuals";
+import { RevealStage } from "@/components/kit/content/from-datatypes/interactions";
+import { SymbolStage } from "@/components/kit/content/from-operators/interactions";
+import { P } from "@/components/kit/content/from-operators/pictures";
+import { ValueCards } from "@/components/kit/content/from-operators/visuals";
 import { STEP } from "./conditions";
-import { at, build, Condition, eitherOrder, neutral, predict, quiz, testRows, trueFalse, yesNo } from "./helpers";
-import { ComboStage, TableStage } from "./interactions";
-import type { ScreenDef } from "./screen";
+import { at, build, Condition, eitherOrder, FIRST_OFF, neutral, predict, quiz, testRows, trueFalse, yesNo } from "@/components/kit/content/from-conditions/helpers";
+import { ComboStage, TableStage } from "@/components/kit/content/from-conditions/interactions";
+import type { ScreenDef } from "@/components/kit/content/from-conditions/screen";
 
 /** `age >= 18`-style tests where the case is written out as words. */
 const cases = (rows: readonly (readonly [string, boolean])[]) => rows.map(([label, yes]) => ({ label, answer: yes ? "Yes" : "No" }));
@@ -26,7 +26,7 @@ export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {
           <ComboStage
             api={api}
             inputs={[{ id: "ravi", label: "Ravi will come to class", pic: P.student, on: "True", off: "False" }]}
-            rule={(states) => !states[0]}
+            rule={FIRST_OFF}
             ask="“Ravi will NOT come to class.” Is this True?"
             yes="True"
             no="False"

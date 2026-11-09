@@ -250,6 +250,11 @@ Built from the "6. Conditions" spec: one step for each of its 38 screens (the st
 | `/profile` | Profile |
 | `/hex` | `hex.riv` animation viewer |
 | `/module1/combined`, `/module1/review` | Old instructions-intro design comparison (`?step=<index>`) |
+| `/kit` | The screen kit: every component working with sample data (see `docs/kit.md`) |
+| `/kit/screen` | A whole lesson screen built only from kit components |
+| `/kit/play/datatypes?step=N`, `/kit/play/operators?step=N`, `/kit/play/conditions?step=N`, `/kit/play/variable?step=N` | The module played from its data file (`src/data/modules/<module>.json`), `N` as in `/module/<module>`, or `complete` |
+| `/kit/compare?module=datatypes&step=N` | A module screen as the code draws it next to the same screen played from its data file (phone sizes, prev/next, unlimited battery) |
+| `/kit/export` | (development only) Reads the three modules' screens from code and writes their data files |
 
 ## Notes
 

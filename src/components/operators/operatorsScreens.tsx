@@ -1,6 +1,6 @@
 "use client";
 
-import type { ScreenDef } from "./screen";
+import type { ScreenDef } from "@/components/kit/content/from-operators/screen";
 import { SCREENS_A } from "./screensA";
 import { SCREENS_B } from "./screensB";
 import { SCREENS_C } from "./screensC";

@@ -1,17 +1,13 @@
 "use client";
 
-import { MultiPickStage } from "@/components/datatypes/interactions";
-import { at, neutral, options, quiz, yesNo } from "./helpers";
-import { ExpressionStage, StepStage, SymbolStage, sumOfProducts } from "./interactions";
+import { MultiPickStage } from "@/components/kit/content/from-datatypes/interactions";
+import { at, neutral, options, quiz, yesNo } from "@/components/kit/content/from-operators/helpers";
+import { CompareHeader, GateHeader } from "@/components/kit/content/from-operators/headers";
+import { ExpressionStage, StepStage, SymbolStage, sumOfProducts } from "@/components/kit/content/from-operators/interactions";
 import { STEP } from "./operators";
-import { P } from "./pictures";
-import type { ScreenDef } from "./screen";
-import { CompareDemo, ExprBig, GateCard, LineScale, SideBySide, ValueCards, Versus } from "./visuals";
-
-/** The three marks 99, 100 and 101 (or 145, 150, 155) with the gate stood at the middle one. */
-const gateLine = (marks: readonly number[], limit: string, picked: number | null) => (
-  <LineScale marks={marks} picked={picked === null ? [] : [picked]} gate={marks[1]} gateLabel={limit} />
-);
+import { P } from "@/components/kit/content/from-operators/pictures";
+import type { ScreenDef } from "@/components/kit/content/from-operators/screen";
+import { ExprBig, LineScale, SideBySide, ValueCards, Versus } from "@/components/kit/content/from-operators/visuals";
 
 /** Screens 15-28 (phases 4 to 6: combining operators, then comparison). */
 export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
@@ -305,10 +301,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
           <SymbolStage
             api={api}
             need={3}
-            header={(current) => {
-              const [left, symbol, right] = (current?.example ?? "35 > 13").split(" ");
-              return <CompareDemo left={left} symbol={symbol} right={right} result={current?.result ?? true} />;
-            }}
+            header={(current) => <CompareHeader current={current} fallback="35 > 13" />}
             groups={[
               {
                 columns: 3,
@@ -603,12 +596,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         render: (api) => (
           <SymbolStage
             api={api}
-            header={(current) => (
-              <div className="flex flex-col items-center gap-2">
-                {gateLine([99, 100, 101], "Unlock at 100", current ? Number(current.symbol) : null)}
-                {current && <GateCard score={Number(current.symbol)} open={current.result === true} />}
-              </div>
-            )}
+            header={(current) => <GateHeader marks={[99, 100, 101]} limit="Unlock at 100" current={current} card />}
             groups={[
               {
                 columns: 3,
@@ -655,7 +643,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
           <SymbolStage
             api={api}
             big={false}
-            header={(current) => gateLine([145, 150, 155], "Limit 150 cm", current ? Number(current.symbol) : null)}
+            header={(current) => <GateHeader marks={[145, 150, 155]} limit="Limit 150 cm" current={current} />}
             groups={[
               {
                 columns: 3,

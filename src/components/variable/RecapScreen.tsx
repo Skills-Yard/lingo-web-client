@@ -6,11 +6,11 @@ import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
 import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "./TrekScreen";
+import { TrekBackdrop } from "@/components/kit/content/from-variable/screenVisuals";
 import { variableHref } from "@/lib/routes";
-import { parseTitle } from "./quiz";
+import { parseTitle } from "@/components/kit/content/from-variable/quiz";
 import { STEP, variablePrevious, VARIABLE_STEPS } from "./variable";
-import { CARD } from "./visuals";
+import { CARD } from "@/components/kit/content/from-variable/visuals";
 
 const TITLE = parseTitle("You *Unlocked Variables!*");
 

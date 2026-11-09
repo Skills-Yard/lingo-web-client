@@ -8,9 +8,9 @@ import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { datatypesHref } from "@/lib/routes";
 import { STEP, DATATYPES_STEPS, datatypesPrevious } from "./datatypes";
-import { TYPES } from "./interactions";
-import { parseTitle } from "./screen";
-import { CARD, LAVENDER, Pic } from "./visuals";
+import { TYPES } from "@/components/kit/content/from-datatypes/interactions";
+import { parseTitle } from "@/components/kit/content/from-datatypes/screen";
+import { CARD, LAVENDER, Pic } from "@/components/kit/content/from-datatypes/visuals";
 
 const TITLE = parseTitle("You Have Unlocked *Data Types!*");
 

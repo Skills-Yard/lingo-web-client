@@ -1,15 +1,17 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { GroupStage, type GroupItem } from "./GroupStage";
-import { GroupTourStage, type TourGroup } from "./GroupTourStage";
-import { INK, TINTS, tintAt } from "./look";
-import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
+import { Stack } from "@/components/kit/layout/Stack";
+import { NameValueCard } from "@/components/kit/text/Code";
+import { KeyText } from "@/components/kit/text/Prompt";
+import { GroupStage, type GroupItem } from "@/components/kit/content/from-datatypes/GroupStage";
+import { GroupTourStage, type TourGroup } from "@/components/kit/content/from-datatypes/GroupTourStage";
+import { INK, TINTS, tintAt } from "@/components/kit/content/from-datatypes/look";
+import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "@/components/kit/content/from-datatypes/interactions";
 import { noteGrouping } from "./datatypesScore";
-import { P } from "./pictures";
-import type { Option, QuizStage, ScreenDef } from "./screen";
+import { P } from "@/components/kit/content/from-datatypes/pictures";
+import type { Option, QuizStage, ScreenDef } from "@/components/kit/content/from-datatypes/screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, LAVENDER, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type InfoRow, type InfoTile } from "./visuals";
+import { AttendanceBoard, EventScene, InfoRows, InfoTiles, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type InfoRow, type InfoTile } from "@/components/kit/content/from-datatypes/visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -28,16 +30,6 @@ const TYPE_BUCKETS: readonly SortBucket[] = TYPES.map((type) => ({ id: type.id, 
 
 /** A question: its answers, like screens 1 and 2's, come in once Hex has finished his line. */
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", optionsAfterHex: true, ...stage });
-
-/** The big, plain sentence under a "Meet ..." screen, as on "Meet the Sequence.". */
-function Key({ children }: { children: ReactNode }) {
-  return <p className="w-[320px] text-center text-[19px] leading-[26px] font-semibold text-[#444444] dark:text-white">{children}</p>;
-}
-
-/** A small card with a heading and a list, for the explanations. */
-function Note({ children }: { children: ReactNode }) {
-  return <p className="w-[320px] rounded-[12px] bg-[#F1EEFF] px-3.5 py-2.5 text-center text-[14px] leading-5 font-medium text-[#444444] dark:bg-[#23204A] dark:text-white">{children}</p>;
-}
 
 const WHY_WRONG = "Look at what each value is. Is it a quantity, a decimal, text or a logical state?";
 
@@ -187,10 +179,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         alignTop: true,
         ready: true,
         render: ({ hexSpoken }) => (
-          <div className="flex flex-col items-center gap-6">
+          <Stack gap={24} fit>
             <InfoTiles layout="row" shown={hexSpoken} tiles={PLAN_TILES} />
             <InfoRows rows={PLAN_ROWS} shown={hexSpoken} firstIndex={PLAN_TILES.length} />
-          </div>
+          </Stack>
         ),
       },
       // 5.2: the same school yard, a new heading, and a question: the three values stand above the four answers.
@@ -250,7 +242,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
               { id: "25", label: "25", caption: "Number of students: 25" },
               { id: "-5", label: "-5", caption: "Temperature change: -5 degrees" },
             ]}
-            footer={<Key>Integer (int) represents whole-number values.</Key>}
+            footer={<KeyText>Integer (int) represents whole-number values.</KeyText>}
           />
         ),
       },
@@ -279,7 +271,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
               { id: "w", label: "36.7", sub: "Weight", caption: "Weight: 36.7" },
               { id: "p", label: "49.99", sub: "Price", caption: "Price: 49.99" },
             ]}
-            footer={<Key>Numbers with decimal values are called Float.</Key>}
+            footer={<KeyText>Numbers with decimal values are called Float.</KeyText>}
           />
         ),
       },
@@ -373,7 +365,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
               { id: "e", label: "Welcome to Learny!", icon: P.string },
               { id: "f", label: "9876543210", icon: P.string },
             ]}
-            footer={<Note>A value is not a number just because it has digits. A phone number or a student ID identifies someone: we don’t add or subtract it.</Note>}
+            footer={<KeyText>A value is not a number just because it has digits. A phone number or a student ID identifies someone: we don’t add or subtract it.</KeyText>}
           />
         ),
         finishPanel: { title: "All of them!", text: "Text can contain letters, numbers, spaces and special characters." },
@@ -405,7 +397,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
               { id: "d", label: "“SY001”", caption: "An ID: letters and digits, as text." },
               { id: "e", label: "“Hello Learny!”", caption: "Words, a space and a symbol." },
             ]}
-            footer={<Key>String (str) represents text information.</Key>}
+            footer={<KeyText>String (str) represents text information.</KeyText>}
           />
         ),
       },
@@ -515,24 +507,19 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             api={api}
             columns={2}
             header={() => (
-              <div className={`flex w-[330px] flex-col gap-0.5 px-3 py-2 ${CARD} ${LAVENDER}`}>
-                {[
-                  ["Is_present", "True"],
-                  ["Is_payment_complete", "False"],
-                  ["Is_logged_in", "True"],
-                ].map(([name, value]) => (
-                  <div key={name} className="flex justify-between text-[13px] leading-5 font-semibold text-[#444444] dark:text-white">
-                    <span className="font-mono">{name}</span>
-                    <span className={value === "True" ? "text-[#01A17F]" : "text-[#8A94A0]"}>{value}</span>
-                  </div>
-                ))}
-              </div>
+              <NameValueCard
+                rows={[
+                  { name: "Is_present", value: "True", tone: "on" },
+                  { name: "Is_payment_complete", value: "False", tone: "off" },
+                  { name: "Is_logged_in", value: "True", tone: "on" },
+                ]}
+              />
             )}
             items={[
               { id: "t", label: "TRUE", sub: "light on", icon: P.boolean, caption: "True: Aarav is present." },
               { id: "f", label: "FALSE", sub: "light off", icon: P.stop, caption: "False: Aarav is not present." },
             ]}
-            footer={<Key>Boolean (bool) represents a logical value: True or False.</Key>}
+            footer={<KeyText>Boolean (bool) represents a logical value: True or False.</KeyText>}
           />
         ),
       },
@@ -560,7 +547,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
               { id: "str", label: "String", sub: "str", icon: P.string, caption: "Text information: Aarav, Delhi, Class 6A." },
               { id: "bool", label: "Boolean", sub: "bool", icon: P.boolean, caption: "Logical values: True, False." },
             ]}
-            footer={<Key>A data type tells a program what kind of value it is working with.</Key>}
+            footer={<KeyText>A data type tells a program what kind of value it is working with.</KeyText>}
           />
         ),
       },

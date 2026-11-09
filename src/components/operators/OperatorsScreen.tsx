@@ -16,7 +16,7 @@ import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { OPERATORS_STEPS, operatorsNext, operatorsPrevious } from "./operators";
 import { noteAnswer, noteStruggle } from "./operatorsScore";
-import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } from "./screen";
+import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } from "@/components/kit/content/from-operators/screen";
 
 /** A row of the list of answers (a compact one, for words only), and the gap between rows (see `AnswerCards`). */
 const ROW_H = 76;

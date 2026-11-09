@@ -1,0 +1,1328 @@
+{
+  "id": "variable",
+  "title": "Variable",
+  "level": 3,
+  "steps": 34,
+  "flow": {
+    "skips": {
+      "11": [
+        8,
+        10
+      ],
+      "21": [
+        18,
+        20
+      ],
+      "24": [
+        22,
+        23
+      ]
+    },
+    "detours": {
+      "8": 7,
+      "10": 7,
+      "14": 13,
+      "16": 13,
+      "20": 19,
+      "21": 19,
+      "23": 8,
+      "24": 10,
+      "27": 26,
+      "28": 20
+    }
+  },
+  "look": {
+    "sheet": "side",
+    "compactRows": true,
+    "grid": "objects",
+    "shortCards": 12,
+    "cardLine": 120,
+    "bubble": [
+      {
+        "upTo": 44,
+        "width": 190
+      },
+      {
+        "width": 240
+      }
+    ],
+    "tileLift": 150,
+    "topAligned": true
+  },
+  "scene": {
+    "$": "kit:trek-backdrop"
+  },
+  "screens": {
+    "1": {
+      "step": 1,
+      "component": "variable.TrekScreen"
+    },
+    "2": {
+      "step": 2,
+      "component": "variable.ThirstyScreen"
+    },
+    "3": {
+      "step": 3,
+      "title": "What If There's *No Water?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "No river or shop nearby. What should we do?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Carry water along",
+              "image": "/animations/svg/variable-module/screen-3/variable-3.1.svg"
+            },
+            {
+              "id": "1",
+              "text": "Wait for a river",
+              "image": "/animations/svg/variable-module/screen-3/variable-3.2.svg"
+            },
+            {
+              "id": "2",
+              "text": "Turn back",
+              "image": "/animations/svg/variable-module/screen-3/variable-3.3.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Great thinking!",
+          "right": "We carry water before the trek.",
+          "wrong": "What can we do before leaving?"
+        }
+      ]
+    },
+    "4": {
+      "step": 4,
+      "title": "Pick the *Right Object*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "We carry water. What should hold it?",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "bottle",
+              "text": "Water bottle",
+              "node": {
+                "$": "kit:bottle",
+                "props": {
+                  "ml": 600,
+                  "height": 48,
+                  "marks": false
+                }
+              }
+            },
+            {
+              "id": "football",
+              "text": "Football",
+              "emoji": "⚽"
+            },
+            {
+              "id": "lunchbox",
+              "text": "Lunchbox",
+              "emoji": "🍱"
+            }
+          ],
+          "correctId": "bottle",
+          "rightTitle": "That's right!",
+          "right": "A bottle is made to hold water.",
+          "wrong": "Which one holds water without spilling?",
+          "spill": true
+        }
+      ]
+    },
+    "5": {
+      "step": 5,
+      "title": "A Bottle *Holds Water!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "We fill it and drink from it. What is it for?",
+          "visual": {
+            "$": "kit:bottle-story",
+            "props": {
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "To store water",
+              "image": "/animations/svg/variable-module/screen-5/variable-5.1.svg"
+            },
+            {
+              "id": "1",
+              "text": "To create water",
+              "image": "/animations/svg/variable-module/screen-5/variable-5.2.svg"
+            },
+            {
+              "id": "2",
+              "text": "To change the colour of water",
+              "image": "/animations/svg/variable-module/screen-5/variable-5.3.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "A bottle holds and stores water.",
+          "wrong": "Did the bottle hold the water we poured?"
+        }
+      ]
+    },
+    "6": {
+      "step": 6,
+      "title": "Programs *Remember Too!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "content": {
+            "$": "kit:bridge-stage",
+            "props": {
+              "slip": {
+                "$ctx": "api.slip"
+              },
+              "done": {
+                "$ctx": "api.done"
+              },
+              "finished": {
+                "$ctx": "api.finished"
+              }
+            }
+          },
+          "nextLabel": "Let's Explore"
+        }
+      ]
+    },
+    "7": {
+      "step": 7,
+      "title": "How Much *Water?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "content": {
+            "$": "kit:fill-slider-stage",
+            "props": {
+              "slip": {
+                "$ctx": "api.slip"
+              },
+              "done": {
+                "$ctx": "api.done"
+              },
+              "finished": {
+                "$ctx": "api.finished"
+              }
+            }
+          },
+          "finishPanel": {
+            "title": "Great!",
+            "text": "The bottle now has 500 ml."
+          }
+        }
+      ]
+    },
+    "8": {
+      "step": 8,
+      "title": "We Need *More Water!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "We have 500 ml and add 250 ml. How much now?",
+          "visual": {
+            "$": "kit:bottle-change",
+            "props": {
+              "from": 500,
+              "to": 750,
+              "pour": true,
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "500 ml"
+            },
+            {
+              "id": "1",
+              "text": "750 ml"
+            },
+            {
+              "id": "2",
+              "text": "1,000 ml"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Correct!",
+          "right": "500 ml + 250 ml = 750 ml.",
+          "wrong": "Add 250 ml to what we had."
+        }
+      ]
+    },
+    "9": {
+      "step": 9,
+      "title": "Same Bottle, *New Amount*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "It held 500 ml, now 750 ml. What changed?",
+          "visual": {
+            "$": "kit:row",
+            "props": {
+              "fit": true,
+              "gap": 24,
+              "align": "end",
+              "justify": "start"
+            },
+            "children": [
+              {
+                "$": "kit:bottle-with-amount",
+                "props": {
+                  "ml": 500,
+                  "height": 140,
+                  "caption": "Earlier",
+                  "label": "500 ml"
+                }
+              },
+              {
+                "$": "kit:bottle-with-amount",
+                "props": {
+                  "ml": 750,
+                  "height": 140,
+                  "caption": "Now",
+                  "label": "750 ml"
+                }
+              }
+            ]
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "The bottle"
+            },
+            {
+              "id": "1",
+              "text": "The amount of water"
+            },
+            {
+              "id": "2",
+              "text": "Both"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "The bottle is the same; the amount changed.",
+          "wrong": "Are these two bottles the same bottle?"
+        }
+      ]
+    },
+    "10": {
+      "step": 10,
+      "title": "Let's *Drink 200 ml!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "We have 750 ml and drink 200 ml. How much is left?",
+          "visual": {
+            "$": "kit:bottle-change",
+            "props": {
+              "from": 750,
+              "to": 550,
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "200 ml"
+            },
+            {
+              "id": "1",
+              "text": "550 ml"
+            },
+            {
+              "id": "2",
+              "text": "750 ml"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Correct!",
+          "right": "750 ml − 200 ml = 550 ml.",
+          "wrong": "Subtract what we drank from 750 ml."
+        }
+      ]
+    },
+    "11": {
+      "step": 11,
+      "title": "The Bottle *Is Empty!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "We drink all 550 ml. How much is left?",
+          "visual": {
+            "$": "kit:bottle-change",
+            "props": {
+              "from": 550,
+              "to": 0,
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "0 ml"
+            },
+            {
+              "id": "1",
+              "text": "550 ml"
+            },
+            {
+              "id": "2",
+              "text": "1,000 ml"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Yes!",
+          "right": "It's empty, so 0 ml remain.",
+          "wrong": "If all the water is gone, how much remains?"
+        }
+      ]
+    },
+    "12": {
+      "step": 12,
+      "title": "Which Bottle *Is Mine?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "All our bottles look the same. How can we tell ours?",
+          "visual": {
+            "$": "kit:row",
+            "props": {
+              "fit": true,
+              "gap": 12,
+              "align": "end",
+              "justify": "start"
+            },
+            "children": [
+              {
+                "$": "kit:bottle",
+                "props": {
+                  "ml": 600,
+                  "tag": "Aarav",
+                  "marks": false,
+                  "height": 118
+                }
+              },
+              {
+                "$": "kit:bottle",
+                "props": {
+                  "ml": 600,
+                  "tag": "Mia",
+                  "marks": false,
+                  "height": 118
+                }
+              },
+              {
+                "$": "kit:bottle",
+                "props": {
+                  "ml": 600,
+                  "tag": "Kabir",
+                  "marks": false,
+                  "height": 118
+                }
+              }
+            ]
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "A name label"
+            },
+            {
+              "id": "1",
+              "text": "Its position"
+            },
+            {
+              "id": "2",
+              "text": "Nothing is needed"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "A name or label helps us identify things.",
+          "wrong": "How would you recognise your own bottle?"
+        }
+      ]
+    },
+    "13": {
+      "step": 13,
+      "title": "*Name* and *Value*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "content": {
+            "$": "kit:name-value-stage",
+            "props": {
+              "slip": {
+                "$ctx": "api.slip"
+              },
+              "done": {
+                "$ctx": "api.done"
+              },
+              "finished": {
+                "$ctx": "api.finished"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "14": {
+      "step": 14,
+      "title": "Name *or Value?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "content": {
+            "$": "kit:classify-stage",
+            "props": {
+              "slip": {
+                "$ctx": "api.slip"
+              },
+              "done": {
+                "$ctx": "api.done"
+              },
+              "finished": {
+                "$ctx": "api.finished"
+              }
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Which of these is a variable name?",
+          "visual": {
+            "$": "kit:name-value-cards"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "550 ml"
+            },
+            {
+              "id": "1",
+              "text": "water_level"
+            },
+            {
+              "id": "2",
+              "text": "1,000 ml"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Correct!",
+          "right": "water_level is the name; 550 ml is its value.",
+          "wrong": "The name tells what it is; the value is the amount."
+        }
+      ]
+    },
+    "15": {
+      "step": 15,
+      "title": "A New Day *at School!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "30 students, attendance time! What should we track?",
+          "visual": {
+            "$": "kit:row",
+            "props": {
+              "fit": true,
+              "gap": 12,
+              "justify": "start"
+            },
+            "children": [
+              {
+                "$": "kit:classroom",
+                "props": {
+                  "present": 27
+                }
+              },
+              {
+                "$": "kit:attendance-board-variable",
+                "props": {
+                  "total": 30,
+                  "present": 27,
+                  "absent": 3
+                }
+              }
+            ]
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Total students"
+            },
+            {
+              "id": "1",
+              "text": "Students present"
+            },
+            {
+              "id": "2",
+              "text": "Students absent"
+            },
+            {
+              "id": "3",
+              "text": "All of these"
+            }
+          ],
+          "correctId": "3",
+          "rightTitle": "Exactly!",
+          "right": "We track all three pieces of information.",
+          "wrong": "What does the teacher need to finish attendance?"
+        }
+      ]
+    },
+    "16": {
+      "step": 16,
+      "title": "Three *Pieces of Data*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "content": {
+            "$": "kit:names-stage",
+            "props": {
+              "slip": {
+                "$ctx": "api.slip"
+              },
+              "done": {
+                "$ctx": "api.done"
+              },
+              "finished": {
+                "$ctx": "api.finished"
+              }
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Which variable tells us how many are absent?",
+          "visual": {
+            "$": "kit:attendance-cards"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "total_students"
+            },
+            {
+              "id": "1",
+              "text": "present_students"
+            },
+            {
+              "id": "2",
+              "text": "absent_students"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Correct!",
+          "right": "absent_students counts the absent students.",
+          "wrong": "Which name means students who are not here?"
+        }
+      ]
+    },
+    "17": {
+      "step": 17,
+      "title": "More Students *Tomorrow!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "2 absent students return. Which values change?",
+          "visual": {
+            "$": "kit:classroom-change",
+            "props": {
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Only total_students"
+            },
+            {
+              "id": "1",
+              "text": "Present and absent counts"
+            },
+            {
+              "id": "2",
+              "text": "All three values"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Present goes to 29, absent to 1. Total stays 30.",
+          "wrong": "The class size is the same. What changes when 2 return?"
+        }
+      ]
+    },
+    "18": {
+      "step": 18,
+      "title": "Shopping *for Supplies!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "We buy a notebook and a pen. What should we track?",
+          "visual": {
+            "$": "kit:items"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Notebook price"
+            },
+            {
+              "id": "1",
+              "text": "Pen price"
+            },
+            {
+              "id": "2",
+              "text": "Both prices"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Right!",
+          "right": "We need both prices for the total.",
+          "wrong": "Which prices do we add together?"
+        }
+      ]
+    },
+    "19": {
+      "step": 19,
+      "title": "Name *the Prices!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "content": {
+            "$": "kit:match-prices-stage",
+            "props": {
+              "slip": {
+                "$ctx": "api.slip"
+              },
+              "done": {
+                "$ctx": "api.done"
+              },
+              "finished": {
+                "$ctx": "api.finished"
+              }
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Which value belongs to pen_price?",
+          "visual": {
+            "$": "kit:items"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹50"
+            },
+            {
+              "id": "1",
+              "text": "₹20"
+            },
+            {
+              "id": "2",
+              "text": "₹70"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Correct!",
+          "right": "The pen costs ₹20.",
+          "wrong": "Look at the pen's price tag again."
+        }
+      ]
+    },
+    "20": {
+      "step": 20,
+      "title": "What's the *Total Cost?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Notebook ₹50, pen ₹20. What's the total?",
+          "visual": {
+            "$": "kit:price-calc",
+            "props": {
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹50"
+            },
+            {
+              "id": "1",
+              "text": "₹70"
+            },
+            {
+              "id": "2",
+              "text": "₹80"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Excellent!",
+          "right": "₹50 + ₹20 = ₹70. We can store it as total_price.",
+          "wrong": "Add the notebook price and the pen price."
+        }
+      ]
+    },
+    "21": {
+      "step": 21,
+      "title": "Add *an Eraser!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "An eraser costs ₹10. What is the new total?",
+          "visual": {
+            "$": "kit:eraser-total",
+            "props": {
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹70"
+            },
+            {
+              "id": "1",
+              "text": "₹80"
+            },
+            {
+              "id": "2",
+              "text": "₹90"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "That's right!",
+          "right": "₹70 + ₹10 = ₹80.",
+          "wrong": "Add ₹10 to the earlier total."
+        }
+      ]
+    },
+    "22": {
+      "step": 22,
+      "title": "Your *Pocket Money*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Your parents give you ₹100. How much do you have?",
+          "visual": {
+            "$": "kit:wallet-change",
+            "props": {
+              "from": 100,
+              "to": 100,
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹50"
+            },
+            {
+              "id": "1",
+              "text": "₹100"
+            },
+            {
+              "id": "2",
+              "text": "₹150"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Correct!",
+          "right": "You have ₹100.",
+          "wrong": "Look at what your parents gave you."
+        }
+      ]
+    },
+    "23": {
+      "step": 23,
+      "title": "Another *₹50 Arrives!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "You had ₹100 and get ₹50 more. How much now?",
+          "visual": {
+            "$": "kit:wallet-change",
+            "props": {
+              "from": 100,
+              "to": 150,
+              "note": "+₹50",
+              "gain": true,
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹100"
+            },
+            {
+              "id": "1",
+              "text": "₹150"
+            },
+            {
+              "id": "2",
+              "text": "₹200"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Great!",
+          "right": "₹100 + ₹50 = ₹150. Your balance grew.",
+          "wrong": "Add the ₹50 to your ₹100."
+        }
+      ]
+    },
+    "24": {
+      "step": 24,
+      "title": "A Toy *for ₹30!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "You had ₹150 and spend ₹30. How much is left?",
+          "visual": {
+            "$": "kit:wallet-change",
+            "props": {
+              "from": 150,
+              "to": 120,
+              "note": "−₹30",
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹30"
+            },
+            {
+              "id": "1",
+              "text": "₹120"
+            },
+            {
+              "id": "2",
+              "text": "₹150"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Correct!",
+          "right": "₹150 − ₹30 = ₹120.",
+          "wrong": "Subtract what you spent."
+        }
+      ]
+    },
+    "25": {
+      "step": 25,
+      "title": "Track *Your Balance*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Start with ₹200, then get ₹50. What's your balance?",
+          "visual": {
+            "$": "kit:wallet-change",
+            "props": {
+              "from": 200,
+              "to": 250,
+              "note": "+₹50",
+              "gain": true,
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹150"
+            },
+            {
+              "id": "1",
+              "text": "₹250"
+            },
+            {
+              "id": "2",
+              "text": "₹300"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Yes!",
+          "right": "₹200 + ₹50 = ₹250.",
+          "wrong": "Add money you receive."
+        },
+        {
+          "kind": "quiz",
+          "line": "Now you spend ₹30. What's your balance?",
+          "visual": {
+            "$": "kit:wallet-change",
+            "props": {
+              "from": 250,
+              "to": 220,
+              "note": "−₹30",
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹180"
+            },
+            {
+              "id": "1",
+              "text": "₹220"
+            },
+            {
+              "id": "2",
+              "text": "₹250"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Correct!",
+          "right": "₹250 − ₹30 = ₹220.",
+          "wrong": "Subtract money you spend."
+        },
+        {
+          "kind": "quiz",
+          "line": "Then you get ₹20. What's the final balance?",
+          "visual": {
+            "$": "kit:wallet-change",
+            "props": {
+              "from": 220,
+              "to": 240,
+              "note": "+₹20",
+              "gain": true,
+              "context": {
+                "$ctx": ""
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹220"
+            },
+            {
+              "id": "1",
+              "text": "₹240"
+            },
+            {
+              "id": "2",
+              "text": "₹270"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Perfect!",
+          "right": "Your final balance is ₹240.",
+          "wrong": "Add or subtract each event in order."
+        }
+      ]
+    },
+    "26": {
+      "step": 26,
+      "title": "Build an *Addition App*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "The app adds two numbers. What should it do first?",
+          "visual": {
+            "$": "kit:calculator-app",
+            "props": {
+              "compact": true
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Show the result"
+            },
+            {
+              "id": "1",
+              "text": "Ask for the first number"
+            },
+            {
+              "id": "2",
+              "text": "Close the app"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "First, it asks for the first number.",
+          "wrong": "It needs numbers before it can add.",
+          "nextLabel": "Let's Build It"
+        }
+      ]
+    },
+    "27": {
+      "step": 27,
+      "component": "variable.PlanAppScreen"
+    },
+    "28": {
+      "step": 28,
+      "title": "Find *the Mistake!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Prices ₹100 and ₹50, but the app shows ₹100. Why?",
+          "visual": {
+            "$": "kit:debug-visual"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "It used only the first price"
+            },
+            {
+              "id": "1",
+              "text": "It added both prices"
+            },
+            {
+              "id": "2",
+              "text": "The first price should be ₹50"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "It used only the first price. ₹100 + ₹50 = ₹150.",
+          "wrong": "Did it include both prices?"
+        }
+      ]
+    },
+    "29": {
+      "step": 29,
+      "title": "Travel *Expense Tracker*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "₹1,000 budget, ₹300 travel, ₹200 food. What to track?",
+          "visual": {
+            "$": "kit:expense-tracker",
+            "props": {
+              "showLeft": false
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Starting budget"
+            },
+            {
+              "id": "1",
+              "text": "Travel expense"
+            },
+            {
+              "id": "2",
+              "text": "Food expense"
+            },
+            {
+              "id": "3",
+              "text": "All of these"
+            }
+          ],
+          "correctId": "3",
+          "rightTitle": "Correct!",
+          "right": "We need all three to find what remains.",
+          "wrong": "What do we need to work out what remains?"
+        },
+        {
+          "kind": "quiz",
+          "line": "How much money remains?",
+          "visual": {
+            "$by": [
+              "checked",
+              "correct"
+            ],
+            "cases": {
+              "false,false": {
+                "$": "kit:expense-tracker",
+                "props": {
+                  "showLeft": false
+                }
+              },
+              "true,false": {
+                "$": "kit:expense-tracker",
+                "props": {
+                  "showLeft": false
+                }
+              },
+              "false,true": {
+                "$": "kit:expense-tracker",
+                "props": {
+                  "showLeft": false
+                }
+              },
+              "true,true": {
+                "$": "kit:expense-tracker",
+                "props": {
+                  "showLeft": true
+                }
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹300"
+            },
+            {
+              "id": "1",
+              "text": "₹500"
+            },
+            {
+              "id": "2",
+              "text": "₹700"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Excellent!",
+          "right": "₹1,000 − ₹300 − ₹200 = ₹500.",
+          "wrong": "Subtract both expenses from the budget."
+        }
+      ]
+    },
+    "30": {
+      "step": 30,
+      "title": "Why *Variables?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Think of the bottle, board and wallet. Why?",
+          "options": [
+            {
+              "id": "0",
+              "text": "To store and track information"
+            },
+            {
+              "id": "1",
+              "text": "To make the screen colourful"
+            },
+            {
+              "id": "2",
+              "text": "To turn off a computer"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Variables store and track information.",
+          "wrong": "What did the bottle and the wallet keep track of?"
+        }
+      ]
+    },
+    "31": {
+      "step": 31,
+      "title": "Can *Values Change?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Think of the water and the wallet. Can a value change?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes"
+            },
+            {
+              "id": "1",
+              "text": "No"
+            },
+            {
+              "id": "2",
+              "text": "Only once"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Yes!",
+          "right": "A value can grow, shrink or become zero.",
+          "wrong": "Remember how the water and the money changed."
+        }
+      ]
+    },
+    "32": {
+      "step": 32,
+      "title": "Why *Meaningful Names?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Remember the labelled bottles. Why name variables?",
+          "options": [
+            {
+              "id": "0",
+              "text": "To know what they represent"
+            },
+            {
+              "id": "1",
+              "text": "To make the program longer"
+            },
+            {
+              "id": "2",
+              "text": "To avoid calculations"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "A good name tells us what a value means.",
+          "wrong": "Why did each bottle need a name label?"
+        }
+      ]
+    },
+    "33": {
+      "step": 33,
+      "title": "Why Keep *Both Numbers?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "An app must add two numbers. Why keep both?",
+          "options": [
+            {
+              "id": "0",
+              "text": "To use them in the calculation"
+            },
+            {
+              "id": "1",
+              "text": "To delete them"
+            },
+            {
+              "id": "2",
+              "text": "To show only one number"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "The app needs both numbers to add them.",
+          "wrong": "What does the app need before it can add?"
+        }
+      ]
+    },
+    "34": {
+      "step": 34,
+      "component": "variable.RecapScreen"
+    }
+  }
+}

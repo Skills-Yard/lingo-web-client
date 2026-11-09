@@ -8,8 +8,8 @@ import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { operatorsHref } from "@/lib/routes";
 import { OPERATORS_STEPS, STEP, operatorsPrevious } from "./operators";
-import { parseTitle } from "./screen";
-import { CARD, LAVENDER } from "./visuals";
+import { parseTitle } from "@/components/kit/content/from-operators/screen";
+import { CARD, LAVENDER } from "@/components/kit/content/from-operators/visuals";
 
 const TITLE = parseTitle("From Calculation *to Decision*");
 

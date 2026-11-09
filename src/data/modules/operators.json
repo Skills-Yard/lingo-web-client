@@ -1,0 +1,5825 @@
+{
+  "id": "operators",
+  "title": "Operators",
+  "level": 5,
+  "steps": 40,
+  "flow": {
+    "skips": {
+      "20": [
+        19
+      ],
+      "23": [
+        22
+      ],
+      "24": [
+        22,
+        23
+      ],
+      "30": [
+        23,
+        29
+      ],
+      "31": [
+        18,
+        30
+      ]
+    },
+    "detours": {
+      "10": 9,
+      "12": 11,
+      "13": 12,
+      "16": 15,
+      "17": 16,
+      "18": 15,
+      "20": 19,
+      "23": 22,
+      "24": 22,
+      "27": 25,
+      "28": 25,
+      "30": 29,
+      "35": 15,
+      "36": 27,
+      "37": 12,
+      "38": {
+        "$ref": "operators.explainDetour"
+      }
+    }
+  },
+  "screens": {
+    "1": {
+      "step": 1,
+      "title": "Have you *tried* these?",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Think about everyday things you do without even noticing.",
+          "content": {
+            "$": "kit:flip-carousel-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "cards": [
+                {
+                  "id": "money",
+                  "image": "/images/operators-module/example_card1.png",
+                  "verb": "Combining",
+                  "label": "Money",
+                  "caption": "Two stacks of money are put together.",
+                  "tint": "teal"
+                },
+                {
+                  "id": "chocolates",
+                  "image": "/images/operators-module/example_card2.png",
+                  "verb": "Sharing",
+                  "label": "Chocolates",
+                  "caption": "Chocolates are shared among students.",
+                  "tint": "pink"
+                },
+                {
+                  "id": "wallet",
+                  "image": "/images/operators-module/example_card3.png",
+                  "verb": "Spending",
+                  "label": "Money",
+                  "caption": "Money is spent from a wallet.",
+                  "tint": "amber"
+                },
+                {
+                  "id": "heights",
+                  "image": "/images/operators-module/example_card4.png",
+                  "verb": "Comparing",
+                  "label": "Heights",
+                  "caption": "Two people compare how tall they are.",
+                  "tint": "blue"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "You do these every day!",
+            "text": "You already put together, share, compare and spend without thinking."
+          }
+        }
+      ]
+    },
+    "2": {
+      "step": 2,
+      "title": "Explore the *situations!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "We saw four situations. Let's find the action in each, starting here.",
+          "content": {
+            "$": "kit:situations-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "situations": [
+                {
+                  "id": "money",
+                  "icon": "/images/operators-module/money-icon.png",
+                  "verb": "Combining",
+                  "thing": "money",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "chocolate",
+                  "icon": "/images/operators-module/chocolate_icon.png",
+                  "verb": "Sharing",
+                  "thing": "chocolate",
+                  "tint": "cream"
+                },
+                {
+                  "id": "heights",
+                  "icon": "/images/operators-module/height_icon.png",
+                  "verb": "Comparing",
+                  "thing": "heights",
+                  "tint": "mint"
+                },
+                {
+                  "id": "spending",
+                  "icon": "/images/operators-module/money_bag.png",
+                  "verb": "Spending",
+                  "thing": "money",
+                  "tint": "blue"
+                }
+              ],
+              "focus": 0
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "You have ₹50 and receive another ₹30.",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/coins.png",
+                  "label": "You have",
+                  "value": "₹50"
+                },
+                {
+                  "pic": "/images/coins.png",
+                  "label": "You get",
+                  "value": "₹30"
+                }
+              ]
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Adding",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Subtracting",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Dividing",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "Comparing",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Adding: we put the two amounts together.",
+          "wrong": "Are the amounts put together, taken away, shared or compared?"
+        },
+        {
+          "kind": "interaction",
+          "line": "Now the next situation.",
+          "content": {
+            "$": "kit:situations-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "situations": [
+                {
+                  "id": "money",
+                  "icon": "/images/operators-module/money-icon.png",
+                  "verb": "Combining",
+                  "thing": "money",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "chocolate",
+                  "icon": "/images/operators-module/chocolate_icon.png",
+                  "verb": "Sharing",
+                  "thing": "chocolate",
+                  "tint": "cream"
+                },
+                {
+                  "id": "heights",
+                  "icon": "/images/operators-module/height_icon.png",
+                  "verb": "Comparing",
+                  "thing": "heights",
+                  "tint": "mint"
+                },
+                {
+                  "id": "spending",
+                  "icon": "/images/operators-module/money_bag.png",
+                  "verb": "Spending",
+                  "thing": "money",
+                  "tint": "blue"
+                }
+              ],
+              "focus": 1
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "You have 20 chocolates to share equally among 4 students.",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/food.png",
+                  "label": "Chocolates",
+                  "value": "20"
+                },
+                {
+                  "pic": "/images/level-one/programmer.png",
+                  "label": "Students",
+                  "value": "4"
+                }
+              ]
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Adding",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Subtracting",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Dividing",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "Comparing",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "Dividing: we share equally.",
+          "wrong": "Everyone should get the same. What do we do to share?"
+        },
+        {
+          "kind": "interaction",
+          "line": "And another one.",
+          "content": {
+            "$": "kit:situations-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "situations": [
+                {
+                  "id": "money",
+                  "icon": "/images/operators-module/money-icon.png",
+                  "verb": "Combining",
+                  "thing": "money",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "chocolate",
+                  "icon": "/images/operators-module/chocolate_icon.png",
+                  "verb": "Sharing",
+                  "thing": "chocolate",
+                  "tint": "cream"
+                },
+                {
+                  "id": "heights",
+                  "icon": "/images/operators-module/height_icon.png",
+                  "verb": "Comparing",
+                  "thing": "heights",
+                  "tint": "mint"
+                },
+                {
+                  "id": "spending",
+                  "icon": "/images/operators-module/money_bag.png",
+                  "verb": "Spending",
+                  "thing": "money",
+                  "tint": "blue"
+                }
+              ],
+              "focus": 2
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "One student is 150 cm tall and another is 140 cm.",
+          "visual": {
+            "$": "kit:versus",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "left": {
+                "pic": "/images/run.png",
+                "label": "Student 1",
+                "value": "150 cm"
+              },
+              "right": {
+                "pic": "/images/run.png",
+                "label": "Student 2",
+                "value": "140 cm"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Adding",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Subtracting",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Dividing",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "Comparing",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "3",
+          "rightTitle": "Exactly!",
+          "right": "Comparing: we see who is taller.",
+          "wrong": "We are not changing the heights. We are looking at the two."
+        },
+        {
+          "kind": "interaction",
+          "line": "Now the last one.",
+          "content": {
+            "$": "kit:situations-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "situations": [
+                {
+                  "id": "money",
+                  "icon": "/images/operators-module/money-icon.png",
+                  "verb": "Combining",
+                  "thing": "money",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "chocolate",
+                  "icon": "/images/operators-module/chocolate_icon.png",
+                  "verb": "Sharing",
+                  "thing": "chocolate",
+                  "tint": "cream"
+                },
+                {
+                  "id": "heights",
+                  "icon": "/images/operators-module/height_icon.png",
+                  "verb": "Comparing",
+                  "thing": "heights",
+                  "tint": "mint"
+                },
+                {
+                  "id": "spending",
+                  "icon": "/images/operators-module/money_bag.png",
+                  "verb": "Spending",
+                  "thing": "money",
+                  "tint": "blue"
+                }
+              ],
+              "focus": 3
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "You have ₹500 and spend ₹100.",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "items": [
+                {
+                  "pic": "/images/coins.png",
+                  "label": "You have",
+                  "value": "₹500"
+                },
+                {
+                  "pic": "/images/coins.png",
+                  "label": "You spend",
+                  "value": "₹100"
+                }
+              ]
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Adding",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Subtracting",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Dividing",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "Comparing",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Subtracting: money is taken away. We add, subtract, divide or compare.",
+          "wrong": "Does the money grow, or does some go away?"
+        }
+      ]
+    },
+    "3": {
+      "step": 3,
+      "title": "Remember What We *Learned?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "We have all this information. Can we find the money left without doing anything with it?",
+          "visual": {
+            "$": "kit:info-sheet",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "rows": [
+                {
+                  "icon": {
+                    "$": "kit:pic",
+                    "props": {
+                      "src": "/images/operators-module/money_bag.png",
+                      "className": "size-full"
+                    }
+                  },
+                  "label": "Money available",
+                  "value": "₹500"
+                },
+                {
+                  "icon": {
+                    "$": "kit:notebook-icon"
+                  },
+                  "label": "Book price",
+                  "value": "₹150"
+                },
+                {
+                  "icon": {
+                    "$": "kit:pen-icon"
+                  },
+                  "label": "Pen price",
+                  "value": "₹50"
+                }
+              ],
+              "missing": {
+                "icon": {
+                  "$": "kit:pic",
+                  "props": {
+                    "src": "/images/operators-module/money_bag.png",
+                    "className": "size-full"
+                  }
+                },
+                "label": "Money left"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Correct!",
+          "right": "We have the information, but we still need an operation to find the result.",
+          "wrong": "Is the money left written on any of the cards?"
+        }
+      ]
+    },
+    "4": {
+      "step": 4,
+      "title": "How Much Money *Will Remain?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "First, what do the book and the pen cost together?",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:info-sheet",
+                "props": {
+                  "compact": true,
+                  "rows": [
+                    {
+                      "icon": {
+                        "$": "kit:pic",
+                        "props": {
+                          "src": "/images/operators-module/money_bag.png",
+                          "className": "size-full"
+                        }
+                      },
+                      "label": "Wallet",
+                      "value": "₹500"
+                    },
+                    {
+                      "icon": {
+                        "$": "kit:notebook-icon"
+                      },
+                      "label": "Book",
+                      "value": "₹150"
+                    },
+                    {
+                      "icon": {
+                        "$": "kit:pen-icon"
+                      },
+                      "label": "Pen",
+                      "value": "₹50"
+                    }
+                  ]
+                }
+              },
+              "tokens": [
+                "150",
+                "50",
+                "+",
+                "-"
+              ],
+              "accept": [
+                [
+                  "150",
+                  "+",
+                  "50"
+                ],
+                [
+                  "50",
+                  "+",
+                  "150"
+                ]
+              ],
+              "hint": "Together means we put the two prices together.",
+              "result": "200"
+            }
+          },
+          "finishPanel": {
+            "title": "That's right!",
+            "text": "150 + 50 = 200. The book and the pen cost ₹200."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Now take that cost out of the wallet.",
+          "content": {
+            "$by": [
+              "api.finished"
+            ],
+            "cases": {
+              "false": {
+                "$": "kit:expression-stage",
+                "props": {
+                  "api": {
+                    "$ctx": "api"
+                  },
+                  "lead": {
+                    "$": "kit:info-sheet",
+                    "props": {
+                      "compact": true,
+                      "rows": [
+                        {
+                          "icon": {
+                            "$": "kit:pic",
+                            "props": {
+                              "src": "/images/operators-module/money_bag.png",
+                              "className": "size-full"
+                            }
+                          },
+                          "label": "Wallet",
+                          "value": "₹500"
+                        },
+                        {
+                          "icon": {
+                            "$": "kit:bag-icon"
+                          },
+                          "label": "Book + Pen",
+                          "value": "₹200"
+                        }
+                      ],
+                      "missing": {
+                        "icon": {
+                          "$": "kit:pic",
+                          "props": {
+                            "src": "/images/operators-module/money_bag.png",
+                            "className": "size-full"
+                          }
+                        },
+                        "label": "Money left"
+                      }
+                    }
+                  },
+                  "tokens": [
+                    "500",
+                    "200",
+                    "-",
+                    "+"
+                  ],
+                  "accept": [
+                    [
+                      "500",
+                      "-",
+                      "200"
+                    ]
+                  ],
+                  "hint": "Money goes out of the wallet, so we take it away.",
+                  "result": "300"
+                }
+              },
+              "true": {
+                "$": "kit:expression-stage",
+                "props": {
+                  "api": {
+                    "$ctx": "api"
+                  },
+                  "lead": {
+                    "$": "kit:info-sheet",
+                    "props": {
+                      "compact": true,
+                      "rows": [
+                        {
+                          "icon": {
+                            "$": "kit:pic",
+                            "props": {
+                              "src": "/images/operators-module/money_bag.png",
+                              "className": "size-full"
+                            }
+                          },
+                          "label": "Wallet",
+                          "value": "₹500"
+                        },
+                        {
+                          "icon": {
+                            "$": "kit:bag-icon"
+                          },
+                          "label": "Book + Pen",
+                          "value": "₹200"
+                        }
+                      ],
+                      "missing": {
+                        "icon": {
+                          "$": "kit:pic",
+                          "props": {
+                            "src": "/images/operators-module/money_bag.png",
+                            "className": "size-full"
+                          }
+                        },
+                        "label": "Money left",
+                        "value": "₹300"
+                      }
+                    }
+                  },
+                  "tokens": [
+                    "500",
+                    "200",
+                    "-",
+                    "+"
+                  ],
+                  "accept": [
+                    [
+                      "500",
+                      "-",
+                      "200"
+                    ]
+                  ],
+                  "hint": "Money goes out of the wallet, so we take it away.",
+                  "result": "300"
+                }
+              }
+            }
+          },
+          "finishPanel": {
+            "title": "₹300 remains!",
+            "text": "500 - 200 = 300. Two operations gave the answer."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Which mathematical actions did we use?",
+          "keepLine": true,
+          "options": [
+            {
+              "id": "0",
+              "text": "Addition and subtraction.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Multiplication and division.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Only comparing.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "We used operations to turn the information into a useful result.",
+          "wrong": "We put prices together, then took the total away from the wallet."
+        }
+      ]
+    },
+    "5": {
+      "step": 5,
+      "title": "Meet the *Operators!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "In programming, these symbols are called operators. First, +: it combines values.",
+          "content": {
+            "$": "kit:operator-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "operators": [
+                {
+                  "id": "add",
+                  "symbol": "+",
+                  "name": "Addition",
+                  "title": "Combines values",
+                  "example": "3 + 2",
+                  "tint": "mint"
+                },
+                {
+                  "id": "sub",
+                  "symbol": "-",
+                  "name": "Subtraction",
+                  "title": "Subtracts values",
+                  "example": "5 - 2",
+                  "tint": "cream"
+                },
+                {
+                  "id": "mul",
+                  "symbol": "*",
+                  "name": "Multiplication",
+                  "title": "Multiplies values",
+                  "example": "3 * 2",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "div",
+                  "symbol": "/",
+                  "name": "Division",
+                  "title": "Divides values",
+                  "example": "6 / 2",
+                  "tint": "blue"
+                }
+              ],
+              "focus": 0
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Next, -: it subtracts one value from another.",
+          "content": {
+            "$": "kit:operator-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "operators": [
+                {
+                  "id": "add",
+                  "symbol": "+",
+                  "name": "Addition",
+                  "title": "Combines values",
+                  "example": "3 + 2",
+                  "tint": "mint"
+                },
+                {
+                  "id": "sub",
+                  "symbol": "-",
+                  "name": "Subtraction",
+                  "title": "Subtracts values",
+                  "example": "5 - 2",
+                  "tint": "cream"
+                },
+                {
+                  "id": "mul",
+                  "symbol": "*",
+                  "name": "Multiplication",
+                  "title": "Multiplies values",
+                  "example": "3 * 2",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "div",
+                  "symbol": "/",
+                  "name": "Division",
+                  "title": "Divides values",
+                  "example": "6 / 2",
+                  "tint": "blue"
+                }
+              ],
+              "focus": 1
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Now *: it multiplies values.",
+          "content": {
+            "$": "kit:operator-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "operators": [
+                {
+                  "id": "add",
+                  "symbol": "+",
+                  "name": "Addition",
+                  "title": "Combines values",
+                  "example": "3 + 2",
+                  "tint": "mint"
+                },
+                {
+                  "id": "sub",
+                  "symbol": "-",
+                  "name": "Subtraction",
+                  "title": "Subtracts values",
+                  "example": "5 - 2",
+                  "tint": "cream"
+                },
+                {
+                  "id": "mul",
+                  "symbol": "*",
+                  "name": "Multiplication",
+                  "title": "Multiplies values",
+                  "example": "3 * 2",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "div",
+                  "symbol": "/",
+                  "name": "Division",
+                  "title": "Divides values",
+                  "example": "6 / 2",
+                  "tint": "blue"
+                }
+              ],
+              "focus": 2
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Last, /: it divides one value by another.",
+          "content": {
+            "$": "kit:operator-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "operators": [
+                {
+                  "id": "add",
+                  "symbol": "+",
+                  "name": "Addition",
+                  "title": "Combines values",
+                  "example": "3 + 2",
+                  "tint": "mint"
+                },
+                {
+                  "id": "sub",
+                  "symbol": "-",
+                  "name": "Subtraction",
+                  "title": "Subtracts values",
+                  "example": "5 - 2",
+                  "tint": "cream"
+                },
+                {
+                  "id": "mul",
+                  "symbol": "*",
+                  "name": "Multiplication",
+                  "title": "Multiplies values",
+                  "example": "3 * 2",
+                  "tint": "lavender"
+                },
+                {
+                  "id": "div",
+                  "symbol": "/",
+                  "name": "Division",
+                  "title": "Divides values",
+                  "example": "6 / 2",
+                  "tint": "blue"
+                }
+              ],
+              "focus": 3
+            }
+          }
+        }
+      ]
+    },
+    "6": {
+      "step": 6,
+      "title": "Calculate *or Compare?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A program does two big things with values. First, it calculates, with arithmetic operators.",
+          "content": {
+            "$": "kit:job-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "jobs": [
+                {
+                  "id": "calculate",
+                  "pic": "/images/computer.png",
+                  "name": "Calculate",
+                  "title": "How much? How many? What remains?",
+                  "example": "20 + 5 = 25",
+                  "tint": "mint"
+                },
+                {
+                  "id": "compare",
+                  "pic": "/images/trafficSignal.png",
+                  "name": "Compare",
+                  "title": "Which is greater? Are they equal?",
+                  "example": "20 > 5",
+                  "tint": "lavender"
+                }
+              ],
+              "focus": 0
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "The second big thing is to compare values, with comparison operators.",
+          "content": {
+            "$": "kit:job-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "jobs": [
+                {
+                  "id": "calculate",
+                  "pic": "/images/computer.png",
+                  "name": "Calculate",
+                  "title": "How much? How many? What remains?",
+                  "example": "20 + 5 = 25",
+                  "tint": "mint"
+                },
+                {
+                  "id": "compare",
+                  "pic": "/images/trafficSignal.png",
+                  "name": "Compare",
+                  "title": "Which is greater? Are they equal?",
+                  "example": "20 > 5",
+                  "tint": "lavender"
+                }
+              ],
+              "focus": 1
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Which job answers the question “Which is greater?”",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Calculate",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Compare",
+              "image": "/images/sequence/icon-actions.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Compare! First we calculate, then we move on to comparisons.",
+          "wrong": "Calculating finds a value. Which job looks at greater or smaller?"
+        }
+      ]
+    },
+    "7": {
+      "step": 7,
+      "title": "What Happens When Values *Come Together?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "You have ₹50. Your friend gives you ₹30. How much now?",
+          "visual": {
+            "$by": [
+              "checked",
+              "correct"
+            ],
+            "cases": {
+              "false,false": {
+                "$": "kit:wallet-scene",
+                "props": {
+                  "replay": {
+                    "$ctx": "attempt"
+                  },
+                  "amount": 50,
+                  "change": {
+                    "sign": "+",
+                    "value": 30
+                  },
+                  "showTotal": false
+                }
+              },
+              "true,false": {
+                "$": "kit:wallet-scene",
+                "props": {
+                  "replay": {
+                    "$ctx": "attempt"
+                  },
+                  "amount": 50,
+                  "change": {
+                    "sign": "+",
+                    "value": 30
+                  },
+                  "showTotal": false
+                }
+              },
+              "false,true": {
+                "$": "kit:wallet-scene",
+                "props": {
+                  "replay": {
+                    "$ctx": "attempt"
+                  },
+                  "amount": 50,
+                  "change": {
+                    "sign": "+",
+                    "value": 30
+                  },
+                  "showTotal": false
+                }
+              },
+              "true,true": {
+                "$": "kit:wallet-scene",
+                "props": {
+                  "replay": {
+                    "$ctx": "attempt"
+                  },
+                  "amount": 50,
+                  "change": {
+                    "sign": "+",
+                    "value": 30
+                  },
+                  "showTotal": true
+                }
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹70",
+              "image": "/images/coins.png"
+            },
+            {
+              "id": "1",
+              "text": "₹80",
+              "image": "/images/coins.png"
+            },
+            {
+              "id": "2",
+              "text": "₹20",
+              "image": "/images/coins.png"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "50 + 30 = 80. Addition combines values.",
+          "wrong": "The money joins what you already have."
+        },
+        {
+          "kind": "quiz",
+          "line": "Now you spend ₹20. How much is left?",
+          "visual": {
+            "$by": [
+              "checked",
+              "correct"
+            ],
+            "cases": {
+              "false,false": {
+                "$": "kit:wallet-scene",
+                "props": {
+                  "replay": {
+                    "$ctx": "attempt"
+                  },
+                  "amount": 80,
+                  "change": {
+                    "sign": "-",
+                    "value": 20
+                  },
+                  "showTotal": false
+                }
+              },
+              "true,false": {
+                "$": "kit:wallet-scene",
+                "props": {
+                  "replay": {
+                    "$ctx": "attempt"
+                  },
+                  "amount": 80,
+                  "change": {
+                    "sign": "-",
+                    "value": 20
+                  },
+                  "showTotal": false
+                }
+              },
+              "false,true": {
+                "$": "kit:wallet-scene",
+                "props": {
+                  "replay": {
+                    "$ctx": "attempt"
+                  },
+                  "amount": 80,
+                  "change": {
+                    "sign": "-",
+                    "value": 20
+                  },
+                  "showTotal": false
+                }
+              },
+              "true,true": {
+                "$": "kit:wallet-scene",
+                "props": {
+                  "replay": {
+                    "$ctx": "attempt"
+                  },
+                  "amount": 80,
+                  "change": {
+                    "sign": "-",
+                    "value": 20
+                  },
+                  "showTotal": true
+                }
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "₹100",
+              "image": "/images/coins.png"
+            },
+            {
+              "id": "1",
+              "text": "₹60",
+              "image": "/images/coins.png"
+            },
+            {
+              "id": "2",
+              "text": "₹80",
+              "image": "/images/coins.png"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "80 - 20 = 60. Subtraction finds the difference or what remains.",
+          "wrong": "Spending takes money out of the wallet."
+        },
+        {
+          "kind": "quiz",
+          "line": "You have 12 stickers and get 5 more. Which operation finds the total?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Add (+)",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Subtract (-)",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Divide (/)",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Right!",
+          "right": "Addition combines values.",
+          "wrong": "You are getting more. Do the stickers join or go away?"
+        },
+        {
+          "kind": "quiz",
+          "line": "You have 9 sweets and eat 4. Which operation finds how many are left?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Multiply (*)",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Subtract (-)",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Add (+)",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Right!",
+          "right": "Subtraction finds what remains.",
+          "wrong": "Eating takes sweets away."
+        }
+      ]
+    },
+    "8": {
+      "step": 8,
+      "title": "What If Every Group Has the *Same Quantity?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "4 rows, 5 chairs in each row. Tap a row to place its chairs.",
+          "content": {
+            "$": "kit:fill-rows-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "rows": 4,
+              "per": 5
+            }
+          },
+          "finishPanel": {
+            "title": "All set!",
+            "text": "Every row has 5 chairs. Now let's count them all."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Count the chairs in each row, then all of them.",
+          "question": "How many chairs altogether?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "5",
+                "+",
+                "5",
+                "+",
+                "5",
+                "+",
+                "5"
+              ],
+              "size": 28
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "9",
+              "image": "/images/level-two/cube.png"
+            },
+            {
+              "id": "1",
+              "text": "20",
+              "image": "/images/level-two/cube.png"
+            },
+            {
+              "id": "2",
+              "text": "25",
+              "image": "/images/level-two/cube.png"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "5 + 5 + 5 + 5 = 20 chairs.",
+          "wrong": "Add the chairs of all four rows."
+        },
+        {
+          "kind": "quiz",
+          "line": "There is a shortcut for adding equal groups.",
+          "question": "Which means 4 groups of 5?",
+          "options": [
+            {
+              "id": "0",
+              "text": "4 * 5",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "4 + 5",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "4 - 5",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "4 * 5 = 20. Multiplication is a shortcut for adding equal groups.",
+          "wrong": "Which operator repeats a group?"
+        }
+      ]
+    },
+    "9": {
+      "step": 9,
+      "title": "Can Everyone Get the *Same Number?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "20 chocolates, 4 students. How many does each one get?",
+          "visual": {
+            "$": "kit:share-scene",
+            "props": {
+              "pile": 20,
+              "trays": [
+                0,
+                0,
+                0,
+                0
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "4",
+              "image": "/images/food.png"
+            },
+            {
+              "id": "1",
+              "text": "5",
+              "image": "/images/food.png"
+            },
+            {
+              "id": "2",
+              "text": "6",
+              "image": "/images/food.png"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Good guess!",
+          "right": "Let's check it by sharing them out.",
+          "wrong": "Four students share 20 equally. Let's see by sharing them."
+        },
+        {
+          "kind": "interaction",
+          "line": "Share them out, one to each student at a time.",
+          "content": {
+            "$": "kit:share-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "total": 20,
+              "students": 4
+            }
+          },
+          "finishPanel": {
+            "title": "5 each!",
+            "text": "20 / 4 = 5.0. Division shares a quantity equally."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "In Python, / gives a Float. What does 20 / 4 give?",
+          "options": [
+            {
+              "id": "0",
+              "text": "5",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "5.0",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "4.0",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "20 / 4 = 5.0. The / operator gives a Float, not 5.",
+          "wrong": "Python's / always gives a decimal-type answer."
+        }
+      ]
+    },
+    "10": {
+      "step": 10,
+      "title": "When Sharing *Is Not Equal*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "23 chocolates, 4 students. Share one round at a time.",
+          "content": {
+            "$": "kit:share-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "total": 23,
+              "students": 4
+            }
+          },
+          "finishPanel": {
+            "title": "Each has 5!",
+            "text": "3 chocolates are left. They can't make another full round."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "How many does each student get, and how many are left?",
+          "visual": {
+            "$": "kit:share-scene",
+            "props": {
+              "pile": 3,
+              "trays": [
+                5,
+                5,
+                5,
+                5
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "5 each, 3 left.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "6 each, 0 left.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "5 each, 0 left.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "5 each, and 3 are left over.",
+          "wrong": "Count what is in each tray, then what is still in the heap."
+        },
+        {
+          "kind": "quiz",
+          "line": "Three results: 5.75, 5 and 3. Which expression gives the 3 left over?",
+          "options": [
+            {
+              "id": "0",
+              "text": "23 / 4",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "23 // 4",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "23 % 4",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "23 % 4 = 3. 23 / 4 = 5.75 and 23 // 4 = 5 answer other questions.",
+          "wrong": "One of these gives the remainder: the % operator."
+        }
+      ]
+    },
+    "11": {
+      "step": 11,
+      "title": "Same Numbers, *Three Answers!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "23 chocolates, 4 in each group. First, /: ordinary division, with decimals.",
+          "content": {
+            "$": "kit:operator-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "operators": [
+                {
+                  "id": "div",
+                  "symbol": "/",
+                  "name": "Division",
+                  "title": "Ordinary division, with decimals",
+                  "example": "23 / 4 = 5.75",
+                  "tint": "blue"
+                },
+                {
+                  "id": "floor",
+                  "symbol": "//",
+                  "name": "Floor division",
+                  "title": "Floor division: complete groups",
+                  "example": "23 // 4 = 5",
+                  "tint": "mint"
+                },
+                {
+                  "id": "mod",
+                  "symbol": "%",
+                  "name": "Modulus",
+                  "title": "Modulus: the remainder",
+                  "example": "23 % 4 = 3",
+                  "tint": "cream"
+                }
+              ],
+              "focus": 0,
+              "columns": 3,
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$": "kit:groups-picture",
+                    "props": {
+                      "total": 23,
+                      "size": 4,
+                      "emphasis": "all",
+                      "still": false
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Next, //: floor division. It counts the complete groups.",
+          "content": {
+            "$": "kit:operator-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "operators": [
+                {
+                  "id": "div",
+                  "symbol": "/",
+                  "name": "Division",
+                  "title": "Ordinary division, with decimals",
+                  "example": "23 / 4 = 5.75",
+                  "tint": "blue"
+                },
+                {
+                  "id": "floor",
+                  "symbol": "//",
+                  "name": "Floor division",
+                  "title": "Floor division: complete groups",
+                  "example": "23 // 4 = 5",
+                  "tint": "mint"
+                },
+                {
+                  "id": "mod",
+                  "symbol": "%",
+                  "name": "Modulus",
+                  "title": "Modulus: the remainder",
+                  "example": "23 % 4 = 3",
+                  "tint": "cream"
+                }
+              ],
+              "focus": 1,
+              "columns": 3,
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$by": [
+                      "arg0"
+                    ],
+                    "cases": {
+                      "false": {
+                        "$": "kit:groups-picture",
+                        "props": {
+                          "total": 23,
+                          "size": 4,
+                          "emphasis": "all",
+                          "still": true
+                        }
+                      },
+                      "true": {
+                        "$": "kit:groups-picture",
+                        "props": {
+                          "total": 23,
+                          "size": 4,
+                          "emphasis": "groups",
+                          "still": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Last, %: modulus. It gives what is left over.",
+          "content": {
+            "$": "kit:operator-turn-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "operators": [
+                {
+                  "id": "div",
+                  "symbol": "/",
+                  "name": "Division",
+                  "title": "Ordinary division, with decimals",
+                  "example": "23 / 4 = 5.75",
+                  "tint": "blue"
+                },
+                {
+                  "id": "floor",
+                  "symbol": "//",
+                  "name": "Floor division",
+                  "title": "Floor division: complete groups",
+                  "example": "23 // 4 = 5",
+                  "tint": "mint"
+                },
+                {
+                  "id": "mod",
+                  "symbol": "%",
+                  "name": "Modulus",
+                  "title": "Modulus: the remainder",
+                  "example": "23 % 4 = 3",
+                  "tint": "cream"
+                }
+              ],
+              "focus": 2,
+              "columns": 3,
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$by": [
+                      "arg0"
+                    ],
+                    "cases": {
+                      "false": {
+                        "$": "kit:groups-picture",
+                        "props": {
+                          "total": 23,
+                          "size": 4,
+                          "emphasis": "groups",
+                          "still": true
+                        }
+                      },
+                      "true": {
+                        "$": "kit:groups-picture",
+                        "props": {
+                          "total": 23,
+                          "size": 4,
+                          "emphasis": "left",
+                          "still": true
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "What does 23 // 4 = 5 tell us?",
+          "options": [
+            {
+              "id": "0",
+              "text": "5 complete groups of 4.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "5 chocolates are left over.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "The decimal answer, 5.75.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Floor division rounds the quotient down: the number of complete groups.",
+          "wrong": "// counts how many complete groups fit. It is not the leftover."
+        }
+      ]
+    },
+    "12": {
+      "step": 12,
+      "title": "Not Enough for *Even One Group?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "1 chocolate, 2 students. How many complete groups of 2 can we make?",
+          "visual": {
+            "$": "kit:share-scene",
+            "props": {
+              "pile": 1,
+              "trays": [
+                0,
+                0
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "0 complete groups.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "1 complete group.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "0.5 complete groups.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Right!",
+          "right": "No complete group of 2 can be made from 1 chocolate.",
+          "wrong": "A group needs 2 chocolates. Do we have 2?"
+        },
+        {
+          "kind": "quiz",
+          "line": "1 / 2 = 0.5 and 1 // 2 = 0. What is 1 % 2?",
+          "visual": {
+            "$": "kit:value-cards",
+            "props": {
+              "items": [
+                {
+                  "label": "1 / 2",
+                  "value": "0.5"
+                },
+                {
+                  "label": "1 // 2",
+                  "value": "0"
+                },
+                {
+                  "label": "1 % 2",
+                  "value": "?"
+                }
+              ]
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "0",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "1",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "2",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "1 % 2 = 1. The whole chocolate is left, so 1 = (2 * 0) + 1.",
+          "wrong": "The remainder is what is left after making all the complete groups."
+        }
+      ]
+    },
+    "13": {
+      "step": 13,
+      "title": "How Much *Remains?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "7 chocolates. Each group needs 3.",
+          "question": "7 // 3 = ? and 7 % 3 = ?",
+          "visual": {
+            "$": "kit:groups-picture",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "total": 7,
+              "size": 3
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "2 and 1",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "3 and 1",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "2 and 2",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "2 complete groups, and 1 chocolate left.",
+          "wrong": "Count the complete groups of 3, then what is left."
+        },
+        {
+          "kind": "quiz",
+          "line": "5 chocolates. Each group needs 2.",
+          "question": "5 // 2 = ? and 5 % 2 = ?",
+          "visual": {
+            "$": "kit:groups-picture",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "total": 5,
+              "size": 2
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "2 and 0",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "2 and 1",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "3 and 1",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "2 complete groups, and 1 chocolate left.",
+          "wrong": "Count the complete groups of 2, then what is left."
+        },
+        {
+          "kind": "quiz",
+          "line": "3 chocolates. Each group needs 5.",
+          "question": "3 // 5 = ? and 3 % 5 = ?",
+          "visual": {
+            "$": "kit:groups-picture",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "total": 3,
+              "size": 5
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "0 and 3",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "1 and 0",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "0 and 5",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "No complete group, so all 3 remain.",
+          "wrong": "Can we make even one group of 5 from 3?"
+        },
+        {
+          "kind": "quiz",
+          "line": "12 chocolates. Each group needs 4.",
+          "question": "12 // 4 = ? and 12 % 4 = ?",
+          "visual": {
+            "$": "kit:groups-picture",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "total": 12,
+              "size": 4
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "3 and 4",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "2 and 4",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "3 and 0",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "3 groups, nothing left. The remainder is always smaller than the divisor.",
+          "wrong": "Do the groups of 4 use up all 12?"
+        }
+      ]
+    },
+    "14": {
+      "step": 14,
+      "title": "Growing *Bigger, Faster!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "A square garden: 4 rows and 4 columns of plants.",
+          "question": "How many plants are there?",
+          "visual": {
+            "$": "kit:plant-grid",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              }
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "8",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "16",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "12",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "4 * 4 = 16. We can also write 4 ** 2 = 16.",
+          "wrong": "Look at the numbers again, and think about what happens to them."
+        },
+        {
+          "kind": "interaction",
+          "line": "** raises a number to a power. Tap the examples.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "big": false,
+              "groups": [
+                {
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "a",
+                      "symbol": "2 ** 3",
+                      "title": "2 * 2 * 2",
+                      "example": "2 ** 3 = 8"
+                    },
+                    {
+                      "id": "b",
+                      "symbol": "3 ** 2",
+                      "title": "3 * 3",
+                      "example": "3 ** 2 = 9"
+                    },
+                    {
+                      "id": "c",
+                      "symbol": "5 ** 2",
+                      "title": "5 * 5",
+                      "example": "5 ** 2 = 25"
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Exponentiation!",
+            "text": "** is a compact way to multiply a number by itself."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "What is 4 ** 2?",
+          "options": [
+            {
+              "id": "0",
+              "text": "8",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "16",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "6",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "4 ** 2 = 4 * 4 = 16.",
+          "wrong": "4 ** 2 means 4 multiplied by itself."
+        }
+      ]
+    },
+    "15": {
+      "step": 15,
+      "title": "Can You Calculate the *Total Bill?*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Build the bill for 3 notebooks and 2 pens.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:value-cards",
+                "props": {
+                  "items": [
+                    {
+                      "pic": "/images/statement.png",
+                      "label": "3 notebooks",
+                      "value": "₹20 each"
+                    },
+                    {
+                      "pic": "/images/command.png",
+                      "label": "2 pens",
+                      "value": "₹10 each"
+                    }
+                  ]
+                }
+              },
+              "tokens": [
+                "3",
+                "20",
+                "2",
+                "10",
+                "*",
+                "*",
+                "+"
+              ],
+              "accept": [
+                [
+                  "3",
+                  "*",
+                  "20",
+                  "+",
+                  "2",
+                  "*",
+                  "10"
+                ],
+                [
+                  "2",
+                  "*",
+                  "10",
+                  "+",
+                  "3",
+                  "*",
+                  "20"
+                ],
+                [
+                  "3",
+                  "*",
+                  "20",
+                  "+",
+                  "10",
+                  "*",
+                  "2"
+                ],
+                [
+                  "10",
+                  "*",
+                  "2",
+                  "+",
+                  "3",
+                  "*",
+                  "20"
+                ],
+                [
+                  "20",
+                  "*",
+                  "3",
+                  "+",
+                  "2",
+                  "*",
+                  "10"
+                ],
+                [
+                  "2",
+                  "*",
+                  "10",
+                  "+",
+                  "20",
+                  "*",
+                  "3"
+                ],
+                [
+                  "20",
+                  "*",
+                  "3",
+                  "+",
+                  "10",
+                  "*",
+                  "2"
+                ],
+                [
+                  "10",
+                  "*",
+                  "2",
+                  "+",
+                  "20",
+                  "*",
+                  "3"
+                ]
+              ],
+              "hint": "Equal items are multiplied. Then the two totals are added.",
+              "result": "80"
+            }
+          },
+          "finishPanel": {
+            "title": "₹80!",
+            "text": "3 * 20 + 2 * 10 = 80. Writing 20 + 20 + 20 + 10 + 10 gives 80 too."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Both ways give 80. What does the * do in 3 * 20?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Finds the cost of equal items.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Combines the two totals.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Finds what is left.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Multiplication costs the equal items; addition combines the different totals.",
+          "wrong": "3 notebooks, each ₹20: what does that make?"
+        }
+      ]
+    },
+    "16": {
+      "step": 16,
+      "title": "Does Calculation *Order Matter?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Do both expressions give the same result?",
+          "visual": {
+            "$": "kit:side-by-side",
+            "props": {
+              "left": [
+                "2",
+                "+",
+                "3",
+                "*",
+                "4"
+              ],
+              "right": [
+                "(",
+                "2",
+                "+",
+                "3",
+                ")",
+                "*",
+                "4"
+              ]
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "No!",
+          "right": "Same numbers, different results. Let's see how each is worked out.",
+          "wrong": "Look at the parentheses. Could they change what happens first?"
+        },
+        {
+          "kind": "interaction",
+          "line": "Watch how 2 + 3 * 4 is worked out.",
+          "content": {
+            "$": "kit:step-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "2",
+                "+",
+                "3",
+                "*",
+                "4"
+              ],
+              "steps": [
+                {
+                  "lit": [
+                    2,
+                    3,
+                    4
+                  ],
+                  "text": "First, 3 * 4 is picked out."
+                },
+                {
+                  "lit": [
+                    2,
+                    3,
+                    4
+                  ],
+                  "text": "3 * 4 = 12."
+                },
+                {
+                  "lit": [
+                    0,
+                    1
+                  ],
+                  "text": "Then add 2: 2 + 12.",
+                  "result": "14"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Now (2 + 3) * 4.",
+          "content": {
+            "$": "kit:step-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "(",
+                "2",
+                "+",
+                "3",
+                ")",
+                "*",
+                "4"
+              ],
+              "steps": [
+                {
+                  "lit": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4
+                  ],
+                  "text": "First, the part inside the parentheses."
+                },
+                {
+                  "lit": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "text": "2 + 3 = 5."
+                },
+                {
+                  "lit": [
+                    5,
+                    6
+                  ],
+                  "text": "Then multiply 5 by 4.",
+                  "result": "20"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "14 and 20!",
+            "text": "Parentheses group values. They can change what is calculated first, and so the result."
+          }
+        }
+      ]
+    },
+    "17": {
+      "step": 17,
+      "title": "Arrange the *Calculation*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "2 gift boxes at ₹50 each and 1 card at ₹20. Build the total.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:value-cards",
+                "props": {
+                  "items": [
+                    {
+                      "pic": "/images/box.png",
+                      "label": "2 gift boxes",
+                      "value": "₹50 each"
+                    },
+                    {
+                      "pic": "/images/statement.png",
+                      "label": "1 card",
+                      "value": "₹20"
+                    }
+                  ]
+                }
+              },
+              "tokens": [
+                "2",
+                "50",
+                "20",
+                "*",
+                "+",
+                "(",
+                ")"
+              ],
+              "accept": [
+                [
+                  "2",
+                  "*",
+                  "50",
+                  "+",
+                  "20"
+                ],
+                [
+                  "50",
+                  "*",
+                  "2",
+                  "+",
+                  "20"
+                ],
+                [
+                  "20",
+                  "+",
+                  "2",
+                  "*",
+                  "50"
+                ],
+                [
+                  "20",
+                  "+",
+                  "50",
+                  "*",
+                  "2"
+                ]
+              ],
+              "hint": "Two boxes of ₹50 are multiplied, then the card is added.",
+              "result": "120"
+            }
+          },
+          "finishPanel": {
+            "title": "₹120!",
+            "text": "2 * 50 + 20 = 120."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Now 2 bundles. Each bundle has a ₹50 box and a ₹20 card.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:value-cards",
+                "props": {
+                  "items": [
+                    {
+                      "pic": "/images/box.png",
+                      "label": "Box",
+                      "value": "₹50"
+                    },
+                    {
+                      "pic": "/images/statement.png",
+                      "label": "Card",
+                      "value": "₹20"
+                    },
+                    {
+                      "pic": "/images/coins.png",
+                      "label": "Bundles",
+                      "value": "2"
+                    }
+                  ]
+                }
+              },
+              "tokens": [
+                "2",
+                "50",
+                "20",
+                "*",
+                "+",
+                "(",
+                ")"
+              ],
+              "accept": [
+                [
+                  "2",
+                  "*",
+                  "(",
+                  "50",
+                  "+",
+                  "20",
+                  ")"
+                ],
+                [
+                  "2",
+                  "*",
+                  "(",
+                  "20",
+                  "+",
+                  "50",
+                  ")"
+                ],
+                [
+                  "(",
+                  "50",
+                  "+",
+                  "20",
+                  ")",
+                  "*",
+                  "2"
+                ],
+                [
+                  "(",
+                  "20",
+                  "+",
+                  "50",
+                  ")",
+                  "*",
+                  "2"
+                ]
+              ],
+              "hint": "A bundle is a box plus a card. Group that first, then multiply by 2.",
+              "result": "140"
+            }
+          },
+          "finishPanel": {
+            "title": "₹140!",
+            "text": "2 * (50 + 20) = 140."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "The two expressions are different. Why?",
+          "options": [
+            {
+              "id": "0",
+              "text": "The second adds each bundle first, using ( ).",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "They are really the same.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "The second one is written wrongly.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "The grouping is different, so the parentheses go around the bundle's cost.",
+          "wrong": "In the second problem, what must be added before multiplying?"
+        }
+      ]
+    },
+    "18": {
+      "step": 18,
+      "title": "Understand the *Situation!*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "A student has ₹200 and spends ₹75. Which expression finds what remains?",
+          "options": [
+            {
+              "id": "0",
+              "text": "200 + 75",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "200 - 75",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "200 * 75",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Spending takes money away: 200 - 75.",
+          "wrong": "Does the money grow, or go away?"
+        },
+        {
+          "kind": "quiz",
+          "line": "There are 6 boxes, each with 8 pencils. Which expression finds all the pencils?",
+          "options": [
+            {
+              "id": "0",
+              "text": "6 + 8",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "6 // 8",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "6 * 8",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "Equal boxes repeat: 6 * 8.",
+          "wrong": "Six equal groups of 8. Which operator repeats a group?"
+        },
+        {
+          "kind": "quiz",
+          "line": "17 chocolates shared among 5 students. Whole chocolates each?",
+          "options": [
+            {
+              "id": "0",
+              "text": "17 % 5",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "17 // 5",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "17 / 5",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "17 // 5 = 3 complete chocolates each.",
+          "wrong": "Which operator counts complete groups?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Same 17 chocolates and 5 students. How many chocolates remain?",
+          "options": [
+            {
+              "id": "0",
+              "text": "17 // 5",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "17 / 5",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "17 % 5",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "17 % 5 = 2 remain. You chose by meaning, not just by symbol.",
+          "wrong": "Which operator gives the remainder?"
+        }
+      ]
+    },
+    "19": {
+      "step": 19,
+      "title": "Who Is *Older?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Is your teacher older than you?",
+          "visual": {
+            "$": "kit:versus",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "left": {
+                "pic": "/images/level-one/teacher.png",
+                "label": "Teacher",
+                "value": "35 years"
+              },
+              "right": {
+                "pic": "/images/level-one/programmer.png",
+                "label": "Student",
+                "value": "13 years"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Yes!",
+          "right": "“My teacher is older than me” is correct. So the statement is True.",
+          "wrong": "Compare the two ages on the cards."
+        },
+        {
+          "kind": "quiz",
+          "line": "“My age is greater than my teacher's age.” Is that correct?",
+          "visual": {
+            "$": "kit:versus",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "left": {
+                "pic": "/images/level-one/teacher.png",
+                "label": "Teacher",
+                "value": "35 years"
+              },
+              "right": {
+                "pic": "/images/level-one/programmer.png",
+                "label": "Student",
+                "value": "13 years"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "No!",
+          "right": "The statement is incorrect. So it is False. We compare things and decide if a statement is correct.",
+          "wrong": "Is 13 greater than 35?"
+        }
+      ]
+    },
+    "20": {
+      "step": 20,
+      "title": "True or *False?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "My teacher is older than me.",
+          "question": "Is this statement correct?",
+          "visual": {
+            "$": "kit:versus",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "left": {
+                "pic": "/images/level-one/teacher.png",
+                "label": "Teacher",
+                "value": "35 years"
+              },
+              "right": {
+                "pic": "/images/level-one/programmer.png",
+                "label": "Me",
+                "value": "13 years"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "True!",
+          "right": "Yes means the statement is True.",
+          "wrong": "Compare the ages on the cards."
+        },
+        {
+          "kind": "quiz",
+          "line": "A bicycle is faster than a walking person.",
+          "question": "Is this statement correct?",
+          "visual": {
+            "$": "kit:versus",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "left": {
+                "pic": "/images/run.png",
+                "label": "Bicycle"
+              },
+              "right": {
+                "pic": "/images/level-one/programmer.png",
+                "label": "Walking person"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "True!",
+          "right": "Yes → True.",
+          "wrong": "Think about how fast each one goes."
+        },
+        {
+          "kind": "quiz",
+          "line": "A school bag is heavier than a pencil.",
+          "question": "Is this statement correct?",
+          "visual": {
+            "$": "kit:versus",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "left": {
+                "pic": "/images/rock.png",
+                "label": "School bag"
+              },
+              "right": {
+                "pic": "/images/command.png",
+                "label": "Pencil"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "True!",
+          "right": "Yes → True.",
+          "wrong": "Which one is harder to lift?"
+        },
+        {
+          "kind": "quiz",
+          "line": "A 5-metre rope is shorter than a 2-metre rope.",
+          "question": "Is this statement correct?",
+          "visual": {
+            "$": "kit:versus",
+            "props": {
+              "replay": {
+                "$ctx": "attempt"
+              },
+              "left": {
+                "pic": "/images/box.png",
+                "label": "Rope",
+                "value": "5 m"
+              },
+              "right": {
+                "pic": "/images/box.png",
+                "label": "Rope",
+                "value": "2 m"
+              }
+            }
+          },
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "Yes.",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "No.",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "False!",
+          "right": "No → False. True and False are Boolean values.",
+          "wrong": "Which number is smaller, 5 or 2?"
+        }
+      ]
+    },
+    "21": {
+      "step": 21,
+      "title": "Let the Computer *Compare!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A computer compares with symbols. Tap each one.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "need": 3,
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$": "kit:compare-header",
+                    "props": {
+                      "current": {
+                        "$ctx": "arg0"
+                      },
+                      "fallback": "35 > 13"
+                    }
+                  }
+                }
+              },
+              "groups": [
+                {
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "gt",
+                      "symbol": ">",
+                      "title": "Greater than",
+                      "example": "35 > 13",
+                      "say": "Thirty-five is greater than thirteen.",
+                      "result": true
+                    },
+                    {
+                      "id": "lt",
+                      "symbol": "<",
+                      "title": "Less than",
+                      "example": "13 < 35",
+                      "say": "Thirteen is less than thirty-five.",
+                      "result": true
+                    },
+                    {
+                      "id": "eq",
+                      "symbol": "==",
+                      "title": "Equal to",
+                      "example": "10 == 10",
+                      "say": "Ten is equal to ten.",
+                      "result": true
+                    },
+                    {
+                      "id": "ne",
+                      "symbol": "!=",
+                      "title": "Not equal to",
+                      "example": "10 != 5",
+                      "say": "Ten is not equal to five.",
+                      "result": true
+                    },
+                    {
+                      "id": "ge",
+                      "symbol": ">=",
+                      "title": "Greater than or equal to",
+                      "example": "35 >= 35",
+                      "say": "Thirty-five is greater than or equal to thirty-five.",
+                      "result": true
+                    },
+                    {
+                      "id": "le",
+                      "symbol": "<=",
+                      "title": "Less than or equal to",
+                      "example": "13 <= 35",
+                      "say": "Thirteen is less than or equal to thirty-five.",
+                      "result": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Comparisons!",
+            "text": "Each symbol compares two values. The next screens explain them one by one."
+          }
+        }
+      ]
+    },
+    "22": {
+      "step": 22,
+      "title": "Always Read *Left to Right*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "First, look at the left side!",
+          "content": {
+            "$": "kit:step-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "8",
+                ">",
+                "5"
+              ],
+              "steps": [
+                {
+                  "lit": [
+                    0
+                  ],
+                  "text": "Start with the number on the left: 8."
+                },
+                {
+                  "lit": [
+                    1
+                  ],
+                  "text": "The side of the symbol touching 8 is open."
+                },
+                {
+                  "lit": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "text": "So the left number is greater: “Eight is greater than five.”"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Now a second example.",
+          "content": {
+            "$": "kit:step-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "5",
+                "<",
+                "8"
+              ],
+              "steps": [
+                {
+                  "lit": [
+                    0
+                  ],
+                  "text": "Start with the number on the left: 5."
+                },
+                {
+                  "lit": [
+                    1
+                  ],
+                  "text": "The side of the symbol touching 5 is closed."
+                },
+                {
+                  "lit": [
+                    0,
+                    1,
+                    2
+                  ],
+                  "text": "So the left number is smaller: “Five is less than eight.”"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "The rule",
+            "text": "Left side open: the left number is greater. Left side closed: the left number is smaller."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "In 6 < 11 the left side is closed. What does that tell us?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "6",
+                "<",
+                "11"
+              ],
+              "size": 40
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "6 is smaller than 11.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "6 is greater than 11.",
+              "image": "/images/sequence/icon-actions.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Left side closed: the left number is smaller.",
+          "wrong": "Start from the left number and look at the side touching it."
+        }
+      ]
+    },
+    "23": {
+      "step": 23,
+      "title": "Read What the *Expression Says*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Read the complete expression. What does it say?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "8",
+                ">",
+                "5"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Eight is greater than five.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Eight is less than five.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Five is greater than eight.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Every comparison says a statement: “Eight is greater than five.”",
+          "wrong": "Start with the number on the left, then the symbol."
+        },
+        {
+          "kind": "quiz",
+          "line": "What does this one say?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "5",
+                "<",
+                "8"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Five is less than eight.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Five is greater than eight.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Eight is less than five.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "“Five is less than eight.”",
+          "wrong": "Read it from left to right."
+        },
+        {
+          "kind": "quiz",
+          "line": "And this one?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "12",
+                ">",
+                "7"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Seven is greater than twelve.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Twelve is greater than seven.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Twelve is less than seven.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "“Twelve is greater than seven.”",
+          "wrong": "Start with 12, the number on the left."
+        },
+        {
+          "kind": "quiz",
+          "line": "Read this one.",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "4",
+                "<",
+                "9"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Four is less than nine.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Four is greater than nine.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Nine is less than four.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "“Four is less than nine.”",
+          "wrong": "Start with 4, the number on the left."
+        },
+        {
+          "kind": "quiz",
+          "line": "Read this one.",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "15",
+                ">",
+                "10"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Fifteen is less than ten.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Ten is greater than fifteen.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Fifteen is greater than ten.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "“Fifteen is greater than ten.”",
+          "wrong": "Start with 15, the number on the left."
+        },
+        {
+          "kind": "quiz",
+          "line": "Read this one, even if it looks odd.",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "6",
+                "<",
+                "3"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Six is greater than three.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Six is less than three.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Three is less than six.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Well read!",
+          "right": "“Six is less than three.” Reading it is not deciding if it is True: this one is False.",
+          "wrong": "Read it as written, from the left. Do not decide yet if it is true."
+        }
+      ]
+    },
+    "24": {
+      "step": 24,
+      "title": "Write What the *Sentence Says*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "“Twenty is greater than ten.”",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "prompt": "Build the expression for the sentence.",
+              "tokens": [
+                "10",
+                "20",
+                ">",
+                "<"
+              ],
+              "accept": [
+                [
+                  "20",
+                  ">",
+                  "10"
+                ]
+              ],
+              "hint": "Start with the number the sentence starts with.",
+              "result": "True"
+            }
+          },
+          "finishPanel": {
+            "title": "That's right!",
+            "text": "20 > 10."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "“Five is less than twelve.”",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "prompt": "Build the expression for the sentence.",
+              "tokens": [
+                "12",
+                "<",
+                ">",
+                "5"
+              ],
+              "accept": [
+                [
+                  "5",
+                  "<",
+                  "12"
+                ]
+              ],
+              "hint": "Start with the number the sentence starts with.",
+              "result": "True"
+            }
+          },
+          "finishPanel": {
+            "title": "That's right!",
+            "text": "5 < 12."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "“Thirty is greater than twenty-five.”",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "prompt": "Build the expression for the sentence.",
+              "tokens": [
+                "25",
+                ">",
+                "30",
+                "<"
+              ],
+              "accept": [
+                [
+                  "30",
+                  ">",
+                  "25"
+                ]
+              ],
+              "hint": "Start with the number the sentence starts with.",
+              "result": "True"
+            }
+          },
+          "finishPanel": {
+            "title": "That's right!",
+            "text": "30 > 25."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "“Four is less than nine.”",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "prompt": "Build the expression for the sentence.",
+              "tokens": [
+                "<",
+                "9",
+                "4",
+                ">"
+              ],
+              "accept": [
+                [
+                  "4",
+                  "<",
+                  "9"
+                ]
+              ],
+              "hint": "Start with the number the sentence starts with.",
+              "result": "True"
+            }
+          },
+          "finishPanel": {
+            "title": "That's right!",
+            "text": "4 < 9."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "“Fifteen is less than eight.”",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "prompt": "Build the expression for the sentence.",
+              "tokens": [
+                "8",
+                "15",
+                "<",
+                ">"
+              ],
+              "accept": [
+                [
+                  "15",
+                  "<",
+                  "8"
+                ]
+              ],
+              "hint": "Start with the number the sentence starts with.",
+              "result": "False"
+            }
+          },
+          "finishPanel": {
+            "title": "Well written!",
+            "text": "15 < 8 matches the sentence, even though the statement is False. You can go both ways now."
+          }
+        }
+      ]
+    },
+    "25": {
+      "step": 25,
+      "title": "Six Ways to *Compare Values!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Tap each card: its meaning, an example and how it reads.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "groups": [
+                {
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "eq",
+                      "symbol": "==",
+                      "title": "Equal to",
+                      "example": "10 == 10",
+                      "say": "Ten is equal to ten.",
+                      "result": true
+                    },
+                    {
+                      "id": "ne",
+                      "symbol": "!=",
+                      "title": "Not equal to",
+                      "example": "10 != 5",
+                      "say": "Ten is not equal to five.",
+                      "result": true
+                    },
+                    {
+                      "id": "gt",
+                      "symbol": ">",
+                      "title": "Greater than",
+                      "example": "10 > 5",
+                      "say": "Ten is greater than five.",
+                      "result": true
+                    },
+                    {
+                      "id": "lt",
+                      "symbol": "<",
+                      "title": "Less than",
+                      "example": "5 < 10",
+                      "say": "Five is less than ten.",
+                      "result": true
+                    },
+                    {
+                      "id": "ge",
+                      "symbol": ">=",
+                      "title": "Greater than or equal to",
+                      "example": "10 >= 10",
+                      "say": "Ten is greater than or equal to ten.",
+                      "result": true
+                    },
+                    {
+                      "id": "le",
+                      "symbol": "<=",
+                      "title": "Less than or equal to",
+                      "example": "5 <= 10",
+                      "say": "Five is less than or equal to ten.",
+                      "result": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Six operators!",
+            "text": "Each symbol asks a different question about two values."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "In Python, = gives a value a name. Which symbol checks if two values are equal?",
+          "options": [
+            {
+              "id": "0",
+              "text": "=",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "==",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "!=",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "== checks whether two values are equal. A single = is used for assignment.",
+          "wrong": "One of these asks “Is it equal?” and does not give a name."
+        }
+      ]
+    },
+    "26": {
+      "step": 26,
+      "title": "The Number Line *Challenge*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Which number is greater, 8 or 5? Build the comparison.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:line-scale",
+                "props": {
+                  "marks": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                  ],
+                  "picked": [
+                    8
+                  ],
+                  "second": [
+                    5
+                  ],
+                  "small": true
+                }
+              },
+              "tokens": [
+                "8",
+                "5",
+                ">",
+                "<"
+              ],
+              "accept": [
+                [
+                  "8",
+                  ">",
+                  "5"
+                ],
+                [
+                  "5",
+                  "<",
+                  "8"
+                ]
+              ],
+              "hint": "The number farther to the right is the greater one.",
+              "result": "True"
+            }
+          },
+          "finishPanel": {
+            "title": "Right!",
+            "text": "8 > 5: “Eight is greater than five.” The number farther right is greater."
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Now 3 and 7.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:line-scale",
+                "props": {
+                  "marks": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                  ],
+                  "picked": [
+                    3
+                  ],
+                  "second": [
+                    7
+                  ],
+                  "small": true
+                }
+              },
+              "tokens": [
+                "3",
+                "7",
+                ">",
+                "<"
+              ],
+              "accept": [
+                [
+                  "7",
+                  ">",
+                  "3"
+                ],
+                [
+                  "3",
+                  "<",
+                  "7"
+                ]
+              ],
+              "hint": "The number farther to the right is the greater one.",
+              "result": "True"
+            }
+          },
+          "finishPanel": {
+            "title": "Right!",
+            "text": "3 < 7: “Three is less than seven.”"
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "Now 9 and 2.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:line-scale",
+                "props": {
+                  "marks": [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5,
+                    6,
+                    7,
+                    8,
+                    9,
+                    10
+                  ],
+                  "picked": [
+                    9
+                  ],
+                  "second": [
+                    2
+                  ],
+                  "small": true
+                }
+              },
+              "tokens": [
+                "9",
+                "2",
+                ">",
+                "<"
+              ],
+              "accept": [
+                [
+                  "9",
+                  ">",
+                  "2"
+                ],
+                [
+                  "2",
+                  "<",
+                  "9"
+                ]
+              ],
+              "hint": "The number farther to the right is the greater one.",
+              "result": "True"
+            }
+          },
+          "finishPanel": {
+            "title": "Right!",
+            "text": "9 > 2: “Nine is greater than two.”"
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Place the right symbol between 4 and 6.",
+          "visual": {
+            "$": "kit:line-scale",
+            "props": {
+              "marks": [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                6,
+                7,
+                8,
+                9,
+                10
+              ],
+              "picked": [
+                4
+              ],
+              "second": [
+                6
+              ],
+              "small": true
+            }
+          },
+          "question": "4 ? 6",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": ">",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "<",
+              "image": "/images/sequence/icon-actions.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "4 < 6. A number line is another way to compare: farther right is greater.",
+          "wrong": "Is 4 farther left or farther right than 6?"
+        }
+      ]
+    },
+    "27": {
+      "step": 27,
+      "title": "At Least *100 Points!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A game needs at least 100 points to unlock a level. Tap each score.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$": "kit:gate-header",
+                    "props": {
+                      "marks": [
+                        99,
+                        100,
+                        101
+                      ],
+                      "limit": "Unlock at 100",
+                      "current": {
+                        "$ctx": "arg0"
+                      },
+                      "card": true
+                    }
+                  }
+                }
+              },
+              "groups": [
+                {
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "99",
+                      "symbol": "99",
+                      "title": "99 points: the gate stays shut.",
+                      "result": false
+                    },
+                    {
+                      "id": "100",
+                      "symbol": "100",
+                      "title": "100 points: exactly enough.",
+                      "result": true
+                    },
+                    {
+                      "id": "101",
+                      "symbol": "101",
+                      "title": "101 points: more than enough.",
+                      "result": true
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "score >= 100: “Score is greater than or equal to 100.” Tap the scores where it is True.",
+          "content": {
+            "$": "kit:multi-pick-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 3,
+              "correct": [
+                "100",
+                "101"
+              ],
+              "hint": "At least 100 includes 100 itself.",
+              "items": [
+                {
+                  "id": "99",
+                  "label": "99",
+                  "sub": "99 >= 100"
+                },
+                {
+                  "id": "100",
+                  "label": "100",
+                  "sub": "100 >= 100"
+                },
+                {
+                  "id": "101",
+                  "label": "101",
+                  "sub": "101 >= 100"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "At least!",
+            "text": "Greater than or equal to includes the boundary value itself."
+          }
+        }
+      ]
+    },
+    "28": {
+      "step": 28,
+      "title": "Understanding the *Maximum Limit*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A ride has a maximum height of 150 cm. Who can enter? Tap each height.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "big": false,
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$": "kit:gate-header",
+                    "props": {
+                      "marks": [
+                        145,
+                        150,
+                        155
+                      ],
+                      "limit": "Limit 150 cm",
+                      "current": {
+                        "$ctx": "arg0"
+                      }
+                    }
+                  }
+                }
+              },
+              "groups": [
+                {
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "145",
+                      "symbol": "145",
+                      "title": "145 cm: allowed.",
+                      "result": true
+                    },
+                    {
+                      "id": "150",
+                      "symbol": "150",
+                      "title": "150 cm: allowed, exactly at the limit.",
+                      "result": true
+                    },
+                    {
+                      "id": "155",
+                      "symbol": "155",
+                      "title": "155 cm: not allowed.",
+                      "result": false
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "kind": "interaction",
+          "line": "height <= 150: “Height is less than or equal to 150.” Tap the heights where it is True.",
+          "content": {
+            "$": "kit:multi-pick-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "columns": 3,
+              "correct": [
+                "145",
+                "150"
+              ],
+              "hint": "The maximum value itself is allowed.",
+              "items": [
+                {
+                  "id": "145",
+                  "label": "145",
+                  "sub": "145 <= 150"
+                },
+                {
+                  "id": "150",
+                  "label": "150",
+                  "sub": "150 <= 150"
+                },
+                {
+                  "id": "155",
+                  "label": "155",
+                  "sub": "155 <= 150"
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Includes the limit!",
+            "text": "Less than or equal to includes the maximum value itself."
+          }
+        }
+      ]
+    },
+    "29": {
+      "step": 29,
+      "title": "A Comparison Produces *an Answer*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "A game checks score >= 100. Test two scores.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "big": false,
+              "prompt": "Tap each score.",
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$": "kit:compare-header",
+                    "props": {
+                      "current": {
+                        "$ctx": "arg0"
+                      },
+                      "idle": {
+                        "$": "kit:expr-big",
+                        "props": {
+                          "tokens": [
+                            "score",
+                            ">=",
+                            "100"
+                          ],
+                          "size": 30
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "groups": [
+                {
+                  "columns": 2,
+                  "items": [
+                    {
+                      "id": "120",
+                      "symbol": "Score = 120",
+                      "title": "Test the first score",
+                      "example": "120 >= 100",
+                      "say": "One hundred twenty is greater than or equal to one hundred.",
+                      "result": true
+                    },
+                    {
+                      "id": "80",
+                      "symbol": "Score = 80",
+                      "title": "Test the second score",
+                      "example": "80 >= 100",
+                      "say": "Eighty is greater than or equal to one hundred.",
+                      "result": false
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "True or False!",
+            "text": "A comparison doesn't return the bigger or smaller number. It returns a Boolean: True or False."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "What does a comparison like 80 >= 100 give back?",
+          "options": [
+            {
+              "id": "0",
+              "text": "A Boolean: True or False.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "The bigger number.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "The smaller number.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Boolean is the data type for True/False information. A comparison can be read, understood and evaluated.",
+          "wrong": "Remember the Boolean data type from the last chapter."
+        }
+      ]
+    },
+    "30": {
+      "step": 30,
+      "title": "Read, Understand *and Evaluate*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Step 1: read it. What does it say?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "8",
+                ">",
+                "5"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Eight is greater than five.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Eight is less than five.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Five is greater than eight.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Read right!",
+          "right": "It says 8 is bigger than 5.",
+          "wrong": "Read it from left to right: the left number, the symbol, then the right number."
+        },
+        {
+          "kind": "quiz",
+          "line": "Step 2: is the statement True or False?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "8",
+                ">",
+                "5"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "True",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "False",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "True!",
+          "right": "8 is bigger than 5, so it is True.",
+          "wrong": "Check the statement against the numbers."
+        },
+        {
+          "kind": "quiz",
+          "line": "Step 1: read it. What does it say?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "4",
+                ">",
+                "9"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Four is greater than nine.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Nine is greater than four.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Four is less than nine.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Read right!",
+          "right": "It says 4 is bigger than 9.",
+          "wrong": "Read it from left to right: the left number, the symbol, then the right number."
+        },
+        {
+          "kind": "quiz",
+          "line": "Step 2: is the statement True or False?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "4",
+                ">",
+                "9"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "True",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "False",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "False!",
+          "right": "4 is not bigger than 9, so it is False.",
+          "wrong": "Check the statement against the numbers."
+        },
+        {
+          "kind": "quiz",
+          "line": "Step 1: read it. What does it say?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "10",
+                "==",
+                "10"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Ten is not equal to ten.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Ten is equal to ten.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Ten is less than ten.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Read right!",
+          "right": "It says both values are the same.",
+          "wrong": "Read it from left to right: the left number, the symbol, then the right number."
+        },
+        {
+          "kind": "quiz",
+          "line": "Step 2: is the statement True or False?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "10",
+                "==",
+                "10"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "True",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "False",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "True!",
+          "right": "Both values are the same, so it is True.",
+          "wrong": "Check the statement against the numbers."
+        },
+        {
+          "kind": "quiz",
+          "line": "Step 1: read it. What does it say?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "15",
+                "<=",
+                "12"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "Fifteen is less than or equal to twelve.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Fifteen is greater than twelve.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Twelve is less than or equal to fifteen.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Read right!",
+          "right": "You can read it right even when it is False.",
+          "wrong": "Read it from left to right: the left number, the symbol, then the right number."
+        },
+        {
+          "kind": "quiz",
+          "line": "Step 2: is the statement True or False?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "15",
+                "<=",
+                "12"
+              ],
+              "size": 44
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "True",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "False",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "False!",
+          "right": "15 is not less than or equal to 12, so it is False.",
+          "wrong": "Check the statement against the numbers."
+        }
+      ]
+    },
+    "31": {
+      "step": 31,
+      "title": "Choose the *Right Operation*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Find the total price of two products.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "+ Add",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "- Subtract",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "* Multiply",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "/ Divide",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Adding combines the two prices.",
+          "wrong": "Which operator puts two values together?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Find the balance left after spending money.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "* Multiply",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "- Subtract",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "+ Add",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "/ Divide",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Subtracting finds what remains.",
+          "wrong": "Spending takes money away."
+        },
+        {
+          "kind": "quiz",
+          "line": "Find the total chairs in 4 equal rows of 5.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "+ Add",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "/ Divide",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "* Multiply",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "- Subtract",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "Equal rows repeat: multiply.",
+          "wrong": "Equal groups call for a shortcut."
+        },
+        {
+          "kind": "quiz",
+          "line": "Share 10 litres of juice among 4 friends. Find the exact amount each.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "// Whole groups",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "/ Divide",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "% Remainder",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "* Multiply",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Ordinary division gives the exact share, 2.5.",
+          "wrong": "You want the exact amount, decimals included."
+        },
+        {
+          "kind": "quiz",
+          "line": "Share 17 chocolates among 5 students. Find the whole chocolates each.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "/ Divide",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "% Remainder",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "// Whole groups",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "- Subtract",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Exactly!",
+          "right": "Floor division gives complete groups: 3 each.",
+          "wrong": "Which operator counts complete groups?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Find how many chocolates remain after forming complete groups.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "// Whole groups",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "% Remainder",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "/ Divide",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "+ Add",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "Modulus gives the remainder.",
+          "wrong": "Which operator gives what is left over?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Check whether a score reaches 100.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "< Below",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": ">= At least",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "== Equal to",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "+ Add",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": ">= includes 100 itself: “at least 100”.",
+          "wrong": "Reaching 100 means 100 or more."
+        },
+        {
+          "kind": "quiz",
+          "line": "Check whether two values are equal.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "> Greater than",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "== Equal to",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "< Below",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "!= Not equal",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "== checks equality.",
+          "wrong": "Which one asks “Is it the same?”"
+        },
+        {
+          "kind": "quiz",
+          "line": "Check that a value is below a limit. The limit itself is not allowed.",
+          "layout": "grid",
+          "options": [
+            {
+              "id": "0",
+              "text": "<= At most",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "< Below",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": ">= At least",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "3",
+              "text": "== Equal to",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "< leaves the limit out. <= would allow it.",
+          "wrong": "Is the limit itself allowed?"
+        }
+      ]
+    },
+    "32": {
+      "step": 32,
+      "title": "Construct the *Expression*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "4 notebooks at ₹25, 3 pens at ₹10. They pay ₹150. Build the change.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:value-cards",
+                "props": {
+                  "items": [
+                    {
+                      "pic": "/images/statement.png",
+                      "label": "4 notebooks",
+                      "value": "₹25 each"
+                    },
+                    {
+                      "pic": "/images/command.png",
+                      "label": "3 pens",
+                      "value": "₹10 each"
+                    },
+                    {
+                      "pic": "/images/coins.png",
+                      "label": "Pays",
+                      "value": "₹150"
+                    }
+                  ]
+                }
+              },
+              "tokens": [
+                "150",
+                "4",
+                "25",
+                "3",
+                "10",
+                "*",
+                "*",
+                "+",
+                "-",
+                "(",
+                ")"
+              ],
+              "accept": [
+                [
+                  "150",
+                  "-",
+                  "(",
+                  "4",
+                  "*",
+                  "25",
+                  "+",
+                  "3",
+                  "*",
+                  "10",
+                  ")"
+                ],
+                [
+                  "150",
+                  "-",
+                  "(",
+                  "3",
+                  "*",
+                  "10",
+                  "+",
+                  "4",
+                  "*",
+                  "25",
+                  ")"
+                ],
+                [
+                  "150",
+                  "-",
+                  "(",
+                  "4",
+                  "*",
+                  "25",
+                  "+",
+                  "10",
+                  "*",
+                  "3",
+                  ")"
+                ],
+                [
+                  "150",
+                  "-",
+                  "(",
+                  "10",
+                  "*",
+                  "3",
+                  "+",
+                  "4",
+                  "*",
+                  "25",
+                  ")"
+                ],
+                [
+                  "150",
+                  "-",
+                  "(",
+                  "25",
+                  "*",
+                  "4",
+                  "+",
+                  "3",
+                  "*",
+                  "10",
+                  ")"
+                ],
+                [
+                  "150",
+                  "-",
+                  "(",
+                  "3",
+                  "*",
+                  "10",
+                  "+",
+                  "25",
+                  "*",
+                  "4",
+                  ")"
+                ],
+                [
+                  "150",
+                  "-",
+                  "(",
+                  "25",
+                  "*",
+                  "4",
+                  "+",
+                  "10",
+                  "*",
+                  "3",
+                  ")"
+                ],
+                [
+                  "150",
+                  "-",
+                  "(",
+                  "10",
+                  "*",
+                  "3",
+                  "+",
+                  "25",
+                  "*",
+                  "4",
+                  ")"
+                ]
+              ],
+              "hint": "Total the notebooks and the pens first, in parentheses. Then take it from 150.",
+              "result": "20"
+            }
+          },
+          "finishPanel": {
+            "title": "₹20 back!",
+            "text": "Notebooks 100 + pens 30 = 130. Then 150 - 130 = 20."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "What if the student pays only ₹120? What is 120 - 130?",
+          "visual": {
+            "$": "kit:expr-big",
+            "props": {
+              "tokens": [
+                "120",
+                "-",
+                "130"
+              ],
+              "size": 36
+            }
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "10",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "-10",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "0",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "120 - 130 = -10. The student is ₹10 short: a shortfall, not money back.",
+          "wrong": "The student pays less than the bill. Which way is the difference?"
+        }
+      ]
+    },
+    "33": {
+      "step": 33,
+      "title": "Create a *Shopping Calculator*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Put the shopping app's steps in order.",
+          "content": {
+            "$": "kit:order-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "lead": {
+                "$": "kit:value-cards",
+                "props": {
+                  "items": [
+                    {
+                      "pic": "/images/statement.png",
+                      "label": "Notebooks"
+                    },
+                    {
+                      "pic": "/images/command.png",
+                      "label": "Pens"
+                    },
+                    {
+                      "pic": "/images/box.png",
+                      "label": "Pencils"
+                    }
+                  ]
+                }
+              },
+              "steps": [
+                "Keep the price of each item.",
+                "Ask how many of each item.",
+                "Multiply price by quantity for each item.",
+                "Add the three totals.",
+                "Display the final bill."
+              ],
+              "shown": [
+                2,
+                4,
+                0,
+                3,
+                1
+              ],
+              "hint": "The app needs prices and quantities before it can calculate."
+            }
+          },
+          "finishPanel": {
+            "title": "A working plan!",
+            "text": "Price * quantity for each item, then add the three totals."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "How does the app find the cost of one kind of item?",
+          "options": [
+            {
+              "id": "0",
+              "text": "notebook_price * notebook_quantity",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "notebook_price + notebook_quantity",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "notebook_price - notebook_quantity",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "Multiplication calculates repeated item costs. Addition combines the different totals.",
+          "wrong": "Several items, each with the same price: which operator?"
+        }
+      ]
+    },
+    "34": {
+      "step": 34,
+      "title": "Build a *Budget Checker*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "The student has ₹500. total_bill <= 500. Tap each bill to test it.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "big": false,
+              "prompt": "Tap each bill.",
+              "header": {
+                "$fn": {
+                  "arity": 1,
+                  "body": {
+                    "$": "kit:compare-header",
+                    "props": {
+                      "current": {
+                        "$ctx": "arg0"
+                      },
+                      "idle": {
+                        "$": "kit:expr-big",
+                        "props": {
+                          "tokens": [
+                            "total_bill",
+                            "<=",
+                            "500"
+                          ],
+                          "size": 28
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "groups": [
+                {
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "450",
+                      "symbol": "₹450",
+                      "title": "Within the budget",
+                      "example": "450 <= 500",
+                      "result": true
+                    },
+                    {
+                      "id": "500",
+                      "symbol": "₹500",
+                      "title": "Exactly the budget",
+                      "example": "500 <= 500",
+                      "result": true
+                    },
+                    {
+                      "id": "550",
+                      "symbol": "₹550",
+                      "title": "Over the budget",
+                      "example": "550 <= 500",
+                      "result": false
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Calculate, then compare!",
+            "text": "Arithmetic calculates the bill. A comparison checks it against the budget."
+          }
+        },
+        {
+          "kind": "quiz",
+          "line": "Which kind of operator checks the bill against the budget?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Comparison operators.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Arithmetic operators.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "None of them.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "The True or False result can later help a program allow or reject a purchase.",
+          "wrong": "We are not calculating a value here. We are checking it."
+        }
+      ]
+    },
+    "35": {
+      "step": 35,
+      "title": "The Incorrect *Shopping Bill*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "3 notebooks at ₹20 and 2 pens at ₹10. The app shows ₹35. What is wrong?",
+          "visual": {
+            "$": "kit:stack",
+            "props": {
+              "gap": 8,
+              "fit": true
+            },
+            "children": [
+              {
+                "$": "kit:bill-card",
+                "props": {
+                  "wrong": true,
+                  "total": "₹35",
+                  "lines": [
+                    [
+                      "3 notebooks at ₹20",
+                      ""
+                    ],
+                    [
+                      "2 pens at ₹10",
+                      ""
+                    ]
+                  ]
+                }
+              },
+              {
+                "$": "kit:expr-big",
+                "props": {
+                  "tokens": [
+                    "3",
+                    "+",
+                    "20",
+                    "+",
+                    "2",
+                    "+",
+                    "10"
+                  ],
+                  "size": 20
+                }
+              }
+            ]
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "The program should multiply quantities and prices.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "The program should subtract all prices.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "The program should compare quantities and prices.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "It must multiply each item's quantity by its price.",
+          "wrong": "Three notebooks at ₹20 each: what should the app do with 3 and 20?"
+        },
+        {
+          "kind": "interaction",
+          "line": "Fix the bill.",
+          "content": {
+            "$": "kit:expression-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "tokens": [
+                "3",
+                "20",
+                "2",
+                "10",
+                "*",
+                "*",
+                "+"
+              ],
+              "accept": [
+                [
+                  "3",
+                  "*",
+                  "20",
+                  "+",
+                  "2",
+                  "*",
+                  "10"
+                ],
+                [
+                  "2",
+                  "*",
+                  "10",
+                  "+",
+                  "3",
+                  "*",
+                  "20"
+                ],
+                [
+                  "3",
+                  "*",
+                  "20",
+                  "+",
+                  "10",
+                  "*",
+                  "2"
+                ],
+                [
+                  "10",
+                  "*",
+                  "2",
+                  "+",
+                  "3",
+                  "*",
+                  "20"
+                ],
+                [
+                  "20",
+                  "*",
+                  "3",
+                  "+",
+                  "2",
+                  "*",
+                  "10"
+                ],
+                [
+                  "2",
+                  "*",
+                  "10",
+                  "+",
+                  "20",
+                  "*",
+                  "3"
+                ],
+                [
+                  "20",
+                  "*",
+                  "3",
+                  "+",
+                  "10",
+                  "*",
+                  "2"
+                ],
+                [
+                  "10",
+                  "*",
+                  "2",
+                  "+",
+                  "20",
+                  "*",
+                  "3"
+                ]
+              ],
+              "hint": "Multiply each item's quantity by its price, then add the two totals.",
+              "result": "80"
+            }
+          },
+          "finishPanel": {
+            "title": "Fixed: ₹80!",
+            "text": "3 * 20 + 2 * 10 = 80."
+          }
+        }
+      ]
+    },
+    "36": {
+      "step": 36,
+      "title": "The Boundary *Bug*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "“At least 100” unlocks a level. A score of 100 stays locked. Which fix?",
+          "visual": {
+            "$": "kit:stack",
+            "props": {
+              "gap": 8,
+              "fit": true
+            },
+            "children": [
+              {
+                "$": "kit:expr-big",
+                "props": {
+                  "tokens": [
+                    "score",
+                    ">",
+                    "100"
+                  ],
+                  "size": 30
+                }
+              },
+              {
+                "$": "kit:gate-card",
+                "props": {
+                  "score": 100,
+                  "open": false
+                }
+              }
+            ]
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "score < 100",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "score >= 100",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "score != 100",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "score > 100 leaves out exactly 100. “At least 100” must include the boundary, so >=.",
+          "wrong": "Which expression is True for 100, 101 and more?"
+        }
+      ]
+    },
+    "37": {
+      "step": 37,
+      "title": "Plan a *Class Trip*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "How many complete groups of 10 students can we form? 32 // 10 = ?",
+          "visual": {
+            "$": "kit:trip-facts"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "3",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "3.2",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "4",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "32 // 10 = 3 complete groups.",
+          "wrong": "// counts complete groups only."
+        },
+        {
+          "kind": "quiz",
+          "line": "How many students remain? 32 % 10 = ?",
+          "visual": {
+            "$": "kit:trip-facts"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "2",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "3",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "10",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Exactly!",
+          "right": "32 % 10 = 2 students remain.",
+          "wrong": "% gives what is left after the complete groups."
+        },
+        {
+          "kind": "quiz",
+          "line": "3 buses are not enough. How many buses are actually needed?",
+          "visual": {
+            "$": "kit:trip-facts"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "3",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "4",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "5",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "3 full groups plus 2 students left need a 4th bus.",
+          "wrong": "What happens to the 2 students who remain?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Each bus costs ₹2,000. Which expression finds the cost of 4 buses?",
+          "visual": {
+            "$": "kit:trip-facts"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "4 + 2000",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "4 * 2000",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "4 // 2000",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Exactly!",
+          "right": "4 * 2000 = 8000.",
+          "wrong": "Four buses, each with the same cost."
+        },
+        {
+          "kind": "quiz",
+          "line": "The budget is ₹7,000. What does 8000 <= 7000 give?",
+          "visual": {
+            "$": "kit:trip-facts"
+          },
+          "options": [
+            {
+              "id": "0",
+              "text": "True",
+              "image": "/images/sequence/icon-goal.svg"
+            },
+            {
+              "id": "1",
+              "text": "False",
+              "image": "/images/sequence/icon-short.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "False!",
+          "right": "The school needs ₹8,000 but has ₹7,000, so the trip can't be arranged within budget.",
+          "wrong": "Is 8000 less than or equal to 7000?"
+        }
+      ]
+    },
+    "38": {
+      "step": 38,
+      "title": "Why Did You Choose *These Operations?*",
+      "stages": [
+        {
+          "kind": "quiz",
+          "line": "Why did we use floor division, 32 // 10?",
+          "options": [
+            {
+              "id": "0",
+              "text": "To find the complete groups of 10.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "To get a decimal answer.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "To find who is left over.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Well explained!",
+          "right": "// counts complete groups: 3 full buses.",
+          "wrong": "Which operation counts complete groups?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Why did we use modulus, 32 % 10?",
+          "options": [
+            {
+              "id": "0",
+              "text": "To count the complete buses.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "To find how many students are left over.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "To work out the cost.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Well explained!",
+          "right": "% gives the remainder: 2 students left.",
+          "wrong": "Which operation gives what is left over?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Why did we need an extra bus?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Floor division rounds up.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "Buses cost more than ₹7,000.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "2 students remain without a seat.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Well explained!",
+          "right": "Two students remain, so the remainder needs a bus too.",
+          "wrong": "Think about the students who are left after 3 full buses."
+        },
+        {
+          "kind": "quiz",
+          "line": "Why did we use multiplication for the total cost?",
+          "options": [
+            {
+              "id": "0",
+              "text": "We are sharing the cost.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "We are comparing costs.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "Every bus costs the same, so the cost repeats.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "2",
+          "rightTitle": "Well explained!",
+          "right": "Equal items repeat: 4 buses * ₹2,000.",
+          "wrong": "Four buses, each with the same cost: what repeats?"
+        },
+        {
+          "kind": "quiz",
+          "line": "Why did we use <= to compare the cost with the budget?",
+          "options": [
+            {
+              "id": "0",
+              "text": "Spending exactly the budget is still allowed.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "It finds the remainder.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "It divides the cost.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "0",
+          "rightTitle": "Well explained!",
+          "right": "<= includes the budget itself.",
+          "wrong": "Which operator asks “Is it within the limit?”"
+        },
+        {
+          "kind": "quiz",
+          "line": "How would the answer change if the budget were ₹8,000?",
+          "options": [
+            {
+              "id": "0",
+              "text": "It would stay False.",
+              "image": "/images/sequence/icon-order.svg"
+            },
+            {
+              "id": "1",
+              "text": "8000 <= 8000 is True: the trip works.",
+              "image": "/images/sequence/icon-actions.svg"
+            },
+            {
+              "id": "2",
+              "text": "We would need another bus.",
+              "image": "/images/sequence/icon-goal.svg"
+            }
+          ],
+          "correctId": "1",
+          "rightTitle": "Well explained!",
+          "right": "The cost equals the budget, and <= allows that.",
+          "wrong": "Is 8000 less than or equal to 8000?"
+        }
+      ]
+    },
+    "39": {
+      "step": 39,
+      "title": "You Can Now *Make Values Work!*",
+      "stages": [
+        {
+          "kind": "interaction",
+          "line": "Tap an operator: its meaning, how it reads and an example.",
+          "content": {
+            "$": "kit:symbol-stage",
+            "props": {
+              "api": {
+                "$ctx": "api"
+              },
+              "big": false,
+              "need": 5,
+              "groups": [
+                {
+                  "title": "Arithmetic operators",
+                  "columns": 4,
+                  "items": [
+                    {
+                      "id": "add",
+                      "symbol": "+",
+                      "title": "Add values",
+                      "example": "3 + 2 = 5",
+                      "say": "Three plus two is five."
+                    },
+                    {
+                      "id": "sub",
+                      "symbol": "-",
+                      "title": "Subtract values",
+                      "example": "5 - 2 = 3",
+                      "say": "Five minus two is three."
+                    },
+                    {
+                      "id": "mul",
+                      "symbol": "*",
+                      "title": "Multiply values",
+                      "example": "4 * 5 = 20",
+                      "say": "Four times five is twenty."
+                    },
+                    {
+                      "id": "div",
+                      "symbol": "/",
+                      "title": "Ordinary division",
+                      "example": "20 / 4 = 5.0",
+                      "say": "Twenty divided by four is five point zero."
+                    },
+                    {
+                      "id": "floor",
+                      "symbol": "//",
+                      "title": "Floor division",
+                      "example": "23 // 4 = 5",
+                      "say": "Complete groups of four in twenty-three: five."
+                    },
+                    {
+                      "id": "mod",
+                      "symbol": "%",
+                      "title": "Find the remainder",
+                      "example": "23 % 4 = 3",
+                      "say": "Twenty-three leaves a remainder of three."
+                    },
+                    {
+                      "id": "pow",
+                      "symbol": "**",
+                      "title": "Raise to a power",
+                      "example": "4 ** 2 = 16",
+                      "say": "Four to the power of two is sixteen."
+                    }
+                  ]
+                },
+                {
+                  "title": "Comparison operators",
+                  "columns": 3,
+                  "items": [
+                    {
+                      "id": "eq",
+                      "symbol": "==",
+                      "title": "Equal to",
+                      "example": "10 == 10",
+                      "say": "Ten is equal to ten.",
+                      "result": true
+                    },
+                    {
+                      "id": "ne",
+                      "symbol": "!=",
+                      "title": "Not equal to",
+                      "example": "10 != 5",
+                      "say": "Ten is not equal to five.",
+                      "result": true
+                    },
+                    {
+                      "id": "gt",
+                      "symbol": ">",
+                      "title": "Left value is greater",
+                      "example": "10 > 5",
+                      "say": "Ten is greater than five.",
+                      "result": true
+                    },
+                    {
+                      "id": "lt",
+                      "symbol": "<",
+                      "title": "Left value is smaller",
+                      "example": "5 < 10",
+                      "say": "Five is less than ten.",
+                      "result": true
+                    },
+                    {
+                      "id": "ge",
+                      "symbol": ">=",
+                      "title": "Greater than or equal to",
+                      "example": "10 >= 10",
+                      "say": "Ten is greater than or equal to ten.",
+                      "result": true
+                    },
+                    {
+                      "id": "le",
+                      "symbol": "<=",
+                      "title": "Less than or equal to",
+                      "example": "5 <= 10",
+                      "say": "Five is less than or equal to ten.",
+                      "result": true
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "finishPanel": {
+            "title": "Your toolkit!",
+            "text": "You can calculate and compare values. Keep tapping to explore the rest."
+          }
+        }
+      ]
+    },
+    "40": {
+      "step": 40,
+      "component": "operators.RecapScreen"
+    }
+  }
+}

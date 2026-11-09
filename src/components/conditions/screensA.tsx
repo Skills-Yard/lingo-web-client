@@ -1,13 +1,13 @@
 "use client";
 
-import { OrderStage, ScenesStage } from "@/components/operators/interactions";
-import { P } from "@/components/operators/pictures";
-import { ValueCards } from "@/components/operators/visuals";
+import { OrderStage, ScenesStage } from "@/components/kit/content/from-operators/interactions";
+import { P } from "@/components/kit/content/from-operators/pictures";
+import { ValueCards } from "@/components/kit/content/from-operators/visuals";
 import { STEP } from "./conditions";
-import { at, build, Condition, neutral, predict, quiz, testRows, yesNo } from "./helpers";
-import { PathStage, TableStage } from "./interactions";
-import type { ScreenDef } from "./screen";
-import { CheckFlow, ResultCards, ZeroLine } from "./visuals";
+import { at, build, Condition, neutral, predict, quiz, testRows, yesNo } from "@/components/kit/content/from-conditions/helpers";
+import { PathStage, TableStage } from "@/components/kit/content/from-conditions/interactions";
+import type { ScreenDef } from "@/components/kit/content/from-conditions/screen";
+import { CheckFlow, ResultCards, ZeroLine } from "@/components/kit/content/from-conditions/visuals";
 
 const MARKS = { pic: P.student, label: "Student's marks", value: "85" };
 

@@ -60,7 +60,7 @@ export const STEP = {
  * answered right the first time with no hint. A screen that was itself skipped
  * counts as answered (it was skipped because the ones before it were).
  */
-const SKIPS: Readonly<Record<number, readonly number[]>> = {
+export const SKIPS: Readonly<Record<number, readonly number[]>> = {
   [STEP.trueFalse]: [STEP.older],
   [STEP.readExpression]: [STEP.leftToRight],
   [STEP.wordsToSymbols]: [STEP.leftToRight, STEP.readExpression],
@@ -71,11 +71,31 @@ const SKIPS: Readonly<Record<number, readonly number[]>> = {
 const cleanRight = (step: number): boolean => answeredClean(step) || (SKIPS[step]?.every(cleanRight) ?? false);
 
 /** "Explain your thinking": trouble with the remainder goes back to the grouping screen, trouble with the comparison to the number line. */
-const explainDetour = () => {
+export const explainDetour = () => {
   const remainder = [0, 1, 2].some((stage) => missedStage(STEP.explain, stage));
   if (remainder) return STEP.noGroup;
   const comparison = [4, 5].some((stage) => missedStage(STEP.explain, stage));
   return comparison ? STEP.numberLine : undefined;
+};
+
+/** Where a learner who missed (or used the hint on) a screen is sent back to, once: the screen that taught the idea (a function picks it from how the learner did). */
+export const DETOURS: Readonly<Record<number, number | (() => number | undefined)>> = {
+  [STEP.unequal]: STEP.sharing,
+  [STEP.noGroup]: STEP.three,
+  [STEP.remainderDrill]: STEP.noGroup,
+  [STEP.order]: STEP.bill,
+  [STEP.arrange]: STEP.order,
+  [STEP.makesSense]: STEP.bill,
+  [STEP.trueFalse]: STEP.older,
+  [STEP.readExpression]: STEP.leftToRight,
+  [STEP.wordsToSymbols]: STEP.leftToRight,
+  [STEP.atLeast]: STEP.sixOperators,
+  [STEP.maxLimit]: STEP.sixOperators,
+  [STEP.readEvaluate]: STEP.answer,
+  [STEP.wrongBill]: STEP.bill,
+  [STEP.boundaryBug]: STEP.atLeast,
+  [STEP.trip]: STEP.noGroup,
+  [STEP.explain]: explainDetour,
 };
 
 const flow = createAdaptiveFlow({
@@ -83,24 +103,7 @@ const flow = createAdaptiveFlow({
   hrefOf: operatorsHref,
   home: "/level",
   skips: SKIPS,
-  detours: {
-    [STEP.unequal]: STEP.sharing,
-    [STEP.noGroup]: STEP.three,
-    [STEP.remainderDrill]: STEP.noGroup,
-    [STEP.order]: STEP.bill,
-    [STEP.arrange]: STEP.order,
-    [STEP.makesSense]: STEP.bill,
-    [STEP.trueFalse]: STEP.older,
-    [STEP.readExpression]: STEP.leftToRight,
-    [STEP.wordsToSymbols]: STEP.leftToRight,
-    [STEP.atLeast]: STEP.sixOperators,
-    [STEP.maxLimit]: STEP.sixOperators,
-    [STEP.readEvaluate]: STEP.answer,
-    [STEP.wrongBill]: STEP.bill,
-    [STEP.boundaryBug]: STEP.atLeast,
-    [STEP.trip]: STEP.noGroup,
-    [STEP.explain]: explainDetour,
-  },
+  detours: DETOURS,
   cleanRight,
   struggled,
   detourKey: "lingo.operators-detour",

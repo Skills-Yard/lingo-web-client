@@ -18,7 +18,7 @@ import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { conditionsHref } from "@/lib/routes";
 import { CONDITIONS_STEPS, STEP, conditionsNext, conditionsPrevious } from "./conditions";
 import { noteAnswer, noteStruggle } from "./conditionsScore";
-import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } from "./screen";
+import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } from "@/components/kit/content/from-conditions/screen";
 
 /** A row of the list of answers (a compact one, for words only), and the gap between rows (see `AnswerCards`). */
 const ROW_H = 76;

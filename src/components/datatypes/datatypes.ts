@@ -45,34 +45,40 @@ export const STEP = {
   recap: 30,
 } as const;
 
+/** What a screen needs for a strong learner to skip it: every screen listed was answered right the first time with no hint. */
+export const SKIPS: Readonly<Record<number, readonly number[]>> = {
+  [STEP.twoStates]: [STEP.attendance],
+  [STEP.profile]: [STEP.classifyNumbers, STEP.beyond],
+  [STEP.reflectInt]: [STEP.classifyNumbers, STEP.profile],
+  [STEP.reflectFloat]: [STEP.floats, STEP.classifyNumbers],
+  [STEP.reflectId]: [STEP.beyond, STEP.game],
+  [STEP.reflectBool]: [STEP.attendance, STEP.boolean],
+  [STEP.reflectApp]: [STEP.weather, STEP.plan],
+};
+
+/** Where a learner who missed (or used the hint on) a screen is sent back to, once: the screen that taught the idea. */
+export const DETOURS: Readonly<Record<number, number>> = {
+  [STEP.classifyNumbers]: STEP.wholeDecimal,
+  [STEP.twelve]: STEP.strings,
+  [STEP.beyond]: STEP.fourTypes,
+  [STEP.profile]: STEP.fourTypes,
+  [STEP.weather]: STEP.fourTypes,
+  [STEP.plan]: STEP.classifyNumbers,
+  [STEP.debug]: STEP.floats,
+  [STEP.game]: STEP.profile,
+  [STEP.reflectInt]: STEP.integers,
+  [STEP.reflectFloat]: STEP.floats,
+  [STEP.reflectId]: STEP.strings,
+  [STEP.reflectBool]: STEP.boolean,
+  [STEP.reflectApp]: STEP.weather,
+};
+
 const flow = createAdaptiveFlow({
   steps: DATATYPES_STEPS,
   hrefOf: datatypesHref,
   home: "/level",
-  skips: {
-    [STEP.twoStates]: [STEP.attendance],
-    [STEP.profile]: [STEP.classifyNumbers, STEP.beyond],
-    [STEP.reflectInt]: [STEP.classifyNumbers, STEP.profile],
-    [STEP.reflectFloat]: [STEP.floats, STEP.classifyNumbers],
-    [STEP.reflectId]: [STEP.beyond, STEP.game],
-    [STEP.reflectBool]: [STEP.attendance, STEP.boolean],
-    [STEP.reflectApp]: [STEP.weather, STEP.plan],
-  },
-  detours: {
-    [STEP.classifyNumbers]: STEP.wholeDecimal,
-    [STEP.twelve]: STEP.strings,
-    [STEP.beyond]: STEP.fourTypes,
-    [STEP.profile]: STEP.fourTypes,
-    [STEP.weather]: STEP.fourTypes,
-    [STEP.plan]: STEP.classifyNumbers,
-    [STEP.debug]: STEP.floats,
-    [STEP.game]: STEP.profile,
-    [STEP.reflectInt]: STEP.integers,
-    [STEP.reflectFloat]: STEP.floats,
-    [STEP.reflectId]: STEP.strings,
-    [STEP.reflectBool]: STEP.boolean,
-    [STEP.reflectApp]: STEP.weather,
-  },
+  skips: SKIPS,
+  detours: DETOURS,
   cleanRight,
   struggled,
   detourKey: "lingo.datatypes-detour",
