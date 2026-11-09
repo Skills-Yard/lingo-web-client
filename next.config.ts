@@ -2,6 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["172.30.144.1", "192.168.1.108", "10.135.178.84"],
+  async redirects() {
+    // The Command module used to live at the bare `/module`; keep old links and bookmarks working.
+    // Next carries the query (`?step=`) over to the destination.
+    return [{ source: "/module", destination: "/module/commands", permanent: false }];
+  },
   async headers() {
     // Static media is large and rarely changes: let the browser/CDN keep it
     // (revalidating in the background) instead of re-downloading each visit.

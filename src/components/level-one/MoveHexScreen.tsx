@@ -8,7 +8,7 @@ import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-t
 import { useSound } from "@/hooks/useSound";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { PlatformBattery } from "@/components/ui/PlatformBattery";
 import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
@@ -121,7 +121,7 @@ export function MoveButton({ label, look, disabled, onPress, children }: { label
 }
 
 /**
- * `/module?step=16` — "Let's guide Hex": Hex stands on the middle of a 3 x 3
+ * `/module/commands?step=16` — "Let's guide Hex": Hex stands on the middle of a 3 x 3
  * platform with the battery one tile ahead, and each button walks him a tile at
  * once. Go Straight reaches the battery, which opens the gem popup and unlocks
  * Continue; Go Back misses it, which offers Try again.
@@ -218,7 +218,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
           return;
         }
         noteAnswer(STEP, !missed.current);
-        router.push(nextAfter(STEP, !missed.current, moduleHref("complete")));
+        router.push(nextAfter(STEP, !missed.current, commandsHref("complete")));
       }}
     >
       <ScreenTitle oneLine>

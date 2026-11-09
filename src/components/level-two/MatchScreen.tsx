@@ -83,7 +83,7 @@ const GRAY_CARD = "border-[#E3E5E9] bg-[#F1F2F4] duration-150 dark:border-white/
 type Side = "left" | "right";
 
 /**
- * `/module?step=6` — "Can you match them?": tap an instruction, then
+ * `/module/commands?step=6` — "Can you match them?": tap an instruction, then
  * the action it does. The tapped card bounces and turns blue. A right pair
  * turns green together as it lifts (with a light shine across it), then goes
  * gray and disabled as it comes down; a wrong pair shakes red and lets go. Next

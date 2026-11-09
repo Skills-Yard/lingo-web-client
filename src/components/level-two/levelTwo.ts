@@ -1,10 +1,10 @@
 import { COLUMN_W } from "@/lib/questionColumn";
 import type { RobotMove, RobotPose } from "@/lib/rive/robotHost";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 
 /** The module's `step`th screen, or its "Lesson complete!". */
-export const levelTwoHref = (step: number | "complete") => moduleHref(step);
+export const levelTwoHref = (step: number | "complete") => commandsHref(step);
 
 /** The Figma frame is 390 x 844 with its own status bar; the Level 1 shell's
  * header sits this much higher, so everything pinned to the top (title, Hex's
@@ -77,7 +77,7 @@ export type Quiz = {
 const LAVENDER = "bg-[#F6F4FE] dark:bg-[#0F1F26]";
 const CREAM = "bg-[#FFF9F0] dark:bg-[#0F1F26]";
 
-/** Screen 3 — `/module?step=3`. */
+/** Screen 3 — `/module/commands?step=3`. */
 export const WHAT_JUST_HAPPENED: Quiz = {
   title: [[{ text: "What just " }, { text: "happened?", teal: true }]],
   line: [{ text: "What did the robot do after " }, { text: "Pick Up", teal: true }, { text: "?" }],
@@ -101,7 +101,7 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   voiceover: MODULE_AUDIO.whatJustHappened,
 };
 
-/** Screen 5 — `/module?step=5`. */
+/** Screen 5 — `/module/commands?step=5`. */
 export const WHAT_NEXT: Quiz = {
   title: [[{ text: "It’s " }, { text: "your turn", teal: true }, { text: " now!" }]],
   line: [{ text: "Let’s make the robot pick up the cube." }],
@@ -123,7 +123,7 @@ export const WHAT_NEXT: Quiz = {
   voiceover: MODULE_AUDIO.yourTurn,
 };
 
-/** Screen 4 — `/module?step=4`. */
+/** Screen 4 — `/module/commands?step=4`. */
 export const ROBOT_PICKED_UP: Quiz = {
   title: [[{ text: "Let’s " }, { text: "release", teal: true }, { text: " the cube." }]],
   line: [{ text: "Which command releases the cube?" }],
@@ -166,7 +166,7 @@ export const LETS_PICK_UP: Quiz = {
   hint: false,
 };
 
-/** Screen 8 — `/module?step=8`. */
+/** Screen 8 — `/module/commands?step=8`. */
 export const WHERE_SHOULD_GO: Quiz = {
   title: [[{ text: "How to " }, { text: "reach the target?", teal: true }]],
   line: [{ text: "Pick an instruction to reach the target area." }],
@@ -189,7 +189,7 @@ export const WHERE_SHOULD_GO: Quiz = {
   voiceover: MODULE_AUDIO.reachTarget,
 };
 
-/** Screen 18 — `/module?step=18`. */
+/** Screen 18 — `/module/commands?step=18`. */
 export const WILL_REACH: Quiz = {
   title: [[{ text: "Will it reach " }, { text: "the target?", teal: true }]],
   line: [{ text: "What happens if you choose PUT DOWN?" }],

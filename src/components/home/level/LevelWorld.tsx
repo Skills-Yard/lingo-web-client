@@ -137,11 +137,14 @@ export function LevelWorld({
         />
       ))}
 
-      {/* Buildings beside the first levels' tiles, each with its icon on the roof */}
+      {/* Buildings beside the first levels' tiles, each with its icon on the roof; tapping one is tapping its level */}
       {BUILDING_CONFIGS.map((b) => (
         <div
           key={b.id}
-          className="pointer-events-none absolute z-25 select-none"
+          role="button"
+          aria-label={b.alt}
+          onClick={() => onLevelClick(b.id)}
+          className="absolute z-25 cursor-pointer select-none transition-transform hover:scale-105 active:scale-95"
           style={{
             top: `${b.top}px`,
             left: `${b.left}px`,

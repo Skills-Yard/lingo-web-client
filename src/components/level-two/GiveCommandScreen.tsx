@@ -31,7 +31,7 @@ const HEX_SETTLE_MS = 900;
 const PANEL_MIN_HEIGHT = 844 - 593;
 
 /**
- * `/module?step=2` — "Let's make it happen!": Hex asks what to
+ * `/module/commands?step=2` — "Let's make it happen!": Hex asks what to
  * tell the robot, the main button ("Pick Up", our usual one) gives the
  * instruction and the cube is picked up. Then, on this same screen (the title
  * stays), a panel with Hex says so above the

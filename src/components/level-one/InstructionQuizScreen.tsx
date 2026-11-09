@@ -6,7 +6,7 @@ import { X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { optionDropIn } from "@/components/onboarding/optionCard";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -45,7 +45,7 @@ const LOOK = {
 } as const;
 
 /**
- * `/module?step=11` — "Instructions are…" (what instructions are known as): a single-answer quiz
+ * `/module/commands?step=11` — "Instructions are…" (what instructions are known as): a single-answer quiz
  * with Hex between the question and the options. Check locks the answer and
  * marks it right (green) or wrong (red); Continue follows.
  */
@@ -76,7 +76,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       ctaLabel={checked ? "Continue" : "Check"}
       // Once the answer is checked the hint folds away and Continue takes its room.
       hint={{ visible: !checked, onUse: () => setHinted(true) }}
-      onBack={() => router.push(moduleHref(QUIZ_STEP - 1))}
+      onBack={() => router.push(commandsHref(QUIZ_STEP - 1))}
       onContinue={() => {
         if (!checked) {
           setChecked(true);

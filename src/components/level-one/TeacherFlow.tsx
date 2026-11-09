@@ -18,7 +18,7 @@ import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { COLUMN_W } from "@/lib/questionColumn";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 import { LevelOneShell, levelOneHref, levelOneStep, TITLE_HEIGHT, TITLE_MARGIN_TOP } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
@@ -133,7 +133,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       // Only the quiz has a hint, and it folds away once the answer is checked.
       hint={{ visible: quiz && !checked, onUse: () => setHinted(true) }}
       onBack={() => {
-        if (!quiz) return router.push(moduleHref(levelOneStep(3) - 1));
+        if (!quiz) return router.push(commandsHref(levelOneStep(3) - 1));
         show("says");
         router.push(levelOneHref(3));
       }}

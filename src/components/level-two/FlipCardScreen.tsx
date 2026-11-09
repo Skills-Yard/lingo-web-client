@@ -94,7 +94,7 @@ function FlipCard({ onFlip }: { onFlip: () => void }) {
 }
 
 /**
- * `/module?step=10` — "Flip the card to reveal.": a card that turns over when tapped,
+ * `/module/commands?step=10` — "Flip the card to reveal.": a card that turns over when tapped,
  * to what a command is. Next unlocks once it has been turned.
  */
 export function FlipCardScreen() {

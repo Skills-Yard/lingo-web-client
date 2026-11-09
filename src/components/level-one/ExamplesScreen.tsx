@@ -42,7 +42,7 @@ const slotOf = (index: number, active: number) => {
 };
 
 /**
- * `/module?step=14` — "Examples of instruction": a looping carousel of
+ * `/module/commands?step=14` — "Examples of instruction": a looping carousel of
  * example cards. The active card is centred with its neighbours peeking in
  * from each side; swipe, tap a neighbour or use the arrow keys to move.
  */

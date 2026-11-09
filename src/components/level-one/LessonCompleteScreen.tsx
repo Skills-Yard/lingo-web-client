@@ -21,7 +21,7 @@ const LAYOUT =new Layout({ fit: Fit.FitWidth, alignment: Alignment.Center });
 const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 
 /**
- * `/module?step=complete` — "Lesson complete!", then the reward: Continue on the
+ * `/module/commands?step=complete` — "Lesson complete!", then the reward: Continue on the
  * results records module `level` as finished and opens the reward chest
  * (`RewardScreen`); Continue there goes back to the path (or runs `onContinue`),
  * where Hex moves on to the next block.
