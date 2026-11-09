@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { GroupStage, type GroupItem } from "./GroupStage";
+import { ToggleRight } from "lucide-react";
 import { FloatLesson } from "./FloatLesson";
 import { GroupTourStage, type TourGroup } from "./GroupTourStage";
 import { BADGE, INK, TINTS, tintAt } from "./look";
@@ -10,7 +11,8 @@ import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, IntegerLesson, LAVENDER, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
+import { WINDOW_ROW, WindowCard } from "./WindowCard";
+import { AttendanceBoard, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -522,18 +524,18 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             api={api}
             columns={2}
             header={() => (
-              <div className={`flex w-[330px] flex-col gap-0.5 px-3 py-2 ${CARD} ${LAVENDER}`}>
+              <WindowCard title="Student status" icon={<ToggleRight />} panel="gap-[6px] pt-3 pr-[21px] pb-3.5 pl-[21px]">
                 {[
                   ["Is_present", "True"],
                   ["Is_payment_complete", "False"],
                   ["Is_logged_in", "True"],
                 ].map(([name, value]) => (
-                  <div key={name} className="flex justify-between text-[13px] leading-5 font-semibold text-[#444444] dark:text-white">
+                  <div key={name} className={`flex h-[30px] items-center justify-between px-3 text-[13px] leading-5 font-semibold text-[#151E48] dark:text-white ${WINDOW_ROW}`}>
                     <span className="font-mono">{name}</span>
                     <span className={value === "True" ? "text-[#01A17F]" : "text-[#8A94A0]"}>{value}</span>
                   </div>
                 ))}
-              </div>
+              </WindowCard>
             )}
             items={[
               { id: "t", label: "TRUE", sub: "light on", icon: P.boolean, caption: "True: Aarav is present." },
