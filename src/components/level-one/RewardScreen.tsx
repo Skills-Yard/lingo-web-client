@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
-import { useHexRive } from "@/components/onboarding/robu/useHexRive";
 import { vibrateForClaim, vibrateForTap } from "@/lib/haptics";
 import { hexRiveSource } from "@/lib/rive/hexFile";
 import { configureRiveRuntime, REWARD_SCREEN } from "@/lib/rive/runtime";
@@ -33,10 +32,11 @@ const HINT_KEEP_GOING = "Keep tapping!";
 
 /**
  * "Open your reward!": the sunburst backdrop ("REWARD_BG") with the chest
- * ("REWARD_Chest") on it, both from `hex.riv`. Each tap anywhere on the screen
- * (mouse, touch or keyboard) sets the chest's `tap` to the next of 1, 2, 3 (so
- * each plays its own animation), and the third opens it. Only then does Continue
- * come in. Until then a hint under the chest says to tap it.
+ * ("REWARD_Chest") on it, both from `hex.riv`. The chest plays itself
+ * (`Reward_SM`): it hears the taps on the box, no data is sent to it, and the
+ * third tap opens it. The page only follows along (`onStateChange` says when the
+ * machine moves to its next state) to word the hint and bring Continue in once
+ * it is open. Until then a hint under the chest says to tap it.
  */
 export function RewardScreen({ onContinue }: { onContinue: () => void }) {
   const { RiveComponent: Backdrop } = useRive({
@@ -46,10 +46,31 @@ export function RewardScreen({ onContinue }: { onContinue: () => void }) {
     autoplay: true,
     layout: BACKGROUND_LAYOUT,
   });
-  const { RiveComponent: Chest, ready, setNumber } = useHexRive(CHEST_LAYOUT, chest.stateMachine, chest.artboard, chest.viewModel);
+  const [ready, setReady] = useState(false);
   const [taps, setTaps] = useState(0);
   const [settled, setSettled] = useState(false);
   const open = taps >= chest.taps;
+  // Rive keeps the callbacks it was created with, so the count lives in a ref.
+  const tapsRef = useRef(0);
+  const { RiveComponent: Chest } = useRive({
+    ...hexRiveSource(),
+    artboard: chest.artboard,
+    stateMachine: chest.stateMachine,
+    // Binds the artboard's own view model, which the machine needs to run.
+    autoBind: true,
+    autoplay: true,
+    layout: CHEST_LAYOUT,
+    onLoad: () => setReady(true),
+    // Each tap on the box moves the machine into its next state: two taps, then the open one.
+    onStateChange: (event) => {
+      const states = Array.isArray(event.data) ? event.data : [];
+      if (states.length === 0 || tapsRef.current >= chest.taps) return;
+      tapsRef.current += 1;
+      setTaps(tapsRef.current);
+      if (tapsRef.current === chest.taps) vibrateForClaim();
+      else vibrateForTap();
+    },
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -57,32 +78,21 @@ export function RewardScreen({ onContinue }: { onContinue: () => void }) {
     return () => window.clearTimeout(timer);
   }, [open]);
 
-  const tap = () => {
-    if (!ready || open) return;
-    const next = taps + 1;
-    setNumber(chest.tapProperty, next);
-    setTaps(next);
-    if (next === chest.taps) vibrateForClaim();
-    else vibrateForTap();
-  };
-
   return (
     <main className="onboarding-light relative h-dvh w-full overflow-hidden bg-[#0E93B0]">
       <div aria-hidden className="absolute inset-0">
         <Backdrop className="h-full w-full" />
       </div>
-      <div aria-hidden className="pointer-events-none absolute top-[44%] left-1/2 -translate-x-1/2 -translate-y-1/2" style={{ width: CHEST_W, aspectRatio: CHEST_RATIO }}>
+      {/* The chest hears the taps itself: only the box answers, not the empty artboard around it. */}
+      <div
+        role="img"
+        aria-label={open ? "Reward chest, open" : `Reward chest: tap the box to open it (${taps} of ${chest.taps})`}
+        className="absolute top-[44%] left-1/2 -translate-x-1/2 -translate-y-1/2 touch-manipulation select-none [-webkit-tap-highlight-color:transparent]"
+        style={{ width: CHEST_W, aspectRatio: CHEST_RATIO }}
+      >
         <Chest className="h-full w-full" />
       </div>
-      {/* A tap anywhere on the screen counts (mouse, touch or keyboard): the button covers it all, over the chest. */}
-      <button
-        type="button"
-        aria-label={open ? "Reward chest, open" : `Tap to open the reward chest (${taps} of ${chest.taps})`}
-        disabled={!ready || open}
-        onClick={tap}
-        className="absolute inset-0 cursor-pointer touch-manipulation select-none [-webkit-tap-highlight-color:transparent] focus-visible:ring-4 focus-visible:ring-white/70 focus-visible:outline-none focus-visible:ring-inset disabled:cursor-default"
-      />
-      {/* Takes no taps itself: they go through to the button under it. */}
+      {/* Takes no taps itself: they go through to the chest under it. */}
       <AnimatePresence>
         {ready && !open && (
           <motion.p

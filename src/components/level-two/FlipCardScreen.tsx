@@ -57,8 +57,17 @@ function FlipCard({ onFlip }: { onFlip: () => void }) {
     artboard: FLIP_CARD.artboard,
     stateMachines: FLIP_CARD.stateMachine,
     autoplay: true,
+    // The file's `FlipCard` view model decides which turn the machine plays; with it
+    // unbound the trigger is ignored and a tap does nothing.
+    autoBind: true,
     layout: LAYOUT,
   });
+
+  // Its own card: the module's "what a command is".
+  useEffect(() => {
+    const cardType = rive?.viewModelInstance?.number(FLIP_CARD.cardTypeProperty);
+    if (cardType) cardType.value = FLIP_CARD.cardType.command;
+  }, [rive]);
 
   // The canvas is bigger than the card by the bleed on every side, so the swell of
   // the turn isn't clipped at the artboard's edge.

@@ -148,8 +148,21 @@ const CENTRED_SHEET = "rounded-t-[32px] border-[3px] pt-[15px] pb-[124px]";
 // The text column is wider than Figma's 149px, so a long sentence wraps over fewer lines and the sheet stays low.
 const CENTRED_ROW = "mx-auto flex min-h-[94px] w-[324px] items-center justify-center gap-[24px]";
 const CENTRED_TEXT = "flex w-[190px] shrink-0 flex-col gap-1.5";
-const CENTRED_HEX_SLOT = "relative h-[79.95px] w-[109.65px] shrink-0";
-const CENTRED_HEX_BOX = "absolute top-1/2 left-[calc(50%+1.44px)] h-[143.7px] w-[197.1px] -translate-x-1/2 -translate-y-1/2";
+export const CENTRED_HEX_SLOT = "relative h-[79.95px] w-[109.65px] shrink-0";
+export const CENTRED_HEX_BOX = "absolute top-1/2 left-[calc(50%+1.44px)] h-[143.7px] w-[197.1px] -translate-x-1/2 -translate-y-1/2";
+/**
+ * Figma "Frame 273" (wrong) and "Frame 348" (right), the Command module's sheets
+ * (390 x 236 at the frame's bottom): a row 18px from the sheet's top (less the 3px
+ * border), centred, of the text (always at the row's top), 34px, and Hex
+ * (109.65 x 79.95, centred on the row, which is 94px tall for right, 114px for
+ * wrong). The text column is a fixed width (156px for wrong, 170px for right, so
+ * the text starts 48.5px / 45px in from the edge) and its sentence stops at 4 / 3
+ * lines, ending in "…", so a long one never runs into Hex. Hex's slot and box are
+ * the Sequence sheet's, drawn from the same Figma box.
+ */
+const GROUPED_SHEET = "min-h-[236px] border-[3px] pt-[15px] pb-[96px]";
+export const GROUPED_ROW = "mx-auto flex items-center gap-[34px]";
+export const GROUPED_TEXT = "flex shrink-0 flex-col gap-1.5 self-start";
 
 const FEEDBACK = {
   correct: {
@@ -159,6 +172,10 @@ const FEEDBACK = {
     frame: "rounded-t-[28px] border-[3px]",
     panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
     bold: "[&_b]:text-[#04ACAB]",
+    // Frame 348: a 299.65 x 94px row, the text 170px wide and at most 3 lines (60px).
+    row: "min-h-[94px] w-[299.65px]",
+    column: "w-[170px]",
+    clamp: "line-clamp-3",
   },
   // Figma: a 3px red border (not on the bottom edge) and a 32px top radius.
   wrong: {
@@ -168,6 +185,10 @@ const FEEDBACK = {
     frame: "rounded-t-[32px] border-[3px]",
     panel: "border-[#D42421] bg-[#FDECEC] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
     bold: "[&_b]:text-[#E5484D]",
+    // Frame 273: a 292.65 x 114px row (its children are 7px wider, and spill to the right), the text 156px wide and at most 4 lines (80px).
+    row: "min-h-[114px] w-[292.65px]",
+    column: "w-[156px]",
+    clamp: "line-clamp-4",
   },
 } as const;
 
@@ -214,6 +235,7 @@ export function FeedbackPanel({
   hexSlot,
   hexCue = null,
   centred = false,
+  grouped = false,
   title,
   children,
 }: {
@@ -233,6 +255,8 @@ export function FeedbackPanel({
   hexCue?: string | null;
   /** The Sequence module's sheet: the text and Hex as one centred group (see `CENTRED_SHEET`). */
   centred?: boolean;
+  /** The Command module's sheet: the text and Hex as one centred group, the sentence cut short with "…" (see `GROUPED_SHEET`). */
+  grouped?: boolean;
   /** The sentence under the title. */
   children: ReactNode;
 }) {
@@ -254,17 +278,17 @@ export function FeedbackPanel({
       transition={{ type: "spring", stiffness: 360, damping: 32 }}
       // 5xl on screen, like the header; the stage is scaled, so divide.
       style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}
-      className={`absolute inset-x-0 bottom-0 z-0 mx-auto border-b-0 ${open ? "" : "pointer-events-none"} ${centred ? CENTRED_SHEET : `pt-5 pb-[140px] ${SHEET_INSET_THICK_BORDER} ${look.frame}`} ${look.panel}`}
+      className={`absolute inset-x-0 bottom-0 z-0 mx-auto border-b-0 ${open ? "" : "pointer-events-none"} ${centred ? CENTRED_SHEET : grouped ? `${GROUPED_SHEET} ${look.frame}` : `pt-5 pb-[140px] ${SHEET_INSET_THICK_BORDER} ${look.frame}`} ${look.panel}`}
     >
-      <div className={centred ? CENTRED_ROW : `flex w-full items-center justify-between ${SHEET_TEXT_GAP}`}>
-        <div className={centred ? CENTRED_TEXT : "flex min-w-0 flex-1 flex-col gap-1.5"}>
-          <h2 className={`font-semibold tracking-[-0.1px] ${SHEET_TITLE_SIZE} ${look.titleColor} ${centred ? "whitespace-nowrap" : ""}`}>{title ?? look.title}</h2>
-          <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${centred ? "font-medium leading-5" : look.text} ${look.bold}`}>
+      <div className={centred ? CENTRED_ROW : grouped ? `${GROUPED_ROW} ${look.row}` : `flex w-full items-center justify-between ${SHEET_TEXT_GAP}`}>
+        <div className={centred ? CENTRED_TEXT : grouped ? `${GROUPED_TEXT} ${look.column}` : "flex min-w-0 flex-1 flex-col gap-1.5"}>
+          <h2 className={`font-semibold tracking-[-0.1px] ${SHEET_TITLE_SIZE} ${look.titleColor} ${grouped ? "truncate" : centred ? "whitespace-nowrap" : ""}`}>{title ?? look.title}</h2>
+          <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${centred ? "font-medium leading-5" : look.text} ${grouped ? `${look.clamp} break-words` : ""} ${look.bold}`}>
             {children}
           </p>
         </div>
-        <div aria-hidden className={`pointer-events-none ${centred ? CENTRED_HEX_SLOT : SHEET_HEX_SLOT}`}>
-          <div ref={hexSlot} className={centred ? CENTRED_HEX_BOX : SHEET_HEX_BOX}>
+        <div aria-hidden className={`pointer-events-none ${centred || grouped ? CENTRED_HEX_SLOT : SHEET_HEX_SLOT}`}>
+          <div ref={hexSlot} className={centred || grouped ? CENTRED_HEX_BOX : SHEET_HEX_BOX}>
             {!hexSlot && <OnboardingHex
                 entryKey={enterNow ? "feedback" : null}
                 cue={enterNow ? hexCue : null}

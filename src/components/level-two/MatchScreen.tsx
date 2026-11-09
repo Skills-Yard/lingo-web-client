@@ -27,8 +27,10 @@ const ACTIONS: readonly Card[] = [
   { id: "lift", text: "Lift the cube", icon: "step-11.4.svg", pair: "pickup" },
 ];
 
-/** The column headers start 181px down the frame; the cards' rows follow them. */
-const CHIP_TOP = 181;
+/** The title ends near 154 in the frame; the column headers sit this much padding under it (27px was Figma's gap, now 4x that). The cards follow right under the headers. */
+const TITLE_BOTTOM = 154;
+const CHIP_PADDING_TOP = 27 * 4;
+const CHIP_TOP = TITLE_BOTTOM + CHIP_PADDING_TOP;
 const CARD_W = 172;
 /** Each theme's heights (frame px): the column headers, the gap under them, a card, and the gap between rows. Dark's are from the "Command_6" design. */
 const METRICS = {
@@ -94,6 +96,7 @@ type Side = "left" | "right";
 export function MatchScreen() {
   const router = useRouter();
   const metrics = METRICS[useTheme().theme];
+  /** A card row's top (frame px): right under the column headers, `chipGap` below them. */
   const rowTop = (row: number) => CHIP_TOP + metrics.chipH + metrics.chipGap + row * (metrics.cardH + metrics.rowGap);
   const [picked, setPicked] = useState<{ left: string | null; right: string | null }>({ left: null, right: null });
   const [matched, setMatched] = useState<readonly string[]>([]);
@@ -242,7 +245,7 @@ export function MatchScreen() {
         Can you <Teal>match them?</Teal>
       </ScreenTitle>
 
-      {/* The column headers. */}
+      {/* The column headers, just under the title. */}
       <div
         className="absolute flex justify-between"
         style={{ top: stageTop(CHIP_TOP), left: `calc(50% - ${COLUMNS_W / 2}px)`, width: COLUMNS_W, height: metrics.chipH }}
@@ -260,6 +263,7 @@ export function MatchScreen() {
         ))}
       </div>
 
+      {/* The cards, centred in the room between the headers and the buttons (never closer to the headers than `chipGap`). */}
       {(
         [
           ["left", INSTRUCTIONS, "bg-[#F6F4FE] dark:bg-[#0F1F26]"],

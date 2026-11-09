@@ -93,6 +93,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
             open={checked}
             hexIn={checked}
             hexCue={selectedId === CORRECT_ID ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            grouped
           >
             {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
             {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>

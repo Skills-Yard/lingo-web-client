@@ -26,9 +26,16 @@ const CARD_HEIGHT = 376;
 const BAND_PAD = 32;
 /** Space below the cards: a gap, then the pagination bars. */
 const BAND_PAD_BOTTOM = 86;
-/** Distance between the centre card and each neighbour. */
-const STEP = 232;
-const SIDE_SCALE = 0.903;
+/** The focused card is drawn larger than the base size, the neighbours smaller. */
+const CENTER_SCALE = 1.08;
+const SIDE_SCALE = 0.78;
+/** Empty space between the centre card and each neighbour. */
+const CARD_GAP = 12;
+/** Distance between the centre card and each neighbour: half of each card's
+ * scaled width, plus the gap. */
+const STEP = (CARD_WIDTH * (CENTER_SCALE + SIDE_SCALE)) / 2 + CARD_GAP;
+/** The unfocused cards on either side are dimmed. */
+const SIDE_OPACITY = 0.45;
 /** Time each card stays centred before the carousel moves on by itself. */
 const AUTO_ADVANCE_MS = 3600;
 const SWIPE_OFFSET = 50;
@@ -146,8 +153,8 @@ function ExamplesCarousel() {
                 animate={{
                   x: slot * STEP,
                   y: 0,
-                  scale: slot === 0 ? 1 : SIDE_SCALE,
-                                  opacity: 1,
+                  scale: slot === 0 ? CENTER_SCALE : SIDE_SCALE,
+                  opacity: slot === 0 ? 1 : SIDE_OPACITY,
                 }}
                 transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
                 style={{

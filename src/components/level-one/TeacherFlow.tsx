@@ -143,6 +143,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             <FeedbackPanel key="feedback" correct={selectedId === CORRECT_ID} open={checked}
               hexIn={checked}
               hexCue={selectedId === CORRECT_ID ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+              grouped
             >
               {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}The teacher is giving an <b>instruction.</b>
             </FeedbackPanel>

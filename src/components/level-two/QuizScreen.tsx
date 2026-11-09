@@ -73,6 +73,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            grouped
           >
             {correct ? quiz.right : quiz.wrong}
           </FeedbackPanel>

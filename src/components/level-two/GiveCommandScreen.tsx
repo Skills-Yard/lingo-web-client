@@ -5,10 +5,11 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import {
+  CENTRED_HEX_BOX,
+  CENTRED_HEX_SLOT,
+  GROUPED_ROW,
+  GROUPED_TEXT,
   OnboardingHex,
-  SHEET_HEX_BOX,
-  SHEET_HEX_SLOT,
-  SHEET_INSET,
   SHEET_TITLE_SIZE,
 } from "@/components/level-one/FeedbackPanel";
 import { vibrateForTap } from "@/lib/haptics";
@@ -27,8 +28,8 @@ const QUESTION_BOTTOM = aboveButtons(QUESTION_ABOVE_BUTTONS);
 /** Hex enters a touch after the panel, and his thumbs-up follows his entrance. */
 const HEX_AFTER_MS = 250;
 const HEX_SETTLE_MS = 900;
-/** Figma: the panel's top edge is 593px down the frame. */
-const PANEL_MIN_HEIGHT = 844 - 593;
+/** Figma "Frame 348": the panel's top edge is 608px down the frame, 236px tall. */
+const PANEL_MIN_HEIGHT = 844 - 608;
 
 /**
  * `/module/commands?step=2` — "Let's make it happen!": Hex asks what to
@@ -107,20 +108,21 @@ function NicePanel() {
         animate={{ y: 0 }}
         transition={{ type: "spring", stiffness: 360, damping: 32 }}
         // 5xl on screen, like the header; the stage is scaled, so divide.
-        // Figma's panel is 251 tall (top at 593); the button is drawn taller here
+        // Figma's panel is 236 tall (top at 608); the button is drawn taller here
         // (and taller still on a wide screen), so the panel reaches 10px above it.
         style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))", minHeight: PANEL_MIN_HEIGHT, paddingBottom: aboveButtons(10) }}
-        className={`absolute inset-x-0 bottom-0 z-0 mx-auto flex rounded-t-[28px] border-[1.5px] border-b-0 border-[#08A2AD] bg-[#DFFFF8] pt-[22px] dark:border-[#1E5F59] dark:bg-[#0F2B28] ${SHEET_INSET}`}
+        className={`absolute inset-x-0 bottom-0 z-0 mx-auto flex rounded-t-[28px] border-[1.5px] border-b-0 border-[#08A2AD] bg-[#DFFFF8] pt-[16.5px] dark:border-[#1E5F59] dark:bg-[#0F2B28]`}
       >
-        <div className="flex h-fit w-full items-center justify-between">
-          <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-            <h2 className={`font-semibold tracking-[-0.1px] text-[#01A17F] ${SHEET_TITLE_SIZE}`}>Yayyy!</h2>
-            <p className="text-[14px] leading-[1.4] font-medium text-[#444444] dark:text-white/80">
+        {/* The same row as the right-answer sheet (see FeedbackPanel `grouped`): 170px of text, 34px, Hex. */}
+        <div className={`${GROUPED_ROW} h-fit min-h-[94px] w-[299.65px]`}>
+          <div className={`${GROUPED_TEXT} w-[170px]`}>
+            <h2 className={`truncate font-semibold tracking-[-0.1px] text-[#01A17F] ${SHEET_TITLE_SIZE}`}>Yayyy!</h2>
+            <p className="line-clamp-3 text-[14px] leading-[1.4] font-medium break-words text-[#444444] dark:text-white/80">
               You gave an instruction and the robot did it.
             </p>
           </div>
-          <div aria-hidden className={SHEET_HEX_SLOT}>
-            <div className={SHEET_HEX_BOX}>
+          <div aria-hidden className={CENTRED_HEX_SLOT}>
+            <div className={CENTRED_HEX_BOX}>
               <OnboardingHex entryKey={hexIn ? "nice" : null} cue={hexIn ? HEX_ONBOARDING_TRIGGER.continueThumb : null} cueDelayMs={HEX_SETTLE_MS} />
             </div>
           </div>
