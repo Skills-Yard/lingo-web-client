@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Calculator, Check, FileText, Link2, Plus, TriangleAlert, X } from "lucide-react";
+import { Calculator, Check, FileText, Link2, Plus, TriangleAlert, User, X } from "lucide-react";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
@@ -64,6 +64,9 @@ export const EventScene = () => <SceneBackdrop file={P.eventScene} />;
 
 /** Screens 5 and 6: the same school yard, empty, for the cards to stand over (drawn the same way, from the same place). */
 export const SchoolScene = () => <SceneBackdrop file={P.schoolScene} />;
+
+/** Screen 10: the school desk, with its books and plant, behind the list (drawn the same way, from the same place). */
+export const NamesScene = () => <SceneBackdrop file={P.namesScene} />;
 
 function SceneBackdrop({ file }: { file: string }) {
   return (
@@ -151,19 +154,64 @@ export function InfoRows({ rows, shown, firstIndex = 0 }: { rows: readonly InfoR
   );
 }
 
-/** Screen 10: the registration list, the names appearing one by one. */
-export function NamesList({ replay = 0 }: { replay?: number }) {
+/** Three people, solid, for the window's title bar. */
+function People() {
   return (
-    <div key={replay} className={`flex w-[316px] flex-col gap-1.5 px-3 py-3 ${CARD} ${LAVENDER}`}>
-      <span className="text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">Registered students</span>
-      <div className="grid grid-cols-2 gap-1.5">
-        {["Aarav", "Mia", "Kabir", "Ananya"].map((name, index) => (
-          <FieldRow key={name} label={`#${index + 1}`} delay={0.3 + index * 0.55}>
-            {name}
-          </FieldRow>
-        ))}
+    <svg aria-hidden viewBox="0 0 28 22" className="h-[22px] w-7 shrink-0 fill-current">
+      <circle cx="14" cy="6" r="4.3" />
+      <path d="M6.2 21.5c0-4.6 3.5-7.6 7.8-7.6s7.8 3 7.8 7.6z" />
+      <circle cx="4.8" cy="8.4" r="3" />
+      <path d="M0 20c0-3.2 2.1-5.3 4.8-5.3.9 0 1.7.2 2.4.6-1.7 1.4-2.8 3.1-3.1 4.7z" />
+      <circle cx="23.2" cy="8.4" r="3" />
+      <path d="M28 20c0-3.2-2.1-5.3-4.8-5.3-.9 0-1.7.2-2.4.6 1.7 1.4 2.8 3.1 3.1 4.7z" />
+    </svg>
+  );
+}
+
+/** The students on screen 10's list. */
+const STUDENTS = ["Aarav", "Mia", "Kabir", "Ananya"] as const;
+
+/** One part of the window: it bounces in (when the window is animated), or is simply there. */
+function Part({ at, shown, animated, className, children }: { at: number; shown: boolean; animated: boolean; className?: string; children: ReactNode }) {
+  return animated ? (
+    <BounceIn index={at} shown={shown} className={className}>
+      {children}
+    </BounceIn>
+  ) : (
+    <div className={className}>{children}</div>
+  );
+}
+
+/**
+ * Screen 10: the school's list, in a window of its own: a teal title bar over a
+ * row for each student's name. Animated, the window comes in and then the names,
+ * one by one, once Hex has finished his line; otherwise it is simply there.
+ */
+export function RegisteredStudents({ shown = true, animated = true }: { shown?: boolean; animated?: boolean }) {
+  return (
+    <Part at={0} shown={shown} animated={animated} className="w-[340px]">
+      <div className="rounded-[30px] bg-linear-to-b from-[#5CC9CC] to-[#8FDDE3] px-3 pt-2.5 pb-3 shadow-[0_6px_16px_rgba(8,152,149,0.22)] dark:from-[#0F5F63] dark:to-[#157C80] dark:shadow-none">
+        <div className="flex h-[42px] items-center gap-3 rounded-t-[18px] bg-linear-to-b from-[#0DA09C] to-[#03888B] px-4 text-white">
+          <People />
+          <span className="text-[16px] leading-6 font-semibold">Registered Students</span>
+          <span aria-hidden className="ml-auto flex gap-[9px]">
+            {[0, 1, 2].map((dot) => (
+              <span key={dot} className="size-2.5 rounded-full bg-white/60" />
+            ))}
+          </span>
+        </div>
+        <div className="flex flex-col gap-[9px] rounded-b-[18px] bg-[#F5FAFE] pt-4 pr-[21px] pb-6 pl-[26px] dark:bg-[#15181E]">
+          {STUDENTS.map((name, index) => (
+            <Part key={name} at={1 + index} shown={shown} animated={animated}>
+              <div className="flex h-[33px] items-center gap-5 rounded-[8px] bg-linear-to-r from-[#E2F1F9] to-[#DCEDF9] pl-[22px] text-[17px] leading-6 font-bold text-[#151E48] dark:from-[#1C2A3A] dark:to-[#1A2633] dark:text-white">
+                <User aria-hidden className="size-[23px] shrink-0 fill-current text-[#06C3B4]" strokeWidth={1.5} />
+                {name}
+              </div>
+            </Part>
+          ))}
+        </div>
       </div>
-    </div>
+    </Part>
   );
 }
 

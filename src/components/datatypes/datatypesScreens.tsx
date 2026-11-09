@@ -4,13 +4,13 @@ import type { ReactNode } from "react";
 import { GroupStage, type GroupItem } from "./GroupStage";
 import { FloatLesson } from "./FloatLesson";
 import { GroupTourStage, type TourGroup } from "./GroupTourStage";
-import { INK, TINTS, tintAt } from "./look";
+import { BADGE, INK, TINTS, tintAt } from "./look";
 import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, IntegerLesson, LAVENDER, NamesList, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
+import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, IntegerLesson, LAVENDER, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -26,6 +26,14 @@ const tinted = (choices: readonly Option[]): Option[] => choices.map((choice, in
 /** The four types as answers: each always with its own picture. */
 const TYPE_OPTIONS: Option[] = tinted(TYPES.map((type) => ({ id: type.id, text: type.label, icon: type.icon })));
 const TYPE_BUCKETS: readonly SortBucket[] = TYPES.map((type) => ({ id: type.id, label: type.label, icon: type.icon }));
+
+/** Screen 8's four answers, big: in the design's order (Integer and Float, then Boolean and String) and tints (the cream is its own, a shade lighter than the other screens'). */
+const FLOAT_QUIZ_OPTIONS: Option[] = [
+  { id: "integer", text: "Integer", icon: P.integer, tint: TINTS.lavender },
+  { id: "float", text: "Float", icon: P.float, tint: "bg-[#FFF9F0] dark:bg-[#2A2218]" },
+  { id: "boolean", text: "Boolean", icon: P.boolean, tint: TINTS.green },
+  { id: "string", text: "String", icon: P.string, tint: TINTS.blue },
+];
 
 /** A question: its answers, like screens 1 and 2's, come in once Hex has finished his line. */
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", optionsAfterHex: true, ...stage });
@@ -96,9 +104,9 @@ const VALUE_TILES: readonly InfoTile[] = [
 
 /** Screen 7's three examples: a whole number in its badge, and what it counts or measures (each tile has its own colour, its badge goes with it). */
 const INTEGER_EXAMPLES: readonly ExampleTile[] = [
-  { id: "students", value: "32", text: "No. of students", tint: TINTS.green, badge: "bg-[#8EEBD8] text-[#036C59]" },
-  { id: "books", value: "13", text: "Number of books", tint: TINTS.cream, badge: "bg-[#C1A5F9] text-[#472A92]" },
-  { id: "temperature", value: "-5°", text: "Temperature change", tint: TINTS.blue, badge: "bg-[#7ACDFB] text-[#035280]" },
+  { id: "students", value: "32", text: "No. of students", tint: TINTS.green, badge: BADGE.mint },
+  { id: "books", value: "13", text: "Number of books", tint: TINTS.cream, badge: BADGE.purple },
+  { id: "temperature", value: "-5°", text: "Temperature change", tint: TINTS.blue, badge: BADGE.sky },
 ];
 
 /** Screens that are a headline and one or more stages: the questions and the interactions. */
@@ -265,9 +273,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         render: ({ hexSpoken }) => <FloatLesson shown={hexSpoken} />,
       },
       quiz({
-        line: "A height of 148.5 cm. Which type suits it best?",
+        title: "Which value *fits best?*",
+        titleSize: 28,
+        line: "Choose the best value to represent 148.5 cm.",
+        bubbleWidth: 176,
         layout: "grid",
-        options: TYPE_OPTIONS,
+        cards: "big",
+        options: FLOAT_QUIZ_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
         right: "A decimal measurement like 148.5 is a Float.",
@@ -308,21 +320,35 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     ],
   },
 
+  // Screen 10 has two parts on one desk: the school's list of names, then the question about it.
   [STEP.names]: {
     step: STEP.names,
-    title: "What about *names?*",
+    title: "Let’s *list* student’s name!",
     titleSize: 28,
+    backdrop: <NamesScene />,
     stages: [
+      {
+        kind: "interaction",
+        line: "Imagine the school wants to display the names of students.",
+        bubbleWidth: 190,
+        alignTop: true,
+        ready: true,
+        render: ({ hexSpoken }) => <RegisteredStudents shown={hexSpoken} />,
+      },
       quiz({
-        line: "What kind of information are these names?",
-        visual: ({ attempt }) => <NamesList replay={attempt} />,
-        options: options([
-          ["Numerical information.", P.integer],
-          ["Textual information.", P.string],
-          ["Decimal information.", P.float],
-          ["Yes/no information.", P.boolean],
-        ]),
-        correctId: at(1),
+        title: "What *information* is this?",
+        titleSize: 28,
+        line: "Can a program understand names too?",
+        bubbleWidth: 160,
+        layout: "grid",
+        cards: "badges",
+        visual: () => <RegisteredStudents animated={false} />,
+        options: [
+          { id: "numerical", text: "Numerical", icon: "", tint: TINTS.green, tag: { text: "30", look: BADGE.mint } },
+          { id: "textual", text: "Textual", icon: "", tint: TINTS.cream, tag: { text: "abc", look: BADGE.purple } },
+          { id: "decimal", text: "Decimal", icon: "", tint: TINTS.blue, tag: { text: "1.2", look: BADGE.sky } },
+        ],
+        correctId: "textual",
         rightTitle: "Exactly!",
         right: "These are names written as text.",
         wrong: "Look at the names. Are they numbers?",
