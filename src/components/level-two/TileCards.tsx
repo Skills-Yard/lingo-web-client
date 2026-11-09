@@ -49,7 +49,7 @@ type TileCardsProps = {
   pictureHeight?: number;
   /** The card's height (px), where it should differ from the layout's. */
   cardHeight?: number;
-  /** Stage px from the top, where the cards should stand there instead of on the button row; they then stay put once checked. */
+  /** Stage px from the top, where the cards should stand there instead of on the button row; they still rise by `rise` once the result panel is up. */
   top?: number;
   /** The cards bounce in one by one instead of the whole row rising together. */
   bounceIn?: boolean;
@@ -67,7 +67,7 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -79,7 +79,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
       className={`pointer-events-auto absolute z-[1] ${look.box}`}
-      style={{ bottom: aboveButtons(bottomGap, withHint), left: WIDTH[layout] ? `calc(50% - ${WIDTH[layout]! / 2}px)` : COLUMN_LEFT, width: WIDTH[layout] ?? COLUMN_W }}
+      style={{ ...(top === undefined ? { bottom: aboveButtons(bottomGap, withHint) } : { top }), left: WIDTH[layout] ? `calc(50% - ${WIDTH[layout]! / 2}px)` : COLUMN_LEFT, width: WIDTH[layout] ?? COLUMN_W }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
