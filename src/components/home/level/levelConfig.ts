@@ -1,36 +1,72 @@
+/*
+ * Layout of the level path, in the 390px-wide stage. The numbers come from the
+ * Figma frame "Path2" (docs/path-figma.txt), moved up by the frame's header
+ * (160px) so the stage starts under the tabs.
+ */
+
+const ART = "/images/level-platfrom";
+
 export interface PlatformConfig {
   id: number;
+  /** Horizontal centre of the tile. */
   baseX: number;
+  /** Bottom of the tile, where the start popup points. */
   baseY: number;
   title: string;
   xp: number;
   placement: "top" | "bottom";
 }
 
-export const WORLD_STAGE_HEIGHT = 2270;
+type TileSide = "left" | "right";
 
-export const PLATFORM_CONFIGS: PlatformConfig[] = [
-  { id: 1, baseX: 281, baseY: 166, title: "Commands", xp: 50, placement: "bottom" },
-  { id: 2, baseX: 134, baseY: 281, title: "Sequence", xp: 50, placement: "bottom" },
-  { id: 3, baseX: 276, baseY: 390, title: "Variable", xp: 50, placement: "bottom" },
-  { id: 4, baseX: 126, baseY: 503, title: "Data Types", xp: 50, placement: "bottom" },
-  { id: 5, baseX: 266, baseY: 613, title: "Operators", xp: 50, placement: "bottom" },
-  { id: 6, baseX: 122, baseY: 721, title: "Conditions", xp: 50, placement: "bottom" },
-  { id: 7, baseX: 270, baseY: 831, title: "Variable Types & Type Casting", xp: 50, placement: "bottom" },
-  { id: 8, baseX: 126, baseY: 941, title: "String Manipulation & Slicing", xp: 50, placement: "bottom" },
-  { id: 9, baseX: 272, baseY: 1051, title: "String Methods & Formatting", xp: 50, placement: "bottom" },
-  { id: 10, baseX: 124, baseY: 1161, title: "Lists & Indexing Fundamentals", xp: 50, placement: "bottom" },
-  { id: 11, baseX: 270, baseY: 1271, title: "List Methods & Operations", xp: 50, placement: "bottom" },
-  { id: 12, baseX: 126, baseY: 1381, title: "Tuples & Immutability", xp: 50, placement: "bottom" },
-  { id: 13, baseX: 272, baseY: 1491, title: "Dictionaries & Key-Value Pairs", xp: 50, placement: "bottom" },
-  { id: 14, baseX: 124, baseY: 1601, title: "Sets & Set Operations", xp: 50, placement: "bottom" },
-  { id: 15, baseX: 270, baseY: 1711, title: "If, Elif & Else Conditions", xp: 50, placement: "bottom" },
-  { id: 16, baseX: 126, baseY: 1821, title: "While Loops & Sentinels", xp: 50, placement: "bottom" },
-  { id: 17, baseX: 272, baseY: 1931, title: "For Loops & Range Function", xp: 50, placement: "bottom" },
-  { id: 18, baseX: 124, baseY: 2041, title: "Loop Controls (break, continue)", xp: 50, placement: "bottom" },
-  { id: 19, baseX: 270, baseY: 2151, title: "Defining Functions & Parameters", xp: 50, placement: "top" },
-  { id: 20, baseX: 124, baseY: 2261, title: "Return Values & Scope", xp: 50, placement: "top" },
+const COLUMN_X: Record<TileSide, number> = { left: 117, right: 273 };
+const FIRST_TILE_CENTER_Y = 250;
+const TILE_STEP_Y = 122.45;
+/** A tile's bottom edge sits this far below its centre. */
+const TILE_HALF_HEIGHT = 34;
+
+/** Levels alternate down the road, starting on the left under the gate. */
+const sideOfLevel = (id: number): TileSide => (id % 2 === 1 ? "left" : "right");
+
+const tileCenterY = (id: number) => FIRST_TILE_CENTER_Y + TILE_STEP_Y * (id - 1);
+
+const LEVELS: { title: string; placement?: PlatformConfig["placement"] }[] = [
+  { title: "Commands" },
+  { title: "Sequence" },
+  { title: "Variable" },
+  { title: "Data Types" },
+  { title: "Operators" },
+  { title: "Conditions" },
+  { title: "Variable Types & Type Casting" },
+  { title: "String Manipulation & Slicing" },
+  { title: "String Methods & Formatting" },
+  { title: "Lists & Indexing Fundamentals" },
+  { title: "List Methods & Operations" },
+  { title: "Tuples & Immutability" },
+  { title: "Dictionaries & Key-Value Pairs" },
+  { title: "Sets & Set Operations" },
+  { title: "If, Elif & Else Conditions" },
+  { title: "While Loops & Sentinels" },
+  { title: "For Loops & Range Function" },
+  { title: "Loop Controls (break, continue)" },
+  { title: "Defining Functions & Parameters", placement: "top" },
+  { title: "Return Values & Scope", placement: "top" },
 ];
+
+export const PLATFORM_CONFIGS: PlatformConfig[] = LEVELS.map(({ title, placement }, index) => {
+  const id = index + 1;
+  return {
+    id,
+    baseX: COLUMN_X[sideOfLevel(id)],
+    baseY: Math.round(tileCenterY(id) + TILE_HALF_HEIGHT),
+    title,
+    xp: 50,
+    placement: placement ?? "bottom",
+  };
+});
+
+/** The last tile's road runs on past it, cut off by the bottom of the stage. */
+const FINAL_ROAD_VISIBLE_HEIGHT = 54;
 
 export interface RoadConfig {
   id: number;
@@ -39,52 +75,111 @@ export interface RoadConfig {
   mirrored: boolean;
 }
 
+/** `Group 287.svg` is 179px wide and runs from one tile to the next; it is mirrored when it heads right. */
+const ROAD_LEFT = { unmirrored: 95, mirrored: 122.5 } as const;
+const ROAD_OFFSET_BELOW_TILE_CENTER = 6.5;
+
+const roadLeavingLevel = (id: number): RoadConfig => {
+  const mirrored = sideOfLevel(id) === "left";
+  return {
+    id,
+    top: Math.round(tileCenterY(id) + ROAD_OFFSET_BELOW_TILE_CENTER),
+    left: mirrored ? ROAD_LEFT.mirrored : ROAD_LEFT.unmirrored,
+    mirrored,
+  };
+};
+
+/** The gate is not a level: its road just runs from the gate down to level 1. */
+const GATE_ROAD: RoadConfig = { id: 0, top: 136, left: 94, mirrored: false };
+
+/** Roads 0 (gate to level 1) to 19 (level 19 to level 20). */
 export const ROAD_CONFIGS: RoadConfig[] = [
-  { id: 1, top: 110, left: 120, mirrored: false },
-  { id: 2, top: 228, left: 100, mirrored: true },
-  { id: 3, top: 346, left: 98, mirrored: false },
-  { id: 4, top: 453, left: 99, mirrored: true },
-  { id: 5, top: 565, left: 98, mirrored: false },
-  { id: 6, top: 676, left: 99, mirrored: true },
-  { id: 7, top: 786, left: 98, mirrored: false },
-  { id: 8, top: 896, left: 99, mirrored: true },
-  { id: 9, top: 1006, left: 98, mirrored: false },
-  { id: 10, top: 1116, left: 99, mirrored: true },
-  { id: 11, top: 1226, left: 98, mirrored: false },
-  { id: 12, top: 1336, left: 99, mirrored: true },
-  { id: 13, top: 1446, left: 98, mirrored: false },
-  { id: 14, top: 1556, left: 99, mirrored: true },
-  { id: 15, top: 1666, left: 98, mirrored: false },
-  { id: 16, top: 1776, left: 99, mirrored: true },
-  { id: 17, top: 1886, left: 98, mirrored: false },
-  { id: 18, top: 1996, left: 99, mirrored: true },
-  { id: 19, top: 2106, left: 98, mirrored: false },
+  GATE_ROAD,
+  ...LEVELS.slice(0, -1).map((_, index) => roadLeavingLevel(index + 1)),
 ];
 
+const finalRoad = roadLeavingLevel(LEVELS.length);
+
 export const FINAL_ROAD = {
-  top: 2216,
-  left: 99,
+  top: finalRoad.top,
+  left: finalRoad.left,
+  mirrored: finalRoad.mirrored,
+  height: FINAL_ROAD_VISIBLE_HEIGHT,
+};
+
+export const WORLD_STAGE_HEIGHT = FINAL_ROAD.top + FINAL_ROAD_VISIBLE_HEIGHT + 4;
+
+/** Entry gate (`Gate/Entry_Gate.svg`): scenery at the top of the road, never a tap target. */
+export const GATE = {
+  src: `${ART}/Gate/Entry_Gate.svg`,
+  alt: "Entry gate",
+  left: 210,
+  top: 45,
+  width: 124,
+  height: 125,
+};
+
+type RoofIcon = {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  /** Where its corner sits on the building's image. */
+  dx: number;
+  dy: number;
+};
+
+const roofIcon = (file: string, alt: string, width: number, height: number, dx: number, dy: number): RoofIcon => ({
+  src: `${ART}/Icon_Roof/${file}`,
+  alt,
+  width,
+  height,
+  dx,
+  dy,
+});
+
+/** The roof icon each level's building carries; levels without one have no building yet. */
+const ROOF_ICONS: { level: number; roof: RoofIcon }[] = [
+  { level: 1, roof: roofIcon("Icon_Roof_Command.svg", "Commands", 77, 47, 6.4, 4.5) },
+  { level: 2, roof: roofIcon("Icon_Roof_Sequence.svg", "Sequence", 74, 47, 24.8, 8.5) },
+  { level: 3, roof: roofIcon("Icon_Roof_Variables.svg", "Variables", 77, 47, 6.4, 4.5) },
+  { level: 4, roof: roofIcon("Icon_Roof_DataTypes.svg", "Data Types", 74, 47, 24.9, 8.6) },
+  { level: 5, roof: roofIcon("Icon_Roof_Operators.svg", "Operators", 61, 38, 14.1, 8) },
+];
+
+/** The two building shells; `dx`/`dy` place one beside its tile, from the tile's centre. */
+const BUILDING_ART: Record<TileSide, { src: string; width: number; height: number; dx: number; dy: number }> = {
+  left: { src: `${ART}/Building/Left_Building.png`, width: 91, height: 88, dx: -97.4, dy: -98 },
+  right: { src: `${ART}/Building/Right_Building.svg`, width: 105, height: 99, dx: -3.3, dy: -108.6 },
 };
 
 export interface BuildingConfig {
   id: number;
-  nearLevel: number;
-  side: "left" | "right";
+  side: TileSide;
   top: number;
   left: number;
   width: number;
   height: number;
   src: string;
   alt: string;
+  roof: RoofIcon;
 }
 
-export const BUILDING_CONFIGS: BuildingConfig[] = [
-  { id: 1, nearLevel: 2, side: "left", top: 150, left: 15, width: 98, height: 88, src: "/images/level-platfrom/Group 335.svg", alt: "Command" },
-  { id: 2, nearLevel: 3, side: "right", top: 255, left: 290, width: 105, height: 99, src: "/images/level-platfrom/Group 311.svg", alt: "Comparison Operators" },
-  { id: 3, nearLevel: 4, side: "left", top: 375, left: 5, width: 91, height: 88, src: "/images/level-platfrom/Group 333.svg", alt: "Logical Operators" },
-  { id: 4, nearLevel: 5, side: "right", top: 475, left: 279, width: 106, height: 99, src: "/images/level-platfrom/Group 312.svg", alt: "Membership Operators" },
-  { id: 5, nearLevel: 6, side: "left", top: 591, left: 15, width: 98, height: 88, src: "/images/level-platfrom/Group 305.svg", alt: "Arithmetic Operators" },
-];
+export const BUILDING_CONFIGS: BuildingConfig[] = ROOF_ICONS.map(({ level, roof }) => {
+  const side = sideOfLevel(level);
+  const art = BUILDING_ART[side];
+  return {
+    id: level,
+    side,
+    top: Math.round(tileCenterY(level) + art.dy),
+    left: Math.round(COLUMN_X[side] + art.dx),
+    width: art.width,
+    height: art.height,
+    src: art.src,
+    alt: roof.alt,
+    roof,
+  };
+});
 
 export interface DecorationConfig {
   id: number;
@@ -94,21 +189,37 @@ export interface DecorationConfig {
   width: number;
   opacity: number;
   src: string;
+  rotate?: number;
+  mirrored?: boolean;
 }
 
-export const DECORATION_CONFIGS: DecorationConfig[] = [
-  { id: 1, top: 55, left: -50, width: 115, opacity: 0.85, src: "/images/level-platfrom/Icy Isometric Platform and Cube 4.svg" },
-  { id: 2, top: 135, right: -65, width: 155, opacity: 0.75, src: "/images/level-platfrom/image 445.svg" },
-  { id: 3, top: 365, left: -20, width: 130, opacity: 0.80, src: "/images/level-platfrom/image 446.svg" },
-  { id: 4, top: 585, right: -50, width: 110, opacity: 0.85, src: "/images/level-platfrom/image 447.svg" },
-  { id: 5, top: 825, left: -45, width: 120, opacity: 0.75, src: "/images/level-platfrom/Icy Isometric Platform and Cube 4.svg" },
-  { id: 6, top: 1045, right: -65, width: 150, opacity: 0.75, src: "/images/level-platfrom/image 445.svg" },
-  { id: 7, top: 1265, left: -20, width: 130, opacity: 0.80, src: "/images/level-platfrom/image 446.svg" },
-  { id: 8, top: 1485, right: -50, width: 110, opacity: 0.85, src: "/images/level-platfrom/image 447.svg" },
-  { id: 9, top: 1725, left: -45, width: 120, opacity: 0.75, src: "/images/level-platfrom/Icy Isometric Platform and Cube 4.svg" },
-  { id: 10, top: 1945, right: -65, width: 150, opacity: 0.75, src: "/images/level-platfrom/image 445.svg" },
-  { id: 11, top: 2165, left: -20, width: 130, opacity: 0.80, src: "/images/level-platfrom/image 446.svg" },
+const CUBE = `${ART}/Icy Isometric Platform and Cube 4.svg`;
+const CHIP = `${ART}/image 445.svg`;
+const RAIL = `${ART}/image 446.svg`;
+const PLANT = `${ART}/image 447.svg`;
+
+/** One run of scenery down the side of the road, as in Figma; it repeats down the path. */
+const DECORATION_RUN: Omit<DecorationConfig, "id">[] = [
+  { top: 35, left: 26, width: 126, opacity: 0.85, src: CUBE, rotate: -1.94 },
+  { top: 115, left: 312, width: 164, opacity: 0.75, src: CHIP },
+  { top: 391, left: 320, width: 109, opacity: 0.85, src: PLANT, mirrored: true },
+  { top: 552, left: -37, width: 168, opacity: 0.8, src: RAIL },
+  { top: 630, left: 315, width: 131, opacity: 0.85, src: CUBE },
+  { top: 815, left: -55, width: 164, opacity: 0.75, src: CHIP },
 ];
+const DECORATION_RUN_LENGTH = 960;
+
+/** The cube peeking out under the tabs at the very top. */
+const TOP_CUBE: Omit<DecorationConfig, "id"> = { top: -69, left: 325, width: 164, opacity: 0.85, src: CUBE, rotate: -1.94 };
+
+export const DECORATION_CONFIGS: DecorationConfig[] = [
+  TOP_CUBE,
+  ...Array.from({ length: Math.ceil(WORLD_STAGE_HEIGHT / DECORATION_RUN_LENGTH) }, (_, run) =>
+    DECORATION_RUN.map((piece) => ({ ...piece, top: piece.top + run * DECORATION_RUN_LENGTH })),
+  ).flat(),
+]
+  .filter((piece) => piece.top < WORLD_STAGE_HEIGHT - 60)
+  .map((piece, index) => ({ ...piece, id: index + 1 }));
 
 export function getPlatformDisplay(
   status: "completed" | "active" | "locked",
@@ -117,7 +228,7 @@ export function getPlatformDisplay(
 ) {
   if (status === "active") {
     return {
-      src: "/images/level-platfrom/Group 316.svg",
+      src: `${ART}/Group 316.svg`,
       alt: "Active Level",
       left: Math.round(baseX - 49.5),
       top: Math.round(baseY - 109.5),
@@ -129,7 +240,7 @@ export function getPlatformDisplay(
   }
   if (status === "completed") {
     return {
-      src: "/images/level-platfrom/Group 315.svg",
+      src: `${ART}/Group 315.svg`,
       alt: "Completed Level",
       left: Math.round(baseX - 42),
       top: Math.round(baseY - 71),
@@ -140,7 +251,7 @@ export function getPlatformDisplay(
     };
   }
   return {
-    src: "/images/level-platfrom/Group 318.svg",
+    src: `${ART}/Group 318.svg`,
     alt: "Locked Level",
     left: Math.round(baseX - 41.5),
     top: Math.round(baseY - 71),

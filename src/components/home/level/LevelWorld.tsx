@@ -5,6 +5,7 @@ import {
   BUILDING_CONFIGS,
   DECORATION_CONFIGS,
   FINAL_ROAD,
+  GATE,
   getPlatformDisplay,
   PLATFORM_CONFIGS,
   ROAD_CONFIGS,
@@ -89,43 +90,33 @@ export function LevelWorld({
             ...(dec.right !== undefined ? { right: `${dec.right}px` } : {}),
             width: `${dec.width}px`,
             opacity: dec.opacity,
+            ...(dec.rotate || dec.mirrored
+              ? { transform: `${dec.mirrored ? "scaleX(-1) " : ""}${dec.rotate ? `rotate(${dec.rotate}deg)` : ""}` }
+              : {}),
           }}
         />
       ))}
 
-      {/* Subtle extra bottom-left glow */}
-      <div
-        className="pointer-events-none absolute z-2 overflow-hidden select-none"
-        style={{ top: "640px", left: "-20px", width: "120px", height: "90px" }}
-      >
-        <img
-          src="/images/level-platfrom/image 446.svg"
-          alt=""
-          aria-hidden
-          className="w-[120px] opacity-40 select-none"
-        />
-      </div>
-
-      {/* Operators Gate (At the start of the path) */}
+      {/* Entry gate: the road runs into it. It is scenery, not a level, so it is not a tap target. */}
       <div
         className="pointer-events-none absolute z-10 select-none"
-        style={{ top: "13px", left: "266px", width: "124px", height: "125px" }}
+        style={{ top: `${GATE.top}px`, left: `${GATE.left}px`, width: `${GATE.width}px`, height: `${GATE.height}px` }}
       >
         <img
-          src="/images/level-platfrom/Group 278.svg"
-          alt="Operators Gate"
+          src={GATE.src}
+          alt={GATE.alt}
           className="h-full w-full object-contain drop-shadow-[0_10px_20px_rgba(0,225,255,0.12)]"
         />
       </div>
 
-      {/* Connecting Roads 1 to 19 */}
+      {/* Roads: the gate to level 1, then each level to the next */}
       {ROAD_CONFIGS.map((road) => (
         <img
           key={road.id}
           src="/images/level-platfrom/Group 287.svg"
           alt=""
           aria-hidden
-          className="pointer-events-none absolute z-5 w-[195px] select-none"
+          className="pointer-events-none absolute z-5 w-[179px] select-none"
           style={{
             top: `${road.top}px`,
             left: `${road.left}px`,
@@ -134,11 +125,11 @@ export function LevelWorld({
         />
       ))}
 
-      {/* Buildings (First 5 Levels) */}
+      {/* Buildings beside the first levels' tiles, each with its icon on the roof */}
       {BUILDING_CONFIGS.map((b) => (
         <div
           key={b.id}
-          className="pointer-events-none absolute z-15 select-none"
+          className="pointer-events-none absolute z-25 select-none"
           style={{
             top: `${b.top}px`,
             left: `${b.left}px`,
@@ -146,10 +137,18 @@ export function LevelWorld({
             height: `${b.height}px`,
           }}
         >
+          <img src={b.src} alt={b.alt} className="h-full w-full object-contain" />
           <img
-            src={b.src}
-            alt={b.alt}
-            className="h-full w-full object-contain drop-shadow-[0_8px_16px_rgba(101,40,210,0.15)]"
+            src={b.roof.src}
+            alt=""
+            aria-hidden
+            className="absolute"
+            style={{
+              top: `${b.roof.dy}px`,
+              left: `${b.roof.dx}px`,
+              width: `${b.roof.width}px`,
+              height: `${b.roof.height}px`,
+            }}
           />
         </div>
       ))}
@@ -163,16 +162,16 @@ export function LevelWorld({
         style={{
           top: `${FINAL_ROAD.top}px`,
           left: `${FINAL_ROAD.left}px`,
-          width: "195px",
-          height: "54px",
+          width: "179px",
+          height: `${FINAL_ROAD.height}px`,
         }}
       >
         <img
           src="/images/level-platfrom/Group 287.svg"
           alt=""
           aria-hidden
-          className="w-[195px] select-none"
-          style={{ transform: "scaleX(-1)" }}
+          className="w-[179px] select-none"
+          style={FINAL_ROAD.mirrored ? { transform: "scaleX(-1)" } : undefined}
         />
       </div>
 
