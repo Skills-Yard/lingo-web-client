@@ -52,7 +52,7 @@ export function HexOrderScreen() {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [hintCard, setHintCard] = useState<string | null>(null);
   const pending = useRef<number[]>([]);
-  const { win, popup } = useBatteryClaim();
+  const { win, popup } = useBatteryClaim(undefined, { rationed: true });
 
   useEffect(() => {
     const timers = pending.current;

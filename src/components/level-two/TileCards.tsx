@@ -41,6 +41,8 @@ type TileCardsProps = {
   pictureHeight?: number;
   /** The card's height (px), where it should differ from the layout's. */
   cardHeight?: number;
+  /** Stage px from the top, where the cards should stand there instead of on the button row; they then stay put once checked. */
+  top?: number;
   /** The cards bounce in one by one instead of the whole row rising together. */
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
@@ -53,19 +55,19 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, bounceIn = false, revealed = true, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -CARDS_RISE : 0 }}
+      animate={{ opacity: 1, y: checked && top === undefined ? -CARDS_RISE : 0 }}
       transition={
         checked
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
       className={`pointer-events-auto absolute z-[1] ${look.box}`}
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W }}
+      style={{ ...(top === undefined ? { bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint) } : { top }), left: COLUMN_LEFT, width: COLUMN_W }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);

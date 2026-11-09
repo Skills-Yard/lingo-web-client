@@ -64,7 +64,7 @@ export function FixScreen() {
   const [hintCard, setHintCard] = useState<string | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
   const pending = useRef<number[]>([]);
-  const { win, popup } = useBatteryClaim();
+  const { win, popup } = useBatteryClaim(undefined, { rationed: true });
   const commands = kindsOf(slots);
 
   // On opening, the broken sequence plays once, so the learner sees what went wrong.
