@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
@@ -37,32 +37,42 @@ const bubbleWidth = (line: string) => (line.length <= 50 ? 190 : 240);
 
 /**
  * "Information can differ!": three groups of values stand side by side, each under
- * a coloured name. The learner taps a group: it is outlined, Hex's line above
- * goes away, and Hex speaks from below the groups about what that group tells
- * us, standing under the group (each group has its own place for him). It is
- * done once every group has been read.
+ * a coloured name. A group is read by tapping it, or by Continue, which goes
+ * through the groups one by one (the first press reads the first group, each
+ * next one the group after the one just read) and, after the last, on to the
+ * next screen. Reading a group outlines it, takes Hex's line above away, and Hex
+ * speaks from below the groups about what that group tells us, standing under
+ * the group (each group has its own place for him). Nothing has to be tapped:
+ * Continue alone gets through it.
  */
 export function GroupTourStage({ api, groups }: { api: InteractionApi; groups: readonly TourGroup[] }) {
-  const { done, dismissHex } = api;
-  const [seen, setSeen] = useState<readonly string[]>([]);
+  const { dismissHex, takeContinue } = api;
   const [current, setCurrent] = useState<string | null>(null);
   const shown = groups.find((group) => group.id === current);
   const place = shown ? HEX_PLACE[shown.hex] : null;
   const hexRowHeight = groups.some((group) => group.hex === "center") ? HEX_ROW_H.stacked : HEX_ROW_H.beside;
 
-  useEffect(() => {
-    if (seen.length < groups.length) return;
-    const timer = window.setTimeout(() => done(), 700);
-    return () => window.clearTimeout(timer);
-  }, [seen, groups.length, done]);
+  const read = useCallback(
+    (id: string) => {
+      playClickSound();
+      vibrateForTap();
+      dismissHex();
+      setCurrent(id);
+    },
+    [dismissHex],
+  );
 
-  const read = (id: string) => {
-    playClickSound();
-    vibrateForTap();
-    dismissHex();
-    setCurrent(id);
-    setSeen((now) => (now.includes(id) ? now : [...now, id]));
-  };
+  // Continue reads the group after the one just read (the first, if none yet); after the last group it lets Continue go on.
+  useEffect(() => {
+    if (!takeContinue) return;
+    takeContinue(() => {
+      const next = groups[groups.findIndex((group) => group.id === current) + 1];
+      if (!next) return false;
+      read(next.id);
+      return true;
+    });
+    return () => takeContinue(null);
+  }, [takeContinue, groups, current, read]);
 
   return (
     <div className="pointer-events-auto flex w-[354px] flex-col">

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Calculator, Check, FileText, TriangleAlert, X } from "lucide-react";
+import { Calculator, Check, FileText, Link2, Plus, TriangleAlert, X } from "lucide-react";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
@@ -124,17 +124,21 @@ export function InfoTiles({ tiles, layout, shown }: { tiles: readonly InfoTile[]
 
 export type InfoRow = { id: string; text: string; icon: string };
 
+/** What a row of `InfoRows` is tall (px) and the gap between rows. */
+const INFO_ROW_H = 60;
+const INFO_ROW_GAP = 10;
+
 /**
- * Screen 5.2: the questions the values answer, as plain rows (a picture and the
- * words, in the answer rows' look, but nothing to pick). They bounce in after the
- * tiles above them: `firstIndex` is how many cards came in before the first row.
+ * Plain rows to look at (a picture and the words, in the answer rows' look, but
+ * nothing to pick). They bounce in after the cards above them: `firstIndex` is
+ * how many cards came in before the first row.
  */
 export function InfoRows({ rows, shown, firstIndex = 0 }: { rows: readonly InfoRow[]; shown: boolean; firstIndex?: number }) {
   return (
-    <div className="flex flex-col gap-2.5" style={{ width: COLUMN_W }}>
+    <div className="flex flex-col" style={{ width: COLUMN_W, gap: INFO_ROW_GAP }}>
       {rows.map((row, index) => (
         <BounceIn key={row.id} index={firstIndex + index} shown={shown} className="w-full">
-          <div className="flex h-[60px] w-full items-center gap-3.5 rounded-[18px] border border-black/4 bg-white px-3.5 shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] dark:border-[#818185] dark:bg-[#15181E]">
+          <div className="flex w-full items-center gap-3.5 rounded-[18px] border border-black/4 bg-white px-3.5 shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] dark:border-[#818185] dark:bg-[#15181E]" style={{ height: INFO_ROW_H }}>
             <Pic src={row.icon} className="h-[40px] w-[40px]" />
             <span className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{row.text}</span>
           </div>
@@ -210,13 +214,22 @@ export function NamesList({ replay = 0 }: { replay?: number }) {
   );
 }
 
-/** Screen 13: 12 and "12", one headed for a calculator, the other for a text display. */
-export function TwelveCards({ replay = 0 }: { replay?: number }) {
-  const card = (value: string, label: string, tint: string, Icon: typeof Calculator, delay: number) => (
+/**
+ * Screen 13: the two values its question is about, 12 and 3. As numbers (the first
+ * question, "add them") they are headed for a calculator and joined by a plus; as
+ * text (the second, "join them") they are “12” and “3”, headed for a text display
+ * and joined by a link.
+ */
+export function TwelveCards({ mode = "numbers", replay = 0 }: { mode?: "numbers" | "text"; replay?: number }) {
+  const numbers = mode === "numbers";
+  const values = numbers ? ["12", "3"] : ["“12”", "“3”"];
+  const Icon = numbers ? Calculator : FileText;
+  const Joiner = numbers ? Plus : Link2;
+  const card = (value: string, delay: number) => (
     <div className="flex flex-col items-center gap-1.5">
-      <div className={`flex w-[132px] flex-col items-center gap-0.5 px-2 py-2.5 ${CARD} ${tint}`}>
+      <div className={`flex w-[120px] flex-col items-center gap-0.5 px-2 py-2.5 ${CARD} ${numbers ? LAVENDER : CREAM}`}>
         <span className="text-[34px] leading-10 font-bold text-[#444444] dark:text-white">{value}</span>
-        <span className="text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{label}</span>
+        <span className="text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{numbers ? "a number" : "text"}</span>
       </div>
       <motion.span
         initial={{ opacity: 0, y: -14 }}
@@ -229,9 +242,14 @@ export function TwelveCards({ replay = 0 }: { replay?: number }) {
     </div>
   );
   return (
-    <div key={replay} className="flex items-start gap-4">
-      {card("12", "a number", LAVENDER, Calculator, 0.6)}
-      {card("“12”", "text", CREAM, FileText, 1.3)}
+    // Keyed by the mode too, so the second question's cards come in afresh.
+    <div key={`${mode}-${replay}`} className="flex items-start gap-2">
+      {card(values[0], 0.6)}
+      {/* Between the two cards, level with their middle (the cards are 86px tall). */}
+      <span aria-hidden className="flex h-[86px] w-8 items-center justify-center text-[#8A94A0]">
+        <Joiner className="size-6" strokeWidth={3} />
+      </span>
+      {card(values[1], 1.3)}
     </div>
   );
 }

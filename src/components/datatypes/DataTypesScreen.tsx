@@ -58,6 +58,7 @@ function InteractionHost({
   dismissHex,
   finished,
   hexSpoken,
+  takeContinue,
 }: {
   stage: InteractionStage;
   slip: () => void;
@@ -65,8 +66,9 @@ function InteractionHost({
   dismissHex: () => void;
   finished: boolean;
   hexSpoken: boolean;
+  takeContinue: (handler: (() => boolean) | null) => void;
 }) {
-  return <>{stage.render({ slip, done, dismissHex, finished, hexSpoken })}</>;
+  return <>{stage.render({ slip, done, dismissHex, finished, hexSpoken, takeContinue })}</>;
 }
 
 /**
@@ -119,8 +121,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const interaction = stage.kind === "interaction" ? stage : null;
   const correct = !!quiz && selectedId === quiz.correctId;
   const hasHint = !!quiz?.hintText;
-  // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none).
-  const lookReady = !!interaction?.ready && (hexSpoken || !interaction.line);
+  // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none, or if he has been sent away).
+  const lookReady = !!interaction?.ready && (hexSpoken || hexDismissed || !interaction.line);
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -143,6 +145,11 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const slip = useCallback(() => slipNow.current(), []);
   const done = useCallback(() => finishNow.current(), []);
   const dismissHex = useCallback(() => setHexDismissed(true), []);
+  // A stage that steps through its own parts can take Continue over (see `InteractionApi.takeContinue`).
+  const continueHandler = useRef<(() => boolean) | null>(null);
+  const takeContinue = useCallback((handler: (() => boolean) | null) => {
+    continueHandler.current = handler;
+  }, []);
 
   const check = () => {
     setChecked(true);
@@ -174,9 +181,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
 
   const onContinue = () => {
     if (!quiz) {
-      // A look-only stage with a result panel shows it first; Continue then goes on.
-      if (interaction?.ready && interaction.finishPanel && !finished) done();
-      else advance();
+      // A stage that steps through its own parts uses the press until it has shown them all.
+      if (!continueHandler.current?.()) advance();
     } else if (!checked) check();
     else if (correct) advance();
     else tryAgain();
@@ -297,7 +303,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         )}
         <div ref={roomRef} className={`flex min-h-0 w-full flex-1 flex-col items-center ${interaction?.alignTop ? "justify-start" : "justify-center"}`}>
           <div ref={pictureRef} className="flex flex-col items-center gap-2 transition-transform duration-300 ease-out" style={{ transform: `scale(${fit})`, transformOrigin: interaction?.alignTop ? "top center" : "center" }}>
-            {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} />}
+            {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct, hexSpoken }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} />}
           </div>
         </div>
       </div>
