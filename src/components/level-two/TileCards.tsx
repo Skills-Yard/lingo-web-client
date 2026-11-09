@@ -22,10 +22,17 @@ const LAYOUT = {
   tiles: { card: "h-[110px]", picture: "h-[46px] w-full", text: "text-[16px] leading-5", box: "flex items-stretch gap-3.5", inner: "gap-2" },
   /** Four answers, two across and two down. */
   grid: { card: "h-[104px]", picture: "h-[48px] w-[56px]", text: "text-[15px] leading-5", box: "grid grid-cols-2 gap-3.5", inner: "gap-1.5" },
+  /** Four big answers, two across and two down, in a column of their own (`BIG_WIDTH`). */
+  big: { card: "h-[184px]", picture: "h-[62px] w-[62px]", text: "text-[16px] leading-5", box: "grid grid-cols-2 gap-x-[29px] gap-y-[31px]", inner: "gap-3" },
+  /** Three 112 x 119 cards, each a coloured badge over its word. */
+  badges: { card: "h-[119px]", picture: "h-10 w-10", text: "text-[14px] leading-[120%]", box: "flex items-stretch gap-[11px]", inner: "gap-1.5" },
 } as const;
 
+/** The layouts that are wider than the usual column (px): they stand centred. */
+const WIDTH: Partial<Record<keyof typeof LAYOUT, number>> = { big: 355, badges: 358 };
+
 type TileCardsProps = {
-  layout: "pair" | "tiles" | "grid";
+  layout: keyof typeof LAYOUT;
   choices: readonly Choice[];
   correctId: string;
   selectedId: string | null;
@@ -48,6 +55,10 @@ type TileCardsProps = {
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
   revealed?: boolean;
+  /** How far (px) above the button they stand (default `GAP_ABOVE_BUTTONS`). */
+  bottomGap?: number;
+  /** How far they rise once the result panel is up (default `CARDS_RISE`). */
+  rise?: number;
   onPick: (id: string) => void;
 };
 
@@ -56,19 +67,19 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked && top === undefined ? -CARDS_RISE : 0 }}
+      animate={{ opacity: 1, y: checked ? -rise : 0 }}
       transition={
         checked
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
       className={`pointer-events-auto absolute z-[1] ${look.box}`}
-      style={{ ...(top === undefined ? { bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint) } : { top }), left: COLUMN_LEFT, width: COLUMN_W }}
+      style={{ bottom: aboveButtons(bottomGap, withHint), left: WIDTH[layout] ? `calc(50% - ${WIDTH[layout]! / 2}px)` : COLUMN_LEFT, width: WIDTH[layout] ?? COLUMN_W }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -100,9 +111,13 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
               />
-              <span className={`flex shrink-0 items-center justify-center ${look.picture}`} style={{ width: pictureWidth, height: pictureHeight }}>
-                <SlotImage file={choice.icon} className={pictureHeight ? "h-full w-full object-contain" : "max-h-full max-w-full object-contain"} />
-              </span>
+              {choice.tag ? (
+                <span className={`flex shrink-0 items-center justify-center rounded-[12px] text-[20px] leading-[120%] font-semibold whitespace-nowrap ${look.picture} ${choice.tag.look}`}>{choice.tag.text}</span>
+              ) : (
+                <span className={`flex shrink-0 items-center justify-center ${look.picture}`} style={{ width: pictureWidth, height: pictureHeight }}>
+                  <SlotImage file={choice.icon} className={pictureHeight ? "h-full w-full object-contain" : "max-h-full max-w-full object-contain"} />
+                </span>
+              )}
               <span
                 className={`text-center font-semibold text-[#444444] dark:text-white ${look.text} ${longText ? "text-[15px]! leading-5!" : ""}`}
               >

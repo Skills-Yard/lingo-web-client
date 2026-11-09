@@ -20,6 +20,13 @@ const TINT_CYCLE = ["blue", "lavender", "green", "cream"] as const satisfies rea
 /** The tint of the card at `index` in a run, going round the four. */
 export const tintAt = (index: number) => TINTS[TINT_CYCLE[index % TINT_CYCLE.length]];
 
+/** A number or word in its coloured badge (the example tiles, and the answers that carry one): the badge's fill and its text. */
+export const BADGE = {
+  mint: "bg-[#8EEBD8] text-[#036C59]",
+  purple: "bg-[#C1A5F9] text-[#472A92]",
+  sky: "bg-[#7ACDFB] text-[#035280]",
+} as const;
+
 /** The colour of a group's name (a text colour class) goes with the group's tint. */
 export const INK = {
   violet: "text-[#8E82FF]",
