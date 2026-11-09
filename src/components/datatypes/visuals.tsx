@@ -7,6 +7,7 @@ import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
+import { INK } from "./look";
 import { P } from "./pictures";
 
 /** A card, in the style of the Sequence module's picture cards. */
@@ -322,30 +323,83 @@ export function WeatherCard() {
   );
 }
 
-/** Screen 7: a number line, the value just tapped lit on it. */
-export function NumberLine({ current }: { current: string | null }) {
-  const values = [-5, 0, 1, 12, 25];
-  const at = (value: number) => 12 + ((value + 5) / 30) * 296;
-  const lit = current === null ? null : Number(current);
+/** Screen 7's picture is as wide as its three example tiles (112 each) and the gaps between them (8). */
+const INTEGER_LESSON_W = 3 * 112 + 2 * 8;
+
+/** A chip on the number line, and the pointer under it that takes the chip's colour: a negative number is picked out in purple. */
+const CHIP_LOOK = {
+  whole: { chip: "bg-[#B8EDDB] text-[#05594F]", pointer: "border-t-[#B8EDDB]" },
+  negative: { chip: "bg-[#C0ABEF] text-[#361887]", pointer: "border-t-[#C0ABEF]" },
+} as const;
+
+const LINE_VALUES = [
+  { value: "-5", look: CHIP_LOOK.negative },
+  { value: "0", look: CHIP_LOOK.whole },
+  { value: "1", look: CHIP_LOOK.whole },
+  { value: "12", look: CHIP_LOOK.whole },
+  { value: "25", look: CHIP_LOOK.whole },
+] as const;
+
+/** Where each part of screen 7 comes in (see `BounceIn`): the card, its chips, the `int` note, then the examples. */
+const LESSON_AT = { card: 0, chips: 1, note: 1 + LINE_VALUES.length, examples: 2 + LINE_VALUES.length } as const;
+
+export type ExampleTile = { id: string; value: string; text: string; tint: string; badge: string };
+
+/** Five integers on a number line that runs on both ways, each in a chip that points at its dot. */
+function IntegerLine({ shown }: { shown: boolean }) {
   return (
-    <div className={`relative h-[66px] w-[330px] px-0 ${CARD} ${WHITE}`}>
-      <div className="absolute inset-x-3 top-7 h-[3px] rounded-full bg-[#D5DADF] dark:bg-white/20" />
-      {[-5, 0, 5, 10, 15, 20, 25].map((tick) => (
-        <span key={tick} className="absolute top-6 flex -translate-x-1/2 flex-col items-center gap-1" style={{ left: at(tick) }}>
-          <span className="h-[9px] w-[2px] rounded-full bg-[#8D9BAA]" />
-          <span className="text-[10px] leading-3 font-semibold text-[#8A94A0]">{tick}</span>
-        </span>
+    <div className="relative flex justify-center">
+      <svg aria-hidden className="absolute top-[32.5px] left-1/2 -translate-x-1/2" width="224" height="12" viewBox="0 0 224 12" fill="none" stroke="#0CC0B7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 6H222M8 1L2 6L8 11M216 1L222 6L216 11" />
+      </svg>
+      {LINE_VALUES.map(({ value, look }, index) => (
+        <BounceIn key={value} index={LESSON_AT.chips + index} shown={shown} className="flex w-[46.5px] flex-col items-center">
+          <span className={`flex h-[28px] min-w-9 items-center justify-center rounded-full px-2 text-[18px] leading-none font-bold ${look.chip}`}>{value}</span>
+          <span className={`size-0 border-x-4 border-t-[5px] border-x-transparent ${look.pointer}`} />
+          <span className="mt-0.5 size-[9px] rounded-full bg-[#0CC0B7]" />
+          <span aria-hidden className="mt-0.5 text-[11px] leading-4 font-semibold text-white dark:text-white/25">
+            {value}
+          </span>
+        </BounceIn>
       ))}
-      {values.map((value) => (
-        <motion.span
-          key={value}
-          className="absolute top-[21px] -ml-2 size-4 rounded-full border-2 border-white bg-[#08A4AD]"
-          style={{ left: at(value) }}
-          initial={false}
-          animate={{ scale: lit === value ? 1.5 : 0.7, opacity: lit === value ? 1 : 0.45 }}
-          transition={{ type: "spring", stiffness: 300, damping: 16 }}
-        />
-      ))}
+    </div>
+  );
+}
+
+/**
+ * Screen 7: whole numbers on a number line, what `int` says about them, and three
+ * examples from everyday life. The parts bounce in, one by one, once Hex has finished his line.
+ */
+export function IntegerLesson({ examples, shown }: { examples: readonly ExampleTile[]; shown: boolean }) {
+  return (
+    <div className="flex flex-col" style={{ width: INTEGER_LESSON_W }}>
+      <BounceIn index={LESSON_AT.card} shown={shown} className={`flex flex-col items-center gap-[5px] rounded-[16px] px-4 pt-[17px] pb-4 ${LAVENDER}`}>
+        <IntegerLine shown={shown} />
+        <BounceIn index={LESSON_AT.note} shown={shown} className="flex h-[52px] w-[237px] items-center gap-[9px] rounded-[20px] border-2 border-white bg-[#E0F4EE] pl-2.5 dark:border-transparent dark:bg-[#0F2B28]">
+          <span className="flex h-[34px] w-[69px] shrink-0 items-center justify-center rounded-full bg-[#BDEEDC] font-mono text-[20px] leading-none text-[#111513] dark:bg-[#17413B] dark:text-white">
+            (<span className="text-[#108A26] dark:text-[#5DDB7A]">int</span>)
+          </span>
+          <span className="mr-[3px] h-7 w-px shrink-0 bg-[#6DD9C3] dark:bg-white/20" />
+          <span className="text-[11px] leading-[15px] font-semibold whitespace-nowrap text-[#333333] dark:text-white">
+            Integer represents
+            <br />
+            whole-number values.
+          </span>
+        </BounceIn>
+      </BounceIn>
+      <BounceIn index={LESSON_AT.examples} shown={shown} className="mt-7 self-start">
+        <span className={`flex h-[38px] w-[100px] items-center justify-center rounded-[8px] text-[16px] leading-none font-semibold ${INK.violet} ${LAVENDER}`}>Examples</span>
+      </BounceIn>
+      <div className="mt-3 flex gap-2">
+        {examples.map((tile, index) => (
+          <BounceIn key={tile.id} index={LESSON_AT.examples + index} shown={shown} className="shrink-0">
+            <div className={`flex h-[119px] w-[112px] flex-col items-center justify-center gap-1.5 rounded-[8px] border-4 border-white dark:border-transparent ${tile.tint}`}>
+              <span className={`flex size-10 items-center justify-center rounded-[12px] text-[20px] leading-[120%] font-semibold whitespace-nowrap ${tile.badge}`}>{tile.value}</span>
+              <span className="w-[104px] text-center text-[14px] leading-[120%] font-semibold text-[#444444] dark:text-white">{tile.text}</span>
+            </div>
+          </BounceIn>
+        ))}
+      </div>
     </div>
   );
 }

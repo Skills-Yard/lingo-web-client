@@ -9,7 +9,7 @@ import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, LAVENDER, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type InfoRow, type InfoTile } from "./visuals";
+import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, IntegerLesson, LAVENDER, NamesList, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -91,6 +91,13 @@ const VALUE_TILES: readonly InfoTile[] = [
   { id: "tickets", text: "25 tickets", icon: P.valueTickets, tint: TINTS.cream },
   { id: "height", text: "148.5 cm height", icon: P.valueHeight, tint: TINTS.green },
   { id: "weight", text: "36.7 kg weight", icon: P.valueWeight, tint: TINTS.blue },
+];
+
+/** Screen 7's three examples: a whole number in its badge, and what it counts or measures (each tile has its own colour, its badge goes with it). */
+const INTEGER_EXAMPLES: readonly ExampleTile[] = [
+  { id: "students", value: "32", text: "No. of students", tint: TINTS.green, badge: "bg-[#8EEBD8] text-[#036C59]" },
+  { id: "books", value: "13", text: "Number of books", tint: TINTS.cream, badge: "bg-[#C1A5F9] text-[#472A92]" },
+  { id: "temperature", value: "-5°", text: "Temperature change", tint: TINTS.blue, badge: "bg-[#7ACDFB] text-[#035280]" },
 ];
 
 /** Screens that are a headline and one or more stages: the questions and the interactions. */
@@ -228,31 +235,17 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.integers]: {
     step: STEP.integers,
-    title: "Meet *Integers!*",
+    title: "Meet *integers!*",
     titleSize: 28,
     backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
-        line: "A whole number, with no decimal part, is an Integer.",
+        line: "Integers are whole numbers without decimal parts.",
         bubbleWidth: 190,
         alignTop: true,
-        render: (api) => (
-          <RevealStage
-            api={api}
-            columns={5}
-            need={3}
-            header={(current) => <NumberLine current={current} />}
-            items={[
-              { id: "0", label: "0", caption: "Zero: nothing left." },
-              { id: "1", label: "1", caption: "One: a single ticket." },
-              { id: "12", label: "12", caption: "Number of books: 12" },
-              { id: "25", label: "25", caption: "Number of students: 25" },
-              { id: "-5", label: "-5", caption: "Temperature change: -5 degrees" },
-            ]}
-            footer={<Key>Integer (int) represents whole-number values.</Key>}
-          />
-        ),
+        ready: true,
+        render: ({ hexSpoken }) => <IntegerLesson examples={INTEGER_EXAMPLES} shown={hexSpoken} />,
       },
     ],
   },
