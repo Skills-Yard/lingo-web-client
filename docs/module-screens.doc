@@ -73,7 +73,7 @@
   <li><b>ForcedTheme light:</b> the whole module is light only.</li>
   <li><b>ModuleButtonWarmup:</b> starts loading the shared Rive Continue button as soon as the module opens (while hex.riv is still downloading), so the first screen's button is already drawn when it appears.</li>
   <li><b>RobotWarmup:</b> preloads the robot arm (<code>command.riv</code>) the same way.</li>
-  <li><b>HexRiveGate:</b> holds the screens back until <code>hex.riv</code> has downloaded and parsed (once, app-wide). Meanwhile it shows <code>HexRiveLoading</code> with the download progress. If the preload fails it does not block; canvases load the file themselves.</li>
+  <li><b>RiveAssetsGate</b> (root layout): holds every route back until all the app's <code>.riv</code> files (<code>hex</code>, <code>progressBar</code>, <code>battery</code>, <code>sequence</code>, <code>command</code>, <code>gem</code>) have downloaded and parsed (once, app-wide, <code>riveCache.ts</code>). Meanwhile it shows <code>RiveLoading</code> with the real progress. If a file fails it does not block; its canvases load it themselves.</li>
 </ul>
 
 <h3>2.2 The shell: <code>LevelOneShell</code> and <code>LevelTwoShell</code></h3>

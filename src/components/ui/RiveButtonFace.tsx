@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { preload } from "react-dom";
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment, EventType, type EventCallback, type Rive } from "@rive-app/canvas";
 import type { AnswerResult } from "./RiveProgressBar";
 import { PersistentModuleButtonFace } from "./PersistentModuleButtonFace";
 import { configureRiveRuntime, BUTTON } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
 import { writeButtonStyle } from "@/lib/rive/buttonStyle";
 import { applyArtboardBleed, artboardBleedBox } from "@/lib/rive/bleed";
 
@@ -68,14 +68,9 @@ export function RiveButtonFace({ variant = "onboarding", disabled, answer, light
 
 /** The onboarding look of the artboard, loaded afresh by every button. */
 function OnboardingButtonFace({ label, pressCount, shine }: Pick<RiveButtonFaceProps, "label" | "pressCount" | "shine">) {
-  // Fetch starts as early as the first button renders; later instances reuse
-  // the browser's cached copy. `crossOrigin: "anonymous"` matches the
-  // credentials mode of Rive's own `fetch()`, or the browser ignores the
-  // preload and downloads the file a second time.
-  preload(RIVE_BUTTON_SRC, { as: "fetch", crossOrigin: "anonymous" });
-
+  // The file is the app's shared, already parsed copy (see `riveCache`).
   const { rive, canvas, RiveComponent } = useRive({
-    src: RIVE_BUTTON_SRC,
+    ...riveSource(RIVE_BUTTON_SRC),
     artboard: BUTTON.artboard,
     stateMachine: BUTTON.stateMachine,
     autoBind: true,

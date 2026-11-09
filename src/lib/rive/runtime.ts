@@ -362,6 +362,13 @@ export const LEVEL_BACKGROUND = {
   fallbackAspect: 390 / 844,
 } as const;
 
+/** The gem — the "Gem" artboard of `gem` (a Rive file with no extension). */
+export const GEM = {
+  src: "/animations/gem",
+  artboard: "Gem",
+  stateMachine: "State Machine 1",
+} as const;
+
 /** The lesson progress bar — "LESSON_ProgressBar" in `progressBar.riv`, played by
  * `ProgressBar_SM`; its `progress` property is the fill in percent (0-100). */
 export const PROGRESS_BAR = {

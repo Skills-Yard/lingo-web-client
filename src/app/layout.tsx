@@ -4,6 +4,7 @@ import { appFont } from "@/lib/fonts";
 import { ThemeProvider } from "@/context/ThemeContext";
 import { InstallHint } from "@/components/pwa/InstallHint";
 import { BatteryDoctorOverlay } from "@/components/rive/BatteryDoctorOverlay";
+import { RiveAssetsGate } from "@/components/rive/RiveAssetsGate";
 
 export const metadata: Metadata = {
   title: "Lingo - Instructions Intro",
@@ -38,8 +39,11 @@ export default function RootLayout({
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground transition-colors duration-200">
         <ThemeProvider>
-          {children}
-          <BatteryDoctorOverlay />
+          {/* Whichever route the app opens on, nothing mounts until every .riv is downloaded and parsed (once). */}
+          <RiveAssetsGate>
+            {children}
+            <BatteryDoctorOverlay />
+          </RiveAssetsGate>
         </ThemeProvider>
         <InstallHint />
       </body>

@@ -5,8 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { vibrateForClaim, vibrateForTap } from "@/lib/haptics";
-import { hexRiveSource } from "@/lib/rive/hexFile";
-import { configureRiveRuntime, REWARD_SCREEN } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
+import { configureRiveRuntime, HEX_RIVE_SRC, REWARD_SCREEN } from "@/lib/rive/runtime";
 import { SoloContinue } from "./SoloContinue";
 
 configureRiveRuntime();
@@ -40,7 +40,7 @@ const HINT_KEEP_GOING = "Keep tapping!";
  */
 export function RewardScreen({ onContinue }: { onContinue: () => void }) {
   const { RiveComponent: Backdrop } = useRive({
-    ...hexRiveSource(),
+    ...riveSource(HEX_RIVE_SRC),
     artboard: background.artboard,
     stateMachines: background.stateMachine,
     autoplay: true,
@@ -53,7 +53,7 @@ export function RewardScreen({ onContinue }: { onContinue: () => void }) {
   // Rive keeps the callbacks it was created with, so the count lives in a ref.
   const tapsRef = useRef(0);
   const { RiveComponent: Chest } = useRive({
-    ...hexRiveSource(),
+    ...riveSource(HEX_RIVE_SRC),
     artboard: chest.artboard,
     stateMachine: chest.stateMachine,
     // Binds the artboard's own view model, which the machine needs to run.
