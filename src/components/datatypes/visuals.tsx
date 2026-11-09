@@ -2,13 +2,14 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Calculator, Check, FileText, Link2, Plus, TriangleAlert, User, X } from "lucide-react";
+import { Calculator, Check, ClipboardCheck, CloudSun, FileText, Link2, Plus, TriangleAlert, User, X } from "lucide-react";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { INK } from "./look";
 import { P } from "./pictures";
+import { People, WINDOW_ROW, WindowCard } from "./WindowCard";
 
 /** A card, in the style of the Sequence module's picture cards. */
 export const CARD = "rounded-[8px] border-4 border-white shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent";
@@ -154,20 +155,6 @@ export function InfoRows({ rows, shown, firstIndex = 0 }: { rows: readonly InfoR
   );
 }
 
-/** Three people, solid, for the window's title bar. */
-function People() {
-  return (
-    <svg aria-hidden viewBox="0 0 28 22" className="h-[22px] w-7 shrink-0 fill-current">
-      <circle cx="14" cy="6" r="4.3" />
-      <path d="M6.2 21.5c0-4.6 3.5-7.6 7.8-7.6s7.8 3 7.8 7.6z" />
-      <circle cx="4.8" cy="8.4" r="3" />
-      <path d="M0 20c0-3.2 2.1-5.3 4.8-5.3.9 0 1.7.2 2.4.6-1.7 1.4-2.8 3.1-3.1 4.7z" />
-      <circle cx="23.2" cy="8.4" r="3" />
-      <path d="M28 20c0-3.2-2.1-5.3-4.8-5.3-.9 0-1.7.2-2.4.6 1.7 1.4 2.8 3.1 3.1 4.7z" />
-    </svg>
-  );
-}
-
 /** The students on screen 10's list. */
 const STUDENTS = ["Aarav", "Mia", "Kabir", "Ananya"] as const;
 
@@ -190,27 +177,16 @@ function Part({ at, shown, animated, className, children }: { at: number; shown:
 export function RegisteredStudents({ shown = true, animated = true }: { shown?: boolean; animated?: boolean }) {
   return (
     <Part at={0} shown={shown} animated={animated} className="w-[340px]">
-      <div className="rounded-[30px] bg-linear-to-b from-[#5CC9CC] to-[#8FDDE3] px-3 pt-2.5 pb-3 shadow-[0_6px_16px_rgba(8,152,149,0.22)] dark:from-[#0F5F63] dark:to-[#157C80] dark:shadow-none">
-        <div className="flex h-[42px] items-center gap-3 rounded-t-[18px] bg-linear-to-b from-[#0DA09C] to-[#03888B] px-4 text-white">
-          <People />
-          <span className="text-[16px] leading-6 font-semibold">Registered Students</span>
-          <span aria-hidden className="ml-auto flex gap-[9px]">
-            {[0, 1, 2].map((dot) => (
-              <span key={dot} className="size-2.5 rounded-full bg-white/60" />
-            ))}
-          </span>
-        </div>
-        <div className="flex flex-col gap-[9px] rounded-b-[18px] bg-[#F5FAFE] pt-4 pr-[21px] pb-6 pl-[26px] dark:bg-[#15181E]">
-          {STUDENTS.map((name, index) => (
-            <Part key={name} at={1 + index} shown={shown} animated={animated}>
-              <div className="flex h-[33px] items-center gap-5 rounded-[8px] bg-linear-to-r from-[#E2F1F9] to-[#DCEDF9] pl-[22px] text-[17px] leading-6 font-bold text-[#151E48] dark:from-[#1C2A3A] dark:to-[#1A2633] dark:text-white">
-                <User aria-hidden className="size-[23px] shrink-0 fill-current text-[#06C3B4]" strokeWidth={1.5} />
-                {name}
-              </div>
-            </Part>
-          ))}
-        </div>
-      </div>
+      <WindowCard title="Registered Students" icon={<People />} panel="gap-[9px] pt-4 pr-[21px] pb-6 pl-[26px]">
+        {STUDENTS.map((name, index) => (
+          <Part key={name} at={1 + index} shown={shown} animated={animated}>
+            <div className={`flex h-[33px] items-center gap-5 pl-[22px] text-[17px] leading-6 font-bold text-[#151E48] dark:text-white ${WINDOW_ROW}`}>
+              <User aria-hidden className="size-[23px] shrink-0 fill-current text-[#06C3B4]" strokeWidth={1.5} />
+              {name}
+            </div>
+          </Part>
+        ))}
+      </WindowCard>
     </Part>
   );
 }
@@ -263,21 +239,23 @@ export function AttendanceBoard() {
     return () => window.clearInterval(timer);
   }, []);
   return (
-    <div className={`flex w-[316px] items-center justify-between gap-3 px-4 py-3 ${CARD} ${LAVENDER}`}>
-      <div className="flex items-center gap-3">
-        <Pic src={P.programmer} className="h-[56px] w-[56px]" />
-        <span className="text-[20px] leading-7 font-bold text-[#444444] dark:text-white">Aarav</span>
+    <WindowCard title="Attendance" icon={<ClipboardCheck />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
+      <div className={`flex h-[52px] items-center justify-between gap-3 pr-3 pl-2.5 ${WINDOW_ROW}`}>
+        <div className="flex items-center gap-2.5">
+          <Pic src={P.programmer} className="h-[40px] w-[40px]" />
+          <span className="text-[18px] leading-7 font-bold text-[#151E48] dark:text-white">Aarav</span>
+        </div>
+        <motion.span
+          key={String(present)}
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[15px] leading-6 font-bold text-white ${present ? "bg-[#01A17F]" : "bg-[#E5484D]"}`}
+        >
+          {present ? <Check aria-hidden className="size-4" strokeWidth={3} /> : <X aria-hidden className="size-4" strokeWidth={3} />}
+          {present ? "Present" : "Absent"}
+        </motion.span>
       </div>
-      <motion.span
-        key={String(present)}
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[16px] leading-6 font-bold text-white ${present ? "bg-[#01A17F]" : "bg-[#E5484D]"}`}
-      >
-        {present ? <Check aria-hidden className="size-4" strokeWidth={3} /> : <X aria-hidden className="size-4" strokeWidth={3} />}
-        {present ? "Present" : "Absent"}
-      </motion.span>
-    </div>
+    </WindowCard>
   );
 }
 
@@ -290,35 +268,38 @@ export function TypedCards({ fixed = false }: { fixed?: boolean }) {
     { label: "Is_present", value: "True", type: "Boolean", warn: false },
   ];
   return (
-    <div className="grid w-[316px] grid-cols-2 gap-2">
+    <WindowCard title="Student record" icon={<FileText />} panel="gap-[7px] pt-3.5 pr-[21px] pb-4 pl-[21px]">
       {rows.map((row) => (
-        <div
-          key={row.label}
-          className={`flex flex-col items-center gap-0.5 rounded-lg border-2 px-2 py-1.5 ${row.warn ? "border-[#FFB300] bg-[#FFF8E1] dark:bg-[#2A2218]" : "border-[#E3E5E9] bg-white dark:border-white/15 dark:bg-[#15181E]"}`}
-        >
-          <span className="text-[11px] leading-4 font-medium text-[#8A94A0]">{row.label}</span>
-          <span className="text-[18px] leading-6 font-bold text-[#444444] dark:text-white">{row.value}</span>
-          <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] leading-4 font-semibold ${row.warn ? "bg-[#FFB300] text-white" : "bg-[#E3F6F3] text-[#04908F] dark:bg-[#0F2B28]"}`}>
+        <div key={row.label} className={`flex h-[34px] items-center gap-3 px-3 ${row.warn ? "rounded-[8px] bg-[#FFF8E1] ring-2 ring-[#FFB300] dark:bg-[#2A2218]" : WINDOW_ROW}`}>
+          <span className="w-[78px] text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{row.label}</span>
+          <span className="min-w-0 flex-1 text-[16px] leading-6 font-bold text-[#151E48] dark:text-white">{row.value}</span>
+          <span className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] leading-4 font-semibold ${row.warn ? "bg-[#FFB300] text-white" : "bg-[#E3F6F3] text-[#04908F] dark:bg-[#0F2B28]"}`}>
             {row.warn && <TriangleAlert aria-hidden className="size-3" />}
             {row.type}
           </span>
         </div>
       ))}
-    </div>
+    </WindowCard>
   );
 }
 
 /** Screen 22: the finished weather card. */
 export function WeatherCard() {
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className={`flex w-[316px] flex-col gap-1.5 px-3 py-3 ${CARD} ${LAVENDER}`}>
-      <span className="text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">Weather</span>
-      <div className="grid grid-cols-2 gap-1.5">
-        <FieldRow label="City">Delhi</FieldRow>
-        <FieldRow label="Temperature">28.5°C</FieldRow>
-        <FieldRow label="Rainy days">3</FieldRow>
-        <FieldRow label="Is raining">False</FieldRow>
-      </div>
+    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+      <WindowCard title="Weather" icon={<CloudSun />} panel="gap-[7px] pt-3.5 pr-[21px] pb-4 pl-[21px]">
+        {[
+          ["City", "Delhi"],
+          ["Temperature", "28.5°C"],
+          ["Rainy days", "3"],
+          ["Is raining", "False"],
+        ].map(([label, value]) => (
+          <div key={label} className={`flex h-[34px] items-center justify-between px-3 ${WINDOW_ROW}`}>
+            <span className="text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{label}</span>
+            <span className="text-[16px] leading-6 font-bold text-[#151E48] dark:text-white">{value}</span>
+          </div>
+        ))}
+      </WindowCard>
     </motion.div>
   );
 }

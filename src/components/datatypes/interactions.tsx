@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, AnimatePresence, motion, useMotionValue } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, FileText } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
@@ -10,7 +10,8 @@ import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
 import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
-import { CARD, LAVENDER, Pic } from "./visuals";
+import { Pic } from "./visuals";
+import { WINDOW_ROW, WindowCard } from "./WindowCard";
 
 /** The four data types, as the places things are sorted into and the chips they are chosen from. */
 export const TYPES = [
@@ -529,13 +530,14 @@ export function ChooseTypeStage({
   };
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-4`}>
-      <div className={`flex w-[250px] flex-col items-center gap-1 px-3 py-2.5 ${CARD} ${LAVENDER}`}>
-        <span className="text-[12px] leading-4 font-medium text-[#8A94A0]">{field}</span>
-        <span className="text-[22px] leading-7 font-bold text-[#444444] dark:text-white">{value}</span>
-        <span className="rounded-full bg-[#E3F6F3] px-3 py-0.5 text-[12px] leading-4 font-semibold text-[#04908F] dark:bg-[#0F2B28]">
-          {chosen ? TYPES.find((type) => type.id === chosen)?.label : from}
-        </span>
-      </div>
+      <WindowCard title={field} icon={<FileText />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
+        <div className={`flex h-[48px] items-center justify-between px-4 ${WINDOW_ROW}`}>
+          <span className="text-[22px] leading-7 font-bold text-[#151E48] dark:text-white">{value}</span>
+          <span className="rounded-full bg-[#E3F6F3] px-3 py-0.5 text-[12px] leading-4 font-semibold text-[#04908F] dark:bg-[#0F2B28]">
+            {chosen ? TYPES.find((type) => type.id === chosen)?.label : from}
+          </span>
+        </div>
+      </WindowCard>
       <div className="grid w-full grid-cols-2 gap-3.5">
         {TYPES.map((type, index) => (
           <motion.button
