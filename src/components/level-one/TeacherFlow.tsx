@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
@@ -17,7 +18,7 @@ import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { COLUMN_W } from "@/lib/questionColumn";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 import { LevelOneShell, levelOneHref, levelOneStep, TITLE_HEIGHT, TITLE_MARGIN_TOP } from "./LevelOneShell";
 
 export type Step = "says" | "quiz";
@@ -58,21 +59,22 @@ export const optionState = (
   return id === selectedId ? "selected" : "idle";
 };
 
+/** Each state of an answer card: the colour of its 3D edge (see `RAISED`) and its face. */
 export const LOOKS: Record<OptionState, { edge: string; card: string }> = {
   idle: {
-    edge: "border-[#BDBA99]",
+    edge: EDGE.khaki,
     card: "border-black/4 bg-white dark:border-white/6 dark:bg-[#15181E]",
   },
   selected: {
-    edge: "border-[#008566]",
+    edge: EDGE.green,
     card: "border-primary bg-[#F2FBF8] dark:bg-[#0F2921]",
   },
   correct: {
-    edge: "border-[#008566]",
+    edge: EDGE.green,
     card: "border-primary bg-[#F2FBF8] dark:bg-[#0F2921]",
   },
   wrong: {
-    edge: "border-[#B3261E]",
+    edge: EDGE.red,
     card: "border-[#E5484D] bg-[#FFF1F1] dark:bg-[#2A1517]",
   },
 };
@@ -131,7 +133,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       // Only the quiz has a hint, and it folds away once the answer is checked.
       hint={{ visible: quiz && !checked, onUse: () => setHinted(true) }}
       onBack={() => {
-        if (!quiz) return router.push(moduleHref(levelOneStep(3) - 1));
+        if (!quiz) return router.push(commandsHref(levelOneStep(3) - 1));
         show("says");
         router.push(levelOneHref(3));
       }}
@@ -141,6 +143,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             <FeedbackPanel key="feedback" correct={selectedId === CORRECT_ID} open={checked}
               hexIn={checked}
               hexCue={selectedId === CORRECT_ID ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+              grouped
             >
               {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}The teacher is giving an <b>instruction.</b>
             </FeedbackPanel>
@@ -248,9 +251,9 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}
-                  className={`relative flex h-[221px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[8px] border-4 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[color,background-color,border-color,box-shadow] ${
+                  className={`relative flex h-[221px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[8px] border-4 ${RAISED} ${LOOKS[state].edge} ${
                     state === "idle" ? `border-white dark:border-transparent ${option.tint}` : LOOKS[state].card
-                  } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
+                  } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_4px_0_var(--edge),0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={option.icon} alt="" draggable={false} className="h-[116px] w-[116px] shrink-0 object-contain" />

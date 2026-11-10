@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { motion, type Transition } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED } from "@/components/ui/raised";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -26,8 +27,10 @@ const ACTIONS: readonly Card[] = [
   { id: "lift", text: "Lift the cube", icon: "step-11.4.svg", pair: "pickup" },
 ];
 
-/** The column headers start 181px down the frame; the cards' rows follow them. */
-const CHIP_TOP = 181;
+/** The title ends near 154 in the frame; the column headers sit this much padding under it (27px was Figma's gap, now 4x that). The cards follow right under the headers. */
+const TITLE_BOTTOM = 154;
+const CHIP_PADDING_TOP = 27 * 4;
+const CHIP_TOP = TITLE_BOTTOM + CHIP_PADDING_TOP;
 const CARD_W = 172;
 /** Each theme's heights (frame px): the column headers, the gap under them, a card, and the gap between rows. Dark's are from the "Command_6" design. */
 const METRICS = {
@@ -82,7 +85,7 @@ const GRAY_CARD = "border-[#E3E5E9] bg-[#F1F2F4] duration-150 dark:border-white/
 type Side = "left" | "right";
 
 /**
- * `/module?step=6` — "Can you match them?": tap an instruction, then
+ * `/module/commands?step=6` — "Can you match them?": tap an instruction, then
  * the action it does. The tapped card bounces and turns blue. A right pair
  * turns green together as it lifts (with a light shine across it), then goes
  * gray and disabled as it comes down; a wrong pair shakes red and lets go. Next
@@ -93,6 +96,7 @@ type Side = "left" | "right";
 export function MatchScreen() {
   const router = useRouter();
   const metrics = METRICS[useTheme().theme];
+  /** A card row's top (frame px): right under the column headers, `chipGap` below them. */
   const rowTop = (row: number) => CHIP_TOP + metrics.chipH + metrics.chipGap + row * (metrics.cardH + metrics.rowGap);
   const [picked, setPicked] = useState<{ left: string | null; right: string | null }>({ left: null, right: null });
   const [matched, setMatched] = useState<readonly string[]>([]);
@@ -170,6 +174,7 @@ export function MatchScreen() {
               : look === "done"
                 ? GRAY_CARD
                 : LOOKS.wrong.card;
+      const edge = look === "idle" ? EDGE.khaki : look === "selected" ? EDGE.blue : look === "done" ? EDGE.pale : look === "wrong" ? EDGE.red : EDGE.green;
       return (
         <HintFloat className="relative" spin={false} active={hintHere}>
         <motion.button
@@ -191,7 +196,7 @@ export function MatchScreen() {
             x: { duration: waiting ? WAIT_NUDGE_S : SHAKE_S },
             scale: matchedNow ? LIFT_TRANSITION : { duration: waiting ? WAIT_NUDGE_S : 0.4 },
           }}
-          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default dark:border-2 ${face}`}
+          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-[8px] border-4 px-2 ${RAISED} ${edge} disabled:cursor-default dark:border-2 ${face}`}
           style={{ width: CARD_W, height: metrics.cardH }}
         >
           {/* The hint's orange fill, wiped in from the left behind the content. */}
@@ -240,7 +245,7 @@ export function MatchScreen() {
         Can you <Teal>match them?</Teal>
       </ScreenTitle>
 
-      {/* The column headers. */}
+      {/* The column headers, just under the title. */}
       <div
         className="absolute flex justify-between"
         style={{ top: stageTop(CHIP_TOP), left: `calc(50% - ${COLUMNS_W / 2}px)`, width: COLUMNS_W, height: metrics.chipH }}
@@ -258,6 +263,7 @@ export function MatchScreen() {
         ))}
       </div>
 
+      {/* The cards, centred in the room between the headers and the buttons (never closer to the headers than `chipGap`). */}
       {(
         [
           ["left", INSTRUCTIONS, "bg-[#F6F4FE] dark:bg-[#0F1F26]"],

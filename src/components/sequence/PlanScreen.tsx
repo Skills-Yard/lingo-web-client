@@ -55,7 +55,7 @@ function PaletteButton({ command, disabled, onPress }: { command: Command; disab
       type="button"
       disabled={disabled}
       onClick={onPress}
-      className={`pointer-events-auto flex h-[56px] w-[164px] items-center justify-center gap-2 rounded-lg px-2 text-[13px] leading-4 font-semibold text-[#444444] transition-[translate,box-shadow] duration-100 enabled:cursor-pointer enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50 ${
+      className={`pointer-events-auto flex h-[76px] w-[164px] items-center justify-center gap-2 rounded-lg px-2 text-[14px] leading-4 font-semibold text-[#444444] transition-[translate,box-shadow] duration-100 enabled:cursor-pointer enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50 ${
         forward ? "bg-[#EDFAFE] shadow-[0_4px_0_#BFE6F2]" : "bg-[#FEF8EC] shadow-[0_4px_0_#F2DFB8]"
       }`}
     >
@@ -84,7 +84,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [ring, setRing] = useState<{ col: number; row: number } | null>(null);
   const nextId = useRef(0);
-  const { win, popup } = useBatteryClaim();
+  const { win, popup } = useBatteryClaim(undefined, { rationed: true });
   const commands = items.map((item) => item.command);
   const editing = phase === "edit";
   // As many places as the shortest route takes; the command buttons stand 20px under them.

@@ -7,6 +7,7 @@ import { TipCard } from "@/components/sequence/HexScreen";
 import { ArrangeBoard, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
 import type { InteractionApi } from "./quiz";
 import { Bottle, BottleWithAmount, CARD, ShopItem } from "./visuals";
@@ -325,8 +326,8 @@ export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
                     setSelected(part.id);
                     setSlip(false);
                   }}
-                  className={`pointer-events-auto flex min-w-[120px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] border-2 px-3 py-1.5 transition-colors ${
-                    known ? "border-[#01A17F] bg-[#E3F6F3] dark:bg-[#0F2B28]" : selected === part.id ? "border-[#FFB300] bg-[#FFF3DE] dark:bg-[#2A2218]" : "border-[#D5DADF] bg-white dark:border-white/20 dark:bg-[#15181E]"
+                  className={`pointer-events-auto flex min-w-[120px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] border-2 px-3 py-1.5 ${RAISED_SMALL} ${
+                    known ? "border-[#01A17F] bg-[#E3F6F3] [--edge:#007D60] dark:bg-[#0F2B28]" : selected === part.id ? "border-[#FFB300] bg-[#FFF3DE] [--edge:#C98A00] dark:bg-[#2A2218]" : "border-[#D5DADF] bg-white [--edge:#C9CED6] dark:border-white/20 dark:bg-[#15181E]"
                   }`}
                 >
                   <span className={`text-[15px] leading-6 font-semibold text-[#444444] dark:text-white ${part.kind === "name" ? "font-mono" : ""}`}>{part.text}</span>

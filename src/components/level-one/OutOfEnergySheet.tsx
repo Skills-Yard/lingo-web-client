@@ -9,6 +9,7 @@ import { Check, Infinity as InfinityIcon, Zap } from "lucide-react";
 import { batteryEmpty, RECHARGE_COST, refillBattery, setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
 import { LEARNER_STATS } from "@/components/home/learnerStats";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
 
 /** How long the battery's drop to 0 is left to show before the sheet comes up. */
@@ -41,7 +42,7 @@ function InfiniteOption({ chosen, onChoose }: OptionProps) {
         type="button"
         aria-pressed={chosen}
         onClick={onChoose}
-        className="flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-[18px] bg-linear-to-br from-[#3F6BFF] to-[#9B51E0] text-center transition-transform active:scale-[0.98]"
+        className={`flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-[18px] bg-linear-to-br from-[#3F6BFF] to-[#9B51E0] text-center [--edge:#5B3AB5] ${RAISED}`}
       >
         <span className="flex h-8 items-center justify-center text-base leading-8 font-extrabold text-white italic">INFINITE</span>
         <span
@@ -67,8 +68,8 @@ function RechargeOption({ chosen, onChoose }: OptionProps) {
         aria-pressed={chosen}
         onClick={onChoose}
         // The top padding lines the icon up with the unlimited card's (its banner is 32px).
-        className={`flex h-full w-full cursor-pointer flex-col items-center gap-2 rounded-[18px] border-2 px-2 pt-[46px] pb-3 text-center transition-[transform,background-color,border-color] active:scale-[0.98] ${
-          chosen ? "border-[#2F80ED] bg-[#F2F7FE]" : "border-black/10 bg-white"
+        className={`flex h-full w-full cursor-pointer flex-col items-center gap-2 rounded-[18px] border-2 px-2 pt-[46px] pb-3 text-center ${RAISED} ${
+          chosen ? `border-[#2F80ED] bg-[#F2F7FE] ${EDGE.blue}` : `border-black/10 bg-white ${EDGE.khaki}`
         }`}
       >
         <span className="flex h-11 w-[60px] items-center justify-center rounded-[12px] bg-[#E9F5F0]">

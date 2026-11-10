@@ -43,11 +43,19 @@ const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 50 ? 1
 /** How the answers stand: rows, or tiles (two, three or four across and down). */
 const tileCount = (stage: QuizStage) => Math.min(4, Math.max(2, stage.options.length)) as 2 | 3 | 4;
 
+/** The special cards (see `cards`): their height, how far above the button they stand, and how far they rise once the result panel is up. */
+const CARD_SETS = {
+  big: { height: 184 * 2 + 31, gapAbove: 100, rise: 100 },
+  badges: { height: 119, gapAbove: 94, rise: 60 },
+} as const;
+
 const answersHeight = (stage: QuizStage) =>
   stage.layout === "grid"
-    ? tileCount(stage) === 4
-      ? TILE_H[4] * 2 + TILE_GAP
-      : TILE_H[tileCount(stage)]
+    ? stage.cards
+      ? CARD_SETS[stage.cards].height
+      : tileCount(stage) === 4
+        ? TILE_H[4] * 2 + TILE_GAP
+        : TILE_H[tileCount(stage)]
     : stage.options.length * ROW_H + (stage.options.length - 1) * ROW_GAP;
 
 /** An interaction stage's own picture and controls. */
@@ -58,6 +66,7 @@ function InteractionHost({
   dismissHex,
   finished,
   hexSpoken,
+  takeContinue,
 }: {
   stage: InteractionStage;
   slip: () => void;
@@ -65,8 +74,9 @@ function InteractionHost({
   dismissHex: () => void;
   finished: boolean;
   hexSpoken: boolean;
+  takeContinue: (handler: (() => boolean) | null) => void;
 }) {
-  return <>{stage.render({ slip, done, dismissHex, finished, hexSpoken })}</>;
+  return <>{stage.render({ slip, done, dismissHex, finished, hexSpoken, takeContinue })}</>;
 }
 
 /**
@@ -119,8 +129,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const interaction = stage.kind === "interaction" ? stage : null;
   const correct = !!quiz && selectedId === quiz.correctId;
   const hasHint = !!quiz?.hintText;
-  // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none).
-  const lookReady = !!interaction?.ready && (hexSpoken || !interaction.line);
+  // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none, or if he has been sent away).
+  const lookReady = !!interaction?.ready && (hexSpoken || hexDismissed || !interaction.line);
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -143,6 +153,11 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const slip = useCallback(() => slipNow.current(), []);
   const done = useCallback(() => finishNow.current(), []);
   const dismissHex = useCallback(() => setHexDismissed(true), []);
+  // A stage that steps through its own parts can take Continue over (see `InteractionApi.takeContinue`).
+  const continueHandler = useRef<(() => boolean) | null>(null);
+  const takeContinue = useCallback((handler: (() => boolean) | null) => {
+    continueHandler.current = handler;
+  }, []);
 
   const check = () => {
     setChecked(true);
@@ -174,9 +189,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
 
   const onContinue = () => {
     if (!quiz) {
-      // A look-only stage with a result panel shows it first; Continue then goes on.
-      if (interaction?.ready && interaction.finishPanel && !finished) done();
-      else advance();
+      // A stage that steps through its own parts uses the press until it has shown them all.
+      if (!continueHandler.current?.()) advance();
     } else if (!checked) check();
     else if (correct) advance();
     else tryAgain();
@@ -206,15 +220,16 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   // Hex's line for this stage (the hint replaces it).
   const line = quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
   const gone = quiz ? checked : finished || hexDismissed;
+  const bubbleWidth = interaction?.bubbleWidth ?? quiz?.bubbleWidth;
 
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
   const tiles = !!quiz && quiz.layout === "grid";
-  const answersBottom = quiz ? aboveButtons(GAP_ABOVE_BUTTONS, hasHint) : "0px";
+  const answersBottom = quiz ? aboveButtons(quiz.cards ? CARD_SETS[quiz.cards].gapAbove : GAP_ABOVE_BUTTONS, hasHint) : "0px";
   const questionLines = quiz?.question ? Math.ceil(quiz.question.length / QUESTION_CHARS) : 0;
   const questionHeight = questionLines ? questionLines * 22 + 14 : 0;
   const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
-  const risen = quiz ? (tiles ? CARDS_RISE : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
+  const risen = quiz ? (tiles ? (quiz.cards ? CARD_SETS[quiz.cards].rise : CARDS_RISE) : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
   const celebrate = panel?.right === true && (quiz ? checked : finished);
 
   return (
@@ -289,7 +304,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               entryKey={`datatypes-${screen.step}-${stageIndex}-${attempt}`}
               hex="left"
               line={[{ text: line }]}
-              size={interaction?.bubbleWidth ? { width: interaction.bubbleWidth } : bubbleSize(line)}
+              size={bubbleWidth ? { width: bubbleWidth } : bubbleSize(line)}
               leaving={gone}
               onSpoken={() => setHexSpoken(true)}
             />
@@ -297,7 +312,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         )}
         <div ref={roomRef} className={`flex min-h-0 w-full flex-1 flex-col items-center ${interaction?.alignTop ? "justify-start" : "justify-center"}`}>
           <div ref={pictureRef} className="flex flex-col items-center gap-2 transition-transform duration-300 ease-out" style={{ transform: `scale(${fit})`, transformOrigin: interaction?.alignTop ? "top center" : "center" }}>
-            {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} />}
+            {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct, hexSpoken }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} />}
           </div>
         </div>
       </div>
@@ -317,7 +332,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
           )}
           {tiles ? (
             <TileCards
-              layout={tileCount(quiz) === 2 ? "pair" : tileCount(quiz) === 3 ? "tiles" : "grid"}
+              layout={quiz.cards ?? (tileCount(quiz) === 2 ? "pair" : tileCount(quiz) === 3 ? "tiles" : "grid")}
+              bottomGap={quiz.cards ? CARD_SETS[quiz.cards].gapAbove : undefined}
+              rise={quiz.cards ? CARD_SETS[quiz.cards].rise : undefined}
               choices={quiz.options}
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}

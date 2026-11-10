@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
+import { RAISED_DRAG } from "@/components/ui/raised";
 import { ArrowUp, RotateCw, X } from "lucide-react";
 import { COMMAND_LABEL, type Command } from "./hexGrid";
 
@@ -137,8 +138,8 @@ function Chip({
         home();
       }}
       style={{ x, y, width: CHIP.width, height: CHIP.height, zIndex: dragging ? 2 : 1 }}
-      className={`group pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center gap-1 rounded-[10px] border-[3px] border-white px-1 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${
-        item.command === "forward" ? "bg-[#EDFAFE] dark:bg-[#15233A]" : "bg-[#FEF8EC] dark:bg-[#2A2218]"
+      className={`group pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center gap-1 rounded-[10px] border-[3px] border-white px-1 ${RAISED_DRAG} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${
+        item.command === "forward" ? "bg-[#EDFAFE] [--edge:#BFE6F2] dark:bg-[#15233A]" : "bg-[#FEF8EC] [--edge:#F2DFB8] dark:bg-[#2A2218]"
       }`}
     >
       {/* Its place in the order, on the corner, as on the command cards. */}

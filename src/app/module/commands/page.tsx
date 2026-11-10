@@ -20,11 +20,11 @@ import {
   WHERE_SHOULD_GO,
 } from "@/components/level-two/levelTwo";
 
-/** The module's screen for `?step=`: Level 2's meeting the robot and the
+/** The Command module's screen for `?step=`: Level 2's meeting the robot and the
  * command, then Level 1's instructions, then "Lesson complete!". (Screens 12
  * and 13 are the same TeacherFlow, so moving between them keeps it mounted and
  * the picture animates.) */
-function moduleScreen(step: string) {
+function commandsScreen(step: string) {
   switch (step) {
     // "Meet your robot."
     case "1":
@@ -81,15 +81,15 @@ function moduleScreen(step: string) {
   }
 }
 
-/** The module's screens: `/module?step=1` … `step=16` (default 1), plus
- * `step=complete`. */
-export default async function ModulePage({
+/** The Command module's screens: `/module/commands?step=1` … `step=16` (default 1), plus
+ * `step=review` and `step=complete`. */
+export default async function CommandsPage({
   searchParams,
 }: {
   searchParams: Promise<{ step?: string }>;
 }) {
   const { step = "1" } = await searchParams;
-  const screen = moduleScreen(step);
+  const screen = commandsScreen(step);
   if (!screen) notFound();
   return screen;
 }
