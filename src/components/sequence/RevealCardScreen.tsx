@@ -23,9 +23,9 @@ const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 /** Where the canvas sits in the card's box: past it by `FLIP_CARD.bleed` on every side. */
 const BLEED_BOX = artboardBleedBox(FLIP_CARD, FLIP_CARD.bleed);
 /** The card's height on the stage (frame px); its width follows the artboard's shape. */
-const CARD_HEIGHT = 380;
-/** Stage px down (the title ends at about 117). */
-const CARD_TOP = 140;
+const CARD_HEIGHT = 480;
+/** Stage px between the card's bottom edge and the Replay button. */
+const REPLAY_GAP = 12;
 
 /**
  * The "Flip card" artboard of `progressBar.riv`, set to its "Why does order
@@ -134,8 +134,12 @@ export function RevealCardScreen() {
       <ScreenTitle oneLine>
         Tap to <Teal>reveal</Teal>
       </ScreenTitle>
-      <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: CARD_TOP }}>
+      {/* The card sits in the middle of the stage; Replay hangs below it, so it
+        (hidden until the card has turned) doesn't pull the card off-centre. */}
+      <div className="absolute inset-0 flex items-center justify-center">
         <OrderFlipCard onFlip={onFlip} />
+      </div>
+      <div className="absolute inset-x-0 flex justify-center" style={{ top: `calc(50% + ${CARD_HEIGHT / 2 + REPLAY_GAP}px)` }}>
         <motion.button
           type="button"
           onClick={() => {

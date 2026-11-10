@@ -17,7 +17,9 @@ const animationVersions = (): Record<string, string> => {
   const versions: Record<string, string> = {};
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (!entry.isFile()) continue;
-    const hash = createHash("sha1").update(readFileSync(path.join(dir, entry.name))).digest("hex");
+    const hash = createHash("sha1")
+      .update(readFileSync(path.join(dir, entry.name)))
+      .digest("hex");
     versions[`/animations/${entry.name}`] = hash.slice(0, 10);
   }
   return versions;
@@ -25,14 +27,22 @@ const animationVersions = (): Record<string, string> => {
 
 export default function config(phase: string): NextConfig {
   return {
-    allowedDevOrigins: ["172.30.144.1", "192.168.1.108", "10.135.178.84"],
+    allowedDevOrigins: ["172.30.144.1", "192.168.1.106", "10.135.178.84"],
     env: {
-      NEXT_PUBLIC_RIVE_VERSIONS: JSON.stringify(phase === PHASE_DEVELOPMENT_SERVER ? {} : animationVersions()),
+      NEXT_PUBLIC_RIVE_VERSIONS: JSON.stringify(
+        phase === PHASE_DEVELOPMENT_SERVER ? {} : animationVersions(),
+      ),
     },
     async redirects() {
       // The Command module used to live at the bare `/module`; keep old links and bookmarks working.
       // Next carries the query (`?step=`) over to the destination.
-      return [{ source: "/module", destination: "/module/commands", permanent: false }];
+      return [
+        {
+          source: "/module",
+          destination: "/module/commands",
+          permanent: false,
+        },
+      ];
     },
     async headers() {
       // Static media is large and rarely changes: let the browser/CDN keep it
@@ -45,7 +55,9 @@ export default function config(phase: string): NextConfig {
         },
         {
           source: "/:dir(animations|audios|images|json|video)/:path*",
-          headers: cache("public, max-age=86400, stale-while-revalidate=604800"),
+          headers: cache(
+            "public, max-age=86400, stale-while-revalidate=604800",
+          ),
         },
         // After the rule above, so it wins: a versioned animation URL never changes content.
         {
