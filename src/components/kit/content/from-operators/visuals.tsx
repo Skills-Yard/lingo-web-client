@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Lock, LockOpen } from "lucide-react";
-import { CARD, CARD_FACE, CREAM, LAVENDER, Pic, WHITE } from "@/components/datatypes/visuals";
+import { CARD, CARD_FACE, CREAM, LAVENDER, Pic, WHITE } from "@/components/kit/content/from-datatypes/visuals";
 import { P } from "./pictures";
 
 export { CARD, CARD_FACE, CREAM, LAVENDER, Pic, WHITE };

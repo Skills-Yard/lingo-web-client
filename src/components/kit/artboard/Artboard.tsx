@@ -5,8 +5,8 @@ import { Alignment, Fit, Layout, type Rive } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { useTheme } from "@/context/ThemeContext";
 import { applyArtboardBleed, artboardBleedBox } from "@/lib/rive/bleed";
-import { hexRiveSource } from "@/lib/rive/hexFile";
-import { configureRiveRuntime, HEX_RIVE_SRC } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
+import { configureRiveRuntime } from "@/lib/rive/runtime";
 import type { TriggerRequest } from "../types";
 
 configureRiveRuntime();
@@ -82,8 +82,8 @@ function fireNamed(rive: Rive, name: string, stateMachine?: string) {
  */
 export function Artboard({ src, artboard, stateMachine, size, bleed = 0, fit = "contain", bind = true, properties, darkThemeProperty, trigger = null, onReady, ref, label, className = "", style }: ArtboardProps) {
   const layout = useMemo(() => new Layout({ fit: FITS[fit], alignment: Alignment.Center }), [fit]);
-  // `hex.riv` is downloaded and parsed once for the app: use that copy rather than fetching it again.
-  const source = src === HEX_RIVE_SRC ? hexRiveSource() : { src };
+  // The app's `.riv` files are downloaded and parsed once (see `riveCache.ts`): use that copy rather than fetching it again.
+  const source = riveSource(src);
   const { rive, canvas, RiveComponent } = useRive({ ...source, artboard, stateMachine, autoplay: true, autoBind: bind, layout });
   const { theme } = useTheme();
 

@@ -8,10 +8,10 @@ import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { datatypesHref } from "@/lib/routes";
 import { STEP, DATATYPES_STEPS, datatypesPrevious } from "./datatypes";
-import { TYPES } from "./interactions";
-import { parseTitle } from "./screen";
-import { CARD, LAVENDER, Pic } from "./visuals";
-import { WINDOW_ROW, WindowCard } from "./WindowCard";
+import { TYPES } from "@/components/kit/content/from-datatypes/interactions";
+import { parseTitle } from "@/components/kit/content/from-datatypes/screen";
+import { CARD, LAVENDER, Pic } from "@/components/kit/content/from-datatypes/visuals";
+import { WINDOW_ROW, WindowCard } from "@/components/kit/content/from-datatypes/WindowCard";
 
 /** The headline (the PDF's, cut to one line), set at a size that keeps it on one. */
 const TITLE = { ...parseTitle("You unlocked *Data Types!*"), twoLines: false, size: 26 };

@@ -5,7 +5,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { CARD, CARD_FACE, CREAM, LAVENDER, Pic, Pile, WHITE } from "@/components/operators/visuals";
+import { PillButton } from "@/components/kit/buttons/PillButton";
+import { Note } from "@/components/kit/text/Prompt";
+import { CARD, CARD_FACE, CREAM, LAVENDER, Pic, Pile, WHITE } from "@/components/kit/content/from-operators/visuals";
 import { EDGE, RAISED, RAISED_SMALL } from "@/components/ui/raised";
 import type { InteractionApi } from "./screen";
 

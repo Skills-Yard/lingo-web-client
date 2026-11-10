@@ -5,7 +5,7 @@ import { AudioPlayer } from "@/components/level-two/AudioPlayer";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { DATATYPES_AUDIO } from "@/lib/moduleAudio";
-import { P } from "./pictures";
+import { P } from "@/components/kit/content/from-datatypes/pictures";
 
 /** The picture is drawn this big (15px in from each side of the frame); the art is 1436 x 640. */
 const PICTURE = { width: 360, height: 160 } as const;

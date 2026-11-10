@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
+import { PillButton } from "@/components/kit/buttons/PillButton";
+import { Note } from "@/components/kit/text/Prompt";
 import { SeenBadge } from "./FlipCarousel";
 import type { InteractionApi } from "./screen";
 import { EDGE, RAISED, RAISED_SMALL } from "@/components/ui/raised";

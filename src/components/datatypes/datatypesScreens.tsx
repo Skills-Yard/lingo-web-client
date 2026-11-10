@@ -1,18 +1,20 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { GroupStage, type GroupItem } from "./GroupStage";
+import { Stack } from "@/components/kit/layout/Stack";
+import { KeyText } from "@/components/kit/text/Prompt";
+import { GroupStage, type GroupItem } from "@/components/kit/content/from-datatypes/GroupStage";
 import { ToggleRight } from "lucide-react";
 import { FloatLesson } from "./FloatLesson";
-import { GroupTourStage, type TourGroup } from "./GroupTourStage";
-import { BADGE, INK, TINTS, tintAt } from "./look";
-import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
+import { GroupTourStage, type TourGroup } from "@/components/kit/content/from-datatypes/GroupTourStage";
+import { BADGE, INK, TINTS, tintAt } from "@/components/kit/content/from-datatypes/look";
+import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "@/components/kit/content/from-datatypes/interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "@/components/kit/content/from-datatypes/pictures";
 import type { Option, QuizStage, ScreenDef } from "@/components/kit/content/from-datatypes/screen";
 import { STEP } from "./datatypes";
-import { WINDOW_ROW, WindowCard } from "./WindowCard";
-import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
+import { WINDOW_ROW, WindowCard } from "@/components/kit/content/from-datatypes/WindowCard";
+import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "@/components/kit/content/from-datatypes/visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
