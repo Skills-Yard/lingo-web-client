@@ -2,12 +2,12 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Calculator, Check, ClipboardCheck, CloudSun, FileText, Link2, Plus, TriangleAlert, User, X } from "lucide-react";
+import { ArrowDown, Calculator, Check, ClipboardCheck, CloudSun, FileText, Link2, Plus, TriangleAlert, User, X } from "lucide-react";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
-import { INK } from "./look";
+import { INK, TINTS } from "./look";
 import { P } from "./pictures";
 import { People, WINDOW_ROW, WindowCard } from "./WindowCard";
 
@@ -155,6 +155,18 @@ export function InfoTiles({ tiles, layout, shown }: { tiles: readonly InfoTile[]
         </BounceIn>
       ))}
     </div>
+  );
+}
+
+/** A number written with its decimal point picked out, where there is one. */
+export function Decimal({ value }: { value: string }) {
+  const [whole, decimal] = value.split(".");
+  if (decimal === undefined) return <>{value}</>;
+  return (
+    <>
+      {whole}
+      <span className="text-[#FF8D42]">.{decimal}</span>
+    </>
   );
 }
 

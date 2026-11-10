@@ -12,7 +12,7 @@ import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
 import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
-import { Pic } from "./visuals";
+import { INFO_LAYOUT, InfoTileBody, Pic, type InfoTile } from "./visuals";
 import { WINDOW_ROW, WindowCard } from "./WindowCard";
 
 /** The four data types, as the places things are sorted into and the chips they are chosen from. */

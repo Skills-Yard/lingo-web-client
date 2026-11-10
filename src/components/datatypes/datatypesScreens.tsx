@@ -6,13 +6,13 @@ import { ToggleRight } from "lucide-react";
 import { FloatLesson } from "./FloatLesson";
 import { GroupTourStage, type TourGroup } from "./GroupTourStage";
 import { BADGE, INK, TINTS, tintAt } from "./look";
-import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
+import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
 import { WINDOW_ROW, WindowCard } from "./WindowCard";
-import { AttendanceBoard, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
+import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
