@@ -13,6 +13,7 @@ import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two
 import { TrekBackdrop } from "@/components/kit/content/from-variable/screenVisuals";
 import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { RAISED } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
@@ -111,7 +112,7 @@ function ObjectGrid({
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               style={{ height: pictures ? OBJECT_H : TEXT_CARD_H }}
-              className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 overflow-visible rounded-[16px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] ${
+              className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 overflow-visible rounded-[16px] border-4 px-1.5 ${RAISED} ${LOOKS[state].edge} ${
                 state === "idle" ? "border-white bg-white dark:border-transparent dark:bg-[#15181E]" : LOOKS[state].card
               }`}
             >

@@ -9,8 +9,6 @@ import {
   saveOnboardingAnswers,
 } from "@/lib/onboardingAnswers";
 import { onboardingHref } from "@/lib/routes";
-import { HexRiveLoading } from "@/components/rive/HexRiveLoading";
-import { useHexRiveStatus } from "@/lib/rive/hexFile";
 
 const subscribeNever = () => () => {};
 
@@ -36,12 +34,9 @@ export function AppFlow({ initialStep }: { initialStep?: string }) {
     readOnboardingAnswersJson,
     () => null,
   );
-  // Nothing starts until `hex.riv` is in, so every Hex canvas (and the
-  // splash's timer) begins with the file already loaded. A failed preload
-  // doesn't block: the canvases fetch the file themselves.
-  const hexRiveStatus = useHexRiveStatus();
+  // The root layout's `RiveAssetsGate` has already loaded every .riv, so every
+  // Hex canvas (and the splash's timer) begins with its file loaded.
   if (savedAnswersJson === null) return null;
-  if (hexRiveStatus === "loading") return <HexRiveLoading />;
 
   return (
     <OnboardingFlow

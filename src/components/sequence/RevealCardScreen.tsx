@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { preload } from "react-dom";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useRive } from "@rive-app/react-canvas";
@@ -13,6 +12,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { applyArtboardBleed, artboardBleedBox } from "@/lib/rive/bleed";
 import { configureRiveRuntime, FLIP_CARD } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
 import { SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
 
 configureRiveRuntime();
@@ -34,12 +34,9 @@ const CARD_TOP = 140;
  * the file has loaded and the card has been set.
  */
 function OrderFlipCard({ onFlip }: { onFlip: () => void }) {
-  // `crossOrigin: "anonymous"` matches the credentials mode of Rive's own `fetch()`,
-  // or the browser ignores the preload and downloads the file a second time.
-  preload(FLIP_CARD.src, { as: "fetch", crossOrigin: "anonymous" });
-
+  // The file is the app's shared, already parsed copy (see `riveCache`).
   const { rive, canvas, RiveComponent } = useRive({
-    src: FLIP_CARD.src,
+    ...riveSource(FLIP_CARD.src),
     artboard: FLIP_CARD.artboard,
     stateMachines: FLIP_CARD.stateMachine,
     autoplay: true,

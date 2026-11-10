@@ -5,10 +5,11 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { CARD, CREAM, LAVENDER, Pic, Pile, WHITE } from "@/components/kit/content/from-operators/visuals";
 import { PillButton } from "@/components/kit/buttons/PillButton";
 import { Note } from "@/components/kit/text/Prompt";
-import type { InteractionApi } from "@/components/kit/content/from-conditions/screen";
+import { CARD, CARD_FACE, CREAM, LAVENDER, Pic, Pile, WHITE } from "@/components/kit/content/from-operators/visuals";
+import { EDGE, RAISED, RAISED_SMALL } from "@/components/ui/raised";
+import type { InteractionApi } from "./screen";
 
 const SHAKE = [0, -7, 7, -5, 5, 0];
 /** A wrong try shakes red for this long (ms). */
@@ -99,7 +100,7 @@ export function PredictTestStage({
                       key={choice}
                       type="button"
                       onClick={() => pick(index, choice)}
-                      className="h-[34px] min-w-[52px] cursor-pointer rounded-[8px] border-2 border-[#B8E0E0] bg-white px-2 text-[14px] leading-none font-bold text-[#04908F] active:scale-95 dark:border-[#2F5D59] dark:bg-[#15181E] dark:text-[#7FD8CC]"
+                      className={`h-[34px] min-w-[52px] cursor-pointer rounded-[8px] border-2 border-[#B8E0E0] bg-white px-2 text-[14px] leading-none font-bold text-[#04908F] [--edge:#9CCFCF] dark:border-[#2F5D59] dark:bg-[#15181E] dark:text-[#7FD8CC] ${RAISED_SMALL}`}
                     >
                       {choice}
                     </button>
@@ -190,7 +191,7 @@ export function ComboStage({
             type="button"
             onClick={() => toggle(index)}
             whileTap={{ scale: 0.96 }}
-            className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1 px-2 py-2.5 ${inputs.length === 1 ? "max-w-[200px]" : ""} ${CARD} ${CREAM}`}
+            className={`flex min-w-0 flex-1 cursor-pointer flex-col items-center gap-1 px-2 py-2.5 ${inputs.length === 1 ? "max-w-[200px]" : ""} ${CARD_FACE} ${RAISED} ${EDGE.khaki} ${CREAM}`}
           >
             <Pic src={input.pic} className="h-10 w-10" />
             <span className="text-[13px] leading-4 font-bold text-[#444444] dark:text-white">{input.label}</span>
@@ -276,7 +277,7 @@ export function TableStage({ api, headers, rows, hidden, header }: { api: Intera
               type="button"
               onClick={() => reveal(index)}
               aria-label={`Row ${index + 1}`}
-              className={`grid min-h-[38px] cursor-pointer items-center gap-1 rounded-[8px] border-2 px-1 py-1 ${open ? "border-[#7FD8CC] bg-[#E3F6F3] dark:bg-[#0F2B28]" : "border-dashed border-[#C9CED6] bg-white/60 dark:bg-white/5"}`}
+              className={`grid min-h-[38px] cursor-pointer items-center gap-1 rounded-[8px] border-2 px-1 py-1 ${RAISED_SMALL} ${open ? "border-[#7FD8CC] bg-[#E3F6F3] [--edge:#7FD8CC] dark:bg-[#0F2B28]" : `border-dashed border-[#C9CED6] bg-white/60 dark:bg-white/5 ${EDGE.pale}`}`}
               style={grid}
             >
               {row.map((value, column) => (
@@ -379,7 +380,7 @@ export function PairUpStage({ api, numbers }: { api: InteractionApi; numbers: re
             animate={{ scale: current === value ? [1, 0.92, 1.08, 1] : 1 }}
             transition={{ duration: 0.35 }}
             whileTap={{ scale: 0.94 }}
-            className={`h-[48px] min-w-[64px] cursor-pointer rounded-[10px] text-[22px] leading-none font-bold text-white ${current === value ? "bg-[#FFB300] shadow-[0_3px_0_#C98A00]" : seen.includes(value) ? "bg-[#04ACAB] shadow-[0_3px_0_#067F86]" : "bg-[#08A4AD] shadow-[0_3px_0_#067F86]"}`}
+            className={`h-[48px] min-w-[64px] cursor-pointer rounded-[10px] text-[22px] leading-none font-bold text-white ${RAISED_SMALL} ${current === value ? "bg-[#FFB300] [--edge:#C98A00]" : seen.includes(value) ? "bg-[#04ACAB] [--edge:#067F86]" : "bg-[#08A4AD] [--edge:#067F86]"}`}
           >
             {value}
           </motion.button>

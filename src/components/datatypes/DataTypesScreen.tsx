@@ -38,16 +38,25 @@ const TITLE_END = { one: 125, two: 163 } as const;
 /** How many letters of a question fit a line, for the room it takes. */
 const QUESTION_CHARS = 36;
 
-const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 50 ? 190 : line.length <= 90 ? 240 : 262 });
+/** Hex's bubble: 190 wide holds two lines of up to about 30 letters (a long word wraps early); a longer line takes the widest the row has room for (about 248), two lines of up to about 46. */
+const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 30 ? 190 : 248 });
 
 /** How the answers stand: rows, or tiles (two, three or four across and down). */
 const tileCount = (stage: QuizStage) => Math.min(4, Math.max(2, stage.options.length)) as 2 | 3 | 4;
 
+/** The special cards (see `cards`): their height, how far above the button they stand, and how far they rise once the result panel is up. */
+const CARD_SETS = {
+  big: { height: 184 * 2 + 31, gapAbove: 100, rise: 100 },
+  badges: { height: 119, gapAbove: 94, rise: 60 },
+} as const;
+
 const answersHeight = (stage: QuizStage) =>
   stage.layout === "grid"
-    ? tileCount(stage) === 4
-      ? TILE_H[4] * 2 + TILE_GAP
-      : TILE_H[tileCount(stage)]
+    ? stage.cards
+      ? CARD_SETS[stage.cards].height
+      : tileCount(stage) === 4
+        ? TILE_H[4] * 2 + TILE_GAP
+        : TILE_H[tileCount(stage)]
     : stage.options.length * ROW_H + (stage.options.length - 1) * ROW_GAP;
 
 /** An interaction stage's own picture and controls. */
@@ -212,15 +221,16 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   // Hex's line for this stage (the hint replaces it).
   const line = quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
   const gone = quiz ? checked : finished || hexDismissed;
+  const bubbleWidth = interaction?.bubbleWidth ?? quiz?.bubbleWidth;
 
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
   const tiles = !!quiz && quiz.layout === "grid";
-  const answersBottom = quiz ? aboveButtons(GAP_ABOVE_BUTTONS, hasHint) : "0px";
+  const answersBottom = quiz ? aboveButtons(quiz.cards ? CARD_SETS[quiz.cards].gapAbove : GAP_ABOVE_BUTTONS, hasHint) : "0px";
   const questionLines = quiz?.question ? Math.ceil(quiz.question.length / QUESTION_CHARS) : 0;
   const questionHeight = questionLines ? questionLines * 22 + 14 : 0;
   const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
-  const risen = quiz ? (tiles ? CARDS_RISE : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
+  const risen = quiz ? (tiles ? (quiz.cards ? CARD_SETS[quiz.cards].rise : CARDS_RISE) : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
   const celebrate = panel?.right === true && (quiz ? checked : finished);
 
   return (
@@ -295,7 +305,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               entryKey={`datatypes-${screen.step}-${stageIndex}-${attempt}`}
               hex="left"
               line={[{ text: line }]}
-              size={interaction?.bubbleWidth ? { width: interaction.bubbleWidth } : bubbleSize(line)}
+              size={bubbleWidth ? { width: bubbleWidth } : bubbleSize(line)}
               leaving={gone}
               onSpoken={() => setHexSpoken(true)}
             />
@@ -323,7 +333,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
           )}
           {tiles ? (
             <TileCards
-              layout={tileCount(quiz) === 2 ? "pair" : tileCount(quiz) === 3 ? "tiles" : "grid"}
+              layout={quiz.cards ?? (tileCount(quiz) === 2 ? "pair" : tileCount(quiz) === 3 ? "tiles" : "grid")}
+              bottomGap={quiz.cards ? CARD_SETS[quiz.cards].gapAbove : undefined}
+              rise={quiz.cards ? CARD_SETS[quiz.cards].rise : undefined}
               choices={quiz.options}
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}

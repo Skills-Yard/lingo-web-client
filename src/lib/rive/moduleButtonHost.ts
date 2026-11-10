@@ -1,5 +1,6 @@
 import { Alignment, Fit, Layout, Rive, type ViewModelInstance } from "@rive-app/canvas";
 import { BUTTON, configureRiveRuntime, MODULE_BUTTON } from "./runtime";
+import { riveSource } from "./riveCache";
 import { writeButtonStyle } from "./buttonStyle";
 import { applyArtboardBleed, artboardBleedBox } from "./bleed";
 
@@ -90,7 +91,7 @@ export const getModuleButtonHost = (): Host => {
   const created: Host = { element, rive: null, loaded: false };
   host = created;
   created.rive = new Rive({
-    src: BUTTON.src,
+    ...riveSource(BUTTON.src),
     canvas,
     artboard: BUTTON.artboard,
     stateMachine: BUTTON.stateMachine,

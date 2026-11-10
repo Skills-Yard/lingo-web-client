@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Confetti } from "@/components/level-one/Confetti";
+import { XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
 import type { BubbleSize, Span, TitleLines } from "@/components/level-two/levelTwo";
@@ -99,6 +100,7 @@ export function PutOnScreen({ stage }: { stage: PutOnStage }) {
         <HexBubble entryKey={`put-on-${stage}`} hex="left" line={config.line} size={config.bubble} />
       </CentredRow>
       <Confetti active={stage === "ready"} />
+      <XpBurst show={stage === "ready"} />
     </LevelTwoShell>
   );
 }

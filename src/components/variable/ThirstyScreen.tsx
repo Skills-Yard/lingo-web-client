@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { optionState } from "@/components/level-one/TeacherFlow";
+import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { RAISED } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
@@ -136,7 +137,7 @@ export function ThirstyScreen() {
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               style={{ height: CARD_H }}
-              className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-[16px] border-4 px-1 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-colors ${choice.tint} ${ring}`}
+              className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-[16px] border-4 px-1 ${RAISED} ${LOOKS[state].edge} ${choice.tint} ${ring}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={choice.icon} alt="" {...ICON} draggable={false} className="select-none" />

@@ -5,6 +5,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
+import { RAISED } from "@/components/ui/raised";
 import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
 import { SlotImage } from "./SlotImage";
@@ -78,7 +79,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              className={`relative isolate flex ${compact ? "h-[56px] gap-3 py-1.5" : "h-[76px] gap-[34px] py-2.5"} w-full cursor-pointer items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] transition-[background-color,border-color] ${
+              className={`relative isolate flex ${compact ? "h-[56px] gap-3 py-1.5" : "h-[76px] gap-[34px] py-2.5"} w-full cursor-pointer items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left ${RAISED} ${look.edge} ${
                 state === "idle" ? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]" : look.card
               }`}
             >

@@ -25,16 +25,17 @@ export const P = {
   allNumbers: `${DATATYPES}/datatypeModule-2.3.svg`,
   // The empty slot on the grouping screen (3): the download-arrow mark.
   dropSlot: `${DATATYPES}/drop-slot.svg`,
+  // Screen 8's picture: two students and their heights, with the decimal part of each picked out (the card is part of the art).
+  floatHeights: `${DATATYPES}/float-heights.webp`,
+  // The backdrop of screen 10: the desk with books and a plant, and the teal shapes behind the list (not supplied yet: an empty slot until the file is in).
+  namesScene: `${DATATYPES}/names-scene.webp`,
   // The backdrop of screens 5 and 6: the school yard, without the student.
   schoolScene: `${DATATYPES}/school-scene.webp`,
   // Screen 5's three cards (planning the school event) use screen 2's icons: the same files.
   planStudents: `${DATATYPES}/datatypeModule-2.2.svg`,
   planTickets: `${DATATYPES}/datatypeModule-2.1.svg`,
   planPrizes: `${DATATYPES}/datatypeModule-2.3.svg`,
-  // Screen 5.2's three number badges ("How are they similar?"): 30 students, 43 tickets, 12 prices.
-  similarStudents: `${DATATYPES}/datatypeModule-5.2.1.svg`,
-  similarTickets: `${DATATYPES}/datatypeModule-5.2.2.svg`,
-  similarPrices: `${DATATYPES}/datatypeModule-5.2.3.svg`,
+  // (Screen 5.2's number badges, 30 students, 45 tickets and 12 prizes, are drawn in code: see `SIMILAR_TILES`.)
   // Screen 6's four cards (values from different situations): students, tickets, height, weight.
   valueStudents: `${DATATYPES}/datatypeModule-6.1.svg`,
   valueTickets: `${DATATYPES}/datatypeModule-6.2.svg`,

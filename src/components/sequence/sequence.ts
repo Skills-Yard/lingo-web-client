@@ -85,8 +85,8 @@ export type SequenceQuiz = {
   bubble: BubbleSize;
   /** Where Hex's row starts (Figma `top`). */
   bubbleTop: number;
-  /** What is behind the screen: an illustration, the robot, or the soft wash. A `fixed` room keeps its place and size once checked, and the answers clear so the boy stays in view. */
-  scene: { room: { start: RoomDress; right: RoomDress; wrong: RoomDress; fixed?: boolean } } | { robot: true } | { plain: true };
+  /** What is behind the screen: an illustration, the robot, or the soft wash. A `fixed` room keeps its place and size once checked, and the answers clear so the boy stays in view. `clearOnRight` does the same for a right answer only, and the boy moves once the answers are gone. */
+  scene: { room: { start: RoomDress; right: RoomDress; wrong: RoomDress; fixed?: boolean; clearOnRight?: boolean } } | { robot: true } | { plain: true };
   /** Two pictures to compare, above the answers. */
   pictures?: readonly [PictureCard, PictureCard];
   /** One picture above the answers; it rises as the answers do. */
@@ -210,7 +210,7 @@ export const SOCKS_FIRST: SequenceQuiz = {
   line: [{ text: "Let’s get ready again. Your shoes are already on." }],
   bubble: { width: 230 },
   bubbleTop: 150,
-  scene: { room: { start: "shoesOnly", right: "trySocks", wrong: "shoesOnly" } },
+  scene: { room: { start: "shoesOnly", right: "trySocks", wrong: "shoesOnly", clearOnRight: true } },
   layout: "list",
   choices: [
     { id: "harder", text: "Socks are hard to put on", icon: `${IMAGES}/put-on-socks.webp` },

@@ -32,8 +32,8 @@ const HEX_PLACE = {
   right: { side: "right", row: "justify-end" },
 } as const;
 
-/** Hex's bubble width by the length of his line, as on the other screens. */
-const bubbleWidth = (line: string) => (line.length <= 50 ? 190 : 240);
+/** Hex's bubble width by the length of his line, as on the other screens: 190 holds two lines of up to about 30 letters, 240 two lines of up to about 46. */
+const bubbleWidth = (line: string) => (line.length <= 30 ? 190 : 240);
 
 /**
  * "Information can differ!": three groups of values stand side by side, each under

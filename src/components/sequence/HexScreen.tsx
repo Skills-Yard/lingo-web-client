@@ -36,6 +36,9 @@ const COMMAND_LOOK: Record<Command, { Icon: LucideIcon; tint: string; icon: stri
   right: { Icon: RotateCw, tint: "bg-[#FEF8EC] dark:bg-[#2A2218]", icon: "text-[#E07B1F]" },
 };
 
+/** The height (px) of each card in `CommandChips`. */
+export const COMMAND_CHIP_HEIGHT = 84;
+
 /**
  * The commands in the order they run, in one row: the Hex Order screen's cards,
  * numbered at the corner as they can't be moved. Four take narrower cards than
@@ -50,8 +53,8 @@ export function CommandChips({ commands, active = -1 }: { commands: readonly Com
         return (
           <li
             key={index}
-            style={{ width }}
-            className={`relative flex h-[84px] flex-col items-center justify-center gap-1 rounded-[8px] border-4 border-white px-0.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-[#818185] ${tint} ${
+            style={{ width, height: COMMAND_CHIP_HEIGHT }}
+            className={`relative flex flex-col items-center justify-center gap-1 rounded-[8px] border-4 border-white px-0.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-[#818185] ${tint} ${
               index === active ? "ring-2 ring-[#04ACAB]" : ""
             }`}
           >
@@ -124,7 +127,7 @@ export function HexScreen({ step, title, titleSize, wrapTitle = false, board, bo
         <>
           {panel && (
             <div className="pointer-events-none absolute inset-0">
-              <FeedbackPanel correct={panel.correct} title={panel.title} open={panel.open} hexIn={panel.open} hexCue={panel.correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}>
+              <FeedbackPanel correct={panel.correct} title={panel.title} open={panel.open} hexIn={panel.open} hexCue={panel.correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null} centred>
                 {panel.text}
               </FeedbackPanel>
             </div>

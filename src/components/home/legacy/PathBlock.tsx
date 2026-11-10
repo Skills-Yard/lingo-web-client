@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState, type MutableRefObject, type RefOb
 import { motion } from "framer-motion";
 import { Layout, Fit, Alignment, type Rive } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
-import { hexRiveSource } from "@/lib/rive/hexFile";
-import { HEX_ONBOARDING_TRIGGER, LIVE_PLATFORM } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
+import { HEX_ONBOARDING_TRIGGER, HEX_RIVE_SRC, LIVE_PLATFORM } from "@/lib/rive/runtime";
 import type { ArtboardFrame, BlockController, Launch, PlatformSpec, Point, Side } from "./types";
 import { EASE, STAGE_H, STAGE_W, pathStateOf, sideOf } from "./pathGeometry";
 
@@ -99,7 +99,7 @@ export function PathBlockCanvas({
   controllerRef?: MutableRefObject<BlockController | null>;
 }) {
   const { rive, canvas, RiveComponent } = useRive({
-    ...hexRiveSource(),
+    ...riveSource(HEX_RIVE_SRC),
     artboard: LIVE_PLATFORM.artboard,
     stateMachine: LIVE_PLATFORM.stateMachine,
     autoplay: true,

@@ -3,10 +3,10 @@
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { Lock, LockOpen } from "lucide-react";
-import { CARD, CREAM, LAVENDER, Pic, WHITE } from "@/components/kit/content/from-datatypes/visuals";
-import { P } from "@/components/kit/content/from-operators/pictures";
+import { CARD, CARD_FACE, CREAM, LAVENDER, Pic, WHITE } from "@/components/kit/content/from-datatypes/visuals";
+import { P } from "./pictures";
 
-export { CARD, CREAM, LAVENDER, Pic, WHITE };
+export { CARD, CARD_FACE, CREAM, LAVENDER, Pic, WHITE };
 
 /** A piece of information as a named card: what it is, and its value. */
 export type ValueCard = { pic?: string; label: string; value?: string; tone?: "plain" | "good" | "warn" };
@@ -303,9 +303,6 @@ export function Pile({ count, lit = 0, columns = 10 }: { count: number; lit?: nu
 export function Tray({ label, count, lit = false, children }: { label: string; count: number; lit?: boolean; children?: ReactNode }) {
   return (
     <div className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-[10px] border-2 px-1 py-1.5 transition-colors ${lit ? "border-[#FFB300] bg-[#FFF8E1] dark:bg-[#2A2218]" : "border-[#B8A9F5] bg-[#F1EEFF] dark:bg-[#2E2A5C]"}`}>
-      <span className="flex size-7 items-center justify-center rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
-        <Pic src={P.student} className="size-5" />
-      </span>
       <span className="text-[11px] leading-4 font-bold text-[#5B3FD0] dark:text-[#A79BFF]">{label}</span>
       <div className="flex min-h-[28px] items-center justify-center">{children ?? <Pile count={count} columns={5} />}</div>
       <span className="text-[16px] leading-5 font-bold text-[#444444] dark:text-white">{count}</span>

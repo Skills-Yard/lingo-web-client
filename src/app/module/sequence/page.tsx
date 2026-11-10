@@ -65,9 +65,9 @@ function sequenceScreen(step: string) {
     case "18":
       return <FixScreen />;
     case "19":
-      return <PlanScreen route="base" />;
+      return <PlanScreen key="plan-base" route="base" />;
     case "20":
-      return <PlanScreen route="complex" />;
+      return <PlanScreen key="plan-complex" route="complex" />;
     case "21":
       return <TeaScreen />;
     case "22":
