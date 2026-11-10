@@ -1,0 +1,1463 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>Lingo Operators Module - Full Reference for the Flutter App</title>
+<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+<style>
+  body { font-family: Calibri, Arial, sans-serif; font-size: 11pt; color: #222222; line-height: 1.35; }
+  h1 { font-size: 24pt; color: #0B7A75; border-bottom: 3px solid #04ACAB; padding-bottom: 4pt; }
+  h2 { font-size: 17pt; color: #0B7A75; margin-top: 22pt; border-bottom: 1px solid #BBBBBB; page-break-before: always; }
+  h2.nobreak { page-break-before: auto; }
+  h3 { font-size: 13pt; color: #1F4899; margin-top: 14pt; }
+  h4 { font-size: 11pt; color: #444444; margin-top: 10pt; }
+  table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt 0; }
+  th { background: #E3F6F3; border: 1px solid #999999; padding: 4pt; text-align: left; font-size: 10pt; }
+  td { border: 1px solid #BBBBBB; padding: 4pt; vertical-align: top; font-size: 10pt; }
+  code { font-family: Consolas, "Courier New", monospace; font-size: 9.5pt; background: #F1F2F4; }
+  pre { font-family: Consolas, "Courier New", monospace; font-size: 9pt; background: #F1F2F4; border: 1px solid #DDDDDD; padding: 6pt; white-space: pre-wrap; }
+  .note { background: #FFF4E3; border-left: 4px solid #FF8D42; padding: 5pt 8pt; margin: 8pt 0; }
+  .meta { color: #666666; font-size: 10pt; }
+  .ok { color: #01805F; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Lingo Operators Module - Full Reference for the Flutter App</h1>
+<p class="meta">Route: <code>/module/operators?step=N</code> &nbsp;|&nbsp; Module 5 on the learner's path (<code>OPERATORS_LEVEL = 5</code>) &nbsp;|&nbsp; Branch: datatypes-module &nbsp;|&nbsp; Generated from the source code. Screen by screen: layout, content, interactions, effects, animations, timings, scoring, adaptive path, sounds, haptics, state and navigation, plus how to build each piece in Flutter.</p>
+<p class="meta">Written for: the Flutter developers who build the Operators module in the Lingo app. It follows the same shape as <code>module-screens.doc</code> (the Command module) and points to <code>module-rive-animations.doc</code>, <code>hex-riv-implementation.md</code> and <code>flutter-rive-implementation.md</code> for the Rive pieces this module shares. Every size is in the 390 x 844 design frame (see 2.2).</p>
+
+<h3>Contents</h3>
+<ol>
+  <li>Module overview and screen order</li>
+  <li>Shared foundation (route, layout, shell, header, bottom row)</li>
+  <li>The screen engine: anatomy, stages, geometry and behaviour of every screen</li>
+  <li>Shared building blocks (headline, Hex with speech bubble, answer rows, tile cards, result panel, rewards)</li>
+  <li>Cross-screen systems (scoring, adaptive path, streak strikes, battery, sounds, haptics, saved state)</li>
+  <li>Interaction stages and scenes, one by one</li>
+  <li>Screens 1 to 40, one by one</li>
+  <li>Lesson complete screen</li>
+  <li>Timing and constants cheat sheet, colour palette</li>
+  <li>Assets and files used</li>
+  <li>Building it in Flutter (mapping, data model, algorithms, checklist)</li>
+  <li>Known notes and gaps found in the code</li>
+</ol>
+
+<!-- ===================================================== 1 -->
+<h2 class="nobreak">1. Module overview and screen order</h2>
+<p>The module is one Next.js page, <code>src/app/module/operators/page.tsx</code>. The query parameter <code>step</code> picks the screen (default <code>1</code>); <code>step=complete</code> is "Lesson complete!". Any other value returns a 404 (<code>isOperatorsStep</code>: a whole number from 1 to 40, or <code>complete</code>). The progress bar total is <code>OPERATORS_STEPS = 40</code>: the progress bar counts <b>screens</b>, not stages.</p>
+<p>It follows the PDF "5. Operators" (40 spec screens, one step each). The design is the Sequence / Command modules' design: a headline, one short line from Hex in a speech bubble, a picture, and the answers as rows or tiles, with Hex's result panel when an answer is checked. The module has <b>no robot, no hint button, no review loop and no audio</b>. What it adds is an <b>adaptive path</b> (strong learners skip repeat screens, learners who struggle are sent back once to the screen that taught the idea, see 5.2).</p>
+<p>Screens 1 to 39 are one component, <code>OperatorsScreen</code>, driven by a screen definition (headline + a list of <b>stages</b>). Screen 40 is <code>RecapScreen</code> (its own layout) and <code>complete</code> is the shared <code>LessonCompleteScreen</code>. A <b>stage</b> is what the learner does before moving on: a <b>quiz</b> (a question with answers, checked with Continue), an <b>interaction</b> (something to tap, build, share, order), or a <b>turn</b> (a look-only interaction where Hex introduces one card, then Continue moves on). Most screens have several stages; the stage changes without changing the URL or the progress bar.</p>
+
+<table>
+<tr><th>Step</th><th>Headline</th><th>Stages</th><th>What the stages are</th><th>Adaptive path</th></tr>
+<tr><td>1</td><td>Have you tried these?</td><td>1</td><td>Flip-card carousel</td><td>-</td></tr>
+<tr><td>2</td><td>Explore the situations!</td><td>8</td><td>4 turns + 4 questions</td><td>-</td></tr>
+<tr><td>3</td><td>Remember What We Learned?</td><td>1</td><td>Quiz: Yes / No</td><td>-</td></tr>
+<tr><td>4</td><td>How Much Money Will Remain?</td><td>3</td><td>2 builds + question</td><td>-</td></tr>
+<tr><td>5</td><td>Meet the Operators!</td><td>4</td><td>4 operator turns</td><td>-</td></tr>
+<tr><td>6</td><td>Calculate or Compare?</td><td>3</td><td>2 job turns + question</td><td>-</td></tr>
+<tr><td>7</td><td>What Happens When Values Come Together?</td><td>4</td><td>4 questions</td><td>-</td></tr>
+<tr><td>8</td><td>What If Every Group Has the Same Quantity?</td><td>3</td><td>Fill rows + 2 questions</td><td>-</td></tr>
+<tr><td>9</td><td>Can Everyone Get the Same Number?</td><td>3</td><td>Predict, share, question</td><td>-</td></tr>
+<tr><td>10</td><td>When Sharing Is Not Equal</td><td>3</td><td>Share with leftovers</td><td>detour to 9</td></tr>
+<tr><td>11</td><td>Same Numbers, Three Answers!</td><td>4</td><td>3 turns + question</td><td>-</td></tr>
+<tr><td>12</td><td>Not Enough for Even One Group?</td><td>2</td><td>2 questions</td><td>detour to 11</td></tr>
+<tr><td>13</td><td>How Much Remains?</td><td>4</td><td>4 questions</td><td>detour to 12</td></tr>
+<tr><td>14</td><td>Growing Bigger, Faster!</td><td>3</td><td>Question, tap **, question</td><td>-</td></tr>
+<tr><td>15</td><td>Can You Calculate the Total Bill?</td><td>2</td><td>Build the bill + question</td><td>-</td></tr>
+<tr><td>16</td><td>Does Calculation Order Matter?</td><td>3</td><td>Question + 2 step-throughs</td><td>detour to 15</td></tr>
+<tr><td>17</td><td>Arrange the Calculation</td><td>3</td><td>2 builds + question</td><td>detour to 16</td></tr>
+<tr><td>18</td><td>Understand the Situation!</td><td>4</td><td>4 questions</td><td>detour to 15</td></tr>
+<tr><td>19</td><td>Who Is Older?</td><td>2</td><td>2 Yes / No questions</td><td>-</td></tr>
+<tr><td>20</td><td>True or False?</td><td>4</td><td>4 Yes / No statements</td><td>skipped after clean 19; detour to 19</td></tr>
+<tr><td>21</td><td>Let the Computer Compare!</td><td>1</td><td>Tap six symbols</td><td>-</td></tr>
+<tr><td>22</td><td>Always Read Left to Right</td><td>3</td><td>2 step-throughs + question</td><td>-</td></tr>
+<tr><td>23</td><td>Read What the Expression Says</td><td>6</td><td>6 read-aloud questions</td><td>skipped after clean 22; detour to 22</td></tr>
+<tr><td>24</td><td>Write What the Sentence Says</td><td>5</td><td>5 sentence builds</td><td>skipped after clean 22 and 23; detour to 22</td></tr>
+<tr><td>25</td><td>Six Ways to Compare Values!</td><td>2</td><td>Tap six keys + question</td><td>-</td></tr>
+<tr><td>26</td><td>The Number Line Challenge</td><td>4</td><td>3 builds + question</td><td>-</td></tr>
+<tr><td>27</td><td>At Least 100 Points!</td><td>2</td><td>Tap scores + pick</td><td>detour to 25</td></tr>
+<tr><td>28</td><td>Understanding the Maximum Limit</td><td>2</td><td>Tap heights + pick</td><td>detour to 25</td></tr>
+<tr><td>29</td><td>A Comparison Produces an Answer</td><td>2</td><td>Test two scores + question</td><td>-</td></tr>
+<tr><td>30</td><td>Read, Understand and Evaluate</td><td>8</td><td>8 questions (4 x read, evaluate)</td><td>skipped after clean 23 and 29; detour to 29</td></tr>
+<tr><td>31</td><td>Choose the Right Operation</td><td>9</td><td>9 "which operator" questions</td><td>skipped after clean 18 and 30</td></tr>
+<tr><td>32</td><td>Construct the Expression</td><td>2</td><td>Build the change + question</td><td>-</td></tr>
+<tr><td>33</td><td>Create a Shopping Calculator</td><td>2</td><td>Order the steps + question</td><td>-</td></tr>
+<tr><td>34</td><td>Build a Budget Checker</td><td>2</td><td>Test three bills + question</td><td>-</td></tr>
+<tr><td>35</td><td>The Incorrect Shopping Bill</td><td>2</td><td>Spot the error + fix it</td><td>detour to 15</td></tr>
+<tr><td>36</td><td>The Boundary Bug</td><td>1</td><td>1 question</td><td>detour to 27</td></tr>
+<tr><td>37</td><td>Plan a Class Trip</td><td>5</td><td>5 questions</td><td>detour to 12</td></tr>
+<tr><td>38</td><td>Why Did You Choose These Operations?</td><td>6</td><td>6 "why" questions</td><td>detour to 12 or 26 (by how it went)</td></tr>
+<tr><td>39</td><td>You Can Now Make Values Work!</td><td>1</td><td>Tap the toolkit</td><td>-</td></tr>
+<tr><td>40</td><td>From Calculation to Decision</td><td>-</td><td>RecapScreen (flow, "A program can now", final thought, gem popup)</td><td>-</td></tr>
+<tr><td>complete</td><td>Lesson complete!</td><td>-</td><td>LessonCompleteScreen (Rive) then the reward chest</td><td>-</td></tr>
+</table>
+
+<p><b>Which stages are scored.</b> Every quiz stage, and every interaction stage that finishes with <code>done()</code> (expression builds, sharing, filling rows, symbol taps, step-by-step, ordering, multi-pick, the flip carousel), records "right first time or not" under the id <code>step * 10 + stage index</code> (so stage 3 of screen 12 is 123). Turn stages (Situations, Operator and Job turns) never record anything. Details in 5.1.</p>
+<p><b>Flow:</b> after the last stage of a screen, Continue goes to <code>operatorsNext(step)</code>: the next screen, a screen skipped for a strong learner, or a one-time detour back to the screen that taught the idea (5.2). After screen 40 the gem popup opens ("Complete Chapter"), then <code>complete</code>. After <code>complete</code> and its reward chest, Continue returns to <code>/level</code>, where Hex moves on to the next block.</p>
+<p><b>Entry:</b> on the path (<code>/level</code>) the learner taps Start on module 5. <code>onStart</code> clears every module's saved score and flow (<code>resetOperatorsScore</code>, <code>resetOperatorsFlow</code> and the others) and opens <code>/module/operators?step=1</code>. There is no resume in the middle of the module.</p>
+
+<h3>Headlines</h3>
+<p>The headline is the PDF's headline with a teal word or phrase (marked <code>*like this*</code> in the source). Its size and line count come from its length (<code>parseTitle</code>, see 4.1): up to 25 letters it stays on one line, longer ones wrap to two lines inside the 340 px column at 24 px.</p>
+<table>
+<tr><th>Step</th><th>Headline (teal part between * *)</th><th>Letters</th><th>Lines</th><th>Size</th></tr>
+<tr><td>1</td><td>Have you *tried* these?</td><td>21</td><td>1</td><td>24 px</td></tr>
+<tr><td>2</td><td>Explore the *situations!*</td><td>23</td><td>1</td><td>24 px</td></tr>
+<tr><td>3</td><td>Remember What We *Learned?*</td><td>25</td><td>1</td><td>24 px</td></tr>
+<tr><td>4</td><td>How Much Money *Will Remain?*</td><td>27</td><td>2</td><td>24 px</td></tr>
+<tr><td>5</td><td>Meet the *Operators!*</td><td>19</td><td>1</td><td>28 px</td></tr>
+<tr><td>6</td><td>Calculate *or Compare?*</td><td>21</td><td>1</td><td>24 px</td></tr>
+<tr><td>7</td><td>What Happens When Values *Come Together?*</td><td>39</td><td>2</td><td>24 px</td></tr>
+<tr><td>8</td><td>What If Every Group Has the *Same Quantity?*</td><td>42</td><td>2</td><td>24 px</td></tr>
+<tr><td>9</td><td>Can Everyone Get the *Same Number?*</td><td>33</td><td>2</td><td>24 px</td></tr>
+<tr><td>10</td><td>When Sharing *Is Not Equal*</td><td>25</td><td>1</td><td>24 px</td></tr>
+<tr><td>11</td><td>Same Numbers, *Three Answers!*</td><td>28</td><td>2</td><td>24 px</td></tr>
+<tr><td>12</td><td>Not Enough for *Even One Group?*</td><td>30</td><td>2</td><td>24 px</td></tr>
+<tr><td>13</td><td>How Much *Remains?*</td><td>17</td><td>1</td><td>28 px</td></tr>
+<tr><td>14</td><td>Growing *Bigger, Faster!*</td><td>23</td><td>1</td><td>24 px</td></tr>
+<tr><td>15</td><td>Can You Calculate the *Total Bill?*</td><td>33</td><td>2</td><td>24 px</td></tr>
+<tr><td>16</td><td>Does Calculation *Order Matter?*</td><td>30</td><td>2</td><td>24 px</td></tr>
+<tr><td>17</td><td>Arrange the *Calculation*</td><td>23</td><td>1</td><td>24 px</td></tr>
+<tr><td>18</td><td>Understand the *Situation!*</td><td>25</td><td>1</td><td>24 px</td></tr>
+<tr><td>19</td><td>Who Is *Older?*</td><td>13</td><td>1</td><td>28 px</td></tr>
+<tr><td>20</td><td>True or *False?*</td><td>14</td><td>1</td><td>28 px</td></tr>
+<tr><td>21</td><td>Let the Computer *Compare!*</td><td>25</td><td>1</td><td>24 px</td></tr>
+<tr><td>22</td><td>Always Read *Left to Right*</td><td>25</td><td>1</td><td>24 px</td></tr>
+<tr><td>23</td><td>Read What the *Expression Says*</td><td>29</td><td>2</td><td>24 px</td></tr>
+<tr><td>24</td><td>Write What the *Sentence Says*</td><td>28</td><td>2</td><td>24 px</td></tr>
+<tr><td>25</td><td>Six Ways to *Compare Values!*</td><td>27</td><td>2</td><td>24 px</td></tr>
+<tr><td>26</td><td>The Number Line *Challenge*</td><td>25</td><td>1</td><td>24 px</td></tr>
+<tr><td>27</td><td>At Least *100 Points!*</td><td>20</td><td>1</td><td>28 px</td></tr>
+<tr><td>28</td><td>Understanding the *Maximum Limit*</td><td>31</td><td>2</td><td>24 px</td></tr>
+<tr><td>29</td><td>A Comparison Produces *an Answer*</td><td>31</td><td>2</td><td>24 px</td></tr>
+<tr><td>30</td><td>Read, Understand *and Evaluate*</td><td>29</td><td>2</td><td>24 px</td></tr>
+<tr><td>31</td><td>Choose the *Right Operation*</td><td>26</td><td>2</td><td>24 px</td></tr>
+<tr><td>32</td><td>Construct the *Expression*</td><td>24</td><td>1</td><td>24 px</td></tr>
+<tr><td>33</td><td>Create a *Shopping Calculator*</td><td>28</td><td>2</td><td>24 px</td></tr>
+<tr><td>34</td><td>Build a *Budget Checker*</td><td>22</td><td>1</td><td>24 px</td></tr>
+<tr><td>35</td><td>The Incorrect *Shopping Bill*</td><td>27</td><td>2</td><td>24 px</td></tr>
+<tr><td>36</td><td>The Boundary *Bug*</td><td>16</td><td>1</td><td>28 px</td></tr>
+<tr><td>37</td><td>Plan a *Class Trip*</td><td>17</td><td>1</td><td>28 px</td></tr>
+<tr><td>38</td><td>Why Did You Choose *These Operations?*</td><td>36</td><td>2</td><td>24 px</td></tr>
+<tr><td>39</td><td>You Can Now *Make Values Work!*</td><td>29</td><td>2</td><td>24 px</td></tr>
+<tr><td>40</td><td>From Calculation *to Decision*</td><td>28</td><td>2</td><td>24 px</td></tr>
+</table>
+
+<!-- ===================================================== 2 -->
+<h2>2. Shared foundation</h2>
+
+<h3>2.1 Route and layout (<code>src/app/module/layout.tsx</code>)</h3>
+<ul>
+  <li><b>ModuleButtonWarmup:</b> starts loading the shared Rive Continue button as soon as the module opens, so the first screen's button is already drawn.</li>
+  <li><b>RobotWarmup:</b> preloads <code>command.riv</code> (the robot arm). The Operators module never shows the robot, so a Flutter build skips it.</li>
+  <li><b>HexRiveGate:</b> holds the screens back until <code>hex.riv</code> has downloaded and parsed (once, app wide), showing a loading view with progress. If the preload fails it does not block.</li>
+  <li><b>Theme:</b> the layout does not force a theme. Every card, panel and text colour in this module has a dark variant (listed in section 9). Only the soft background wash is light only.</li>
+  <li><b>OperatorsRoute:</b> <code>complete</code> shows <code>LessonCompleteScreen</code> (level 5, accuracy = <code>operatorsAccuracy</code>); step 40 shows <code>RecapScreen</code>; any other step shows <code>OperatorsScreen</code> with <code>key = step</code>, so every screen is mounted fresh (all stage, pick and hint state starts clean on each step).</li>
+</ul>
+
+<h3>2.2 The shell: LevelTwoShell (over LevelOneShell)</h3>
+<p>Every screen sits inside <code>LevelTwoShell</code>, which wraps <code>LevelOneShell</code> and adds a full-frame stage for the children plus a scene slot (the picture behind). Here the scene is always <code>SoftBackdrop</code>.</p>
+<table>
+<tr><th>Feature</th><th>Behaviour</th></tr>
+<tr><td>Design frame</td><td>Everything is laid out in Figma's 390 x 844 frame. The shell measures the screen before first paint and scales the frame as one piece: <code>scale = min(width/390, height/844, 1.5)</code>. The stage is stretched to fill what the frame's shape leaves. CSS variables on the stage: <code>--stage-scale</code>, <code>--stage-w</code>, <code>--stage-h</code> (stage size in frame px).</td></tr>
+<tr><td>Answer column width</td><td><code>COLUMN_W = min(stageW - 50/scale, 380/scale)</code> in frame px: 340 on a 390 px phone (25 px screen margin each side), never wider than 380 screen px. Rows, tiles and question pills use this width, centred.</td></tr>
+<tr><td>Top position</td><td><code>stageTop(figmaTop) = figmaTop - 37</code>: the Level 1 header sits 37 px higher than in Figma, so everything pinned to the top (title, Hex's row, the picture) is moved up by it; what is pinned to the bottom is not.</td></tr>
+<tr><td>Safe areas</td><td>Top and bottom use the device's safe-area insets (notch, home bar).</td></tr>
+<tr><td>Soft background (SoftBackdrop)</td><td>A vertical gradient: #EAF3FF at 0%, #F7FAFF at 38%, #FFFFFF at 100%, behind the whole stage. Light theme only; the dark theme shows the plain page background.</td></tr>
+<tr><td>Out of energy</td><td>If the battery is empty the stage is inert (no taps) and the out-of-energy sheet comes up (2.5).</td></tr>
+<tr><td>Back button</td><td>Goes to <code>operatorsPrevious(step)</code>: step 1 goes to <code>/level</code>; otherwise the screen before, skipping any screen that is skipped for this learner (5.2). It always leaves the stage, even from stage 3 of 6, and does not clear a pending detour.</td></tr>
+<tr><td>Continue handling</td><td>If the screen has a checked answer (<code>answer</code> is set), leaving first ends any strike or loop effect (<code>endStrikes</code>), then runs the screen's own continue.</td></tr>
+<tr><td>Voiceover</td><td>Not used in this module (no <code>voiceover</code> prop). Hex's bubble types its text at a steady pace (4.2).</td></tr>
+</table>
+
+<h3>2.3 Header (OnboardingHeader, 52 px)</h3>
+<ul>
+  <li>Close cross (goes to <code>/level</code>), previous arrow, Rive progress bar (<code>progressBar.riv</code>, artboard <code>LESSON_ProgressBar</code>) showing <b>step / 40</b>, battery (<code>battery.riv</code>), and a mute toggle. Same as the Command module's header (module-screens 2.3).</li>
+  <li>The progress bar reacts to every recorded answer with its <code>correct</code> / <code>wrong</code> trigger (see 5.3 for which stage events count). There is no hint button on any Operators screen, so the bar plays the plain strike clips, never the <code>...Check</code> twins.</li>
+</ul>
+
+<h3>2.4 Bottom row: the Continue button</h3>
+<p>The row holds only the main button (the hint slot is never used here: <code>hintText</code> is not set on any stage). It is the Rive <code>AllButton</code> artboard (<code>ModuleButton_SM</code>, 360 x 73), green when enabled and grey when disabled; the label is set on the artboard text. The row is <code>min(stage width, 450) - 12</code> wide and as tall as the artboard's ratio gives (<code>73/360</code> of that width: about 76.7 px on a 390 px screen); the drawn button fills it, and its bottom edge stands 20 px above the screen bottom (<code>BUTTON_BOTTOM_GAP</code>).</p>
+<table>
+<tr><th>State</th><th>Label and behaviour</th></tr>
+<tr><td>Quiz, nothing picked</td><td>"Continue", disabled (grey).</td></tr>
+<tr><td>Quiz, an answer picked</td><td>"Continue" enabled: pressing it <b>checks</b> the answer (the quiz may set another label with <code>ctaLabel</code>; none of the Operators quizzes do).</td></tr>
+<tr><td>Quiz, checked right</td><td>"Next" (a quiz can set <code>nextLabel</code>; none do): goes to the next stage, or leaves the screen from the last stage.</td></tr>
+<tr><td>Quiz, checked wrong</td><td>"Try again": clears the pick, brings a fresh Hex and line back, same stage.</td></tr>
+<tr><td>Interaction, not done</td><td>"Continue", disabled, unless the stage has taken the button (<code>holdButton</code>, used by the turn stages once Hex has finished and the card is lit): then it is enabled and each press calls the stage's own handler.</td></tr>
+<tr><td>Interaction, done</td><td>"Next": goes to the next stage, or leaves the screen from the last stage (an interaction can set <code>nextLabel</code>; none do).</td></tr>
+<tr><td>Press feel</td><td>The press holds 150 ms (<code>PRESS_HOLD_MS</code>), then the caller's handler runs at 330 ms (<code>CLICK_DELAY_MS</code>) so the press animation is visible before the screen changes. Click sound plays on press. A shine sweeps the button about every 5 s. While a strike plays, the button shows the electric glow (0.67 s) and takes no clicks (not drawn disabled).</td></tr>
+</table>
+
+<h3>2.5 Out of energy sheet</h3>
+<ul>
+  <li>Appears 600 ms after the battery reaches 0. Dark overlay (black 50%) fades in over 0.25 s; the sheet springs up (stiffness 320, damping 34), 28 px rounded top, max width 430 px. Choices: try infinite free, or recharge with gems; "No thanks" leaves to <code>/level</code>. Same as the Command module (module-screens 2.5).</li>
+</ul>
+
+<!-- ===================================================== 3 -->
+<h2>3. The screen engine: anatomy, stages, geometry and behaviour</h2>
+<p>Screens 1 to 39 all use <code>OperatorsScreen({ screen })</code>. A screen definition is <code>{ step, title, stages[] }</code>. A stage is one of two kinds (the "turn" stages are interactions that never finish):</p>
+<table>
+<tr><th>Kind</th><th>Fields</th></tr>
+<tr><td>Quiz stage</td><td><code>line</code> (Hex's words), <code>question</code> (optional, a pill just above the answers), <code>visual(context)</code> (picture between Hex and the answers; context = <code>{ attempt, picked, checked, correct }</code>), <code>layout</code> (<code>rows</code> by default, or <code>grid</code> for tiles), <code>compact</code> (56 px rows: supported, never used), <code>options[]</code> (id, text, icon), <code>correctId</code>, <code>rightTitle</code>, <code>right</code>, <code>wrongTitle</code> (default "Not quite"), <code>wrong</code>, <code>hintText</code> (never set here), <code>keepLine</code> (Hex and his line stay after the check: only screen 4's last stage), <code>ctaLabel</code>, <code>nextLabel</code>.</td></tr>
+<tr><td>Interaction stage</td><td><code>line</code> (Hex's words, optional), <code>render(api)</code> (the interaction), <code>finishPanel { title, text }</code> (the result panel shown when it is done, optional), <code>ctaLabel</code>, <code>nextLabel</code>. The <code>api</code> is <code>{ slip(), done(), finished, lineTyped, holdButton(press|null), next(), dismissHex() (a no-op here), hexSpoken }</code>.</td></tr>
+</table>
+
+<h3>3.1 The state of a screen</h3>
+<table>
+<tr><th>State</th><th>Meaning</th></tr>
+<tr><td><code>stageIndex</code></td><td>Which stage is showing (starts 0). Changing stage resets the rest.</td></tr>
+<tr><td><code>selectedId</code>, <code>checked</code></td><td>The picked answer, and whether Continue has checked it.</td></tr>
+<tr><td><code>answer</code></td><td>The latest recorded answer <code>{ id, correct }</code>, handed to the shell so the progress bar plays its reaction (id increases each time so the same result can fire twice).</td></tr>
+<tr><td><code>attempt</code></td><td>Counts tries of the same quiz; each try re-creates Hex and his bubble (a fresh Hex entrance, the line typed again) and replays the picture (the quiz's <code>visual</code> receives <code>attempt</code> so its animation restarts).</td></tr>
+<tr><td><code>finished</code></td><td>An interaction stage has called <code>done()</code>.</td></tr>
+<tr><td><code>lineIsTyped</code></td><td>Hex has finished typing the stage's line (reset on every stage change and every try). <code>lineTyped = !line || lineIsTyped</code>.</td></tr>
+<tr><td><code>heldPress</code></td><td>The handler an interaction has taken the main button for (<code>holdButton</code>).</td></tr>
+<tr><td><code>roomHeight</code>, <code>pictureHeight</code>, <code>fit</code></td><td>The picture's auto-fit (3.3).</td></tr>
+</table>
+
+<h3>3.2 What each press and event does</h3>
+<table>
+<tr><th>Event</th><th>Effect</th></tr>
+<tr><td>Pick an answer</td><td>Click sound, tap haptic, the card bounces and turns green-selected (4.4). Pick again to change it. Nothing is recorded yet.</td></tr>
+<tr><td>Continue on a quiz (check)</td><td><code>checked = true</code>; <code>record(correct)</code>: the first answer to this question is noted for the score (5.1); if wrong, the screen is noted as struggled (<code>noteStruggle(step, "miss")</code>); answer haptic (correct 250 ms, wrong 80/40/80); the progress bar reaction; Hex's line leaves (unless <code>keepLine</code>); the result panel slides up; the answers rise.</td></tr>
+<tr><td>Continue after a right quiz</td><td><code>advance()</code>.</td></tr>
+<tr><td>Continue after a wrong quiz ("Try again")</td><td><code>tryAgain()</code>: clear pick, clear checked, clear the bar's answer, <code>lineIsTyped = false</code>, <code>attempt += 1</code>. The right answer is <b>never shown</b> after a wrong check: only the picked card turns red (the engine passes an empty <code>correctId</code> to the cards while the check is wrong).</td></tr>
+<tr><td><code>slip()</code> (an interaction)</td><td><code>record(false)</code>: same as a wrong check (first-try miss for this stage, struggle noted, wrong haptic, bar plays <code>wrong</code>, streak resets). It does not show a panel; the interaction shows its own note and shake.</td></tr>
+<tr><td><code>done()</code> (an interaction)</td><td>Ignored if already finished. <code>record(true)</code> (right haptic, bar plays <code>correct</code>, streak +1), <code>finished = true</code>. If the stage has a <code>finishPanel</code> the result panel (right look) slides up with confetti and "+10 XP"; Hex's line leaves.</td></tr>
+<tr><td>Continue on an interaction</td><td>If <code>heldPress</code> is set and the stage is not finished: calls it (a turn stage's handler calls <code>next()</code>). Otherwise <code>advance()</code>.</td></tr>
+<tr><td><code>advance()</code></td><td>From the last stage: go to <code>operatorsNext(step)</code> (a page change). Otherwise: <code>stageIndex += 1</code> and reset pick, checked, answer, hint, attempt, finished and <code>lineIsTyped</code>. There is no transition effect between stages other than the new stage's own entrance animations.</td></tr>
+</table>
+<div class="note"><b>Every interaction that calls <code>done()</code> counts as a right answer</b> for the progress bar and streak, even look-only ones such as the flip carousel (screen 1) or the step-by-step screens. Turn stages and stages that never call <code>done()</code> do not touch the bar.</div>
+
+<h3>3.3 Geometry</h3>
+<p>Everything between the headline and the Continue button is one absolute block. All numbers are frame px.</p>
+<table>
+<tr><th>What</th><th>Value</th></tr>
+<tr><td>Headline</td><td>Absolute at stage top 79 (Figma 116), centred. One line: the block below starts at <b>125</b>; two lines: at <b>163</b> (<code>TITLE_END</code>).</td></tr>
+<tr><td>Body block</td><td>Absolute, full width, <code>top = title end</code>, <code>bottom = bodyBottom</code>, a column, items centred, 8 px gap. Its bottom padding animates (500 ms ease-out) from 0 to <code>risen</code> once the stage is checked / finished ("gone"), so the room shrinks as the result panel arrives.</td></tr>
+<tr><td>Hex row</td><td>First child, full width, 16 px side padding, centred. Present only when the stage has a line. Collapses (height to 0, opacity to 0) over 0.35 s when the line leaves.</td></tr>
+<tr><td>Room</td><td>The rest of the block (flex 1, min height 0): the picture or interaction is centred in it, both ways.</td></tr>
+<tr><td>Picture auto-fit</td><td>The picture block (gap 8) is measured with the room. <code>fit = clamp(roomHeight / pictureHeight, 0.6, 1)</code> (<code>MIN_FIT = 0.6</code>); the picture is scaled by <code>fit</code> about its centre (it never grows, never shrinks below 60%). Re-measured whenever either size changes (resize observers).</td></tr>
+<tr><td>Quiz answers</td><td>Pinned to the button row: bottom edge at <code>aboveButtons(28)</code> = 20 + button height + 28 (about 124.7 px up from the bottom on a 390 px phone). Left edge on the answer column.</td></tr>
+<tr><td><code>answersHeight</code></td><td>Rows: <code>n * 76 + (n - 1) * 6</code> (compact: 56 per row). Tiles: 2 answers = 184; 3 = 110; 4 = 104 * 2 + 14 = 222. (Tile count is the number of options clamped to 2 to 4.)</td></tr>
+<tr><td><code>bodyBottom</code></td><td>Quiz: <code>aboveButtons(28) + answersHeight + 10 + questionHeight + 8</code>. Interaction: <code>aboveButtons(24)</code>. <code>questionHeight = 0</code> without a question, else <code>ceil(question.length / 36) * 22 + 14</code>.</td></tr>
+<tr><td><code>risen</code></td><td>Quiz rows: <b>150</b> (<code>LIST_RISE</code>); quiz tiles: <b>180</b> (<code>CARDS_RISE</code>); an interaction with a <code>finishPanel</code>: <b>215</b> (<code>PANEL_ROOM</code>); an interaction without one: 0.</td></tr>
+<tr><td>Question pill</td><td>Absolute, on the answer column, bottom at <code>aboveButtons(28) + answersHeight + 10</code>; white 85% (dark: #15181E 85%), 12 px radius, padding 12 x 6, centred 16 px / 22 px, weight 600, #444444. It comes in with the answers (opacity 0 to 1 and rising from 90 px, see 4.4) and rises with them when checked (150 rows, 180 tiles) on the panel's spring.</td></tr>
+<tr><td>Interaction width</td><td>Interactions draw themselves in a 340 px column (some 316 px cards inside); a few (multi-pick) 354 px. The flip carousel is the full stage width.</td></tr>
+</table>
+
+<!-- ===================================================== 4 -->
+<h2>4. Shared building blocks</h2>
+
+<h3>4.1 Headline (ScreenTitle, <code>parseTitle</code>)</h3>
+<ul>
+  <li>Poppins 600, line-height 134%, #444444 (dark: white), centred, placed at Figma top 116 (stage top 79). Size from the length: <code>parts = title.split("*")</code> (every odd part is teal); <code>length</code> = letters without the asterisks; <code>twoLines = length &gt; 25</code>; <code>size = length &lt;= 20 ? 28 : 24</code> px. The per-screen result is in the table in section 1.</li>
+  <li>One line: never wraps (<code>max-content</code> width, stays centred even if a little wider than the column). Two lines: width = the 340 px column; wraps where the text falls.</li>
+  <li>Teal words: the app's gradient, <code>linear-gradient(90deg, #00B8A9 0%, #1387B3 33.17%)</code>, clipped to the text.</li>
+  <li>Animation: fades from opacity 0 and slides in from 24 px above, spring (stiffness 140, damping 16), delay 0.15 s. It is keyed by the screen number, so it plays once per screen, not per stage.</li>
+</ul>
+
+<h3>4.2 Hex with speech bubble (HexBubble)</h3>
+<p>Same component and rig as the Command module (module-screens 3.2, module-rive-animations section 5). What this module sets:</p>
+<table>
+<tr><th>Part</th><th>Details</th></tr>
+<tr><td>Hex</td><td>Rive character from <code>hex.riv</code>, played the "onboarding" way, in a 110 x 110 slot, always on the <b>left</b> of the bubble (<code>hex="left"</code>). Enters with the enter trigger; an ambient idle trigger fires every 4 s; he talks while a voiceover plays (none here). Each stage and each retry gets a new entry key <code>operators-{step}-{stageIndex}-{attempt}</code>, so Hex enters afresh. With <code>keepLine</code> the key does not change with the attempt.</td></tr>
+<tr><td>Bubble size</td><td><code>bubbleSize(line)</code>: width <b>190</b> if the line is 50 letters or fewer, <b>240</b> up to 90, else <b>262</b>. The bubble keeps what it likes but shrinks to the row: the row is the stage width less 16 px each side, minus Hex's 110, so about 248 at most on a 390 px phone (240 and 262 both come out near 248). The line wraps inside; the bubble is at least 86 px tall (padding 13 y, 12 x) and grows with the text. About 17 letters fit a line at 190 px, about 25 at 240 px (Poppins 16 px medium).</td></tr>
+<tr><td>Bubble look</td><td>White rounded (10 px) box with a soft blue drop edge <code>drop-shadow(0 3px 0 rgba(18,140,179,0.5))</code> (dark: #1A1C22 fill). Tail: a 15 px square rotated 45 degrees at the middle of the left side, pointing at Hex. Text 16 px, weight 500, line-height 1.24, #444444 (dark white), centred.</td></tr>
+<tr><td>Bubble enter</td><td>Opacity 0 to 1, scale 0.85 to 1, sliding 8 px out from the tail side. Spring (stiffness 260, damping 20), after a 350 ms delay so Hex has started moving.</td></tr>
+<tr><td>Typing effect</td><td>The line types letter by letter: 350 ms start delay, then 55 ms per letter. The whole line is laid out from the start (unseen letters invisible) so centred text never shifts. When the last letter appears the bubble calls <code>onTyped</code>: the screen sets <code>lineIsTyped</code> and interactions waiting for Hex (the flip carousel's demo, the turn stages' Continue) start.</td></tr>
+<tr><td>Leaving</td><td>When a quiz is checked or an interaction is done (and not <code>keepLine</code>): the Hex row collapses (0.35 s) while the bubble bounces right by 18 px then flies off to the left (two window widths) in 0.15 s (easeOut then backIn); Hex follows 80 ms later, sliding off left in 0.2 s easeIn with the <code>exitLeft</code> trigger; during the exit Hex is drawn over the bubble so it passes behind him. The result panel then brings its own Hex.</td></tr>
+</table>
+
+<h3>4.3 Answer rows (AnswerCards, list layout)</h3>
+<ul>
+  <li>2 to 3 white rows (never more here), each <b>76 px</b> tall, 6 px apart, 18 px radius, 1 px border (<code>black 4%</code>; dark #818185), shadow <code>1px 1px 20.9px -13px rgba(0,0,0,.25)</code>, padding 14 px each side, dark fill #15181E. Compact rows (56 px, no radio circle, 12 px gaps) exist in the engine but no Operators stage uses them.</li>
+  <li>Inside, left to right: a picture box 46.68 x 47.31 (picture fitted inside), 22 px gap, the text (14 px / 22 px, weight 500, #444444, takes the rest; a long option wraps to two lines), and at the row's end a 34 px empty circle slot (a spacer: no radio is drawn; gap 34 px between the left group and the circle).</li>
+  <li>Pictures: options made with <code>neutral(...)</code> take the Sequence icons in turn so a picture never hints at the right answer: <code>icon-order.svg</code>, <code>icon-actions.svg</code>, <code>icon-goal.svg</code>, <code>icon-short.svg</code> (then round again). Yes/No and True/False use <code>icon-goal.svg</code> and <code>icon-short.svg</code>. Where an option has its own picture (money, chocolate, chair) it is listed on its screen.</li>
+  <li>Enter: the list fades and rises from 90 px below; opacity 0.3 s and y spring (stiffness 110, damping 13), both delayed 0.3 s. It is a new mount for each stage (keyed by the stage index), so each question's answers come in afresh.</li>
+  <li>Selected: the row bounces (scale 1, 0.95, 1.05, 1 in 0.4 s) and turns selected: border #01A17F (the app's primary), fill #F2FBF8 (dark #0F2921). Press scales to 0.97.</li>
+  <li>Checked right: same green look. Checked wrong: the picked row turns red (border #E5484D, fill #FFF1F1, dark #2A1517); no row turns green (see 3.2). A checked list takes no more taps.</li>
+  <li>After a check the list rises by <b>150 px</b> on the result panel's spring (stiffness 360, damping 32), so the panel never covers it.</li>
+</ul>
+
+<h3>4.4 Tile cards (TileCards)</h3>
+<p>Used when a quiz has <code>layout: "grid"</code>. The number of options (clamped 2 to 4) chooses the arrangement:</p>
+<table>
+<tr><th>Options</th><th>Layout</th><th>Card height</th><th>Picture box</th><th>Text</th></tr>
+<tr><td>2</td><td>pair: two big cards side by side, 14 px apart</td><td>184</td><td>95 x 83</td><td>16 px, line-height 1</td></tr>
+<tr><td>3</td><td>tiles: three small tiles in a row (not used here)</td><td>110</td><td>full width x 46</td><td>16 px / 20 px</td></tr>
+<tr><td>4</td><td>grid: 2 x 2, 14 px gaps</td><td>104</td><td>56 x 48</td><td>15 px / 20 px</td></tr>
+</table>
+<ul>
+  <li>Cards: 8 px radius, 4 px border (white at rest, transparent in dark), fill white (dark #15181E), shadow <code>1px 1px 6px 1px rgba(0,0,0,.15)</code>, picture over text centred, 6 px side padding, text weight 600 #444444. Same enter (0.3 s delay, rise from 90 px), the select bounce [1, 0.95, 1.05, 1], press scale 0.96, selected / right / wrong looks, and no-green-after-wrong rule as the rows. After a check the tiles rise by <b>180 px</b>.</li>
+  <li>Quizzes with tiles: the 2 x 2 "which action / which operator" questions (screens 2 and 31), the Yes/No and True/False pairs (screens 3, 16, 19, 20, 30, 37), Calculate / Compare (6) and the &gt; / &lt; pair (26). Tile pictures follow the same neutral icons; the &gt; / &lt; tiles show the symbol as the text with <code>icon-order.svg</code> / <code>icon-actions.svg</code>.</li>
+</ul>
+
+<h3>4.5 Result panel (FeedbackPanel, <code>centred</code>) and what feeds it</h3>
+<ul>
+  <li>Slides up from the bottom behind the Continue button (button row above the panel) with a spring (stiffness 360, damping 32). It stays mounted while closed so Hex's canvas is loaded. The panel is the Sequence module's "centred" sheet: the text column (190 px wide, 6 px gap) and Hex (drawn 109.65 x 79.95) form one centred group 24 px apart, 324 px wide, min height 94, padding top 15, bottom 124, 3 px border, 32 px top radius.</li>
+  <li>Right look: fill #E3F6F3 (dark #0F2B28), border #7FD8CC (dark #1E5F59), title #01A17F (22 px / 28 px, semibold, never wraps), bold words #04ACAB. Wrong look: fill #FDECEC (dark #2E1517), border #D42421 (dark #6B2A2E), title #D42421, bold #E5484D. Body 14 px, weight 500, #444444 (dark white 80%), line-height 20 px.</li>
+  <li><b>Content:</b> a quiz uses <code>rightTitle</code> + <code>right</code> after a right check, or <code>wrongTitle</code> (default "Not quite") + <code>wrong</code> after a wrong one. An interaction shows its <code>finishPanel</code> (right look) when done; an interaction with no <code>finishPanel</code> shows no panel at all. Panel titles are 1 to 2 words and texts at most two lines of the 190 px column (about 26 letters a line).</li>
+  <li>Panel Hex: enters 250 ms after the sheet starts; on a right result he plays the thumbs-up cue (<code>continueThumb</code>) 900 ms after entering, held about 2.8 s before the ambient idle resumes. No cue on a wrong result.</li>
+</ul>
+
+<h3>4.6 Reward effects</h3>
+<ul>
+  <li><b>Confetti:</b> on a right result (a right quiz check, or an interaction done that has a <code>finishPanel</code>): a full-screen canvas burst of 120 square pieces, 6 to 14 px, 8 colours (#FFC107 #FF5722 #E91E63 #9C27B0 #3F51B5 #00BCD4 #4CAF50 #8BC34A), shot up from the bottom centre with random velocity (vx up to +/-6, vy -10 to -25), gravity 0.35 per frame, random spin. Plays once each time it turns on.</li>
+  <li><b>XP burst:</b> a big "+10 XP" (56 px bold, #F5A623, up to 70% opacity) in the middle of the screen: rises from 60 px below with a bouncy spring scale (0.4 to 1, stiffness 300, damping 9), fades in, holds, then leaves 110 px upward, over 1.6 s (key times 0, 0.2, 0.65, 1; delay 0.15 s).</li>
+  <li>The XP shown is decoration only: no XP total is kept by this module. Lesson complete shows a fixed +40.</li>
+</ul>
+
+<h3>4.7 The card look the scenes share</h3>
+<ul>
+  <li><b>CARD:</b> 8 px radius, 4 px border white (dark transparent), shadow <code>1px 1px 6px 1px rgba(0,0,0,.15)</code>. Fills: LAVENDER #F6F4FE (dark #0F1F26), CREAM #FFF9F0 (dark #0F1F26), WHITE white (dark #15181E); good #E3F6F3 (dark #0F2B28); warn #FFF4E3 (dark #4A3418).</li>
+  <li>Value block (a number in an expression): border 2 #E4DFF7, fill #F6F4FE, text #444444, edge shadow <code>0 3px 0 #D3CCF0</code> (dark: border #3B3670, fill #2E2A5C, white text, edge #1B1840). Operator block: fill #08A4AD, white text, edge <code>0 3px 0 #067F86</code>.</li>
+  <li>An operator is any token made only of <code>+ - * / % &lt; &gt; = ! ( )</code> or the words <code>and</code>, <code>or</code>, <code>not</code> (regex <code>^([+\-*/%&lt;&gt;=!()]+|and|or|not)$</code>). Operators draw teal; numbers and names draw as plain values.</li>
+</ul>
+
+<!-- ===================================================== 5 -->
+<h2>5. Cross-screen systems</h2>
+
+<h3>5.1 Scoring (<code>operatorsScore.ts</code> over <code>moduleScore.ts</code>)</h3>
+<p>The module keeps its own record of how each question went, in session storage under the prefix <code>lingo.operators</code>.</p>
+<table>
+<tr><th>Item</th><th>Rule</th></tr>
+<tr><td>Question id</td><td><code>questionId(step, stage) = step * 10 + stage</code> (stage index from 0). Screen 12's stage 1 is 121; screen 30's stage 7 is 307. (A screen can therefore have at most 10 scored stages.)</td></tr>
+<tr><td>First try</td><td><code>noteAnswer(step, stage, correct)</code> stores <code>firstTry[id] = correct</code> the first time only; later answers to the same question never change it. A miss stays a miss. Stored as <code>lingo.operators-first-try</code> (a record id to boolean).</td></tr>
+<tr><td>Struggle</td><td><code>noteStruggle(step, "miss" | "hint")</code>: a wrong attempt (a wrong quiz check, or an interaction <code>slip()</code>) marks the whole <b>screen</b> as struggled; a miss outranks a hint. Stored as <code>lingo.operators-assisted</code> (step to "miss" or "hint"). There is no hint button here, so only "miss" occurs.</td></tr>
+<tr><td><code>struggled(step)</code></td><td>True when the screen has a miss or hint on record.</td></tr>
+<tr><td><code>missedStage(step, stage)</code></td><td>True when that stage was answered and the first try was wrong.</td></tr>
+<tr><td><code>answeredClean(step)</code></td><td><code>firstTry[step*10 + 0] === true &amp;&amp; !struggled(step)</code>. Only <b>stage 0</b> of the screen is looked at, plus "no miss anywhere on the screen". A screen whose stage 0 never records (a turn stage) can never be clean.</td></tr>
+<tr><td>Accuracy</td><td><code>operatorsAccuracy()</code> = share (0 to 100, rounded) of the recorded questions answered right the first time; 100 if none was recorded. Shown on Lesson complete.</td></tr>
+<tr><td>Rewards record</td><td><code>lingo.operators-rewards</code> exists (one claim per run) but this module claims nothing.</td></tr>
+<tr><td>Reset</td><td><code>resetOperatorsScore()</code> clears all three keys when the module is started from the path. Reloading a screen keeps them (session storage); a new browser session starts clean.</td></tr>
+</table>
+<p><b>What records.</b> A quiz stage records when it is checked. An interaction stage records on its first <code>slip()</code> (a miss) or on <code>done()</code> (a right), whichever is first. So a stage that is slipped and then finished is a miss; a stage finished without a slip is right. The stages that never slip and always finish right (flip carousel, step-by-step, share, fill rows, symbol taps) record a right as soon as they are done. Turn stages record nothing.</p>
+
+<h3>5.2 Adaptive path (<code>operators.ts</code> over <code>lib/adaptiveFlow.ts</code>)</h3>
+<p>Two ideas, both decided when the learner presses Continue on the last stage of a screen: a strong learner <b>skips</b> a repeat screen, and a learner who struggled is sent <b>back once</b> to the screen that taught the idea, then carries on from where they were.</p>
+<h4>Skips</h4>
+<p>A screen is skipped when <b>every</b> screen in its list was answered clean. A skipped screen itself counts as clean for the screens after it (the check is recursive: <code>cleanRight(s) = answeredClean(s) || SKIPS[s].every(cleanRight)</code>), so a chain of skips stays consistent.</p>
+<table>
+<tr><th>Screen skipped</th><th>When all of these were clean</th></tr>
+<tr><td>20 True or False?</td><td>19 Who is older?</td></tr>
+<tr><td>23 Read what the expression says</td><td>22 Always read left to right</td></tr>
+<tr><td>24 Write what the sentence says</td><td>22 and 23</td></tr>
+<tr><td>30 Read, understand and evaluate</td><td>23 and 29</td></tr>
+<tr><td>31 Choose the right operation</td><td>18 Understand the situation, and 30</td></tr>
+</table>
+<h4>Detours</h4>
+<p>If the learner <b>struggled</b> on the screen they are leaving (<code>struggled(step)</code>), the screen has a detour and it has not been used before on this run, they go back to the detour screen; when they finish that screen (any Continue off its last stage) they resume at the screen that would have come after the one they struggled on (with skips applied).</p>
+<table>
+<tr><th>Struggled on</th><th>Sent back to</th></tr>
+<tr><td>10 When sharing is not equal</td><td>9 Can everyone get the same number?</td></tr>
+<tr><td>12 Not enough for even one group?</td><td>11 Same numbers, three answers!</td></tr>
+<tr><td>13 How much remains?</td><td>12 Not enough for even one group?</td></tr>
+<tr><td>16 Does calculation order matter?</td><td>15 Can you calculate the total bill?</td></tr>
+<tr><td>17 Arrange the calculation</td><td>16 Does calculation order matter?</td></tr>
+<tr><td>18 Understand the situation</td><td>15 Can you calculate the total bill?</td></tr>
+<tr><td>20 True or False?</td><td>19 Who is older?</td></tr>
+<tr><td>23 Read what the expression says</td><td>22 Always read left to right</td></tr>
+<tr><td>24 Write what the sentence says</td><td>22 Always read left to right</td></tr>
+<tr><td>27 At least 100 points</td><td>25 Six ways to compare values</td></tr>
+<tr><td>28 Understanding the maximum limit</td><td>25 Six ways to compare values</td></tr>
+<tr><td>30 Read, understand and evaluate</td><td>29 A comparison produces an answer</td></tr>
+<tr><td>35 The incorrect shopping bill</td><td>15 Can you calculate the total bill?</td></tr>
+<tr><td>36 The boundary bug</td><td>27 At least 100 points</td></tr>
+<tr><td>37 Plan a class trip</td><td>12 Not enough for even one group?</td></tr>
+<tr><td>38 Why did you choose these operations?</td><td>A function of how it went: if stage 0, 1 or 2 was missed (floor division, modulus, the extra bus) then screen 12; else if stage 4 or 5 was missed (the &lt;= questions) then screen 26 The number line challenge; else none.</td></tr>
+</table>
+<h4>The algorithm</h4>
+<pre>skipped(s)   = SKIPS[s] exists and every screen in SKIPS[s] is cleanRight
+plainNext(s) = first n &gt; s with n &lt;= 40 and not skipped(n); 41 means "complete"
+href(n)      = n &gt; 40 ? /module/operators?step=complete : /module/operators?step=n
+
+next(step):
+  pending = read(detour key)                       // {to, resume} or null
+  if pending and step == pending.to:               // finishing a detour screen
+      clear pending; return href(pending.resume)
+  after = plainNext(step)
+  back  = DETOURS[step]  (a number, or a function returning a number or none)
+  visited = read(detoured key) or {}
+  if back is set and struggled(step) and not visited[step]:
+      visited[step] = true; write(detoured key, visited)
+      write(detour key, {to: back, resume: after})
+      return /module/operators?step=back
+  return href(after)
+
+previous(step):
+  if step &lt;= 1 return "/level"
+  b = step - 1; while b &gt; 1 and skipped(b): b -= 1
+  return step b
+reset(): remove both keys</pre>
+<ul>
+  <li>Each screen can send the learner back only once per run (<code>visited</code>). On the detour screen itself no new detour starts (the pending check comes first).</li>
+  <li>Keys: <code>lingo.operators-detour</code> (the pending <code>{ to, resume }</code>) and <code>lingo.operators-detoured</code> (the screens already sent back), both session storage. If storage is blocked nobody is sent back and nothing is skipped.</li>
+  <li>The Back arrow does not clear a pending detour; the progress bar shows the screen number, so it moves backwards on a detour and forwards again after.</li>
+</ul>
+
+<h3>5.3 Streak strikes (progress bar and battery)</h3>
+<p>The run of right answers in a row (<code>moduleStreak</code>) is shared by all modules and kept in session storage (<code>lingo.module-streak</code> = <code>{ streak, loops }</code>). Only a recorded answer moves it: every right quiz check, every <code>done()</code>, and every <code>slip()</code> (a wrong one). Opening or leaving a screen never does.</p>
+<table>
+<tr><th>Right answers in a row</th><th>Effect</th></tr>
+<tr><td>2nd</td><td><code>strikeDuo2</code> lightning on the bar (0.9 s)</td></tr>
+<tr><td>3rd, 6th, 9th ...</td><td>Battery gains 1 unit (<code>BATTERY_UNITS = 1</code>) and plays its charge animation</td></tr>
+<tr><td>4th</td><td><code>strikeMix</code> (1.6 s)</td></tr>
+<tr><td>5th</td><td><code>strikeLoop</code> switch turns on and loops 1 s the first time, 4 s the second, 7 s afterwards</td></tr>
+<tr><td>A wrong answer or <code>slip()</code></td><td>The run goes back to 0 and any strike is cancelled</td></tr>
+</table>
+<ul>
+  <li>Each strike waits 150 ms after the correct / wrong trigger (two triggers in one frame would drop one). The Continue button plays the electric effect and takes no clicks until the strike is over; leaving the screen ends any loop. These screens have no hint button, so the plain strike clips play (not the <code>...Check</code> twins).</li>
+</ul>
+
+<h3>5.4 Battery</h3>
+<ul>
+  <li>The header battery (<code>battery.riv</code>) is the session's one battery. The learner starts at 18 of 20 units. <b>Arriving at a screen that has not been paid for spends 1 unit</b> (<code>chargeBatteryScreen(step)</code>): it pays for every screen from the furthest one paid so far up to this one, so jumping from 9 to 11 spends 2 units; Back and forward over paid screens spend nothing. Reaching screen 1 while the furthest paid screen is not 1 starts the module over (everything payable again; the level carries over). With the unlimited trial on, nothing is spent.</li>
+  <li>The battery is charged by the streak (every 3rd right answer in a row, +1 unit) and refilled by the out-of-energy sheet. At 0 the stage is inert and the out-of-energy sheet appears (2.5).</li>
+  <li>Skipped screens are never arrived at, so they cost nothing; a 40-screen module still costs more than the 18 units a learner starts with unless streaks or the trial refill it (see section 12).</li>
+</ul>
+
+<h3>5.5 Sounds and haptics</h3>
+<table>
+<tr><th>What</th><th>Details</th></tr>
+<tr><td>Click sound</td><td><code>/audios/click-sound.mpeg</code>, preloaded; each tap plays a clone so quick taps overlap. Plays on every pick, tap, block, key, card and button press. Follows the header mute toggle. This is the only sound in the module.</td></tr>
+<tr><td>Tap haptic (110 ms)</td><td>Every pick and interaction tap, button press.</td></tr>
+<tr><td>Correct answer haptic (250 ms)</td><td>Every right quiz check and every interaction <code>done()</code>.</td></tr>
+<tr><td>Wrong answer haptic (80, 40, 80 ms)</td><td>Every wrong quiz check and every <code>slip()</code>.</td></tr>
+<tr><td>Lesson complete (1200 ms), claim reward (350, 70, 350, 70, 600 ms)</td><td>On the Lesson complete screen and its reward chest.</td></tr>
+</table>
+
+<h3>5.6 Saved state (all session storage unless noted)</h3>
+<table>
+<tr><th>Key</th><th>Holds</th></tr>
+<tr><td><code>lingo.operators-first-try</code></td><td>question id to right-first-time (boolean)</td></tr>
+<tr><td><code>lingo.operators-assisted</code></td><td>screen number to "miss" or "hint"</td></tr>
+<tr><td><code>lingo.operators-rewards</code></td><td>reward ids already claimed (unused)</td></tr>
+<tr><td><code>lingo.operators-detour</code>, <code>lingo.operators-detoured</code></td><td>the pending detour <code>{ to, resume }</code>; screens already sent back</td></tr>
+<tr><td><code>lingo.module-streak</code></td><td><code>{ streak, loops }</code></td></tr>
+<tr><td><code>lingo.battery</code></td><td><code>{ level 0-100, unlimited, charged }</code></td></tr>
+<tr><td><code>lingo:modules-done</code> (local storage), <code>lingo:module-just-done</code> (session)</td><td>How many modules are finished (the path), and a one-time flag so the path plays Hex moving on. <code>completeModule(5)</code> writes them (8).</td></tr>
+</table>
+
+<!-- ===================================================== 6 -->
+<h2>6. Interaction stages and scenes, one by one</h2>
+<p>Each interaction below is a widget that draws itself in the room under Hex's line and talks to the screen through the stage <code>api</code> (<code>slip</code>, <code>done</code>, <code>finished</code>, <code>lineTyped</code>, <code>holdButton</code>, <code>next</code>). The screens in section 7 only list their data.</p>
+
+<h3>6.1 ExpressionStage: build an expression from blocks</h3>
+<p>Used on screens 4, 15, 17, 24, 26, 32, 35. Data: <code>lead</code> (a scene above), <code>prompt</code> (default "Tap the blocks to build it."), <code>tokens</code> (the blocks, in the order shown, each usable once), <code>accept</code> (every right way to write it, all the same length), <code>hint</code> (the wrong-try note), <code>result</code> (what it works out to).</p>
+<table>
+<tr><th>Part</th><th>Details</th></tr>
+<tr><td>Layout</td><td>A 340 px column, 10 px gaps: the lead, the expression card, the tray of blocks, the note line.</td></tr>
+<tr><td>Expression card</td><td>CARD look, white (dark #15181E), min height 68, full width, padding 12 x 8, blocks centred and wrapping, 6 px apart. Turns right-green when right, wrong-red while shaking.</td></tr>
+<tr><td>Places</td><td>One place for each token of the accepted expressions (<code>length = accept[0].length</code>). Up to 5 places: "roomy" (place 44 x 48, placed block min 44 x 48, 21 px); more: "tight" (place 36 x 40, block min 36 x 40, 17 px; tray blocks 44, 19 px). An empty place is a dashed rounded (10 px) box, 2 px border: the next place to fill is picked out (teal border #08A4AD, fill teal 10%, gentle pulse); a place that only operators can fill (all accepted ways agree) has a teal 40% border; others #C9CED6 (dark white 20%).</td></tr>
+<tr><td>Result slot</td><td>If <code>result</code> is given, after the places: a teal "=" (22 px bold #08A4AD) and a "?" pill (fill #E3F6F3, text #08A4AD, padding 12 x 6, 20 px bold). When right the "?" is replaced by the result in a #04908F pill with white text, springing in from scale 0.5 (stiffness 260, damping 14).</td></tr>
+<tr><td>Tray</td><td>Wrapping, centred, 8 px apart. Value blocks and operator blocks look as in 4.7 (tray blocks: roomy min 48 x 48, 21 px; padding 10). A used block fades to 25% opacity, drops 3 px and is disabled; press scale 0.92 and y 2.</td></tr>
+<tr><td>Tap a tray block</td><td>Ignored if right, wrong, finished, already used, or the places are full. Otherwise click sound + tap haptic; the block goes into the next free place with a spring (scale 0.6 to 1, opacity 0 to 1, stiffness 420, damping 22). When the last place is filled it is checked.</td></tr>
+<tr><td>Tap a placed block</td><td>Takes it back out (click sound only); the blocks after it close up to the left. Ignored while right, wrong or finished.</td></tr>
+<tr><td>Check</td><td>The written tokens, in place order, are compared with every accepted way (same length, every token equal). Right: green look, the result appears, and 600 ms later <code>done()</code>. Wrong: <code>slip()</code>, the card shakes (x 0, -7, 7, -5, 5, 0 over 0.4 s) in the wrong look and the note shows the <code>hint</code>; after <b>800 ms</b> (<code>WRONG_MS</code>) every block goes back to the tray and the learner starts again.</td></tr>
+<tr><td>Note line</td><td>13 px / 20 px, centred, min height 20: the <code>hint</code> in red #D42421 while the card is wrong; otherwise the prompt in grey #6B7480 (dark white 60%); empty once finished.</td></tr>
+<tr><td>Accepted ways</td><td><code>sumOfProducts([a,b],[c,d])</code> returns all 8 ways to write <code>a*b + c*d</code>: each product either way round, and the two products either way round (e.g. for 3,20,2,10: <code>3*20+2*10</code>, <code>20*3+2*10</code>, <code>3*20+10*2</code>, <code>20*3+10*2</code>, and the same four with the products swapped).</td></tr>
+</table>
+
+<h3>6.2 ShareStage: share equally, one round at a time</h3>
+<p>Screens 9 (20 shared by 4) and 10 (23 shared by 4). A <code>ShareScene</code> (heap + trays, 6.10) over a pill button "Give one to each student" (fill #08A4AD, white 16 px bold, padding 24 x 8, fully round, edge <code>0 3px 0 #067F86</code>, presses 1 px down). Each tap: click sound, tap haptic, one more round: every student's tray gains one and the heap loses <code>students</code>. When fewer than <code>students</code> remain the button goes and 900 ms later <code>done()</code> is called; two chips fade in (8 px rise): "Each student has {rounds}" (fill #E3F6F3, text #04908F, 14 px bold) and "Left over: {pile}" (fill #FFF4E3, text #B85A28). 20 / 4 ends after 5 taps with 0 left; 23 / 4 after 5 taps with 3 left. No wrong path.</p>
+
+<h3>6.3 FillRowsStage: put chairs in rows</h3>
+<p>Screen 8 (4 rows of 5). A CREAM card (padding 8) of rows 44 px tall, 6 px apart. A row is a button: open = dashed 2 px #C9CED6 border on white 70%; full = solid #7FD8CC border on #E3F6F3. A row has a "Row n" chip (48 px wide, 11 px bold; open #EEF0F4 / #6B7480, full #04ACAB / white), <code>per</code> seat slots (26 px, 6 px radius, dotted 2 px border) and, at the end, a 24 px teal circle with the count that appears after <code>per * 0.16</code> s. Tapping an open row (click sound, tap haptic) fills it: its chairs pop in one after another (each 0.16 s after the one before: scale 0.3 to 1, y -8 to 0, opacity 0 to 1). Chair drawing: an SVG 26 px, back #04ACAB, seat #08A4AD, legs #444444 (unlit: #7C6BE0 / #5B3FD0). A filled row cannot be tapped again. Caption under the card (13 px, grey): "Tap a row to put its chairs in." then "n of 4 rows filled."; empty once finished. When the last row is full <code>done()</code> is called after <code>per * 160 + 700</code> ms. No wrong path.</p>
+
+<h3>6.4 SymbolStage: big keys to tap, with an explanation card</h3>
+<p>Screens 14, 21, 25, 27, 28, 29, 34, 39. Data: <code>groups[]</code> (each: optional <code>title</code>, <code>columns</code>, <code>items[]</code>), <code>need</code> (how many different keys must be tapped; default all), <code>header(current)</code> (a scene above that follows the last key tapped), <code>big</code> (default true), <code>prompt</code> (default "Tap each symbol.").</p>
+<table>
+<tr><th>Part</th><th>Details</th></tr>
+<tr><td>Item</td><td><code>{ id, symbol, title, example?, say?, result? }</code>: the key's text, what it means, an example, the example read aloud, and whether the example is True (comparisons).</td></tr>
+<tr><td>Layout</td><td>A 340 px column, 10 px gaps: the header, each group (optional heading, then a grid of keys <code>columns</code> wide, 10 px apart), then the explanation card, then <code>footer</code> once done (none used).</td></tr>
+<tr><td>Group heading</td><td>12 px bold uppercase, letter-spacing 0.4, with a 6 px dot; in a screen with two groups the heading takes the group's colour, otherwise grey #6B7480.</td></tr>
+<tr><td>Key</td><td>12 px radius, bold white text. Size: a symbol of more than 6 letters is 56 px tall at 17 px; otherwise <code>big</code>: 56 px tall at 28 px; not big: 44 px tall at 20 px. A symbol of 4 letters or fewer is set in a monospace font. Colours by group (first teal <code>#08A4AD</code> edge <code>#067F86</code>; second violet <code>#7B61FF</code> edge <code>#5B3FD0</code>; third orange <code>#E8743B</code> edge <code>#B85A28</code>); the key has a 3 px bottom edge. The tapped (current) key turns amber <code>#FFB300</code> with edge <code>#C98A00</code> and a soft ring (0 0 0 4px, 28% amber) and bounces (scale 1, 0.92, 1.08, 1 in 0.35 s). A key seen before (not current) carries a small tick badge (20 px circle #01A17F with a white 2 px ring, top right). Press: scale 0.94, y 2.</td></tr>
+<tr><td>Tap</td><td>Click sound + tap haptic; that key becomes current and is added to the seen list. When the number of different keys seen reaches <code>need</code> (the first time it does), <code>done()</code> is called 900 ms later. <b>Keys stay tappable after it is done</b> so the learner can keep exploring.</td></tr>
+<tr><td>Explanation card</td><td>Min height 78, full width; the content cross-fades in when the current key changes (opacity 0 to 1, rise 6 px, 0.2 s). Empty state: the prompt (14 px / 20, grey). With a current key: white card (dark #15181E), shadow <code>0 2px 8px rgba(31,42,68,.12)</code>, 2 px border (transparent; #01A17F 40% if the example is True; #D42421 40% if False), radius 12, centred: the key's title (15 px bold #2F5D59, dark #BFE6E2); the example (monospace 18 px bold, with a pill "&#10003; True" #01A17F or "&#10005; False" #D42421, white 13 px bold, when <code>result</code> is set); the <code>say</code> sentence in quotes (13 px, italic, #6B7480).</td></tr>
+</table>
+
+<h3>6.5 StepStage: an expression worked out one step at a time</h3>
+<p>Screens 16 (two stages) and 22 (two stages). A 340 px column: a white CARD (padding 12) with the big expression (<code>ExprBig</code>, with the current step's parts picked out and the result pill once given), a row of step dots, and a text box; under it a pill button. Dots: 6 px high, 6 px wide when still ahead (#D5DAE1, dark white 20%), 20 px wide and teal #08A4AD once reached (animates 0.3 s). Text box (min height 44, radius 10, 15 px / 22 px semibold, centred): idle "Tap the button to see the steps." (grey); a step's text in #2F5D59 on #EAF7F6 (dark #BFE6E2 on #0F2B28). The button reads "Show the steps" then "Next step" (the pill look of 6.2); each press: click sound, tap haptic, step +1. At the <b>last step</b> the button disappears and 1100 ms later <code>done()</code> is called. Each step is <code>{ lit: indexes of the tokens picked out, text, result? }</code>. No wrong path.</p>
+
+<h3>6.6 OrderStage: put steps in order</h3>
+<p>Screen 33. A 340 px column, 10 px gaps: a lead scene, then the steps in a shuffled order (<code>shown</code> gives the position in the right order of each step in turn), each a CREAM CARD button at least 46 px tall, padding 12 x 6, left to right: a 26 px circle (empty: dashed 2 px #C9CED6 ring; placed: filled #01A17F with the number in white and edge <code>0 2px 0 #018066</code>, springing from scale 0.5), then the step's text (14 px / 20, weight 600). Tap the steps in the order they happen: tapping the <b>next</b> step in the right order places it (green look, numbered, stays) with click sound + tap haptic; any other step: <code>slip()</code>, the row shakes (x 0, -7, 7, -5, 5, 0 over 0.4 s) in the wrong look for 800 ms and the note shows the hint. A placed step cannot be tapped again. When all are placed, 600 ms later <code>done()</code>. Note line (13 px): the hint in red; otherwise "Tap the steps in the order they happen." in grey; empty once finished.</p>
+
+<h3>6.7 MultiPickStage (shared with Data Types): tap the cards that fit</h3>
+<p>Screens 27 (stage 1) and 28 (stage 1). From <code>components/datatypes/interactions.tsx</code>. A 354 px column, 12 px gaps: a grid (3 columns here, 14 px gaps) of cards, then a note line. Card: CARD_BODY (8 px radius, 4 px border, shadow as 4.7), at least 64 px tall, padding 8, picture (none here) / label (16 px / 110%, weight 600, #444444) / sub label (12 px / 16, weight 500, #6B7480), tinted in turn (blue #E5EFFD, lavender #F6F4FE, green #ECF7ED, cream #FFF3DE; dark variants). Tap: click sound + tap haptic. A <b>right</b> card turns right-green (border #01A17F, fill #F2FBF8) and stays, with a scale pulse [1, 1.05, 1] in 0.35 s. A <b>wrong</b> card: <code>slip()</code>, shakes red (x 0, -7, 7, -5, 5, 0) for 600 ms and the note shows the hint (13 px, red #D42421). When every right card has been tapped, 500 ms later <code>done()</code>. No prompt line; the note is empty until a wrong tap.</p>
+
+<h3>6.8 FlipCarouselStage: the flip-card carousel (screen 1)</h3>
+<p>Four photo cards in a looping carousel; the centred card has its neighbours peeking in. Full stage width, height 386 (10 + 336 + 40), tinted band #04ACAB at 12% (dark 30%) fading to nothing at the top and bottom (a vertical mask: transparent, black 30%, black 70%, transparent). The web version also answers the left and right arrow keys.</p>
+<table>
+<tr><th>Part</th><th>Details</th></tr>
+<tr><td>Card</td><td>230 x 336 (the pictures are 1 : 1.459), centred horizontally, 10 px from the top. Front: the whole card is one picture (the scene, its name, rounded corners 26 px and a 4 px white edge are in the image). Back: the same shape in the card's tint (a vertical gradient), 4 px white border, content centred: "<b>{Verb} {Label}</b>" in 13 px bold uppercase teal #08A4AD with letter spacing, then the caption in 20 px / 28 semibold #2F5D59 (dark #BFE6E2). Tints: teal #E3F7F4 to #BDEBE5, pink #FDEBEF to #F8CFDA, blue #E6F0FF to #C9DEFF, amber #FFF3DC to #FFE1AB (dark variants exist).</td></tr>
+<tr><td>Slots</td><td>The active card is at x = 0, scale 1, on top. The right neighbour is at +218 px, the left at -218 px, both scale 0.9; any other card is hidden (opacity 0) beyond the left one. The slide takes 0.7 s on <code>cubic-bezier(0.32, 0.72, 0, 1)</code>; opacity 0.25 s. A card that wraps round from one end to the other jumps instantly instead of sliding across.</td></tr>
+<tr><td>Active highlight</td><td>The active card's picture gets a 2 px teal #08A4AD outline with a soft teal glow (<code>0 8px 14px rgba(8,164,173,.35)</code>); idle cards a soft grey drop shadow. A "Tap for more details" pill sits over the foot of the active card (78 px above its bottom) until the card is turned over: white 90%, teal 12 px bold text with a small hand icon, gentle pulse (scale 1 to 1.07, 1.6 s loop; none with reduced motion).</td></tr>
+<tr><td>Flip</td><td>Tapping the active card turns it over about its vertical axis (rotateY 0 to 180, 0.5 s, <code>cubic-bezier(0.45, 0, 0.25, 1)</code>, perspective 900); tapping again turns it back. A card that has been turned over carries a green tick badge (24 px circle #01A17F, top right). Tapping a neighbour moves it to the centre. Moving to another card turns any turned card face up.</td></tr>
+<tr><td>Dots</td><td>Four dots under the cards (bottom 12): the active one is a 24 x 8 pill with a light teal track (teal 25%) and a teal #08A4AD fill; others 8 x 8 grey #BFC3C9. Tap a dot to go to that card. While the autoplay runs the active dot's fill grows across the track over 2.6 s (linear) and restarts on every card; otherwise the active dot is simply full.</td></tr>
+<tr><td>Swipe</td><td>Drag horizontally (elastic 0.2, snaps back): an offset beyond 50 px or a velocity beyond 400 moves one card (left swipe = next, right swipe = previous).</td></tr>
+<tr><td>Demonstration</td><td>As soon as Hex has finished his line (<code>lineTyped</code>) plus 700 ms, the <b>first card turns over by itself</b>, holds its back up for 2400 ms and turns face up again (this counts as the first card seen). Then the carousel plays through the cards <b>once</b> on its own: each card stays 2600 ms, then slides to the next, ending back on the first. The first touch of any kind (tap, drag, key, dot) ends the demonstration and the autoplay for good. Reduced-motion users get neither.</td></tr>
+<tr><td>Done</td><td>Once every card has been turned over (the demonstration counts for the first), the last card's back stays up 1600 ms and then <code>done()</code> is called (finish panel, confetti). No wrong path.</td></tr>
+</table>
+
+<h3>6.9 Turn stages: SituationsStage, OperatorTurnStage, JobTurnStage</h3>
+<p>Look-only stages where Hex introduces <b>one card at a time</b> (screens 2, 5, 6, 11). Each stage is "the turn" of card number <code>focus</code>; the screen puts one turn stage per card, so the next Continue shows the next card's turn (or a question). They never call <code>done()</code> and record nothing.</p>
+<table>
+<tr><th>Part</th><th>Details</th></tr>
+<tr><td>Timing (<code>useTurn</code>)</td><td>The stage opens; 500 ms later (<code>HIGHLIGHT_MS</code>) the focused card is "lit" (picked out). Once the card is lit <b>and</b> Hex has finished typing his line, the stage takes the main button (<code>holdButton</code>): Continue becomes enabled, and pressing it calls <code>next()</code> (go to the next stage, nothing recorded). Until then Continue is disabled.</td></tr>
+<tr><td>Grid</td><td>A 340 px column. Situations: 2 columns, 12 px gaps, cards 150 px tall (icon 100 x 76 above the name in two lines: verb over thing, 14 px / 18 bold #444444). Operators and jobs (<code>TurnCardsStage</code>): 2 columns (jobs 150 px tall, operators 118 px) or 3 columns for the division screen (128 px tall, 10 px gaps), 12 px gaps, card art over the name (14 px / 18 bold); in a row of three, names reserve two lines so the keys line up.</td></tr>
+<tr><td>Card look</td><td>10 px radius, 4 px border (white at rest; the lit card teal #08A4AD with a ring <code>0 0 0 3px rgba(8,164,173,.18)</code> and glow <code>0 6px 16px rgba(8,164,173,.25)</code>), idle shadow <code>1px 1px 6px 1px rgba(0,0,0,.15)</code>. Tints: lavender #F4F1FF, cream #FFF6EA, mint #EBF6F0, blue #E6F0FF (dark #1F1B3A, #3A2C14, #0F2B28, #15213A).</td></tr>
+<tr><td>Highlight</td><td>The lit card scales to 1.04 on a spring (stiffness 320, damping 22) and (operators and jobs) its art hops up 5 px and back (0.45 s). In the operator and job turns the cards <b>not</b> being introduced fade to 30% opacity once the turn starts (and stay faded on the later turns, except the card whose turn just ended, which starts bright and hands over). Cards before the focus carry a green tick badge (24 px circle #01A17F, top 6 right 6).</td></tr>
+<tr><td>Entrance</td><td>On the first turn (<code>focus 0</code>) the cards come in one after another (opacity 0 to 1, rise 16 px, scale 0.96 to 1, 0.35 s, 80 ms apart). Later turns find the cards already there (no entrance), so the change reads as a hand-over.</td></tr>
+<tr><td>Example strip (operators, jobs)</td><td>Under the grid, a 60 px band with a white card (dark #15181E, radius 12, shadow <code>0 2px 8px rgba(31,42,68,.12)</code>, padding 12 x 8) that fades in (and rises 8 px, 0.3 s) once the card is lit: the card's chip (a small symbol key, or the job's picture in a 36 px circle #F4F6F8), the card's one-line meaning (13 px bold #2F5D59) and its example (monospace 20 px bold #444444).</td></tr>
+<tr><td>Symbol key (SymbolTile)</td><td>The operator's symbol in white monospace bold on a rounded tile (large 56 px, radius 14, 34 px text; small 36 px, radius 10, 22 px; an asterisk is pushed down 8 px so it centres), edge <code>0 3px 0 rgba(0,0,0,.22)</code>, in the card's accent: lavender #7B61FF, cream #E8743B, mint #08A4AD, blue #3B82F6.</td></tr>
+<tr><td>Header picture (division turns)</td><td>Screen 11's three turns put the <code>GroupsPicture</code> of 23 chocolates in groups of 4 over the cards (6.10), emphasising all, the complete groups, then the leftovers; before the card is lit the picture still shows the turn before so the change reads as a fade.</td></tr>
+</table>
+
+<h3>6.10 Scenes (visuals), one by one</h3>
+<p>Drawn in code in <code>visuals.tsx</code>; sizes in frame px. All come in with a small stagger and replay when a quiz is tried again (they receive <code>attempt</code> as <code>replay</code>).</p>
+<table>
+<tr><th>Scene</th><th>Description</th></tr>
+<tr><td>ValueCards</td><td>A row of named cards (default 316 wide, 6 px gaps), each a CARD (padding 6 x 8, LAVENDER by default; tone good or warn) with an optional 36 px white circle holding a 24 px picture, the name (11 px / 16 semibold uppercase, letter spacing 0.3, grey #6B7480) and the value (19 px / 24 bold #444444). Each card comes in 0.3 s after the one before (opacity, rise 12 px, scale 0.95 to 1, spring stiffness 260, damping 20). A sign badge (24 px teal circle, 12 px bold white, edge <code>0 2px 0 #067F86</code>) can stand between two cards.</td></tr>
+<tr><td>Versus</td><td>ValueCards with two cards and the badge "vs" between them.</td></tr>
+<tr><td>InfoSheet</td><td>"What we know": 316 px wide. A pill heading "What we know" (11 px bold uppercase teal #08A4AD on #E3F6F3, with a 16 px teal circle holding a white tick), a LAVENDER card of lines (picture in a 36 px white circle, label 14 px semibold grey, value 20 px bold #444444, hairline #E4DFF7 between lines; lines slide in from -12 px, 0.25 s apart), and under it, if there is a missing item, a dashed teal (60%) box with the item's greyed picture, its label and a pulsing "?" (22 px bold teal, scale 1 to 1.2, 1.6 s loop; none with reduced motion). Once its value is known the box turns solid teal-bordered on #E3F6F3 with the value (20 px bold #04908F, springing in). <code>compact</code>: no heading, smaller lines (32 px icon, 13 px label, 18 px value), 6 px gaps.</td></tr>
+<tr><td>WalletScene</td><td>A CREAM card, 316 wide: a 56 px white circle with the wallet picture (40 px), the label "Wallet" (11 px grey uppercase) over the amount (26 px bold, "&#8377;50"). A pill slides in from the right (x +40, scale 0.8) after 0.6 s: "+ &#8377;30" in green #01A17F or "- &#8377;20" in orange #E8743B (16 px bold white). After 1300 ms the amount changes to the new total <b>only</b> if the learner has answered right (<code>showTotal = checked and correct</code>), so the scene never gives the answer away.</td></tr>
+<tr><td>ExprBig</td><td>A big expression: tokens in a row (wrapping, 8 px apart; <code>tight</code> = no wrap, 2 px), bold <code>size</code> px (default 34; line-height 1.2), operators teal #08A4AD, parts "lit" on a yellow pad (#FFD36B, text #444444, edge <code>0 2px 0 #E0A81C</code>); each token has 6 px side padding and 8 px radius. A result renders as a pill "= {result}" (teal text #04908F on #E3F6F3, springing in from scale 0.7).</td></tr>
+<tr><td>SideBySide</td><td>Two LAVENDER cards side by side (316 wide, 8 px gap, padding 12 x 8), each an ExprBig at 19 px, no wrap.</td></tr>
+<tr><td>ShareScene</td><td>316 wide column, 8 px gaps: a CREAM card (min height 44, min width 150, padding 12 x 8) holding the heap (<code>Pile</code>, 10 chocolates a row) or the words "No chocolates left" (12 px bold grey); under it a row of student trays (6 px gaps).</td></tr>
+<tr><td>Pile and chocolate</td><td>A chocolate is a 13 px square (4 px radius), brown #8B5A3C with border #6B4226 and a light inset highlight; lit chocolates are yellow #FFD36B / border #FFB300. A pile is a grid of 13 px chocolates 3 px apart, <code>columns</code> wide (10 by default).</td></tr>
+<tr><td>Tray</td><td>A student's tray: flexible width, radius 10, 2 px border #B8A9F5 on #F1EEFF (dark #2E2A5C); a 28 px white circle with the student picture (20 px), the label "Student n" (11 px bold #5B3FD0), its chocolates (a pile 5 wide, min height 28), and the count (16 px bold #444444). A lit tray is amber (#FFB300 border, #FFF8E1 fill).</td></tr>
+<tr><td>GroupsPicture</td><td>Chocolates set out in groups of <code>size</code> (316 wide, wrapping, 8 px gaps, centred): each complete group in a solid box (radius 10, 2 px #04ACAB border, fill #E3F6F3, padding 6, a pile at most 6 wide), then any leftovers in a dashed box (2 px dashed #FFB300, fill #FFF8E1). Boxes come in 0.25 s apart (opacity, scale 0.7 to 1); <code>still</code> = shown at once. <code>emphasis</code> = <code>groups</code> fades the leftovers box to 30%, <code>left</code> fades the complete groups to 30% (0.3 s).</td></tr>
+<tr><td>PlantGrid</td><td>A CREAM card, padding 8, 4 x 4 cells of 32 px (4 px gaps), each with a plant picture (28 px). After 700 ms each row lights up in turn (a #FFD36B pad behind the plants), 450 ms apart; then each column in turn; then the highlight clears. Restarts on every try.</td></tr>
+<tr><td>LineScale</td><td>A number line in a WHITE card (316 wide): a row of circles, one per mark (38 px, or 26 px when <code>small</code>; 15 or 11 px bold text), below them a 3 px grey #C9CED6 line with an arrow head. A circle can be "picked" (teal #08A4AD fill, #04ACAB border, white text) or "second" (orange #FFB267 fill, #E8743B border, white text); others white with a #C9CED6 border and grey text. With a <code>gate</code> the row is 66 px tall and a gate marker stands above that mark: its label (10 px bold #E8743B, e.g. "Unlock at 100", "Limit 150 cm") over a 3 x 22 px orange post.</td></tr>
+<tr><td>CompareDemo</td><td>The computer's view of a comparison: two number blocks (LAVENDER CARD, min width 56, 26 px / 32 bold) either side of the symbol block (teal #08A4AD, white, edge <code>0 3px 0 #067F86</code>, same size), 8 px apart; the left block slides in from -20 px, the symbol pops (scale 0.4 to 1, delay 0.2 s), the right block slides in from +20 px; at 0.7 s a pill drops in under them (rise -8 px): "&#10003; True" (fill #01A17F, edge #018066) or "&#10005; False" (#D42421, edge #A31B19), white 16 px bold.</td></tr>
+<tr><td>GateCard</td><td>A CARD (padding 16 x 8) with a lock icon (28 px; open #01A17F, locked #E8743B), the score (22 px bold) and "Unlocked" or "Locked" (16 px bold). Open: fill #E3F6F3 (dark #0F2B28); locked: #FFF4E3 (dark #4A3418).</td></tr>
+<tr><td>TripFacts</td><td>Four small CARDs in a 2 x 2 grid (316 wide, 6 px gaps), each with a 36 px white circle holding a 24 px picture, a label (10 px bold uppercase grey) and a value (16 px bold): Students 32, Per bus 10, Cost per bus &#8377;2,000, Budget &#8377;7,000 (fills #F6F4FE, #E6F0FF, #FFF6EA, #EBF6F0).</td></tr>
+<tr><td>BillCard</td><td>A CREAM card (316 wide, padding 12 x 8): lines "what ....... price" (14 px, a dotted #D9D2C4 leader between), then a dashed top rule and "Bill shown" (14 px bold) with a pill showing the total (17 px bold white; red #D42421 when <code>wrong</code>, else green #01A17F). The wrong bill on screen 35 has blank prices on its two lines.</td></tr>
+<tr><td>Flat icons</td><td>Notebook (blue book with white lines), pen (orange, rotated 45 degrees), bag (orange shopping bag): small SVGs drawn in code (32 x 32 viewBox) until the module has art. Flat icons for the chair (6.3) and the check tick are also drawn in code.</td></tr>
+</table>
+
+<!-- ===================================================== 7 -->
+<h2>7. Screens 1 to 40, one by one</h2>
+<p>Every screen has a summary table and a stage table. Stages are numbered from 0 and come one after another on the same URL. How to read the stage table:</p>
+<ul>
+  <li><b>Kind:</b> a quiz (rows, a pair of tiles, or 2 x 2 tiles), an interaction (with the section where it is described), or a turn stage (6.9).</li>
+  <li><b>Hex says:</b> the line in the bubble; it types in letter by letter (4.2).</li>
+  <li><b>On screen:</b> the picture or interaction scene (section 6.10), the question pill if there is one, and what the option pictures are.</li>
+  <li><b>Answers, keys or blocks:</b> the options in the order shown; <span class="ok">✔</span> marks the right one. The right answer is the same on a retry (the order never shuffles). For interactions it lists the data of the build (blocks, accepted ways, result, wrong-try note) or the keys.</li>
+  <li><b>Result panel:</b> the right panel (title and text) and the wrong panel (title and text; the title is "Not quite" unless stated). A quiz shows one of them after Continue checks the answer. An interaction shows its finish panel when done, or none.</li>
+  <li><b>Recorded:</b> which stage ids are written to the score (5.1).</li>
+  <li>Money amounts use the rupee sign; expressions are written as in code (<code>*</code> multiply, <code>/</code> divide, <code>//</code> floor division, <code>%</code> remainder, <code>**</code> power).</li>
+</ul>
+
+<h3>Screen 1: Have you tried these? (/module/operators?step=1)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Have you tried these?" (teal: "tried"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Phase 1, Experience: everyday actions (combining, sharing, spending, comparing) shown as four photo cards the learner turns over.</td></tr>
+<tr><td>Stages</td><td>1 (Flip-card carousel)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 10.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: flip carousel (6.8)</td><td>Think about everyday things you do without even noticing.</td><td>The full-width carousel of four cards (6.8): demonstration, autoplay once, then free exploring.</td><td>Card 1: image example_card1.png, back "COMBINING MONEY" / "Two stacks of money are put together.", teal back<br>Card 2: example_card2.png, "SHARING CHOCOLATES" / "Chocolates are shared among students.", pink back<br>Card 3: example_card3.png, "SPENDING MONEY" / "Money is spent from a wallet.", amber back<br>Card 4: example_card4.png, "COMPARING HEIGHTS" / "Two people compare how tall they are.", blue back</td><td>Finish panel "You do these every day!": You already put together, share, compare and spend without thinking.</td></tr>
+</table>
+
+
+<h3>Screen 2: Explore the situations! (/module/operators?step=2)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Explore the situations!" (teal: "situations!"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Match four situations to the action each needs: adding, subtracting, dividing or comparing. Each question is introduced by a turn stage that lights up its situation card.</td></tr>
+<tr><td>Stages</td><td>8 (4 turns + 4 questions)</td></tr>
+<tr><td>Scene</td><td>The four situation cards (2 columns, 150 px tall, in this order): Combining money (lavender, money-icon.png), Sharing chocolate (cream, chocolate_icon.png), Comparing heights (mint, height_icon.png), Spending money (blue, money_bag.png). Cards before the current turn carry a green tick.</td></tr>
+<tr><td>Recorded</td><td>Stages 1, 3, 5, 7 (ids 21, 23, 25, 27).</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Turn: situations (6.9)</td><td>We saw four situations. Let's find the action in each, starting here.</td><td>Situation cards come in; card 1 (Combining money) is lit.</td><td>focus = 0</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>1</td><td>Quiz, 2 x 2 tiles</td><td>You have ₹50 and receive another ₹30.</td><td>ValueCards: coins "You have" ₹50, coins "You get" ₹30.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Adding</span><br>Subtracting<br>Dividing<br>Comparing</td><td>Right panel "Exactly!": Adding: we put the two amounts together.<br>Wrong panel "Not quite": Are the amounts put together, taken away, shared or compared?</td></tr>
+<tr><td>2</td><td>Turn: situations</td><td>Now the next situation.</td><td>Card 2 (Sharing chocolate) is lit; card 1 has its tick.</td><td>focus = 1</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>3</td><td>Quiz, 2 x 2 tiles</td><td>You have 20 chocolates to share equally among 4 students.</td><td>ValueCards: food picture "Chocolates" 20, student picture "Students" 4.<br>Option pictures: neutral icons.</td><td>Adding<br>Subtracting<br><span class="ok">✔ Dividing</span><br>Comparing</td><td>Right panel "Exactly!": Dividing: we share equally.<br>Wrong panel "Not quite": Everyone should get the same. What do we do to share?</td></tr>
+<tr><td>4</td><td>Turn: situations</td><td>And another one.</td><td>Card 3 (Comparing heights) is lit.</td><td>focus = 2</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>5</td><td>Quiz, 2 x 2 tiles</td><td>One student is 150 cm tall and another is 140 cm.</td><td>Versus: person "Student 1" 150 cm, person "Student 2" 140 cm.<br>Option pictures: neutral icons.</td><td>Adding<br>Subtracting<br>Dividing<br><span class="ok">✔ Comparing</span></td><td>Right panel "Exactly!": Comparing: we see who is taller.<br>Wrong panel "Not quite": We are not changing the heights. We are looking at the two.</td></tr>
+<tr><td>6</td><td>Turn: situations</td><td>Now the last one.</td><td>Card 4 (Spending money) is lit.</td><td>focus = 3</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>7</td><td>Quiz, 2 x 2 tiles</td><td>You have ₹500 and spend ₹100.</td><td>ValueCards: coins "You have" ₹500, coins "You spend" ₹100.<br>Option pictures: neutral icons.</td><td>Adding<br><span class="ok">✔ Subtracting</span><br>Dividing<br>Comparing</td><td>Right panel "Exactly!": Subtracting: money is taken away. We add, subtract, divide or compare.<br>Wrong panel "Not quite": Does the money grow, or does some go away?</td></tr>
+</table>
+
+
+<h3>Screen 3: Remember What We Learned? (/module/operators?step=3)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Remember What We Learned?" (teal: "Learned?"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Having the information is not enough: an operation is needed to find the result.</td></tr>
+<tr><td>Stages</td><td>1 (Quiz: Yes / No)</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 30.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, 2 x 2 tiles</td><td>We have all this information. Can we find the money left without doing anything with it?</td><td>InfoSheet "What we know": Money available ₹500 (wallet picture), Book price ₹150 (notebook icon), Pen price ₹50 (pen icon); missing line "Money left" with a pulsing "?".<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td>Yes.<br><span class="ok">✔ No.</span></td><td>Right panel "Correct!": We have the information, but we still need an operation to find the result.<br>Wrong panel "Not quite": Is the money left written on any of the cards?</td></tr>
+</table>
+
+
+<h3>Screen 4: How Much Money Will Remain? (/module/operators?step=4)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"How Much Money Will Remain?" (teal: "Will Remain?"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Build the two steps that find the money left: add the prices, then take the total from the wallet.</td></tr>
+<tr><td>Stages</td><td>3 (2 builds + question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 40, 41, 42.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: ExpressionStage (6.1)</td><td>First, what do the book and the pen cost together?</td><td>Lead: compact InfoSheet: Wallet ₹500, Book ₹150, Pen ₹50.<br>3 places; the result slot shows "= ?".</td><td>Blocks: 150, 50, +, -<br>Right: 150 + 50 or 50 + 150<br>Result: 200<br>Wrong-try note: "Together means we put the two prices together."</td><td>Finish panel "That's right!": 150 + 50 = 200. The book and the pen cost ₹200.</td></tr>
+<tr><td>1</td><td>Interaction: ExpressionStage</td><td>Now take that cost out of the wallet.</td><td>Lead: compact InfoSheet: Wallet ₹500, Book + Pen ₹200 (bag icon); missing line "Money left" shows ₹300 once the stage is finished.</td><td>Blocks: 500, 200, -, +<br>Right: 500 - 200<br>Result: 300<br>Wrong-try note: "Money goes out of the wallet, so we take it away."</td><td>Finish panel "₹300 remains!": 500 - 200 = 300. Two operations gave the answer.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>Which mathematical actions did we use?</td><td>No picture.<br>Option pictures: neutral icons.<br>keepLine: after the check Hex and his line stay where they are (they neither leave nor re-enter on a retry).</td><td><span class="ok">✔ Addition and subtraction.</span><br>Multiplication and division.<br>Only comparing.</td><td>Right panel "Exactly!": We used operations to turn the information into a useful result.<br>Wrong panel "Not quite": We put prices together, then took the total away from the wallet.</td></tr>
+</table>
+
+
+<h3>Screen 5: Meet the Operators! (/module/operators?step=5)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Meet the Operators!" (teal: "Operators!"), one line at 28 px</td></tr>
+<tr><td>Purpose</td><td>Hex introduces the four arithmetic operators, one card per turn.</td></tr>
+<tr><td>Stages</td><td>4 (4 operator turns)</td></tr>
+<tr><td>Scene</td><td>Four operator cards, 2 columns, 118 px tall, each with a symbol key (6.9): Addition + (mint), Subtraction - (cream), Multiplication * (lavender), Division / (blue). Each card's strip shows the card's meaning and example.</td></tr>
+<tr><td>Recorded</td><td>Nothing is recorded on this screen.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Turn: operator (6.9)</td><td>In programming, these symbols are called operators. First, +: it combines values.</td><td>Operator card 1 lit.</td><td>Addition + | "Combines values" | 3 + 2</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>1</td><td>Turn: operator</td><td>Next, -: it subtracts one value from another.</td><td>Operator card 2 lit; card 1 faded, with a tick.</td><td>Subtraction - | "Subtracts values" | 5 - 2</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>2</td><td>Turn: operator</td><td>Now *: it multiplies values.</td><td>Operator card 3 lit.</td><td>Multiplication * | "Multiplies values" | 3 * 2</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>3</td><td>Turn: operator</td><td>Last, /: it divides one value by another.</td><td>Operator card 4 lit.</td><td>Division / | "Divides values" | 6 / 2</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+</table>
+
+
+<h3>Screen 6: Calculate or Compare? (/module/operators?step=6)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Calculate or Compare?" (teal: "or Compare?"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>The two big jobs of a program with values: calculate and compare.</td></tr>
+<tr><td>Stages</td><td>3 (2 job turns + question)</td></tr>
+<tr><td>Scene</td><td>Two tall job cards (150 px): Calculate (computer picture, "How much? How many? What remains?", example 20 + 5 = 25, mint) and Compare (traffic-signal picture, "Which is greater? Are they equal?", example 20 &gt; 5, lavender).</td></tr>
+<tr><td>Recorded</td><td>Stage 2 (id 62).</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Turn: job (6.9)</td><td>A program does two big things with values. First, it calculates, with arithmetic operators.</td><td>Job card 1 (Calculate) lit.</td><td>Calculate | "How much? How many? What remains?" | 20 + 5 = 25</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>1</td><td>Turn: job</td><td>The second big thing is to compare values, with comparison operators.</td><td>Job card 2 (Compare) lit.</td><td>Compare | "Which is greater? Are they equal?" | 20 &gt; 5</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>2</td><td>Quiz, 2 x 2 tiles</td><td>Which job answers the question “Which is greater?”</td><td>No picture.<br>Option pictures: icon-order.svg (Calculate), icon-actions.svg (Compare).</td><td>Calculate<br><span class="ok">✔ Compare</span></td><td>Right panel "Exactly!": Compare! First we calculate, then we move on to comparisons.<br>Wrong panel "Not quite": Calculating finds a value. Which job looks at greater or smaller?</td></tr>
+</table>
+
+
+<h3>Screen 7: What Happens When Values Come Together? (/module/operators?step=7)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"What Happens When Values Come Together?" (teal: "Come Together?"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Addition and subtraction in a wallet story, then by name.</td></tr>
+<tr><td>Stages</td><td>4 (4 questions)</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 70, 71, 72, 73.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>You have ₹50. Your friend gives you ₹30. How much now?</td><td>WalletScene: ₹50 with a "+ ₹30" pill; the total ₹80 shows after 1.3 s only once answered right.<br>Option pictures: the coins picture on every option.</td><td>₹70<br><span class="ok">✔ ₹80</span><br>₹20</td><td>Right panel "Exactly!": 50 + 30 = 80. Addition combines values.<br>Wrong panel "Not quite": The money joins what you already have.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>Now you spend ₹20. How much is left?</td><td>WalletScene: ₹80 with a "- ₹20" pill; total ₹60 only after a right answer.<br>Option pictures: the coins picture on every option.</td><td>₹100<br><span class="ok">✔ ₹60</span><br>₹80</td><td>Right panel "Exactly!": 80 - 20 = 60. Subtraction finds the difference or what remains.<br>Wrong panel "Not quite": Spending takes money out of the wallet.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>You have 12 stickers and get 5 more. Which operation finds the total?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Add (+)</span><br>Subtract (-)<br>Divide (/)</td><td>Right panel "Right!": Addition combines values.<br>Wrong panel "Not quite": You are getting more. Do the stickers join or go away?</td></tr>
+<tr><td>3</td><td>Quiz, rows</td><td>You have 9 sweets and eat 4. Which operation finds how many are left?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>Multiply (*)<br><span class="ok">✔ Subtract (-)</span><br>Add (+)</td><td>Right panel "Right!": Subtraction finds what remains.<br>Wrong panel "Not quite": Eating takes sweets away.</td></tr>
+</table>
+
+
+<h3>Screen 8: What If Every Group Has the Same Quantity? (/module/operators?step=8)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"What If Every Group Has the Same Quantity?" (teal: "Same Quantity?"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Equal groups: add the rows, then meet the shortcut *.</td></tr>
+<tr><td>Stages</td><td>3 (Fill rows + 2 questions)</td></tr>
+<tr><td>Recorded</td><td>Stages 0, 1, 2 (ids 80, 81, 82).</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: FillRowsStage (6.3)</td><td>4 rows, 5 chairs in each row. Tap a row to place its chairs.</td><td>4 rows of 5 chair slots.</td><td>rows = 4, per = 5</td><td>Finish panel "All set!": Every row has 5 chairs. Now let's count them all.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>Count the chairs in each row, then all of them.</td><td>ExprBig: 5 + 5 + 5 + 5 at 28 px.<br>Question pill: "How many chairs altogether?"<br>Option pictures: the chair (cube) picture on every option.</td><td>9<br><span class="ok">✔ 20</span><br>25</td><td>Right panel "Exactly!": 5 + 5 + 5 + 5 = 20 chairs.<br>Wrong panel "Not quite": Add the chairs of all four rows.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>There is a shortcut for adding equal groups.</td><td>No picture.<br>Question pill: "Which means 4 groups of 5?"<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 4 * 5</span><br>4 + 5<br>4 - 5</td><td>Right panel "Exactly!": 4 * 5 = 20. Multiplication is a shortcut for adding equal groups.<br>Wrong panel "Not quite": Which operator repeats a group?</td></tr>
+</table>
+
+
+<h3>Screen 9: Can Everyone Get the Same Number? (/module/operators?step=9)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Can Everyone Get the Same Number?" (teal: "Same Number?"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Sharing equally: guess, share out, then see that / gives a Float (5.0).</td></tr>
+<tr><td>Stages</td><td>3 (Predict, share, question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 90, 91, 92.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>20 chocolates, 4 students. How many does each one get?</td><td>ShareScene: a heap of 20 and four empty student trays.<br>Option pictures: the chocolate picture on every option.</td><td>4<br><span class="ok">✔ 5</span><br>6</td><td>Right panel "Good guess!": Let's check it by sharing them out.<br>Wrong panel "Not quite": Four students share 20 equally. Let's see by sharing them.</td></tr>
+<tr><td>1</td><td>Interaction: ShareStage (6.2)</td><td>Share them out, one to each student at a time.</td><td>ShareScene with the pill button "Give one to each student".</td><td>total = 20, students = 4 (5 taps)</td><td>Finish panel "5 each!": 20 / 4 = 5.0. Division shares a quantity equally.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>In Python, / gives a Float. What does 20 / 4 give?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>5<br><span class="ok">✔ 5.0</span><br>4.0</td><td>Right panel "Exactly!": 20 / 4 = 5.0. The / operator gives a Float, not 5.<br>Wrong panel "Not quite": Python's / always gives a decimal-type answer.</td></tr>
+</table>
+
+
+<h3>Screen 10: When Sharing Is Not Equal (/module/operators?step=10)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"When Sharing Is Not Equal" (teal: "Is Not Equal"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Sharing that leaves a remainder; which expression gives the 3 left over.</td></tr>
+<tr><td>Stages</td><td>3 (Share with leftovers)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 100, 101, 102.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 9.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: ShareStage</td><td>23 chocolates, 4 students. Share one round at a time.</td><td>ShareScene with the pill button.</td><td>total = 23, students = 4 (5 taps, 3 left)</td><td>Finish panel "Each has 5!": 3 chocolates are left. They can't make another full round.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>How many does each student get, and how many are left?</td><td>ShareScene: heap of 3, four trays holding 5 each.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 5 each, 3 left.</span><br>6 each, 0 left.<br>5 each, 0 left.</td><td>Right panel "Exactly!": 5 each, and 3 are left over.<br>Wrong panel "Not quite": Count what is in each tray, then what is still in the heap.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>Three results: 5.75, 5 and 3. Which expression gives the 3 left over?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>23 / 4<br>23 // 4<br><span class="ok">✔ 23 % 4</span></td><td>Right panel "Exactly!": 23 % 4 = 3. 23 / 4 = 5.75 and 23 // 4 = 5 answer other questions.<br>Wrong panel "Not quite": One of these gives the remainder: the % operator.</td></tr>
+</table>
+
+
+<h3>Screen 11: Same Numbers, Three Answers! (/module/operators?step=11)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Same Numbers, Three Answers!" (teal: "Three Answers!"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>The three divisions on 23 chocolates in groups of 4: /, // and %.</td></tr>
+<tr><td>Stages</td><td>4 (3 turns + question)</td></tr>
+<tr><td>Scene</td><td>Three cards in one row (3 columns, 128 px tall): Division / (blue), Floor division // (mint), Modulus % (cream). Over them the GroupsPicture of 23 chocolates in groups of 4 (5 complete groups + 3 left).</td></tr>
+<tr><td>Recorded</td><td>Stage 3 (id 113).</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Turn: operator, 3 columns (6.9)</td><td>23 chocolates, 4 in each group. First, /: ordinary division, with decimals.</td><td>Card 1 lit; the picture shows all chocolates (emphasis all).</td><td>/ Division | "Ordinary division, with decimals" | 23 / 4 = 5.75</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>1</td><td>Turn: operator</td><td>Next, //: floor division. It counts the complete groups.</td><td>Card 2 lit; the picture keeps the complete groups bright and fades the leftovers.</td><td>// Floor division | "Floor division: complete groups" | 23 // 4 = 5</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>2</td><td>Turn: operator</td><td>Last, %: modulus. It gives what is left over.</td><td>Card 3 lit; the picture fades the complete groups and keeps the leftovers bright.</td><td>% Modulus | "Modulus: the remainder" | 23 % 4 = 3</td><td>No result panel. Nothing recorded. Continue goes to the next stage.</td></tr>
+<tr><td>3</td><td>Quiz, rows</td><td>What does 23 // 4 = 5 tell us?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 5 complete groups of 4.</span><br>5 chocolates are left over.<br>The decimal answer, 5.75.</td><td>Right panel "Exactly!": Floor division rounds the quotient down: the number of complete groups.<br>Wrong panel "Not quite": // counts how many complete groups fit. It is not the leftover.</td></tr>
+</table>
+
+
+<h3>Screen 12: Not Enough for Even One Group? (/module/operators?step=12)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Not Enough for Even One Group?" (teal: "Even One Group?"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>When there is not enough to make even one group: 1 // 2 and 1 % 2.</td></tr>
+<tr><td>Stages</td><td>2 (2 questions)</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 120, 121.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 11.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>1 chocolate, 2 students. How many complete groups of 2 can we make?</td><td>ShareScene: a heap of 1 and two empty trays.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 0 complete groups.</span><br>1 complete group.<br>0.5 complete groups.</td><td>Right panel "Right!": No complete group of 2 can be made from 1 chocolate.<br>Wrong panel "Not quite": A group needs 2 chocolates. Do we have 2?</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>1 / 2 = 0.5 and 1 // 2 = 0. What is 1 % 2?</td><td>ValueCards: "1 / 2" 0.5, "1 // 2" 0, "1 % 2" ?.<br>Option pictures: neutral icons.</td><td>0<br><span class="ok">✔ 1</span><br>2</td><td>Right panel "Exactly!": 1 % 2 = 1. The whole chocolate is left, so 1 = (2 * 0) + 1.<br>Wrong panel "Not quite": The remainder is what is left after making all the complete groups.</td></tr>
+</table>
+
+
+<h3>Screen 13: How Much Remains? (/module/operators?step=13)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"How Much Remains?" (teal: "Remains?"), one line at 28 px</td></tr>
+<tr><td>Purpose</td><td>Four quick // and % questions on groups of chocolates.</td></tr>
+<tr><td>Stages</td><td>4 (4 questions)</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 130, 131, 132, 133.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 12.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>7 chocolates. Each group needs 3.</td><td>GroupsPicture: 7 in groups of 3.<br>Question pill: "7 // 3 = ? and 7 % 3 = ?"<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 2 and 1</span><br>3 and 1<br>2 and 2</td><td>Right panel "Exactly!": 2 complete groups, and 1 chocolate left.<br>Wrong panel "Not quite": Count the complete groups of 3, then what is left.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>5 chocolates. Each group needs 2.</td><td>GroupsPicture: 5 in groups of 2.<br>Question pill: "5 // 2 = ? and 5 % 2 = ?"<br>Option pictures: neutral icons.</td><td>2 and 0<br><span class="ok">✔ 2 and 1</span><br>3 and 1</td><td>Right panel "Exactly!": 2 complete groups, and 1 chocolate left.<br>Wrong panel "Not quite": Count the complete groups of 2, then what is left.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>3 chocolates. Each group needs 5.</td><td>GroupsPicture: 3 in groups of 5 (no complete group).<br>Question pill: "3 // 5 = ? and 3 % 5 = ?"<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 0 and 3</span><br>1 and 0<br>0 and 5</td><td>Right panel "Exactly!": No complete group, so all 3 remain.<br>Wrong panel "Not quite": Can we make even one group of 5 from 3?</td></tr>
+<tr><td>3</td><td>Quiz, rows</td><td>12 chocolates. Each group needs 4.</td><td>GroupsPicture: 12 in groups of 4.<br>Question pill: "12 // 4 = ? and 12 % 4 = ?"<br>Option pictures: neutral icons.</td><td>3 and 4<br>2 and 4<br><span class="ok">✔ 3 and 0</span></td><td>Right panel "Exactly!": 3 groups, nothing left. The remainder is always smaller than the divisor.<br>Wrong panel "Not quite": Do the groups of 4 use up all 12?</td></tr>
+</table>
+
+
+<h3>Screen 14: Growing Bigger, Faster! (/module/operators?step=14)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Growing Bigger, Faster!" (teal: "Bigger, Faster!"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Exponentiation: a square garden and the ** operator.</td></tr>
+<tr><td>Stages</td><td>3 (Question, tap **, question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 140, 141, 142.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>A square garden: 4 rows and 4 columns of plants.</td><td>PlantGrid 4 x 4: rows light up, then columns.<br>Question pill: "How many plants are there?"<br>Option pictures: neutral icons.</td><td>8<br><span class="ok">✔ 16</span><br>12</td><td>Right panel "Exactly!": 4 * 4 = 16. We can also write 4 ** 2 = 16.<br>Wrong panel "Not quite": Look at the numbers again, and think about what happens to them.</td></tr>
+<tr><td>1</td><td>Interaction: SymbolStage (6.4)</td><td>** raises a number to a power. Tap the examples.</td><td>Three keys in one row (not big: 44 px, 20 px text), no header; the explanation card shows meaning and example.</td><td>2 ** 3 | "2 * 2 * 2" | 2 ** 3 = 8<br>3 ** 2 | "3 * 3" | 3 ** 2 = 9<br>5 ** 2 | "5 * 5" | 5 ** 2 = 25<br>need = all 3</td><td>Finish panel "Exponentiation!": ** is a compact way to multiply a number by itself.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>What is 4 ** 2?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>8<br><span class="ok">✔ 16</span><br>6</td><td>Right panel "Exactly!": 4 ** 2 = 4 * 4 = 16.<br>Wrong panel "Not quite": 4 ** 2 means 4 multiplied by itself.</td></tr>
+</table>
+
+
+<h3>Screen 15: Can You Calculate the Total Bill? (/module/operators?step=15)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Can You Calculate the Total Bill?" (teal: "Total Bill?"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>One problem with several operations: * for equal items, + to combine the totals.</td></tr>
+<tr><td>Stages</td><td>2 (Build the bill + question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 150, 151.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: ExpressionStage</td><td>Build the bill for 3 notebooks and 2 pens.</td><td>Lead: ValueCards: notebook "3 notebooks" ₹20 each, pen "2 pens" ₹10 each.<br>7 places (tight sizes); result slot "= ?".</td><td>Blocks: 3, 20, 2, 10, *, *, +<br>Right (8 ways): 3 * 20 + 2 * 10; 20 * 3 + 2 * 10; 3 * 20 + 10 * 2; 20 * 3 + 10 * 2; and the same four with the two products swapped (8 ways)<br>Result: 80<br>Wrong-try note: "Equal items are multiplied. Then the two totals are added."</td><td>Finish panel "₹80!": 3 * 20 + 2 * 10 = 80. Writing 20 + 20 + 20 + 10 + 10 gives 80 too.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>Both ways give 80. What does the * do in 3 * 20?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Finds the cost of equal items.</span><br>Combines the two totals.<br>Finds what is left.</td><td>Right panel "Exactly!": Multiplication costs the equal items; addition combines the different totals.<br>Wrong panel "Not quite": 3 notebooks, each ₹20: what does that make?</td></tr>
+</table>
+
+
+<h3>Screen 16: Does Calculation Order Matter? (/module/operators?step=16)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Does Calculation Order Matter?" (teal: "Order Matter?"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Order of operations and parentheses: 2 + 3 * 4 against (2 + 3) * 4.</td></tr>
+<tr><td>Stages</td><td>3 (Question + 2 step-throughs)</td></tr>
+<tr><td>Recorded</td><td>Stage 0 is a question (id 160). The two step-throughs record a right when they finish (ids 161, 162); the first has no result panel, so no confetti.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 15.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, 2 x 2 tiles</td><td>Do both expressions give the same result?</td><td>SideBySide: "2 + 3 * 4" and "( 2 + 3 ) * 4".<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td>Yes.<br><span class="ok">✔ No.</span></td><td>Right panel "No!": Same numbers, different results. Let's see how each is worked out.<br>Wrong panel "Not quite": Look at the parentheses. Could they change what happens first?</td></tr>
+<tr><td>1</td><td>Interaction: StepStage (6.5)</td><td>Watch how 2 + 3 * 4 is worked out.</td><td>Expression 2 + 3 * 4 (tokens 0 to 4).</td><td>Step 1: picks out 3 * 4 (tokens 2-4): "First, 3 * 4 is picked out."<br>Step 2: same tokens: "3 * 4 = 12."<br>Step 3: picks out 2 + (tokens 0-1): "Then add 2: 2 + 12." result 14</td><td>No result panel.</td></tr>
+<tr><td>2</td><td>Interaction: StepStage</td><td>Now (2 + 3) * 4.</td><td>Expression ( 2 + 3 ) * 4 (tokens 0 to 6).</td><td>Step 1: tokens 0-4: "First, the part inside the parentheses."<br>Step 2: tokens 1-3: "2 + 3 = 5."<br>Step 3: tokens 5-6: "Then multiply 5 by 4." result 20</td><td>Finish panel "14 and 20!": Parentheses group values. They can change what is calculated first, and so the result.</td></tr>
+</table>
+
+
+<h3>Screen 17: Arrange the Calculation (/module/operators?step=17)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Arrange the Calculation" (teal: "Calculation"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Choose where *, + and ( ) go for two different situations.</td></tr>
+<tr><td>Stages</td><td>3 (2 builds + question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 170, 171, 172.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 16.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: ExpressionStage</td><td>2 gift boxes at ₹50 each and 1 card at ₹20. Build the total.</td><td>Lead: ValueCards: gift "2 gift boxes" ₹50 each, notebook "1 card" ₹20.<br>5 places; result slot.</td><td>Blocks: 2, 50, 20, *, +, (, )<br>Right: 2 * 50 + 20; 50 * 2 + 20; 20 + 2 * 50; 20 + 50 * 2<br>Result: 120<br>Wrong-try note: "Two boxes of ₹50 are multiplied, then the card is added."</td><td>Finish panel "₹120!": 2 * 50 + 20 = 120.</td></tr>
+<tr><td>1</td><td>Interaction: ExpressionStage</td><td>Now 2 bundles. Each bundle has a ₹50 box and a ₹20 card.</td><td>Lead: ValueCards: gift "Box" ₹50, notebook "Card" ₹20, coins "Bundles" 2.<br>7 places (tight sizes).</td><td>Blocks: 2, 50, 20, *, +, (, )<br>Right: 2 * ( 50 + 20 ); 2 * ( 20 + 50 ); ( 50 + 20 ) * 2; ( 20 + 50 ) * 2<br>Result: 140<br>Wrong-try note: "A bundle is a box plus a card. Group that first, then multiply by 2."</td><td>Finish panel "₹140!": 2 * (50 + 20) = 140.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>The two expressions are different. Why?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ The second adds each bundle first, using ( ).</span><br>They are really the same.<br>The second one is written wrongly.</td><td>Right panel "Exactly!": The grouping is different, so the parentheses go around the bundle's cost.<br>Wrong panel "Not quite": In the second problem, what must be added before multiplying?</td></tr>
+</table>
+
+
+<h3>Screen 18: Understand the Situation! (/module/operators?step=18)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Understand the Situation!" (teal: "Situation!"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Choose the expression by the meaning of the situation, not just by the symbol.</td></tr>
+<tr><td>Stages</td><td>4 (4 questions)</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 180, 181, 182, 183.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 15.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>A student has ₹200 and spends ₹75. Which expression finds what remains?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>200 + 75<br><span class="ok">✔ 200 - 75</span><br>200 * 75</td><td>Right panel "Exactly!": Spending takes money away: 200 - 75.<br>Wrong panel "Not quite": Does the money grow, or go away?</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>There are 6 boxes, each with 8 pencils. Which expression finds all the pencils?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>6 + 8<br>6 // 8<br><span class="ok">✔ 6 * 8</span></td><td>Right panel "Exactly!": Equal boxes repeat: 6 * 8.<br>Wrong panel "Not quite": Six equal groups of 8. Which operator repeats a group?</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>17 chocolates shared among 5 students. Whole chocolates each?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>17 % 5<br><span class="ok">✔ 17 // 5</span><br>17 / 5</td><td>Right panel "Exactly!": 17 // 5 = 3 complete chocolates each.<br>Wrong panel "Not quite": Which operator counts complete groups?</td></tr>
+<tr><td>3</td><td>Quiz, rows</td><td>Same 17 chocolates and 5 students. How many chocolates remain?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>17 // 5<br>17 / 5<br><span class="ok">✔ 17 % 5</span></td><td>Right panel "Exactly!": 17 % 5 = 2 remain. You chose by meaning, not just by symbol.<br>Wrong panel "Not quite": Which operator gives the remainder?</td></tr>
+</table>
+
+
+<h3>Screen 19: Who Is Older? (/module/operators?step=19)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Who Is Older?" (teal: "Older?"), one line at 28 px</td></tr>
+<tr><td>Purpose</td><td>Compare two ages and decide whether a statement is correct (True or False).</td></tr>
+<tr><td>Stages</td><td>2 (2 Yes / No questions)</td></tr>
+<tr><td>Scene</td><td>Both stages show the same Versus: teacher picture "Teacher" 35 years against student picture "Student" 13 years, with the "vs" badge between.</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 190, 191.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, 2 x 2 tiles</td><td>Is your teacher older than you?</td><td>Versus (above).<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td><span class="ok">✔ Yes.</span><br>No.</td><td>Right panel "Yes!": “My teacher is older than me” is correct. So the statement is True.<br>Wrong panel "Not quite": Compare the two ages on the cards.</td></tr>
+<tr><td>1</td><td>Quiz, 2 x 2 tiles</td><td>“My age is greater than my teacher's age.” Is that correct?</td><td>Versus (above).<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td>Yes.<br><span class="ok">✔ No.</span></td><td>Right panel "No!": The statement is incorrect. So it is False. We compare things and decide if a statement is correct.<br>Wrong panel "Not quite": Is 13 greater than 35?</td></tr>
+</table>
+
+
+<h3>Screen 20: True or False? (/module/operators?step=20)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"True or False?" (teal: "False?"), one line at 28 px</td></tr>
+<tr><td>Purpose</td><td>Yes means the statement is True, No means False.</td></tr>
+<tr><td>Stages</td><td>4 (4 Yes / No statements)</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 200, 201, 202, 203.</td></tr>
+<tr><td>Adaptive path</td><td>Skipped for a strong learner when screen(s) 19 were answered clean. If the learner struggled here, sent back once to screen 19.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, 2 x 2 tiles</td><td>My teacher is older than me.</td><td>Versus: teacher "Teacher" 35 years, student "Me" 13 years.<br>Question pill: "Is this statement correct?"<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td><span class="ok">✔ Yes.</span><br>No.</td><td>Right panel "True!": Yes means the statement is True.<br>Wrong panel "Not quite": Compare the ages on the cards.</td></tr>
+<tr><td>1</td><td>Quiz, 2 x 2 tiles</td><td>A bicycle is faster than a walking person.</td><td>Versus: person picture "Bicycle", student picture "Walking person" (no values).<br>Question pill: "Is this statement correct?"<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td><span class="ok">✔ Yes.</span><br>No.</td><td>Right panel "True!": Yes → True.<br>Wrong panel "Not quite": Think about how fast each one goes.</td></tr>
+<tr><td>2</td><td>Quiz, 2 x 2 tiles</td><td>A school bag is heavier than a pencil.</td><td>Versus: bag picture "School bag", pen picture "Pencil".<br>Question pill: "Is this statement correct?"<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td><span class="ok">✔ Yes.</span><br>No.</td><td>Right panel "True!": Yes → True.<br>Wrong panel "Not quite": Which one is harder to lift?</td></tr>
+<tr><td>3</td><td>Quiz, 2 x 2 tiles</td><td>A 5-metre rope is shorter than a 2-metre rope.</td><td>Versus: gift picture "Rope" 5 m, gift picture "Rope" 2 m.<br>Question pill: "Is this statement correct?"<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td>Yes.<br><span class="ok">✔ No.</span></td><td>Right panel "False!": No → False. True and False are Boolean values.<br>Wrong panel "Not quite": Which number is smaller, 5 or 2?</td></tr>
+</table>
+
+
+<h3>Screen 21: Let the Computer Compare! (/module/operators?step=21)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Let the Computer Compare!" (teal: "Compare!"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>The computer compares with symbols: the six comparison keys, introduced by example.</td></tr>
+<tr><td>Stages</td><td>1 (Tap six symbols)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 210.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: SymbolStage</td><td>A computer compares with symbols. Tap each one.</td><td>Header: CompareDemo of the current key's example (before any tap it shows 35 &gt; 13, True).<br>Six big keys (56 px, 28 px text), 3 columns, no heading. Explanation card before a tap: "Tap each symbol."</td><td>Key | meaning | example | read aloud | result<br>&gt; | Greater than | 35 &gt; 13 | "Thirty-five is greater than thirteen." | True<br>&lt; | Less than | 13 &lt; 35 | "Thirteen is less than thirty-five." | True<br>== | Equal to | 10 == 10 | "Ten is equal to ten." | True<br>!= | Not equal to | 10 != 5 | "Ten is not equal to five." | True<br>&gt;= | Greater than or equal to | 35 &gt;= 35 | "Thirty-five is greater than or equal to thirty-five." | True<br>&lt;= | Less than or equal to | 13 &lt;= 35 | "Thirteen is less than or equal to thirty-five." | True<br>need = 3 different keys (the stage is done after the third)</td><td>Finish panel "Comparisons!": Each symbol compares two values. The next screens explain them one by one.</td></tr>
+</table>
+
+
+<h3>Screen 22: Always Read Left to Right (/module/operators?step=22)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Always Read Left to Right" (teal: "Left to Right"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Read a comparison from left to right: the side of the symbol touching the left number is open (greater) or closed (smaller).</td></tr>
+<tr><td>Stages</td><td>3 (2 step-throughs + question)</td></tr>
+<tr><td>Recorded</td><td>Stage 0 (id 220) records a right when its step-through ends; stage 1 likewise (221); stage 2 is a question (222). The first step-through has no result panel.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: StepStage</td><td>First, look at the left side!</td><td>Expression 8 &gt; 5.</td><td>Step 1: token 0: "Start with the number on the left: 8."<br>Step 2: token 1: "The side of the symbol touching 8 is open."<br>Step 3: tokens 0-2: "So the left number is greater: “Eight is greater than five.”"</td><td>No result panel.</td></tr>
+<tr><td>1</td><td>Interaction: StepStage</td><td>Now a second example.</td><td>Expression 5 &lt; 8.</td><td>Step 1: token 0: "Start with the number on the left: 5."<br>Step 2: token 1: "The side of the symbol touching 5 is closed."<br>Step 3: tokens 0-2: "So the left number is smaller: “Five is less than eight.”"</td><td>Finish panel "The rule": Left side open: the left number is greater. Left side closed: the left number is smaller.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>In 6 &lt; 11 the left side is closed. What does that tell us?</td><td>ExprBig: 6 &lt; 11 at 40 px.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 6 is smaller than 11.</span><br>6 is greater than 11.</td><td>Right panel "Exactly!": Left side closed: the left number is smaller.<br>Wrong panel "Not quite": Start from the left number and look at the side touching it.</td></tr>
+</table>
+
+
+<h3>Screen 23: Read What the Expression Says (/module/operators?step=23)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Read What the Expression Says" (teal: "Expression Says"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Read six comparisons as sentences.</td></tr>
+<tr><td>Stages</td><td>6 (6 read-aloud questions)</td></tr>
+<tr><td>Scene</td><td>Each stage shows its expression with ExprBig at 44 px (operators teal).</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 230, 231, 232, 233, 234, 235.</td></tr>
+<tr><td>Adaptive path</td><td>Skipped for a strong learner when screen(s) 22 were answered clean. If the learner struggled here, sent back once to screen 22.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>Read the complete expression. What does it say?</td><td>8 &gt; 5<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Eight is greater than five.</span><br>Eight is less than five.<br>Five is greater than eight.</td><td>Right panel "Exactly!": Every comparison says a statement: “Eight is greater than five.”<br>Wrong panel "Not quite": Start with the number on the left, then the symbol.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>What does this one say?</td><td>5 &lt; 8<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Five is less than eight.</span><br>Five is greater than eight.<br>Eight is less than five.</td><td>Right panel "Exactly!": “Five is less than eight.”<br>Wrong panel "Not quite": Read it from left to right.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>And this one?</td><td>12 &gt; 7<br>Option pictures: neutral icons.</td><td>Seven is greater than twelve.<br><span class="ok">✔ Twelve is greater than seven.</span><br>Twelve is less than seven.</td><td>Right panel "Exactly!": “Twelve is greater than seven.”<br>Wrong panel "Not quite": Start with 12, the number on the left.</td></tr>
+<tr><td>3</td><td>Quiz, rows</td><td>Read this one.</td><td>4 &lt; 9<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Four is less than nine.</span><br>Four is greater than nine.<br>Nine is less than four.</td><td>Right panel "Exactly!": “Four is less than nine.”<br>Wrong panel "Not quite": Start with 4, the number on the left.</td></tr>
+<tr><td>4</td><td>Quiz, rows</td><td>Read this one.</td><td>15 &gt; 10<br>Option pictures: neutral icons.</td><td>Fifteen is less than ten.<br>Ten is greater than fifteen.<br><span class="ok">✔ Fifteen is greater than ten.</span></td><td>Right panel "Exactly!": “Fifteen is greater than ten.”<br>Wrong panel "Not quite": Start with 15, the number on the left.</td></tr>
+<tr><td>5</td><td>Quiz, rows</td><td>Read this one, even if it looks odd.</td><td>6 &lt; 3<br>Option pictures: neutral icons.</td><td>Six is greater than three.<br><span class="ok">✔ Six is less than three.</span><br>Three is less than six.</td><td>Right panel "Well read!": “Six is less than three.” Reading it is not deciding if it is True: this one is False.<br>Wrong panel "Not quite": Read it as written, from the left. Do not decide yet if it is true.</td></tr>
+</table>
+
+
+<h3>Screen 24: Write What the Sentence Says (/module/operators?step=24)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Write What the Sentence Says" (teal: "Sentence Says"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Write the expression for a sentence (the reverse of screen 23).</td></tr>
+<tr><td>Stages</td><td>5 (5 sentence builds)</td></tr>
+<tr><td>Scene</td><td>Every stage is an ExpressionStage with no lead scene, the prompt "Build the expression for the sentence.", 3 places (roomy), and the same wrong-try note: "Start with the number the sentence starts with."</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 240, 241, 242, 243, 244.</td></tr>
+<tr><td>Adaptive path</td><td>Skipped for a strong learner when screen(s) 22 and 23 were answered clean. If the learner struggled here, sent back once to screen 22.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: ExpressionStage</td><td>“Twenty is greater than ten.”</td><td>3 places, result slot.</td><td>Blocks: 10, 20, &gt;, &lt;<br>Right: 20 &gt; 10<br>Result: True</td><td>Finish panel "That's right!": 20 &gt; 10.</td></tr>
+<tr><td>1</td><td>Interaction: ExpressionStage</td><td>“Five is less than twelve.”</td><td>3 places, result slot.</td><td>Blocks: 12, &lt;, &gt;, 5<br>Right: 5 &lt; 12<br>Result: True</td><td>Finish panel "That's right!": 5 &lt; 12.</td></tr>
+<tr><td>2</td><td>Interaction: ExpressionStage</td><td>“Thirty is greater than twenty-five.”</td><td>3 places, result slot.</td><td>Blocks: 25, &gt;, 30, &lt;<br>Right: 30 &gt; 25<br>Result: True</td><td>Finish panel "That's right!": 30 &gt; 25.</td></tr>
+<tr><td>3</td><td>Interaction: ExpressionStage</td><td>“Four is less than nine.”</td><td>3 places, result slot.</td><td>Blocks: &lt;, 9, 4, &gt;<br>Right: 4 &lt; 9<br>Result: True</td><td>Finish panel "That's right!": 4 &lt; 9.</td></tr>
+<tr><td>4</td><td>Interaction: ExpressionStage</td><td>“Fifteen is less than eight.”</td><td>3 places, result slot.</td><td>Blocks: 8, 15, &lt;, &gt;<br>Right: 15 &lt; 8<br>Result: False</td><td>Finish panel "Well written!": 15 &lt; 8 matches the sentence, even though the statement is False. You can go both ways now.</td></tr>
+</table>
+
+
+<h3>Screen 25: Six Ways to Compare Values! (/module/operators?step=25)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Six Ways to Compare Values!" (teal: "Compare Values!"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>The six comparison operators with meaning, example and how they read; = against ==.</td></tr>
+<tr><td>Stages</td><td>2 (Tap six keys + question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 250, 251.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: SymbolStage</td><td>Tap each card: its meaning, an example and how it reads.</td><td>Six big keys, 3 columns, no header, no heading. Explanation card prompt: "Tap each symbol."</td><td>Key | meaning | example | read aloud | result<br>== | Equal to | 10 == 10 | "Ten is equal to ten." | True<br>!= | Not equal to | 10 != 5 | "Ten is not equal to five." | True<br>&gt; | Greater than | 10 &gt; 5 | "Ten is greater than five." | True<br>&lt; | Less than | 5 &lt; 10 | "Five is less than ten." | True<br>&gt;= | Greater than or equal to | 10 &gt;= 10 | "Ten is greater than or equal to ten." | True<br>&lt;= | Less than or equal to | 5 &lt;= 10 | "Five is less than or equal to ten." | True<br>need = all 6</td><td>Finish panel "Six operators!": Each symbol asks a different question about two values.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>In Python, = gives a value a name. Which symbol checks if two values are equal?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>=<br><span class="ok">✔ ==</span><br>!=</td><td>Right panel "Exactly!": == checks whether two values are equal. A single = is used for assignment.<br>Wrong panel "Not quite": One of these asks “Is it equal?” and does not give a name.</td></tr>
+</table>
+
+
+<h3>Screen 26: The Number Line Challenge (/module/operators?step=26)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"The Number Line Challenge" (teal: "Challenge"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Compare numbers on a number line: farther right is greater.</td></tr>
+<tr><td>Stages</td><td>4 (3 builds + question)</td></tr>
+<tr><td>Scene</td><td>The three builds show a small LineScale (marks 0 to 10) with one number picked (teal) and one second (orange); the build has 3 places and the result slot, wrong-try note "The number farther to the right is the greater one." and result True.</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 260, 261, 262, 263.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: ExpressionStage</td><td>Which number is greater, 8 or 5? Build the comparison.</td><td>LineScale: 8 picked, 5 second.</td><td>Blocks: 8, 5, &gt;, &lt;<br>Right: 8 &gt; 5; 5 &lt; 8</td><td>Finish panel "Right!": 8 &gt; 5: “Eight is greater than five.” The number farther right is greater.</td></tr>
+<tr><td>1</td><td>Interaction: ExpressionStage</td><td>Now 3 and 7.</td><td>LineScale: 3 picked, 7 second.</td><td>Blocks: 3, 7, &gt;, &lt;<br>Right: 7 &gt; 3; 3 &lt; 7</td><td>Finish panel "Right!": 3 &lt; 7: “Three is less than seven.”</td></tr>
+<tr><td>2</td><td>Interaction: ExpressionStage</td><td>Now 9 and 2.</td><td>LineScale: 9 picked, 2 second.</td><td>Blocks: 9, 2, &gt;, &lt;<br>Right: 9 &gt; 2; 2 &lt; 9</td><td>Finish panel "Right!": 9 &gt; 2: “Nine is greater than two.”</td></tr>
+<tr><td>3</td><td>Quiz, 2 x 2 tiles</td><td>Place the right symbol between 4 and 6.</td><td>LineScale (small): 4 picked, 6 second.<br>Question pill: "4 ? 6"<br>Option pictures: icon-order.svg (&gt;), icon-actions.svg (&lt;).</td><td>&gt;<br><span class="ok">✔ &lt;</span></td><td>Right panel "Exactly!": 4 &lt; 6. A number line is another way to compare: farther right is greater.<br>Wrong panel "Not quite": Is 4 farther left or farther right than 6?</td></tr>
+</table>
+
+
+<h3>Screen 27: At Least 100 Points! (/module/operators?step=27)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"At Least 100 Points!" (teal: "100 Points!"), one line at 28 px</td></tr>
+<tr><td>Purpose</td><td>&gt;= : at least 100 points unlocks a level; the boundary value is included.</td></tr>
+<tr><td>Stages</td><td>2 (Tap scores + pick)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 270, 271.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 25.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: SymbolStage</td><td>A game needs at least 100 points to unlock a level. Tap each score.</td><td>Header: a LineScale with marks 99, 100, 101, a gate standing at 100 labelled "Unlock at 100", the tapped score picked; under it a GateCard (score, Unlocked or Locked).<br>Three keys, 3 columns, 56 px keys with 28 px text (big).</td><td>99 | "99 points: the gate stays shut." | False<br>100 | "100 points: exactly enough." | True<br>101 | "101 points: more than enough." | True<br>need = all 3</td><td>No result panel.<br>(No finish panel: the stage is done silently after the third key.)</td></tr>
+<tr><td>1</td><td>Interaction: MultiPickStage (6.7)</td><td>score &gt;= 100: “Score is greater than or equal to 100.” Tap the scores where it is True.</td><td>Three cards in a row: label and sub label.</td><td>99 | 99 &gt;= 100<br>100 | 100 &gt;= 100 (right)<br>101 | 101 &gt;= 100 (right)<br>Wrong-tap note: "At least 100 includes 100 itself."</td><td>Finish panel "At least!": Greater than or equal to includes the boundary value itself.</td></tr>
+</table>
+
+
+<h3>Screen 28: Understanding the Maximum Limit (/module/operators?step=28)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Understanding the Maximum Limit" (teal: "Maximum Limit"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>&lt;= : a ride's maximum height of 150 cm; the limit itself is allowed.</td></tr>
+<tr><td>Stages</td><td>2 (Tap heights + pick)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 280, 281.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 25.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: SymbolStage</td><td>A ride has a maximum height of 150 cm. Who can enter? Tap each height.</td><td>Header: a LineScale with marks 145, 150, 155, the gate at 150 labelled "Limit 150 cm", the tapped height picked (no GateCard).<br>Three keys, not big (44 px, 20 px text).</td><td>145 | "145 cm: allowed." | True<br>150 | "150 cm: allowed, exactly at the limit." | True<br>155 | "155 cm: not allowed." | False<br>need = all 3</td><td>No result panel.<br>(No finish panel.)</td></tr>
+<tr><td>1</td><td>Interaction: MultiPickStage</td><td>height &lt;= 150: “Height is less than or equal to 150.” Tap the heights where it is True.</td><td>Three cards in a row.</td><td>145 | 145 &lt;= 150 (right)<br>150 | 150 &lt;= 150 (right)<br>155 | 155 &lt;= 150<br>Wrong-tap note: "The maximum value itself is allowed."</td><td>Finish panel "Includes the limit!": Less than or equal to includes the maximum value itself.</td></tr>
+</table>
+
+
+<h3>Screen 29: A Comparison Produces an Answer (/module/operators?step=29)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"A Comparison Produces an Answer" (teal: "an Answer"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>A comparison gives an answer: a Boolean.</td></tr>
+<tr><td>Stages</td><td>2 (Test two scores + question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 290, 291.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: SymbolStage</td><td>A game checks score &gt;= 100. Test two scores.</td><td>Header: before a tap, ExprBig "score &gt;= 100" at 30 px; after a tap, CompareDemo of the example with its result.<br>Two keys, 2 columns, not big (the symbol text is longer than 6 letters, so 56 px tall at 17 px). Prompt: "Tap each score."</td><td>Score = 120 | "Test the first score" | 120 &gt;= 100 | "One hundred twenty is greater than or equal to one hundred." | True<br>Score = 80 | "Test the second score" | 80 &gt;= 100 | "Eighty is greater than or equal to one hundred." | False<br>need = both</td><td>Finish panel "True or False!": A comparison doesn't return the bigger or smaller number. It returns a Boolean: True or False.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>What does a comparison like 80 &gt;= 100 give back?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ A Boolean: True or False.</span><br>The bigger number.<br>The smaller number.</td><td>Right panel "Exactly!": Boolean is the data type for True/False information. A comparison can be read, understood and evaluated.<br>Wrong panel "Not quite": Remember the Boolean data type from the last chapter.</td></tr>
+</table>
+
+
+<h3>Screen 30: Read, Understand and Evaluate (/module/operators?step=30)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Read, Understand and Evaluate" (teal: "and Evaluate"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Read, then evaluate, four comparisons: two questions each.</td></tr>
+<tr><td>Stages</td><td>8 (8 questions (4 x read, evaluate))</td></tr>
+<tr><td>Scene</td><td>Each expression has Step 1 (read it, rows) and Step 2 (is it True or False, pair of tiles). Both show the expression with ExprBig at 44 px. Step 1 right title "Read right!", wrong text "Read it from left to right: the left number, the symbol, then the right number." Step 2 right title "True!" or "False!", wrong text "Check the statement against the numbers." Step 2 options: True (icon-goal.svg), False (icon-short.svg).</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 300, 301, 302, 303, 304, 305, 306, 307.</td></tr>
+<tr><td>Adaptive path</td><td>Skipped for a strong learner when screen(s) 23 and 29 were answered clean. If the learner struggled here, sent back once to screen 29.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>Step 1: read it. What does it say?</td><td>8 &gt; 5<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Eight is greater than five.</span><br>Eight is less than five.<br>Five is greater than eight.</td><td>Right panel "Read right!": It says 8 is bigger than 5.<br>Wrong panel "Not quite": Read it from left to right: the left number, the symbol, then the right number.</td></tr>
+<tr><td>1</td><td>Quiz, 2 x 2 tiles</td><td>Step 2: is the statement True or False?</td><td>8 &gt; 5<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td><span class="ok">✔ True</span><br>False</td><td>Right panel "True!": 8 is bigger than 5, so it is True.<br>Wrong panel "Not quite": Check the statement against the numbers.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>Step 1: read it. What does it say?</td><td>4 &gt; 9<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Four is greater than nine.</span><br>Nine is greater than four.<br>Four is less than nine.</td><td>Right panel "Read right!": It says 4 is bigger than 9.<br>Wrong panel "Not quite": Read it from left to right: the left number, the symbol, then the right number.</td></tr>
+<tr><td>3</td><td>Quiz, 2 x 2 tiles</td><td>Step 2: is the statement True or False?</td><td>4 &gt; 9<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td>True<br><span class="ok">✔ False</span></td><td>Right panel "False!": 4 is not bigger than 9, so it is False.<br>Wrong panel "Not quite": Check the statement against the numbers.</td></tr>
+<tr><td>4</td><td>Quiz, rows</td><td>Step 1: read it. What does it say?</td><td>10 == 10<br>Option pictures: neutral icons.</td><td>Ten is not equal to ten.<br><span class="ok">✔ Ten is equal to ten.</span><br>Ten is less than ten.</td><td>Right panel "Read right!": It says both values are the same.<br>Wrong panel "Not quite": Read it from left to right: the left number, the symbol, then the right number.</td></tr>
+<tr><td>5</td><td>Quiz, 2 x 2 tiles</td><td>Step 2: is the statement True or False?</td><td>10 == 10<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td><span class="ok">✔ True</span><br>False</td><td>Right panel "True!": Both values are the same, so it is True.<br>Wrong panel "Not quite": Check the statement against the numbers.</td></tr>
+<tr><td>6</td><td>Quiz, rows</td><td>Step 1: read it. What does it say?</td><td>15 &lt;= 12<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Fifteen is less than or equal to twelve.</span><br>Fifteen is greater than twelve.<br>Twelve is less than or equal to fifteen.</td><td>Right panel "Read right!": You can read it right even when it is False.<br>Wrong panel "Not quite": Read it from left to right: the left number, the symbol, then the right number.</td></tr>
+<tr><td>7</td><td>Quiz, 2 x 2 tiles</td><td>Step 2: is the statement True or False?</td><td>15 &lt;= 12<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td>True<br><span class="ok">✔ False</span></td><td>Right panel "False!": 15 is not less than or equal to 12, so it is False.<br>Wrong panel "Not quite": Check the statement against the numbers.</td></tr>
+</table>
+
+
+<h3>Screen 31: Choose the Right Operation (/module/operators?step=31)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Choose the Right Operation" (teal: "Right Operation"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Choose the right operator for nine situations (arithmetic and comparison).</td></tr>
+<tr><td>Stages</td><td>9 (9 "which operator" questions)</td></tr>
+<tr><td>Scene</td><td>Every stage is a 2 x 2 tile question (option text 15 px). Option texts used: "+ Add", "- Subtract", "* Multiply", "/ Divide", "// Whole groups", "% Remainder", "&gt;= At least", "== Equal to", "&lt; Below", "&gt; Greater than", "&lt;= At most", "!= Not equal". Right title "Exactly!" on all.</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 310, 311, 312, 313, 314, 315, 316, 317, 318.</td></tr>
+<tr><td>Adaptive path</td><td>Skipped for a strong learner when screen(s) 18 and 30 were answered clean.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, 2 x 2 tiles</td><td>Find the total price of two products.</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ + Add</span><br>- Subtract<br>* Multiply<br>/ Divide</td><td>Right panel "Exactly!": Adding combines the two prices.<br>Wrong panel "Not quite": Which operator puts two values together?</td></tr>
+<tr><td>1</td><td>Quiz, 2 x 2 tiles</td><td>Find the balance left after spending money.</td><td>No picture.<br>Option pictures: neutral icons.</td><td>* Multiply<br><span class="ok">✔ - Subtract</span><br>+ Add<br>/ Divide</td><td>Right panel "Exactly!": Subtracting finds what remains.<br>Wrong panel "Not quite": Spending takes money away.</td></tr>
+<tr><td>2</td><td>Quiz, 2 x 2 tiles</td><td>Find the total chairs in 4 equal rows of 5.</td><td>No picture.<br>Option pictures: neutral icons.</td><td>+ Add<br>/ Divide<br><span class="ok">✔ * Multiply</span><br>- Subtract</td><td>Right panel "Exactly!": Equal rows repeat: multiply.<br>Wrong panel "Not quite": Equal groups call for a shortcut.</td></tr>
+<tr><td>3</td><td>Quiz, 2 x 2 tiles</td><td>Share 10 litres of juice among 4 friends. Find the exact amount each.</td><td>No picture.<br>Option pictures: neutral icons.</td><td>// Whole groups<br><span class="ok">✔ / Divide</span><br>% Remainder<br>* Multiply</td><td>Right panel "Exactly!": Ordinary division gives the exact share, 2.5.<br>Wrong panel "Not quite": You want the exact amount, decimals included.</td></tr>
+<tr><td>4</td><td>Quiz, 2 x 2 tiles</td><td>Share 17 chocolates among 5 students. Find the whole chocolates each.</td><td>No picture.<br>Option pictures: neutral icons.</td><td>/ Divide<br>% Remainder<br><span class="ok">✔ // Whole groups</span><br>- Subtract</td><td>Right panel "Exactly!": Floor division gives complete groups: 3 each.<br>Wrong panel "Not quite": Which operator counts complete groups?</td></tr>
+<tr><td>5</td><td>Quiz, 2 x 2 tiles</td><td>Find how many chocolates remain after forming complete groups.</td><td>No picture.<br>Option pictures: neutral icons.</td><td>// Whole groups<br><span class="ok">✔ % Remainder</span><br>/ Divide<br>+ Add</td><td>Right panel "Exactly!": Modulus gives the remainder.<br>Wrong panel "Not quite": Which operator gives what is left over?</td></tr>
+<tr><td>6</td><td>Quiz, 2 x 2 tiles</td><td>Check whether a score reaches 100.</td><td>No picture.<br>Option pictures: neutral icons.</td><td>&lt; Below<br><span class="ok">✔ &gt;= At least</span><br>== Equal to<br>+ Add</td><td>Right panel "Exactly!": &gt;= includes 100 itself: “at least 100”.<br>Wrong panel "Not quite": Reaching 100 means 100 or more.</td></tr>
+<tr><td>7</td><td>Quiz, 2 x 2 tiles</td><td>Check whether two values are equal.</td><td>No picture.<br>Option pictures: neutral icons.</td><td>&gt; Greater than<br><span class="ok">✔ == Equal to</span><br>&lt; Below<br>!= Not equal</td><td>Right panel "Exactly!": == checks equality.<br>Wrong panel "Not quite": Which one asks “Is it the same?”</td></tr>
+<tr><td>8</td><td>Quiz, 2 x 2 tiles</td><td>Check that a value is below a limit. The limit itself is not allowed.</td><td>No picture.<br>Option pictures: neutral icons.</td><td>&lt;= At most<br><span class="ok">✔ &lt; Below</span><br>&gt;= At least<br>== Equal to</td><td>Right panel "Exactly!": &lt; leaves the limit out. &lt;= would allow it.<br>Wrong panel "Not quite": Is the limit itself allowed?</td></tr>
+</table>
+
+
+<h3>Screen 32: Construct the Expression (/module/operators?step=32)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Construct the Expression" (teal: "Expression"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Build a change calculation, then see a negative result.</td></tr>
+<tr><td>Stages</td><td>2 (Build the change + question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 320, 321.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: ExpressionStage</td><td>4 notebooks at ₹25, 3 pens at ₹10. They pay ₹150. Build the change.</td><td>Lead: ValueCards: notebook "4 notebooks" ₹25 each, pen "3 pens" ₹10 each, coins "Pays" ₹150.<br>11 places (tight sizes); result slot.</td><td>Blocks: 150, 4, 25, 3, 10, *, *, +, -, (, )<br>Right: 150 - ( the 8 ways of 4 * 25 + 3 * 10 ) with the brackets, for example 150 - ( 4 * 25 + 3 * 10 )<br>Result: 20<br>Wrong-try note: "Total the notebooks and the pens first, in parentheses. Then take it from 150."</td><td>Finish panel "₹20 back!": Notebooks 100 + pens 30 = 130. Then 150 - 130 = 20.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>What if the student pays only ₹120? What is 120 - 130?</td><td>ExprBig: 120 - 130 at 36 px.<br>Option pictures: neutral icons.</td><td>10<br><span class="ok">✔ -10</span><br>0</td><td>Right panel "Exactly!": 120 - 130 = -10. The student is ₹10 short: a shortfall, not money back.<br>Wrong panel "Not quite": The student pays less than the bill. Which way is the difference?</td></tr>
+</table>
+
+
+<h3>Screen 33: Create a Shopping Calculator (/module/operators?step=33)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Create a Shopping Calculator" (teal: "Shopping Calculator"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Put the steps of a shopping app in order, then the cost expression.</td></tr>
+<tr><td>Stages</td><td>2 (Order the steps + question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 330, 331.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: OrderStage (6.6)</td><td>Put the shopping app's steps in order.</td><td>Lead: ValueCards: notebook "Notebooks", pen "Pens", gift "Pencils" (no values).</td><td>Right order: 1 Keep the price of each item. 2 Ask how many of each item. 3 Multiply price by quantity for each item. 4 Add the three totals. 5 Display the final bill.<br>Shown in this order: "Multiply price by quantity for each item.", "Display the final bill.", "Keep the price of each item.", "Add the three totals.", "Ask how many of each item."<br>Wrong-tap note: "The app needs prices and quantities before it can calculate."</td><td>Finish panel "A working plan!": Price * quantity for each item, then add the three totals.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>How does the app find the cost of one kind of item?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ notebook_price * notebook_quantity</span><br>notebook_price + notebook_quantity<br>notebook_price - notebook_quantity</td><td>Right panel "Exactly!": Multiplication calculates repeated item costs. Addition combines the different totals.<br>Wrong panel "Not quite": Several items, each with the same price: which operator?</td></tr>
+</table>
+
+
+<h3>Screen 34: Build a Budget Checker (/module/operators?step=34)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Build a Budget Checker" (teal: "Budget Checker"), one line at 24 px</td></tr>
+<tr><td>Purpose</td><td>Check a bill against a budget with &lt;=.</td></tr>
+<tr><td>Stages</td><td>2 (Test three bills + question)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 340, 341.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: SymbolStage</td><td>The student has ₹500. total_bill &lt;= 500. Tap each bill to test it.</td><td>Header: before a tap, ExprBig "total_bill &lt;= 500" at 28 px; after a tap, CompareDemo of the example with its result.<br>Three keys, 3 columns, not big. Prompt: "Tap each bill."</td><td>₹450 | "Within the budget" | 450 &lt;= 500 | True<br>₹500 | "Exactly the budget" | 500 &lt;= 500 | True<br>₹550 | "Over the budget" | 550 &lt;= 500 | False<br>need = all 3</td><td>Finish panel "Calculate, then compare!": Arithmetic calculates the bill. A comparison checks it against the budget.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>Which kind of operator checks the bill against the budget?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Comparison operators.</span><br>Arithmetic operators.<br>None of them.</td><td>Right panel "Exactly!": The True or False result can later help a program allow or reject a purchase.<br>Wrong panel "Not quite": We are not calculating a value here. We are checking it.</td></tr>
+</table>
+
+
+<h3>Screen 35: The Incorrect Shopping Bill (/module/operators?step=35)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"The Incorrect Shopping Bill" (teal: "Shopping Bill"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Spot and fix a bill that added instead of multiplying.</td></tr>
+<tr><td>Stages</td><td>2 (Spot the error + fix it)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 350, 351.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 15.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>3 notebooks at ₹20 and 2 pens at ₹10. The app shows ₹35. What is wrong?</td><td>BillCard (wrong): "3 notebooks at ₹20" and "2 pens at ₹10" with blank prices, "Bill shown" ₹35 in a red pill; under it ExprBig 3 + 20 + 2 + 10 at 20 px.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ The program should multiply quantities and prices.</span><br>The program should subtract all prices.<br>The program should compare quantities and prices.</td><td>Right panel "Exactly!": It must multiply each item's quantity by its price.<br>Wrong panel "Not quite": Three notebooks at ₹20 each: what should the app do with 3 and 20?</td></tr>
+<tr><td>1</td><td>Interaction: ExpressionStage</td><td>Fix the bill.</td><td>No lead scene; 7 places (tight sizes); result slot.</td><td>Blocks: 3, 20, 2, 10, *, *, +<br>Right: the 8 ways of 3 * 20 + 2 * 10<br>Result: 80<br>Wrong-try note: "Multiply each item's quantity by its price, then add the two totals."</td><td>Finish panel "Fixed: ₹80!": 3 * 20 + 2 * 10 = 80.</td></tr>
+</table>
+
+
+<h3>Screen 36: The Boundary Bug (/module/operators?step=36)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"The Boundary Bug" (teal: "Bug"), one line at 28 px</td></tr>
+<tr><td>Purpose</td><td>Fix &gt; to &gt;= for "at least 100".</td></tr>
+<tr><td>Stages</td><td>1 (1 question)</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 360.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 27.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>“At least 100” unlocks a level. A score of 100 stays locked. Which fix?</td><td>ExprBig "score &gt; 100" at 30 px, and under it a GateCard: 100, Locked.<br>Option pictures: neutral icons.</td><td>score &lt; 100<br><span class="ok">✔ score &gt;= 100</span><br>score != 100</td><td>Right panel "Exactly!": score &gt; 100 leaves out exactly 100. “At least 100” must include the boundary, so &gt;=.<br>Wrong panel "Not quite": Which expression is True for 100, 101 and more?</td></tr>
+</table>
+
+
+<h3>Screen 37: Plan a Class Trip (/module/operators?step=37)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Plan a Class Trip" (teal: "Class Trip"), one line at 28 px</td></tr>
+<tr><td>Purpose</td><td>Plan a class trip with //, %, * and &lt;=.</td></tr>
+<tr><td>Stages</td><td>5 (5 questions)</td></tr>
+<tr><td>Scene</td><td>Every stage shows TripFacts (Students 32, Per bus 10, Cost per bus ₹2,000, Budget ₹7,000) above the answers.</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 370, 371, 372, 373, 374.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 12.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>How many complete groups of 10 students can we form? 32 // 10 = ?</td><td>TripFacts.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 3</span><br>3.2<br>4</td><td>Right panel "Exactly!": 32 // 10 = 3 complete groups.<br>Wrong panel "Not quite": // counts complete groups only.</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>How many students remain? 32 % 10 = ?</td><td>TripFacts.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ 2</span><br>3<br>10</td><td>Right panel "Exactly!": 32 % 10 = 2 students remain.<br>Wrong panel "Not quite": % gives what is left after the complete groups.</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>3 buses are not enough. How many buses are actually needed?</td><td>TripFacts.<br>Option pictures: neutral icons.</td><td>3<br><span class="ok">✔ 4</span><br>5</td><td>Right panel "Exactly!": 3 full groups plus 2 students left need a 4th bus.<br>Wrong panel "Not quite": What happens to the 2 students who remain?</td></tr>
+<tr><td>3</td><td>Quiz, rows</td><td>Each bus costs ₹2,000. Which expression finds the cost of 4 buses?</td><td>TripFacts.<br>Option pictures: neutral icons.</td><td>4 + 2000<br><span class="ok">✔ 4 * 2000</span><br>4 // 2000</td><td>Right panel "Exactly!": 4 * 2000 = 8000.<br>Wrong panel "Not quite": Four buses, each with the same cost.</td></tr>
+<tr><td>4</td><td>Quiz, 2 x 2 tiles</td><td>The budget is ₹7,000. What does 8000 &lt;= 7000 give?</td><td>TripFacts.<br>Option pictures: icon-goal.svg and icon-short.svg.</td><td>True<br><span class="ok">✔ False</span></td><td>Right panel "False!": The school needs ₹8,000 but has ₹7,000, so the trip can't be arranged within budget.<br>Wrong panel "Not quite": Is 8000 less than or equal to 7000?</td></tr>
+</table>
+
+
+<h3>Screen 38: Why Did You Choose These Operations? (/module/operators?step=38)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"Why Did You Choose These Operations?" (teal: "These Operations?"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Explain why each operator was chosen.</td></tr>
+<tr><td>Stages</td><td>6 (6 "why" questions)</td></tr>
+<tr><td>Scene</td><td>Every right panel is titled "Well explained!". The detour depends on which stages were missed (5.2).</td></tr>
+<tr><td>Recorded</td><td>Every stage is a question: ids 380, 381, 382, 383, 384, 385.</td></tr>
+<tr><td>Adaptive path</td><td>If the learner struggled here, sent back once to screen 12 or 26 (by how it went).</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Quiz, rows</td><td>Why did we use floor division, 32 // 10?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ To find the complete groups of 10.</span><br>To get a decimal answer.<br>To find who is left over.</td><td>Right panel "Well explained!": // counts complete groups: 3 full buses.<br>Wrong panel "Not quite": Which operation counts complete groups?</td></tr>
+<tr><td>1</td><td>Quiz, rows</td><td>Why did we use modulus, 32 % 10?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>To count the complete buses.<br><span class="ok">✔ To find how many students are left over.</span><br>To work out the cost.</td><td>Right panel "Well explained!": % gives the remainder: 2 students left.<br>Wrong panel "Not quite": Which operation gives what is left over?</td></tr>
+<tr><td>2</td><td>Quiz, rows</td><td>Why did we need an extra bus?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>Floor division rounds up.<br>Buses cost more than ₹7,000.<br><span class="ok">✔ 2 students remain without a seat.</span></td><td>Right panel "Well explained!": Two students remain, so the remainder needs a bus too.<br>Wrong panel "Not quite": Think about the students who are left after 3 full buses.</td></tr>
+<tr><td>3</td><td>Quiz, rows</td><td>Why did we use multiplication for the total cost?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>We are sharing the cost.<br>We are comparing costs.<br><span class="ok">✔ Every bus costs the same, so the cost repeats.</span></td><td>Right panel "Well explained!": Equal items repeat: 4 buses * ₹2,000.<br>Wrong panel "Not quite": Four buses, each with the same cost: what repeats?</td></tr>
+<tr><td>4</td><td>Quiz, rows</td><td>Why did we use &lt;= to compare the cost with the budget?</td><td>No picture.<br>Option pictures: neutral icons.</td><td><span class="ok">✔ Spending exactly the budget is still allowed.</span><br>It finds the remainder.<br>It divides the cost.</td><td>Right panel "Well explained!": &lt;= includes the budget itself.<br>Wrong panel "Not quite": Which operator asks “Is it within the limit?”</td></tr>
+<tr><td>5</td><td>Quiz, rows</td><td>How would the answer change if the budget were ₹8,000?</td><td>No picture.<br>Option pictures: neutral icons.</td><td>It would stay False.<br><span class="ok">✔ 8000 &lt;= 8000 is True: the trip works.</span><br>We would need another bus.</td><td>Right panel "Well explained!": The cost equals the budget, and &lt;= allows that.<br>Wrong panel "Not quite": Is 8000 less than or equal to 8000?</td></tr>
+</table>
+
+
+<h3>Screen 39: You Can Now Make Values Work! (/module/operators?step=39)</h3>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"You Can Now Make Values Work!" (teal: "Make Values Work!"), two lines at 24 px</td></tr>
+<tr><td>Purpose</td><td>Your operator toolkit: tap the arithmetic and comparison operators; five of the thirteen finish the stage, all stay tappable.</td></tr>
+<tr><td>Stages</td><td>1 (Tap the toolkit)</td></tr>
+<tr><td>Recorded</td><td>Quiz stages and finished interactions record: ids 390.</td></tr>
+</table>
+<table>
+<tr><th>#</th><th>Kind</th><th>Hex says</th><th>On screen</th><th>Answers, keys or blocks (✔ = right)</th><th>Result panel</th></tr>
+<tr><td>0</td><td>Interaction: SymbolStage</td><td>Tap an operator: its meaning, how it reads and an example.</td><td>Two groups, not big (44 px keys, 20 px text): the heading "ARITHMETIC OPERATORS" in teal over 4 columns (7 keys, two rows), then "COMPARISON OPERATORS" in violet over 3 columns (6 keys). No header scene. Prompt: "Tap each symbol."</td><td>Arithmetic keys (symbol | meaning | example | read aloud):<br>+ | Add values | 3 + 2 = 5 | "Three plus two is five."<br>- | Subtract values | 5 - 2 = 3 | "Five minus two is three."<br>* | Multiply values | 4 * 5 = 20 | "Four times five is twenty."<br>/ | Ordinary division | 20 / 4 = 5.0 | "Twenty divided by four is five point zero."<br>// | Floor division | 23 // 4 = 5 | "Complete groups of four in twenty-three: five."<br>% | Find the remainder | 23 % 4 = 3 | "Twenty-three leaves a remainder of three."<br>** | Raise to a power | 4 ** 2 = 16 | "Four to the power of two is sixteen."<br>Comparison keys (all True):<br>== | Equal to | 10 == 10 | "Ten is equal to ten." | True<br>!= | Not equal to | 10 != 5 | "Ten is not equal to five." | True<br>&gt; | Left value is greater | 10 &gt; 5 | "Ten is greater than five." | True<br>&lt; | Left value is smaller | 5 &lt; 10 | "Five is less than ten." | True<br>&gt;= | Greater than or equal to | 10 &gt;= 10 | "Ten is greater than or equal to ten." | True<br>&lt;= | Less than or equal to | 5 &lt;= 10 | "Five is less than or equal to ten." | True<br>need = 5 different keys</td><td>Finish panel "Your toolkit!": You can calculate and compare values. Keep tapping to explore the rest.</td></tr>
+</table>
+
+<h3>Screen 40: From Calculation to Decision (/module/operators?step=40)</h3>
+<p>The only screen with its own layout (<code>RecapScreen</code>, not <code>OperatorsScreen</code>). It has no stages, no Hex line and no question.</p>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Headline</td><td>"From Calculation <b>to Decision</b>" (teal: "to Decision"), 28 letters, two lines at 24 px, in the usual place.</td></tr>
+<tr><td>Purpose</td><td>Close the chapter: the application's flow from a calculation to a decision, what a program can now do, the final thought, and the lead into Conditions.</td></tr>
+<tr><td>Layout</td><td>One column, 340 px wide, centred, from stage top 168, 8 px gaps. Nothing is scored; nothing is recorded.</td></tr>
+<tr><td>1. Flow card</td><td>A LAVENDER CARD (padding 10). Row 1: three boxes joined by arrows: "Shopping total" (plain), arrow, "Compare with budget" (key: fill #08A4AD, white text, edge <code>0 3px 0 #067F86</code>), arrow, "True or False" (plain). Boxes: flexible width, min height 44, radius 10, padding 8 x 4, 13 px / 16 bold, centred. Each box fades in and drops from -8 px (0.35 s) at 0.2, 0.5 and 0.8 s; each arrow (16 px, teal, 3.5 px stroke) fades in sliding from -4 px (0.25 s) at 0.4 and 0.7 s.</td></tr>
+<tr><td>2. Branch lines</td><td>A 20 px tall SVG across the card (viewBox 100 x 20, stretched; stroke teal 2.5 px, round caps, non-scaling): a vertical from the "True or False" box (at 85% of the width) down to y 10, a horizontal at y 10 from x 85 to x 24, then a drop at x 24 and a drop at x 76 to the bottom. It draws itself (path length 0 to 1, 0.5 s easeOut) from 1.05 s.</td></tr>
+<tr><td>3. Two outcome boxes</td><td>Two boxes side by side (8 px gap, equal height, centred under x 24% and x 76%). True (good: fill #E3F6F3, text #04908F; dark #0F2B28 / #7FE0D6; appears at 1.5 s): a 16 px green circle with a tick and "True", then "Within budget → Continue purchase" (semibold). False (warn: fill #FFF4E3, text #A85B00; dark #4A3418 / #FFB267; appears at 1.65 s): a 16 px orange circle with "!" and "False", then "Over budget → Show a warning".</td></tr>
+<tr><td>4. "A program can now"</td><td>A small heading (12 px bold uppercase, letter spacing 0.4, grey #6B7480), then a box (fill #E3F6F3, dark #0F2B28, radius 14, padding 14 x 10, 6 px gaps) of five lines, each sliding in from -10 px (0.3 s), the first at 1.9 s, 0.15 s apart: an 18 px teal #04ACAB circle with a white tick (edge <code>0 1px 0 #067F86</code>) and the text (13 px / 18 medium, #2F5D59, dark #BFE6E2): "Calculate a shopping bill." "Find how much money remains." "Divide objects into complete groups and find the remainder." "Compare a score with a target." "Check whether a purchase is within budget."</td></tr>
+<tr><td>5. Final thought</td><td>A box (fill #F1EEFF, dark #23204A, radius 14, padding 14 x 10): a 16 px quote icon (#6D4FE0, dark #A79BFF) and the text (13 px / 18 semibold, #444444): "Operators help a program calculate and compare values. The result of a comparison can help a program make a decision."</td></tr>
+<tr><td>6. Lead-in line</td><td>Centred, 12 px / 16 semibold grey: a pill "NEXT" (fill #08A4AD, white, 10 px bold uppercase, letter spacing 0.4, padding 8 x 2) and "Conditions: teaching a program to make decisions."</td></tr>
+<tr><td>Button</td><td>"Complete Chapter" (enabled at once, no hint). Opens the gem popup (below). Back goes to <code>operatorsPrevious(40)</code> (screen 39).</td></tr>
+<tr><td>Gem popup (GemPopup)</td><td>Dark overlay (black 45%, 0.25 s fade). Card 356 x 494, 32 px radius, white (dark #1A1C22), springs in (scale 0.85 to 1, y 24 to 0, stiffness 260, damping 22), exits with scale 0.92. Content at fixed spots: close X (39 px square, top 24 right 24); "+10 XP" (32 px, #FF8D42, top 22); the animated gem (Rive file <code>gem</code>, artboard <code>Gem</code>, state machine <code>State Machine 1</code>, 156 x 156 at top 63); "Congratulations!" (32 px semibold, top 219); a mint chip (154 x 63.6, #E9F8F4) with the small gem (tilted -19.9 degrees) and "1 Gem" (24 px); a sparkle divider (top 368); "You won 1 Gem as you followed the given command." (14 px, 265 wide, top 410). A countdown bar along the bottom (6 px, teal) drains left to right over 3 s (linear); the popup closes itself at 3 s. Tap anywhere or the X to close early (click sound). Closing goes to <code>/module/operators?step=complete</code>.</td></tr>
+</table>
+
+<!-- ===================================================== 8 -->
+<h2>8. Lesson complete screen (/module/operators?step=complete)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Component</td><td><code>LessonCompleteScreen level=5 accuracy=operatorsAccuracy</code>: the shared screen, with this module's accuracy.</td></tr>
+<tr><td>Display</td><td>Full-screen Rive artboard <code>LESSON_Complete</code> (<code>LessonComplete_SM</code>, view model <code>LessonComplete</code>, from <code>hex.riv</code>), fit width, centred, held to 430 px wide on a wide screen. No header.</td></tr>
+<tr><td>Values written</td><td>Once ready: <code>xp = 40</code>, <code>accuracy</code> = the share of recorded questions right the first time (5.1; 100 if none), <code>time = 222</code> seconds (a fixed value, shown as 3:42). Written as numbers, or as text ("+40", "92%", "3:42") if the artboard declares strings. Then the <code>play</code> trigger fires and the phone vibrates once for 1.2 s.</td></tr>
+<tr><td>Continue</td><td>The solo Continue button (module button, full phone width). It calls <code>completeModule(5)</code>: the path's saved count of finished modules becomes 5 (only if it was lower; replaying changes nothing) and a one-time "just done" flag is set so the path plays Hex moving on. Then it shows the reward chest on the same URL.</td></tr>
+<tr><td>Reward chest (RewardScreen)</td><td>"REWARD_BG" (sunburst, full-screen, cover) with "REWARD_Chest" on it (440 x 430 artboard drawn 150 vw wide, max 640 px, centred at 44% of the height). A full-screen button takes taps: each tap sets the chest's <code>tap</code> to 1, 2, 3 (two wobbles, then the lid opens); a short haptic on taps 1 and 2, the long claim buzz on the third. About 1.9 s after the third tap the Continue button slides in. Continue resets the review record and goes to <code>/level</code>, where Hex moves on to the next block. See module-rive-animations section 11b.</td></tr>
+</table>
+
+<!-- ===================================================== 9 -->
+<h2>9. Timing and constants cheat sheet</h2>
+<table>
+<tr><th>What</th><th>Value</th></tr>
+<tr><td>Design frame, scale</td><td>390 x 844; <code>min(w/390, h/844, 1.5)</code>; column <code>min(stageW - 50/scale, 380/scale)</code> (340)</td></tr>
+<tr><td>Headline</td><td>spring 140/16, delay 0.15 s, from y -24; 28 px if 20 letters or fewer else 24 px; two lines above 25 letters; body starts at 125 (one line) or 163 (two)</td></tr>
+<tr><td>Answer rows / tiles enter</td><td>opacity 0.3 s, y spring 110/13, delay 0.3 s, from y 90</td></tr>
+<tr><td>Result panel</td><td>spring 360/32 (also drives the rise of rows 150 / tiles 180, the body padding 215 for an interaction panel, and Hex)</td></tr>
+<tr><td>Body padding change</td><td>500 ms ease-out; Hex row collapse 0.35 s</td></tr>
+<tr><td>Hex typing</td><td>350 ms start delay, 55 ms per letter</td></tr>
+<tr><td>Bubble</td><td>enter spring 260/20 after 350 ms; leave 0.15 s (bounce +18 px, then off left); Hex follows 80 ms later, 0.2 s easeIn</td></tr>
+<tr><td>Hex</td><td>ambient idle every 4 s; panel Hex enters 250 ms after the sheet, thumbs-up cue 900 ms after that, held about 2.8 s</td></tr>
+<tr><td>Continue press</td><td>hold 150 ms, handler at 330 ms; shine every 5 s; electric effect 0.67 s</td></tr>
+<tr><td>Picked answer</td><td>bounce [1, 0.95, 1.05, 1] in 0.4 s; press 0.97 (rows) / 0.96 (tiles)</td></tr>
+<tr><td>Wrong shake</td><td>x [0, -7, 7, -5, 5, 0]; 0.4 s (blocks, steps); wrong state held 800 ms (<code>WRONG_MS</code>), multi-pick 600 ms</td></tr>
+<tr><td>Streak</td><td>strike delay 150 ms; strikeDuo2 0.9 s on the 2nd; strikeMix 1.6 s on the 4th; strikeLoop on the 5th for 1, 4, then 7 s; battery +1 every 3rd</td></tr>
+<tr><td>Confetti, XP</td><td>120 pieces, gravity 0.35; "+10 XP" 56 px, 1.6 s</td></tr>
+<tr><td>ExpressionStage</td><td>right: result pill springs 260/14, <code>done()</code> after 600 ms; placed block spring 420/22; wrong held 800 ms</td></tr>
+<tr><td>ShareStage</td><td><code>done()</code> 900 ms after the round that leaves too few</td></tr>
+<tr><td>FillRowsStage</td><td>chairs 0.16 s apart; count badge at per x 0.16 s; <code>done()</code> at per x 160 + 700 ms after the last row</td></tr>
+<tr><td>SymbolStage</td><td><code>done()</code> 900 ms after the need-th different key; key bounce 0.35 s; card cross-fade 0.2 s</td></tr>
+<tr><td>StepStage</td><td><code>done()</code> 1100 ms after the last step; dots 0.3 s</td></tr>
+<tr><td>OrderStage / MultiPickStage</td><td><code>done()</code> 600 ms / 500 ms after the last right tap</td></tr>
+<tr><td>Flip carousel</td><td>demo starts 700 ms after Hex finishes; back held 2400 ms; autoplay 2600 ms per card, once; slide 0.7 s <code>cubic-bezier(0.32, 0.72, 0, 1)</code>; flip 0.5 s <code>cubic-bezier(0.45, 0, 0.25, 1)</code>, perspective 900; swipe 50 px or 400 px/s; <code>done()</code> 1600 ms after the last card is seen; card 230 x 336, step 218, side scale 0.9</td></tr>
+<tr><td>Turn stages</td><td>card lit 500 ms after the stage opens; lit scale 1.04 spring 320/22; dimmed cards 30%; entrance 0.35 s, 80 ms apart</td></tr>
+<tr><td>Scenes</td><td>ValueCards 0.3 s apart (spring 260/20); InfoSheet lines 0.25 s apart; WalletScene pill after 0.6 s, new total after 1.3 s; PlantGrid starts at 700 ms, 450 ms per row then column; CompareDemo symbol at 0.2 s, result at 0.7 s; GroupsPicture 0.25 s per box</td></tr>
+<tr><td>Recap</td><td>boxes at 0.2 / 0.5 / 0.8 s, branch line from 1.05 s (0.5 s), outcome boxes at 1.5 and 1.65 s, list from 1.9 s (0.15 s apart)</td></tr>
+<tr><td>Gem popup</td><td>3 s auto-close; reward chest Continue 1.9 s after the third tap</td></tr>
+<tr><td>Out of energy</td><td>sheet 600 ms after the battery reaches 0</td></tr>
+</table>
+
+<h3>Colour palette (light | dark)</h3>
+<table>
+<tr><th>Use</th><th>Colour</th></tr>
+<tr><td>Brand teal, gradient</td><td>#04ACAB; gradient #00B8A9 to #1387B3 (at 33.17%); keys and pills #08A4AD with edge #067F86; teal text #04908F (dark #7FE0D6)</td></tr>
+<tr><td>Text</td><td>#444444 | white; secondary #6B7480 | white 60%; explanation text #2F5D59 | #BFE6E2</td></tr>
+<tr><td>Right</td><td>panel #E3F6F3 | #0F2B28; border #7FD8CC | #1E5F59; title #01A17F; card fill #F2FBF8 | #0F2921; card edge #01A17F; True pill #01A17F (edge #018066)</td></tr>
+<tr><td>Wrong</td><td>panel #FDECEC | #2E1517; border #D42421 | #6B2A2E; card border #E5484D, fill #FFF1F1 | #2A1517; False pill #D42421 (edge #A31B19); note text #D42421</td></tr>
+<tr><td>Orange, amber, yellow</td><td>operator accents #E8743B (edge #B85A28); XP #F5A623; tapped key #FFB300 (edge #C98A00); lit part pad #FFD36B (edge #E0A81C); warn fill #FFF4E3 | #4A3418, text #A85B00 | #FFB267</td></tr>
+<tr><td>Violet</td><td>second key colour #7B61FF (edge #5B3FD0); tray border #B8A9F5, fill #F1EEFF | #2E2A5C, label #5B3FD0 | #A79BFF; final-thought box #F1EEFF | #23204A</td></tr>
+<tr><td>Cards</td><td>lavender #F6F4FE | #0F1F26; cream #FFF9F0 | #0F1F26; white | #15181E; value block border #E4DFF7 | #3B3670, fill #F6F4FE | #2E2A5C, edge #D3CCF0 | #1B1840</td></tr>
+<tr><td>Turn-card tints</td><td>lavender #F4F1FF, cream #FFF6EA, mint #EBF6F0, blue #E6F0FF | #1F1B3A, #3A2C14, #0F2B28, #15213A; accents lavender #7B61FF, cream #E8743B, mint #08A4AD, blue #3B82F6</td></tr>
+<tr><td>Multi-pick tints</td><td>blue #E5EFFD, lavender #F6F4FE, green #ECF7ED, cream #FFF3DE | #15233A, #0F1F26, #10261A, #2A2218</td></tr>
+<tr><td>Flip-card backs</td><td>teal #E3F7F4 to #BDEBE5; pink #FDEBEF to #F8CFDA; blue #E6F0FF to #C9DEFF; amber #FFF3DC to #FFE1AB</td></tr>
+<tr><td>Speech bubble, rows</td><td>bubble edge rgba(18,140,179,0.5), fill white | #1A1C22; row border black 4% | #818185, fill #15181E</td></tr>
+<tr><td>Backdrop</td><td>soft gradient #EAF3FF, #F7FAFF at 38%, #FFFFFF (light only)</td></tr>
+</table>
+
+<!-- ===================================================== 10 -->
+<h2>10. Assets and files used</h2>
+<table>
+<tr><th>Type</th><th>Files</th></tr>
+<tr><td>Rive animations</td><td><code>/animations/hex.riv</code> (Hex in the bubble row and the result panel, <code>LESSON_Complete</code>, <code>REWARD_BG</code>, <code>REWARD_Chest</code>), <code>progressBar.riv</code> (progress bar and the <code>AllButton</code> Continue button), <code>battery.riv</code>, <code>gem</code> (the popup gem). <code>command.riv</code> is preloaded by the layout but never shown here.</td></tr>
+<tr><td>Module art (<code>/images/operators-module/</code>)</td><td><code>example_card1.png</code> (1072 x 1564), <code>example_card2.png</code>, <code>example_card3.png</code>, <code>example_card4.png</code> (804 x 1173 each): the four flip cards of screen 1 (each holds the picture, its name, rounded corners and a white edge). <code>money-icon.png</code> (207 x 171), <code>chocolate_icon.png</code> (279 x 174), <code>height_icon.png</code> (198 x 207), <code>money_bag.png</code> (237 x 207): the four situation cards of screen 2, also the wallet picture across the module (<code>money_bag.png</code>) and the trip's budget (<code>money-icon.png</code>).</td></tr>
+<tr><td>Stand-in pictures (until the module has art)</td><td>All listed in one table, <code>pictures.ts</code> (<code>P</code>); one line each to swap. Coins <code>/images/coins.png</code> (money in cards and options), food <code>food.png</code> (chocolates), <code>level-one/programmer.png</code> (a student), <code>level-one/teacher.png</code>, <code>run.png</code> (a person), <code>box.png</code> (a gift), <code>level-two/cube.png</code> (a chair option), <code>tree.png</code> (the plants), <code>statement.png</code> (a notebook card), <code>command.png</code> (a pen), <code>rock.png</code> (a school bag), <code>computer.png</code> (the Calculate job), <code>trafficSignal.png</code> (the Compare job).</td></tr>
+<tr><td>Answer icons</td><td>Sequence icons <code>/images/sequence/icon-order.svg</code>, <code>icon-actions.svg</code>, <code>icon-goal.svg</code>, <code>icon-short.svg</code>. They are the neutral options' pictures (in turn) and Yes/No/True/False.</td></tr>
+<tr><td>Unused entries in <code>P</code></td><td>game, gate, think, random, repeat, unsure, letters, idea, question, star, stop.</td></tr>
+<tr><td>Drawn in code</td><td>Notebook, pen and bag icons (32 x 32 SVGs), the chair, the check tick, the hand icon of "Tap for more details", the lock and unlocked lock (Lucide), the quote mark, the chocolates, trays, plants grid and every scene of 6.10.</td></tr>
+<tr><td>Audio</td><td><code>/audios/click-sound.mpeg</code> only. There is no voiceover and no recorded audio.</td></tr>
+<tr><td>Fonts</td><td>Poppins (400, 500, 600, 700, 800) for everything; a monospace face (the web uses the system monospace) for operator keys, examples and symbol cards.</td></tr>
+<tr><td>Source folders</td><td><code>src/components/operators/</code> (<code>operators.ts</code>, <code>operatorsScore.ts</code>, <code>screen.ts</code>, <code>OperatorsScreen.tsx</code>, <code>OperatorsRoute.tsx</code>, <code>RecapScreen.tsx</code>, <code>screensA/B/C.tsx</code>, <code>helpers.ts</code>, <code>pictures.ts</code>, <code>interactions.tsx</code>, <code>visuals.tsx</code>, <code>FlipCarousel.tsx</code>, <code>SituationsStage.tsx</code>, <code>OperatorCardsStage.tsx</code>); <code>src/components/level-two/</code> (<code>LevelTwoShell</code>, <code>AnswerCards</code>, <code>TileCards</code>, <code>HexBubble</code>, <code>BounceIn</code>); <code>src/components/level-one/</code> (<code>FeedbackPanel</code>, <code>GemPopup</code>, <code>LessonCompleteScreen</code>, <code>RewardScreen</code>, <code>Confetti</code>, <code>useTyped</code>, <code>ActionRow</code>); <code>src/components/datatypes/</code> (<code>MultiPickStage</code>, the <code>CARD</code> looks); <code>src/lib/</code> (<code>adaptiveFlow.ts</code>, <code>moduleScore.ts</code>, <code>moduleStreak.ts</code>, <code>haptics.ts</code>, <code>routes.ts</code>, <code>levelProgress.ts</code>, <code>questionColumn.ts</code>, <code>rive/*</code>); <code>src/components/home/batteryStore.ts</code>.</td></tr>
+</table>
+
+<!-- ===================================================== 11 -->
+<h2>11. Building it in Flutter</h2>
+
+<h3>11.1 From the web to Flutter</h3>
+<table>
+<tr><th>On the web</th><th>In Flutter</th></tr>
+<tr><td>390 x 844 frame scaled as one piece</td><td>A <code>LayoutBuilder</code> that computes <code>scale = min(w/390, h/844, 1.5)</code>, then lays the stage out in frame units (<code>stageW = w/scale</code>, <code>stageH = h/scale</code>) inside a <code>Transform.scale</code> (or <code>FittedBox</code>) so every number in this document can be used as written. <code>colW = min(stageW - 50/scale, 380/scale)</code>.</td></tr>
+<tr><td><code>stageTop(figmaTop)</code></td><td><code>figmaTop - 37</code> for anything pinned to the top.</td></tr>
+<tr><td>framer-motion springs <code>{ stiffness, damping }</code></td><td><code>SpringDescription(mass: 1, stiffness: s, damping: d)</code> with a <code>SpringSimulation</code> (or <code>physics</code> package). Values used: title 140/16, cards in 110/13, panel 360/32, bubble 260/20, placed block 420/22, result pill 260/14, lit card 320/22, ValueCards 260/20, XP 300/9, gem popup 260/22, out of energy 320/34, sheet 360/32.</td></tr>
+<tr><td>Keyframes <code>[1, 0.95, 1.05, 1]</code></td><td>A <code>TweenSequence</code> of equal segments (framer eases each with ease-in-out unless told otherwise). Shake <code>[0, -7, 7, -5, 5, 0]</code> likewise.</td></tr>
+<tr><td>CSS cubic-bezier, easeOut, backIn</td><td><code>Cubic(a, b, c, d)</code> with the numbers in this document; <code>easeOut</code> = <code>Curves.easeOut</code>; the bubble's exit <code>backIn</code> = <code>Cubic(0.36, 0, 0.66, -0.56)</code>.</td></tr>
+<tr><td>Typed bubble text</td><td>A timer: 350 ms, then one more letter every 55 ms. Lay the <b>whole</b> line out from the start with a <code>RichText</code> whose untyped part has a transparent colour, so centred text never shifts. Report "typed" when the last letter shows.</td></tr>
+<tr><td>Teal gradient text</td><td><code>ShaderMask</code> with a <code>LinearGradient</code> from #00B8A9 to #1387B3 at stop 0.3317 (then solid).</td></tr>
+<tr><td>Bubble's drop edge (<code>drop-shadow 0 3px 0</code>)</td><td>A shape painted twice: the bubble outline path (box + tail) offset 3 px down in rgba(18,140,179,0.5), then the white shape on top (a <code>CustomPainter</code>).</td></tr>
+<tr><td>Picture auto-fit (<code>ResizeObserver</code>)</td><td>Measure the room and the picture (<code>LayoutBuilder</code> and a <code>GlobalKey</code> size read after layout, or a custom render object) and scale by <code>clamp(room / picture, 0.6, 1)</code>.</td></tr>
+<tr><td><code>pointer-events-none</code></td><td><code>IgnorePointer</code> for the overlay layers; the stage's interactive parts re-enable taps.</td></tr>
+<tr><td>3D flip (rotateY, perspective 900)</td><td><code>Transform(transform: Matrix4.identity()..setEntry(3, 2, 1/900)..rotateY(angle))</code>; show the front for angles under 90 degrees and the back (mirrored by another 180) above.</td></tr>
+<tr><td>Carousel drag</td><td><code>GestureDetector</code> horizontal drag with the 50 px / 400 px/s thresholds, elastic factor 0.2 while dragging, snap back.</td></tr>
+<tr><td>Session storage</td><td>An in-memory store (cleared when the module starts) holding the keys in 5.6; use <code>shared_preferences</code> only where a value must survive an app restart (<code>lingo:modules-done</code>).</td></tr>
+<tr><td>Pages and <code>?step=</code></td><td>One <code>OperatorsModulePage</code> holding the current step (1 to 40 or complete); build the screen with <code>key: ValueKey(step)</code> so each starts fresh. Continue and Back set the step with no page transition (the web changes page).</td></tr>
+<tr><td>Reduced motion</td><td><code>MediaQuery.of(context).disableAnimations</code>: no flip demonstration or autoplay, no pulsing "?" or hint.</td></tr>
+<tr><td>Dark mode</td><td>Use the dark values in section 9; the soft gradient is light only.</td></tr>
+<tr><td>Rive</td><td>Hex, the progress bar, the Continue button, the battery and Lesson complete: the existing Flutter Rive layer (<code>flutter-rive-implementation.md</code>, <code>hex-riv-implementation.md</code> part 3). The robot and the flip-card Rive are not needed.</td></tr>
+</table>
+
+<h3>11.2 A data model that fits every screen</h3>
+<pre>sealed class Stage { String? line; }
+
+class QuizStage extends Stage {
+  String? question;                          // the pill above the answers
+  Widget Function(VisualContext)? visual;    // VisualContext(attempt, picked, checked, correct)
+  QuizLayout layout = QuizLayout.rows;       // rows | grid (2 = pair, 3 = tiles, 4 = 2x2)
+  List&lt;Option&gt; options;                       // Option(id, text, iconAsset, tint?)
+  String correctId, rightTitle, right, wrong;
+  String wrongTitle = 'Not quite';
+  bool keepLine = false;
+}
+
+class InteractionStage extends Stage {
+  Widget Function(InteractionApi) render;
+  ({String title, String text})? finishPanel;
+}
+
+class InteractionApi {            // what a stage can ask of the screen
+  void Function() slip, done, next;
+  void Function(VoidCallback?) holdButton;
+  bool finished, lineTyped;
+}
+
+class ScreenDef { int step; String title; List&lt;Stage&gt; stages; }   // title: '*teal*' marks</pre>
+
+<h3>11.3 The two pieces of pure logic</h3>
+<p>These have no UI and are easy to unit-test. They are shown in Dart-like form; the web source is <code>moduleScore.ts</code> and <code>adaptiveFlow.ts</code>.</p>
+<pre>// Score
+int questionId(int step, [int stage = 0]) =&gt; step * 10 + stage;
+void noteAnswer(int step, int stage, bool correct) {           // first answer only
+  final id = questionId(step, stage);
+  if (!firstTry.containsKey(id)) firstTry[id] = correct;
+}
+void noteStruggle(int step, Assist kind) {                     // miss outranks hint
+  if (assisted[step] == Assist.miss) return;
+  assisted[step] = kind;
+}
+bool struggled(int step) =&gt; assisted.containsKey(step);
+bool missedStage(int step, int stage) =&gt; firstTry[questionId(step, stage)] == false;
+bool answeredClean(int step) =&gt; firstTry[questionId(step)] == true &amp;&amp; !struggled(step);
+int accuracy() =&gt; firstTry.isEmpty ? 100 : (100 * firstTry.values.where((v) =&gt; v).length / firstTry.length).round();
+
+// Flow
+bool cleanRight(int s) =&gt; answeredClean(s) || (skips[s]?.every(cleanRight) ?? false);
+bool skipped(int s) =&gt; skips[s]?.every(cleanRight) ?? false;
+int plainNext(int s) { var n = s + 1; while (n &lt;= 40 &amp;&amp; skipped(n)) n++; return n; }
+
+Target next(int step) {
+  final pending = store.detour;                                // {to, resume}?
+  if (pending != null &amp;&amp; step == pending.to) { store.detour = null; return screen(pending.resume); }
+  final after = plainNext(step);
+  final back = detours[step]?.call();                          // int?; screen 38 is a function
+  if (back != null &amp;&amp; struggled(step) &amp;&amp; !store.detoured.contains(step)) {
+    store.detoured.add(step);
+    store.detour = (to: back, resume: after);
+    return screen(back);
+  }
+  return screen(after);                                        // 41 means complete
+}
+Target previous(int step) {
+  if (step &lt;= 1) return levelPath;
+  var b = step - 1; while (b &gt; 1 &amp;&amp; skipped(b)) b--;
+  return screen(b);
+}</pre>
+<p><b>Worked examples to test against</b> (all with a fresh score):</p>
+<ul>
+  <li>Answer screen 19's two questions right first time, no misses: leaving 19 goes to <b>21</b> (20 is skipped). Back from 21 goes to 19.</li>
+  <li>Miss one question on screen 22: screen 22 has no detour, so leaving it goes to 23 (23 is not skipped, because 22 is not clean).</li>
+  <li>Miss once on screen 12 (any stage): Continue from 12 goes to <b>11</b> and stores <code>{ to: 11, resume: 13 }</code>. Continue from 11 goes to <b>13</b> and clears it. Missing on 12 again later (a replay) sends nobody back.</li>
+  <li>Screen 38: miss stage 1 (the modulus question): Continue from 38 goes to <b>12</b>. Miss only stage 4: goes to <b>26</b>, and from 26 on to <b>39</b>. Miss stages 1 and 4: goes to 12.</li>
+  <li>Screens 18 and 30 both clean (30 answered clean, or skipped because 23 and 29 were clean): screen 31 is skipped, so leaving 30 goes to 32.</li>
+</ul>
+
+<h3>11.4 Expression checking (screens 4, 15, 17, 24, 26, 32, 35)</h3>
+<pre>bool isOperator(String t) =&gt; RegExp(r'^([+\-*/%&lt;&gt;=!()]+|and|or|not)$').hasMatch(t);
+
+// a place takes: value | operator | any, from what every accepted way agrees on
+SlotKind kindOf(int place) {
+  final ops = accept.map((way) =&gt; isOperator(way[place])).toSet();
+  return ops.length &gt; 1 ? SlotKind.any : (ops.contains(true) ? SlotKind.operator : SlotKind.value);
+}
+
+void onFilled(List&lt;int&gt; chosenTokenIndexes) {
+  final written = chosenTokenIndexes.map((i) =&gt; tokens[i]).toList();
+  final ok = accept.any((way) =&gt; way.length == written.length &amp;&amp; Iterable.generate(way.length).every((i) =&gt; way[i] == written[i]));
+  if (ok) { showResult(); Future.delayed(600.ms, api.done); }
+  else    { api.slip(); shake(); Future.delayed(800.ms, clearAll); }   // note shows the hint meanwhile
+}
+
+List&lt;List&lt;String&gt;&gt; sumOfProducts((String, String) a, (String, String) b) {
+  List&lt;List&lt;String&gt;&gt; term((String, String) p) =&gt; [[p.$1, '*', p.$2], [p.$2, '*', p.$1]];
+  return [ for (final x in term(a)) for (final y in term(b)) ...[[...x, '+', ...y], [...y, '+', ...x]] ];
+}</pre>
+
+<h3>11.5 Build order and checklist</h3>
+<ol>
+  <li><b>Shell and scale:</b> frame scaling, header, Continue row (labels and disabled rules of 2.4), SoftBackdrop, out-of-energy sheet.</li>
+  <li><b>Quiz stage end to end</b> (this covers 82 of the 129 stages): headline, Hex bubble with typing, the picture room with auto-fit, answer rows, tiles (pair and 2 x 2), question pill, result panel, check / Try again / Next, confetti and XP. Check the geometry numbers of 3.3 on a 390 px and a wide device.</li>
+  <li><b>Scoring and the flow</b> (11.3) with unit tests of the worked examples, then wire Back and Continue to them. Wire the progress bar reactions, streak and battery.</li>
+  <li><b>Interactions</b> in this order (most screens first): Expression (7 screens), Symbol (8), Step (2), Share (2), Order, Fill rows, Multi-pick (2); then the scenes of 6.10 as the screens that use them are built.</li>
+  <li><b>Turn stages</b> (screens 2, 5, 6, 11) and the <b>flip carousel</b> (screen 1).</li>
+  <li><b>Screen 40, Lesson complete and the reward chest.</b></li>
+  <li><b>Walk every screen:</b> all 40 in order with right answers; then with a wrong answer on each screen to see its note, shake and Try again; then the skip and detour paths of 5.2; Back from every screen; dark mode; a small and a wide device; reduced motion.</li>
+</ol>
+
+<!-- ===================================================== 12 -->
+<h2>12. Known notes and gaps found in the code</h2>
+<p>These are observations from reading the source, not changes.</p>
+<ul>
+  <li><b>No hint button anywhere.</b> The engine supports <code>hintText</code> (and a hint button with the orange fill), but no Operators stage sets it, so the bottom row is always the single Continue button and <code>noteStruggle(..., "hint")</code> never runs.</li>
+  <li><b>Text length rules not applied here yet.</b> The one-line headline, one-line option and two-line bubble rules that were applied to the Data Types screens have not been applied to Operators: 63 of the 129 Hex lines are longer than about 46 letters (so they take three or more lines in the 248 px bubble), 44 of the 161 answer-row options are longer than 24 letters (they wrap to two lines inside the row), and 69 result-panel texts are longer than about 52 letters (more than two lines in the 190 px column). 20 of the 40 headlines run to two lines. Build the Flutter widgets to wrap and grow (do not truncate); if the copy is later shortened, only the data changes.</li>
+  <li><b>Bubble width rule.</b> <code>bubbleSize</code> here puts every line of 50 letters or fewer in a 190 px bubble (about 17 letters a line). The Data Types screen uses a different rule (190 only up to 30 letters, otherwise about 248).</li>
+  <li><b>Battery.</b> Every screen arrived at costs 1 of 20 units and a learner starts with 18, so 40 screens cannot be played from the start without streak charges (every 3rd right answer in a row), the unlimited trial, or a recharge; skipped screens are free, jumps pay for the screens they skip over.</li>
+  <li><b>Look-only stages count as right answers.</b> Finishing the flip carousel, a step-by-step or a fill-the-rows stage calls <code>done()</code>, which records a right first try, plays the bar's <code>correct</code> reaction and raises the streak, although nothing was asked. They count towards the accuracy shown on Lesson complete (which therefore is not only about questions).</li>
+  <li><b>Turn stages record nothing.</b> Screens 2, 5, 6 and 11 begin with turn stages, so their stage 0 never records. None of those four screens is in a skip list, so this changes nothing today; a screen whose stage 0 is a turn stage could never be "clean".</li>
+  <li><b>The clean check looks at stage 0 only</b> (plus "no miss anywhere on the screen"). That is enough for the screens that are skipped on (19, 22, 23, 29, 18, 30) because any later miss marks the whole screen as struggled.</li>
+  <li><b>Continue waits for Hex on the turn stages.</b> The button is disabled until the line is typed (350 ms + 55 ms a letter, so a 70-letter line takes about 4.2 s) and the card is lit (500 ms).</li>
+  <li><b>Screen 9, stage 0</b> is a prediction that is still graded: the right answer is titled "Good guess!" and a wrong one says "Let's see by sharing them", but the learner must pick the right number to carry on (Try again), before the sharing is shown.</li>
+  <li><b>Screen 16, step 3 of the first step-through</b> lights the "2" and the "+" (tokens 0 and 1) for "Then add 2: 2 + 12", and the result 14 appears; the 12 itself is not lit.</li>
+  <li><b>Fixed values.</b> Lesson complete shows XP +40 and the time 3:42 (222 s) as fixed values; the "+10 XP" burst is decoration only (no total is kept).</li>
+  <li><b>Unused code.</b> <code>ScenesStage</code> (tap each scene), the <code>after</code> props of ShareStage and FillRowsStage, <code>QuizStage.compact</code>, <code>P.game</code>, <code>P.gate</code> and several other stand-in pictures are not used by any screen. <code>RobotWarmup</code> preloads the robot file although this module never shows it.</li>
+  <li><b>Pictures are stand-ins.</b> Except the screen 1 and 2 art (<code>operators-module/</code>), every picture on an option or card is borrowed from other modules (listed in section 10) and drawn flat icons stand in for the notebook, pen and bag. An idea keeps one picture wherever it appears (money is always the coins).</li>
+  <li><b>Dark mode</b> classes exist on every component here and the module layout does not force a theme, but the dark look was not checked while writing this document; the soft background gradient is light only.</li>
+  <li><b>Accessibility.</b> Only the flip carousel, the information sheet's "?" and the tap hint react to reduced motion; the other animations always play.</li>
+</ul>
+
+<p class="meta">End of document.</p>
+</body>
+</html>
