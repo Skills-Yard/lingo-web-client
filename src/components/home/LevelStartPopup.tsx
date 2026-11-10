@@ -2,8 +2,8 @@
 
 import { motion } from "framer-motion";
 
-const POPUP_W = 210;
-const STAGE_MARGIN = 8;
+const POPUP_W = 186;
+const STAGE_MARGIN = 4;
 
 type LevelStartPopupProps = {
   /** Target anchor X where the pointer tip should point (in stage px) */
@@ -85,21 +85,21 @@ export function LevelStartPopup({
         {isTop ? (
           <span
             aria-hidden
-            className="absolute -bottom-1.5 h-3.5 w-3.5 rotate-45 rounded-[2px] bg-white border-r border-b border-black/5 dark:bg-[#1E293B] dark:border-white/10"
-            style={{ left: pointerX - 7 }}
+            className="absolute -bottom-1.5 h-3.5 w-3.5 rounded-[2px] bg-white border-r border-b border-black/5 dark:bg-[#1E293B] dark:border-white/10"
+            style={{ left: `${pointerX}px`, transform: "translateX(-50%) rotate(45deg)" }}
           />
         ) : (
           <span
             aria-hidden
-            className="absolute -top-1.5 h-3.5 w-3.5 rotate-45 rounded-[2px] bg-white border-l border-t border-black/5 dark:bg-[#1E293B] dark:border-white/10"
-            style={{ left: pointerX - 7 }}
+            className="absolute -top-1.5 h-3.5 w-3.5 rounded-[2px] bg-white border-l border-t border-black/5 dark:bg-[#1E293B] dark:border-white/10"
+            style={{ left: `${pointerX}px`, transform: "translateX(-50%) rotate(45deg)" }}
           />
         )}
 
         <p className="text-[14px] leading-[1.3] font-semibold text-[#1E293B] dark:text-white px-1">
           {title}
         </p>
-        
+
         <button
           type="button"
           onClick={onStart}
