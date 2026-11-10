@@ -362,9 +362,9 @@ export const LEVEL_BACKGROUND = {
   fallbackAspect: 390 / 844,
 } as const;
 
-/** The gem — the "Gem" artboard of `gem` (a Rive file with no extension). */
+/** The gem — the "Gem" artboard of `gem.riv`. The file's first (default) artboard is "Hex_Turning", so the gem is always asked for by name. */
 export const GEM = {
-  src: "/animations/gem",
+  src: "/animations/gem.riv",
   artboard: "Gem",
   stateMachine: "State Machine 1",
 } as const;

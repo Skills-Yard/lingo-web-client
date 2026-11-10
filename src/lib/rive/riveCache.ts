@@ -44,7 +44,7 @@ export const RIVE_FILES = [
   { src: BATTERY.src, bytes: 6_830_856 },
   { src: SEQUENCE_ROOM.src, bytes: 1_008_207 },
   { src: COMMAND_ROBOT.src, bytes: 264_119 },
-  { src: GEM.src, bytes: 6_689 },
+  { src: GEM.src, bytes: 96_439 },
 ] as const;
 
 export type RiveFilesStatus = "loading" | "loaded";

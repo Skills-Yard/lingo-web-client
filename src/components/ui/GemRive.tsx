@@ -6,7 +6,7 @@ import { riveSource } from "@/lib/rive/riveCache";
 
 configureRiveRuntime();
 
-/** The gem: the "Gem" artboard and "State Machine 1" state machine of `gem` (a Rive file), in a box the caller sizes with `className`. */
+/** The gem: the "Gem" artboard and "State Machine 1" state machine of `gem.riv`, in a box the caller sizes with `className`. */
 export function GemRive({ className = "" }: { className?: string }) {
   const { RiveComponent } = useRive({ ...riveSource(GEM.src), artboard: GEM.artboard, stateMachines: GEM.stateMachine, autoplay: true });
   return (
