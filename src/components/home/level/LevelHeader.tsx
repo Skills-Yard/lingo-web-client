@@ -1,9 +1,10 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Moon, Sun } from "lucide-react";
 import { GemRive } from "@/components/ui/GemRive";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { BatteryMenu } from "@/components/onboarding/BatteryMenu";
+import { useTheme } from "@/context/ThemeContext";
 import { batteryCount, useBattery } from "../batteryStore";
 import { LEARNER_STATS } from "../learnerStats";
 
@@ -42,27 +43,28 @@ export function LevelHeader({
         </h1>
       </div>
 
-      <div
-        className="flex items-center gap-2 xs:gap-2.5 sm:gap-3.5 shrink-0 select-none"
-        onDoubleClick={onDoubleClickStats}
-        title="Double-click to toggle theme"
-      >
-        <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#7C3AED] dark:text-[#A78BFA]">
-          <GemRive className="h-5 w-5 sm:h-6 sm:w-6" />
-          <span className="text-[14px] sm:text-[17px] leading-none">{LEARNER_STATS.gems}</span>
-        </div>
-
-        <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#F59E0B] dark:text-[#FBBF24]">
-          <img src="/images/idea.png" alt="" className="h-4.5 w-auto sm:h-6 select-none object-contain" />
-          <span className="text-[14px] sm:text-[17px] leading-none">{LEARNER_STATS.hints}</span>
-        </div>
-
-        <BatteryMenu className="relative" buttonClassName="block text-left">
-          <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#01A17F] dark:text-[#34D399] cursor-pointer hover:opacity-85 transition-opacity">
-            <PersistentBattery className="w-7 sm:w-9" />
-            <span className="text-[14px] sm:text-[17px] leading-none">{batteryCount(battery)}</span>
+      <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3.5 shrink-0 select-none">
+        <div
+          className="flex items-center gap-2 xs:gap-2.5 sm:gap-3.5 shrink-0"
+          onDoubleClick={onDoubleClickStats}
+        >
+          <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#7C3AED] dark:text-[#A78BFA]">
+            <GemRive className="h-5 w-5 sm:h-6 sm:w-6" />
+            <span className="text-[14px] sm:text-[17px] leading-none">{LEARNER_STATS.gems}</span>
           </div>
-        </BatteryMenu>
+
+          <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#F59E0B] dark:text-[#FBBF24]">
+            <img src="/images/idea.png" alt="" className="h-4.5 w-auto sm:h-6 select-none object-contain" />
+            <span className="text-[14px] sm:text-[17px] leading-none">{LEARNER_STATS.hints}</span>
+          </div>
+
+          <BatteryMenu className="relative" buttonClassName="block text-left">
+            <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#01A17F] dark:text-[#34D399] cursor-pointer hover:opacity-85 transition-opacity">
+              <PersistentBattery className="w-7 sm:w-9" />
+              <span className="text-[14px] sm:text-[17px] leading-none">{batteryCount(battery)}</span>
+            </div>
+          </BatteryMenu>
+        </div>
       </div>
     </header>
   );
