@@ -1,10 +1,9 @@
 "use client";
 
-import { ArrowLeft, Moon, Sun } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { GemRive } from "@/components/ui/GemRive";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { BatteryMenu } from "@/components/onboarding/BatteryMenu";
-import { useTheme } from "@/context/ThemeContext";
 import { batteryCount, useBattery } from "../batteryStore";
 import { LEARNER_STATS } from "../learnerStats";
 import { LevelPathOptions } from "./LevelPathOptions";
@@ -13,12 +12,9 @@ interface LevelHeaderProps {
   onBack: () => void;
   title?: string;
   onDoubleClickTitle?: () => void;
-  onDoubleClickStats?: () => void;
-  /** How many modules the learner has finished. */
   modulesDone: number;
   onCompleteModule: () => void;
   onUndoModule: () => void;
-  /** Puts the learner on module `module` (1-based). */
   onPickModule: (module: number) => void;
 }
 
@@ -26,7 +22,6 @@ export function LevelHeader({
   onBack,
   title = "Data Analytics",
   onDoubleClickTitle,
-  onDoubleClickStats,
   modulesDone,
   onCompleteModule,
   onUndoModule,
@@ -56,10 +51,7 @@ export function LevelHeader({
       </div>
 
       <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3.5 shrink-0 select-none">
-        <div
-          className="flex items-center gap-2 xs:gap-2.5 sm:gap-3.5 shrink-0"
-          onDoubleClick={onDoubleClickStats}
-        >
+        <div className="flex items-center gap-2 xs:gap-2.5 sm:gap-3.5 shrink-0">
           <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#7C3AED] dark:text-[#A78BFA]">
             <GemRive className="h-5 w-5 sm:h-6 sm:w-6" />
             <span className="text-[14px] sm:text-[17px] leading-none">{LEARNER_STATS.gems}</span>
@@ -70,25 +62,25 @@ export function LevelHeader({
             <span className="text-[14px] sm:text-[17px] leading-none">{LEARNER_STATS.hints}</span>
           </div>
 
-        <BatteryMenu
-          className="relative"
-          buttonClassName="block text-left"
-          extraOptions={(close) => (
-            <LevelPathOptions
-              done={modulesDone}
-              onComplete={onCompleteModule}
-              onUndo={onUndoModule}
-              onPickModule={onPickModule}
-              onClose={close}
-            />
-          )}
-        >
-          <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#01A17F] dark:text-[#34D399] cursor-pointer hover:opacity-85 transition-opacity">
-            <PersistentBattery className="w-7 sm:w-9" />
-            <span className="text-[14px] sm:text-[17px] leading-none">{batteryCount(battery)}</span>
-          </div>
-        </BatteryMenu>
-      </div>
+          <BatteryMenu
+            className="relative"
+            buttonClassName="block text-left"
+            extraOptions={(close) => (
+              <LevelPathOptions
+                done={modulesDone}
+                onComplete={onCompleteModule}
+                onUndo={onUndoModule}
+                onPickModule={onPickModule}
+                onClose={close}
+              />
+            )}
+          >
+            <div className="flex items-center gap-1 sm:gap-1.5 font-bold text-[#01A17F] dark:text-[#34D399] cursor-pointer hover:opacity-85 transition-opacity">
+              <PersistentBattery className="w-7 sm:w-9" />
+              <span className="text-[14px] sm:text-[17px] leading-none">{batteryCount(battery)}</span>
+            </div>
+          </BatteryMenu>
+        </div>
       </div>
     </header>
   );

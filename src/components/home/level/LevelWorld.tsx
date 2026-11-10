@@ -1,14 +1,20 @@
 "use client";
 
 import { AnimatePresence } from "framer-motion";
+import { useTheme } from "@/context/ThemeContext";
 import {
   BUILDING_CONFIGS,
+  computeFinalRoad,
+  computeRoadConfigs,
+  computeStageHeight,
   DECORATION_CONFIGS,
   FINAL_ROAD,
   GATE,
   getPlatformDisplay,
   PLATFORM_CONFIGS,
   ROAD_CONFIGS,
+  ROAD_SETTINGS,
+  RoadSettings,
   WORLD_STAGE_HEIGHT,
 } from "./levelConfig";
 import { LevelStartPopup } from "../LevelStartPopup";
@@ -20,6 +26,8 @@ interface LevelWorldProps {
   onLevelClick: (levelId: number) => void;
   onStartLesson: (levelId: number) => void;
   onClosePopup: () => void;
+  roadSettings?: RoadSettings;
+  theme?: "light" | "dark";
 }
 
 export function LevelWorld({
@@ -29,7 +37,18 @@ export function LevelWorld({
   onLevelClick,
   onStartLesson,
   onClosePopup,
+  roadSettings,
+  theme: propTheme,
 }: LevelWorldProps) {
+  const { theme: contextTheme } = useTheme();
+  const theme = propTheme ?? contextTheme;
+  const isDark = theme === "dark";
+
+  const roads = roadSettings ? computeRoadConfigs(roadSettings) : ROAD_CONFIGS;
+  const finalRoad = roadSettings ? computeFinalRoad(roadSettings) : FINAL_ROAD;
+  const stageHeight = roadSettings ? computeStageHeight(roadSettings) : WORLD_STAGE_HEIGHT;
+  const roadWidth = roadSettings?.width ?? ROAD_SETTINGS.width;
+
   const getLevelStatus = (id: number): "completed" | "active" | "locked" => {
     if (id <= modulesCompleted) return "completed";
     if (id === activeLevelNumber) return "active";
@@ -43,7 +62,14 @@ export function LevelWorld({
   const renderPlatform = (stepId: number) => {
     const config = PLATFORM_CONFIGS.find((p) => p.id === stepId)!;
     const status = getLevelStatus(stepId);
-    const display = getPlatformDisplay(status, config.baseX, config.baseY);
+    const display = getPlatformDisplay(
+      status,
+      config.baseX,
+      config.baseY,
+      config.side,
+      roadSettings ?? ROAD_SETTINGS,
+      isDark
+    );
 
     return (
       <div
@@ -73,7 +99,7 @@ export function LevelWorld({
       className="absolute top-0 left-0 origin-top-left"
       style={{
         width: "390px",
-        height: `${WORLD_STAGE_HEIGHT}px`,
+        height: `${stageHeight}px`,
       }}
     >
       {/* Background Decorative SVGs */}
@@ -110,16 +136,17 @@ export function LevelWorld({
       </div>
 
       {/* Roads: the gate to level 1, then each level to the next */}
-      {ROAD_CONFIGS.map((road) => (
+      {roads.map((road) => (
         <img
           key={road.id}
-          src="/images/level-platfrom/Group 287.svg"
+          src={isDark ? "/images/level-platfrom/dark-theme-road.svg" : "/images/level-platfrom/grid-road.svg"}
           alt=""
           aria-hidden
-          className="pointer-events-none absolute z-5 w-[179px] select-none"
+          className="pointer-events-none absolute z-5 select-none"
           style={{
             top: `${road.top}px`,
             left: `${road.left}px`,
+            width: `${road.width ?? roadWidth}px`,
             ...(road.mirrored ? { transform: "scaleX(-1)" } : {}),
           }}
         />
@@ -164,18 +191,21 @@ export function LevelWorld({
       <div
         className="pointer-events-none absolute z-5 overflow-hidden select-none"
         style={{
-          top: `${FINAL_ROAD.top}px`,
-          left: `${FINAL_ROAD.left}px`,
-          width: "179px",
-          height: `${FINAL_ROAD.height}px`,
+          top: `${finalRoad.top}px`,
+          left: `${finalRoad.left}px`,
+          width: `${finalRoad.width ?? roadWidth}px`,
+          height: `${finalRoad.height}px`,
         }}
       >
         <img
-          src="/images/level-platfrom/Group 287.svg"
+          src={isDark ? "/images/level-platfrom/dark-theme-road.svg" : "/images/level-platfrom/grid-road.svg"}
           alt=""
           aria-hidden
-          className="w-[179px] select-none"
-          style={FINAL_ROAD.mirrored ? { transform: "scaleX(-1)" } : undefined}
+          className="select-none"
+          style={{
+            width: `${finalRoad.width ?? roadWidth}px`,
+            ...(finalRoad.mirrored ? { transform: "scaleX(-1)" } : {}),
+          }}
         />
       </div>
 
@@ -184,12 +214,21 @@ export function LevelWorld({
         {selectedLevel !== null && (() => {
           const getAnchor = (level: number) => {
             const config = PLATFORM_CONFIGS.find((p) => p.id === level) || PLATFORM_CONFIGS[0];
+            const status = getLevelStatus(level);
+            const display = getPlatformDisplay(
+              status,
+              config.baseX,
+              config.baseY,
+              config.side,
+              roadSettings ?? ROAD_SETTINGS,
+              isDark
+            );
             const isTop = config.placement === "top";
             return {
-              cx: config.baseX,
-              cy: isTop ? config.baseY - 65 : config.baseY,
+              cx: Math.round(display.left + display.width / 2),
+              cy: isTop ? display.top : display.top + display.height,
               placement: config.placement,
-              offset: isTop ? 2 : 4,
+              offset: isTop ? 6 : 6,
             };
           };
           const anchor = getAnchor(selectedLevel);
