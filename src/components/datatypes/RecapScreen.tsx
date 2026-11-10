@@ -3,7 +3,7 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Quote } from "lucide-react";
+import { Lightbulb, Quote } from "lucide-react";
 import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { datatypesHref } from "@/lib/routes";
@@ -11,6 +11,7 @@ import { STEP, DATATYPES_STEPS, datatypesPrevious } from "./datatypes";
 import { TYPES } from "./interactions";
 import { parseTitle } from "./screen";
 import { CARD, LAVENDER, Pic } from "./visuals";
+import { WINDOW_ROW, WindowCard } from "./WindowCard";
 
 /** The headline (the PDF's, cut to one line), set at a size that keeps it on one. */
 const TITLE = { ...parseTitle("You unlocked *Data Types!*"), twoLines: false, size: 26 };
@@ -108,14 +109,16 @@ export function RecapScreen() {
       </div>
 
       <div className="absolute left-1/2 flex w-[340px] -translate-x-1/2 flex-col gap-2.5" style={{ top: 330 }}>
-        <ol className="flex flex-col gap-1.5 rounded-[14px] bg-[#E3F6F3] px-4 py-3 dark:bg-[#0F2B28]">
-          {RECAP.map((point, index) => (
-            <li key={point} className="flex items-start gap-2 text-[13px] leading-[18px] font-medium text-[#2F5D59] dark:text-[#BFE6E2]">
-              <span className="flex size-[18px] shrink-0 items-center justify-center rounded-full bg-[#04ACAB] text-[10px] leading-none font-bold text-white">{index + 1}</span>
-              {point}
-            </li>
-          ))}
-        </ol>
+        <WindowCard title="What you learned" icon={<Lightbulb />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
+          <ol className="flex flex-col gap-[7px]">
+            {RECAP.map((point, index) => (
+              <li key={point} className={`flex items-start gap-2 px-3 py-2 text-[13px] leading-[18px] font-medium text-[#151E48] dark:text-white ${WINDOW_ROW}`}>
+                <span className="flex size-[18px] shrink-0 items-center justify-center rounded-full bg-[#04ACAB] text-[10px] leading-none font-bold text-white">{index + 1}</span>
+                {point}
+              </li>
+            ))}
+          </ol>
+        </WindowCard>
         <p className="flex items-start gap-2 rounded-[14px] bg-[#F1EEFF] px-4 py-3 text-[13px] leading-[18px] font-semibold text-[#444444] dark:bg-[#23204A] dark:text-white">
           <Quote aria-hidden className="mt-0.5 size-4 shrink-0 text-[#6D4FE0] dark:text-[#A79BFF]" />
           {FINAL_THOUGHT}

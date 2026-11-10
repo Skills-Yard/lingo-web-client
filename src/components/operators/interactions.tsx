@@ -7,8 +7,9 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { SeenBadge } from "./FlipCarousel";
 import type { InteractionApi } from "./screen";
-import { EDGE_CURRENT, EDGE_IDLE, TINT } from "./SituationsStage";
-import { CARD, CREAM, Pic, ExprBig, ShareScene, WHITE, isOperator } from "./visuals";
+import { EDGE, RAISED, RAISED_SMALL } from "@/components/ui/raised";
+import { TINT } from "./SituationsStage";
+import { CARD, CARD_FACE, CREAM, Pic, ExprBig, ShareScene, WHITE, isOperator } from "./visuals";
 
 const SHAKE = [0, -7, 7, -5, 5, 0];
 /** A wrong try shakes red for this long (ms). */
@@ -268,7 +269,7 @@ export function FillRowsStage({ api, rows, per, after }: { api: InteractionApi; 
               type="button"
               onClick={() => fill(row)}
               aria-label={`Row ${row + 1}`}
-              className={`flex h-[44px] cursor-pointer items-center gap-2 rounded-[10px] border-2 px-2 transition-colors ${full ? "border-[#7FD8CC] bg-[#E3F6F3] dark:bg-[#0F2B28]" : "border-dashed border-[#C9CED6] bg-white/70 dark:bg-white/5"}`}
+              className={`flex h-[44px] cursor-pointer items-center gap-2 rounded-[10px] border-2 px-2 ${RAISED_SMALL} ${full ? "border-[#7FD8CC] bg-[#E3F6F3] [--edge:#7FD8CC] dark:bg-[#0F2B28]" : `border-dashed border-[#C9CED6] bg-white/70 dark:bg-white/5 ${EDGE.pale}`}`}
             >
               <span className={`w-[48px] rounded-full px-2 py-0.5 text-center text-[11px] leading-4 font-bold transition-colors ${full ? "bg-[#04ACAB] text-white" : "bg-[#EEF0F4] text-[#6B7480] dark:bg-white/10 dark:text-white/60"}`}>Row {row + 1}</span>
               <span className="flex flex-1 items-center justify-center gap-1">
@@ -551,7 +552,7 @@ export function OrderStage({
               animate={{ x: wrong === index ? SHAKE : 0 }}
               transition={{ duration: 0.4 }}
               whileTap={{ scale: 0.98 }}
-              className={`flex min-h-[46px] cursor-pointer items-center gap-2.5 px-3 py-1.5 text-left ${CARD} ${place >= 0 ? LOOKS.correct.card : wrong === index ? LOOKS.wrong.card : CREAM}`}
+              className={`flex min-h-[46px] cursor-pointer items-center gap-2.5 px-3 py-1.5 text-left ${CARD_FACE} ${RAISED} ${place >= 0 ? LOOKS.correct.edge : wrong === index ? LOOKS.wrong.edge : EDGE.khaki} ${place >= 0 ? LOOKS.correct.card : wrong === index ? LOOKS.wrong.card : CREAM}`}
             >
               <motion.span
                 key={place >= 0 ? "placed" : "open"}
@@ -611,7 +612,7 @@ export function ScenesStage({ api, scenes, columns = 2, prompt = "Tap each scene
             transition={{ duration: 0.35, delay: currentId === scene.id ? 0 : index * 0.08 }}
             whileTap={{ scale: 0.97 }}
             aria-pressed={currentId === scene.id}
-            className={`relative flex min-h-[104px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[10px] border-4 px-2 py-2 transition-[border-color,box-shadow] duration-200 ${SCENE_TINTS[index % SCENE_TINTS.length]} ${currentId === scene.id ? EDGE_CURRENT : EDGE_IDLE}`}
+            className={`relative flex min-h-[104px] cursor-pointer flex-col items-center justify-center gap-1.5 rounded-[10px] border-4 px-2 py-2 ${RAISED} ${SCENE_TINTS[index % SCENE_TINTS.length]} ${currentId === scene.id ? `border-[#08A4AD] ${EDGE.teal}` : `border-white dark:border-transparent ${EDGE.khaki}`}`}
           >
             <span className="flex size-14 items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
               <Pic src={scene.pic} className="size-9" />

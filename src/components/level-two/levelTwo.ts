@@ -34,6 +34,8 @@ export type Choice = {
   text: string;
   icon: string;
   tint?: string;
+  /** A short text in a coloured badge (its `look` is the fill and text classes), drawn in place of the picture. */
+  tag?: { text: string; look: string };
   moves?: readonly RobotMove[];
 };
 

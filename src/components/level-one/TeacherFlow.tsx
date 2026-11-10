@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { Confetti } from "./Confetti";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
@@ -58,21 +59,22 @@ export const optionState = (
   return id === selectedId ? "selected" : "idle";
 };
 
+/** Each state of an answer card: the colour of its 3D edge (see `RAISED`) and its face. */
 export const LOOKS: Record<OptionState, { edge: string; card: string }> = {
   idle: {
-    edge: "border-[#BDBA99]",
+    edge: EDGE.khaki,
     card: "border-black/4 bg-white dark:border-white/6 dark:bg-[#15181E]",
   },
   selected: {
-    edge: "border-[#008566]",
+    edge: EDGE.green,
     card: "border-primary bg-[#F2FBF8] dark:bg-[#0F2921]",
   },
   correct: {
-    edge: "border-[#008566]",
+    edge: EDGE.green,
     card: "border-primary bg-[#F2FBF8] dark:bg-[#0F2921]",
   },
   wrong: {
-    edge: "border-[#B3261E]",
+    edge: EDGE.red,
     card: "border-[#E5484D] bg-[#FFF1F1] dark:bg-[#2A1517]",
   },
 };
@@ -248,9 +250,9 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}
-                  className={`relative flex h-[221px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[8px] border-4 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[color,background-color,border-color,box-shadow] ${
+                  className={`relative flex h-[221px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[8px] border-4 ${RAISED} ${LOOKS[state].edge} ${
                     state === "idle" ? `border-white dark:border-transparent ${option.tint}` : LOOKS[state].card
-                  } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
+                  } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_4px_0_var(--edge),0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={option.icon} alt="" draggable={false} className="h-[116px] w-[116px] shrink-0 object-contain" />

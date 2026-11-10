@@ -2,20 +2,17 @@
 
 import type { ReactNode } from "react";
 import { GroupStage, type GroupItem } from "./GroupStage";
+import { ToggleRight } from "lucide-react";
+import { FloatLesson } from "./FloatLesson";
 import { GroupTourStage, type TourGroup } from "./GroupTourStage";
-import { INK, TINTS, tintAt } from "./look";
-import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
+import { BADGE, INK, TINTS, tintAt } from "./look";
+import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, DecimalGroups, EventScene, InfoRows, InfoTiles, LAVENDER, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type InfoRow, type InfoTile } from "./visuals";
-
-/**
- * The content of every screen follows `4. DataTypes.pdf`, cut to fit the design: a
- * headline on one line, Hex's line on two lines at most, each answer on one line
- * and the result panel's text on two lines at most.
- */
+import { WINDOW_ROW, WindowCard } from "./WindowCard";
+import { AttendanceBoard, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -31,6 +28,14 @@ const tinted = (choices: readonly Option[]): Option[] => choices.map((choice, in
 /** The four types as answers: each always with its own picture. */
 const TYPE_OPTIONS: Option[] = tinted(TYPES.map((type) => ({ id: type.id, text: type.label, icon: type.icon })));
 const TYPE_BUCKETS: readonly SortBucket[] = TYPES.map((type) => ({ id: type.id, label: type.label, icon: type.icon }));
+
+/** Screen 8's four answers, big: in the design's order (Integer and Float, then Boolean and String) and tints (the cream is its own, a shade lighter than the other screens'). */
+const FLOAT_QUIZ_OPTIONS: Option[] = [
+  { id: "integer", text: "Integer", icon: P.integer, tint: TINTS.lavender },
+  { id: "float", text: "Float", icon: P.float, tint: "bg-[#FFF9F0] dark:bg-[#2A2218]" },
+  { id: "boolean", text: "Boolean", icon: P.boolean, tint: TINTS.green },
+  { id: "string", text: "String", icon: P.string, tint: TINTS.blue },
+];
 
 /** A question: its answers, like screens 1 and 2's, come in once Hex has finished his line. */
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", optionsAfterHex: true, ...stage });
@@ -97,6 +102,13 @@ const VALUE_TILES: readonly InfoTile[] = [
   { id: "tickets", text: "25 tickets", icon: P.valueTickets, tint: TINTS.cream },
   { id: "height", text: "148.5 cm height", icon: P.valueHeight, tint: TINTS.green },
   { id: "weight", text: "36.7 kg weight", icon: P.valueWeight, tint: TINTS.blue },
+];
+
+/** Screen 7's three examples: a whole number in its badge, and what it counts or measures (each tile has its own colour, its badge goes with it). */
+const INTEGER_EXAMPLES: readonly ExampleTile[] = [
+  { id: "students", value: "32", text: "No. of students", tint: TINTS.green, badge: BADGE.mint },
+  { id: "books", value: "13", text: "Number of books", tint: TINTS.cream, badge: BADGE.purple },
+  { id: "temperature", value: "-5°", text: "Temperature change", tint: TINTS.blue, badge: BADGE.sky },
 ];
 
 /** Screens that are a headline and one or more stages: the questions and the interactions. */
@@ -257,64 +269,42 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.integers]: {
     step: STEP.integers,
-    title: "Meet *Integers!*",
+    title: "Meet *integers!*",
     titleSize: 28,
     backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
-        line: "A whole number is called an Integer.",
+        line: "Integers are whole numbers without decimal parts.",
         bubbleWidth: 190,
         alignTop: true,
-        render: (api) => (
-          <RevealStage
-            api={api}
-            columns={5}
-            need={3}
-            header={(current) => <NumberLine current={current} />}
-            items={[
-              { id: "0", label: "0", caption: "Zero: nothing left." },
-              { id: "1", label: "1", caption: "One: a single ticket." },
-              { id: "12", label: "12", caption: "Number of books: 12" },
-              { id: "25", label: "25", caption: "Number of students: 25" },
-              { id: "-5", label: "-5", caption: "Temperature change: -5 degrees" },
-            ]}
-            footer={<Key>Integer (int) represents whole-number values.</Key>}
-          />
-        ),
+        ready: true,
+        render: ({ hexSpoken }) => <IntegerLesson examples={INTEGER_EXAMPLES} shown={hexSpoken} />,
       },
     ],
   },
 
   [STEP.floats]: {
     step: STEP.floats,
-    title: "Need more *precision?*",
+    title: "Can we be more *precise?*",
     titleSize: 28,
-    backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
-        line: "One student is 148.5 cm, another 152.8 cm.",
+        line: "Whole numbers can miss details like a height of 148.5 cm!!",
+        bubbleWidth: 190,
         alignTop: true,
-        render: (api) => (
-          <RevealStage
-            api={api}
-            columns={3}
-            need={1}
-            header={() => <RulerScale />}
-            items={[
-              { id: "h", label: "148.5", sub: "Height", caption: "Height: 148.5" },
-              { id: "w", label: "36.7", sub: "Weight", caption: "Weight: 36.7" },
-              { id: "p", label: "49.99", sub: "Price", caption: "Price: 49.99" },
-            ]}
-            footer={<Key>Numbers with decimal values are called Float.</Key>}
-          />
-        ),
+        ready: true,
+        render: ({ hexSpoken }) => <FloatLesson shown={hexSpoken} />,
       },
       quiz({
-        line: "Which is more suitable for a height of 148.5 cm?",
+        title: "Which value *fits best?*",
+        titleSize: 28,
+        line: "Choose the best value to represent 148.5 cm.",
+        bubbleWidth: 176,
         layout: "grid",
-        options: TYPE_OPTIONS,
+        cards: "big",
+        options: FLOAT_QUIZ_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
         right: "A decimal measurement like 148.5 is a Float.",
@@ -354,21 +344,35 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     ],
   },
 
+  // Screen 10 has two parts on one desk: the school's list of names, then the question about it.
   [STEP.names]: {
     step: STEP.names,
-    title: "Can programs know *names?*",
-    titleSize: 24,
+    title: "Let’s *list* student’s name!",
+    titleSize: 28,
+    backdrop: <NamesScene />,
     stages: [
+      {
+        kind: "interaction",
+        line: "Imagine the school wants to display the names of students.",
+        bubbleWidth: 190,
+        alignTop: true,
+        ready: true,
+        render: ({ hexSpoken }) => <RegisteredStudents shown={hexSpoken} />,
+      },
       quiz({
-        line: "What kind of information are these?",
-        visual: ({ attempt }) => <NamesList replay={attempt} />,
-        options: options([
-          ["Numerical information", P.integer],
-          ["Textual information", P.string],
-          ["Decimal information", P.float],
-          ["Yes/no information", P.boolean],
-        ]),
-        correctId: at(1),
+        title: "What *information* is this?",
+        titleSize: 28,
+        line: "Can a program understand names too?",
+        bubbleWidth: 160,
+        layout: "grid",
+        cards: "badges",
+        visual: () => <RegisteredStudents animated={false} />,
+        options: [
+          { id: "numerical", text: "Numerical", icon: "", tint: TINTS.green, tag: { text: "30", look: BADGE.mint } },
+          { id: "textual", text: "Textual", icon: "", tint: TINTS.cream, tag: { text: "abc", look: BADGE.purple } },
+          { id: "decimal", text: "Decimal", icon: "", tint: TINTS.blue, tag: { text: "1.2", look: BADGE.sky } },
+        ],
+        correctId: "textual",
         rightTitle: "Exactly!",
         right: "These are names written as text.",
         wrong: "Look at the names. Are they numbers?",
@@ -548,18 +552,18 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             api={api}
             columns={2}
             header={() => (
-              <div className={`flex w-[330px] flex-col gap-0.5 px-3 py-2 ${CARD} ${LAVENDER}`}>
+              <WindowCard title="Student status" icon={<ToggleRight />} panel="gap-[6px] pt-3 pr-[21px] pb-3.5 pl-[21px]">
                 {[
                   ["Is_present", "True"],
                   ["Is_payment_complete", "False"],
                   ["Is_logged_in", "True"],
                 ].map(([name, value]) => (
-                  <div key={name} className="flex justify-between text-[13px] leading-5 font-semibold text-[#444444] dark:text-white">
+                  <div key={name} className={`flex h-[30px] items-center justify-between px-3 text-[13px] leading-5 font-semibold text-[#151E48] dark:text-white ${WINDOW_ROW}`}>
                     <span className="font-mono">{name}</span>
                     <span className={value === "True" ? "text-[#01A17F]" : "text-[#8A94A0]"}>{value}</span>
                   </div>
                 ))}
-              </div>
+              </WindowCard>
             )}
             items={[
               { id: "t", label: "TRUE", sub: "light on", icon: P.boolean, caption: "True: Aarav is present." },

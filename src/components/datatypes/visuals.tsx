@@ -2,16 +2,19 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, Calculator, Check, FileText, Link2, Plus, TriangleAlert, X } from "lucide-react";
+import { Calculator, Check, ClipboardCheck, CloudSun, FileText, Link2, Plus, TriangleAlert, User, X } from "lucide-react";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
-import { TINTS } from "./look";
+import { INK } from "./look";
 import { P } from "./pictures";
+import { People, WINDOW_ROW, WindowCard } from "./WindowCard";
 
 /** A card, in the style of the Sequence module's picture cards. */
 export const CARD = "rounded-[8px] border-4 border-white shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent";
+/** A card that is pressed: `CARD` without its soft shadow, which the 3D edge (see `RAISED`) stands in for. */
+export const CARD_FACE = "rounded-[8px] border-4 border-white dark:border-transparent";
 export const LAVENDER = "bg-[#F6F4FE] dark:bg-[#0F1F26]";
 export const CREAM = "bg-[#FFF9F0] dark:bg-[#0F1F26]";
 export const WHITE = "bg-white dark:bg-[#15181E]";
@@ -62,6 +65,9 @@ export const EventScene = () => <SceneBackdrop file={P.eventScene} />;
 
 /** Screens 5 and 6: the same school yard, empty, for the cards to stand over (drawn the same way, from the same place). */
 export const SchoolScene = () => <SceneBackdrop file={P.schoolScene} />;
+
+/** Screen 10: the school desk, with its books and plant, behind the list (drawn the same way, from the same place). */
+export const NamesScene = () => <SceneBackdrop file={P.namesScene} />;
 
 function SceneBackdrop({ file }: { file: string }) {
   return (
@@ -207,69 +213,39 @@ export function InfoRows({ rows, shown, firstIndex = 0 }: { rows: readonly InfoR
   );
 }
 
-/** A number written with its decimal point picked out, where there is one. */
-export function Decimal({ value }: { value: string }) {
-  const [whole, decimal] = value.split(".");
-  if (decimal === undefined) return <>{value}</>;
-  return (
-    <>
-      {whole}
-      <span className="text-[#FF8D42]">.{decimal}</span>
-    </>
+/** The students on screen 10's list. */
+const STUDENTS = ["Aarav", "Mia", "Kabir", "Ananya"] as const;
+
+/** One part of the window: it bounces in (when the window is animated), or is simply there. */
+function Part({ at, shown, animated, className, children }: { at: number; shown: boolean; animated: boolean; className?: string; children: ReactNode }) {
+  return animated ? (
+    <BounceIn index={at} shown={shown} className={className}>
+      {children}
+    </BounceIn>
+  ) : (
+    <div className={className}>{children}</div>
   );
 }
 
-/** Screen 8: a measuring scale stopping at two heights; the decimal parts are picked out. */
-export function RulerScale({ replay = 0 }: { replay?: number }) {
-  const [at, setAt] = useState(0);
-  useEffect(() => {
-    const timers = [window.setTimeout(() => setAt(1), 700), window.setTimeout(() => setAt(2), 2700)];
-    return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
-      setAt(0);
-    };
-  }, [replay]);
-  const heights = [140, 148.5, 152.8] as const;
-  const x = ((heights[at] - 140) / 20) * 288;
+/**
+ * Screen 10: the school's list, in a window of its own: a teal title bar over a
+ * row for each student's name. Animated, the window comes in and then the names,
+ * one by one, once Hex has finished his line; otherwise it is simply there.
+ */
+export function RegisteredStudents({ shown = true, animated = true }: { shown?: boolean; animated?: boolean }) {
   return (
-    <div className={`flex w-[316px] flex-col items-center gap-1 px-3 pt-2 pb-3 ${CARD} ${WHITE}`}>
-      <span className="text-[26px] leading-8 font-bold text-[#444444] dark:text-white">
-        {at === 0 ? "…" : <Decimal value={heights[at].toFixed(1)} />} <span className="text-[16px] font-semibold text-[#8A94A0]">cm</span>
-      </span>
-      <div className="relative h-9 w-[288px]">
-        <div className="absolute inset-x-0 top-5 h-[3px] rounded-full bg-[#D5DADF] dark:bg-white/20" />
-        {Array.from({ length: 21 }, (_, index) => (
-          <span key={index} className="absolute top-4 w-[2px] rounded-full bg-[#8D9BAA]" style={{ left: (index / 20) * 288 - 1, height: index % 5 === 0 ? 14 : 8 }} />
+    <Part at={0} shown={shown} animated={animated} className="w-[340px]">
+      <WindowCard title="Registered Students" icon={<People />} panel="gap-[9px] pt-4 pr-[21px] pb-6 pl-[26px]">
+        {STUDENTS.map((name, index) => (
+          <Part key={name} at={1 + index} shown={shown} animated={animated}>
+            <div className={`flex h-[33px] items-center gap-5 pl-[22px] text-[17px] leading-6 font-bold text-[#151E48] dark:text-white ${WINDOW_ROW}`}>
+              <User aria-hidden className="size-[23px] shrink-0 fill-current text-[#06C3B4]" strokeWidth={1.5} />
+              {name}
+            </div>
+          </Part>
         ))}
-        <motion.span
-          className="absolute top-0 -ml-[7px] h-0 w-0 border-x-[7px] border-t-[11px] border-x-transparent border-t-[#08A4AD]"
-          initial={false}
-          animate={{ x }}
-          transition={{ duration: 1.4, ease: "easeInOut" }}
-        />
-      </div>
-      <div className="flex w-[288px] justify-between text-[11px] leading-4 font-semibold text-[#8A94A0]">
-        {[140, 145, 150, 155, 160].map((tick) => (
-          <span key={tick}>{tick}</span>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-/** Screen 10: the registration list, the names appearing one by one. */
-export function NamesList({ replay = 0 }: { replay?: number }) {
-  return (
-    <div key={replay} className={`flex w-[316px] flex-col gap-1.5 px-3 py-3 ${CARD} ${LAVENDER}`}>
-      <span className="text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">Registered students</span>
-      <div className="grid grid-cols-2 gap-1.5">
-        {["Aarav", "Mia", "Kabir", "Ananya"].map((name, index) => (
-          <FieldRow key={name} label={`#${index + 1}`} delay={0.3 + index * 0.55}>
-            {name}
-          </FieldRow>
-        ))}
-      </div>
-    </div>
+      </WindowCard>
+    </Part>
   );
 }
 
@@ -349,21 +325,23 @@ export function AttendanceBoard() {
     return () => window.clearInterval(timer);
   }, []);
   return (
-    <div className={`flex w-[316px] items-center justify-between gap-3 px-4 py-3 ${CARD} ${LAVENDER}`}>
-      <div className="flex items-center gap-3">
-        <Pic src={P.programmer} className="h-[56px] w-[56px]" />
-        <span className="text-[20px] leading-7 font-bold text-[#444444] dark:text-white">Aarav</span>
+    <WindowCard title="Attendance" icon={<ClipboardCheck />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
+      <div className={`flex h-[52px] items-center justify-between gap-3 pr-3 pl-2.5 ${WINDOW_ROW}`}>
+        <div className="flex items-center gap-2.5">
+          <Pic src={P.programmer} className="h-[40px] w-[40px]" />
+          <span className="text-[18px] leading-7 font-bold text-[#151E48] dark:text-white">Aarav</span>
+        </div>
+        <motion.span
+          key={String(present)}
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className={`flex items-center gap-1.5 rounded-full px-3.5 py-1 text-[15px] leading-6 font-bold text-white ${present ? "bg-[#01A17F]" : "bg-[#E5484D]"}`}
+        >
+          {present ? <Check aria-hidden className="size-4" strokeWidth={3} /> : <X aria-hidden className="size-4" strokeWidth={3} />}
+          {present ? "Present" : "Absent"}
+        </motion.span>
       </div>
-      <motion.span
-        key={String(present)}
-        initial={{ scale: 0.7, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className={`flex items-center gap-1.5 rounded-full px-4 py-1.5 text-[16px] leading-6 font-bold text-white ${present ? "bg-[#01A17F]" : "bg-[#E5484D]"}`}
-      >
-        {present ? <Check aria-hidden className="size-4" strokeWidth={3} /> : <X aria-hidden className="size-4" strokeWidth={3} />}
-        {present ? "Present" : "Absent"}
-      </motion.span>
-    </div>
+    </WindowCard>
   );
 }
 
@@ -376,63 +354,119 @@ export function TypedCards({ fixed = false }: { fixed?: boolean }) {
     { label: "Is_present", value: "True", type: "Boolean", warn: false },
   ];
   return (
-    <div className="grid w-[316px] grid-cols-2 gap-2">
+    <WindowCard title="Student record" icon={<FileText />} panel="gap-[7px] pt-3.5 pr-[21px] pb-4 pl-[21px]">
       {rows.map((row) => (
-        <div
-          key={row.label}
-          className={`flex flex-col items-center gap-0.5 rounded-lg border-2 px-2 py-1.5 ${row.warn ? "border-[#FFB300] bg-[#FFF8E1] dark:bg-[#2A2218]" : "border-[#E3E5E9] bg-white dark:border-white/15 dark:bg-[#15181E]"}`}
-        >
-          <span className="text-[11px] leading-4 font-medium text-[#8A94A0]">{row.label}</span>
-          <span className="text-[18px] leading-6 font-bold text-[#444444] dark:text-white">{row.value}</span>
-          <span className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] leading-4 font-semibold ${row.warn ? "bg-[#FFB300] text-white" : "bg-[#E3F6F3] text-[#04908F] dark:bg-[#0F2B28]"}`}>
+        <div key={row.label} className={`flex h-[34px] items-center gap-3 px-3 ${row.warn ? "rounded-[8px] bg-[#FFF8E1] ring-2 ring-[#FFB300] dark:bg-[#2A2218]" : WINDOW_ROW}`}>
+          <span className="w-[78px] text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{row.label}</span>
+          <span className="min-w-0 flex-1 text-[16px] leading-6 font-bold text-[#151E48] dark:text-white">{row.value}</span>
+          <span className={`flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] leading-4 font-semibold ${row.warn ? "bg-[#FFB300] text-white" : "bg-[#E3F6F3] text-[#04908F] dark:bg-[#0F2B28]"}`}>
             {row.warn && <TriangleAlert aria-hidden className="size-3" />}
             {row.type}
           </span>
         </div>
       ))}
-    </div>
+    </WindowCard>
   );
 }
 
 /** Screen 22: the finished weather card. */
 export function WeatherCard() {
   return (
-    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className={`flex w-[316px] flex-col gap-1.5 px-3 py-3 ${CARD} ${LAVENDER}`}>
-      <span className="text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">Weather</span>
-      <div className="grid grid-cols-2 gap-1.5">
-        <FieldRow label="City">Delhi</FieldRow>
-        <FieldRow label="Temperature">28.5°C</FieldRow>
-        <FieldRow label="Rainy days">3</FieldRow>
-        <FieldRow label="Is raining">False</FieldRow>
-      </div>
+    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+      <WindowCard title="Weather" icon={<CloudSun />} panel="gap-[7px] pt-3.5 pr-[21px] pb-4 pl-[21px]">
+        {[
+          ["City", "Delhi"],
+          ["Temperature", "28.5°C"],
+          ["Rainy days", "3"],
+          ["Is raining", "False"],
+        ].map(([label, value]) => (
+          <div key={label} className={`flex h-[34px] items-center justify-between px-3 ${WINDOW_ROW}`}>
+            <span className="text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{label}</span>
+            <span className="text-[16px] leading-6 font-bold text-[#151E48] dark:text-white">{value}</span>
+          </div>
+        ))}
+      </WindowCard>
     </motion.div>
   );
 }
 
-/** Screen 7: a number line, the value just tapped lit on it. */
-export function NumberLine({ current }: { current: string | null }) {
-  const values = [-5, 0, 1, 12, 25];
-  const at = (value: number) => 12 + ((value + 5) / 30) * 296;
-  const lit = current === null ? null : Number(current);
+/** Screen 7's picture is as wide as its three example tiles (112 each) and the gaps between them (8). */
+const INTEGER_LESSON_W = 3 * 112 + 2 * 8;
+
+/** A chip on the number line, and the pointer under it that takes the chip's colour: a negative number is picked out in purple. */
+const CHIP_LOOK = {
+  whole: { chip: "bg-[#B8EDDB] text-[#05594F]", pointer: "border-t-[#B8EDDB]" },
+  negative: { chip: "bg-[#C0ABEF] text-[#361887]", pointer: "border-t-[#C0ABEF]" },
+} as const;
+
+const LINE_VALUES = [
+  { value: "-5", look: CHIP_LOOK.negative },
+  { value: "0", look: CHIP_LOOK.whole },
+  { value: "1", look: CHIP_LOOK.whole },
+  { value: "12", look: CHIP_LOOK.whole },
+  { value: "25", look: CHIP_LOOK.whole },
+] as const;
+
+/** Where each part of screen 7 comes in (see `BounceIn`): the card, its chips, the `int` note, then the examples. */
+const LESSON_AT = { card: 0, chips: 1, note: 1 + LINE_VALUES.length, examples: 2 + LINE_VALUES.length } as const;
+
+export type ExampleTile = { id: string; value: string; text: string; tint: string; badge: string };
+
+/** Five integers on a number line that runs on both ways, each in a chip that points at its dot. */
+function IntegerLine({ shown }: { shown: boolean }) {
   return (
-    <div className={`relative h-[66px] w-[330px] px-0 ${CARD} ${WHITE}`}>
-      <div className="absolute inset-x-3 top-7 h-[3px] rounded-full bg-[#D5DADF] dark:bg-white/20" />
-      {[-5, 0, 5, 10, 15, 20, 25].map((tick) => (
-        <span key={tick} className="absolute top-6 flex -translate-x-1/2 flex-col items-center gap-1" style={{ left: at(tick) }}>
-          <span className="h-[9px] w-[2px] rounded-full bg-[#8D9BAA]" />
-          <span className="text-[10px] leading-3 font-semibold text-[#8A94A0]">{tick}</span>
-        </span>
+    <div className="relative flex justify-center">
+      <svg aria-hidden className="absolute top-[32.5px] left-1/2 -translate-x-1/2" width="224" height="12" viewBox="0 0 224 12" fill="none" stroke="#0CC0B7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M2 6H222M8 1L2 6L8 11M216 1L222 6L216 11" />
+      </svg>
+      {LINE_VALUES.map(({ value, look }, index) => (
+        <BounceIn key={value} index={LESSON_AT.chips + index} shown={shown} className="flex w-[46.5px] flex-col items-center">
+          <span className={`flex h-[28px] min-w-9 items-center justify-center rounded-full px-2 text-[18px] leading-none font-bold ${look.chip}`}>{value}</span>
+          <span className={`size-0 border-x-4 border-t-[5px] border-x-transparent ${look.pointer}`} />
+          <span className="mt-0.5 size-[9px] rounded-full bg-[#0CC0B7]" />
+          <span aria-hidden className="mt-0.5 text-[11px] leading-4 font-semibold text-white dark:text-white/25">
+            {value}
+          </span>
+        </BounceIn>
       ))}
-      {values.map((value) => (
-        <motion.span
-          key={value}
-          className="absolute top-[21px] -ml-2 size-4 rounded-full border-2 border-white bg-[#08A4AD]"
-          style={{ left: at(value) }}
-          initial={false}
-          animate={{ scale: lit === value ? 1.5 : 0.7, opacity: lit === value ? 1 : 0.45 }}
-          transition={{ type: "spring", stiffness: 300, damping: 16 }}
-        />
-      ))}
+    </div>
+  );
+}
+
+/**
+ * Screen 7: whole numbers on a number line, what `int` says about them, and three
+ * examples from everyday life. The parts bounce in, one by one, once Hex has finished his line.
+ */
+export function IntegerLesson({ examples, shown }: { examples: readonly ExampleTile[]; shown: boolean }) {
+  return (
+    <div className="flex flex-col" style={{ width: INTEGER_LESSON_W }}>
+      <BounceIn index={LESSON_AT.card} shown={shown} className={`flex flex-col items-center gap-[5px] rounded-[16px] px-4 pt-[17px] pb-4 ${LAVENDER}`}>
+        <IntegerLine shown={shown} />
+        <BounceIn index={LESSON_AT.note} shown={shown} className="flex h-[52px] w-[237px] items-center gap-[9px] rounded-[20px] border-2 border-white bg-[#E0F4EE] pl-2.5 dark:border-transparent dark:bg-[#0F2B28]">
+          <span className="flex h-[34px] w-[69px] shrink-0 items-center justify-center rounded-full bg-[#BDEEDC] font-mono text-[20px] leading-none text-[#111513] dark:bg-[#17413B] dark:text-white">
+            (<span className="text-[#108A26] dark:text-[#5DDB7A]">int</span>)
+          </span>
+          <span className="mr-[3px] h-7 w-px shrink-0 bg-[#6DD9C3] dark:bg-white/20" />
+          <span className="text-[11px] leading-[15px] font-semibold whitespace-nowrap text-[#333333] dark:text-white">
+            Integer represents
+            <br />
+            whole-number values.
+          </span>
+        </BounceIn>
+      </BounceIn>
+      <BounceIn index={LESSON_AT.examples} shown={shown} className="mt-7 self-start">
+        <span className={`flex h-[38px] w-[100px] items-center justify-center rounded-[8px] text-[16px] leading-none font-semibold ${INK.violet} ${LAVENDER}`}>Examples</span>
+      </BounceIn>
+      <div className="mt-3 flex gap-2">
+        {examples.map((tile, index) => (
+          <BounceIn key={tile.id} index={LESSON_AT.examples + index} shown={shown} className="shrink-0">
+            <div className={`flex h-[119px] w-[112px] flex-col items-center justify-center gap-1.5 rounded-[8px] border-4 border-white dark:border-transparent ${tile.tint}`}>
+              <span className={`flex size-10 items-center justify-center rounded-[12px] text-[20px] leading-[120%] font-semibold whitespace-nowrap ${tile.badge}`}>{tile.value}</span>
+              <span className="w-[104px] text-center text-[14px] leading-[120%] font-semibold text-[#444444] dark:text-white">{tile.text}</span>
+            </div>
+          </BounceIn>
+        ))}
+      </div>
     </div>
   );
 }

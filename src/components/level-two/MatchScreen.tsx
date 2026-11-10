@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { motion, type Transition } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED } from "@/components/ui/raised";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -170,6 +171,7 @@ export function MatchScreen() {
               : look === "done"
                 ? GRAY_CARD
                 : LOOKS.wrong.card;
+      const edge = look === "idle" ? EDGE.khaki : look === "selected" ? EDGE.blue : look === "done" ? EDGE.pale : look === "wrong" ? EDGE.red : EDGE.green;
       return (
         <HintFloat className="relative" spin={false} active={hintHere}>
         <motion.button
@@ -191,7 +193,7 @@ export function MatchScreen() {
             x: { duration: waiting ? WAIT_NUDGE_S : SHAKE_S },
             scale: matchedNow ? LIFT_TRANSITION : { duration: waiting ? WAIT_NUDGE_S : 0.4 },
           }}
-          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-[8px] border-4 px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] disabled:cursor-default dark:border-2 ${face}`}
+          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-[8px] border-4 px-2 ${RAISED} ${edge} disabled:cursor-default dark:border-2 ${face}`}
           style={{ width: CARD_W, height: metrics.cardH }}
         >
           {/* The hint's orange fill, wiped in from the left behind the content. */}
