@@ -3,6 +3,7 @@
  * runtime (`ModuleRunner`, `ScreenRunner`) plays it with the kit. Nothing in it is code.
  */
 
+import type { AnswersLook } from "../options/Answers";
 import type { OptionData } from "../types";
 
 export type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
@@ -41,8 +42,11 @@ export type QuizStageData = StageTitle & {
   question?: string;
   /** The picture between Hex's line and the answers; `$ctx` values: `attempt`, `picked`, `checked`, `correct`, `hexSpoken`. */
   visual?: Json;
-  layout?: "rows" | "grid";
-  /** Shorter rows, for answers that are only words. */
+  /** How the answers are drawn (see `Answers`): `rows`, `tiles` (pictures), `objects` (small cards to tap) or `trueFalse` (two big cards; the options are `true` and `false`). */
+  answers: AnswersLook;
+  /** `trueFalse`: the words on the two cards, [for true, for false] (Yes / No). */
+  yesNo?: [string, string];
+  /** `rows`: shorter rows, for answers that are only words. */
   compact?: boolean;
   /** Hex and his line stay once it is checked. */
   keepLine?: boolean;
@@ -116,17 +120,11 @@ export type FlowData = {
 export type ModuleLook = {
   /** `centred`: Hex and the words as one centred group (default); `side`: the words at the left, Hex at the right. */
   sheet?: "centred" | "side";
-  /** Shorter rows (56px) for every list of answers. */
-  compactRows?: boolean;
-  /** What a `grid` question draws: `tiles` (pictures, default) or `objects` (small cards to tap). */
-  grid?: "tiles" | "objects";
-  /** With `grid: "objects"`: three answers of at most this many letters and no picture are cards too. */
-  shortCards?: number;
   /** A line longer than this many letters goes on a card in place of Hex's bubble. */
   cardLine?: number;
   /** Hex's bubble width by the length of his line: the first entry whose `upTo` is not less than it. */
   bubble?: { upTo?: number; width: number }[];
-  /** How far (px) the body rises when a result sheet comes up over a grid of answers (default 180). */
+  /** How far (px) the body rises when a result sheet comes up over tiles of answers (default 180) or object cards (default 150). */
   tileLift?: number;
   /** Interactions stand at the top of their room, instead of in the middle. */
   topAligned?: boolean;

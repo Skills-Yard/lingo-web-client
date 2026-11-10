@@ -8,7 +8,7 @@ import { DragCard } from "./interactions";
 import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
 import { CARD_LOOK_FLAT, EMPTY_SLOT, RECEIVING, TINTS, type GroupTint } from "./look";
 import { P } from "./pictures";
-import type { InteractionApi } from "./screen";
+import type { SortApi } from "./screen";
 import { Pic } from "./visuals";
 
 export type GroupItem = { id: string; label: string; tint: GroupTint };
@@ -51,7 +51,7 @@ export function GroupStage({
   items,
   onSorted,
 }: {
-  api: InteractionApi;
+  api: SortApi;
   items: readonly GroupItem[];
   /** Told how the cards ended up (card id to slot id). */
   onSorted?: (placed: Readonly<Record<string, string>>) => void;

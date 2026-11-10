@@ -190,10 +190,11 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
   const lineGone = (quiz ? checked : finished || hexDismissed) && !lineStays;
   const lineTyped = !line || hexSpoken;
 
-  // How a question's answers stand: tiles (pictures), object cards (things to tap), or rows.
-  const objects = !!quiz && look.grid === "objects" && (quiz.layout === "grid" || (!!look.shortCards && quiz.options.length === 3 && quiz.options.every((option) => !option.image && option.text.length <= look.shortCards!)));
-  const tiles = !!quiz && quiz.layout === "grid" && !objects;
-  const lift = panel ? (quiz ? (tiles ? (look.tileLift ?? RESULT_LIFT) : objects ? (look.tileLift ?? LIST_LIFT) : LIST_LIFT) : interaction?.finishPanel ? PANEL_LIFT : 0) : 0;
+  // How a question's answers stand is the data's choice: rows, tiles (pictures), object cards (things to tap) or true / false.
+  // Big cards (tiles, true / false) need the body lifted higher than rows or small object cards do.
+  const answersLook = quiz?.answers ?? "rows";
+  const bigCards = answersLook === "tiles" || answersLook === "trueFalse";
+  const lift = panel ? (quiz ? (bigCards ? (look.tileLift ?? RESULT_LIFT) : answersLook === "objects" ? (look.tileLift ?? LIST_LIFT) : LIST_LIFT) : interaction?.finishPanel ? PANEL_LIFT : 0) : 0;
   // A line too long for Hex's bubble goes on a card.
   const cardLine = !!quiz && !!look.cardLine && line !== null && line.length > look.cardLine;
   const bubble = line === null ? undefined : (interaction?.bubbleWidth ?? look.bubble?.find((rule) => rule.upTo === undefined || line.length <= rule.upTo)?.width);
@@ -299,7 +300,8 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
       {quiz && (
         <motion.div key={`answers-${stageIndex}`} initial={quiz.optionsAfterHex ? false : { opacity: 0, y: 90 }} animate={{ opacity: 1, y: 0 }} transition={ANSWERS_IN} className="shrink-0" style={{ width: COLUMN_W }}>
           <Answers
-            look={objects ? "objects" : tiles ? "tiles" : "rows"}
+            look={answersLook}
+            yesNo={quiz.yesNo}
             question={quiz.question}
             options={quiz.options.map((option): ObjectOption => ({ ...option, media: option.node === undefined ? undefined : hydrateNode(option.node, {}) }))}
             selectedId={selectedId}
@@ -308,7 +310,7 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
             correctId={shownCorrectId}
             revealCorrect={right}
             hintId={hintShown ? quiz.correctId : null}
-            compact={quiz.compact ?? look.compactRows}
+            compact={quiz.compact}
             marks={false}
             spill={quiz.spill}
             stagger={quiz.optionsAfterHex}

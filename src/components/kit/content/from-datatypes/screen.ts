@@ -77,6 +77,9 @@ export type InteractionApi = {
   takeContinue?: (handler: (() => boolean) | null) => void;
 };
 
+/** The part of `InteractionApi` a sorting activity (`SortGroups`) needs: every module's interactions are given at least this. */
+export type SortApi = Pick<InteractionApi, "slip" | "done" | "finished">;
+
 /** Something to do instead of a question: tap, sort, match. The main button waits until it is done. */
 export type InteractionStage = StageTitle & {
   kind: "interaction";

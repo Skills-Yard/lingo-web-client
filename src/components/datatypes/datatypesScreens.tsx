@@ -3,18 +3,17 @@
 import type { ReactNode } from "react";
 import { Stack } from "@/components/kit/layout/Stack";
 import { KeyText } from "@/components/kit/text/Prompt";
-import { GroupStage, type GroupItem } from "@/components/kit/content/from-datatypes/GroupStage";
-import { ToggleRight } from "lucide-react";
-import { FloatLesson } from "./FloatLesson";
+import { SortGroups } from "@/components/kit/inputs/SortGroups";
+import { type GroupItem } from "@/components/kit/content/from-datatypes/GroupStage";
+import { FloatLesson } from "@/components/kit/content/from-datatypes/FloatLesson";
 import { GroupTourStage, type TourGroup } from "@/components/kit/content/from-datatypes/GroupTourStage";
 import { BADGE, INK, TINTS, tintAt } from "@/components/kit/content/from-datatypes/look";
-import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "@/components/kit/content/from-datatypes/interactions";
+import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, TYPES, ToggleStage, type SortBucket } from "@/components/kit/content/from-datatypes/interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "@/components/kit/content/from-datatypes/pictures";
 import type { Option, QuizStage, ScreenDef } from "@/components/kit/content/from-datatypes/screen";
 import { STEP } from "./datatypes";
-import { WINDOW_ROW, WindowCard } from "@/components/kit/content/from-datatypes/WindowCard";
-import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "@/components/kit/content/from-datatypes/visuals";
+import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, StudentStatusCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "@/components/kit/content/from-datatypes/visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -173,7 +172,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Some of these may belong together.",
         bubbleWidth: 190,
         alignTop: true,
-        render: (api) => <GroupStage api={api} items={SIMILAR_VALUES} onSorted={noteGrouping} />,
+        render: (api) => <SortGroups look="free" api={api} items={SIMILAR_VALUES} onSorted={noteGrouping} />,
         finishPanel: { title: "Interesting!", text: "You started grouping by what values represent." },
       },
     ],
@@ -325,7 +324,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Drag each number to Integer or Float.",
         alignTop: true,
         render: (api) => (
-          <SortStage
+          <SortGroups look="columns"
             api={api}
             decimalHint
             cardWidth={104}
@@ -553,20 +552,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
           <RevealStage
             api={api}
             columns={2}
-            header={() => (
-              <WindowCard title="Student status" icon={<ToggleRight />} panel="gap-[6px] pt-3 pr-[21px] pb-3.5 pl-[21px]">
-                {[
-                  ["Is_present", "True"],
-                  ["Is_payment_complete", "False"],
-                  ["Is_logged_in", "True"],
-                ].map(([name, value]) => (
-                  <div key={name} className={`flex h-[30px] items-center justify-between px-3 text-[13px] leading-5 font-semibold text-[#151E48] dark:text-white ${WINDOW_ROW}`}>
-                    <span className="font-mono">{name}</span>
-                    <span className={value === "True" ? "text-[#01A17F]" : "text-[#8A94A0]"}>{value}</span>
-                  </div>
-                ))}
-              </WindowCard>
-            )}
+            header={() => <StudentStatusCard />}
             items={[
               { id: "t", label: "TRUE", sub: "light on", icon: P.boolean, caption: "True: Aarav is present." },
               { id: "f", label: "FALSE", sub: "light off", icon: P.stop, caption: "False: Aarav is not present." },
@@ -617,7 +603,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
-          <SortStage
+          <SortGroups look="columns"
             api={api}
             cardWidth={150}
             prompt="Drag each card to its type."
@@ -652,7 +638,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Drag each value to what we do with it.",
         alignTop: true,
         render: (api) => (
-          <SortStage
+          <SortGroups look="columns"
             api={api}
             cardWidth={104}
             prompt="Drag each card to what we do with it."
@@ -682,7 +668,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Drag each piece of information to its type.",
         alignTop: true,
         render: (api) => (
-          <SortStage
+          <SortGroups look="columns"
             api={api}
             cardWidth={104}
             prompt="Drag each card to its type."
@@ -711,7 +697,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "What kind of data should each field use?",
         alignTop: true,
         render: (api) => (
-          <SortStage
+          <SortGroups look="columns"
             api={api}
             cardWidth={150}
             prompt="Drag each field to its data type."
@@ -740,7 +726,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
-          <SortStage
+          <SortGroups look="columns"
             api={api}
             cardWidth={150}
             prompt="Drag each field to its data type."
@@ -799,7 +785,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Sort the player’s five values by type.",
         alignTop: true,
         render: (api) => (
-          <SortStage
+          <SortGroups look="columns"
             api={api}
             cardWidth={104}
             prompt="Drag each card to its type."
@@ -903,7 +889,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
-          <SortStage
+          <SortGroups look="columns"
             api={api}
             cardWidth={104}
             prompt="Drag each field to its data type."

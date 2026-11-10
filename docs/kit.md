@@ -31,7 +31,7 @@ Import from the barrel: `import { Title, OptionList, ScreenFrame } from "@/compo
 ### Header
 | Component | What it is |
 |---|---|
-| `Header` | Cross + progress bar + battery. `step`/`total`, `answer` (bar reaction), `chargeBattery`, `persistent`. |
+| `LessonHeader` | The one header (the live lesson shell draws exactly this): a raised cross, the progress bar, and the battery on a raised face (a tap opens Energy, a hold the hidden dev panel with Back). `step`/`total`, `onClose`, `onPrevious`, `answer` (bar reaction), `batteryStep` (the screen whose battery share is spent), `persistent`. |
 | `CloseButton`, `ProgressBar`, `BatteryMeter` | The parts. `persistent` (default) uses the session's one Rive bar/battery, which keeps its state between screens but can be on a page only once. `persistent={false}` gives each its own (the bar's fill then jumps instead of tweening). |
 
 ### Text
@@ -112,7 +112,7 @@ The screens of the **Data Types, Operators, Conditions and Variable** modules (1
 }
 ```
 
-Quiz stages are plain data: Hex's line, optional `question`, `visual`, `options` (`image`, `emoji`, `node`, `tint`), `correctId`, the two panel texts, `hintText`, `layout`, `compact`, `keepLine`, labels, and (Variable's) `alsoOk` (other picks that are fine too), `hintVisual`, `hintOnMiss`, `spill`. Interaction stages (tap, sort, reveal, build, ...) name their component and give it plain props. `schema.ts` has the types.
+Quiz stages are plain data: Hex's line, optional `question`, `visual`, `options` (`image`, `emoji`, `node`, `tint`), `correctId`, the two panel texts, `hintText`, `answers` (how the answers look: `rows`, `tiles`, `objects` or `trueFalse`, with `yesNo` for the words of the last; always written out, never worked out by the runner), `compact` (shorter `rows`), `keepLine`, labels, and (Variable's) `alsoOk` (other picks that are fine too), `hintVisual`, `hintOnMiss`, `spill`. Interaction stages (tap, sort, reveal, build, ...) name their component and give it plain props. `schema.ts` has the types.
 
 A **node** is plain JSON plus four kinds of object, told apart by their key:
 
@@ -126,7 +126,7 @@ A **node** is plain JSON plus four kinds of object, told apart by their key:
 
 ### Where modules differ: `look` and `scene`
 
-A module's design choices are data too. `look` says how its sheet is laid out (`sheet`: `centred` or `side`), whether answer rows are `compactRows`, what a `grid` question draws (`tiles` or `objects`), how long a line may be before it goes on a card (`cardLine`), Hex's bubble widths (`bubble`), and whether interactions are `topAligned`. `scene` is a picture behind every screen (Variable's mountain trail). Leave them out for the Data Types look.
+A module's design choices are data too. `look` says how its sheet is laid out (`sheet`: `centred` or `side`), how long a line may be before it goes on a card (`cardLine`), Hex's bubble widths (`bubble`), how far the body rises for big answers under the result sheet (`tileLift`), and whether interactions are `topAligned`. (How a question's answers look is **not** a module setting any more: each quiz stage says `answers` itself. The code screens still say `layout: "grid"`; the exporter turns that and the module's `QuizLook` in `ExportPage.tsx` into `answers` and `compact`.) `scene` is a picture behind every screen (Variable's mountain trail). Leave them out for the Data Types look.
 
 ### Where the data comes from
 

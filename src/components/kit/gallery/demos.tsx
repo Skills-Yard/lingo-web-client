@@ -326,44 +326,80 @@ export function OrderListDemo() {
 }
 
 export function SortBucketsDemo() {
-  const [placed, setPlaced] = useState<Record<string, string>>({});
-  const [checked, setChecked] = useState(false);
-  const items = [
-    { id: "12", text: "12" },
-    { id: "36.7", text: "36.7" },
-    { id: "25", text: "25" },
-    { id: "148.5", text: "148.5" },
-  ];
+  const [look, setLook] = useState<"columns" | "free" | "labels">("columns");
+  // A new round starts the activity over (and a new look is a new activity).
+  const [round, setRound] = useState(0);
+  const [slips, setSlips] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const api = { slip: () => setSlips((n) => n + 1), done: () => setFinished(true), finished };
+  const restart = (next = look) => {
+    setLook(next);
+    setRound((n) => n + 1);
+    setSlips(0);
+    setFinished(false);
+  };
   return (
     <Panel>
-      <SortGroups
-        items={items}
-        buckets={[
-          { id: "int", label: "Integer", tint: "blue" },
-          { id: "float", label: "Float", tint: "cream" },
-        ]}
-        placed={placed}
-        onPlace={(id, bucket) =>
-          setPlaced((now) => {
-            const next = { ...now };
-            if (bucket === null) delete next[id];
-            else next[id] = bucket;
-            return next;
-          })
-        }
-        answers={{ "12": "int", "36.7": "float", "25": "int", "148.5": "float" }}
-        checked={checked}
-      />
       <Tools>
-        <Tool label="Check" onClick={() => setChecked(true)} active={checked} />
-        <Tool
-          label="Reset"
-          onClick={() => {
-            setPlaced({});
-            setChecked(false);
-          }}
-        />
+        {(["columns", "free", "labels"] as const).map((name) => (
+          <Tool key={name} label={name} active={look === name} onClick={() => restart(name)} />
+        ))}
+        <Tool label="Reset" onClick={() => restart()} />
       </Tools>
+      <div key={`${look}-${round}`} className="flex w-full justify-center">
+        {look === "columns" && (
+          <SortGroups
+            look="columns"
+            api={api}
+            items={[
+              { id: "12", label: "12", bucket: "int" },
+              { id: "36.7", label: "36.7", bucket: "float" },
+              { id: "25", label: "25", bucket: "int" },
+              { id: "148.5", label: "148.5", bucket: "float" },
+            ]}
+            buckets={[
+              { id: "int", label: "Integer" },
+              { id: "float", label: "Float" },
+            ]}
+          />
+        )}
+        {look === "free" && (
+          <SortGroups
+            look="free"
+            api={api}
+            items={[
+              { id: "a", label: "Aarav", tint: "lavender" },
+              { id: "b", label: "12", tint: "cream" },
+              { id: "c", label: "148.5", tint: "blue" },
+              { id: "d", label: "True", tint: "green" },
+              { id: "e", label: "Delhi", tint: "lavender" },
+              { id: "f", label: "25", tint: "cream" },
+            ]}
+          />
+        )}
+        {look === "labels" && (
+          <SortGroups
+            look="labels"
+            api={api}
+            items={[
+              { id: "n", text: "price", label: "name", card: 1, mono: true },
+              { id: "v", text: "₹50", label: "value", card: 1 },
+            ]}
+            choices={[
+              { label: "name", button: "It is a name" },
+              { label: "value", button: "It is a value" },
+            ]}
+            narration="Is each one a name or a value?"
+            entry="kit-demo-labels"
+            asking="Is it a name or a value?"
+            idle="Tap a part to sort it."
+            wrong="The name tells what it is; the value is the amount."
+          />
+        )}
+      </div>
+      <p className="text-center text-[12px] text-[#6B7480] dark:text-white/60">
+        {finished ? "Done: everything is in its group." : `Misses so far: ${slips}.`}
+      </p>
     </Panel>
   );
 }

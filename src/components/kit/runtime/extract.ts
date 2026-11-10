@@ -1,4 +1,5 @@
 import { Fragment, isValidElement, type ReactElement } from "react";
+import type { AnswersLook } from "../options/Answers";
 import { TINT } from "../tokens";
 import { nameOf } from "./registry";
 import { hydrate } from "./hydrate";
@@ -313,10 +314,33 @@ const stubsOfApi = (api: unknown) => {
   return stubs;
 };
 
-function readStage(reader: Reader, stage: AnyStage, where: string, apiKeys: readonly string[]): StageData {
+/**
+ * How the code's screens decide a question's answers look, which the data now says outright (`answers`).
+ * A screen only says `layout: "grid"`; its module says what a grid is and which short answers are cards.
+ */
+export type QuizLook = {
+  /** Shorter rows (56px) for every list of answers. */
+  compactRows?: boolean;
+  /** What a `grid` question draws: `tiles` (pictures, default) or `objects` (small cards to tap). */
+  grid?: "tiles" | "objects";
+  /** With `grid: "objects"`: three answers of at most this many letters and no picture are cards too. */
+  shortCards?: number;
+};
+
+const answersLookOf = (layout: unknown, options: readonly OptionData[], look: QuizLook): AnswersLook => {
+  const objects = look.grid === "objects" && (layout === "grid" || (!!look.shortCards && options.length === 3 && options.every((option) => !option.image && option.text.length <= look.shortCards!)));
+  return objects ? "objects" : layout === "grid" ? "tiles" : "rows";
+};
+
+function readStage(reader: Reader, stage: AnyStage, where: string, apiKeys: readonly string[], quizLook: QuizLook): StageData {
   const out: Record<string, Json> = { kind: stage.kind };
   for (const [key, value] of Object.entries(stage)) {
     if (key === "kind" || value === undefined) continue;
+    // The code's `layout` is written as `answers`, in the same place (its value is worked out below, once the options are read).
+    if (key === "layout") {
+      out.answers = "rows";
+      continue;
+    }
     if (key === "visual" && typeof value === "function") {
       const make = value as (ctx: unknown) => unknown;
       out.visual = reader.read(`${where} visual`, {
@@ -346,15 +370,21 @@ function readStage(reader: Reader, stage: AnyStage, where: string, apiKeys: read
       out[key] = reader.at(`${where} ${key}`, () => reader.node(value));
     }
   }
+  if (stage.kind === "quiz") {
+    const answers = answersLookOf(stage.layout, (out.options ?? []) as unknown as OptionData[], quizLook);
+    out.answers = answers;
+    // Rows are short when the module says so, unless the screen says otherwise.
+    if (answers === "rows" && stage.compact === undefined && quizLook.compactRows) out.compact = true;
+  }
   return out as unknown as StageData;
 }
 
-function readScreen(reader: Reader, screen: ScreenLike, label: string, apiKeys: readonly string[]): ScreenData {
+function readScreen(reader: Reader, screen: ScreenLike, label: string, apiKeys: readonly string[], quizLook: QuizLook): ScreenData {
   const out: Record<string, Json> = { step: screen.step, title: screen.title };
   if (screen.titleSize !== undefined) out.titleSize = screen.titleSize;
   if (screen.finish) out.finish = screen.finish;
   if (screen.backdrop !== undefined) out.backdrop = reader.at(`${label} backdrop`, () => reader.node(screen.backdrop));
-  out.stages = screen.stages.map((stage, index) => readStage(reader, stage, `${label} stage ${index + 1}`, apiKeys)) as unknown as Json;
+  out.stages = screen.stages.map((stage, index) => readStage(reader, stage, `${label} stage ${index + 1}`, apiKeys, quizLook)) as unknown as Json;
   return out as unknown as ScreenData;
 }
 
@@ -370,6 +400,8 @@ export type ModuleSource = {
   components: Readonly<Record<number, unknown>>;
   afterGem?: number;
   look?: ModuleLook;
+  /** What a screen's `layout` means in this module (see `QuizLook`); written into each question as `answers`. */
+  quizLook?: QuizLook;
   /** A picture behind every screen of the module. */
   scene?: unknown;
   /** What an interaction of the module is given (default: everything the runner can give). */
@@ -379,7 +411,7 @@ export type ModuleSource = {
 export function readModule(source: ModuleSource): { data: ModuleData; issues: Issue[] } {
   const reader = new Reader();
   const screens: Record<string, ScreenData> = {};
-  for (const [step, screen] of Object.entries(source.screens)) screens[step] = readScreen(reader, screen, `${source.id} ${step}`, source.apiKeys ?? API_KEYS);
+  for (const [step, screen] of Object.entries(source.screens)) screens[step] = readScreen(reader, screen, `${source.id} ${step}`, source.apiKeys ?? API_KEYS, source.quizLook ?? {});
   for (const [step, component] of Object.entries(source.components)) {
     const name = nameOf(component);
     if (!name) reader.issues.push({ where: `${source.id} ${step}`, problem: "a whole-screen component that is not registered" });

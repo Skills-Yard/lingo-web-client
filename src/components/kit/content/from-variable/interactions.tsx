@@ -9,6 +9,7 @@ import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
+import type { SortApi } from "@/components/kit/content/from-datatypes/screen";
 import type { InteractionApi } from "@/components/kit/content/from-variable/quiz";
 import { Bottle, BottleWithAmount, CARD, ShopItem } from "@/components/kit/content/from-variable/visuals";
 
@@ -279,86 +280,123 @@ export function NamesStage({ done, finished }: InteractionApi) {
   );
 }
 
-type PartKind = "name" | "value";
-const CLASSIFY_PARTS: readonly { id: string; text: string; kind: PartKind; card: number }[] = [
-  { id: "n1", text: "water_level", kind: "name", card: 1 },
-  { id: "v1", text: "550 ml", kind: "value", card: 1 },
-  { id: "n2", text: "bottle_capacity", kind: "name", card: 2 },
-  { id: "v2", text: "1,000 ml", kind: "value", card: 2 },
-];
+/** One thing to label: its words, the label it has, and the card it stands on. */
+export type LabelItem = {
+  id: string;
+  text: string;
+  /** The label it really has (one of the choices' `label`). */
+  label: string;
+  /** Items with the same number stand on one card. */
+  card: number;
+  /** Written in the code font (names of things). */
+  mono?: boolean;
+};
+/** A label the learner can give: what is written on the part once it has it, and the words of the button. */
+export type LabelChoice = { label: string; button: string };
 
-/** Screen 14: tap each part of the two cards and say whether it is a name or a value. */
-export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
+/**
+ * Tap a part, then press the label it has ("It is a name" / "It is a value"). A right label stays on the part
+ * with a tick; a wrong one counts as a slip and shows `wrong`. Done when every part has its label.
+ * (The `labels` look of `SortGroups`.)
+ */
+export function LabelStage({
+  api,
+  items,
+  choices,
+  narration,
+  entry,
+  asking,
+  idle,
+  wrong,
+}: {
+  api: SortApi;
+  items: readonly LabelItem[];
+  choices: readonly LabelChoice[];
+  /** What Hex says above the cards. */
+  narration: string;
+  /** Plays Hex's entrance again when it changes. */
+  entry: string;
+  /** Under the cards once a part is picked. */
+  asking: string;
+  /** Under the cards before any part is picked. */
+  idle: string;
+  /** Under the cards after a wrong label. */
+  wrong: string;
+}) {
+  const { slip: slipped, done } = api;
   const [selected, setSelected] = useState<string | null>(null);
-  const [placed, setPlaced] = useState<Record<string, PartKind>>({});
+  const [placed, setPlaced] = useState<Record<string, string>>({});
   const [slip, setSlip] = useState(false);
-  const choose = (kind: PartKind) => {
-    const part = CLASSIFY_PARTS.find((candidate) => candidate.id === selected);
+  const cards = [...new Set(items.map((item) => item.card))];
+  const choose = (label: string) => {
+    const part = items.find((candidate) => candidate.id === selected);
     if (!part) return;
     playClickSound();
     vibrateForTap();
-    if (part.kind !== kind) {
+    if (part.label !== label) {
       slipped();
       setSlip(true);
       return;
     }
     setSlip(false);
-    const next = { ...placed, [part.id]: kind };
+    const next = { ...placed, [part.id]: label };
     setPlaced(next);
     setSelected(null);
-    if (Object.keys(next).length === CLASSIFY_PARTS.length) done();
+    if (Object.keys(next).length === items.length) done();
   };
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="Is each one a name or a value?" entry="variable-classify" />
+      <Narration text={narration} entry={entry} />
       <div className="flex w-[340px] flex-col gap-2">
-        {[1, 2].map((card) => (
+        {cards.map((card) => (
           <div key={card} className={`flex items-center justify-around gap-2 px-3 py-3 ${CARD}`}>
-            {CLASSIFY_PARTS.filter((part) => part.card === card).map((part) => {
-              const known = placed[part.id];
-              return (
-                <button
-                  key={part.id}
-                  type="button"
-                  disabled={!!known}
-                  onClick={() => {
-                    playClickSound();
-                    setSelected(part.id);
-                    setSlip(false);
-                  }}
-                  className={`pointer-events-auto flex min-w-[120px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] border-2 px-3 py-1.5 ${RAISED_SMALL} ${
-                    known ? "border-[#01A17F] bg-[#E3F6F3] [--edge:#007D60] dark:bg-[#0F2B28]" : selected === part.id ? "border-[#FFB300] bg-[#FFF3DE] [--edge:#C98A00] dark:bg-[#2A2218]" : "border-[#D5DADF] bg-white [--edge:#C9CED6] dark:border-white/20 dark:bg-[#15181E]"
-                  }`}
-                >
-                  <span className={`text-[15px] leading-6 font-semibold text-[#444444] dark:text-white ${part.kind === "name" ? "font-mono" : ""}`}>{part.text}</span>
-                  <span className="flex h-4 items-center gap-1 text-[11px] leading-4 font-bold tracking-[0.4px] text-[#01A17F] uppercase">
-                    {known && (
-                      <>
-                        <Check aria-hidden className="size-3" /> {known}
-                      </>
-                    )}
-                  </span>
-                </button>
-              );
-            })}
+            {items
+              .filter((part) => part.card === card)
+              .map((part) => {
+                const known = placed[part.id];
+                return (
+                  <button
+                    key={part.id}
+                    type="button"
+                    disabled={!!known}
+                    onClick={() => {
+                      playClickSound();
+                      setSelected(part.id);
+                      setSlip(false);
+                    }}
+                    className={`pointer-events-auto flex min-w-[120px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] border-2 px-3 py-1.5 ${RAISED_SMALL} ${
+                      known ? "border-[#01A17F] bg-[#E3F6F3] [--edge:#007D60] dark:bg-[#0F2B28]" : selected === part.id ? "border-[#FFB300] bg-[#FFF3DE] [--edge:#C98A00] dark:bg-[#2A2218]" : "border-[#D5DADF] bg-white [--edge:#C9CED6] dark:border-white/20 dark:bg-[#15181E]"
+                    }`}
+                  >
+                    <span className={`text-[15px] leading-6 font-semibold text-[#444444] dark:text-white ${part.mono ? "font-mono" : ""}`}>{part.text}</span>
+                    <span className="flex h-4 items-center gap-1 text-[11px] leading-4 font-bold tracking-[0.4px] text-[#01A17F] uppercase">
+                      {known && (
+                        <>
+                          <Check aria-hidden className="size-3" /> {known}
+                        </>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
           </div>
         ))}
       </div>
       <div className="pointer-events-auto flex w-[340px] gap-3">
-        {(["name", "value"] as const).map((kind) => (
+        {choices.map((choice) => (
           <button
-            key={kind}
+            key={choice.label}
             type="button"
             disabled={!selected}
-            onClick={() => choose(kind)}
+            onClick={() => choose(choice.label)}
             className="h-12 flex-1 cursor-pointer rounded-lg bg-[#EDFAFE] text-[15px] leading-5 font-semibold text-[#1F4899] shadow-[0_4px_0_#BFE6F2] transition-[translate,box-shadow] duration-100 enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50"
           >
-            It is a {kind}
+            {choice.button}
           </button>
         ))}
       </div>
       <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? "The name tells what it is; the value is the amount." : <span className="text-[#6B7480] dark:text-white/60">{selected ? "Is it a name or a value?" : "Tap a part to sort it."}</span>}
+        {slip ? wrong : <span className="text-[#6B7480] dark:text-white/60">{selected ? asking : idle}</span>}
       </p>
     </div>
   );

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { ArrowDown, Calculator, Check, ClipboardCheck, CloudSun, FileText, Link2, Plus, TriangleAlert, User, X } from "lucide-react";
+import { ArrowDown, Calculator, Check, ClipboardCheck, CloudSun, FileText, Link2, Plus, ToggleRight, TriangleAlert, User, X } from "lucide-react";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
@@ -399,6 +399,24 @@ export function WeatherCard() {
         ))}
       </WindowCard>
     </motion.div>
+  );
+}
+
+/** Screen 16: a student's three yes / no fields, as the Boolean's example. */
+export function StudentStatusCard() {
+  return (
+    <WindowCard title="Student status" icon={<ToggleRight />} panel="gap-[6px] pt-3 pr-[21px] pb-3.5 pl-[21px]">
+      {[
+        ["Is_present", "True"],
+        ["Is_payment_complete", "False"],
+        ["Is_logged_in", "True"],
+      ].map(([name, value]) => (
+        <div key={name} className={`flex h-[30px] items-center justify-between px-3 text-[13px] leading-5 font-semibold text-[#151E48] dark:text-white ${WINDOW_ROW}`}>
+          <span className="font-mono">{name}</span>
+          <span className={value === "True" ? "text-[#01A17F]" : "text-[#8A94A0]"}>{value}</span>
+        </div>
+      ))}
+    </WindowCard>
   );
 }
 

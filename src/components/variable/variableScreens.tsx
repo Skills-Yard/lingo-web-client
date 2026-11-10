@@ -2,7 +2,8 @@
 
 import { Row } from "@/components/kit/layout/Stack";
 import { Bottle, BottleWithAmount, CalculatorApp, Classroom, AttendanceBoard } from "@/components/kit/content/from-variable/visuals";
-import { BridgeStage, ClassifyStage, FillSliderStage, Items, MatchPricesStage, NameValueStage, NamesStage } from "@/components/kit/content/from-variable/interactions";
+import { SortGroups, type LabelItem } from "@/components/kit/inputs/SortGroups";
+import { BridgeStage, FillSliderStage, Items, MatchPricesStage, NameValueStage, NamesStage } from "@/components/kit/content/from-variable/interactions";
 import type { Option, QuizStage, ScreenDef } from "@/components/kit/content/from-variable/quiz";
 import { STEP } from "./variable";
 import { BottleChange, BottleStory, WalletChange, ClassroomChange, PriceCalc, EraserTotal, ExpenseTracker, DebugVisual, NameValueCards, AttendanceCards } from "@/components/kit/content/from-variable/screenVisuals";
@@ -14,6 +15,14 @@ const words = (texts: readonly string[]): Option[] => texts.map((text, index) =>
 const at = (index: number) => String(index);
 
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", ...stage });
+
+/** Screen 14: the parts of two cards, each a name (in the code font) or a value. */
+const NAME_OR_VALUE: readonly LabelItem[] = [
+  { id: "n1", text: "water_level", label: "name", card: 1, mono: true },
+  { id: "v1", text: "550 ml", label: "value", card: 1 },
+  { id: "n2", text: "bottle_capacity", label: "name", card: 2, mono: true },
+  { id: "v2", text: "1,000 ml", label: "value", card: 2 },
+];
 
 /** Screens that are a title and one or more stages: the questions and the interactions. */
 export const SCREENS: Readonly<Record<number, ScreenDef>> = {
@@ -200,7 +209,25 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.classify,
     title: "Name *or Value?*",
     stages: [
-      { kind: "interaction", render: (api) => <ClassifyStage {...api} /> },
+      {
+        kind: "interaction",
+        render: (api) => (
+          <SortGroups
+            look="labels"
+            api={api}
+            items={NAME_OR_VALUE}
+            choices={[
+              { label: "name", button: "It is a name" },
+              { label: "value", button: "It is a value" },
+            ]}
+            narration="Is each one a name or a value?"
+            entry="variable-classify"
+            asking="Is it a name or a value?"
+            idle="Tap a part to sort it."
+            wrong="The name tells what it is; the value is the amount."
+          />
+        ),
+      },
       quiz({
         line: "Which of these is a variable name?",
         visual: () => <NameValueCards />,

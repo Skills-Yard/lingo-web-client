@@ -141,7 +141,7 @@ export function KitGallery() {
         <Demo name="OrderSteps" note="Drag the rows into order.">
           <OrderListDemo />
         </Demo>
-        <Demo name="SortGroups" note="Tap an item, then its group.">
+        <Demo name="SortGroups" note="One component, three looks (the data picks): columns (drag a card into its group), free (group with no right answer), labels (tap a part, then its label).">
           <SortBucketsDemo />
         </Demo>
       </Section>

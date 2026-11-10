@@ -89,7 +89,7 @@
               ]
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -145,7 +145,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "The passing requirement: 40 marks.",
-          "wrong": "What do we compare the marks with?"
+          "wrong": "What do we compare the marks with?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -190,7 +191,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "It checks the marks against the requirement.",
-          "wrong": "The requirement is the passing mark."
+          "wrong": "The requirement is the passing mark.",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -318,7 +320,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "A condition checks whether a statement or requirement is True or False.",
-          "wrong": "A condition is something we can check, and the check gives an answer."
+          "wrong": "A condition is something we can check, and the check gives an answer.",
+          "answers": "rows"
         }
       ]
     },
@@ -445,7 +448,7 @@
         {
           "kind": "quiz",
           "line": "Does age = 17 check a requirement?",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -486,7 +489,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "A condition checks whether information satisfies a requirement.",
-          "wrong": "One of them stores a value, and the other asks a question about it."
+          "wrong": "One of them stores a value, and the other asks a question about it.",
+          "answers": "rows"
         }
       ]
     },
@@ -607,7 +611,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "All positive numbers appear after zero on the number line.",
-          "wrong": "Look at the number line. Which side of zero are they on?"
+          "wrong": "Look at the number line. Which side of zero are they on?",
+          "answers": "rows"
         }
       ]
     },
@@ -644,7 +649,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "A positive number is greater than zero.",
-          "wrong": "Positive numbers come after zero."
+          "wrong": "Positive numbers come after zero.",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -757,7 +763,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Negative numbers are smaller than zero.",
-          "wrong": "They come before zero on the number line."
+          "wrong": "They come before zero on the number line.",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -855,7 +862,7 @@
               ]
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -973,7 +980,7 @@
               ]
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -1364,7 +1371,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Even numbers are completely divisible by 2. There is no remainder.",
-          "wrong": "Look at what happened to 6, 8 and 10, and then to 7."
+          "wrong": "Look at what happened to 6, 8 and 10, and then to 7.",
+          "answers": "rows"
         }
       ]
     },
@@ -2106,7 +2114,7 @@
         {
           "kind": "quiz",
           "line": "“Both items are required.” Which operator fits?",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2127,7 +2135,7 @@
         {
           "kind": "quiz",
           "line": "“Either one is enough.” Which operator fits?",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2148,7 +2156,7 @@
         {
           "kind": "quiz",
           "line": "Ice cream: True. Pastry: False. The order still counts. Which operator?",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2253,7 +2261,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "A range needs two comparisons: at least 10, and at most 20.",
-          "wrong": "A valid score is not below 10 and not above 20."
+          "wrong": "A valid score is not below 10 and not above 20.",
+          "answers": "rows"
         }
       ]
     },
@@ -2643,7 +2652,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": ">= and <= include both boundaries.",
-          "wrong": "At least and at most both include their number."
+          "wrong": "At least and at most both include their number.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -2668,7 +2678,8 @@
           "correctId": "2",
           "rightTitle": "Exactly!",
           "right": "The comparison symbols control whether the boundary values are included.",
-          "wrong": "10 is allowed, 20 is not."
+          "wrong": "10 is allowed, 20 is not.",
+          "answers": "rows"
         }
       ]
     },
@@ -2798,7 +2809,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Outside the range means being on the left or on the right.",
-          "wrong": "Can a number be smaller than 10 and greater than 20 at once?"
+          "wrong": "Can a number be smaller than 10 and greater than 20 at once?",
+          "answers": "rows"
         }
       ]
     },
@@ -2951,7 +2963,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "False. not reverses the result of 15 > 10.",
-          "wrong": "First find 15 > 10, then reverse it."
+          "wrong": "First find 15 > 10, then reverse it.",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -3056,7 +3069,7 @@
               ]
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -3162,7 +3175,7 @@
         {
           "kind": "quiz",
           "line": "Reward if the score is exactly 100 OR all bonus tasks are done. Must both happen?",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -3392,7 +3405,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Age and registration must be met together. Special permission is a separate alternative.",
-          "wrong": "Which two parts are joined by AND?"
+          "wrong": "Which two parts are joined by AND?",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -3461,7 +3475,7 @@
         {
           "kind": "quiz",
           "line": "A student has special permission but is outside the age range. Can they join?",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -3562,7 +3576,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "The requirement includes both boundaries, but this condition leaves them out.",
-          "wrong": "Look at what happened to 10 and 20."
+          "wrong": "Look at what happened to 10 and 20.",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -3677,7 +3692,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "One comparison can be True even when the number is outside the required range.",
-          "wrong": "Check each comparison for 5 and for 25."
+          "wrong": "Check each comparison for 5 and for 25.",
+          "answers": "rows"
         },
         {
           "kind": "interaction",

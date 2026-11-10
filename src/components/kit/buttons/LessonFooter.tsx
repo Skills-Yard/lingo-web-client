@@ -13,6 +13,8 @@ export type LessonFooterProps = {
   locked?: boolean;
   /** White instead of green. */
   light?: boolean;
+  /** The cube on the button's face is on (the "Pick up" button). */
+  cube?: boolean;
   /** The hint button beside the main one; `visible` slides it in and out. */
   hint?: { visible: boolean; onUse: () => void };
   answer?: AnswerResult | null;
@@ -23,6 +25,6 @@ export type LessonFooterProps = {
  * there is one. The row keeps its height with or without the hint, so nothing above it moves.
  * It sizes itself from the screen frame (`ScreenFrame`); on its own it is 390 px wide.
  */
-export function LessonFooter({ label = "Continue", onContinue, disabled, locked, light, hint, answer }: LessonFooterProps) {
-  return <ActionRow maxWidth={450} hint={hint} answer={answer} ctaLabel={label} ctaDisabled={disabled} ctaLocked={locked} ctaLight={light} onContinue={onContinue} />;
+export function LessonFooter({ label = "Continue", onContinue, disabled, locked, light, cube, hint, answer }: LessonFooterProps) {
+  return <ActionRow maxWidth={450} hint={hint} answer={answer} ctaLabel={label} ctaDisabled={disabled} ctaLocked={locked} ctaLight={light} ctaCube={cube} onContinue={onContinue} />;
 }

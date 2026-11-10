@@ -65,11 +65,9 @@ const SOURCES: ModuleSource[] = [
     // Its screens stand on the mountain trail, answer in small rows or object cards, and show the result sheet with the words at the left.
     scene: <TrekBackdrop />,
     apiKeys: ["slip", "done", "finished"],
+    quizLook: { compactRows: true, grid: "objects", shortCards: 12 },
     look: {
       sheet: "side",
-      compactRows: true,
-      grid: "objects",
-      shortCards: 12,
       cardLine: 120,
       bubble: [{ upTo: 44, width: 190 }, { width: 240 }],
       tileLift: 150,

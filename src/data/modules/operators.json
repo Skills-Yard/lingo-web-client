@@ -172,7 +172,7 @@
               ]
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -266,7 +266,7 @@
               ]
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -358,7 +358,7 @@
               }
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -452,7 +452,7 @@
               ]
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -534,7 +534,7 @@
               }
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -785,7 +785,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "We used operations to turn the information into a useful result.",
-          "wrong": "We put prices together, then took the total away from the wallet."
+          "wrong": "We put prices together, then took the total away from the wallet.",
+          "answers": "rows"
         }
       ]
     },
@@ -1052,7 +1053,7 @@
         {
           "kind": "quiz",
           "line": "Which job answers the question “Which is greater?”",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -1163,7 +1164,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "50 + 30 = 80. Addition combines values.",
-          "wrong": "The money joins what you already have."
+          "wrong": "The money joins what you already have.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -1252,7 +1254,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "80 - 20 = 60. Subtraction finds the difference or what remains.",
-          "wrong": "Spending takes money out of the wallet."
+          "wrong": "Spending takes money out of the wallet.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -1277,7 +1280,8 @@
           "correctId": "0",
           "rightTitle": "Right!",
           "right": "Addition combines values.",
-          "wrong": "You are getting more. Do the stickers join or go away?"
+          "wrong": "You are getting more. Do the stickers join or go away?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -1302,7 +1306,8 @@
           "correctId": "1",
           "rightTitle": "Right!",
           "right": "Subtraction finds what remains.",
-          "wrong": "Eating takes sweets away."
+          "wrong": "Eating takes sweets away.",
+          "answers": "rows"
         }
       ]
     },
@@ -1367,7 +1372,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "5 + 5 + 5 + 5 = 20 chairs.",
-          "wrong": "Add the chairs of all four rows."
+          "wrong": "Add the chairs of all four rows.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -1393,7 +1399,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "4 * 5 = 20. Multiplication is a shortcut for adding equal groups.",
-          "wrong": "Which operator repeats a group?"
+          "wrong": "Which operator repeats a group?",
+          "answers": "rows"
         }
       ]
     },
@@ -1436,7 +1443,8 @@
           "correctId": "1",
           "rightTitle": "Good guess!",
           "right": "Let's check it by sharing them out.",
-          "wrong": "Four students share 20 equally. Let's see by sharing them."
+          "wrong": "Four students share 20 equally. Let's see by sharing them.",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -1479,7 +1487,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "20 / 4 = 5.0. The / operator gives a Float, not 5.",
-          "wrong": "Python's / always gives a decimal-type answer."
+          "wrong": "Python's / always gives a decimal-type answer.",
+          "answers": "rows"
         }
       ]
     },
@@ -1540,7 +1549,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "5 each, and 3 are left over.",
-          "wrong": "Count what is in each tray, then what is still in the heap."
+          "wrong": "Count what is in each tray, then what is still in the heap.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -1565,7 +1575,8 @@
           "correctId": "2",
           "rightTitle": "Exactly!",
           "right": "23 % 4 = 3. 23 / 4 = 5.75 and 23 // 4 = 5 answer other questions.",
-          "wrong": "One of these gives the remainder: the % operator."
+          "wrong": "One of these gives the remainder: the % operator.",
+          "answers": "rows"
         }
       ]
     },
@@ -1790,7 +1801,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Floor division rounds the quotient down: the number of complete groups.",
-          "wrong": "// counts how many complete groups fit. It is not the leftover."
+          "wrong": "// counts how many complete groups fit. It is not the leftover.",
+          "answers": "rows"
         }
       ]
     },
@@ -1831,7 +1843,8 @@
           "correctId": "0",
           "rightTitle": "Right!",
           "right": "No complete group of 2 can be made from 1 chocolate.",
-          "wrong": "A group needs 2 chocolates. Do we have 2?"
+          "wrong": "A group needs 2 chocolates. Do we have 2?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -1875,7 +1888,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "1 % 2 = 1. The whole chocolate is left, so 1 = (2 * 0) + 1.",
-          "wrong": "The remainder is what is left after making all the complete groups."
+          "wrong": "The remainder is what is left after making all the complete groups.",
+          "answers": "rows"
         }
       ]
     },
@@ -1917,7 +1931,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "2 complete groups, and 1 chocolate left.",
-          "wrong": "Count the complete groups of 3, then what is left."
+          "wrong": "Count the complete groups of 3, then what is left.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -1953,7 +1968,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "2 complete groups, and 1 chocolate left.",
-          "wrong": "Count the complete groups of 2, then what is left."
+          "wrong": "Count the complete groups of 2, then what is left.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -1989,7 +2005,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "No complete group, so all 3 remain.",
-          "wrong": "Can we make even one group of 5 from 3?"
+          "wrong": "Can we make even one group of 5 from 3?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -2025,7 +2042,8 @@
           "correctId": "2",
           "rightTitle": "Exactly!",
           "right": "3 groups, nothing left. The remainder is always smaller than the divisor.",
-          "wrong": "Do the groups of 4 use up all 12?"
+          "wrong": "Do the groups of 4 use up all 12?",
+          "answers": "rows"
         }
       ]
     },
@@ -2065,7 +2083,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "4 * 4 = 16. We can also write 4 ** 2 = 16.",
-          "wrong": "Look at the numbers again, and think about what happens to them."
+          "wrong": "Look at the numbers again, and think about what happens to them.",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -2132,7 +2151,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "4 ** 2 = 4 * 4 = 16.",
-          "wrong": "4 ** 2 means 4 multiplied by itself."
+          "wrong": "4 ** 2 means 4 multiplied by itself.",
+          "answers": "rows"
         }
       ]
     },
@@ -2281,7 +2301,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Multiplication costs the equal items; addition combines the different totals.",
-          "wrong": "3 notebooks, each ₹20: what does that make?"
+          "wrong": "3 notebooks, each ₹20: what does that make?",
+          "answers": "rows"
         }
       ]
     },
@@ -2313,7 +2334,7 @@
               ]
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2619,7 +2640,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "The grouping is different, so the parentheses go around the bundle's cost.",
-          "wrong": "In the second problem, what must be added before multiplying?"
+          "wrong": "In the second problem, what must be added before multiplying?",
+          "answers": "rows"
         }
       ]
     },
@@ -2650,7 +2672,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "Spending takes money away: 200 - 75.",
-          "wrong": "Does the money grow, or go away?"
+          "wrong": "Does the money grow, or go away?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -2675,7 +2698,8 @@
           "correctId": "2",
           "rightTitle": "Exactly!",
           "right": "Equal boxes repeat: 6 * 8.",
-          "wrong": "Six equal groups of 8. Which operator repeats a group?"
+          "wrong": "Six equal groups of 8. Which operator repeats a group?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -2700,7 +2724,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "17 // 5 = 3 complete chocolates each.",
-          "wrong": "Which operator counts complete groups?"
+          "wrong": "Which operator counts complete groups?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -2725,7 +2750,8 @@
           "correctId": "2",
           "rightTitle": "Exactly!",
           "right": "17 % 5 = 2 remain. You chose by meaning, not just by symbol.",
-          "wrong": "Which operator gives the remainder?"
+          "wrong": "Which operator gives the remainder?",
+          "answers": "rows"
         }
       ]
     },
@@ -2754,7 +2780,7 @@
               }
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2793,7 +2819,7 @@
               }
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2839,7 +2865,7 @@
               }
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2877,7 +2903,7 @@
               }
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2915,7 +2941,7 @@
               }
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -2955,7 +2981,7 @@
               }
             }
           },
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -3182,7 +3208,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Left side closed: the left number is smaller.",
-          "wrong": "Start from the left number and look at the side touching it."
+          "wrong": "Start from the left number and look at the side touching it.",
+          "answers": "rows"
         }
       ]
     },
@@ -3224,7 +3251,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Every comparison says a statement: “Eight is greater than five.”",
-          "wrong": "Start with the number on the left, then the symbol."
+          "wrong": "Start with the number on the left, then the symbol.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -3260,7 +3288,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "“Five is less than eight.”",
-          "wrong": "Read it from left to right."
+          "wrong": "Read it from left to right.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -3296,7 +3325,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "“Twelve is greater than seven.”",
-          "wrong": "Start with 12, the number on the left."
+          "wrong": "Start with 12, the number on the left.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -3332,7 +3362,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "“Four is less than nine.”",
-          "wrong": "Start with 4, the number on the left."
+          "wrong": "Start with 4, the number on the left.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -3368,7 +3399,8 @@
           "correctId": "2",
           "rightTitle": "Exactly!",
           "right": "“Fifteen is greater than ten.”",
-          "wrong": "Start with 15, the number on the left."
+          "wrong": "Start with 15, the number on the left.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -3404,7 +3436,8 @@
           "correctId": "1",
           "rightTitle": "Well read!",
           "right": "“Six is less than three.” Reading it is not deciding if it is True: this one is False.",
-          "wrong": "Read it as written, from the left. Do not decide yet if it is true."
+          "wrong": "Read it as written, from the left. Do not decide yet if it is true.",
+          "answers": "rows"
         }
       ]
     },
@@ -3672,7 +3705,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "== checks whether two values are equal. A single = is used for assignment.",
-          "wrong": "One of these asks “Is it equal?” and does not give a name."
+          "wrong": "One of these asks “Is it equal?” and does not give a name.",
+          "answers": "rows"
         }
       ]
     },
@@ -3892,7 +3926,7 @@
             }
           },
           "question": "4 ? 6",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4208,7 +4242,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Boolean is the data type for True/False information. A comparison can be read, understood and evaluated.",
-          "wrong": "Remember the Boolean data type from the last chapter."
+          "wrong": "Remember the Boolean data type from the last chapter.",
+          "answers": "rows"
         }
       ]
     },
@@ -4250,7 +4285,8 @@
           "correctId": "0",
           "rightTitle": "Read right!",
           "right": "It says 8 is bigger than 5.",
-          "wrong": "Read it from left to right: the left number, the symbol, then the right number."
+          "wrong": "Read it from left to right: the left number, the symbol, then the right number.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -4281,7 +4317,8 @@
           "correctId": "0",
           "rightTitle": "True!",
           "right": "8 is bigger than 5, so it is True.",
-          "wrong": "Check the statement against the numbers."
+          "wrong": "Check the statement against the numbers.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -4317,7 +4354,8 @@
           "correctId": "0",
           "rightTitle": "Read right!",
           "right": "It says 4 is bigger than 9.",
-          "wrong": "Read it from left to right: the left number, the symbol, then the right number."
+          "wrong": "Read it from left to right: the left number, the symbol, then the right number.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -4348,7 +4386,8 @@
           "correctId": "1",
           "rightTitle": "False!",
           "right": "4 is not bigger than 9, so it is False.",
-          "wrong": "Check the statement against the numbers."
+          "wrong": "Check the statement against the numbers.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -4384,7 +4423,8 @@
           "correctId": "1",
           "rightTitle": "Read right!",
           "right": "It says both values are the same.",
-          "wrong": "Read it from left to right: the left number, the symbol, then the right number."
+          "wrong": "Read it from left to right: the left number, the symbol, then the right number.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -4415,7 +4455,8 @@
           "correctId": "0",
           "rightTitle": "True!",
           "right": "Both values are the same, so it is True.",
-          "wrong": "Check the statement against the numbers."
+          "wrong": "Check the statement against the numbers.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -4451,7 +4492,8 @@
           "correctId": "0",
           "rightTitle": "Read right!",
           "right": "You can read it right even when it is False.",
-          "wrong": "Read it from left to right: the left number, the symbol, then the right number."
+          "wrong": "Read it from left to right: the left number, the symbol, then the right number.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -4482,7 +4524,8 @@
           "correctId": "1",
           "rightTitle": "False!",
           "right": "15 is not less than or equal to 12, so it is False.",
-          "wrong": "Check the statement against the numbers."
+          "wrong": "Check the statement against the numbers.",
+          "answers": "rows"
         }
       ]
     },
@@ -4493,7 +4536,7 @@
         {
           "kind": "quiz",
           "line": "Find the total price of two products.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4524,7 +4567,7 @@
         {
           "kind": "quiz",
           "line": "Find the balance left after spending money.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4555,7 +4598,7 @@
         {
           "kind": "quiz",
           "line": "Find the total chairs in 4 equal rows of 5.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4586,7 +4629,7 @@
         {
           "kind": "quiz",
           "line": "Share 10 litres of juice among 4 friends. Find the exact amount each.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4617,7 +4660,7 @@
         {
           "kind": "quiz",
           "line": "Share 17 chocolates among 5 students. Find the whole chocolates each.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4648,7 +4691,7 @@
         {
           "kind": "quiz",
           "line": "Find how many chocolates remain after forming complete groups.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4679,7 +4722,7 @@
         {
           "kind": "quiz",
           "line": "Check whether a score reaches 100.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4710,7 +4753,7 @@
         {
           "kind": "quiz",
           "line": "Check whether two values are equal.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4741,7 +4784,7 @@
         {
           "kind": "quiz",
           "line": "Check that a value is below a limit. The limit itself is not allowed.",
-          "layout": "grid",
+          "answers": "tiles",
           "options": [
             {
               "id": "0",
@@ -4968,7 +5011,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "120 - 130 = -10. The student is ₹10 short: a shortfall, not money back.",
-          "wrong": "The student pays less than the bill. Which way is the difference?"
+          "wrong": "The student pays less than the bill. Which way is the difference?",
+          "answers": "rows"
         }
       ]
     },
@@ -5049,7 +5093,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Multiplication calculates repeated item costs. Addition combines the different totals.",
-          "wrong": "Several items, each with the same price: which operator?"
+          "wrong": "Several items, each with the same price: which operator?",
+          "answers": "rows"
         }
       ]
     },
@@ -5150,7 +5195,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "The True or False result can later help a program allow or reject a purchase.",
-          "wrong": "We are not calculating a value here. We are checking it."
+          "wrong": "We are not calculating a value here. We are checking it.",
+          "answers": "rows"
         }
       ]
     },
@@ -5222,7 +5268,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "It must multiply each item's quantity by its price.",
-          "wrong": "Three notebooks at ₹20 each: what should the app do with 3 and 20?"
+          "wrong": "Three notebooks at ₹20 each: what should the app do with 3 and 20?",
+          "answers": "rows"
         },
         {
           "kind": "interaction",
@@ -5381,7 +5428,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "score > 100 leaves out exactly 100. “At least 100” must include the boundary, so >=.",
-          "wrong": "Which expression is True for 100, 101 and more?"
+          "wrong": "Which expression is True for 100, 101 and more?",
+          "answers": "rows"
         }
       ]
     },
@@ -5415,7 +5463,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "32 // 10 = 3 complete groups.",
-          "wrong": "// counts complete groups only."
+          "wrong": "// counts complete groups only.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5443,7 +5492,8 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "32 % 10 = 2 students remain.",
-          "wrong": "% gives what is left after the complete groups."
+          "wrong": "% gives what is left after the complete groups.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5471,7 +5521,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "3 full groups plus 2 students left need a 4th bus.",
-          "wrong": "What happens to the 2 students who remain?"
+          "wrong": "What happens to the 2 students who remain?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5499,7 +5550,8 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "4 * 2000 = 8000.",
-          "wrong": "Four buses, each with the same cost."
+          "wrong": "Four buses, each with the same cost.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5522,7 +5574,8 @@
           "correctId": "1",
           "rightTitle": "False!",
           "right": "The school needs ₹8,000 but has ₹7,000, so the trip can't be arranged within budget.",
-          "wrong": "Is 8000 less than or equal to 7000?"
+          "wrong": "Is 8000 less than or equal to 7000?",
+          "answers": "rows"
         }
       ]
     },
@@ -5553,7 +5606,8 @@
           "correctId": "0",
           "rightTitle": "Well explained!",
           "right": "// counts complete groups: 3 full buses.",
-          "wrong": "Which operation counts complete groups?"
+          "wrong": "Which operation counts complete groups?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5578,7 +5632,8 @@
           "correctId": "1",
           "rightTitle": "Well explained!",
           "right": "% gives the remainder: 2 students left.",
-          "wrong": "Which operation gives what is left over?"
+          "wrong": "Which operation gives what is left over?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5603,7 +5658,8 @@
           "correctId": "2",
           "rightTitle": "Well explained!",
           "right": "Two students remain, so the remainder needs a bus too.",
-          "wrong": "Think about the students who are left after 3 full buses."
+          "wrong": "Think about the students who are left after 3 full buses.",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5628,7 +5684,8 @@
           "correctId": "2",
           "rightTitle": "Well explained!",
           "right": "Equal items repeat: 4 buses * ₹2,000.",
-          "wrong": "Four buses, each with the same cost: what repeats?"
+          "wrong": "Four buses, each with the same cost: what repeats?",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5653,7 +5710,8 @@
           "correctId": "0",
           "rightTitle": "Well explained!",
           "right": "<= includes the budget itself.",
-          "wrong": "Which operator asks “Is it within the limit?”"
+          "wrong": "Which operator asks “Is it within the limit?”",
+          "answers": "rows"
         },
         {
           "kind": "quiz",
@@ -5678,7 +5736,8 @@
           "correctId": "1",
           "rightTitle": "Well explained!",
           "right": "The cost equals the budget, and <= allows that.",
-          "wrong": "Is 8000 less than or equal to 8000?"
+          "wrong": "Is 8000 less than or equal to 8000?",
+          "answers": "rows"
         }
       ]
     },

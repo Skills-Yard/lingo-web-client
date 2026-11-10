@@ -4,14 +4,14 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
-import { OnboardingHeader } from "@/components/onboarding/OnboardingHeader";
+import { LessonFooter } from "@/components/kit/buttons/LessonFooter";
+import { LessonHeader } from "@/components/kit/header/LessonHeader";
 import { setClickSoundMuted } from "@/components/onboarding/clickSound";
 import { isVoiceoverSettled, useVoiceover } from "@/components/onboarding/useVoiceover";
 import { questionSpoken } from "@/components/onboarding/QuestionHeading";
 import { LEVEL_ONE_STEP, MODULE_STEPS, type LevelOneStepKey } from "@/lib/moduleFlow";
 import { useReviewProgress } from "@/lib/moduleReview";
 import { commandsHref } from "@/lib/routes";
-import { ActionRow } from "./ActionRow";
 import { LevelVoiceContext } from "./LevelVoice";
 import { useLevelMuted } from "./levelMuted";
 import { OutOfEnergySheet, useOutOfEnergy } from "./OutOfEnergySheet";
@@ -87,6 +87,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
   // A question being asked again (see `moduleReview`): the bar is the review's, and
   // Back leaves the module rather than going to the screen before it.
   const review = useReviewProgress(step);
+  const progress = review ?? { step, total };
   // With no battery left the screen can't be played: it stays, but takes no taps or keys.
   const outOfEnergy = useOutOfEnergy();
   const endStrikes = useStreakStrikes({ answer, withHint: !!hint });
@@ -95,7 +96,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
     if (answer) endStrikes();
     onContinue?.();
   };
-  const [muted, toggleMuted] = useLevelMuted();
+  const [muted] = useLevelMuted();
   useEffect(() => setClickSoundMuted(muted), [muted]);
   const voice = useVoiceover(voiceover, true, muted);
   const spoken = questionSpoken(voice, !!voiceover?.length);
@@ -216,16 +217,18 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
           // room it keeps for the content below, which starts there whatever the margin.
           style={{ maxWidth: columnW, top: `calc(var(--screen-top) / var(--stage-scale, 1))` }}
         >
-          <OnboardingHeader
-            onBack={() => router.push("/level")}
-            onPrevious={review ? () => router.push("/level") : (onBack ?? (() => router.back()))}
-            progress={review ?? { step, total }}
-            batteryStep={step}
-            answer={answer}
-            level
-            muted={muted}
-            onToggleMuted={toggleMuted}
-          />
+          {/* The kit's header, the only one. Its row is 30px tall and sits 5.35px up, so the cross itself meets the page margin. */}
+          <div className="relative h-11 shrink-0">
+            <LessonHeader
+              className="absolute inset-x-0 -top-[5.35px]"
+              onClose={() => router.push("/level")}
+              onPrevious={review ? () => router.push("/level") : (onBack ?? (() => router.back()))}
+              step={progress.step}
+              total={progress.total}
+              batteryStep={step}
+              answer={answer}
+            />
+          </div>
         </div>
         {/* The scroller spans the device, so a child can run edge to edge;
           the rest of the content stays in the centred column. */}
@@ -258,15 +261,14 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
         full-width white base, down to the stage's bottom. */}
       <div className={backdrop ? "relative z-10 w-full shrink-0 bg-white dark:bg-background" : "contents"}>
         {action ?? (
-          <ActionRow
-            maxWidth={FRAME_W + 60}
+          <LessonFooter
             hint={hint}
             answer={answer}
-            ctaLabel={ctaLabel}
-            ctaDisabled={ctaDisabled || (ctaWaitsForVoice && !isVoiceoverSettled(voice.status))}
-            ctaLocked={ctaLocked}
-            ctaLight={ctaLight}
-            ctaCube={ctaCube}
+            label={ctaLabel}
+            disabled={ctaDisabled || (ctaWaitsForVoice && !isVoiceoverSettled(voice.status))}
+            locked={ctaLocked}
+            light={ctaLight}
+            cube={ctaCube}
             onContinue={handleContinue}
           />
         )}

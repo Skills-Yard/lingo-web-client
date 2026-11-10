@@ -37,6 +37,12 @@ Each of these is its own component: **PickAll** (tick all that apply), **WordChi
 | **MatchPairs** | Match items from two columns |
 | **NumberLine** | A line with marks, a gate or a range |
 
+### Decisions on merging the one-offs into the activities (popups, 2026-11-10)
+
+- **SortGroups: one component, three looks, no screen changes how it looks.** The data picks the look (as **Answers** has four): `columns` (drag cards into group boxes; wrong drop shakes: today's `sort-stage`), `free` (group with no right answer: `group-stage`), `labels` (tap a part, then press its label: `classify-stage`, whose words move out of the code into the data). The old tap-only gallery `SortGroups` goes away.
+- **pair-up-stage goes into RevealCards** (tap an item, see what it means): the share-out picture stays as what is shown. It does not sort anything.
+- **choose-type-stage becomes a setting of Answers: `instant`** (a tap is checked at once: a wrong tap shakes and gives its hint, a right one finishes; no Check button). The screen keeps how it behaves.
+
 ## Scenes and media
 
 | Component | What it is |

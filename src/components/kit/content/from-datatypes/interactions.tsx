@@ -11,7 +11,7 @@ import { vibrateForTap } from "@/lib/haptics";
 import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
 import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
-import type { InteractionApi } from "./screen";
+import type { InteractionApi, SortApi } from "./screen";
 import { INFO_LAYOUT, InfoTileBody, Pic, type InfoTile } from "./visuals";
 import { WINDOW_ROW, WindowCard } from "./WindowCard";
 
@@ -136,7 +136,7 @@ export function SortStage({
   decimalHint = false,
   after,
 }: {
-  api: InteractionApi;
+  api: SortApi;
   items: readonly SortItem[];
   buckets: readonly SortBucket[];
   prompt?: string;

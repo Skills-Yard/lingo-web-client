@@ -33,9 +33,6 @@
   },
   "look": {
     "sheet": "side",
-    "compactRows": true,
-    "grid": "objects",
-    "shortCards": 12,
     "cardLine": 120,
     "bubble": [
       {
@@ -88,7 +85,9 @@
           "correctId": "0",
           "rightTitle": "Great thinking!",
           "right": "We carry water before the trek.",
-          "wrong": "What can we do before leaving?"
+          "wrong": "What can we do before leaving?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -99,7 +98,7 @@
         {
           "kind": "quiz",
           "line": "We carry water. What should hold it?",
-          "layout": "grid",
+          "answers": "objects",
           "options": [
             {
               "id": "bottle",
@@ -167,7 +166,9 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "A bottle holds and stores water.",
-          "wrong": "Did the bottle hold the water we poured?"
+          "wrong": "Did the bottle hold the water we poured?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -257,7 +258,8 @@
           "correctId": "1",
           "rightTitle": "Correct!",
           "right": "500 ml + 250 ml = 750 ml.",
-          "wrong": "Add 250 ml to what we had."
+          "wrong": "Add 250 ml to what we had.",
+          "answers": "objects"
         }
       ]
     },
@@ -314,7 +316,9 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "The bottle is the same; the amount changed.",
-          "wrong": "Are these two bottles the same bottle?"
+          "wrong": "Are these two bottles the same bottle?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -352,7 +356,8 @@
           "correctId": "1",
           "rightTitle": "Correct!",
           "right": "750 ml − 200 ml = 550 ml.",
-          "wrong": "Subtract what we drank from 750 ml."
+          "wrong": "Subtract what we drank from 750 ml.",
+          "answers": "objects"
         }
       ]
     },
@@ -390,7 +395,8 @@
           "correctId": "0",
           "rightTitle": "Yes!",
           "right": "It's empty, so 0 ml remain.",
-          "wrong": "If all the water is gone, how much remains?"
+          "wrong": "If all the water is gone, how much remains?",
+          "answers": "objects"
         }
       ]
     },
@@ -456,7 +462,9 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "A name or label helps us identify things.",
-          "wrong": "How would you recognise your own bottle?"
+          "wrong": "How would you recognise your own bottle?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -490,17 +498,55 @@
         {
           "kind": "interaction",
           "content": {
-            "$": "kit:classify-stage",
+            "$": "kit:sort-groups",
             "props": {
-              "slip": {
-                "$ctx": "api.slip"
+              "look": "labels",
+              "api": {
+                "$ctx": "api"
               },
-              "done": {
-                "$ctx": "api.done"
-              },
-              "finished": {
-                "$ctx": "api.finished"
-              }
+              "items": [
+                {
+                  "id": "n1",
+                  "text": "water_level",
+                  "label": "name",
+                  "card": 1,
+                  "mono": true
+                },
+                {
+                  "id": "v1",
+                  "text": "550 ml",
+                  "label": "value",
+                  "card": 1
+                },
+                {
+                  "id": "n2",
+                  "text": "bottle_capacity",
+                  "label": "name",
+                  "card": 2,
+                  "mono": true
+                },
+                {
+                  "id": "v2",
+                  "text": "1,000 ml",
+                  "label": "value",
+                  "card": 2
+                }
+              ],
+              "choices": [
+                {
+                  "label": "name",
+                  "button": "It is a name"
+                },
+                {
+                  "label": "value",
+                  "button": "It is a value"
+                }
+              ],
+              "narration": "Is each one a name or a value?",
+              "entry": "variable-classify",
+              "asking": "Is it a name or a value?",
+              "idle": "Tap a part to sort it.",
+              "wrong": "The name tells what it is; the value is the amount."
             }
           }
         },
@@ -527,7 +573,8 @@
           "correctId": "1",
           "rightTitle": "Correct!",
           "right": "water_level is the name; 550 ml is its value.",
-          "wrong": "The name tells what it is; the value is the amount."
+          "wrong": "The name tells what it is; the value is the amount.",
+          "answers": "objects"
         }
       ]
     },
@@ -583,7 +630,9 @@
           "correctId": "3",
           "rightTitle": "Exactly!",
           "right": "We track all three pieces of information.",
-          "wrong": "What does the teacher need to finish attendance?"
+          "wrong": "What does the teacher need to finish attendance?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -631,7 +680,9 @@
           "correctId": "2",
           "rightTitle": "Correct!",
           "right": "absent_students counts the absent students.",
-          "wrong": "Which name means students who are not here?"
+          "wrong": "Which name means students who are not here?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -667,7 +718,9 @@
           "correctId": "1",
           "rightTitle": "Exactly!",
           "right": "Present goes to 29, absent to 1. Total stays 30.",
-          "wrong": "The class size is the same. What changes when 2 return?"
+          "wrong": "The class size is the same. What changes when 2 return?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -698,7 +751,9 @@
           "correctId": "2",
           "rightTitle": "Right!",
           "right": "We need both prices for the total.",
-          "wrong": "Which prices do we add together?"
+          "wrong": "Which prices do we add together?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -746,7 +801,8 @@
           "correctId": "1",
           "rightTitle": "Correct!",
           "right": "The pen costs ₹20.",
-          "wrong": "Look at the pen's price tag again."
+          "wrong": "Look at the pen's price tag again.",
+          "answers": "objects"
         }
       ]
     },
@@ -782,7 +838,8 @@
           "correctId": "1",
           "rightTitle": "Excellent!",
           "right": "₹50 + ₹20 = ₹70. We can store it as total_price.",
-          "wrong": "Add the notebook price and the pen price."
+          "wrong": "Add the notebook price and the pen price.",
+          "answers": "objects"
         }
       ]
     },
@@ -818,7 +875,8 @@
           "correctId": "1",
           "rightTitle": "That's right!",
           "right": "₹70 + ₹10 = ₹80.",
-          "wrong": "Add ₹10 to the earlier total."
+          "wrong": "Add ₹10 to the earlier total.",
+          "answers": "objects"
         }
       ]
     },
@@ -856,7 +914,8 @@
           "correctId": "1",
           "rightTitle": "Correct!",
           "right": "You have ₹100.",
-          "wrong": "Look at what your parents gave you."
+          "wrong": "Look at what your parents gave you.",
+          "answers": "objects"
         }
       ]
     },
@@ -896,7 +955,8 @@
           "correctId": "1",
           "rightTitle": "Great!",
           "right": "₹100 + ₹50 = ₹150. Your balance grew.",
-          "wrong": "Add the ₹50 to your ₹100."
+          "wrong": "Add the ₹50 to your ₹100.",
+          "answers": "objects"
         }
       ]
     },
@@ -935,7 +995,8 @@
           "correctId": "1",
           "rightTitle": "Correct!",
           "right": "₹150 − ₹30 = ₹120.",
-          "wrong": "Subtract what you spent."
+          "wrong": "Subtract what you spent.",
+          "answers": "objects"
         }
       ]
     },
@@ -975,7 +1036,8 @@
           "correctId": "1",
           "rightTitle": "Yes!",
           "right": "₹200 + ₹50 = ₹250.",
-          "wrong": "Add money you receive."
+          "wrong": "Add money you receive.",
+          "answers": "objects"
         },
         {
           "kind": "quiz",
@@ -1008,7 +1070,8 @@
           "correctId": "1",
           "rightTitle": "Correct!",
           "right": "₹250 − ₹30 = ₹220.",
-          "wrong": "Subtract money you spend."
+          "wrong": "Subtract money you spend.",
+          "answers": "objects"
         },
         {
           "kind": "quiz",
@@ -1042,7 +1105,8 @@
           "correctId": "1",
           "rightTitle": "Perfect!",
           "right": "Your final balance is ₹240.",
-          "wrong": "Add or subtract each event in order."
+          "wrong": "Add or subtract each event in order.",
+          "answers": "objects"
         }
       ]
     },
@@ -1077,7 +1141,9 @@
           "rightTitle": "Exactly!",
           "right": "First, it asks for the first number.",
           "wrong": "It needs numbers before it can add.",
-          "nextLabel": "Let's Build It"
+          "nextLabel": "Let's Build It",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -1112,7 +1178,9 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "It used only the first price. ₹100 + ₹50 = ₹150.",
-          "wrong": "Did it include both prices?"
+          "wrong": "Did it include both prices?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -1150,7 +1218,9 @@
           "correctId": "3",
           "rightTitle": "Correct!",
           "right": "We need all three to find what remains.",
-          "wrong": "What do we need to work out what remains?"
+          "wrong": "What do we need to work out what remains?",
+          "answers": "rows",
+          "compact": true
         },
         {
           "kind": "quiz",
@@ -1204,7 +1274,8 @@
           "correctId": "1",
           "rightTitle": "Excellent!",
           "right": "₹1,000 − ₹300 − ₹200 = ₹500.",
-          "wrong": "Subtract both expenses from the budget."
+          "wrong": "Subtract both expenses from the budget.",
+          "answers": "objects"
         }
       ]
     },
@@ -1232,7 +1303,9 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "Variables store and track information.",
-          "wrong": "What did the bottle and the wallet keep track of?"
+          "wrong": "What did the bottle and the wallet keep track of?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -1260,7 +1333,8 @@
           "correctId": "0",
           "rightTitle": "Yes!",
           "right": "A value can grow, shrink or become zero.",
-          "wrong": "Remember how the water and the money changed."
+          "wrong": "Remember how the water and the money changed.",
+          "answers": "objects"
         }
       ]
     },
@@ -1288,7 +1362,9 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "A good name tells us what a value means.",
-          "wrong": "Why did each bottle need a name label?"
+          "wrong": "Why did each bottle need a name label?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },
@@ -1316,7 +1392,9 @@
           "correctId": "0",
           "rightTitle": "Exactly!",
           "right": "The app needs both numbers to add them.",
-          "wrong": "What does the app need before it can add?"
+          "wrong": "What does the app need before it can add?",
+          "answers": "rows",
+          "compact": true
         }
       ]
     },

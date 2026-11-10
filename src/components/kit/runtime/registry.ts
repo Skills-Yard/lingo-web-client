@@ -6,6 +6,7 @@ import * as conditionsNext from "@/components/conditions/NextScreen";
 import * as conditionsVisuals from "@/components/kit/content/from-conditions/visuals";
 import * as datatypesFlow from "@/components/datatypes/datatypes";
 import * as datatypesScore from "@/components/datatypes/datatypesScore";
+import * as datatypesFloat from "@/components/kit/content/from-datatypes/FloatLesson";
 import * as datatypesGroup from "@/components/kit/content/from-datatypes/GroupStage";
 import * as datatypesTour from "@/components/kit/content/from-datatypes/GroupTourStage";
 import * as datatypesInteractions from "@/components/kit/content/from-datatypes/interactions";
@@ -37,7 +38,7 @@ import { KIT } from "../registry";
  * The keys are only where each file came from, to tell two components of the same name apart.
  */
 const CONTENT: Record<string, readonly Record<string, unknown>[]> = {
-  datatypes: [datatypesInteractions, datatypesVisuals, datatypesGroup, datatypesTour],
+  datatypes: [datatypesInteractions, datatypesVisuals, datatypesFloat, datatypesGroup, datatypesTour],
   operators: [operatorsInteractions, operatorsVisuals, operatorsFlip, operatorsCards, operatorsSituations, operatorsHelpers, operatorsHeaders],
   conditions: [conditionsInteractions, conditionsVisuals, conditionsHelpers],
   variable: [variableInteractions, variableVisuals, variableScreenVisuals],
