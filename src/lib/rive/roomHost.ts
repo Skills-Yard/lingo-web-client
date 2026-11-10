@@ -1,5 +1,6 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { configureRiveRuntime, SEQUENCE_ROOM } from "./runtime";
+import { riveSource } from "./riveCache";
 
 /**
  * One bedroom for the whole Sequence module, like the robot (see `robotHost`):
@@ -98,7 +99,7 @@ export const getRoomHost = (): Host => {
     }, SETTLE_MS);
   };
   created.rive = new Rive({
-    src: SEQUENCE_ROOM.src,
+    ...riveSource(SEQUENCE_ROOM.src),
     canvas,
     artboard: SEQUENCE_ROOM.artboard,
     stateMachine: SEQUENCE_ROOM.stateMachine,

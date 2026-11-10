@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Confetti } from "@/components/level-one/Confetti";
-import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
+import { useCelebrate } from "@/components/level-one/Celebration";
+import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards, CARDS_RISE, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
@@ -226,6 +226,11 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
   const risen = quiz ? (tiles ? CARDS_RISE : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
   const celebrate = panel?.right === true && (quiz ? checked : finished);
+  // The burst belongs to the module's layout, so it plays on when Next leaves this screen.
+  const startCelebration = useCelebrate();
+  useEffect(() => {
+    if (celebrate) startCelebration();
+  }, [celebrate, startCelebration]);
 
   return (
     <LevelTwoShell
@@ -356,8 +361,6 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
         </>
       )}
 
-      <Confetti active={celebrate} />
-      <XpBurst show={celebrate} />
     </LevelTwoShell>
   );
 }

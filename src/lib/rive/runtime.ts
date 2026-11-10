@@ -362,6 +362,13 @@ export const LEVEL_BACKGROUND = {
   fallbackAspect: 390 / 844,
 } as const;
 
+/** The gem — the "Gem" artboard of `gem` (a Rive file with no extension). */
+export const GEM = {
+  src: "/animations/gem",
+  artboard: "Gem",
+  stateMachine: "State Machine 1",
+} as const;
+
 /** The lesson progress bar — "LESSON_ProgressBar" in `progressBar.riv`, played by
  * `ProgressBar_SM`; its `progress` property is the fill in percent (0-100). */
 export const PROGRESS_BAR = {
@@ -606,11 +613,13 @@ export const LESSON_COMPLETE = {
 /**
  * The reward screen after "Lesson complete!" — two artboards of `hex.riv`: the
  * backdrop "REWARD_BG" (it loops on its own in `REWARD_BG_SM`, and has no view
- * model) and the chest "REWARD_Chest". The chest's `State Machine 1` reads the
- * number `tap` of the `reward` view model: set it to 1, then 2, then 3 and each
- * plays its own tap; the third opens the chest.
+ * model) and the chest "REWARD_Chest", played by `Reward_SM`. The chest needs
+ * no data from the page: it listens for clicks on the box itself (the canvas
+ * must be created with `autoBind`), and each of the first `taps` clicks makes
+ * the machine enter its next state (two tap animations, then the open one),
+ * which `onStateChange` reports.
  */
 export const REWARD_SCREEN = {
   background: { artboard: "REWARD_BG", stateMachine: "REWARD_BG_SM" },
-  chest: { artboard: "REWARD_Chest", stateMachine: "State Machine 1", viewModel: "reward", tapProperty: "tap", taps: 3 },
+  chest: { artboard: "REWARD_Chest", stateMachine: "Reward_SM", taps: 3 },
 } as const;

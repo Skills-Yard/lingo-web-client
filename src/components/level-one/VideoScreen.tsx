@@ -13,7 +13,7 @@ const HEADING: TextSpan[] = [{ text: "What are " }, { text: "instructions", high
 const VIDEO_AUDIO = MODULE_AUDIO.whatAreInstructions;
 
 /**
- * `/module?step=15` — "What are instructions?": the question, and a
+ * `/module/commands?step=15` — "What are instructions?": the question, and a
  * short video (thumbnail, player bar) with a note on what it covers.
  */
 export function VideoScreen({ onContinue }: { onContinue?: () => void }) {

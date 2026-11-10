@@ -95,8 +95,47 @@ const write = (next: StreakState) => {
   }
 };
 
-/** Starts the module over: no run, no loops played. */
-export const resetStreak = () => write(FRESH);
+/** The gem popup (and the battery it claims) comes with every this-many games won, not with each one. */
+const REWARD_EVERY = 3;
+const WINS_KEY = "lingo.module-game-wins";
+
+let wins = 0;
+let winsRestored = false;
+
+const readWins = (): number => {
+  if (!winsRestored && typeof window !== "undefined") {
+    winsRestored = true;
+    try {
+      const saved = Number(sessionStorage.getItem(WINS_KEY));
+      wins = Number.isFinite(saved) && saved > 0 ? saved : 0;
+    } catch {
+      // Storage blocked: the count just lasts for this page.
+    }
+  }
+  return wins;
+};
+
+const writeWins = (next: number) => {
+  wins = next;
+  try {
+    sessionStorage.setItem(WINS_KEY, String(next));
+  } catch {
+    // Same as `readWins`.
+  }
+};
+
+/** A board game was won: whether this win brings the gem popup (every `REWARD_EVERY`th). */
+export const noteGameWin = (): boolean => {
+  const next = readWins() + 1;
+  writeWins(next);
+  return next % REWARD_EVERY === 0;
+};
+
+/** Starts the module over: no run, no loops played, no games won. */
+export const resetStreak = () => {
+  write(FRESH);
+  writeWins(0);
+};
 
 /** A checked answer was right: the run grows. `withHint`: the screen has a hint button. */
 export const noteRightAnswer = (withHint: boolean): StreakBeat => {

@@ -5,6 +5,7 @@ import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useRive } from "@rive-app/react-canvas";
 import { applyCanvasBleed } from "@/lib/rive/bleed";
 import { PROGRESS_BAR } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
 
 const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
@@ -35,7 +36,7 @@ type RiveProgressBarProps = {
 export function RiveProgressBar({ value, from, answer = null, className = "" }: RiveProgressBarProps) {
   const [aspect, setAspect] = useState(FALLBACK_ASPECT);
   const { rive, canvas, RiveComponent } = useRive({
-    src: PROGRESS_BAR.src,
+    ...riveSource(PROGRESS_BAR.src),
     artboard: PROGRESS_BAR.artboard,
     stateMachine: PROGRESS_BAR.stateMachine,
     autoplay: true,

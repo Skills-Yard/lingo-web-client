@@ -1,10 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { preload } from "react-dom";
 import { useTheme } from "@/context/ThemeContext";
 import { getRoomHost, setRoomDark, setRoomDress, setRoomFit, type RoomDress, type RoomFit } from "@/lib/rive/roomHost";
-import { SEQUENCE_ROOM } from "@/lib/rive/runtime";
 
 export type { RoomDress };
 
@@ -15,7 +13,6 @@ export type { RoomDress };
  * "cover" to crop to a box.
  */
 export function SequenceRoom({ dress, happy = false, fit = "width" }: { dress: RoomDress; happy?: boolean; fit?: RoomFit }) {
-  preload(SEQUENCE_ROOM.src, { as: "fetch", crossOrigin: "anonymous" });
   const slot = useRef<HTMLDivElement>(null);
   const { theme } = useTheme();
 
