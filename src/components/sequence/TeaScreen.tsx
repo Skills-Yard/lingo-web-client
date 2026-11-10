@@ -92,6 +92,7 @@ export function TeaScreen() {
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            centred
           >
             {correct ? "Same idea, new situation. Order matters!" : wrongNote.text}
           </FeedbackPanel>

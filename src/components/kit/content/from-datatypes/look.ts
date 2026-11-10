@@ -20,6 +20,13 @@ const TINT_CYCLE = ["blue", "lavender", "green", "cream"] as const satisfies rea
 /** The tint of the card at `index` in a run, going round the four. */
 export const tintAt = (index: number) => TINTS[TINT_CYCLE[index % TINT_CYCLE.length]];
 
+/** A number or word in its coloured badge (the example tiles, and the answers that carry one): the badge's fill and its text. */
+export const BADGE = {
+  mint: "bg-[#8EEBD8] text-[#036C59]",
+  purple: "bg-[#C1A5F9] text-[#472A92]",
+  sky: "bg-[#7ACDFB] text-[#035280]",
+} as const;
+
 /** The colour of a group's name (a text colour class) goes with the group's tint. */
 export const INK = {
   violet: "text-[#8E82FF]",
@@ -30,8 +37,11 @@ export const INK = {
 
 /** A card, as the design has it: a 4px white edge, a soft shadow, Poppins 600 16px inside (its size is the screen's to give). */
 export const CARD_BODY = "flex items-center justify-center rounded-[8px] border-4 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)]";
+/** A card that is pressed: without the soft shadow, which its 3D edge (see `RAISED`) stands in for. */
+export const CARD_BODY_FLAT = "flex items-center justify-center rounded-[8px] border-4";
 /** Screen 3's card: 104 x 52. */
 export const CARD_LOOK = `${CARD_BODY} h-[52px] w-[104px]`;
+export const CARD_LOOK_FLAT = `${CARD_BODY_FLAT} h-[52px] w-[104px]`;
 
 /** A card's edge at rest, and when it is the one picked up (screen 3's blue). */
 export const EDGE_IDLE = "border-white dark:border-transparent";

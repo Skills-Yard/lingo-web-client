@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkle, X } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED_SMALL } from "@/components/ui/raised";
 
 /** How long the popup stays open when nobody closes it. */
 const AUTO_CLOSE_MS = 3000;
@@ -53,7 +54,7 @@ export function GemPopup({ open, onClose }: { open: boolean; onClose: () => void
               type="button"
               aria-label="Close"
               onClick={close}
-              className="absolute top-6 right-6 flex h-[39px] w-[39px] cursor-pointer items-center justify-center rounded-md border border-black/8 transition-transform active:scale-95 dark:border-white/15"
+              className={`absolute top-6 right-6 flex h-[39px] w-[39px] cursor-pointer items-center justify-center rounded-md border border-black/8 bg-white dark:border-white/15 dark:bg-[#15181E] ${RAISED_SMALL} ${EDGE.khaki}`}
             >
               <X className="h-[22px] w-[22px]" strokeWidth={1.4} />
             </button>

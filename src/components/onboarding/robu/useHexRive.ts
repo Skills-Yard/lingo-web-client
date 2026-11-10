@@ -5,6 +5,7 @@ import { useRive } from "@rive-app/react-canvas";
 import type { Layout } from "@rive-app/canvas";
 import {
   configureRiveRuntime,
+  HEX_RIVE_SRC,
   HEX_ARTBOARD,
   HEX_VIEW_MODEL,
   HEX_STOP_TALK_TRIGGER,
@@ -13,7 +14,7 @@ import {
   HEX_ONBOARDING_TRIGGER,
   isHexTalkTrigger,
 } from "@/lib/rive/runtime";
-import { hexRiveSource } from "@/lib/rive/hexFile";
+import { riveSource } from "@/lib/rive/riveCache";
 import { useTheme } from "@/context/ThemeContext";
 import { HexEntryStyleContext } from "./hexExit";
 
@@ -56,7 +57,7 @@ export function useHexRive(
   const entryStyleRef = useRef(entryStyle);
   entryStyleRef.current = entryStyle;
   const { rive, RiveComponent } = useRive({
-    ...hexRiveSource(),
+    ...riveSource(HEX_RIVE_SRC),
     artboard,
     // Only read when the canvas is created; later `state` changes are played
     // by the effect below. Naming it here keeps Rive from defaulting to the

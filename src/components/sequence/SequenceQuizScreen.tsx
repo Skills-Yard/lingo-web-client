@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
@@ -17,6 +17,7 @@ import { fireRobot } from "@/lib/rive/robotHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { PictureCards } from "./PictureCards";
 import { SceneBackdrop } from "./SceneBackdrop";
+import type { RoomDress } from "./SequenceRoom";
 import { SEQUENCE_STEPS, sequenceNext, sequencePrevious, type SequenceQuiz } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
@@ -31,6 +32,17 @@ const PICTURES_RISE = 90;
 /** A single picture also shrinks (from its top) as it rises, so the raised answers don't reach it. */
 const CLOSE_UP_CHECKED_SCALE = 0.9;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
+/** How long the cards take to rise and fade after a right answer, before the boy moves. */
+const CARDS_CLEAR_MS = 700;
+
+type RoomScene = Extract<SequenceQuiz["scene"], { room: unknown }>["room"];
+
+/** What the boy has on: the start until checked, then the right or wrong result (a cleared room's right result waits for the cards to go). */
+const roomDress = (room: RoomScene, checked: boolean, correct: boolean, cardsGone: boolean): RoomDress => {
+  if (!checked) return room.start;
+  if (!correct) return room.wrong;
+  return room.clearOnRight && !cardsGone ? room.start : room.right;
+};
 
 /**
  * A Sequence question: the title, Hex asking it, and the answers. The main
@@ -47,10 +59,20 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const [hinted, setHinted] = useState(false);
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
+  // A right answer in a `clearOnRight` room: the boy waits until the cards have gone, then moves.
+  const [cardsGone, setCardsGone] = useState(false);
   const correct = selectedId === quiz.correctId;
+  const room = "room" in quiz.scene ? quiz.scene.room : null;
+  // The room stays put and the cards clear, so the boy is in view while he moves.
+  const clearedRoom = !!room && (!!room.fixed || (!!room.clearOnRight && correct));
   // Like the first lesson: a right answer that plays a robot move clears the cards so it can be seen.
-  const fixedRoom = "room" in quiz.scene && !!quiz.scene.room.fixed;
-  const fadeCards = checked && (fixedRoom || (correct && !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length));
+  const fadeCards = checked && (clearedRoom || (correct && !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length));
+
+  useEffect(() => {
+    if (!checked || !correct) return;
+    const timer = window.setTimeout(() => setCardsGone(true), CARDS_CLEAR_MS);
+    return () => window.clearTimeout(timer);
+  }, [checked, correct]);
 
   const check = () => {
     setChecked(true);
@@ -95,8 +117,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       voiceover={checked ? quiz.resultVoiceover : quiz.voiceover}
       onBack={() => router.push(sequencePrevious(quiz.step))}
       scene={
-        "room" in quiz.scene ? (
-          <SceneBackdrop dress={!checked ? quiz.scene.room.start : correct ? quiz.scene.room.right : quiz.scene.room.wrong} lifted={checked && !fixedRoom} />
+        room ? (
+          <SceneBackdrop dress={roomDress(room, checked, correct, cardsGone)} lifted={checked && !clearedRoom} />
         ) : "robot" in quiz.scene ? (
           <RobotBackdrop below={robotBelowDialogue(quiz.bubbleTop, quiz.bubble)} pose="idle" />
         ) : (

@@ -1,5 +1,6 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { BUTTON, configureRiveRuntime, PROGRESS_BAR } from "./runtime";
+import { riveSource } from "./riveCache";
 
 // The one bar lives in this module. A hot reload would run it again beside the
 // bar already on screen, and every trigger would go to the new, unloaded one.
@@ -153,7 +154,7 @@ export const getProgressBarHost = (): Host => {
   const created: Host = { element, canvas, rive: null, aspect: FALLBACK_ASPECT, loaded: false, slot: null };
   host = created;
   created.rive = new Rive({
-    src: PROGRESS_BAR.src,
+    ...riveSource(PROGRESS_BAR.src),
     canvas,
     artboard: PROGRESS_BAR.artboard,
     stateMachine: PROGRESS_BAR.stateMachine,

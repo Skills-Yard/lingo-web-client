@@ -47,7 +47,7 @@ const TARGET_LINE = 1;
 const HEX_LEAVE_MS = 350;
 
 /**
- * `/module?step=7` — "Move cube to target": Hex says three lines, one per
+ * `/module/commands?step=7` — "Move cube to target": Hex says three lines, one per
  * Continue, each from a different place, and the robot behind him follows
  * them: it holds the cube, then the target box is lit up with its label, which
  * stays lit for the last line.

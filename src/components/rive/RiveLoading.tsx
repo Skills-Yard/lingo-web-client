@@ -1,13 +1,13 @@
 "use client";
 
-import { useHexRiveProgress } from "@/lib/rive/hexFile";
+import { useRiveFilesProgress } from "@/lib/rive/riveCache";
 
-/** Shown while `hex.riv` downloads at the start of the app: a bar that fills
- * with the real download progress. */
-export function HexRiveLoading() {
-  const percent = Math.round(useHexRiveProgress() * 100);
+/** Shown while the app's `.riv` files load at the start: a bar that fills with
+ * the real download (then parse) progress. */
+export function RiveLoading() {
+  const percent = Math.round(useRiveFilesProgress() * 100);
   return (
-    <div className="onboarding-light absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background px-10">
+    <div className="onboarding-light fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 bg-background px-10">
       <div
         role="progressbar"
         aria-label="Loading"

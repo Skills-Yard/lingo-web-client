@@ -11,7 +11,7 @@ import { levelTwoHref } from "./levelTwo";
 const PLAYER_TOP = 514;
 
 /**
- * `/module?step=9` — "Meet the Command.": the robot, a voice clip to play
+ * `/module/commands?step=9` — "Meet the Command.": the robot, a voice clip to play
  * under it, and what instructions are known as.
  */
 export function MeetCommandScreen() {

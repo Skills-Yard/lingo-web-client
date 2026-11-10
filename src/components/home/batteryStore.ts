@@ -138,6 +138,9 @@ export const batteryLabel = ({ level, unlimited }: BatteryState) =>
 export const batteryCount = ({ level, unlimited }: BatteryState) =>
   unlimited ? "∞" : String(unitsLeft(level));
 
+/** Every unit is there already, so a charge has nothing to add. */
+export const batteryFull = (): boolean => unitsLeft(read().level) >= max;
+
 /** Nothing left to spend: the learner can't go on until it is recharged. */
 export const batteryEmpty = ({ level, unlimited }: BatteryState) => !unlimited && unitsLeft(level) === 0;
 

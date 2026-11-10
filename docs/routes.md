@@ -116,36 +116,36 @@ Built from the "4. DataTypes" spec (its screen number is in brackets; screens wi
 
 | Route | Screen |
 |---|---|
-| `/module/datatypes?step=1` | "Let's Organise Our School Event!" [1] |
-| `/module/datatypes?step=2` | "Meet Aarav!" [2] |
-| `/module/datatypes?step=3` | "Let's Find the Similar Ones!" (free grouping into three groups of three, not marked, recorded) [3] |
-| `/module/datatypes?step=4` | "Information can differ!" (Hex says his line, then each of the three groups is read by tapping it or by Continue, which goes through Group A, B, C one by one and then on to the next screen; nothing has to be tapped; one stage, no question after it) [4] |
-| `/module/datatypes?step=5` | "Let's plan a school event!" (three cards to look at: Students Registered?, Tickets Sold?, Prizes Available?, with three rows under them: "How many students registered?", "How many tickets were sold?", "How many prizes are available?"; they bounce in after Hex, Continue waits until Hex has finished his line), then stage 5.2 "How are they similar?" (a question: 30 Students, 43 Tickets, 12 Prices above, and four answers: "They represent quantities." (right), "...people's names.", "...colours.", "...yes/no answers.") [5] |
-| `/module/datatypes?step=6` | "Look at these numbers" (four cards to look at: 12 students, 25 tickets, 148.5 cm height, 36.7 kg weight; same behaviour as screen 5) [6] |
+| `/module/datatypes?step=1` | "Let's organise our event!" (PDF: "Let's Organise Our School Event!"): What information might the school need? [1] |
+| `/module/datatypes?step=2` | "Meet Aarav!" (four answers, as the PDF has them) [2] |
+| `/module/datatypes?step=3` | "Let's find similar ones!" (free grouping of the PDF's eight values, 12, 25, 40, Aarav, Mia, Kabir, 148.5, 165.2, into three groups; not marked, recorded) [3] |
+| `/module/datatypes?step=4` | "Not all info is the same!" (Hex says his line, then each of the three groups, A = 12, 25, 40, B = Aarav, Mia, Kabir, C = Yes, No, Yes, is read by tapping it or by Continue, which goes through A, B, C one by one; then a second stage asks "Are these groups the same kind of information?", answer: No) [4] |
+| `/module/datatypes?step=5` | "Numbers help us count!" (three cards to look at: Students, Tickets, Prizes, with the PDF's three questions under them: "How many students registered?", "How many tickets were sold?", "How many prizes are available?"; they bounce in after Hex, Continue waits until Hex has finished his line), then stage 5.2, a question under the same headline (30 Students, 45 Tickets, 12 Prizes above, and four answers: "Quantities" (right), "People's names", "Colours", "Yes/no answers") [5] |
+| `/module/datatypes?step=6` | "Look at these numbers!" in three stages: the four values to look at (12 students, 25 tickets, 148.5 cm height, 36.7 kg weight); tap the ones with a decimal part (148.5 and 36.7, "That's right!"); the two groups, "Whole numbers: 12, 25" and "Numbers with decimal parts: 148.5, 36.7", with the key line [6] |
 | `/module/datatypes?step=7` | "Meet Integers!" [7] |
 | `/module/datatypes?step=8` | "Need more precision?" (Float, then a question) [8] |
-| `/module/datatypes?step=9` | "Sort the numbers!" (Integer or Float) [9] |
-| `/module/datatypes?step=10` | "What about names?" [10] |
-| `/module/datatypes?step=11` | "Which ones are text?" [11] |
+| `/module/datatypes?step=9` | "Classify these numbers!" (Integer or Float) [9] |
+| `/module/datatypes?step=10` | "Can programs know names?" [10] |
+| `/module/datatypes?step=11` | "Text is more than names!" [11] |
 | `/module/datatypes?step=12` | "Meet Strings!" [12] |
-| `/module/datatypes?step=13` | "Same look, same type?" (12 and "12", two questions) [13] |
-| `/module/datatypes?step=14` | "Check the attendance!" [14] |
+| `/module/datatypes?step=13` | "Look alike, but same?" (three stages: 12 and "12", one headed for a calculator and one for a text display, to look at; then two questions) [13] |
+| `/module/datatypes?step=14` | "Let's check attendance!" [14] |
 | `/module/datatypes?step=15` | "Yes or no answers!" (skipped after a clean 14) [15] |
 | `/module/datatypes?step=16` | "Meet Boolean!" [16] |
-| `/module/datatypes?step=17` | "Four data types!" [17] |
-| `/module/datatypes?step=18` | "Look beyond looks!" (match to types, then a question) [18] |
-| `/module/datatypes?step=19` | "Data decides its use!" [19] |
+| `/module/datatypes?step=17` | "You found four data types!" [17] |
+| `/module/datatypes?step=18` | "Look beyond appearance!" (match to types, then a question) [18] |
+| `/module/datatypes?step=19` | "Data changes how we use it!" [19] |
 | `/module/datatypes?step=20` | "Organise Aarav's info!" (skipped after clean 9 and 18) [20] |
-| `/module/datatypes?step=21` | "Build a weather app!" [21] |
+| `/module/datatypes?step=21` | "What does a weather app need?" [21] |
 | `/module/datatypes?step=22` | "Plan before you build!" (ends on the weather card preview) [22] |
-| `/module/datatypes?step=23` | "Can You Find the Mistake?" (find it, then fix its type) [23] |
-| `/module/datatypes?step=24` | "Sort a game profile!" (sort, then a question) [24] |
-| `/module/datatypes?step=25` | Reflection: which type suits an age of 12? [25, question 1] |
-| `/module/datatypes?step=26` | Reflection: which type suits a height of 152.5 cm? [25, question 2] |
-| `/module/datatypes?step=27` | Reflection: why is the ID "0045" text? [25, question 3] |
-| `/module/datatypes?step=28` | Reflection: which type is True or False? [25, question 4] |
-| `/module/datatypes?step=29` | Reflection: types for a city, a temperature and a rain status [25, question 5] |
-| `/module/datatypes?step=30` | "You Have Unlocked Data Types!" (then the gem popup) [26] |
+| `/module/datatypes?step=23` | "Can you find the mistake?" (find it, then fix its type) [23] |
+| `/module/datatypes?step=24` | "Organise a game profile!" (sort, then a question) [24] |
+| `/module/datatypes?step=25` | "Test your data thinking!": which type suits an age of 12? [25, question 1] |
+| `/module/datatypes?step=26` | "Test your data thinking!": which type suits a height of 152.5 cm? [25, question 2] |
+| `/module/datatypes?step=27` | "Test your data thinking!": why is the ID "0045" text? [25, question 3] |
+| `/module/datatypes?step=28` | "Test your data thinking!": which type is True or False? [25, question 4] |
+| `/module/datatypes?step=29` | "Test your data thinking!": types for a city, a temperature and a rain status [25, question 5] |
+| `/module/datatypes?step=30` | "You unlocked Data Types!" (PDF: "You Have Unlocked Data Types!"; then the gem popup) [26] |
 | `/module/datatypes?step=complete` | "Lesson complete!" |
 
 ## Operators module
