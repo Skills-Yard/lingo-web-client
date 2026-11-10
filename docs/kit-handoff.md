@@ -1,0 +1,79 @@
+# Kit and data-driven screens: thread handoff
+
+The full context of the Claude Code thread that built the screen kit and the data-driven screens, so the work can be continued on another machine. (Written 2026-11-09 on branch `feat/data-driven-screens`.) Short version for Claude: see `CLAUDE.md`.
+
+## 1. The goal, in the owner's words
+
+> "create specific components of each component on the screen ... then we will just use components based on the data for each screen, and will just use them in runtime"
+
+Later, firmly: *"i want modularity in all screens, all screens should share same kit, no specific screen wise components"* and *"if they are same then they should use same component from the kit ... like correct answer popup and wrong answer popups, progress bar, header text, etc. all these are same design just changes are in data."*
+
+So: one kit; data names only kit components; screens are data; the runner plays them.
+
+## 2. What was built, in order
+
+1. **The kit** (`src/components/kit/`): ~55 components with plain-data props, a gallery at `/kit`, a demo screen at `/kit/screen`, a registry (`registry.ts`: `KIT`, `KitNode`, `renderKit`) and docs (`docs/kit.md`).
+2. **A data format and a runner.** Screen data are JSON (`src/data/modules/*.json`) with four special node kinds: `{ "$": "kit:name", props, children }` (a component), `{ "$ctx": "api.done" }` (a value the runner supplies), `{ "$ref": ... }` (a named function), `{ "$fn": ... }` (a function to a node), `{ "$by": [...], "cases": {...} }` (a decision table). `ScreenRunner` holds a screen's state (pick, checked, hint, stage, try) and draws it with kit components; `ModuleRunner` plays a module step by step; flow (skips, detours) is built from the data with `createAdaptiveFlow`.
+3. **An exporter** (`/kit/export`, `runtime/extract.ts`): reads the four modules' screens as written in code (`SCREENS`) and writes the JSON. Every picture/interaction/function is verified by drawing the data again with sample values and comparing with what the code draws (`Reader.read` / `check` / `tabulate`). Anything the data cannot hold is reported as an issue instead of written wrongly. Currently **0 issues for 142 screens**.
+4. **Four modules in data:** Data Types (30 screens), Operators (40), Conditions (38), Variable (34). Parity with the code screens was checked side by side (`/kit/compare`) on many screens; they match within a few px.
+5. **Shared design moved into the kit:** the repeated bits (big key sentence, name/value card, flex wrappers, red helper note, teal pill button) became kit components; 23 content files moved from the module folders to `src/components/kit/content/from-<module>/`; every component node in the data is now `kit:*`.
+6. **The agreed inventory and names** (below), with the kit renamed/merged to match: `LessonHeader`, `LessonFooter`, `LessonTitle`, `HexGuide`, `ResultSheet` (one component, right/wrong), `Celebration`, `SoundButton`, `AudioClip`, `Answers` (one component, four looks), `PickAll`, `WordChips`, `LessonSlider`, `LessonTextBox`, `OrderSteps`, `SortGroups`, `LessonArtboard`, `HexGame`, `LessonCards`.
+
+Small supporting changes outside the kit: `SKIPS`/`DETOURS` exported from each module's flow file; operators `headers.tsx` (named header components) and conditions `ALL_ON`/`ANY_ON`/`FIRST_OFF` (named rules) replaced inline lambdas; `lib/routes.ts` hrefs are play-aware.
+
+## 3. Decisions (popup answers, 2026-11-09)
+
+Full list with "replaces what" in `docs/kit-components.md`. In short:
+
+- Names: **LessonHeader** (close, progress bar, battery), **LessonFooter** (main button + hint), **ResultSheet** (one component for right and wrong), **HexGuide** (Hex + bubble), **LessonTitle**, **Celebration**, **RewardPopup**, **SoundButton**, **KeyText**.
+- **Answers** is one component; looks: rows, tiles, object cards, true/false. **PickAll**, **WordChips**, **LessonSlider**, **LessonTextBox** are separate.
+- Activities to keep: **RevealCards, SortGroups, BlockBuilder, OrderSteps, SwitchTable, PredictRows, MatchPairs, NumberLine** (all eight).
+- **LessonArtboard**: *the Rive file shown at the centre of a screen, as in Sequence and the earlier modules; the data names which artboard to show.* The ~20 pictures the newer modules draw in code (bottle, wallet, classroom, school scene, event scene, weather card, calculator app...) are **placeholders to be replaced by Rive artboards**; the owner will supply them.
+- **HexGame** is its own component (not part of LessonArtboard).
+- Kept: **AudioClip**, **VideoPlayer**, **LessonCards** ("for now; we'll change this later").
+- Dropped: the purple note card (`Callout`) and the tip card (`TipCard`) as kit components. Keep **KeyText**. (Variable still renders a long Hex line on a `TipCard` via `look.cardLine`; `TipCard` stays an internal part until those lines are shortened. Data Types screen 11's note is now a `KeyText`.)
+- **Order of work:** frame first across all modules, then activities, then the whole screens still in code, then Sequence and Command, then switch the live routes and delete the old runners.
+
+## 4. Current state
+
+| Area | State |
+|---|---|
+| Data Types, Operators, Conditions, Variable | In data (JSON), played by the runner, 100% `kit:*` component nodes |
+| Sequence (24 screens) | **Not converted.** 7 are quiz-shaped (bedroom artboard), 17 bespoke (put on socks/shoes, arrange, Hex board, predict, fix, plan, tea, recap) |
+| Command (Level 1 + 2, `/module/commands?step=1-16`) | **Not converted.** 4 robot quizzes (robot arm plays a move per answer), 12 bespoke (meet robot, give command, match, target, flip card, audio, teacher, examples, video, Move-Hex). Level 1 and Level 2 are one flow here. |
+| Kit frame components | Renamed/merged in `src/components/kit/`. **But** the live lesson shell (`LevelOneShell` -> `OnboardingHeader`, `ActionRow`, `FeedbackPanel`) is still what really draws the header/footer/sheet; the kit's `LessonHeader` is a separate composition. Unifying so there is exactly one header (the shell renders `LessonHeader`) is the next frame task. |
+| Legacy runners | `DataTypesScreen`, `OperatorsScreen`, `ConditionsScreen`, `VariableQuizScreen` and the `/module/*` routes still exist and are used by the real app. The kit duplicates a few legacy pieces (answer cards) until they are deleted. |
+| Kit coverage (`/kit/export`) | All 339 component nodes are `kit:*`, but **49 content components are used on one screen only** and 3 names are shared by different components (`true-false` in operators/conditions, `attendance-board` in datatypes/variable). 8 whole screens are still module-named (`datatypes.RecapScreen`, `operators.RecapScreen`, `conditions.NextScreen`, `variable.TrekScreen/ThirstyScreen/PlanAppScreen/RecapScreen`). |
+
+Mapping proposed for merging the one-offs (not yet done): RevealCards <- reveal-stage, flip-carousel-stage, scenes-stage, situations-stage, job/operator-turn-stage, group-tour-stage; SortGroups <- sort-stage, group-stage, classify-stage, pair-up-stage, choose-type-stage; BlockBuilder <- expression-stage; OrderSteps <- order-stage; SwitchTable <- combo-stage, toggle-stage; PredictRows <- predict-test-stage, table-stage; MatchPairs <- match-prices-stage; NumberLine <- line-scale, range-line, zero-line, number-line, ruler-scale, gate-card/header; LessonCards <- info-tiles, info-rows, value-cards, info-sheet, typed-cards, twelve-cards, result-cards, name-value-card; code-drawn scenes -> LessonArtboard when `.riv` files exist.
+
+## 5. Next steps (agreed order)
+
+1. **Frame, all modules:** make the shell use `LessonHeader` (and `LessonFooter`, `ResultSheet`, `HexGuide`, `LessonTitle` as the one implementation each) so no second copy exists; check header pixels before/after with `scripts/cdp.mjs`. Let the data pick the answers look directly (`quiz.answers: rows|tiles|objects|trueFalse`) instead of `layout` + module `look`.
+2. **Activities:** merge the 49 one-offs and 3 duplicates into the eight activities + `LessonCards` (track with Kit coverage).
+3. **Whole screens still in code:** rebuild the 8 from kit parts.
+4. **Scene support, then Sequence and Command** from kit components only: quiz stages get a `scene` (a `LessonArtboard` name + the trigger to play per answer, e.g. the robot's `moves`), bespoke screens become stages of kit components wired to the runner `api` (`{"$ctx":"api.done"}`).
+5. Switch `/module/*` to the data runner, delete the old runners and the transitional `content/from-*` folders.
+
+## 6. How to test and regenerate
+
+- `/kit/compare?module=<id>&step=N` — code vs data side by side; module tabs, previous/next, device sizes, **Unlimited battery** (press first), reload, theme toggle (press Reload both after toggling).
+- `/kit/play/<id>?step=N` — play from data. `/kit/export` — read screens from code, see issues and **Kit coverage**, write the JSON.
+- `npx tsc --noEmit -p .` and eslint on `src/components/kit` + `src/app/kit` must be clean.
+- `scripts/cdp.mjs`: `node scripts/cdp.mjs <url> <out-prefix> <waitMs> <width> <height> [steps.json]` drives headless Chrome (`CHROME=/path/to/chrome` if not at `/usr/bin/google-chrome`; Node 22). Steps are `{eval}`, `{wait}`, `{shot, full?, selector?}`. Each `eval` runs in the page's global scope: wrap helpers in an IIFE (re-declaring a global `const` in a later eval fails silently). Combine two shots side by side with PIL to compare.
+- Verified by hand so far: Data Types 1, 2, 3, 4, 5, 9, 11, 12; Operators 1, 4, 11, 12, 15, 21; Conditions 3, 17, 37; Variable 3, 4, 5, 7, 14, and flows (hint, wrong, retry, right, next, tour Continue takeover, operators block building). **Not exercised end to end:** the gem popup (`finish: "gem"`, Conditions 37), most interactions' drag behaviour, dark mode beyond a few screens.
+
+## 7. Gotchas learned
+
+- Battery lives in `sessionStorage` (`lingo.battery`).
+- The exporter reads each module's `SCREENS` in the browser (client components); there is no Node path. A function that decides from a value the data cannot hold is reported; move the decision into a named component/function that the registry can name.
+- `ctxProxy` needs `ownKeys` for `{...api}` spreads; Variable passes only `slip`, `done`, `finished` (`apiKeys` on the module source).
+- Answer rows in the legacy screens reserve a 34px spot at the row's end and show no tick/cross; the kit matches (`marks={false}`).
+- A `grid` question means tiles in Data Types/Operators/Conditions and object cards in Variable: that is `ModuleData.look.grid`.
+- The Rive "Flip card" shows "Why does order matter?" regardless of `cardType` in the current file (same in the real lesson screen).
+- The scratchpad directory of a Claude session may be wiped between calls; keep helper scripts in `scripts/`.
+
+## 8. Other notes
+
+- Local-only Claude memory (`~/.claude/projects/.../memory/`) is not portable; this file and `CLAUDE.md` replace it.
+- The owner's `next dev` is typically running on :3000 and hot-reloads these files.
