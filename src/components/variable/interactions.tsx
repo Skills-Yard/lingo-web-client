@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
@@ -9,8 +9,9 @@ import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
+import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
 import type { InteractionApi } from "./quiz";
-import { Bottle, BottleWithAmount, CARD, ShopItem } from "./visuals";
+import { Bottle, CARD } from "./visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
 export function Narration({ text, entry }: { text: string; entry: string }) {
@@ -155,26 +156,47 @@ const SLIDER_STEP = 50;
 const SLIDER_THUMB =
   "[&::-webkit-slider-thumb]:size-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#08A4AD] [&::-webkit-slider-thumb]:shadow-[0_2px_6px_rgba(0,0,0,0.3)] [&::-moz-range-thumb]:size-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[#08A4AD]";
 
-/** Screen 7: drag a slider to fill the bottle to its 500 ml mark; letting go there finishes it. */
+/** How long the stream stays on after the slider last moved up (ms). */
+const POUR_HOLD_MS = 600;
+
+/** Screen 7: drag a slider to fill the bottle (the bottle scene behind it) to 500 ml; letting go there finishes it. */
 export function FillSliderStage({ done, finished }: InteractionApi) {
   const [ml, setMl] = useState(0);
   const [tried, setTried] = useState(false);
+  const pourTimer = useRef(0);
+
+  // The bottle starts empty with its cap opening, and the stream stops when the screen is left.
+  useEffect(() => {
+    setSceneValues("bottle", { showLabel: true, pouring: false });
+    setBottleLevel(0);
+    openBottleCap();
+    return () => {
+      window.clearTimeout(pourTimer.current);
+      setSceneValues("bottle", { pouring: false });
+    };
+  }, []);
+
+  const slide = (next: number) => {
+    // The water follows the slider, and the stream is on while it goes up.
+    rampBottleLevel(next, 250);
+    if (next > ml) {
+      setSceneValues("bottle", { pouring: true });
+      window.clearTimeout(pourTimer.current);
+      pourTimer.current = window.setTimeout(() => setSceneValues("bottle", { pouring: false }), POUR_HOLD_MS);
+    }
+    setMl(next);
+  };
   const letGo = () => {
+    window.clearTimeout(pourTimer.current);
+    setSceneValues("bottle", { pouring: false });
     if (finished) return;
     if (ml === 500) done();
     else setTried(true);
   };
   return (
-    <div className="flex w-full flex-col items-center gap-3">
+    <div className="flex w-full flex-1 flex-col items-center gap-3">
       <Narration text="The bottle holds 1,000 ml. Fill it with 500 ml." entry="variable-fill" />
-      <div className="relative">
-        <BottleWithAmount ml={ml} height={190} label={`${ml.toLocaleString("en-IN")} ml`} />
-        {/* The target mark, level with 500 ml on the bottle (a share of its drawn height). */}
-        <span aria-hidden className="absolute -right-[72px] flex items-center gap-1 text-[12px] leading-4 font-bold text-[#FF8D42]" style={{ top: "calc(10px + 190px * 0.52)" }}>
-          <span className="h-0 w-5 border-t-2 border-dashed border-[#FF8D42]" /> 500 ml
-        </span>
-      </div>
-      <div className="pointer-events-auto flex w-[300px] flex-col items-center gap-1.5">
+      <div className="pointer-events-auto mt-auto flex w-[300px] flex-col items-center gap-1.5">
         <input
           type="range"
           min={0}
@@ -183,7 +205,7 @@ export function FillSliderStage({ done, finished }: InteractionApi) {
           value={ml}
           disabled={finished}
           aria-label="Amount of water"
-          onChange={(event) => setMl(Number(event.target.value))}
+          onChange={(event) => slide(Number(event.target.value))}
           onPointerUp={letGo}
           onKeyUp={letGo}
           className={`h-3 w-full cursor-pointer appearance-none rounded-full bg-[#D5DADF] accent-[#08A4AD] dark:bg-white/20 ${SLIDER_THUMB}`}
@@ -380,15 +402,22 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
   const [slip, setSlip] = useState(false);
   const full = slots.every((slot) => slot !== null);
   const right = full && slots.every((id, index) => id === MATCH_ITEMS[index].id);
+  // The shop counter behind (see `ShopBackdrop`) starts with the names shown and nothing lit.
+  useEffect(() => {
+    setSceneValues("shop", { showEraser: false, showNames: true, showTotal: false, highlight: 0 });
+  }, []);
   useEffect(() => {
     if (!full) return;
     if (right) {
+      setSceneValues("shop", { highlight: 0 });
+      fireSceneTrigger("shop", "correct");
       const timer = window.setTimeout(() => done(), 500);
       return () => window.clearTimeout(timer);
     }
     const timer = window.setTimeout(() => {
       slipped();
       setSlip(true);
+      setSceneValues("shop", { highlight: 0 });
       reset();
     }, 900);
     return () => window.clearTimeout(timer);
@@ -405,6 +434,8 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
           onPlace={(id, slot) => {
             setSlip(false);
             placeIn(id, slot);
+            // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
+            setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
           }}
           slotContent={(index) => (
             <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
@@ -419,17 +450,6 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
       <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
         {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
       </p>
-    </div>
-  );
-}
-
-/** The two items and their prices, as a row of cards (for the screens that talk about them). */
-export function Items({ eraser = false }: { eraser?: boolean }) {
-  return (
-    <div className="flex items-start justify-center gap-2.5">
-      <ShopItem emoji="📓" name="Notebook" price={50} />
-      <ShopItem emoji="🖊️" name="Pen" price={20} tint="bg-[#FFF9F0]" />
-      {eraser && <ShopItem emoji="🧽" name="Eraser" price={10} tint="bg-[#ECF7ED]" />}
     </div>
   );
 }

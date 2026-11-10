@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
 import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "./TrekScreen";
+import { TrekBackdrop } from "./scenes";
 import { variableHref } from "@/lib/routes";
 import { parseTitle } from "./quiz";
 import { STEP, variablePrevious, VARIABLE_STEPS } from "./variable";

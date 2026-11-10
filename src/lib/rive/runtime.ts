@@ -138,6 +138,41 @@ export const SEQUENCE_ROOM = {
 } as const;
 
 /**
+ * The Variable module's scenes: three more artboards of `sequence.riv` (390x306 each),
+ * each with its own background and a state machine that carries on by itself. Their
+ * data (the view model each artboard binds) is written by `variableHost`:
+ *
+ * - `trek` ("VAR_TrekScene", the backdrop of every screen without a scene of its own):
+ *   `thirsty`, `noWater` and `thinking` are booleans; `cheer` (a right answer) and
+ *   `drinkHint` (a wrong one) are triggers.
+ * - `bottle` ("VAR_Bottle", screens 5, 7, 8, 10, 11): `capOpen` opens the cap, `level` is the
+ *   water in ml (0-1000), `pouring` plays the stream, `showLabel` draws the amount.
+ * - `names` ("VAR_Names", screen 12): `showLabels` puts the names on the bottles and the
+ *   `shuffle` trigger mixes them up (4.5s).
+ * - `items` ("VAR_Items", screen 4): the water bottle, football, notebook and lunchbox;
+ *   `pick` 1-4 lights one up (0 none) and `correct` / `wrong` mark the picked one.
+ * - `shop` ("VAR_Shop", screens 18-21): a counter with a notebook (₹50), a pen (₹20) and,
+ *   with `showEraser`, an eraser (₹10). `highlight` 1-3 lights notebook / pen / eraser (0
+ *   none), `showNames` labels them, `showTotal` shows the Total board (`total`). The
+ *   triggers: `calc` adds the notebook and pen, `calcAll` all of them, `correct` / `wrong`
+ *   mark the items.
+ * - `wallet` ("VAR_Wallet", screens 22-25): a wallet whose "Pocket money" card (`showCard`)
+ *   shows `balance`; `receive` / `spend` fly notes in / out with a "+" / "−" `amount` tag,
+ *   and `showToy` brings the toy car with its `amount` tag.
+ */
+export const VARIABLE_SCENES = {
+  src: SEQUENCE_ROOM.src,
+  width: 390,
+  height: 306,
+  trek: { artboard: "VAR_TrekScene", stateMachine: "Trek_SM" },
+  bottle: { artboard: "VAR_Bottle", stateMachine: "Bottle_SM", capOpenSeconds: 0.7, pourSeconds: 1, capacity: 1000 },
+  names: { artboard: "VAR_Names", stateMachine: "Names_SM" },
+  items: { artboard: "VAR_Items", stateMachine: "Items_SM" },
+  shop: { artboard: "VAR_Shop", stateMachine: "Shop_SM" },
+  wallet: { artboard: "VAR_Wallet", stateMachine: "Wallet_SM" },
+} as const;
+
+/**
  * Hex — `hex.riv`, artboard "HEX". The one character rig for every onboarding
  * screen. It has no inputs or view model: each pose is its own state machine
  * (named `HEX-<Pose>`), and a screen plays exactly one of them at a time.

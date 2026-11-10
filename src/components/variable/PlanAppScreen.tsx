@@ -7,10 +7,11 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "./TrekScreen";
+import { TrekBackdrop } from "./scenes";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { fireSceneTrigger } from "@/lib/rive/variableHost";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import { parseTitle } from "./quiz";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
@@ -66,6 +67,8 @@ export function PlanAppScreen() {
     setChecked(true);
     noteAnswer(STEP.plan, 0, correct);
     if (!correct) noteStruggle(STEP.plan, "miss");
+    // The trail behind cheers a right plan.
+    if (correct) fireSceneTrigger("trek", "cheer");
     vibrateForAnswer(correct);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
   };

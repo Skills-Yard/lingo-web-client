@@ -36,6 +36,10 @@ type AnswerCardsProps = {
   rise?: number;
   /** Shorter rows (56px) for answers that are only words, so four fit above the button. */
   compact?: boolean;
+  /** The space between rows (px), where it should differ from the usual 6. */
+  gap?: number;
+  /** The text's size (px), where it should differ from the usual 14. */
+  fontSize?: number;
   /** The rows bounce in one by one instead of the whole list rising together. */
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
@@ -48,7 +52,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, gap = 6, fontSize, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
   return (
     <motion.div
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
@@ -58,8 +62,8 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
-      className="pointer-events-auto absolute z-[1] flex flex-col gap-1.5"
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W }}
+      className="pointer-events-auto absolute z-[1] flex flex-col"
+      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -96,7 +100,12 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 <span className="flex h-[47.31px] w-[46.68px] shrink-0 items-center justify-center">
                   <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
                 </span>
-                <span className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{choice.text}</span>
+                <span
+                  className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white"
+                  style={fontSize ? { fontSize, lineHeight: `${fontSize + 8}px` } : undefined}
+                >
+                  {choice.text}
+                </span>
               </span>
               {/* Figma "Ellipse 3" (34 x 34), at the row's end. */}
               {!compact && <span aria-hidden className="size-[34px] shrink-0 rounded-full" />}
