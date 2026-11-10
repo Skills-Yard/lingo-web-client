@@ -38,7 +38,8 @@ const TITLE_END = { one: 125, two: 163 } as const;
 /** How many letters of a question fit a line, for the room it takes. */
 const QUESTION_CHARS = 36;
 
-const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 50 ? 190 : line.length <= 90 ? 240 : 262 });
+/** Hex's bubble: 190 wide holds two lines of up to about 30 letters (a long word wraps early); a longer line takes the widest the row has room for (about 248), two lines of up to about 46. */
+const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 30 ? 190 : 248 });
 
 /** How the answers stand: rows, or tiles (two, three or four across and down). */
 const tileCount = (stage: QuizStage) => Math.min(4, Math.max(2, stage.options.length)) as 2 | 3 | 4;

@@ -2,11 +2,12 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
-import { Calculator, Check, FileText, Link2, Plus, TriangleAlert, X } from "lucide-react";
+import { ArrowDown, Calculator, Check, FileText, Link2, Plus, TriangleAlert, X } from "lucide-react";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
+import { TINTS } from "./look";
 import { P } from "./pictures";
 
 /** A card, in the style of the Sequence module's picture cards. */
@@ -92,15 +93,45 @@ export function StudentProfileCard() {
   );
 }
 
-export type InfoTile = { id: string; text: string; icon: string; tint: string };
+/** A count in a rounded coloured square (screen 5's number badges): `fill` is the square, `ink` the number. */
+export type Badge = { value: string; fill: string; ink: string };
+
+/** A tile's picture is a file (`icon`) or a number badge (`badge`). */
+export type InfoTile = { id: string; text: string; icon?: string; badge?: Badge; tint: string };
+
+/** The number badge, with its number set in the module's own font. */
+function NumberBadge({ badge }: { badge: Badge }) {
+  return (
+    <span className="flex size-10 items-center justify-center rounded-[12px] text-[20px] leading-none font-bold" style={{ backgroundColor: badge.fill, color: badge.ink }}>
+      {badge.value}
+    </span>
+  );
+}
 
 /** How each arrangement of cards stands: the same sizes as the answer tiles of the question screens (three across, or two by two). */
-const INFO_LAYOUT = {
+export const INFO_LAYOUT = {
   /** Screen 5: three small tiles in a row. */
   row: { box: "flex gap-3.5", card: "h-[110px] gap-2", picture: "h-[46px] w-full", text: "text-[16px] leading-5" },
   /** Screen 6: four big cards, two across and two down. */
   grid: { box: "grid grid-cols-2 gap-3.5", card: "h-[184px] gap-3.5", picture: "h-[83px] w-full", text: "text-[16px] leading-none" },
 } as const;
+
+/** What is inside an info tile: its picture (or number badge) and its words. */
+export function InfoTileBody({ tile, layout }: { tile: InfoTile; layout: keyof typeof INFO_LAYOUT }) {
+  const look = INFO_LAYOUT[layout];
+  return (
+    <>
+      {tile.badge ? (
+        <span className={`flex items-center justify-center ${look.picture}`}>
+          <NumberBadge badge={tile.badge} />
+        </span>
+      ) : (
+        tile.icon && <Pic src={tile.icon} className={look.picture} />
+      )}
+      <span className={`text-center font-semibold text-[#444444] dark:text-white ${look.text}`}>{tile.text}</span>
+    </>
+  );
+}
 
 /**
  * Screens 5 and 6: cards to look at, nothing to pick. Each bounces in, one by one,
@@ -113,8 +144,36 @@ export function InfoTiles({ tiles, layout, shown }: { tiles: readonly InfoTile[]
       {tiles.map((tile, index) => (
         <BounceIn key={tile.id} index={index} shown={shown} className="flex min-w-0 flex-1">
           <div className={`flex min-w-0 flex-1 flex-col items-center justify-center px-1.5 ${CARD} ${tile.tint} ${look.card}`}>
-            <Pic src={tile.icon} className={look.picture} />
-            <span className={`text-center font-semibold text-[#444444] dark:text-white ${look.text}`}>{tile.text}</span>
+            <InfoTileBody tile={tile} layout={layout} />
+          </div>
+        </BounceIn>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * Screen 6's follow-up: the four numbers sorted into whole numbers and numbers with
+ * decimal parts (the decimal part picked out). The groups bounce in once Hex has
+ * finished his line.
+ */
+export function DecimalGroups({ shown }: { shown: boolean }) {
+  const groups = [
+    { id: "whole", title: "Whole numbers", values: ["12", "25"], tint: TINTS.lavender },
+    { id: "decimal", title: "Numbers with decimal parts", values: ["148.5", "36.7"], tint: TINTS.cream },
+  ];
+  return (
+    <div className="grid grid-cols-2 gap-3.5" style={{ width: COLUMN_W }}>
+      {groups.map((group, index) => (
+        <BounceIn key={group.id} index={index} shown={shown} className="flex min-w-0 flex-1">
+          <div className={`flex min-w-0 flex-1 flex-col items-center gap-2.5 px-2 py-3 ${CARD} ${group.tint}`}>
+            {/* Both headings take two lines of room, so the numbers under them line up. */}
+            <span className="flex h-10 items-center text-center text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/60">{group.title}</span>
+            {group.values.map((value) => (
+              <span key={value} className="flex h-[52px] w-full items-center justify-center rounded-[8px] bg-white text-[22px] leading-none font-bold text-[#444444] dark:bg-[#15181E] dark:text-white">
+                <Decimal value={value} />
+              </span>
+            ))}
           </div>
         </BounceIn>
       ))}
@@ -250,6 +309,34 @@ export function TwelveCards({ mode = "numbers", replay = 0 }: { mode?: "numbers"
         <Joiner className="size-6" strokeWidth={3} />
       </span>
       {card(values[1], 1.3)}
+    </div>
+  );
+}
+
+/**
+ * Screen 13's opening: 12 and "12", one headed for a calculator (a number) and the
+ * other for a text display (text). The cards bounce in once Hex has finished his line.
+ */
+export function TwelveIntro({ shown }: { shown: boolean }) {
+  const cards = [
+    { id: "number", value: "12", caption: "A numerical value", destination: "Calculator", Icon: Calculator, tint: LAVENDER },
+    { id: "text", value: "“12”", caption: "Text with two characters", destination: "Text display", Icon: FileText, tint: CREAM },
+  ];
+  return (
+    <div className="flex items-start gap-5">
+      {cards.map((card, index) => (
+        <BounceIn key={card.id} index={index * 2} shown={shown} className="flex flex-col items-center gap-2">
+          <div className={`flex h-[96px] w-[150px] flex-col items-center justify-center gap-0.5 px-2 ${CARD} ${card.tint}`}>
+            <span className="text-[34px] leading-10 font-bold text-[#444444] dark:text-white">{card.value}</span>
+            <span className="text-center text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{card.caption}</span>
+          </div>
+          <ArrowDown aria-hidden className="size-5 text-[#8A94A0]" strokeWidth={3} />
+          <span className="flex size-12 items-center justify-center rounded-[10px] bg-[#E3F6F3] text-[#04908F] dark:bg-[#0F2B28]">
+            <card.Icon aria-hidden className="size-6" />
+          </span>
+          <span className="text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{card.destination}</span>
+        </BounceIn>
+      ))}
     </div>
   );
 }

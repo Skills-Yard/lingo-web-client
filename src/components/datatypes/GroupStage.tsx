@@ -27,17 +27,18 @@ const DROP_SLACK = { x: 7, top: 10, bottom: 48 } as const;
 const CARD_H = 52;
 /** How much of each card shows above the one in front of it (px). */
 const STEP = 36;
-/** The columns are at least as tall as a pile of this many cards (an even share of the nine), so the first few cards never move the screen about. */
+/** The columns are at least as tall as a pile of this many cards (an even share of the eight or nine), so the first few cards never move the screen about. */
 const MIN_PILE = 3;
 /** A card behind another shows only its top strip: its label moves up, from the middle of the card to the middle of that strip. */
 const LABEL_BEHIND_SHIFT = STEP / 2 - CARD_H / 2;
 const PILE_SPRING = { type: "spring", stiffness: 380, damping: 22 } as const;
 
 /**
- * Grouping with no right answer ("Let's find similar ones!"): nine cards stand in
- * a 3 x 3 grid above three columns, and the learner drags them (or taps a card,
- * then a column) into whichever groups they think fit. A group takes as many cards
- * as the learner likes (even all nine, or none). A group is a pile, not a queue: a
+ * Grouping with no right answer ("Let's find similar ones!"): the cards (the PDF's
+ * eight, so the grid's last place stays empty) stand in a 3-wide grid above three
+ * columns, and the learner drags them (or taps a card, then a column) into
+ * whichever groups they think fit. A group takes as many cards
+ * as the learner likes (even all of them, or none). A group is a pile, not a queue: a
  * card put in a column lands in front at its foot, and the ones already there slide
  * up behind it, each showing its label (in the order they came). The columns grow
  * with the biggest pile. A tap on a card takes it out again. It is done when every

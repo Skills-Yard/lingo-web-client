@@ -12,7 +12,8 @@ import { TYPES } from "./interactions";
 import { parseTitle } from "./screen";
 import { CARD, LAVENDER, Pic } from "./visuals";
 
-const TITLE = parseTitle("You Have Unlocked *Data Types!*");
+/** The headline (the PDF's, cut to one line), set at a size that keeps it on one. */
+const TITLE = { ...parseTitle("You unlocked *Data Types!*"), twoLines: false, size: 26 };
 
 const RECAP = [
   "Programs work with different kinds of information.",
@@ -20,8 +21,8 @@ const RECAP = [
   "Float represents decimal-number values.",
   "String represents text.",
   "Boolean represents True or False.",
-  "The meaning of information helps decide its data type.",
-  "Data types help programs use information correctly.",
+  "The meaning of information helps determine its appropriate data type.",
+  "Data types help programs interpret and use information correctly.",
 ];
 
 const FINAL_THOUGHT = "Before a program can work with information correctly, it needs to understand what kind of information it is.";

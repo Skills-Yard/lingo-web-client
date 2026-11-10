@@ -4,12 +4,18 @@ import type { ReactNode } from "react";
 import { GroupStage, type GroupItem } from "./GroupStage";
 import { GroupTourStage, type TourGroup } from "./GroupTourStage";
 import { INK, TINTS, tintAt } from "./look";
-import { ChooseTypeStage, MultiPickStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
+import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { Option, QuizStage, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, CARD, EventScene, InfoRows, InfoTiles, LAVENDER, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TypedCards, WeatherCard, type InfoRow, type InfoTile } from "./visuals";
+import { AttendanceBoard, CARD, DecimalGroups, EventScene, InfoRows, InfoTiles, LAVENDER, NamesList, NumberLine, RulerScale, SchoolScene, StudentProfileCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type InfoRow, type InfoTile } from "./visuals";
+
+/**
+ * The content of every screen follows `4. DataTypes.pdf`, cut to fit the design: a
+ * headline on one line, Hex's line on two lines at most, each answer on one line
+ * and the result panel's text on two lines at most.
+ */
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -39,9 +45,10 @@ function Note({ children }: { children: ReactNode }) {
   return <p className="w-[320px] rounded-[12px] bg-[#F1EEFF] px-3.5 py-2.5 text-center text-[14px] leading-5 font-medium text-[#444444] dark:bg-[#23204A] dark:text-white">{children}</p>;
 }
 
-const WHY_WRONG = "Look at what each value is. Is it a quantity, a decimal, text or a logical state?";
+/** What is said when a value is put in the wrong type (the PDF's "Incorrect" line of the sorting screens). */
+const WHY_WRONG = "Look at what each value represents. Is it a quantity, decimal measurement, text or logical state?";
 
-/** Screen 3's nine values, in the order of the design's grid (their tints only tell them apart). */
+/** Screen 3's eight values (the PDF's), in the order of the design's grid (their tints only tell them apart). */
 const SIMILAR_VALUES: readonly GroupItem[] = [
   { id: "12", label: "12", tint: "blue" },
   { id: "25", label: "25", tint: "lavender" },
@@ -49,33 +56,32 @@ const SIMILAR_VALUES: readonly GroupItem[] = [
   { id: "148.5", label: "148.5", tint: "cream" },
   { id: "kabir", label: "Kabir", tint: "blue" },
   { id: "mia", label: "Mia", tint: "cream" },
-  { id: "162", label: "162", tint: "lavender" },
-  { id: "40", label: "40", tint: "cream" },
-  { id: "156", label: "156", tint: "green" },
+  { id: "165.2", label: "165.2", tint: "lavender" },
+  { id: "40", label: "40", tint: "green" },
 ];
 
-/** Screen 4's three groups: what each holds, and what Hex says about it once it is tapped. */
+/** Screen 4's three groups (the PDF's): what each holds, and what Hex says about it once it is tapped. */
 const TOUR_GROUPS: readonly TourGroup[] = [
-  { id: "a", name: "Group A", tint: "lavender", ink: INK.violet, values: ["Aarav", "Kabir", "Mia"], caption: "These values identify people using their names.", hex: "left" },
-  { id: "b", name: "Group B", tint: "cream", ink: INK.orange, values: ["12", "25", "40"], caption: "These values represent quantities or amounts.", hex: "center" },
-  { id: "c", name: "Group C", tint: "blue", ink: INK.blue, values: ["Yes", "No", "Yes"], caption: "These values tell us whether something is true or false.", hex: "right" },
+  { id: "a", name: "Group A", tint: "lavender", ink: INK.violet, values: ["12", "25", "40"], caption: "These values represent quantities or amounts.", hex: "left" },
+  { id: "b", name: "Group B", tint: "cream", ink: INK.orange, values: ["Aarav", "Mia", "Kabir"], caption: "These values identify people using their names.", hex: "center" },
+  { id: "c", name: "Group C", tint: "blue", ink: INK.blue, values: ["Yes", "No", "Yes"], caption: "These values tell us true or false.", hex: "right" },
 ];
 
-/** Screen 5's three details of the event (the icons are screen 2's, the same files). */
+/** Screen 5's three things the event needs counted (the icons are screen 2's, the same files). */
 const PLAN_TILES: readonly InfoTile[] = [
-  { id: "students", text: "Students Registered?", icon: P.planStudents, tint: TINTS.green },
-  { id: "tickets", text: "Tickets Sold?", icon: P.planTickets, tint: TINTS.cream },
-  { id: "prizes", text: "Prizes Available?", icon: P.planPrizes, tint: TINTS.lavender },
+  { id: "students", text: "Students", icon: P.planStudents, tint: TINTS.green },
+  { id: "tickets", text: "Tickets", icon: P.planTickets, tint: TINTS.cream },
+  { id: "prizes", text: "Prizes", icon: P.planPrizes, tint: TINTS.lavender },
 ];
 
-/** Screen 5.2's three values, each under its number badge (the badges' colours go with the tints). */
+/** Screen 5.2's three counts (the PDF's: 30 students, 45 tickets, 12 prizes), each in its number badge. */
 const SIMILAR_TILES: readonly InfoTile[] = [
-  { id: "students", text: "Students", icon: P.similarStudents, tint: TINTS.green },
-  { id: "tickets", text: "Tickets", icon: P.similarTickets, tint: TINTS.cream },
-  { id: "prices", text: "Prices", icon: P.similarPrices, tint: TINTS.blue },
+  { id: "students", text: "Students", badge: { value: "30", fill: "#8EEBD8", ink: "#036C59" }, tint: TINTS.green },
+  { id: "tickets", text: "Tickets", badge: { value: "45", fill: "#C1A5F9", ink: "#472A92" }, tint: TINTS.cream },
+  { id: "prizes", text: "Prizes", badge: { value: "12", fill: "#7ACDFB", ink: "#035280" }, tint: TINTS.blue },
 ];
 
-/** The three questions under screen 5's tiles (the same icons as the tiles). */
+/** The three questions under screen 5's tiles (the PDF's, with the same icons as the tiles). */
 const PLAN_ROWS: readonly InfoRow[] = [
   { id: "students", text: "How many students registered?", icon: P.planStudents },
   { id: "tickets", text: "How many tickets were sold?", icon: P.planTickets },
@@ -83,7 +89,7 @@ const PLAN_ROWS: readonly InfoRow[] = [
 ];
 
 /** Screen 5.2's four answers (what the values share), with pictures that don't hint at the right one. The first is right. */
-const SIMILAR_OPTIONS = neutral(["They represent quantities.", "They represent people’s names.", "They represent colours.", "They represent yes/no answers."]);
+const SIMILAR_OPTIONS = neutral(["Quantities", "People’s names", "Colours", "Yes/no answers"]);
 
 /** Screen 6's four values, each with the picture of what it measures. */
 const VALUE_TILES: readonly InfoTile[] = [
@@ -98,45 +104,47 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
   // Screens 1 and 2 set the scene, then Hex finishes his line and the answers bounce in one by one.
   [STEP.eventInfo]: {
     step: STEP.eventInfo,
-    title: "What details are *needed?*",
+    title: "Let’s organise our *event!*",
+    titleSize: 28,
     backdrop: <EventScene />,
     stages: [
       quiz({
-        line: "Student details are needed before the school event begins.",
+        line: "What information might the school need?",
         layout: "grid",
         optionsAfterHex: true,
         options: [
-          { id: "name", text: "Name", icon: P.needName, tint: TINTS.blue },
-          { id: "age", text: "Age", icon: P.needAge, tint: TINTS.green },
-          { id: "height", text: "Height", icon: P.needHeight, tint: TINTS.cream },
-          { id: "all", text: "All", icon: P.needAll, tint: TINTS.lavender },
+          { id: "name", text: "Student’s name", icon: P.needName, tint: TINTS.blue },
+          { id: "age", text: "Student’s age", icon: P.needAge, tint: TINTS.green },
+          { id: "height", text: "Student’s height", icon: P.needHeight, tint: TINTS.cream },
+          { id: "all", text: "All of these", icon: P.needAll, tint: TINTS.lavender },
         ],
         correctId: "all",
         rightTitle: "Exactly!",
-        right: "The event needs every detail: a name, an age and a height.",
-        wrong: "Look at the registration form. How many details does it ask for?",
+        right: "The school needs different details of each student.",
+        wrong: "Think about what identifies a student.",
       }),
     ],
   },
 
   [STEP.meetAarav]: {
     step: STEP.meetAarav,
-    title: "What do you *notice?*",
+    title: "Meet *Aarav!*",
+    titleSize: 28,
     stages: [
       quiz({
-        line: "Notice the difference among his details!",
+        line: "Notice anything about these four values?",
         visual: () => <StudentProfileCard />,
         optionsAfterHex: true,
         options: [
-          { id: "same", text: "They all look same", icon: P.lookSame },
-          { id: "different", text: "They are different from each other", icon: P.lookDifferent },
+          { id: "same", text: "They all look the same", icon: P.lookSame },
+          { id: "different", text: "Different kinds of info", icon: P.lookDifferent },
           { id: "numbers", text: "They are all numbers", icon: P.allNumbers },
+          { id: "words", text: "They are all words", icon: P.string },
         ],
         correctId: "different",
         rightTitle: "Exactly!",
-        right: "A name, an age, a height and a permission: each detail is a different kind of information.",
-        wrong: "Compare the details one by one. Is a name like an age?",
-        hintText: "Read each detail on the profile. Do they all look alike?",
+        right: "Each value is a different kind of information.",
+        wrong: "Is a name the same kind as a height?",
       }),
     ],
   },
@@ -148,18 +156,18 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "Explore these values and find which ones belong together.",
+        line: "Some of these may belong together.",
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => <GroupStage api={api} items={SIMILAR_VALUES} onSorted={noteGrouping} />,
-        finishPanel: { title: "Interesting!", text: "You started grouping information by what it represents. Let's look at your groups." },
+        finishPanel: { title: "Interesting!", text: "You started grouping by what values represent." },
       },
     ],
   },
 
   [STEP.groups]: {
     step: STEP.groups,
-    title: "Information can *differ!*",
+    title: "Not all info is the *same!*",
     titleSize: 28,
     stages: [
       {
@@ -170,20 +178,28 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         ready: true,
         render: (api) => <GroupTourStage api={api} groups={TOUR_GROUPS} />,
       },
+      // The PDF's question after the groups: they are not the same kind of information.
+      quiz({
+        line: "Are these groups the same kind of information?",
+        options: neutral(["Yes, the same kind", "No, different kinds"]),
+        correctId: at(1),
+        rightTitle: "No!",
+        right: "They represent different kinds of information.",
+        wrong: "Compare what each group tells us.",
+      }),
     ],
   },
 
   // Screen 5 is only looked at: Hex says his line, the cards bounce in, and Continue waits for him. Then 5.2 is a question.
   [STEP.counting]: {
     step: STEP.counting,
-    title: "Let’s *plan* a school event!",
+    title: "Numbers help us *count!*",
     titleSize: 28,
     backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
-        line: "You need to know few details for this event",
-        bubbleWidth: 190,
+        line: "You are organising the event. You need to know:",
         alignTop: true,
         ready: true,
         render: ({ hexSpoken }) => (
@@ -193,17 +209,15 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
           </div>
         ),
       },
-      // 5.2: the same school yard, a new heading, and a question: the three values stand above the four answers.
+      // 5.2: the same school yard and headline, and a question: the three counts stand above the four answers.
       quiz({
-        title: "How are they *similar?*",
-        titleSize: 28,
-        line: "Look closely and find what these values share.",
+        line: "What do all these values have in common?",
         visual: ({ hexSpoken = true }) => <InfoTiles layout="row" shown={hexSpoken} tiles={SIMILAR_TILES} />,
         options: SIMILAR_OPTIONS,
         correctId: at(0),
         rightTitle: "Exactly!",
-        right: "These numbers represent quantities that we can count.",
-        wrong: "Look closely at the values. What do they all tell us?",
+        right: "These numbers are quantities we can count.",
+        wrong: "What do 30, 45 and 12 all tell us?",
         nextLabel: "Continue",
       }),
     ],
@@ -211,17 +225,32 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.wholeDecimal]: {
     step: STEP.wholeDecimal,
-    title: "Look at these *numbers*",
+    title: "Look at these *numbers!*",
     titleSize: 28,
     backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
         line: "Here are some values from different situations.",
-        bubbleWidth: 190,
         alignTop: true,
         ready: true,
         render: ({ hexSpoken }) => <InfoTiles layout="grid" shown={hexSpoken} tiles={VALUE_TILES} />,
+      },
+      // The PDF's question: tap the numbers with a part after the decimal point.
+      {
+        kind: "interaction",
+        line: "Which numbers have a decimal part?",
+        alignTop: true,
+        render: (api) => <PickTilesStage api={api} tiles={VALUE_TILES} correct={["height", "weight"]} hint="Look for a number with a decimal point." />,
+        finishPanel: { title: "That’s right!", text: "148.5 and 36.7 contain decimal parts." },
+      },
+      // The PDF's follow-up: the two kinds of number, and the key line.
+      {
+        kind: "interaction",
+        line: "Some numbers are whole, others have decimal parts.",
+        alignTop: true,
+        ready: true,
+        render: ({ hexSpoken }) => <DecimalGroups shown={hexSpoken} />,
       },
     ],
   },
@@ -234,7 +263,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "A whole number, with no decimal part, is an Integer.",
+        line: "A whole number is called an Integer.",
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
@@ -265,8 +294,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "148.5 cm or 152.8 cm: a whole number isn't enough detail.",
-        bubbleWidth: 190,
+        line: "One student is 148.5 cm, another 152.8 cm.",
         alignTop: true,
         render: (api) => (
           <RevealStage
@@ -284,26 +312,25 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         ),
       },
       quiz({
-        line: "A height of 148.5 cm. Which type suits it best?",
+        line: "Which is more suitable for a height of 148.5 cm?",
         layout: "grid",
         options: TYPE_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
         right: "A decimal measurement like 148.5 is a Float.",
-        wrong: "Does 148.5 have a decimal part? Which type holds decimals?",
+        wrong: "Does 148.5 have a decimal part?",
       }),
     ],
   },
 
   [STEP.classifyNumbers]: {
     step: STEP.classifyNumbers,
-    title: "Sort the *numbers!*",
+    title: "Classify these *numbers!*",
     titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Drag each number to Integer or Float.",
-        bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
           <SortStage
@@ -322,24 +349,24 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             buckets={TYPE_BUCKETS.filter((bucket) => bucket.id === "integer" || bucket.id === "float")}
           />
         ),
-        finishPanel: { title: "Excellent!", text: "You can now tell whole numbers from decimal numbers." },
+        finishPanel: { title: "Excellent!", text: "You can tell whole and decimal numbers apart." },
       },
     ],
   },
 
   [STEP.names]: {
     step: STEP.names,
-    title: "What about *names?*",
-    titleSize: 28,
+    title: "Can programs know *names?*",
+    titleSize: 24,
     stages: [
       quiz({
-        line: "What kind of information are these names?",
+        line: "What kind of information are these?",
         visual: ({ attempt }) => <NamesList replay={attempt} />,
         options: options([
-          ["Numerical information.", P.integer],
-          ["Textual information.", P.string],
-          ["Decimal information.", P.float],
-          ["Yes/no information.", P.boolean],
+          ["Numerical information", P.integer],
+          ["Textual information", P.string],
+          ["Decimal information", P.float],
+          ["Yes/no information", P.boolean],
         ]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -351,13 +378,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.textLooks]: {
     step: STEP.textLooks,
-    title: "Which ones are *text?*",
-    titleSize: 28,
+    title: "Text is more than *names!*",
+    titleSize: 27,
     stages: [
       {
         kind: "interaction",
-        line: "Which of these can be treated as text? Tap them.",
-        bubbleWidth: 190,
+        line: "Which of these can be treated as text?",
         alignTop: true,
         render: (api) => (
           <MultiPickStage
@@ -376,7 +402,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             footer={<Note>A value is not a number just because it has digits. A phone number or a student ID identifies someone: we don’t add or subtract it.</Note>}
           />
         ),
-        finishPanel: { title: "All of them!", text: "Text can contain letters, numbers, spaces and special characters." },
+        finishPanel: { title: "All of them!", text: "Text holds letters, numbers and symbols." },
       },
     ],
   },
@@ -389,7 +415,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "Information that is text is called a String.",
+        line: "Text information is called a String.",
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
@@ -414,11 +440,19 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.twelve]: {
     step: STEP.twelve,
-    title: "Same look, *same type?*",
+    title: "Look alike, but *same?*",
     titleSize: 28,
     stages: [
+      // The PDF's opening: 12 and "12", one headed for a calculator and the other for a text display.
+      {
+        kind: "interaction",
+        line: "Look at these two values: 12 and “12”.",
+        alignTop: true,
+        ready: true,
+        render: ({ hexSpoken }) => <TwelveIntro shown={hexSpoken} />,
+      },
       quiz({
-        line: "Add 12 and 3 as numbers. What do we get?",
+        line: "If we add 12 and 3 as numbers, what do we get?",
         visual: ({ attempt }) => <TwelveCards mode="numbers" replay={attempt} />,
         layout: "grid",
         options: tinted(neutral(["9", "15", "123", "36"])),
@@ -428,13 +462,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         wrong: "Add the two numbers: 12 and 3.",
       }),
       quiz({
-        line: "Now join the text “12” and the text “3”. What text do we get?",
+        line: "Join the text “12” and “3”. What text do we get?",
         visual: ({ attempt }) => <TwelveCards mode="text" replay={attempt} />,
         layout: "grid",
         options: tinted(neutral(["“15”", "“123”", "“312”", "“9”"])),
         correctId: at(1),
         rightTitle: "Exactly!",
-        right: "A value's look doesn't always tell its type. We must know what it means.",
+        right: "A value’s look doesn’t always show its type.",
         wrong: "Joining text puts the characters side by side.",
       }),
     ],
@@ -442,7 +476,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.attendance]: {
     step: STEP.attendance,
-    title: "Check the *attendance!*",
+    title: "Let’s check *attendance!*",
     titleSize: 28,
     backdrop: <SchoolScene />,
     stages: [
@@ -450,15 +484,15 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "What kind of information is the teacher collecting?",
         visual: () => <AttendanceBoard />,
         options: options([
-          ["A person's name.", P.string],
-          ["A numerical quantity.", P.integer],
-          ["A yes/no status.", P.boolean],
-          ["A decimal measurement.", P.float],
+          ["Person’s name", P.string],
+          ["Numerical quantity", P.integer],
+          ["Yes/no status", P.boolean],
+          ["Decimal measurement", P.float],
         ]),
         correctId: at(2),
         rightTitle: "Exactly!",
-        right: "This information tells us whether something is true or false.",
-        wrong: "How many different answers are possible: present or absent?",
+        right: "It tells us whether something is true or false.",
+        wrong: "Present or absent: how many answers?",
       }),
     ],
   },
@@ -471,14 +505,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       {
         kind: "interaction",
         line: "Tap each picture to switch its state.",
-        bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
           <ToggleStage
             api={api}
             items={[
               { id: "a", title: "Student attendance", on: "Present", off: "Absent", icon: P.programmer },
-              { id: "b", title: "Payment", on: "Complete", off: "Pending", icon: P.float },
+              { id: "b", title: "Payment confirmation", on: "Complete", off: "Pending", icon: P.float },
               { id: "c", title: "Login status", on: "Logged in", off: "Logged out", icon: P.computer },
               { id: "d", title: "Light switch", on: "On", off: "Off", icon: P.idea },
             ]}
@@ -486,12 +519,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         ),
       },
       quiz({
-        line: "What do all these situations have in common?",
+        line: "What do these situations have in common?",
         options: options([
-          ["Each has two possible states.", P.boolean],
-          ["Each is a number.", P.integer],
-          ["Each is a name.", P.string],
-          ["Each is a decimal value.", P.float],
+          ["Two possible states", P.boolean],
+          ["They are all numbers", P.integer],
+          ["They are all names", P.string],
+          ["They are all decimals", P.float],
         ]),
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -508,7 +541,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "Information with only two values is a Boolean: True or False.",
+        line: "Information with two values is a Boolean.",
         alignTop: true,
         render: (api) => (
           <RevealStage
@@ -541,13 +574,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.fourTypes]: {
     step: STEP.fourTypes,
-    title: "Four *data types!*",
-    titleSize: 28,
+    title: "You found four *data types!*",
+    titleSize: 26,
     backdrop: <SchoolScene />,
     stages: [
       {
         kind: "interaction",
-        line: "Tap each card to see what it holds.",
+        line: "Tap each card to see its examples.",
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
@@ -555,10 +588,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             api={api}
             columns={2}
             items={[
-              { id: "int", label: "Integer", sub: "int", icon: P.integer, caption: "Whole-number values: 10, 25, 100." },
-              { id: "float", label: "Float", sub: "float", icon: P.float, caption: "Decimal-number values: 10.5, 25.75, 100.2." },
-              { id: "str", label: "String", sub: "str", icon: P.string, caption: "Text information: Aarav, Delhi, Class 6A." },
-              { id: "bool", label: "Boolean", sub: "bool", icon: P.boolean, caption: "Logical values: True, False." },
+              { id: "int", label: "Integer", sub: "int", icon: P.integer, caption: "Whole-number values. Examples: 10, 25, 100." },
+              { id: "float", label: "Float", sub: "float", icon: P.float, caption: "Decimal-number values. Examples: 10.5, 25.75, 100.2." },
+              { id: "str", label: "String", sub: "str", icon: P.string, caption: "Text information. Examples: Aarav, Delhi, Class 6A." },
+              { id: "bool", label: "Boolean", sub: "bool", icon: P.boolean, caption: "Logical values. Examples: True, False." },
             ]}
             footer={<Key>A data type tells a program what kind of value it is working with.</Key>}
           />
@@ -569,8 +602,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.beyond]: {
     step: STEP.beyond,
-    title: "Look beyond *looks!*",
-    titleSize: 28,
+    title: "Look beyond *appearance!*",
+    titleSize: 26,
     stages: [
       {
         kind: "interaction",
@@ -593,25 +626,24 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         ),
       },
       quiz({
-        line: "Why is Student ID text, even though it has digits?",
-        options: neutral(["It identifies a student.", "It is a decimal number.", "It is a height.", "It is True or False."]),
+        line: "Why is Student ID text, though it has digits?",
+        options: neutral(["It identifies a student", "It is a decimal number", "It is a height", "It is True or False"]),
         correctId: at(0),
-        rightTitle: "Because it identifies a student.",
-        right: "It's not a quantity we calculate. It also keeps the leading zero.",
-        wrong: "Are we calculating a student's ID, or using it to identify them?",
+        rightTitle: "Exactly!",
+        right: "It isn’t a quantity. It keeps its leading zero.",
+        wrong: "Do we calculate with an ID, or identify someone?",
       }),
     ],
   },
 
   [STEP.shopping]: {
     step: STEP.shopping,
-    title: "Data decides *its use!*",
-    titleSize: 28,
+    title: "Data changes how we *use it!*",
+    titleSize: 24,
     stages: [
       {
         kind: "interaction",
-        line: "Which values can we add up? Drag each to its use.",
-        bubbleWidth: 190,
+        line: "Drag each value to what we do with it.",
         alignTop: true,
         render: (api) => (
           <SortStage
@@ -621,7 +653,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             items={[
               { id: "nb", label: "Notebook price", sub: "₹50", bucket: "total", hint: "A price is a number, so we can add it." },
               { id: "pen", label: "Pen price", sub: "₹20", bucket: "total", hint: "A price is a number, so we can add it." },
-              { id: "name", label: "Student name", sub: "Aarav", bucket: "display", hint: "A name is text. We show it, we don't add it." },
+              { id: "name", label: "Student name", sub: "Aarav", bucket: "display", hint: "A name is text. We show it, we don’t add it." },
             ]}
             buckets={[
               { id: "total", label: "Calculate a total", icon: P.integer },
@@ -629,20 +661,19 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             ]}
           />
         ),
-        finishPanel: { title: "Nice!", text: "Prices are numbers, so we add them. A name is text, so we show it." },
+        finishPanel: { title: "Nice!", text: "Prices are numbers: we add them. Names are text." },
       },
     ],
   },
 
   [STEP.profile]: {
     step: STEP.profile,
-    title: "Organise *Aarav's info!*",
+    title: "Organise Aarav’s *info!*",
     titleSize: 28,
     stages: [
       {
         kind: "interaction",
         line: "Drag each piece of information to its type.",
-        bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
           <SortStage
@@ -659,20 +690,19 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             buckets={TYPE_BUCKETS}
           />
         ),
-        finishPanel: { title: "Great!", text: "You organised the student's information by its data type." },
+        finishPanel: { title: "Great!", text: "You sorted the student’s info by data type." },
       },
     ],
   },
 
   [STEP.weather]: {
     step: STEP.weather,
-    title: "Build a *weather app!*",
-    titleSize: 28,
+    title: "What does a weather app *need?*",
+    titleSize: 22,
     stages: [
       {
         kind: "interaction",
         line: "What kind of data should each field use?",
-        bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
           <SortStage
@@ -688,7 +718,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             buckets={TYPE_BUCKETS}
           />
         ),
-        finishPanel: { title: "Excellent!", text: "Your app needs four different kinds of information." },
+        finishPanel: { title: "Excellent!", text: "Your app needs four kinds of information." },
       },
     ],
   },
@@ -718,35 +748,34 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             after={<WeatherCard />}
           />
         ),
-        finishPanel: { title: "Perfect!", text: "You know what kind of information each part needs." },
+        finishPanel: { title: "Perfect!", text: "You know what kind of info each part needs." },
       },
     ],
   },
 
   [STEP.debug]: {
     step: STEP.debug,
-    title: "Find the *mistake!*",
-    titleSize: 28,
+    title: "Can you find the *mistake?*",
+    titleSize: 26,
     stages: [
       quiz({
         line: "Which field has been classified incorrectly?",
         visual: () => <TypedCards />,
         layout: "grid",
         options: tinted([
-          { id: "name", text: "Name.", icon: P.statement },
-          { id: "age", text: "Age.", icon: P.question },
-          { id: "height", text: "Height.", icon: P.idea },
-          { id: "present", text: "Is_present.", icon: P.command },
+          { id: "name", text: "Name", icon: P.statement },
+          { id: "age", text: "Age", icon: P.question },
+          { id: "height", text: "Height", icon: P.idea },
+          { id: "present", text: "Is_present", icon: P.command },
         ]),
         correctId: "height",
         rightTitle: "Exactly!",
-        right: "148.5 has a decimal part, so it should be a Float, not an Integer.",
-        wrong: "Look carefully at the height value. Does it have a decimal part?",
+        right: "148.5 has a decimal part: it should be a Float.",
+        wrong: "Look at the height. Does it have a decimal part?",
       }),
       {
         kind: "interaction",
-        line: "Now replace the wrong type with the right one.",
-        bubbleWidth: 190,
+        line: "Now replace the incorrect type with Float.",
         alignTop: true,
         render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" />,
         finishPanel: { title: "Fixed!", text: "Height is now a Float." },
@@ -756,13 +785,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.game]: {
     step: STEP.game,
-    title: "Sort a *game profile!*",
+    title: "Organise a *game profile!*",
     titleSize: 28,
     stages: [
       {
         kind: "interaction",
-        line: "Sort the five values of the player's profile by type.",
-        bubbleWidth: 190,
+        line: "Sort the player’s five values by type.",
         alignTop: true,
         render: (api) => (
           <SortStage
@@ -782,22 +810,22 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       },
       quiz({
         line: "Why is Player ID a String rather than an Integer?",
-        options: neutral(["It identifies a player, not a quantity.", "It is a decimal number.", "It is a yes/no value.", "It is a very big number."]),
+        options: neutral(["It identifies a player", "It is a decimal number", "It is a yes/no value", "It is a very big number"]),
         correctId: at(0),
         rightTitle: "Excellent!",
-        right: "You applied data type thinking to a completely different app.",
-        wrong: "Is it a quantity we calculate, or a name for a player?",
+        right: "You used data type thinking in a new app.",
+        wrong: "Is it a quantity, or a name for a player?",
       }),
     ],
   },
 
   [STEP.reflectInt]: {
     step: STEP.reflectInt,
-    title: "Test your *thinking!*",
+    title: "Test your data *thinking!*",
     titleSize: 28,
     stages: [
       quiz({
-        line: "Which data type suits a student's age of 12?",
+        line: "Which data type suits a student’s age of 12?",
         layout: "grid",
         options: TYPE_OPTIONS,
         correctId: "integer",
@@ -810,7 +838,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectFloat]: {
     step: STEP.reflectFloat,
-    title: "Test your *thinking!*",
+    title: "Test your data *thinking!*",
     titleSize: 28,
     stages: [
       quiz({
@@ -827,23 +855,23 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectId]: {
     step: STEP.reflectId,
-    title: "Test your *thinking!*",
+    title: "Test your data *thinking!*",
     titleSize: 28,
     stages: [
       quiz({
-        line: "The student ID is “0045”. Why should it be treated as text?",
-        options: neutral(["It identifies a student.", "It represents a height.", "It is a decimal number.", "It represents True or False."]),
+        line: "Student ID “0045”: why is it treated as text?",
+        options: neutral(["It identifies a student", "It represents a height", "It is a decimal number", "It means True or False"]),
         correctId: at(0),
         rightTitle: "Correct!",
-        right: "It identifies a student. It isn't a quantity we calculate.",
-        wrong: "Are we calculating with the ID, or using it to identify someone?",
+        right: "It identifies a student, not a quantity.",
+        wrong: "Do we calculate with the ID, or identify someone?",
       }),
     ],
   },
 
   [STEP.reflectBool]: {
     step: STEP.reflectBool,
-    title: "Test your *thinking!*",
+    title: "Test your data *thinking!*",
     titleSize: 28,
     stages: [
       quiz({
@@ -860,12 +888,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectApp]: {
     step: STEP.reflectApp,
-    title: "Test your *thinking!*",
+    title: "Test your data *thinking!*",
     titleSize: 28,
     stages: [
       {
         kind: "interaction",
-        line: "An app needs a city name, a temperature and a rain status. Which types fit?",
+        line: "Which data type fits each field?",
+        bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
           <SortStage
@@ -880,7 +909,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             buckets={TYPE_BUCKETS}
           />
         ),
-        finishPanel: { title: "Correct!", text: "City name: String. Temperature: Float. Rain status: Boolean." },
+        finishPanel: { title: "Correct!", text: "City: String. Temperature: Float. Rain: Boolean." },
       },
     ],
   },

@@ -4,12 +4,14 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, AnimatePresence, motion, useMotionValue } from "framer-motion";
 import { Check } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
+import { BounceIn } from "@/components/level-two/BounceIn";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForTap } from "@/lib/haptics";
 import { CARD_BODY, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
-import { CARD, LAVENDER, Pic } from "./visuals";
+import { CARD, INFO_LAYOUT, InfoTileBody, LAVENDER, Pic, type InfoTile } from "./visuals";
 
 /** The four data types, as the places things are sorted into and the chips they are chosen from. */
 export const TYPES = [
@@ -355,6 +357,76 @@ export function MultiPickStage({
       </div>
       <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{note}</p>
       {finished && footer}
+    </div>
+  );
+}
+
+/**
+ * Tap the big picture cards (screen 6's four numbers, standing as in its first part)
+ * that fit: each right one turns green and stays; a wrong one shakes red with a
+ * hint (and counts as a slip). It is done when every right card has been tapped.
+ * The cards bounce in once Hex has finished his line.
+ */
+export function PickTilesStage({
+  api,
+  tiles,
+  correct,
+  hint,
+}: {
+  api: InteractionApi;
+  tiles: readonly InfoTile[];
+  /** The ids of the cards that fit. */
+  correct: readonly string[];
+  hint: string;
+}) {
+  const { slip, done, finished, hexSpoken } = api;
+  const [got, setGot] = useState<readonly string[]>([]);
+  const [wrongId, setWrongId] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    if (got.length < correct.length) return;
+    const timer = window.setTimeout(() => done(), 600);
+    return () => window.clearTimeout(timer);
+  }, [got, correct, done]);
+
+  const tap = (id: string) => {
+    if (finished || got.includes(id)) return;
+    playClickSound();
+    vibrateForTap();
+    if (correct.includes(id)) {
+      setNote("");
+      setGot((now) => [...now, id]);
+      return;
+    }
+    slip();
+    setNote(hint);
+    setWrongId(id);
+    window.setTimeout(() => setWrongId(null), WRONG_MS);
+  };
+
+  const look = INFO_LAYOUT.grid;
+  return (
+    <div className="pointer-events-auto flex flex-col items-center gap-2">
+      <div className={look.box} style={{ width: COLUMN_W }}>
+        {tiles.map((tile, index) => (
+          <BounceIn key={tile.id} index={index} shown={hexSpoken} className="flex min-w-0 flex-1">
+            <motion.button
+              type="button"
+              onClick={() => tap(tile.id)}
+              animate={{ x: wrongId === tile.id ? SHAKE : 0, scale: got.includes(tile.id) ? [1, 1.05, 1] : 1 }}
+              transition={{ duration: 0.35 }}
+              whileTap={{ scale: 0.97 }}
+              className={`${CARD_BODY} min-w-0 flex-1 cursor-pointer flex-col px-1.5 ${look.card} ${
+                got.includes(tile.id) ? LOOKS.correct.card : wrongId === tile.id ? LOOKS.wrong.card : `${tile.tint} ${EDGE_IDLE}`
+              }`}
+            >
+              <InfoTileBody tile={tile} layout="grid" />
+            </motion.button>
+          </BounceIn>
+        ))}
+      </div>
+      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{note}</p>
     </div>
   );
 }
