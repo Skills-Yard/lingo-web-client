@@ -8,7 +8,11 @@ import {
   setModulesDone,
   subscribeModulesDone,
 } from "@/lib/levelProgress";
-import { PlatformConfig, PLATFORM_CONFIGS, WORLD_STAGE_HEIGHT } from "./level/levelConfig";
+import {
+  PlatformConfig,
+  PLATFORM_CONFIGS,
+  WORLD_STAGE_HEIGHT,
+} from "./level/levelConfig";
 import { LevelHeader } from "./level/LevelHeader";
 import { CategoryBar } from "./level/CategoryBar";
 import { LockedToast } from "./level/LockedToast";
@@ -67,9 +71,10 @@ export function HomeScreen({
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
   const [lockedNotice, setLockedNotice] = useState<string | null>(null);
 
+  const stageHeight = WORLD_STAGE_HEIGHT;
+
   const activeLevelNumber = Math.min(modulesCompleted + 1, PLATFORM_CONFIGS.length);
 
-  // Smoothly scroll active level into view when it changes
   useEffect(() => {
     const scroller = scrollerRef.current;
     if (!scroller) return;
@@ -79,8 +84,6 @@ export function HomeScreen({
     scroller.scrollTo({ top: targetY, behavior: "smooth" });
   }, [activeLevelNumber, stageScale]);
 
-  // Puts the path at `count` finished modules. The progress flag stops the
-  // stale-progress reset above from sending a pick of Module 3 back to the start.
   const goToModulesDone = (count: number) => {
     const next = Math.max(0, Math.min(count, PLATFORM_CONFIGS.length));
     window.localStorage.setItem("lingo:progress-started", "1");
@@ -106,8 +109,8 @@ export function HomeScreen({
   };
 
   return (
-    <main className="relative flex h-dvh w-full justify-center overflow-hidden bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFFFF_20%,#DDDAFD_100%)] font-sans select-none dark:bg-[#070b14]">
-      <div className="relative flex h-full w-full max-w-[430px] flex-col bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFFFF_20%,#DDDAFD_100%)] dark:bg-gradient-to-b dark:from-[#0B132B] dark:via-[#0F172A] dark:to-[#090D16]">
+    <main className="relative flex h-dvh w-full justify-center overflow-hidden bg-[linear-gradient(180deg,#FFFFFF_0%,#FFFFFF_20%,#DDDAFD_100%)] font-sans select-none dark:bg-gradient-to-b dark:from-[#0B132B] dark:via-[#0F172A] dark:to-[#090D16]">
+      <div className="relative flex h-full w-full max-w-[430px] flex-col">
         {/* Top Header */}
         <LevelHeader
           onBack={() => router.push("/home")}
@@ -116,7 +119,6 @@ export function HomeScreen({
             setModulesDone(next);
             setModulesCompleted(next);
           }}
-          onDoubleClickStats={() => toggleTheme()}
           modulesDone={modulesCompleted}
           onCompleteModule={() => goToModulesDone(modulesCompleted + 1)}
           onUndoModule={() => goToModulesDone(modulesCompleted - 1)}
@@ -142,14 +144,14 @@ export function HomeScreen({
             className="relative mx-auto"
             style={{
               width: `${Math.round(390 * stageScale)}px`,
-              height: `${Math.round(WORLD_STAGE_HEIGHT * stageScale)}px`,
+              height: `${Math.round(stageHeight * stageScale)}px`,
             }}
           >
             <div
               className="absolute top-0 left-0 origin-top-left"
               style={{
                 width: "390px",
-                height: `${WORLD_STAGE_HEIGHT}px`,
+                height: `${stageHeight}px`,
                 transform: `scale(${stageScale})`,
               }}
             >

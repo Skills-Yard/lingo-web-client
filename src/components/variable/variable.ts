@@ -1,4 +1,5 @@
 import { variableHref } from "@/lib/routes";
+import type { SceneName } from "@/lib/rive/variableHost";
 import { cleanRight, DETOURED_KEY, DETOUR_KEY, struggled } from "./variableScore";
 
 /** The Variable module's screens, for its progress bar. */
@@ -47,6 +48,33 @@ export const STEP = {
   reflectBoth: 33,
   recap: 34,
 } as const;
+
+/** The screens where the bottle is filled and drunk from: its scene is their backdrop. */
+const BOTTLE_STEPS: readonly number[] = [STEP.bottle, STEP.fill, STEP.addWater, STEP.drink, STEP.empty];
+
+/** The screens about the notebook, pen and eraser (the shop counter), and about the pocket money (the wallet). */
+const SHOP_STEPS: readonly number[] = [STEP.shopping, STEP.prices, STEP.total, STEP.eraser];
+const WALLET_STEPS: readonly number[] = [STEP.pocket, STEP.received, STEP.spent, STEP.follow];
+
+/**
+ * The scene behind a screen: the four objects on "Pick the Right Object", the bottle, the
+ * labelled bottles on "Which bottle is mine?", the shop, the wallet, and the trail on every other.
+ */
+export const sceneOf = (step: number): SceneName =>
+  step === STEP.carry
+    ? "items"
+    : step === STEP.labels
+      ? "names"
+      : BOTTLE_STEPS.includes(step)
+        ? "bottle"
+        : SHOP_STEPS.includes(step)
+          ? "shop"
+          : WALLET_STEPS.includes(step)
+            ? "wallet"
+            : "trek";
+
+/** The screens where a wrong answer makes the trail point at the drink. */
+export const DRINK_HINT_STEPS: readonly number[] = [STEP.thirsty, STEP.noWater];
 
 /**
  * Repeats a learner who has the idea can do without: a screen is skipped when

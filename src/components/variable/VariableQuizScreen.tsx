@@ -10,7 +10,7 @@ import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "@/components/kit/content/from-variable/screenVisuals";
+import { BottleBackdrop, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, WalletBackdrop } from "./scenes";
 import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
@@ -18,16 +18,24 @@ import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { fireSceneTrigger, type SceneName } from "@/lib/rive/variableHost";
 import { TipCard } from "@/components/sequence/HexScreen";
-import { parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "@/components/kit/content/from-variable/quiz";
-import { variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
+import { parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
+import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
-/** The answers' rows and the object cards: their heights and gaps (px). */
-const ROW_H = 56;
-const ROW_GAP = 6;
-const OBJECT_H = 100;
-const OBJECT_GAP = 10;
+/**
+ * The answers' rows and the cards across: their heights and gaps (px). The rows are
+ * the list the other modules use (76px, see `AnswerCards`) and the cards are as tall as
+ * their tiles (110px, see `TileCards`), with a little more room between them.
+ */
+const ROW_H = 76;
+const ROW_GAP = 10;
+const OBJECT_H = 110;
+const OBJECT_GAP = 14;
+/** Their text (px): the other modules' is 14 in the rows and 16 on the cards; these are two larger. */
+const ROW_FONT = 16;
+const CARD_FONT = 18;
 /** The least a picture is shrunk to fit its room. */
 const MIN_FIT = 0.6;
 /** The result panel makes room by raising the answers this far (px). */
@@ -40,13 +48,31 @@ const BUBBLE_MAX_CHARS = 120;
 /** The title block (px): where it ends, one line or two. */
 const TITLE_END = { one: 125, two: 163 } as const;
 
+/** The scene behind a screen (see `sceneOf`); the trail says whether the river is gone. */
+const backdropFor = (scene: SceneName, step: number) => {
+  switch (scene) {
+    case "items":
+      return <ItemsBackdrop />;
+    case "bottle":
+      return <BottleBackdrop />;
+    case "names":
+      return <NamesBackdrop />;
+    case "shop":
+      return <ShopBackdrop />;
+    case "wallet":
+      return <WalletBackdrop />;
+    default:
+      return <TrekBackdrop noWater={step === STEP.noWater} />;
+  }
+};
+
 /** Hex's line is two lines at most: a short one fits the narrow bubble. */
 const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 44 ? 190 : 240 });
 
 /** Answers this short (and without a picture) stand as cards side by side; longer ones are rows. */
 const SHORT_ANSWER_CHARS = 12;
 /** The height of a card with words only. */
-const TEXT_CARD_H = 64;
+const TEXT_CARD_H = 84;
 
 /** Whether the answers are cards across (objects to tap, or three short answers) rather than rows. */
 const acrossCards = (stage: QuizStage) =>
@@ -123,8 +149,10 @@ function ObjectGrid({
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className="pointer-events-none absolute inset-0 -z-10 rounded-[12px] bg-[#FFE7D1] dark:bg-[#33220F]"
               />
-              {pictures && <span className="flex h-[46px] items-center justify-center text-[38px] leading-none">{option.node ?? option.emoji}</span>}
-              <span className="text-center text-[14px] leading-5 font-semibold text-[#444444] dark:text-white">{option.text}</span>
+              {pictures && <span className="flex h-[54px] items-center justify-center text-[44px] leading-none">{option.node ?? option.emoji}</span>}
+              <span className="text-center leading-6 font-semibold text-[#444444] dark:text-white" style={{ fontSize: CARD_FONT }}>
+                {option.text}
+              </span>
               <AnimatePresence>
                 {spilling &&
                   [0, 1, 2, 3, 4].map((drop) => (
@@ -193,6 +221,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   }, []);
   const fit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
 
+  const sceneKind = sceneOf(screen.step);
   const stage = screen.stages[stageIndex];
   const lastStage = stageIndex === screen.stages.length - 1;
   const quiz = stage.kind === "quiz" ? stage : null;
@@ -208,9 +237,19 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
     if (!clean) noteStruggle(screen.step, "miss");
+    // The trail behind cheers a right answer, and points at the drink after a wrong one on the first screens.
+    if (sceneKind === "trek") {
+      if (clean) fireSceneTrigger("trek", "cheer");
+      else if (DRINK_HINT_STEPS.includes(screen.step)) fireSceneTrigger("trek", "drinkHint");
+    }
     vibrateForAnswer(clean);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: clean }));
   };
+
+  // The labelled bottles are shuffled when the screen opens, and again for each new try.
+  useEffect(() => {
+    if (sceneKind === "names") fireSceneTrigger("names", "shuffle");
+  }, [sceneKind, attempt]);
 
   // What an interaction calls: always the same functions, acting on the screen as it is now.
   const slipNow = useRef<() => void>(() => {});
@@ -291,7 +330,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       step={screen.step}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(screen.step))}
-      scene={<TrekBackdrop />}
+      scene={backdropFor(sceneKind, screen.step)}
       answer={answer}
       ctaDisabled={quiz ? selectedId === null : !finished}
       ctaLabel={
@@ -398,7 +437,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               hinted={hintShown}
               withHint={hasHint}
               rise={RISE}
-              compact
+              gap={ROW_GAP}
+              fontSize={ROW_FONT}
               onPick={setSelectedId}
             />
           )}

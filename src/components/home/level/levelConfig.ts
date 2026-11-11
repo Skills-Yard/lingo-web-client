@@ -15,6 +15,7 @@ export interface PlatformConfig {
   title: string;
   xp: number;
   placement: "top" | "bottom";
+  side: TileSide;
 }
 
 type TileSide = "left" | "right";
@@ -55,13 +56,15 @@ const LEVELS: { title: string; placement?: PlatformConfig["placement"] }[] = [
 
 export const PLATFORM_CONFIGS: PlatformConfig[] = LEVELS.map(({ title, placement }, index) => {
   const id = index + 1;
+  const side = sideOfLevel(id);
   return {
     id,
-    baseX: COLUMN_X[sideOfLevel(id)],
+    baseX: COLUMN_X[side],
     baseY: Math.round(tileCenterY(id) + TILE_HALF_HEIGHT),
     title,
     xp: 50,
     placement: placement ?? "bottom",
+    side,
   };
 });
 
@@ -73,41 +76,97 @@ export interface RoadConfig {
   top: number;
   left: number;
   mirrored: boolean;
+  width?: number;
 }
 
-/** `Group 287.svg` is 179px wide and runs from one tile to the next; it is mirrored when it heads right. */
-const ROAD_LEFT = { unmirrored: 95, mirrored: 122.5 } as const;
-const ROAD_OFFSET_BELOW_TILE_CENTER = 6.5;
+export interface RoadSettings {
+  /** Width in px of each 3D road segment. */
+  width: number;
+  /** Vertical offset in px relative to tile center. */
+  offsetY: number;
+  /** Horizontal position (left in px) for left-to-right roads (mirrored). */
+  mirroredLeft: number;
+  /** Horizontal position (left in px) for right-to-left roads (unmirrored). */
+  unmirroredLeft: number;
+  /** Gate road vertical position (top in px). */
+  gateTop: number;
+  /** Gate road horizontal position (left in px). */
+  gateLeft: number;
+  /** Separate offset X for all right-side cubes. */
+  rightCubeDx: number;
+  /** Separate offset Y for all right-side cubes. */
+  rightCubeDy: number;
+  /** Separate offset X for all left-side cubes. */
+  leftCubeDx: number;
+  /** Separate offset Y for all left-side cubes. */
+  leftCubeDy: number;
+}
 
-const roadLeavingLevel = (id: number): RoadConfig => {
+/**
+ * Global Road Settings:
+ * Easily tune road positions here. These settings apply consistently
+ * across all levels (Level 1 to Level 20).
+ */
+export const ROAD_SETTINGS: RoadSettings = {
+  width: 184,
+  offsetY: 2,
+  mirroredLeft: 98,
+  unmirroredLeft: 98,
+  gateTop: 133,
+  gateLeft: 101,
+  rightCubeDx: 18,
+  rightCubeDy: 0,
+  leftCubeDx: -6,
+  leftCubeDy: -1,
+};
+
+export const roadLeavingLevel = (id: number, settings: RoadSettings = ROAD_SETTINGS): RoadConfig => {
   const mirrored = sideOfLevel(id) === "left";
   return {
     id,
-    top: Math.round(tileCenterY(id) + ROAD_OFFSET_BELOW_TILE_CENTER),
-    left: mirrored ? ROAD_LEFT.mirrored : ROAD_LEFT.unmirrored,
+    top: Math.round(tileCenterY(id) + settings.offsetY),
+    left: mirrored ? settings.mirroredLeft : settings.unmirroredLeft,
     mirrored,
+    width: settings.width,
   };
 };
 
-/** The gate is not a level: its road just runs from the gate down to level 1. */
-const GATE_ROAD: RoadConfig = { id: 0, top: 136, left: 94, mirrored: false };
-
-/** Roads 0 (gate to level 1) to 19 (level 19 to level 20). */
-export const ROAD_CONFIGS: RoadConfig[] = [
-  GATE_ROAD,
-  ...LEVELS.slice(0, -1).map((_, index) => roadLeavingLevel(index + 1)),
-];
-
-const finalRoad = roadLeavingLevel(LEVELS.length);
-
-export const FINAL_ROAD = {
-  top: finalRoad.top,
-  left: finalRoad.left,
-  mirrored: finalRoad.mirrored,
-  height: FINAL_ROAD_VISIBLE_HEIGHT,
+export const computeRoadConfigs = (settings: RoadSettings = ROAD_SETTINGS): RoadConfig[] => {
+  const gateRoad: RoadConfig = {
+    id: 0,
+    top: settings.gateTop,
+    left: settings.gateLeft,
+    mirrored: false,
+    width: settings.width,
+  };
+  return [
+    gateRoad,
+    ...LEVELS.slice(0, -1).map((_, index) => roadLeavingLevel(index + 1, settings)),
+  ];
 };
 
-export const WORLD_STAGE_HEIGHT = FINAL_ROAD.top + FINAL_ROAD_VISIBLE_HEIGHT + 4;
+export const computeFinalRoad = (settings: RoadSettings = ROAD_SETTINGS) => {
+  const final = roadLeavingLevel(LEVELS.length, settings);
+  return {
+    top: final.top,
+    left: final.left,
+    mirrored: final.mirrored,
+    height: FINAL_ROAD_VISIBLE_HEIGHT,
+    width: settings.width,
+  };
+};
+
+export const computeStageHeight = (settings: RoadSettings = ROAD_SETTINGS) => {
+  const final = computeFinalRoad(settings);
+  return final.top + final.height + 4;
+};
+
+/** Default roads 0 (gate to level 1) to 19 (level 19 to level 20). */
+export const ROAD_CONFIGS: RoadConfig[] = computeRoadConfigs(ROAD_SETTINGS);
+
+export const FINAL_ROAD = computeFinalRoad(ROAD_SETTINGS);
+
+export const WORLD_STAGE_HEIGHT = computeStageHeight(ROAD_SETTINGS);
 
 type RoofIcon = {
   src: string;
@@ -132,26 +191,25 @@ const roofIcon = (file: string, alt: string, width: number, height: number, dx: 
 export const GATE = {
   src: `${ART}/Gate/Entry_Gate.svg`,
   alt: "Entry gate",
-  left: 215,
+  left: 226,
   top: 48,
   width: 124,
   height: 125,
-  roof: roofIcon("Icon_Roof_Gate.svg", "Start", 78, 49, 22.5, 12),
 };
 
 /** The roof icon each level's building carries; levels without one have no building yet. */
 const ROOF_ICONS: { level: number; roof: RoofIcon }[] = [
   { level: 1, roof: roofIcon("Icon_Roof_Command.svg", "Commands", 77, 47, 6.4, 4.5) },
-  { level: 2, roof: roofIcon("Icon_Roof_Sequence.svg", "Sequence", 74, 47, 24.8, 8.5) },
+  { level: 2, roof: roofIcon("Icon_Roof_Sequence.svg", "Sequence", 70, 47, 21, 6) },
   { level: 3, roof: roofIcon("Icon_Roof_Variables.svg", "Variables", 77, 47, 6.4, 4.5) },
-  { level: 4, roof: roofIcon("Icon_Roof_DataTypes.svg", "Data Types", 74, 47, 24.9, 8.6) },
+  { level: 4, roof: roofIcon("Icon_Roof_DataTypes.svg", "Data Types", 71, 47, 20, 5) },
   { level: 5, roof: roofIcon("Icon_Roof_Operators.svg", "Operators", 61, 38, 14.1, 8) },
 ];
 
 /** The two building shells; `dx`/`dy` place one beside its tile, from the tile's centre. */
 const BUILDING_ART: Record<TileSide, { src: string; width: number; height: number; dx: number; dy: number }> = {
-  left: { src: `${ART}/Building/Left_Building.png`, width: 91, height: 88, dx: -97.4, dy: -98 },
-  right: { src: `${ART}/Building/Right_Building.svg`, width: 105, height: 99, dx: -3.3, dy: -108.6 },
+  left: { src: `${ART}/Building/Left_Building.png`, width: 91, height: 88, dx: -120, dy: -90 },
+  right: { src: `${ART}/Building/Right_Building.svg`, width: 105, height: 99, dx: 10, dy: -100 },
 };
 
 export interface BuildingConfig {
@@ -201,12 +259,11 @@ const PLANT = `${ART}/image 447.svg`;
 
 /** One run of scenery down the side of the road, as in Figma; it repeats down the path. */
 const DECORATION_RUN: Omit<DecorationConfig, "id">[] = [
-  { top: 35, left: 26, width: 126, opacity: 0.85, src: CUBE, rotate: -1.94 },
-  { top: 115, left: 312, width: 164, opacity: 0.75, src: CHIP },
-  { top: 391, left: 320, width: 109, opacity: 0.85, src: PLANT, mirrored: true },
-  { top: 552, left: -37, width: 168, opacity: 0.8, src: RAIL },
-  { top: 630, left: 315, width: 131, opacity: 0.85, src: CUBE },
-  { top: 815, left: -55, width: 164, opacity: 0.75, src: CHIP },
+  { top: 35, left: -70, width: 126, opacity: 0.80, src: CUBE, rotate: -1.94 },
+  { top: 115, right: -82, width: 164, opacity: 0.60, src: CHIP },
+  { top: 391, left: 320, width: 109, opacity: 0.60, src: PLANT, mirrored: true },
+  { top: 502, left: -37, width: 168, opacity: 0.50, src: RAIL },
+  { top: 630, left: 315, width: 131, opacity: 0.80, src: CUBE },
 ];
 const DECORATION_RUN_LENGTH = 960;
 
@@ -225,39 +282,56 @@ export const DECORATION_CONFIGS: DecorationConfig[] = [
 export function getPlatformDisplay(
   status: "completed" | "active" | "locked",
   baseX: number,
-  baseY: number
+  baseY: number,
+  side: TileSide = "left",
+  settings: RoadSettings = ROAD_SETTINGS,
+  themeOrIsDark: "light" | "dark" | boolean = false
 ) {
+  const isDark = typeof themeOrIsDark === "boolean" ? themeOrIsDark : themeOrIsDark === "dark";
+  const dx = side === "right" ? (settings.rightCubeDx ?? 0) : (settings.leftCubeDx ?? 0);
+  const dy = side === "right" ? (settings.rightCubeDy ?? 0) : (settings.leftCubeDy ?? 0);
+
+  const common = {
+    left: Math.round(baseX - 46 + dx),
+    top: Math.round(baseY - 64 + dy),
+    width: 72,
+    height: 60,
+  };
+
   if (status === "active") {
     return {
-      src: `${ART}/Group 316.svg`,
+      src: `${ART}/progress-cube.svg`,
       alt: "Active Level",
-      left: Math.round(baseX - 49.5),
-      top: Math.round(baseY - 109.5),
-      width: 99,
-      height: 113,
-      className: "relative z-10 h-full w-full object-contain",
+      ...common,
+      className: "relative z-10 h-full w-full object-contain drop-shadow-[0_6px_14px_rgba(242,193,78,0.4)]",
       zIndex: 22,
     };
   }
   if (status === "completed") {
     return {
-      src: `${ART}/Group 315.svg`,
+      src: `${ART}/check-cube.svg`,
       alt: "Completed Level",
-      left: Math.round(baseX - 42),
-      top: Math.round(baseY - 71),
-      width: 81,
-      height: 74,
-      className: "h-full w-full object-contain drop-shadow-[0_6px_14px_rgba(5,156,128,0.3)]",
+      ...common,
+      className: "h-full w-full object-contain drop-shadow-[0_6px_14px_rgba(40,174,139,0.35)]",
+      zIndex: 20,
+    };
+  }
+  if (isDark) {
+    return {
+      src: `${ART}/dark-theme-locked-cube.svg`,
+      alt: "Locked Level",
+      left: Math.round(baseX - 65 + dx),
+      top: Math.round(baseY - 71 + dy),
+      width: 110,
+      height: 63,
+      className: "h-full w-full object-contain drop-shadow-[0_4px_16px_rgba(79,216,232,0.15)]",
       zIndex: 20,
     };
   }
   return {
-    src: `${ART}/Group 318.svg`,
+    src: `${ART}/locked-cube.svg`,
     alt: "Locked Level",
-    left: Math.round(baseX - 41.5),
-    top: Math.round(baseY - 71),
-    width: 83,
-    height: 74,
+    ...common,
     className: "h-full w-full object-contain drop-shadow-[0_6px_14px_rgba(119,119,198,0.22)]",
     zIndex: 20,
   };

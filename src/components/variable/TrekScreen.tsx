@@ -3,10 +3,9 @@
 import { useRouter } from "next/navigation";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "@/components/kit/content/from-variable/screenVisuals";
+import { TrekBackdrop } from "./scenes";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 
-/** Where Hex's line stands (Figma `top`). */
 const BUBBLE_TOP = 178;
 
 /** "Let's go trekking today!": Hex tells what is about to happen over a picture of the trail. */

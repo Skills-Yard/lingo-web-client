@@ -16,14 +16,16 @@ import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { TrekBackdrop } from "@/components/kit/content/from-variable/screenVisuals";
+import { fireSceneTrigger } from "@/lib/rive/variableHost";
+import { TrekBackdrop } from "./scenes";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
 const BUBBLE_TOP = 178;
-const CARD_H = 108;
-const CARD_GAP = 10;
-const ICON = { width: 53, height: 49 };
+/** The cards are as tall as the other modules' tiles or taller (110px, see `TileCards`), 14px apart. */
+const CARD_H = 120;
+const CARD_GAP = 14;
+const ICON = { width: 58, height: 54 };
 /** The result panel makes room by raising the cards this far (px). */
 const RISE = 150;
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives, not after it. */
@@ -56,6 +58,8 @@ export function ThirstyScreen() {
     setChecked(true);
     noteAnswer(STEP.thirsty, 0, right);
     if (!right) noteStruggle(STEP.thirsty, "miss");
+    // The trail behind cheers a right answer and points at the drink after a wrong one.
+    fireSceneTrigger("trek", right ? "cheer" : "drinkHint");
     vibrateForAnswer(right);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: right }));
   };
@@ -85,7 +89,7 @@ export function ThirstyScreen() {
       step={STEP.thirsty}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(STEP.thirsty))}
-      scene={<TrekBackdrop />}
+      scene={<TrekBackdrop thirsty />}
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={!checked ? "Continue" : right ? "Next" : "Try again"}
@@ -141,7 +145,7 @@ export function ThirstyScreen() {
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={choice.icon} alt="" {...ICON} draggable={false} className="select-none" />
-              <span className="text-[15px] leading-5 font-semibold text-[#444444] dark:text-white">{choice.text}</span>
+              <span className="text-[18px] leading-6 font-semibold text-[#444444] dark:text-white">{choice.text}</span>
             </motion.button>
           );
         })}

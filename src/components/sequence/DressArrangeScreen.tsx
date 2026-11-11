@@ -21,7 +21,8 @@ const BUBBLE: BubbleSize = { width: 190 };
 const BUBBLE_TOP = 150;
 const subscribeNever = () => () => {};
 
-const art = (file: string) => <SlotImage file={`${IMAGES}/${file}`} className="max-h-full max-w-full object-contain" />;
+/** The pictures are wide, so they are held to a height that leaves room for the card's label (the cards are as wide as the column). */
+const art = (file: string) => <SlotImage file={`${IMAGES}/${file}`} className="h-19 w-auto max-w-full object-contain" />;
 /** Shoes are listed first, so the right first card isn't the first one in the tray. */
 const CARDS: readonly ArrangeCardDef[] = [
   { id: "shoes", kind: "shoes", text: "Put Shoes", art: art("put-on-shoes.webp"), tint: "bg-[#FFF9F0] dark:bg-[#0F1F26]" },
@@ -30,7 +31,8 @@ const CARDS: readonly ArrangeCardDef[] = [
 /** The right order, first slot first. */
 const ANSWER = ["socks", "shoes"];
 
-const GEO = arrangeGeometry({ mode: "rows", card: { width: 110, height: 116 }, count: 2, gap: 16, lane: 14, slotsOnTop: true, solidSlots: true });
+/** Two cards across the whole content column: 2 x 166 + 8 = 340, as wide as the three-card boards (3 x 108 + 2 x 8). */
+const GEO = arrangeGeometry({ mode: "rows", card: { width: 166, height: 116 }, count: 2, gap: 8, lane: 14, slotsOnTop: true, solidSlots: true });
 /** On a right order the board rises this far (px) as it fades. */
 const BOARD_RISE = 110;
 /** On a miss he tries it first: the result comes once the room has played that. */

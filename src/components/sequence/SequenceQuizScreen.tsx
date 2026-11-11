@@ -65,8 +65,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const room = "room" in quiz.scene ? quiz.scene.room : null;
   // The room stays put and the cards clear, so the boy is in view while he moves.
   const clearedRoom = !!room && (!!room.fixed || (!!room.clearOnRight && correct));
-  // Like the first lesson: a right answer that plays a robot move clears the cards so it can be seen.
-  const fadeCards = checked && (clearedRoom || (correct && !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length));
+  // Like the first lesson: an answer that plays a robot move (the right one, or the robot's wrong try) clears the cards so the move can be seen, not played behind them.
+  const fadeCards = checked && (clearedRoom || !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length);
 
   useEffect(() => {
     if (!checked || !correct) return;
@@ -108,7 +108,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const wrongNote = !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
   const line = quiz.line;
   const withHint = !quiz.noHint;
-  const listRise = quiz.pictures || quiz.closeUp ? LIST_RISE : LIST_RISE_OPEN;
+  // A picture above the answers (or one shown after a wrong try) needs them to rise less, so they don't reach it.
+  const listRise = quiz.pictures || quiz.closeUp || quiz.wrongPicture ? LIST_RISE : LIST_RISE_OPEN;
 
   return (
     <LevelTwoShell
