@@ -9,6 +9,7 @@ import {
   AudioDemo,
   BatteryArtboardDemo,
   CelebrateDemo,
+  FlipCardDemo,
   GameScreenDemo,
   GemDemo,
   HeaderDemo,
@@ -56,7 +57,8 @@ export function KitGallery() {
         <ThemeToggle />
       </header>
 
-      <nav className="sticky top-0 z-20 -mx-5 flex flex-wrap gap-2 bg-white/90 px-5 py-3 backdrop-blur dark:bg-background/90">
+      {/* Above the demos' own overlays (the reward popup is `z-[300]`), which would otherwise draw over it as the page scrolls. */}
+      <nav className="sticky top-0 z-[400] -mx-5 flex flex-wrap gap-2 bg-white/90 px-5 py-3 backdrop-blur dark:bg-background/90">
         {SECTIONS.map(([id, label]) => (
           <a key={id} href={`#${id}`} className="rounded-full border border-black/10 px-3 py-1 text-[13px] font-semibold hover:bg-black/5 dark:border-white/15 dark:hover:bg-white/10">
             {label}
@@ -153,6 +155,9 @@ export function KitGallery() {
         </Demo>
         <Demo name={`LessonArtboard name="battery"`}>
           <BatteryArtboardDemo />
+        </Demo>
+        <Demo name={`LessonArtboard name="flip-card" tapTrigger`} note="Tap the card (or Flip) to turn it over. It shows the Sequence card, “Why does order matter?”.">
+          <FlipCardDemo />
         </Demo>
         <Demo name="LessonArtboard src=… (any file)">
           <GemDemo />

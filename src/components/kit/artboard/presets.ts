@@ -47,14 +47,14 @@ export const ARTBOARDS = {
     bleed: BUTTON.bleed,
     properties: { [BUTTON.labelProperty]: "Continue", [MODULE_BUTTON.stateProperty]: MODULE_BUTTON.state.enabled },
   },
-  /** The card that turns over when tapped; it shows its "what a command is" face as it is, and the "Why does order matter?" face with `bind` on and `cardType: 1`. Trigger: `Trigger 1` flips it. */
+  /** The card that turns over when tapped (`tapTrigger="Trigger 1"`, or fire `Trigger 1`). It needs its view model bound, or it does not turn. Property: `cardType` (0 the "what a command is" card, 1 the Sequence module's "Why does order matter?"; the current file draws the second whichever is set). */
   "flip-card": {
     src: FLIP_CARD.src,
     artboard: FLIP_CARD.artboard,
     stateMachine: FLIP_CARD.stateMachine,
     size: { width: FLIP_CARD.width, height: FLIP_CARD.height },
     bleed: FLIP_CARD.bleed,
-    bind: false,
+    properties: { [FLIP_CARD.cardTypeProperty]: FLIP_CARD.cardType.order },
   },
   /** The robot arm and its table. Property: `targetLabel` (text on the target box). Triggers: `pickUp`, `putDown`, `placeInTarget`, `reset`, `showHint`, `hideHint`, `wrongClaw`, `wrongCube`. */
   "robot-arm": {

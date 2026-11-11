@@ -508,6 +508,19 @@ export function BatteryArtboardDemo() {
   );
 }
 
+export function FlipCardDemo() {
+  const { trigger, fire } = useTrigger();
+  return (
+    <div className="flex flex-col items-start gap-2">
+      {/* `tapTrigger` makes the artboard itself the button: a tap fires the flip trigger. */}
+      <LessonArtboard name="flip-card" tapTrigger="Trigger 1" trigger={trigger} className="w-[207px]" label="A card that turns over" />
+      <Tools>
+        <Tool label="Flip" onClick={() => fire("Trigger 1")} />
+      </Tools>
+    </div>
+  );
+}
+
 export function GemDemo() {
   const handle = useRef<ArtboardHandle>(null);
   return (
