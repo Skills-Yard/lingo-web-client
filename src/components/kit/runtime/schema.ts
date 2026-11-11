@@ -88,12 +88,31 @@ export type InteractionStageData = StageTitle & {
 
 export type StageData = QuizStageData | InteractionStageData;
 
+/**
+ * The Rive scene behind a screen (a `LessonArtboard` with `scene`), and what plays on it as the learner answers.
+ * A scene is kept for the whole module, so each screen says everything it needs of it.
+ */
+export type SceneData = {
+  /** Which scene: `trek`, `bottle`, `names`, `items`, `shop`, `wallet` (see the kit's `scenes.tsx`). */
+  name: string;
+  /** Values set on it while this screen shows (`{ "noWater": true }`). */
+  values?: Record<string, boolean | number | string>;
+  /** A trigger fired each time something is got right (a right answer, an interaction done). */
+  onRight?: string;
+  /** A trigger fired each time something is got wrong (a wrong answer, a slip). */
+  onWrong?: string;
+  /** A trigger fired when the screen opens, and again for each new try. */
+  onTry?: string;
+};
+
 /** A screen made of stages (one progress step). */
 export type StagedScreenData = {
   step: number;
   /** The title; `*words*` in teal. */
   title: string;
   titleSize?: number;
+  /** The Rive scene behind the screen, in place of the module's `scene` picture and the pale default. */
+  scene?: SceneData;
   /** A picture behind the whole screen. */
   backdrop?: Json;
   /** `gem`: going on from the last stage opens the gem popup first. */
@@ -120,6 +139,8 @@ export type FlowData = {
 export type ModuleLook = {
   /** `centred`: Hex and the words as one centred group (default); `side`: the words at the left, Hex at the right. */
   sheet?: "centred" | "side";
+  /** Rows of answers: the space between them (px, default 6) and the size of their words (px, default 14). */
+  rows?: { gap?: number; fontSize?: number };
   /** A line longer than this many letters goes on a card in place of Hex's bubble. */
   cardLine?: number;
   /** Hex's bubble width by the length of his line: the first entry whose `upTo` is not less than it. */

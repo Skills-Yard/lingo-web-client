@@ -47,7 +47,7 @@ Each of these is its own component: **PickAll** (tick all that apply), **WordChi
 
 | Component | What it is |
 |---|---|
-| **LessonArtboard** | A Rive file shown at the centre of a screen, as in Sequence and the earlier modules. **The data names which artboard to show** (the robot arm, the bedroom, the flip card, ...) and what plays on it |
+| **LessonArtboard** | A Rive file shown at the centre of a screen, as in Sequence and the earlier modules. **The data names which artboard to show** (the robot arm, the bedroom, the flip card, ...) and what plays on it. With its `scene` setting it is the Rive scene **behind** a screen (Variable's trail, bottle, shop, wallet...): a screen's data names the scene, its values and the trigger for a right answer, a wrong one and a new try |
 | **HexGame** | Its own component: guide Hex over the tiles to the battery, by moves or by writing a program |
 | **AudioClip** | A voice clip to play |
 | **VideoPlayer** | A video with a play button |

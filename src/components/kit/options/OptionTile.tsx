@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { feelTap } from "../feel";
-import { HINT_FILL, STATE_CARD, tintClass } from "../tokens";
+import { RAISED } from "@/components/ui/raised";
+import { HINT_FILL, STATE_CARD, STATE_EDGE, tintClass } from "../tokens";
 import type { OptionData, OptionState } from "../types";
 
 /** How big a tile is: the card's height, the picture's box, the text's size. */
@@ -49,7 +50,7 @@ export function OptionTile({ option, size, state = "idle", hinted = false, media
         animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
         whileTap={{ scale: 0.96 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className={`pointer-events-auto relative isolate flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[8px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] enabled:cursor-pointer ${look.card} ${look.gap} ${
+        className={`pointer-events-auto relative isolate flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[8px] border-4 px-1.5 ${RAISED} ${STATE_EDGE[state]} enabled:cursor-pointer ${look.card} ${look.gap} ${
           state === "idle" ? `border-white dark:border-transparent ${tintClass(option.tint)}` : STATE_CARD[state]
         }`}
       >

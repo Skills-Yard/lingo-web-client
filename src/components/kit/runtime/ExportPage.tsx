@@ -10,16 +10,28 @@ import { RecapScreen as DatatypesRecap } from "@/components/datatypes/RecapScree
 import { STEP as OPERATORS_STEP, OPERATORS_LEVEL, OPERATORS_STEPS, DETOURS as OPERATORS_DETOURS, SKIPS as OPERATORS_SKIPS } from "@/components/operators/operators";
 import { SCREENS as OPERATORS_SCREENS } from "@/components/operators/operatorsScreens";
 import { RecapScreen as OperatorsRecap } from "@/components/operators/RecapScreen";
-import { STEP as VARIABLE_STEP, DETOURS as VARIABLE_DETOURS, SKIPS as VARIABLE_SKIPS, VARIABLE_LEVEL, VARIABLE_STEPS } from "@/components/variable/variable";
+import { DRINK_HINT_STEPS, sceneOf, STEP as VARIABLE_STEP, DETOURS as VARIABLE_DETOURS, SKIPS as VARIABLE_SKIPS, VARIABLE_LEVEL, VARIABLE_STEPS } from "@/components/variable/variable";
 import { PlanAppScreen } from "@/components/variable/PlanAppScreen";
 import { RecapScreen as VariableRecap } from "@/components/variable/RecapScreen";
 import { ThirstyScreen } from "@/components/variable/ThirstyScreen";
 import { TrekScreen } from "@/components/variable/TrekScreen";
-import { TrekBackdrop } from "@/components/kit/content/from-variable/screenVisuals";
 import { SCREENS as VARIABLE_SCREENS } from "@/components/variable/variableScreens";
 import { readModule, type Issue, type ModuleSource } from "./extract";
 import { duplicateNames } from "./registry";
-import type { ModuleData } from "./schema";
+import type { ModuleData, SceneData } from "./schema";
+
+/**
+ * The scene behind a Variable screen and what plays on it, as the module's own runner (`VariableQuizScreen`) decides
+ * them in code: the trail says all three of its values on every screen (the file keeps what it was last given),
+ * cheers a right answer and, on the first screens, points at the drink after a wrong one; the labelled bottles
+ * always show their names and are shuffled for each try.
+ */
+const variableScene = (step: number): SceneData => {
+  const name = sceneOf(step);
+  if (name === "trek") return { name, values: { thirsty: false, noWater: step === VARIABLE_STEP.noWater, thinking: false }, onRight: "cheer", ...(DRINK_HINT_STEPS.includes(step) ? { onWrong: "drinkHint" } : {}) };
+  if (name === "names") return { name, values: { showLabels: true }, onTry: "shuffle" };
+  return { name };
+};
 
 const SOURCES: ModuleSource[] = [
   {
@@ -62,12 +74,14 @@ const SOURCES: ModuleSource[] = [
     skips: VARIABLE_SKIPS,
     detours: VARIABLE_DETOURS,
     components: { [VARIABLE_STEP.trek]: TrekScreen, [VARIABLE_STEP.thirsty]: ThirstyScreen, [VARIABLE_STEP.plan]: PlanAppScreen, [VARIABLE_STEP.recap]: VariableRecap },
-    // Its screens stand on the mountain trail, answer in small rows or object cards, and show the result sheet with the words at the left.
-    scene: <TrekBackdrop />,
+    // Each screen stands on a Rive scene (the trail, the bottle, the shop...), answers in rows or object cards, and shows the result sheet with the words at the left.
+    sceneFor: variableScene,
     apiKeys: ["slip", "done", "finished"],
-    quizLook: { compactRows: true, grid: "objects", shortCards: 12 },
+    quizLook: { grid: "objects", shortCards: 12 },
     look: {
       sheet: "side",
+      // The usual rows, a little further apart and with larger words.
+      rows: { gap: 10, fontSize: 16 },
       cardLine: 120,
       bubble: [{ upTo: 44, width: 190 }, { width: 240 }],
       tileLift: 150,

@@ -34,6 +34,11 @@ export type AnswersProps = {
   hintId?: string | null;
   /** `rows`: shorter rows (56px) for answers that are only words. */
   compact?: boolean;
+  /** `rows`: the space between rows (px, default 6) and the size of their words (px, default 14). */
+  rowGap?: number;
+  rowFont?: number;
+  /** `rows`: keeps the picture's room in every row even when no answer has a picture (as the lesson screens' rows do). */
+  pictureRoom?: boolean;
   /** `rows`: a radio at each row's end. */
   control?: RowControl;
   /** `rows`: a tick or cross at the end of a checked row. */
@@ -55,12 +60,12 @@ export type AnswersProps = {
  * The answers of a question, in the look the data asks for. One component for every question of every
  * module, so picking, checking, the hint and the right/wrong colours behave the same everywhere.
  */
-export function Answers({ look = "rows", options, selectedId, onSelect, question, checked = false, correctId, revealCorrect = true, hintId = null, compact = false, control = "none", marks = true, tiles = "auto", spill = false, yesNo, stagger = false, revealed = true, disabled = false, className = "" }: AnswersProps) {
+export function Answers({ look = "rows", options, selectedId, onSelect, question, checked = false, correctId, revealCorrect = true, hintId = null, compact = false, rowGap, rowFont, pictureRoom, control = "none", marks = true, tiles = "auto", spill = false, yesNo, stagger = false, revealed = true, disabled = false, className = "" }: AnswersProps) {
   const common = { selectedId, onSelect, checked, correctId, revealCorrect, hintId, disabled };
   return (
     <div className={`flex w-full flex-col items-center gap-2.5 ${className}`}>
       {question && <Prompt text={question} />}
-      {look === "rows" && <OptionList options={options} compact={compact} control={control} marks={marks} stagger={stagger} revealed={revealed} {...common} />}
+      {look === "rows" && <OptionList options={options} compact={compact} gap={rowGap} fontSize={rowFont} pictureRoom={pictureRoom} control={control} marks={marks} stagger={stagger} revealed={revealed} {...common} />}
       {look === "tiles" && <OptionGrid options={options} layout={tiles} stagger={stagger} revealed={revealed} {...common} />}
       {look === "objects" && <OptionObjects options={options} spill={spill} {...common} />}
       {look === "trueFalse" && (
