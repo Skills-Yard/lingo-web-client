@@ -6,9 +6,9 @@ import { KeyText } from "@/components/kit/text/Prompt";
 import { SortGroups } from "@/components/kit/inputs/SortGroups";
 import { type GroupItem } from "@/components/kit/content/from-datatypes/GroupStage";
 import { FloatLesson } from "@/components/kit/content/from-datatypes/FloatLesson";
-import { GroupTourStage, type TourGroup } from "@/components/kit/content/from-datatypes/GroupTourStage";
+import { RevealCards, type TourGroup } from "@/components/kit/inputs/RevealCards";
 import { BADGE, INK, TINTS, tintAt } from "@/components/kit/content/from-datatypes/look";
-import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, TYPES, ToggleStage, type SortBucket } from "@/components/kit/content/from-datatypes/interactions";
+import { ChooseTypeStage, MultiPickStage, PickTilesStage, TYPES, ToggleStage, type SortBucket } from "@/components/kit/content/from-datatypes/interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "@/components/kit/content/from-datatypes/pictures";
 import type { Option, QuizStage, ScreenDef } from "@/components/kit/content/from-datatypes/screen";
@@ -189,7 +189,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         alignTop: true,
         // Nothing has to be tapped: once Hex has said his line, Continue reads the groups one by one, then goes on.
         ready: true,
-        render: (api) => <GroupTourStage api={api} groups={TOUR_GROUPS} />,
+        render: (api) => <RevealCards look="tour" api={api} groups={TOUR_GROUPS} />,
       },
       // The PDF's question after the groups: they are not the same kind of information.
       quiz({
@@ -424,7 +424,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
-          <RevealStage
+          <RevealCards look="cards"
             api={api}
             columns={3}
             need={3}
@@ -549,7 +549,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Information with two values is a Boolean.",
         alignTop: true,
         render: (api) => (
-          <RevealStage
+          <RevealCards look="cards"
             api={api}
             columns={2}
             header={() => <StudentStatusCard />}
@@ -576,7 +576,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
-          <RevealStage
+          <RevealCards look="cards"
             api={api}
             columns={2}
             items={[

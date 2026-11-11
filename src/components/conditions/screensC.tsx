@@ -1,6 +1,6 @@
 "use client";
 
-import { RevealStage } from "@/components/kit/content/from-datatypes/interactions";
+import { RevealCards } from "@/components/kit/inputs/RevealCards";
 import { SymbolStage } from "@/components/kit/content/from-operators/interactions";
 import { P } from "@/components/kit/content/from-operators/pictures";
 import { ValueCards } from "@/components/kit/content/from-operators/visuals";
@@ -419,7 +419,7 @@ export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Three kinds of condition you can build. Tap each.",
         render: (api) => (
-          <RevealStage
+          <RevealCards look="cards"
             api={api}
             columns={3}
             items={[

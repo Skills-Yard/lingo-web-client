@@ -220,8 +220,9 @@
           "alignTop": true,
           "ready": true,
           "content": {
-            "$": "kit:group-tour-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "tour",
               "api": {
                 "$ctx": "api"
               },
@@ -896,8 +897,9 @@
           "bubbleWidth": 190,
           "alignTop": true,
           "content": {
-            "$": "kit:reveal-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "cards",
               "api": {
                 "$ctx": "api"
               },
@@ -1190,8 +1192,9 @@
           "line": "Information with two values is a Boolean.",
           "alignTop": true,
           "content": {
-            "$": "kit:reveal-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "cards",
               "api": {
                 "$ctx": "api"
               },
@@ -1245,8 +1248,9 @@
           "bubbleWidth": 190,
           "alignTop": true,
           "content": {
-            "$": "kit:reveal-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "cards",
               "api": {
                 "$ctx": "api"
               },

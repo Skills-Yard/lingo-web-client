@@ -27,6 +27,7 @@ export { LessonTextBox, type LessonTextBoxProps } from "./inputs/LessonTextBox";
 // Activities
 export { OrderSteps, type OrderStepsProps, type OrderItem } from "./inputs/OrderSteps";
 export { SortGroups, type SortGroupsProps, type SortItem, type SortBucket } from "./inputs/SortGroups";
+export { RevealCards, type RevealCardsProps } from "./inputs/RevealCards";
 
 // Scenes and media
 export { LessonArtboard, type LessonArtboardProps } from "./artboard/LessonArtboard";

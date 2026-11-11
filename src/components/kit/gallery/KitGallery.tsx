@@ -22,6 +22,7 @@ import {
   RewardDemo,
   RobotDemo,
   SliderDemo,
+  RevealCardsDemo,
   SortBucketsDemo,
   TextFieldDemo,
   VoiceoverDemo,
@@ -140,12 +141,15 @@ export function KitGallery() {
         </Demo>
       </Section>
 
-      <Section id="activities" title="Activities" note="The things to do inside a screen. OrderSteps and SortGroups are built; RevealCards, BlockBuilder, SwitchTable, PredictRows, MatchPairs and NumberLine are still the module-specific pieces that will be merged into them (see /kit/export, Kit coverage).">
+      <Section id="activities" title="Activities" note="The things to do inside a screen. OrderSteps, SortGroups and RevealCards are built; BlockBuilder, SwitchTable, PredictRows, MatchPairs and NumberLine are still the module-specific pieces that will be merged into them (see /kit/export, Kit coverage).">
         <Demo name="OrderSteps" note="Drag the rows into order.">
           <OrderListDemo />
         </Demo>
         <Demo name="SortGroups" note="One component, three looks (the data picks): columns (drag a card into its group), free (group with no right answer), labels (tap a part, then its label).">
           <SortBucketsDemo />
+        </Demo>
+        <Demo name="RevealCards" note="One component, the data picks the look. Tapped by the learner: cards, scenes, share, flip. Introduced by Hex one per stage: situations, operators, jobs, tour. Three of them are shown here.">
+          <RevealCardsDemo />
         </Demo>
       </Section>
 

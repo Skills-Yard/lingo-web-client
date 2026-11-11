@@ -35,6 +35,7 @@ import {
   ProgramBuilder,
   RewardPopup,
   LessonSlider,
+  RevealCards,
   SortGroups,
   LessonTextBox,
   TrueFalse,
@@ -45,6 +46,7 @@ import {
   type GridLayout,
 } from "../internal";
 import { Panel, Phone, Tool, Tools } from "./parts";
+import { P as PICTURES } from "../content/from-datatypes/pictures";
 
 /* ------------------------------------------------------------------ results */
 
@@ -400,6 +402,53 @@ export function SortBucketsDemo() {
       <p className="text-center text-[12px] text-[#6B7480] dark:text-white/60">
         {finished ? "Done: everything is in its group." : `Misses so far: ${slips}.`}
       </p>
+    </Panel>
+  );
+}
+
+export function RevealCardsDemo() {
+  const [look, setLook] = useState<"cards" | "scenes" | "share">("cards");
+  // A new round starts the activity over (and a new look is a new activity).
+  const [round, setRound] = useState(0);
+  const [finished, setFinished] = useState(false);
+  const api = { slip: () => {}, done: () => setFinished(true), dismissHex: () => {}, finished, hexSpoken: true, lineTyped: true };
+  const restart = (next = look) => {
+    setLook(next);
+    setRound((n) => n + 1);
+    setFinished(false);
+  };
+  return (
+    <Panel>
+      <Tools>
+        {(["cards", "scenes", "share"] as const).map((name) => (
+          <Tool key={name} label={name} active={look === name} onClick={() => restart(name)} />
+        ))}
+        <Tool label="Reset" onClick={() => restart()} />
+      </Tools>
+      <div key={`${look}-${round}`} className="flex w-full justify-center">
+        {look === "cards" && (
+          <RevealCards
+            look="cards"
+            api={api}
+            items={[
+              { id: "t", label: "TRUE", sub: "light on", icon: PICTURES.boolean, caption: "True: Aarav is present." },
+              { id: "f", label: "FALSE", sub: "light off", icon: PICTURES.stop, caption: "False: Aarav is not present." },
+            ]}
+          />
+        )}
+        {look === "scenes" && (
+          <RevealCards
+            look="scenes"
+            api={api}
+            scenes={[
+              { id: "count", pic: PICTURES.integer, label: "Counting", caption: "Whole things are counted: 1, 2, 3." },
+              { id: "money", pic: PICTURES.float, label: "Money", caption: "Money often has a decimal part." },
+            ]}
+          />
+        )}
+        {look === "share" && <RevealCards look="share" api={api} numbers={[6, 7, 8]} />}
+      </div>
+      <p className="text-center text-[12px] text-[#6B7480] dark:text-white/60">{finished ? "Done: every card has been seen." : "Tap each one."}</p>
     </Panel>
   );
 }
