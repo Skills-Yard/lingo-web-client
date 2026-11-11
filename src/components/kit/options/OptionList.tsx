@@ -25,6 +25,8 @@ export type OptionListProps = {
   /** Keeps the picture's room at the start of every row even when no answer has a picture, so the words start where they do on every other screen (default: only if some answer has one). */
   pictureRoom?: boolean;
   control?: RowControl;
+  /** A wrong row shakes (answers that check each tap at once). */
+  shakeWrong?: boolean;
   /** A tick or cross at the end of a checked row (default). */
   marks?: boolean;
   /** The rows bounce in one by one, once `revealed`. */
@@ -39,7 +41,7 @@ export type OptionListProps = {
  * The answers as a column of rows (a picture, the words, a radio) — the usual
  * single-choice question. It fills the width it is given; a screen decides where it stands.
  */
-export function OptionList({ options, selectedId, onSelect, checked = false, correctId, revealCorrect = true, hintId = null, compact = false, gap = 6, fontSize, pictureRoom = false, control = "none", marks = true, stagger = false, revealed = true, disabled = false, className = "" }: OptionListProps) {
+export function OptionList({ options, selectedId, onSelect, checked = false, correctId, revealCorrect = true, hintId = null, compact = false, gap = 6, fontSize, pictureRoom = false, control = "none", shakeWrong = false, marks = true, stagger = false, revealed = true, disabled = false, className = "" }: OptionListProps) {
   const imageSlot = pictureRoom || options.some((option) => option.image);
   return (
     <div role="radiogroup" className={`flex w-full flex-col ${className}`} style={{ gap }}>
@@ -55,6 +57,7 @@ export function OptionList({ options, selectedId, onSelect, checked = false, cor
             marks={marks}
             imageSlot={imageSlot}
             fontSize={fontSize}
+            shake={shakeWrong}
             disabled={disabled || checked}
             onPick={onSelect}
           />

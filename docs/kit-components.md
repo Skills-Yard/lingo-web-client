@@ -42,7 +42,7 @@ Each of these is its own component: **PickAll** (tick all that apply), **WordChi
 - **SortGroups: one component, three looks, no screen changes how it looks.** The data picks the look (as **Answers** has four): `columns` (drag cards into group boxes; wrong drop shakes: today's `sort-stage`), `free` (group with no right answer: `group-stage`), `labels` (tap a part, then press its label: `classify-stage`, whose words move out of the code into the data). The old tap-only gallery `SortGroups` goes away.
 - **pair-up-stage goes into RevealCards** (tap an item, see what it means): the share-out picture stays as what is shown. It does not sort anything.
 - **RevealCards: one component, eight looks, no screen changes how it looks** (built 2026-11-11, on the SortGroups decision). Tapped by the learner, done when all are tapped: `cards`, `scenes`, `share`, `flip`. Introduced by Hex, one card per stage (`focus`), Continue goes on: `situations`, `operators`, `jobs`, `tour`.
-- **choose-type-stage becomes a setting of Answers: `instant`** (a tap is checked at once: a wrong tap shakes and gives its hint, a right one finishes; no Check button). The screen keeps how it behaves.
+- **choose-type-stage becomes a setting of Answers: `instant`** (a tap is checked at once: a wrong tap shakes and gives its hint, a right one finishes; no Check button). The screen keeps how it behaves. Built 2026-11-11; the owner chose the **normal answer tiles** for that screen (Data Types 23), as the module's other "which type?" questions have, over its old small cards.
 
 ## Scenes and media
 

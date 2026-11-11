@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, AnimatePresence, motion, useMotionValue } from "framer-motion";
-import { Check, FileText } from "lucide-react";
+import { Check } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { playClickSound } from "@/components/onboarding/clickSound";
@@ -13,7 +13,6 @@ import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READ
 import { P } from "./pictures";
 import type { InteractionApi, SortApi } from "./screen";
 import { INFO_LAYOUT, InfoTileBody, Pic, type InfoTile } from "./visuals";
-import { WINDOW_ROW, WindowCard } from "./WindowCard";
 
 /** The four data types, as the places things are sorted into and the chips they are chosen from. */
 export const TYPES = [
@@ -564,71 +563,6 @@ export function ToggleStage({ api, items }: { api: InteractionApi; items: readon
           </motion.button>
         );
       })}
-    </div>
-  );
-}
-
-/** A field marked as having the wrong type: tap the type it should have. */
-export function ChooseTypeStage({
-  api,
-  field,
-  value,
-  from,
-  correct,
-  hint,
-}: {
-  api: InteractionApi;
-  field: string;
-  value: string;
-  from: string;
-  correct: string;
-  hint: string;
-}) {
-  const { slip, done, finished } = api;
-  const [wrong, setWrong] = useState<string | null>(null);
-  const [chosen, setChosen] = useState<string | null>(null);
-  const choose = (id: string) => {
-    if (finished) return;
-    playClickSound();
-    vibrateForTap();
-    if (id === correct) {
-      setChosen(id);
-      window.setTimeout(() => done(), 500);
-      return;
-    }
-    slip();
-    setWrong(id);
-    window.setTimeout(() => setWrong(null), WRONG_MS);
-  };
-  return (
-    <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-4`}>
-      <WindowCard title={field} icon={<FileText />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
-        <div className={`flex h-[48px] items-center justify-between px-4 ${WINDOW_ROW}`}>
-          <span className="text-[22px] leading-7 font-bold text-[#151E48] dark:text-white">{value}</span>
-          <span className="rounded-full bg-[#E3F6F3] px-3 py-0.5 text-[12px] leading-4 font-semibold text-[#04908F] dark:bg-[#0F2B28]">
-            {chosen ? TYPES.find((type) => type.id === chosen)?.label : from}
-          </span>
-        </div>
-      </WindowCard>
-      <div className="grid w-full grid-cols-2 gap-3.5">
-        {TYPES.map((type, index) => (
-          <motion.button
-            key={type.id}
-            type="button"
-            onClick={() => choose(type.id)}
-            animate={{ x: wrong === type.id ? SHAKE : 0 }}
-            transition={{ duration: 0.35 }}
-            whileTap={{ scale: 0.97 }}
-            className={`${CARD_BODY_FLAT} ${RAISED} h-[64px] cursor-pointer gap-2 px-2 ${
-              chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
-            }`}
-          >
-            <Pic src={type.icon} className="h-8 w-8" />
-            <span className={CARD_TEXT}>{type.label}</span>
-          </motion.button>
-        ))}
-      </div>
-      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
     </div>
   );
 }

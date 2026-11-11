@@ -402,6 +402,18 @@ export function WeatherCard() {
   );
 }
 
+/** Screen 23 (its second part): one field of the record with the type it was given (`from`); once `fixed`, the type it should have (`to`). */
+export function TypeFieldCard({ field, value, from, to, fixed = false }: { field: string; value: string; from: string; to: string; fixed?: boolean }) {
+  return (
+    <WindowCard title={field} icon={<FileText />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
+      <div className={`flex h-[48px] items-center justify-between px-4 ${WINDOW_ROW}`}>
+        <span className="text-[22px] leading-7 font-bold text-[#151E48] dark:text-white">{value}</span>
+        <span className="rounded-full bg-[#E3F6F3] px-3 py-0.5 text-[12px] leading-4 font-semibold text-[#04908F] dark:bg-[#0F2B28]">{fixed ? to : from}</span>
+      </div>
+    </WindowCard>
+  );
+}
+
 /** Screen 16: a student's three yes / no fields, as the Boolean's example. */
 export function StudentStatusCard() {
   return (

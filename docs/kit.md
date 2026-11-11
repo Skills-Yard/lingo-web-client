@@ -128,6 +128,8 @@ A **node** is plain JSON plus four kinds of object, told apart by their key:
 
 A module's design choices are data too. `look` says how its sheet is laid out (`sheet`: `centred` or `side`), how long a line may be before it goes on a card (`cardLine`), Hex's bubble widths (`bubble`), how far the body rises for big answers under the result sheet (`tileLift`), and whether interactions are `topAligned`. (How a question's answers look is **not** a module setting any more: each quiz stage says `answers` itself. The code screens still say `layout: "grid"`; the exporter turns that and the module's `QuizLook` in `ExportPage.tsx` into `answers` and `compact`.) `scene` is a picture behind every screen (Variable's mountain trail). Leave them out for the Data Types look.
 
+`Answers` usually works as pick, then Check (the screen holds the pick). With `instant` it checks each tap at once and holds the pick itself: give it `correctId`, `onRight` (the stage's `{ "$ctx": "api.done" }`), `onWrong` (`api.slip`) and a `wrongNote`; it stands inside an interaction stage, as on Data Types 23.
+
 A module's row style is in `look` too: `rows: { gap, fontSize }` (Variable's rows stand 10 apart with 16px words).
 
 ### The scene behind a screen

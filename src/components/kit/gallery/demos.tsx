@@ -726,3 +726,64 @@ export function RegistryDemo() {
     </div>
   );
 }
+
+/* ------------------------------------------------------------ new settings */
+
+/** `Answers` with `instant`: each tap is checked at once, with no Check button. */
+export function InstantAnswersDemo() {
+  const [round, setRound] = useState(0);
+  const [misses, setMisses] = useState(0);
+  const [right, setRight] = useState(false);
+  return (
+    <Panel>
+      <Answers key={round} look="tiles" instant options={GRIDS.grid.options} correctId="b" onRight={() => setRight(true)} onWrong={() => setMisses((n) => n + 1)} wrongNote="Which one has a decimal point?" />
+      <p className="text-center text-[12px] text-[#6B7480] dark:text-white/60">{right ? "Right: the screen is told, and can go on." : `Wrong taps so far: ${misses}.`}</p>
+      <Tools>
+        <Tool
+          label="Reset"
+          onClick={() => {
+            setRound((n) => n + 1);
+            setMisses(0);
+            setRight(false);
+          }}
+        />
+      </Tools>
+    </Panel>
+  );
+}
+
+/** The scenes a screen can stand on, with sample values and the triggers each can play. */
+const SCENES: Record<string, { values: Record<string, boolean | number>; triggers: readonly string[] }> = {
+  trek: { values: { thirsty: false, noWater: false, thinking: false }, triggers: ["cheer", "drinkHint"] },
+  items: { values: { pick: 0 }, triggers: ["correct", "wrong"] },
+  bottle: { values: { capOpen: true, level: 600, pouring: false, showLabel: true }, triggers: [] },
+  names: { values: { showLabels: true }, triggers: ["shuffle"] },
+  shop: { values: { highlight: 0, showEraser: false, showNames: true, showTotal: false, total: 70 }, triggers: ["calc", "correct", "wrong"] },
+  wallet: { values: { amount: 50, balance: 100, showCard: true, showToy: false }, triggers: ["receive", "spend"] },
+};
+
+/** `LessonArtboard` with `scene`: the Rive scene behind a screen, and the triggers a screen plays on it. */
+export function SceneDemo() {
+  const [scene, setScene] = useState("trek");
+  // A trigger belongs to the scene it was fired on: it is not played again on the next scene picked.
+  const [request, setRequest] = useState<(TriggerRequest & { scene: string }) | null>(null);
+  return (
+    <div className="flex flex-col gap-2">
+      {/* `isolate`: the scene is drawn behind the screen (a negative layer), which must stay inside this box. */}
+      <Phone height={500} className="isolate">
+        <p className="absolute inset-x-0 top-8 px-8 text-center text-[13px] leading-5 text-[#6B7480] dark:text-white/60">The scene stands behind the screen, under the title and what Hex says.</p>
+        <LessonArtboard key={scene} scene={scene} properties={SCENES[scene].values} trigger={request?.scene === scene ? request : null} />
+      </Phone>
+      <Tools>
+        {Object.keys(SCENES).map((name) => (
+          <Tool key={name} label={name} active={name === scene} onClick={() => setScene(name)} />
+        ))}
+      </Tools>
+      <Tools>
+        {SCENES[scene].triggers.map((name) => (
+          <Tool key={name} label={`▶ ${name}`} onClick={() => setRequest((now) => ({ scene, name, id: (now?.id ?? 0) + 1 }))} />
+        ))}
+      </Tools>
+    </div>
+  );
+}

@@ -20,6 +20,8 @@ export type OptionGridProps = {
   correctId?: string;
   revealCorrect?: boolean;
   hintId?: string | null;
+  /** A wrong tile shakes (answers that check each tap at once). */
+  shakeWrong?: boolean;
   /** The tiles bounce in one by one, once `revealed`. */
   stagger?: boolean;
   revealed?: boolean;
@@ -31,7 +33,7 @@ export type OptionGridProps = {
 export const layoutFor = (count: number): TileSize => (count <= 2 ? "pair" : count === 3 ? "three" : "grid");
 
 /** The answers as cards side by side: two big ones, three small tiles, or four in a two-by-two. */
-export function OptionGrid({ options, selectedId, onSelect, layout = "auto", checked = false, correctId, revealCorrect = true, hintId = null, stagger = false, revealed = true, disabled = false, className = "" }: OptionGridProps) {
+export function OptionGrid({ options, selectedId, onSelect, layout = "auto", checked = false, correctId, revealCorrect = true, hintId = null, shakeWrong = false, stagger = false, revealed = true, disabled = false, className = "" }: OptionGridProps) {
   const size = layout === "auto" ? layoutFor(options.length) : layout;
   return (
     <div role="radiogroup" className={`w-full gap-3.5 ${size === "grid" ? "grid grid-cols-2" : "flex items-stretch"} ${className}`}>
@@ -43,6 +45,7 @@ export function OptionGrid({ options, selectedId, onSelect, layout = "auto", che
             size={size}
             state={optionState(option.id, selectedId, checked, correctId, revealCorrect)}
             hinted={hintId === option.id && selectedId === null}
+            shake={shakeWrong}
             disabled={disabled || checked}
             onPick={onSelect}
           />

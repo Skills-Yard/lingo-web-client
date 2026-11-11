@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ARTBOARDS, KeyText, LessonCards, LessonTitle, VideoPlayer } from "../internal";
@@ -14,6 +15,7 @@ import {
   GemDemo,
   HeaderDemo,
   HexSaysDemo,
+  InstantAnswersDemo,
   MultiSelectDemo,
   OptionChipsDemo,
   OrderListDemo,
@@ -21,15 +23,83 @@ import {
   ResultDemo,
   RewardDemo,
   RobotDemo,
+  SceneDemo,
   SliderDemo,
   RevealCardsDemo,
   SortBucketsDemo,
   TextFieldDemo,
   VoiceoverDemo,
 } from "./demos";
-import { Demo, Panel, Section } from "./parts";
+import { Demo, Panel, Section, Tool } from "./parts";
+
+/**
+ * What was merged or added lately, and where to see each: its demo on this page (`demo` is a section's id),
+ * and the lesson screens that use it, played from their data (`[label, module, step]`).
+ */
+const NEW: readonly { name: string; what: string; demo: string; screens: readonly (readonly [string, string, number])[] }[] = [
+  {
+    name: "LessonHeader · LessonFooter",
+    what: "The real lesson screens now draw these two: one header and one footer for every module.",
+    demo: "frame",
+    screens: [["any screen, e.g. Data Types 1", "datatypes", 1]],
+  },
+  {
+    name: "Answers",
+    what: "The cards stand on the raised edge, as in the lessons. New setting `instant`: a tap is checked at once, with no Check button.",
+    demo: "answers",
+    screens: [["instant: Data Types 23 (its second part)", "datatypes", 23]],
+  },
+  {
+    name: "SortGroups",
+    what: "One component, three looks. It replaced three one-screen components.",
+    demo: "activities",
+    screens: [
+      ["columns: Data Types 9", "datatypes", 9],
+      ["free: Data Types 3", "datatypes", 3],
+      ["labels: Variable 14", "variable", 14],
+    ],
+  },
+  {
+    name: "RevealCards",
+    what: "One component, eight looks. It replaced eight one-screen components.",
+    demo: "activities",
+    screens: [
+      ["cards: Data Types 12", "datatypes", 12],
+      ["scenes: Conditions 2", "conditions", 2],
+      ["share: Conditions 13", "conditions", 13],
+      ["flip: Operators 1", "operators", 1],
+      ["situations: Operators 2", "operators", 2],
+      ["operators: Operators 5", "operators", 5],
+      ["jobs: Operators 6", "operators", 6],
+      ["tour: Data Types 4", "datatypes", 4],
+    ],
+  },
+  {
+    name: "LessonArtboard scene",
+    what: "The Rive scene behind a screen. The data names the scene and what plays on a right or a wrong answer.",
+    demo: "scenes",
+    screens: [
+      ["trek: Variable 3", "variable", 3],
+      ["items: Variable 4", "variable", 4],
+      ["bottle: Variable 5", "variable", 5],
+      ["names: Variable 12", "variable", 12],
+      ["shop: Variable 18", "variable", 18],
+      ["wallet: Variable 22", "variable", 22],
+    ],
+  },
+];
+
+/** Gives the lesson screens a battery that does not run out (it is kept in session storage), so "Out of energy" does not cover them. */
+function unlimitedBattery() {
+  try {
+    sessionStorage.setItem("lingo.battery", JSON.stringify({ level: 100, unlimited: true, charged: 0 }));
+  } catch {
+    // Storage blocked: the battery will run down as it does in play.
+  }
+}
 
 const SECTIONS = [
+  ["new", "New"],
   ["frame", "On every screen"],
   ["answers", "Answers"],
   ["activities", "Activities"],
@@ -39,6 +109,7 @@ const SECTIONS = [
 
 /** `/kit` — the decided components (`docs/kit-components.md`), each working with sample data. */
 export function KitGallery() {
+  const [batterySet, setBatterySet] = useState(false);
   return (
     // Hex's canvas is far wider than the box he sits in (it is drawn at ~950px); `overflow-x-clip` keeps that from widening the page (unlike `hidden`, it leaves the sticky nav working).
     <main className="mx-auto flex w-full max-w-[1280px] flex-col gap-14 overflow-x-clip px-5 py-8 text-[#444444] dark:text-white">
@@ -66,6 +137,41 @@ export function KitGallery() {
           </a>
         ))}
       </nav>
+
+      <Section id="new" title="New" note="What was merged or added lately. “Demo” jumps to it on this page; the other links open a real lesson screen that uses it, played from its data. Press “Unlimited battery” once first, or the lesson screens get covered by “Out of energy”.">
+        <div className="flex w-full flex-col gap-3">
+          <div className="flex items-center gap-3">
+            <Tool
+              label={batterySet ? "Unlimited battery ✓" : "Unlimited battery"}
+              active={batterySet}
+              onClick={() => {
+                unlimitedBattery();
+                setBatterySet(true);
+              }}
+            />
+          </div>
+          <div className="grid w-full gap-3 md:grid-cols-2">
+            {NEW.map((item) => (
+              <div key={item.name} className="flex flex-col gap-2 rounded-[16px] border border-black/10 bg-white/70 p-4 dark:border-white/15 dark:bg-white/5">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <h3 className="font-mono text-[15px] leading-5 font-semibold text-[#08A4AD]">{item.name}</h3>
+                  <a href={`#${item.demo}`} className="rounded-full bg-[#08A4AD] px-3 py-1 text-[12px] font-bold text-white">
+                    Demo ↓
+                  </a>
+                </div>
+                <p className="text-[13px] leading-5 text-[#444444] dark:text-white/80">{item.what}</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {item.screens.map(([label, module, step]) => (
+                    <Link key={label} href={`/kit/play/${module}?step=${step}`} target="_blank" className="rounded-full border border-[#7B61FF] px-2.5 py-0.5 text-[12px] font-semibold text-[#7B61FF] hover:bg-[#7B61FF]/10">
+                      {label} ↗
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Section>
 
       <Section id="frame" title="On every screen" note="The same parts on every screen of every module; only the words and numbers change.">
         <Demo name="LessonHeader" note="Close button, progress bar and battery. The bar cheers or winces at each answer.">
@@ -127,6 +233,9 @@ export function KitGallery() {
         <Demo name="Answers look='trueFalse'">
           <AnswersDemo look="trueFalse" />
         </Demo>
+        <Demo name="Answers instant" note="New. Each tap is checked at once, with no Check button: a wrong tap shakes red and gives its note, the right one turns green and the screen is told.">
+          <InstantAnswersDemo />
+        </Demo>
         <Demo name="PickAll">
           <MultiSelectDemo />
         </Demo>
@@ -154,6 +263,9 @@ export function KitGallery() {
       </Section>
 
       <Section id="scenes" title="Scenes and media">
+        <Demo name={`LessonArtboard scene="…"`} note="New. The Rive scene behind a screen. Pick a scene, then play its triggers (what a screen plays on a right answer, a wrong one, a new try).">
+          <SceneDemo />
+        </Demo>
         <Demo name={`LessonArtboard name="robot-arm"`} note="The data names the artboard; triggers play on it.">
           <RobotDemo />
         </Demo>

@@ -210,7 +210,7 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
   const lift = panel ? (quiz ? (bigCards ? (look.tileLift ?? RESULT_LIFT) : answersLook === "objects" ? (look.tileLift ?? LIST_LIFT) : LIST_LIFT) : interaction?.finishPanel ? PANEL_LIFT : 0) : 0;
   // A line too long for Hex's bubble goes on a card.
   const cardLine = !!quiz && !!look.cardLine && line !== null && line.length > look.cardLine;
-  const bubble = line === null ? undefined : (interaction?.bubbleWidth ?? look.bubble?.find((rule) => rule.upTo === undefined || line.length <= rule.upTo)?.width);
+  const bubble = line === null ? undefined : (interaction?.bubbleWidth ?? quiz?.bubbleWidth ?? look.bubble?.find((rule) => rule.upTo === undefined || line.length <= rule.upTo)?.width);
   const celebrate = panel?.right === true && (quiz ? checked : finished);
   // The pick that is shown as the right one: the right answer, or (for a pick that is fine too) the pick itself.
   const shownCorrectId = quiz ? (alsoOk ? (selectedId ?? quiz.correctId) : quiz.correctId) : "";

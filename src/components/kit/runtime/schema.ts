@@ -39,6 +39,8 @@ type StageTitle = {
 export type QuizStageData = StageTitle & {
   kind: "quiz";
   line: string;
+  /** The width (px) of Hex's bubble for this line, where the module's rule (`look.bubble`) does not suit it. */
+  bubbleWidth?: number;
   question?: string;
   /** The picture between Hex's line and the answers; `$ctx` values: `attempt`, `picked`, `checked`, `correct`, `hexSpoken`. */
   visual?: Json;

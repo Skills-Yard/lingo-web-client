@@ -6,7 +6,7 @@ import { SlotImage } from "@/components/level-two/SlotImage";
 import { AnswerMark } from "../feedback/AnswerMark";
 import { feelTap } from "../feel";
 import { RAISED } from "@/components/ui/raised";
-import { HINT_FILL, STATE_CARD, STATE_EDGE } from "../tokens";
+import { HINT_FILL, STATE_CARD, STATE_EDGE, WRONG_SHAKE } from "../tokens";
 import type { OptionData, OptionState } from "../types";
 
 /** What stands at the row's end: nothing, a round radio, or a square checkbox. */
@@ -26,6 +26,8 @@ export type OptionRowProps = {
   imageSlot?: boolean;
   /** The size of the words (px), where it should differ from the usual 14; their line height follows (8 more). */
   fontSize?: number;
+  /** A wrong row shakes from side to side (answers that check each tap at once). */
+  shake?: boolean;
   disabled?: boolean;
   onPick?: (id: string) => void;
 };
@@ -57,7 +59,7 @@ function Control({ kind, state, marks, compact }: { kind: RowControl; state: Opt
  * One answer as a white card across the column: a picture, the words and, at the
  * end, a radio (or a tick / cross once it is checked). Tap to pick it.
  */
-export function OptionRow({ option, state = "idle", hinted = false, compact = false, control = "none", marks = true, imageSlot, fontSize, disabled = false, onPick }: OptionRowProps) {
+export function OptionRow({ option, state = "idle", hinted = false, compact = false, control = "none", marks = true, imageSlot, fontSize, shake = false, disabled = false, onPick }: OptionRowProps) {
   const showImage = imageSlot ?? !!option.image;
   return (
     <HintFloat className="relative w-full" spin={false} active={hinted}>
@@ -69,7 +71,7 @@ export function OptionRow({ option, state = "idle", hinted = false, compact = fa
           onPick?.(option.id);
         }}
         aria-pressed={state === "selected"}
-        animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
+        animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, x: shake && state === "wrong" ? WRONG_SHAKE : 0 }}
         whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
         className={`pointer-events-auto relative isolate flex w-full items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left ${RAISED} ${STATE_EDGE[state]} enabled:cursor-pointer ${

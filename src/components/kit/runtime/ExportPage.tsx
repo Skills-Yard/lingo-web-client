@@ -43,6 +43,8 @@ const SOURCES: ModuleSource[] = [
     skips: DATATYPES_SKIPS,
     detours: DATATYPES_DETOURS,
     components: { [DATATYPES_STEP.recap]: DatatypesRecap },
+    // Hex's bubble is wide for any line of more than 30 letters (the module's own runner: `bubbleSize` in `DataTypesScreen`).
+    look: { bubble: [{ upTo: 30, width: 190 }, { width: 248 }] },
   },
   {
     id: "operators",

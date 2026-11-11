@@ -37,6 +37,9 @@ export const STATE_EDGE: Record<OptionState, string> = {
   wrong: EDGE.red,
 };
 
+/** How a card shakes from side to side when a tap on it was wrong (px, as keyframes). */
+export const WRONG_SHAKE = [0, -7, 7, -5, 5, 0];
+
 /** The hint's fill, wiped across a card behind its content. */
 export const HINT_FILL = "bg-[#FFE7D1] dark:bg-[#33220F]";
 
