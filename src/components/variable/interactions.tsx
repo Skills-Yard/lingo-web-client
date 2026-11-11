@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Check, Sparkles } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check, Pointer, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
 import { ArrangeBoard, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import { HexBubble } from "@/components/level-two/HexBubble";
@@ -50,7 +50,39 @@ export function KeyPoints({ points }: { points: readonly string[] }) {
   );
 }
 
-/** A thing to tap: it pulses while it is the next one to tap, and what it explains shows once it has been tapped. */
+/**
+ * "Tap here", right under the thing to tap next (where its note will show once it is tapped): a small pill with a
+ * hand that taps up at it. Pressing it counts as pressing the thing.
+ */
+function TapHint({ onTap }: { onTap: () => void }) {
+  const reduceMotion = useReducedMotion();
+  return (
+    <motion.button
+      type="button"
+      tabIndex={-1}
+      aria-hidden
+      onClick={onTap}
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className="pointer-events-auto mt-1 flex cursor-pointer items-center gap-1.5 rounded-full border-2 border-[#04ACAB] bg-white py-1 pr-3 pl-2 text-[13px] leading-5 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
+    >
+      <motion.span
+        aria-hidden
+        animate={reduceMotion ? { y: 0 } : { y: [0, -4, 0], scale: [1, 0.88, 1] }}
+        transition={reduceMotion ? { duration: 0 } : { duration: 1.3, repeat: Infinity, ease: "easeInOut" }}
+      >
+        <Pointer className="size-5 fill-white stroke-[#04ACAB]" strokeWidth={1.75} />
+      </motion.span>
+      Tap here
+    </motion.button>
+  );
+}
+
+/**
+ * A thing to tap: it pulses while it is the next one to tap, with a "Tap here" hand under it, and what it explains
+ * shows once it has been tapped.
+ */
 function Tappable({
   children,
   note,
@@ -70,17 +102,18 @@ function Tappable({
   className?: string;
   label: string;
 }) {
+  const press = () => {
+    playClickSound();
+    vibrateForTap();
+    onTap();
+  };
   return (
     <div className={`flex min-w-0 flex-col items-center gap-1.5 ${className}`}>
       <motion.button
         type="button"
         aria-label={label}
         disabled={!enabled}
-        onClick={() => {
-          playClickSound();
-          vibrateForTap();
-          onTap();
-        }}
+        onClick={press}
         animate={next ? { scale: [1, 1.04, 1] } : { scale: 1 }}
         transition={next ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
         whileTap={{ scale: 0.96 }}
@@ -88,6 +121,7 @@ function Tappable({
       >
         {children}
       </motion.button>
+      {next && enabled && <TapHint onTap={press} />}
       <AnimatePresence>
         {tapped && (
           <motion.span
@@ -292,6 +326,14 @@ function Part({ label, children, tapped, next, onTap, note }: { label: string; c
   );
 }
 
+/**
+ * How much of the Name and Value cards stands over the scene (px, from their top down to the scene's bottom edge).
+ * They stand under the picture, on the white below it, so no character is covered; only the scene's faded last rows
+ * (it fades out over its bottom 26px, which show no more than ground) are under their top. The notes and the key
+ * points follow below them, above the button.
+ */
+const NAME_VALUE_OVER_SCENE = 16;
+
 /** Screen 13: a variable has a name and a value; tap each to find out what it is. */
 export function NameValueStage({ done, finished }: InteractionApi) {
   const [name, setName] = useState(false);
@@ -304,18 +346,23 @@ export function NameValueStage({ done, finished }: InteractionApi) {
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="A variable has a name and a value. Tap each part." entry="variable-meet" />
-      <div className="flex w-[340px] items-start justify-between">
-        <Part label="Name" tapped={name} next={!name} onTap={() => setName(true)} note="What we call the information.">
-          <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[15px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">water_level</span>
-        </Part>
-        <motion.svg aria-hidden width={34} height={20} viewBox="0 0 34 20" className="mt-9 shrink-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
-          <motion.path d="M2 10H30M24 4l6 6-6 6" stroke="#04ACAB" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 0.6 }} />
-        </motion.svg>
-        <Part label="Value" tapped={value} next={name && !value} onTap={() => setValue(true)} note="What it holds right now.">
-          <span className="text-[20px] leading-7 font-bold text-[#444444] dark:text-white">550 ml</span>
-        </Part>
+      <div
+        className="absolute inset-x-0 flex flex-col items-center gap-3"
+        style={{ top: `calc(min(${SCENE_BOTTOM}, ${SCENE_BOTTOM_PHONE}px) - ${BELOW_TITLE}px - ${NAME_VALUE_OVER_SCENE}px)` }}
+      >
+        <div className="flex w-[340px] items-start justify-between">
+          <Part label="Name" tapped={name} next={!name} onTap={() => setName(true)} note="What we call the information.">
+            <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[15px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">water_level</span>
+          </Part>
+          <motion.svg aria-hidden width={34} height={20} viewBox="0 0 34 20" className="mt-9 shrink-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+            <motion.path d="M2 10H30M24 4l6 6-6 6" stroke="#04ACAB" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 0.6 }} />
+          </motion.svg>
+          <Part label="Value" tapped={value} next={name && !value} onTap={() => setValue(true)} note="What it holds right now.">
+            <span className="text-[20px] leading-7 font-bold text-[#444444] dark:text-white">550 ml</span>
+          </Part>
+        </div>
+        {finished && <KeyPoints points={["A variable has a name.", "The name tells us what it is.", "The value is what it holds now."]} />}
       </div>
-      {finished && <KeyPoints points={["A variable has a name.", "The name tells us what it is.", "The value is what it holds now."]} />}
     </div>
   );
 }

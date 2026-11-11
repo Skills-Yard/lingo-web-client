@@ -103,6 +103,7 @@ export function PlanAppScreen() {
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            grouped
           >
             {correct
               ? "You planned the app's logic."

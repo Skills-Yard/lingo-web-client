@@ -359,6 +359,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
             open={!!panel}
             hexIn={!!panel}
             hexCue={panel?.right ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            grouped
           >
             {panel?.text ?? ""}
           </FeedbackPanel>
