@@ -10,8 +10,9 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
-import type { InteractionApi } from "./quiz";
-import { Bottle, CARD } from "./visuals";
+import type { SortApi } from "@/components/kit/content/from-datatypes/screen";
+import type { InteractionApi } from "@/components/kit/content/from-variable/quiz";
+import { Bottle, CARD } from "@/components/kit/content/from-variable/visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
 export function Narration({ text, entry }: { text: string; entry: string }) {

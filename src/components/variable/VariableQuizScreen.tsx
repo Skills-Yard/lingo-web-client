@@ -20,7 +20,7 @@ import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger, type SceneName } from "@/lib/rive/variableHost";
 import { TipCard } from "@/components/sequence/HexScreen";
-import { parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
+import { parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "@/components/kit/content/from-variable/quiz";
 import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
