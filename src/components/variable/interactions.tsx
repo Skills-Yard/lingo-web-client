@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { Check, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
 import { ArrangeBoard, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
-import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
+import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneryHidden, setSceneValues, setSkippedFills } from "@/lib/rive/variableHost";
 import type { InteractionApi } from "./quiz";
-import { HEX_LIFT } from "./scenes";
-import { Bottle, CARD } from "./visuals";
+import { BELOW_TITLE, HEX_LIFT, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneWindow } from "./scenes";
+import { CARD } from "./visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
 export function Narration({ text, entry }: { text: string; entry: string }) {
@@ -104,52 +104,112 @@ function Tappable({
   );
 }
 
-/** Screen 6: tap the bottle, then the information panel; the word "variable" is the bridge between them. */
+/**
+ * What the two windows show of the "VAR_Bottle" artboard (artboard px). The artboard is on the screen twice
+ * (`bottle` and `bottleCard`, see `VARIABLE_SCENES`): the first has the variable off, so the bottle stands alone
+ * in the middle; the second has it on, and the artboard draws a variable card (a heading, name `water`, the value
+ * in ml) beside the bottle (x 197 to 372), of which only that card is shown, next to the first. The scenery is
+ * hidden in both (see `setSceneryHidden`): they stand on one white card. The variable is the bigger of the two
+ * (about 19px text), as it is what the screen is about; the bottle is just its picture.
+ */
+const JAR_CROP = { x: 132, y: 6, width: 160, height: 264 } as const;
+const JAR_ZOOM = 0.78;
+const CARD_CROP = { x: 199, y: 79, width: 178, height: 143 } as const;
+const CARD_ZOOM = 1.2;
+/** The colours the artboard fills the variable card's outline and its shadow (the grey edge under it) with: each is one shape, so they can be left out (see `setSkippedFills`). */
+const CARD_EDGE_FILLS = ["#dce6f4", "rgba(70, 90, 120, 0.14)"] as const;
+/**
+ * How much of the combined card stands over the scene (px, from its top down to the scene's bottom edge): the top
+ * stays below the characters' faces, and the rest of the card goes on below the edge, into the white under the scene.
+ * The edge it is measured from is the phone's: on a wider or shorter window the scene is drawn larger and its edge
+ * lower, and the card (with its captions) would run down behind the button.
+ */
+const CARD_OVER_SCENE = 196;
+/** The bottle fills to this many ml, over this long (ms). */
+const BRIDGE_ML = 500;
+const BRIDGE_FILL_MS = 2200;
+
+/** A caption under one of the two, shown from the start: it hangs under the card's bottom without taking any room, so the card stays where it is. */
+function Caption({ children }: { children: ReactNode }) {
+  return (
+    <motion.span
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.5 }}
+      className="absolute top-full left-1/2 mt-[18px] w-max max-w-[128px] -translate-x-1/2 rounded-[10px] bg-white px-2 py-1.5 text-center text-[12px] leading-4 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+/** Once the water has stopped, this long (ms) before Continue can be pressed: the value has been read at 500. */
+const BRIDGE_SETTLE_MS = 300;
+
+/**
+ * Screen 6: the bottle and the variable beside it (the artboard's own card: name `water`, value in ml), each with
+ * a line under it saying what it is. The bottle is the "VAR_Bottle" artboard: its cap opens and it fills to 500 ml as
+ * the screen opens, the variable's value counting up with the water; when it is full the screen is done and Continue
+ * can be pressed (nothing to tap). The two stand on the bottom edge of the trail scene behind the screen.
+ */
 export function BridgeStage({ done, finished }: InteractionApi) {
-  const [bottle, setBottle] = useState(false);
-  const [panel, setPanel] = useState(false);
+  // Both copies of the artboard are drawn without their scenery, and the variable card without its own outline and shadow, flat on the white card (and all as they were for the screens after).
+  useLayoutEffect(() => {
+    setSceneryHidden("bottle", true);
+    setSceneryHidden("bottleCard", true);
+    setSkippedFills("bottleCard", CARD_EDGE_FILLS);
+    return () => {
+      setSceneryHidden("bottle", false);
+      setSceneryHidden("bottleCard", false);
+      setSkippedFills("bottleCard", []);
+    };
+  }, []);
+
+  // The bottle starts empty with its cap opening, then the stream is on while it fills (see `BottleChange`). The variable card is the other copy, with the variable on, and takes the same water.
   useEffect(() => {
-    if (!bottle || !panel) return;
-    const timer = window.setTimeout(() => done(), 700);
-    return () => window.clearTimeout(timer);
-  }, [bottle, panel, done]);
+    setSceneValues("bottleCard", { showVariable: true, varName: "water" });
+    setSceneValues("bottle", { showLabel: false, showVariable: false, pouring: false });
+    setBottleLevel(0);
+    const wait = openBottleCap();
+    const timers = [
+      window.setTimeout(() => {
+        setSceneValues("bottle", { pouring: true });
+        rampBottleLevel(BRIDGE_ML, BRIDGE_FILL_MS);
+      }, wait),
+      window.setTimeout(() => setSceneValues("bottle", { pouring: false }), wait + BRIDGE_FILL_MS),
+      // Full: the screen is done, and Continue is let through.
+      window.setTimeout(() => done(), wait + BRIDGE_FILL_MS + BRIDGE_SETTLE_MS),
+    ];
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      setSceneValues("bottle", { pouring: false, showLabel: true });
+    };
+  }, [done]);
+
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="A variable keeps information, like a bottle keeps water." entry="variable-bridge" />
-      <div className="flex w-[340px] items-start justify-between gap-1">
-        <Tappable label="Tap the bottle" note="A container for water." tapped={bottle} next={!bottle} onTap={() => setBottle(true)} className="w-[132px]">
-          <div className={`flex flex-col items-center gap-1 px-3 py-2 ${CARD}`}>
-            <Bottle ml={600} height={104} marks={false} />
-            <span className="text-[12px] leading-4 font-semibold text-[#08A4AD]">Water</span>
+      {/* One white card for the two, over the bottom edge of the scene behind the screen (the trail): its top is `CARD_OVER_SCENE` above that edge, and it goes on below it. */}
+      <div className="absolute inset-x-0 flex justify-center" style={{ top: `calc(min(${SCENE_BOTTOM}, ${SCENE_BOTTOM_PHONE}px) - ${BELOW_TITLE}px - ${CARD_OVER_SCENE}px)` }}>
+        <div className="flex items-end rounded-[20px] border-4 border-white bg-white p-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)]">
+          <div className="relative">
+            <SceneWindow scene="bottle" crop={JAR_CROP} zoom={JAR_ZOOM} className="rounded-[12px]" />
+            <Caption>A container for water.</Caption>
           </div>
-        </Tappable>
-        <div className="flex shrink-0 flex-col items-center gap-1 pt-12">
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="rounded-full bg-[#08A4AD] px-2.5 py-1 text-[12px] leading-4 font-bold text-white"
-          >
-            Variable
-          </motion.span>
-          <ArrowRight aria-hidden className="size-5 text-[#04ACAB]" />
+          {/* The artboard's own dotted line, from the bottle across to its variable. */}
+          <div aria-hidden className="h-0 w-3.5 shrink-0 self-center border-t-[3px] border-dotted border-[#17998C]" />
+          <div className="relative">
+            <SceneWindow scene="bottleCard" crop={CARD_CROP} zoom={CARD_ZOOM} className="rounded-[16px]" />
+            <Caption>A named place for information.</Caption>
+          </div>
         </div>
-        <Tappable
-          label="Tap the information panel"
-          note="A named place for information."
-          tapped={panel}
-          next={bottle && !panel}
-          enabled={bottle}
-          onTap={() => setPanel(true)}
-          className="w-[132px]"
-        >
-          <div className="flex h-[148px] w-[120px] flex-col items-center justify-center gap-1 rounded-[16px] border-4 border-white bg-[#1E293B] px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent">
-            <span className="text-[10px] leading-3 font-semibold tracking-[0.6px] text-[#7FD8CC] uppercase">Information</span>
-            <span className="text-[22px] leading-7 font-bold text-white">500 ml</span>
-          </div>
-        </Tappable>
       </div>
-      {finished && <KeyPoints points={["A bottle holds water.", "A variable holds information.", "Information in a program is called data."]} />}
+      {/* The key points stand just above the button row (this stage's bottom), under the notes: below the scene's edge on a phone, and never behind the button on a short, wide window, where the scene is drawn larger. */}
+      {finished && (
+        <div className="absolute inset-x-0 bottom-0 flex justify-center">
+          <KeyPoints points={["A bottle holds water.", "A variable holds information.", "Information in a program is called data."]} />
+        </div>
+      )}
     </div>
   );
 }

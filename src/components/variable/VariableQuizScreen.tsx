@@ -48,21 +48,21 @@ const BUBBLE_MAX_CHARS = 120;
 /** The title block (px): where it ends, one line or two. */
 const TITLE_END = { one: BELOW_TITLE, two: 163 } as const;
 
-/** The scene behind a screen (see `sceneOf`); the trail says whether the river is gone. */
-const backdropFor = (scene: SceneName, step: number) => {
+/** The scene behind a screen (see `sceneOf`); the trail says whether the river is gone. `lifted`: a right answer has sent Hex and his bubble away, and the scene rises into their room. */
+const backdropFor = (scene: SceneName, step: number, lifted: boolean) => {
   switch (scene) {
     case "items":
-      return <ItemsBackdrop />;
+      return <ItemsBackdrop lifted={lifted} />;
     case "bottle":
-      return <BottleBackdrop />;
+      return <BottleBackdrop lifted={lifted} />;
     case "names":
-      return <NamesBackdrop />;
+      return <NamesBackdrop lifted={lifted} />;
     case "shop":
-      return <ShopBackdrop />;
+      return <ShopBackdrop lifted={lifted} />;
     case "wallet":
-      return <WalletBackdrop />;
+      return <WalletBackdrop lifted={lifted} />;
     default:
-      return <TrekBackdrop noWater={step === STEP.noWater} />;
+      return <TrekBackdrop noWater={step === STEP.noWater} lifted={lifted} />;
   }
 };
 
@@ -96,6 +96,7 @@ function ObjectGrid({
   correctId,
   selectedId,
   checked,
+  fadeOut,
   hinted,
   withHint,
   spill,
@@ -105,6 +106,8 @@ function ObjectGrid({
   correctId: string;
   selectedId: string | null;
   checked: boolean;
+  /** The cards fade out (a right answer clears the screen). */
+  fadeOut: boolean;
   hinted: boolean;
   withHint: boolean;
   spill: boolean;
@@ -114,8 +117,8 @@ function ObjectGrid({
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -RISE : 0 }}
-      transition={checked ? PANEL_SPRING : ANSWERS_IN}
+      animate={{ opacity: fadeOut ? 0 : 1, y: checked ? -RISE : 0 }}
+      transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
       className="pointer-events-auto absolute z-[1] grid"
       style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OBJECT_GAP, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(0, 1fr))` }}
     >
@@ -233,6 +236,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const shownCorrectId = checked && !right ? "" : alsoOk ? (selectedId ?? "") : (quiz?.correctId ?? "");
   const hasHint = !!quiz && (!!quiz.hintText || !!quiz.hintVisual);
   const hintShown = hinted || (!!quiz?.hintOnMiss && attempt > 0);
+  // A right answer clears the screen: the answers fade out and, as Hex and his bubble run off, the scene rises into their room. (A wrong one keeps the answers, for another try.)
+  const cleared = !!quiz && checked && right;
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -330,7 +335,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       step={screen.step}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(screen.step))}
-      scene={backdropFor(sceneKind, screen.step)}
+      scene={backdropFor(sceneKind, screen.step, cleared)}
       answer={answer}
       ctaDisabled={quiz ? selectedId === null : !finished}
       ctaLabel={
@@ -423,6 +428,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               correctId={shownCorrectId}
               selectedId={selectedId}
               checked={checked}
+              fadeOut={cleared}
               hinted={hintShown}
               withHint={hasHint}
               spill={!!quiz.spill}
@@ -434,7 +440,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               correctId={shownCorrectId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={false}
+              fadeOut={cleared}
               hinted={hintShown}
               withHint={hasHint}
               rise={RISE}

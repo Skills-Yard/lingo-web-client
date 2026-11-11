@@ -88,7 +88,7 @@ export function ThirstyScreen() {
       step={STEP.thirsty}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(STEP.thirsty))}
-      scene={<TrekBackdrop thirsty />}
+      scene={<TrekBackdrop thirsty lifted={celebrate} />}
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={!checked ? "Continue" : right ? "Next" : "Try again"}
@@ -117,8 +117,9 @@ export function ThirstyScreen() {
 
       <motion.div
         initial={{ opacity: 0, y: 90 }}
-        animate={{ opacity: 1, y: checked ? -RISE : 0 }}
-        transition={checked ? PANEL_SPRING : CARDS_IN}
+        // A right answer clears the screen: the cards fade out (and the trail rises into the room Hex and his bubble leave).
+        animate={{ opacity: celebrate ? 0 : 1, y: checked ? -RISE : 0 }}
+        transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : CARDS_IN}
         className="pointer-events-auto absolute z-[1] grid grid-cols-3"
         style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS), left: COLUMN_LEFT, width: COLUMN_W, gap: CARD_GAP }}
       >

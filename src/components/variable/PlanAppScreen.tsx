@@ -90,7 +90,7 @@ export function PlanAppScreen() {
       step={STEP.plan}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(STEP.plan))}
-      scene={<TrekBackdrop />}
+      scene={<TrekBackdrop lifted={checked && correct} />}
       answer={answer}
       ctaDisabled={!full}
       ctaLabel={!checked ? "Check" : correct ? "Next" : "Try again"}
