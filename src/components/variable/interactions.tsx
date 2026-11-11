@@ -11,6 +11,7 @@ import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
 import type { InteractionApi } from "./quiz";
+import { HEX_LIFT } from "./scenes";
 import { Bottle, CARD } from "./visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
@@ -24,7 +25,8 @@ export function Narration({ text, entry }: { text: string; entry: string }) {
   }
   const width = text.length <= 44 ? 190 : 240;
   return (
-    <div className="shrink-0">
+    // Lifted like the quiz screens' bubble (see `HEX_LIFT`); what is under it stays where it was.
+    <div className="relative shrink-0" style={{ top: -HEX_LIFT }}>
       <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={{ width }} />
     </div>
   );

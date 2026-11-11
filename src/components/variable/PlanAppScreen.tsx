@@ -7,7 +7,7 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "./scenes";
+import { HEX_ROW_TOP, TrekBackdrop } from "./scenes";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
@@ -19,7 +19,6 @@ import { noteAnswer, noteStruggle } from "./variableScore";
 import { CalculatorApp } from "./visuals";
 
 const TITLE = parseTitle("Plan the *App's Steps*");
-const TITLE_END = 163;
 
 const TINT = "bg-[#F6F4FE] dark:bg-[#0F1F26]";
 /** Listed out of order, so the tray doesn't give the plan away. */
@@ -125,7 +124,7 @@ export function PlanAppScreen() {
           )}
         </span>
       </ScreenTitle>
-      <div className="absolute inset-x-0 flex justify-center" style={{ top: TITLE_END }}>
+      <div className="absolute inset-x-0 flex justify-center" style={{ top: HEX_ROW_TOP }}>
         <HexBubble key={attempt} entryKey={`variable-plan-${attempt}`} hex="left" line={[{ text: "Put the steps for our addition app in order." }]} size={{ width: 190 }} leaving={checked} />
       </div>
       {checked && correct && (

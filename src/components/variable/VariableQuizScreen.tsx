@@ -10,7 +10,7 @@ import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { BottleBackdrop, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, WalletBackdrop } from "./scenes";
+import { BELOW_TITLE, BottleBackdrop, HEX_LIFT, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, WalletBackdrop } from "./scenes";
 import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
@@ -46,7 +46,7 @@ const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring"
 /** A line longer than this goes on a card; a shorter one is Hex's. */
 const BUBBLE_MAX_CHARS = 120;
 /** The title block (px): where it ends, one line or two. */
-const TITLE_END = { one: 125, two: 163 } as const;
+const TITLE_END = { one: BELOW_TITLE, two: 163 } as const;
 
 /** The scene behind a screen (see `sceneOf`); the trail says whether the river is gone. */
 const backdropFor = (scene: SceneName, step: number) => {
@@ -384,8 +384,9 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               initial={false}
               animate={{ opacity: checked ? 0 : 1, height: checked ? 0 : "auto" }}
               transition={{ duration: 0.35 }}
-              style={{ overflow: checked ? "hidden" : "visible" }}
-              className="flex w-full shrink-0 justify-center px-4"
+              // Hex's bubble is lifted (see `HEX_LIFT`), clear of the picture's top; only it moves, what is under it stays where it was.
+              style={{ overflow: checked ? "hidden" : "visible", top: longLine ? 0 : -HEX_LIFT }}
+              className="relative flex w-full shrink-0 justify-center px-4"
             >
               {longLine ? (
                 <div className="w-[340px]">

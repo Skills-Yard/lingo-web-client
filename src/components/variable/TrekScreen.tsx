@@ -2,11 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "./scenes";
+import { CentredRow, LevelTwoShell, ScreenTitle, Teal } from "@/components/level-two/LevelTwoShell";
+import { HEX_ROW_TOP, TrekBackdrop } from "./scenes";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
-
-const BUBBLE_TOP = 178;
 
 /** "Let's go trekking today!": Hex tells what is about to happen over a picture of the trail. */
 export function TrekScreen() {
@@ -22,7 +20,7 @@ export function TrekScreen() {
       <ScreenTitle oneLine>
         Let’s go <Teal>trekking</Teal> today!
       </ScreenTitle>
-      <CentredRow top={stageTop(BUBBLE_TOP)}>
+      <CentredRow top={HEX_ROW_TOP}>
         <HexBubble entryKey="trek" hex="left" line={[{ text: "You and your friends are off on a trek!" }]} size={{ width: 190 }} />
       </CentredRow>
     </LevelTwoShell>

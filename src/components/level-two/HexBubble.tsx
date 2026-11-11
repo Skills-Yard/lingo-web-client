@@ -67,9 +67,13 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
   );
 }
 
-/** The bubble's own look: plain white over a soft blue drop edge (the Figma
- * "Rectangle 142"), its tail pointing at Hex. The edge is a filter, not a
- * box-shadow, so it runs under the tail as well as the box. */
+/** The bubble's own look: plain white, its tail pointing at Hex, with two flat
+ * edges — green (the app's `--primary`) 3px below, and on the top 3px (and the
+ * left, half as far) a dark one in light mode, a light one in dark mode. The
+ * edges are one chained filter, not box-shadows, so they run under the tail as
+ * well as the box (Tailwind's `drop-shadow-*` takes only one, hence the
+ * arbitrary `filter`). The green one comes first, so the top one is cast from
+ * both and stays behind them. */
 function SpeechBubble({ line, size, tail, leaving, onSpoken }: { line: readonly Span[]; size: BubbleSize; tail: "left" | "right" | "top"; leaving: boolean; onSpoken?: () => void }) {
   const tailAtLeft = tail === "left";
   const tailOnTop = tail === "top";
@@ -132,7 +136,7 @@ function SpeechBubble({ line, size, tail, leaving, onSpoken }: { line: readonly 
       // Figma: the short bubble ("Rectangle 142") is 77 tall with its text 9px in; the others 86.
       style={{ transformOrigin: tailOnTop ? "50% 0%" : tailAtLeft ? "0% 50%" : "100% 50%", width: size.width, minHeight: size.minHeight }}
       // Its width is what it likes to have; a narrower screen takes from it (the line wraps more) instead of the bubble running off the edge.
-      className={`relative flex min-w-0 shrink items-center justify-center rounded-[10px] bg-white px-3 drop-shadow-[0_3px_0_rgba(18,140,179,0.5)] dark:bg-[#1A1C22] ${
+      className={`relative flex min-w-0 shrink items-center justify-center rounded-[10px] bg-white px-3 filter-[drop-shadow(0_3px_0_rgba(1,161,127,0.7))_drop-shadow(-1.5px_-3px_0_rgba(0,0,0,0.05))] dark:bg-[#1A1C22] dark:filter-[drop-shadow(0_3px_0_#4DBDA5)_drop-shadow(-1.5px_-3px_0_rgba(255,255,255,0.05))] ${
         size.minHeight ? "py-[7px]" : size.short ? "min-h-[77px] py-2.5" : "min-h-[86px] py-[13px]"
       }`}
     >

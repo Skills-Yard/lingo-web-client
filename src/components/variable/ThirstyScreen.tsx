@@ -8,7 +8,7 @@ import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
+import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, Teal } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
@@ -17,11 +17,10 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger } from "@/lib/rive/variableHost";
-import { TrekBackdrop } from "./scenes";
+import { HEX_ROW_TOP, TrekBackdrop } from "./scenes";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
-const BUBBLE_TOP = 178;
 /** The cards are as tall as the other modules' tiles or taller (110px, see `TileCards`), 14px apart. */
 const CARD_H = 120;
 const CARD_GAP = 14;
@@ -105,7 +104,7 @@ export function ThirstyScreen() {
       <ScreenTitle oneLine>
         What do we <Teal>need</Teal> now?
       </ScreenTitle>
-      <CentredRow top={stageTop(BUBBLE_TOP)}>
+      <CentredRow top={HEX_ROW_TOP}>
         <HexBubble
           key={attempt}
           entryKey={`variable-thirsty-${attempt}`}
