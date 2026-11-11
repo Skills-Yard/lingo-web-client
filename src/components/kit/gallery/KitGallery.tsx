@@ -38,7 +38,8 @@ const SECTIONS = [
 /** `/kit` — the decided components (`docs/kit-components.md`), each working with sample data. */
 export function KitGallery() {
   return (
-    <main className="mx-auto flex w-full max-w-[1280px] flex-col gap-14 px-5 py-8 text-[#444444] dark:text-white">
+    // Hex's canvas is far wider than the box he sits in (it is drawn at ~950px); `overflow-x-clip` keeps that from widening the page (unlike `hidden`, it leaves the sticky nav working).
+    <main className="mx-auto flex w-full max-w-[1280px] flex-col gap-14 overflow-x-clip px-5 py-8 text-[#444444] dark:text-white">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-[32px] leading-10 font-semibold">Screen kit</h1>
