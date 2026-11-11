@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
@@ -9,7 +9,8 @@ import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
-import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
+import { openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
+import { fireScene, setScene } from "@/components/kit/artboard/scenes";
 import type { SortApi } from "@/components/kit/content/from-datatypes/screen";
 import type { InteractionApi } from "@/components/kit/content/from-variable/quiz";
 import { Bottle, CARD } from "@/components/kit/content/from-variable/visuals";
@@ -424,71 +425,123 @@ export function LabelStage({
   );
 }
 
-const MATCH_ITEMS = [
-  { id: "notebook_price", emoji: "📓", name: "Notebook", price: 50 },
-  { id: "pen_price", emoji: "🖊️", name: "Pen", price: 20 },
-] as const;
-const MATCH_CARDS: readonly ArrangeCardDef[] = [
-  { id: "pen_price", kind: "pen_price", text: "pen_price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
-  { id: "notebook_price", kind: "notebook_price", text: "notebook_price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
-];
-const MATCH_GEO = arrangeGeometry({ mode: "columns", card: { width: 140, height: 72 }, count: 2, gap: 14, lane: 40, sentence: true });
+/** A place a card is put on: a thing with its name and, if it has one, a tag (its price). */
+export type MatchPlace = { id: string; name: string; emoji?: string; tag?: string };
+/** A card to drag: it belongs on the place with the same `id`. */
+export type MatchCard = { id: string; text: string };
 
-/** Screen 19: drag each product's name onto the card of its price. */
-export function MatchPricesStage({ slip: slipped, done, finished }: InteractionApi) {
-  const { slots, placeIn, reset } = useArrange(MATCH_CARDS.map((card) => card.id), MATCH_GEO.count);
+/** How the scene behind the screen follows the matching. */
+export type MatchScene = {
+  /** Which scene (see the kit's `artboard/scenes.tsx`). */
+  name: string;
+  /** Values set on it when the activity opens. */
+  values?: Record<string, boolean | number | string>;
+  /** A number of the scene that says which place was just rightly filled (1, 2, ...; 0 for none). */
+  lit?: string;
+  /** A trigger fired when everything is matched. */
+  onRight?: string;
+};
+
+/** The cards all share one colour, so a card's colour does not hint at its place. */
+const MATCH_TINT = "bg-[#E3F6F3] dark:bg-[#0F2B28]";
+
+/**
+ * Drag each card onto the place it belongs to (a name onto its price). When every place has a card it is
+ * checked: all right and the stage is done; otherwise it counts as a slip, `wrong` shows and the cards go back.
+ * With `scene`, the scene behind the screen follows along (see `MatchScene`). (The look of `MatchPairs`.)
+ */
+export function MatchStage({
+  api,
+  places,
+  cards,
+  narration,
+  entry,
+  idle,
+  wrong,
+  finishedNote,
+  scene,
+}: {
+  api: SortApi;
+  places: readonly MatchPlace[];
+  /** The cards, in the order they are shown. */
+  cards: readonly MatchCard[];
+  /** What Hex says above the board. */
+  narration: string;
+  /** Plays Hex's entrance again when it changes. */
+  entry: string;
+  /** Under the board while it is being done. */
+  idle: string;
+  /** Under the board after a wrong match. */
+  wrong: string;
+  /** Under the board once it is done. */
+  finishedNote: string;
+  scene?: MatchScene;
+}) {
+  const { slip: slipped, done, finished } = api;
+  const count = places.length;
+  const geo = useMemo(() => arrangeGeometry({ mode: "columns", card: { width: 140, height: 72 }, count, gap: 14, lane: 40, sentence: true }), [count]);
+  const defs: readonly ArrangeCardDef[] = cards.map((card) => ({ id: card.id, kind: card.id, text: card.text, tint: MATCH_TINT }));
+  const { slots, placeIn, reset } = useArrange(cards.map((card) => card.id), geo.count);
   const [slip, setSlip] = useState(false);
   const full = slots.every((slot) => slot !== null);
-  const right = full && slots.every((id, index) => id === MATCH_ITEMS[index].id);
-  // The shop counter behind (see `ShopBackdrop`) starts with the names shown and nothing lit.
+  const right = full && slots.every((id, index) => id === places[index].id);
+  const sceneName = scene?.name;
+  const sceneLit = scene?.lit;
+  const sceneOnRight = scene?.onRight;
+  // The scene's starting values as text, so the same values given as a new object do not write again.
+  const sceneStart = scene?.values ? JSON.stringify(scene.values) : "";
   useEffect(() => {
-    setSceneValues("shop", { showEraser: false, showNames: true, showTotal: false, highlight: 0 });
-  }, []);
+    if (sceneStart) setScene(sceneName, JSON.parse(sceneStart) as Record<string, boolean | number | string>);
+  }, [sceneName, sceneStart]);
   useEffect(() => {
     if (!full) return;
+    const unlight = () => {
+      if (sceneLit) setScene(sceneName, { [sceneLit]: 0 });
+    };
     if (right) {
-      setSceneValues("shop", { highlight: 0 });
-      fireSceneTrigger("shop", "correct");
+      unlight();
+      fireScene(sceneName, sceneOnRight);
       const timer = window.setTimeout(() => done(), 500);
       return () => window.clearTimeout(timer);
     }
     const timer = window.setTimeout(() => {
       slipped();
       setSlip(true);
-      setSceneValues("shop", { highlight: 0 });
+      unlight();
       reset();
     }, 900);
     return () => window.clearTimeout(timer);
-  }, [full, right, done, slipped, reset]);
+  }, [full, right, done, slipped, reset, sceneName, sceneLit, sceneOnRight]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="Drag each name to the price it belongs to." entry="variable-prices" />
-      <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }}>
+      <Narration text={narration} entry={entry} />
+      <div className="pointer-events-auto relative" style={{ width: geo.board.width, height: geo.board.height }}>
         <ArrangeBoard
-          cards={MATCH_CARDS}
+          cards={defs}
           slots={slots}
-          geo={MATCH_GEO}
+          geo={geo}
           disabled={finished || (full && !right)}
           onPlace={(id, slot) => {
             setSlip(false);
             placeIn(id, slot);
-            // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
-            setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
+            // The place a card is put on is lit in the scene when it is the right one (the first place is 1).
+            if (sceneLit) setScene(sceneName, { [sceneLit]: slot !== null && id === places[slot].id ? slot + 1 : 0 });
           }}
           slotContent={(index) => (
             <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
-              <span aria-hidden className="text-[26px] leading-none">
-                {MATCH_ITEMS[index].emoji}
-              </span>
-              {MATCH_ITEMS[index].name} <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">₹{MATCH_ITEMS[index].price}</span>
+              {places[index].emoji && (
+                <span aria-hidden className="text-[26px] leading-none">
+                  {places[index].emoji}
+                </span>
+              )}
+              {places[index].name} {places[index].tag && <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">{places[index].tag}</span>}
             </span>
           )}
         />
       </div>
       <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
+        {slip ? wrong : <span className="text-[#6B7480] dark:text-white/60">{finished ? finishedNote : idle}</span>}
       </p>
     </div>
   );
 }
-

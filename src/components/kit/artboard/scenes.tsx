@@ -34,6 +34,11 @@ export const fireScene = (name: string | undefined, trigger: string | undefined)
   if (isScene(name) && trigger) fireSceneTrigger(name, trigger as never);
 };
 
+/** Sets values on a scene (written as soon as its file has loaded). An unknown scene is ignored. */
+export const setScene = (name: string | undefined, values: SceneValues) => {
+  if (isScene(name)) setSceneValues(name, values as never);
+};
+
 /**
  * A scene drawn behind the screen (not in its flow): the artboard's own size at the stage's width, faded in at
  * its top and bottom. `values` are set on it when it appears and whenever they change; `trigger` fires each

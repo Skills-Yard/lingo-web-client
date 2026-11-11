@@ -13,6 +13,7 @@ import { LessonSlider } from "./inputs/LessonSlider";
 import { LessonTextBox } from "./inputs/LessonTextBox";
 import { OrderSteps } from "./inputs/OrderSteps";
 import { RevealCards } from "./inputs/RevealCards";
+import { MatchPairs } from "./inputs/MatchPairs";
 import { SortGroups } from "./inputs/SortGroups";
 import { ScreenFrame } from "./layout/ScreenFrame";
 import { Card, Row, Spacer, Stack } from "./layout/Stack";
@@ -61,6 +62,7 @@ export const KIT = {
   // Activities
   "order-steps": OrderSteps,
   "sort-groups": SortGroups,
+  "match-pairs": MatchPairs,
   "reveal-cards": RevealCards,
   // Scenes and media
   "lesson-artboard": LessonArtboard,
