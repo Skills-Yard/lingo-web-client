@@ -84,6 +84,12 @@ export type InteractionApi = {
   holdButton?: (press: (() => void) | null) => void;
   /** Goes on to the stage after this one at once, with nothing recorded and no panel. Left out by the screens that do not say. */
   next?: () => void;
+  /**
+   * Says what the stage changes in its scene (a card sent to its bin, a value lit up), over the data the stage's
+   * `scene` sets. It is all of what the stage sets, each time: what is left out goes back to the stage's own.
+   * Does nothing on a stage without a scene. Left out by the screens that have no scenes.
+   */
+  setScene?: (values: SceneValues) => void;
   /** Hex has finished his line (a stage whose cards wait for him comes in then). */
   hexSpoken: boolean;
   /**
@@ -105,7 +111,8 @@ export type InteractionStage = StageTitle & {
   alignTop?: boolean;
   /** Nothing to do, only to look at (screens 5 and 6): Continue waits only for Hex to finish his line, and his line stays. */
   ready?: boolean;
-  render: (api: InteractionApi) => ReactNode;
+  /** What stands under the line (or under the scene). Left out where the scene is all there is to look at. */
+  render?: (api: InteractionApi) => ReactNode;
   /** Hex's panel on finishing, if the interaction has one. */
   finishPanel?: { title: string; text: string };
   ctaLabel?: string;

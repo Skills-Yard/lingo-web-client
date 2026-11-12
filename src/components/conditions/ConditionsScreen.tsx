@@ -57,7 +57,7 @@ const KEEP_HEX = () => {};
 
 /** An interaction stage's own picture and controls. */
 function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, dismissHex: KEEP_HEX, finished, hexSpoken: true })}</>;
+  return <>{stage.render?.({ slip, done, dismissHex: KEEP_HEX, finished, hexSpoken: true })}</>;
 }
 
 /**

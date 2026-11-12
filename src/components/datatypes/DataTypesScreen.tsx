@@ -13,7 +13,7 @@ import { TileCards } from "@/components/level-two/TileCards";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
-import { fireSceneTrigger } from "@/lib/rive/datatypesHost";
+import { fireSceneTrigger, type SceneValues } from "@/lib/rive/datatypesHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { DATATYPES_STEPS, datatypesNext, datatypesPrevious } from "./datatypes";
 import { noteAnswer, noteStruggle } from "./datatypesScore";
@@ -70,6 +70,7 @@ function InteractionHost({
   finished,
   hexSpoken,
   takeContinue,
+  setScene,
 }: {
   stage: InteractionStage;
   slip: () => void;
@@ -78,8 +79,9 @@ function InteractionHost({
   finished: boolean;
   hexSpoken: boolean;
   takeContinue: (handler: (() => boolean) | null) => void;
+  setScene: (values: SceneValues) => void;
 }) {
-  return <>{stage.render({ slip, done, dismissHex, finished, hexSpoken, takeContinue })}</>;
+  return <>{stage.render?.({ slip, done, dismissHex, finished, hexSpoken, takeContinue, setScene })}</>;
 }
 
 /**
@@ -107,6 +109,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const [hexSpoken, setHexSpoken] = useState(false);
   // An interaction has sent Hex's line away early, to talk through its own Hex lower down.
   const [hexDismissed, setHexDismissed] = useState(false);
+  // What the interaction has changed in its scene so far (see `InteractionApi.setScene`); each stage starts clean.
+  const [sceneExtra, setSceneExtra] = useState<SceneValues>({});
   // The picture is shrunk to fit the room between Hex's line and the question, if it is taller than that.
   const [roomHeight, setRoomHeight] = useState(0);
   const [pictureHeight, setPictureHeight] = useState(0);
@@ -135,9 +139,11 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none, or if he has been sent away).
   const lookReady = !!interaction?.ready && (hexSpoken || hexDismissed || !interaction.line);
 
-  // The scene behind the stage, if it has one: its data follows what the learner has done (an interaction is "checked" and "correct" once it is finished).
+  // The scene behind the stage, if it has one: its data follows what the learner has done (an interaction is "checked" and "correct" once it is finished),
+  // and an interaction can add to it as it goes (a card sent to its bin).
   const sceneContext: VisualContext = { attempt, picked: selectedId, checked: quiz ? checked : finished, correct: quiz ? correct : finished, hexSpoken };
-  const scene = !stage.scene ? null : typeof stage.scene === "function" ? stage.scene(sceneContext) : stage.scene;
+  const stageScene = !stage.scene ? null : typeof stage.scene === "function" ? stage.scene(sceneContext) : stage.scene;
+  const scene = stageScene && { ...stageScene, values: { ...stageScene.values, ...sceneExtra } };
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -161,6 +167,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const slip = useCallback(() => slipNow.current(), []);
   const done = useCallback(() => finishNow.current(), []);
   const dismissHex = useCallback(() => setHexDismissed(true), []);
+  const setScene = useCallback((values: SceneValues) => setSceneExtra(values), []);
   // A stage that steps through its own parts can take Continue over (see `InteractionApi.takeContinue`).
   const continueHandler = useRef<(() => boolean) | null>(null);
   const takeContinue = useCallback((handler: (() => boolean) | null) => {
@@ -193,6 +200,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     setFinished(false);
     setHexSpoken(false);
     setHexDismissed(false);
+    setSceneExtra({});
   };
 
   const onContinue = () => {
@@ -325,7 +333,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         {!scene && (
           <div ref={roomRef} className={`flex min-h-0 w-full flex-1 flex-col items-center ${interaction?.alignTop ? "justify-start" : "justify-center"}`}>
             <div ref={pictureRef} className="flex flex-col items-center gap-2 transition-transform duration-300 ease-out" style={{ transform: `scale(${fit})`, transformOrigin: interaction?.alignTop ? "top center" : "center" }}>
-              {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct, hexSpoken }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} />}
+              {quiz
+                ? quiz.visual?.({ attempt, picked: selectedId, checked, correct, hexSpoken })
+                : interaction && <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />}
             </div>
           </div>
         )}
@@ -335,12 +345,12 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       {scene && interaction && (
         <motion.div
           initial={false}
-          animate={{ opacity: gone ? 0 : 1 }}
+          animate={{ opacity: panel ? 0 : 1 }}
           transition={{ duration: 0.3 }}
           className="absolute inset-x-0 flex justify-center"
-          style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)` }}
+          style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)`, pointerEvents: panel ? "none" : "auto" }}
         >
-          <InteractionHost stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} />
+          <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
         </motion.div>
       )}
 
