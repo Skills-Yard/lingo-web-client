@@ -20,7 +20,7 @@ import { COLUMN_W, SIDE_MARGIN } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger, type SceneName } from "@/lib/rive/variableHost";
 import { TipCard } from "@/components/sequence/HexScreen";
-import { parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
+import { IDLE_LOOK, parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
 import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
@@ -39,12 +39,6 @@ const OBJECT_GAP = 14;
 /** Their text (px): the other modules' is 14 in the rows and 16 on the cards; these are two larger. */
 const ROW_FONT = 16;
 const CARD_FONT = 18;
-/**
- * An answer at rest (rows and cards alike): a thin grey line all round (1px; the card adds `border`) and a very light
- * shade, so its top and sides show against the white page as well as the raised edge under it (a white border on white
- * left only that edge). Picking it swaps this for the 4px green or red look (see `LOOKS`).
- */
-const IDLE_LOOK = "border-[#DCE2E9] bg-white drop-shadow-[0_1px_2px_rgba(31,42,68,0.07)] dark:border-white/10 dark:bg-[#15181E]";
 /** The least a picture is shrunk to fit its room. */
 const MIN_FIT = 0.6;
 /** The result panel makes room by raising the answers this far (px). */
@@ -309,10 +303,10 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: clean }));
   };
 
-  // The labelled bottles are shuffled when the screen opens, and again for each new try.
+  // The labelled bottles are shuffled when "Which bottle is mine?" opens, and again for each new try (on the reflection screen that brings them back they just stand there).
   useEffect(() => {
-    if (sceneKind === "names") fireSceneTrigger("names", "shuffle");
-  }, [sceneKind, attempt]);
+    if (sceneKind === "names" && screen.step === STEP.labels) fireSceneTrigger("names", "shuffle");
+  }, [sceneKind, screen.step, attempt]);
 
   // What an interaction calls: always the same functions, acting on the screen as it is now.
   const slipNow = useRef<() => void>(() => {});

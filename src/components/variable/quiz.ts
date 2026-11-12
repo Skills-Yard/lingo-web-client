@@ -1,5 +1,12 @@
 import type { ReactNode } from "react";
 
+/**
+ * A button at rest (answers, rows and cards alike): a thin grey line all round (1px; a card adds `border`) and a very
+ * light shade, so its top and sides show against the white page as well as the raised edge under it (a white border on
+ * white left only that edge). Picking it swaps this for the 4px green or red look (see `LOOKS`).
+ */
+export const IDLE_LOOK = "border-[#DCE2E9] bg-white drop-shadow-[0_1px_2px_rgba(31,42,68,0.07)] dark:border-white/10 dark:bg-[#15181E]";
+
 /** An answer: words, with a small picture (an emoji, or `node`) where the answer is an object to tap. */
 export type Option = { id: string; text: string; emoji?: string; node?: ReactNode; /** A picture file shown beside an answer in words. */ icon?: string };
 

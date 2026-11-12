@@ -169,6 +169,8 @@ export const VARIABLE_SCENES = {
   /** A second copy of the bottle's artboard, for a screen that shows two parts of it apart (screen 6: the bottle, and its variable card below it). */
   bottleCard: { artboard: "VAR_Bottle", stateMachine: "Bottle_SM" },
   names: { artboard: "VAR_Names", stateMachine: "Names_SM" },
+  /** The chapter's wrap-up ("VAR_Complete"): the idea in the middle with the things the chapter used around it; `focus` 1-5 puts one of them forward, and `celebrate` is a trigger. */
+  complete: { artboard: "VAR_Complete", stateMachine: "Complete_SM" },
   /** The little app on a phone ("VAR_MiniApp"): its `title`, up to three `name` / `val` fields and a result, with `highlight` 1-4 lighting a part. */
   miniApp: { artboard: "VAR_MiniApp", stateMachine: "MiniApp_SM" },
   /** The classroom and its attendance board ("VAR_Classroom"): `total`, `present`, `highlight` 1-3 lights a row of the board. */

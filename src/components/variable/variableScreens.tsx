@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
-import { Bottle, ShopItem, CARD } from "./visuals";
+import { Bottle, CARD } from "./visuals";
 import { BridgeStage, ClassifyStage, FillSliderStage, MatchPricesStage, NameValueStage, NamesStage } from "./interactions";
 import { NAME_VALUE_CARDS, type VarCards } from "./scenes";
 import type { Option, QuizStage, ScreenDef, VisualContext } from "./quiz";
@@ -230,11 +230,14 @@ function ClassroomDrive({ names = false, context }: { names?: boolean; context: 
 const APP_LIGHTS: Readonly<Record<string, number>> = { "0": 4, "1": 1 };
 
 /**
- * Screen 26: the little app on a phone ("VAR_MiniApp", see `MiniAppBackdrop`), as the learner is about to build it:
- * its two number fields empty and its result not yet worked out. This draws nothing, it sets the scene's data. The part
- * of the app an answer is about is lit while it is the one tapped; checking marks the answer right or wrong.
+ * Screens 26 and 33: the little app on a phone ("VAR_MiniApp", see `MiniAppBackdrop`), the addition app with
+ * its two number fields (`filled`: none of them shown yet, as the learner is about to build it, or both, kept) and
+ * its result not yet worked out. This draws nothing, it sets the scene's data. The part of the app an answer is
+ * about (`lights`, by answer) is lit while it is the one tapped; checking marks the answer right or wrong, and with
+ * `reveal` the result (30) shows once the answer is right.
  */
-function MiniAppDrive({ context }: { context: VisualContext }) {
+function MiniAppDrive({ filled = 0, lights = APP_LIGHTS, reveal = false, context }: { filled?: number; lights?: Readonly<Record<string, number>>; reveal?: boolean; context: VisualContext }) {
+  const settled = context.checked && context.correct;
   useEffect(() => {
     setSceneValues("miniApp", {
       mode: 0,
@@ -246,14 +249,17 @@ function MiniAppDrive({ context }: { context: VisualContext }) {
       val1: "10",
       val2: "20",
       result: 30,
-      filled: 0,
+      filled,
       showResult: false,
       bug: false,
     });
-  }, []);
+  }, [filled, context.attempt]);
   useEffect(() => {
-    setSceneValues("miniApp", { highlight: APP_LIGHTS[context.picked ?? ""] ?? 0 });
-  }, [context.picked]);
+    setSceneValues("miniApp", { highlight: lights[context.picked ?? ""] ?? 0 });
+  }, [lights, context.picked]);
+  useEffect(() => {
+    if (reveal && settled) setSceneValues("miniApp", { showResult: true });
+  }, [reveal, settled]);
   useEffect(() => {
     if (context.checked) fireSceneTrigger("miniApp", context.correct ? "correct" : "wrong");
   }, [context.checked, context.correct]);
@@ -301,22 +307,30 @@ function ExpenseTracker({ showLeft }: { showLeft: boolean }) {
   );
 }
 
-/** Screen 28: two prices, and an application that shows the wrong total. */
-function DebugVisual() {
-  return (
-    <div className="flex items-center gap-2">
-      <ShopItem emoji="🛍️" name="Item 1" price={100} />
-      <ShopItem emoji="🛍️" name="Item 2" price={50} tint="bg-[#FFF9F0]" />
-      <span className="text-[22px] leading-8 font-bold text-[#04ACAB]">→</span>
-      <div className="flex w-[96px] flex-col items-center gap-0.5 rounded-[14px] border-4 border-[#E5484D] bg-[#FDECEC] px-2 py-3 dark:bg-[#2E1517]">
-        <span className="text-[11px] leading-4 font-bold text-[#D42421] uppercase">App shows</span>
-        <span className="text-[24px] leading-8 font-bold text-[#D42421]">₹100</span>
-        <span aria-hidden className="text-[16px] leading-5">
-          ⚠️
-        </span>
-      </div>
-    </div>
-  );
+/** What the app on screen 28 wrongly shows (the notebook's price alone), and the total it should (the notebook's and the pen's). */
+const WRONG_TOTAL = 50;
+const RIGHT_TOTAL = 70;
+
+/**
+ * Screen 28: the shop counter (see `ShopBackdrop`) with the notebook (₹50) and the pen (₹20), and its Total board
+ * showing what the app wrongly shows, ₹50 (`showTotal` and `total`). This draws nothing, it sets the scene's data.
+ * Once the answer is right the two prices are added up (`calc`) and the board shows the right total, ₹70; checking
+ * marks the items right or wrong.
+ */
+function ShopDebugDrive({ context }: { context: VisualContext }) {
+  const settled = context.checked && context.correct;
+  useEffect(() => {
+    setSceneValues("shop", { showEraser: false, showNames: false, showTotal: true, highlight: 0, total: WRONG_TOTAL });
+  }, [context.attempt]);
+  useEffect(() => {
+    if (!settled) return;
+    setSceneValues("shop", { total: RIGHT_TOTAL });
+    fireSceneTrigger("shop", "calc");
+  }, [settled]);
+  useEffect(() => {
+    if (context.checked) fireSceneTrigger("shop", context.correct ? "correct" : "wrong");
+  }, [context.checked, context.correct]);
+  return null;
 }
 
 /* ───────────────────────── Screens ───────────────────────── */
@@ -744,12 +758,15 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     title: "Find *the Mistake!*",
     stages: [
       quiz({
-        line: "Prices ₹100 and ₹50, but the app shows ₹100. Why?",
-        visual: () => <DebugVisual />,
-        options: words(["It used only the first price", "It added both prices", "The first price should be ₹50"]),
+        line: "Notebook ₹50 and pen ₹20, but the app shows ₹50. Why?",
+        // The shop counter, with the app's wrong total on its Total board, is the screen's scene (see `ShopBackdrop`).
+        visual: (context) => <ShopDebugDrive context={context} />,
+        // Three rows of words would cover the counter; the shorter rows stand below it.
+        compact: true,
+        options: words(["It used only the first price", "It added both prices", "The notebook should cost ₹20"]),
         correctId: at(0),
         rightTitle: "Exactly!",
-        right: "It used only the first price. ₹100 + ₹50 = ₹150.",
+        right: "It used only the first price. ₹50 + ₹20 = ₹70.",
         wrong: "Did it include both prices?",
       }),
     ],
@@ -816,6 +833,9 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Remember the labelled bottles. Why name variables?",
+        // The labelled bottles are the screen's scene (see `NamesBackdrop`), as on "Which bottle is mine?", standing still.
+        // Three rows of words would cover their bases; the shorter rows stand below them.
+        compact: true,
         options: words(["To know what they represent", "To make the program longer", "To avoid calculations"]),
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -831,6 +851,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "An app must add two numbers. Why keep both?",
+        // The addition app, both its numbers kept, is the screen's scene (see `MiniAppBackdrop`); nothing is lit for an answer (no part of the app is about only one of them), and the result shows once the answer is right.
+        visual: (context) => <MiniAppDrive filled={2} lights={NO_LIGHTS} reveal context={context} />,
+        // Three rows of words would cover the app's lower half; the shorter rows stand below it.
+        compact: true,
         options: words(["To use them in the calculation", "To delete them", "To show only one number"]),
         correctId: at(0),
         rightTitle: "Exactly!",

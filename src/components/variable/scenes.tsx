@@ -42,6 +42,8 @@ const SCENE_WIDTH = `min(var(--stage-w, ${VARIABLE_SCENES.width}px), calc(${MAX_
 export const SCENE_BOTTOM = `calc(${SCENE_TOP}px + ${SCENE_WIDTH} * ${VARIABLE_SCENES.height} / ${VARIABLE_SCENES.width})`;
 /** `SCENE_BOTTOM` for a scene drawn at its own size (stage px): what it is on a 390px-wide phone, and the lowest anything pinned to the edge should go, as a wider window draws the scene larger and the edge lower, into what stands under it. */
 export const SCENE_BOTTOM_PHONE = SCENE_TOP + VARIABLE_SCENES.height;
+/** `SCENE_BOTTOM` for a scene that has risen into the room under the title (see `SCENE_LIFT`): where a screen with no Hex bubble, whose scene starts there, has it end. */
+export const SCENE_BOTTOM_LIFTED = `calc(${SCENE_BOTTOM} - ${SCENE_LIFT}px)`;
 /** Fades the scene into the page at its top and bottom only: its sides are left sharp. The bottom fade is short, as the scenes put labels and price tags near their lower edge. */
 const FADE = "linear-gradient(180deg, transparent 0, #000 28px, #000 calc(100% - 26px), transparent 100%)";
 
@@ -163,6 +165,11 @@ export function ClassroomBackdrop({ lifted = false }: { lifted?: boolean }) {
 /** The little app on a phone ("VAR_MiniApp"); the screen sets what it shows and lights (see `MiniAppDrive`). */
 export function MiniAppBackdrop({ lifted = false }: { lifted?: boolean }) {
   return <SceneFrame scene="miniApp" lifted={lifted} />;
+}
+
+/** The chapter's wrap-up ("VAR_Complete"): the idea with the things the chapter used around it; the screen sets `focus` and fires `celebrate`. */
+export function CompleteBackdrop({ lifted = false }: { lifted?: boolean }) {
+  return <SceneFrame scene="complete" lifted={lifted} />;
 }
 
 /** The four objects ("VAR_Items"); the screen sets `pick` and fires `correct` / `wrong`. */

@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { animate, AnimatePresence, motion } from "framer-motion";
-import { Calculator as CalculatorIcon } from "lucide-react";
 
 /** A card, in the style of the picture cards of the other modules. */
 export const CARD =
@@ -155,61 +154,6 @@ export function Wallet({ amount, caption = "Pocket money", note }: { amount: num
           </motion.span>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-/** An item to buy, with its price on a tag. */
-export function ShopItem({ emoji, name, price, tint = "bg-[#F6F4FE]" }: { emoji: string; name: string; price: number; tint?: string }) {
-  return (
-    <div className={`relative flex w-[92px] flex-col items-center gap-0.5 rounded-[14px] border-4 border-white px-2 pt-3 pb-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent dark:bg-[#0F1F26] ${tint}`}>
-      <span aria-hidden className="text-[34px] leading-none">
-        {emoji}
-      </span>
-      <span className="text-[13px] leading-4 font-semibold text-[#444444] dark:text-white">{name}</span>
-      <span className="mt-1 rounded-full bg-[#FFB300] px-2.5 py-0.5 text-[13px] leading-4 font-bold text-white shadow-[0_2px_0_#D98E00]">₹{price}</span>
-    </div>
-  );
-}
-
-/* ───────────────────────── Small apps ───────────────────────── */
-
-/** The addition app the learner is about to plan: two number fields, an Add button and a result. `compact` is the short version, for where there is little room. */
-export function CalculatorApp({
-  first = "",
-  second = "",
-  result = "",
-  highlight = false,
-  compact = false,
-}: {
-  first?: string;
-  second?: string;
-  result?: string;
-  highlight?: boolean;
-  compact?: boolean;
-}) {
-  const field = (value: string, label: string) => (
-    <div className={`flex items-center justify-between rounded-lg border-2 border-[#D5DADF] bg-white px-3 dark:border-white/20 dark:bg-[#15181E] ${compact ? "h-7" : "h-10"}`}>
-      <span className="text-[11px] leading-4 font-medium text-[#8A94A0]">{label}</span>
-      <span className={`font-semibold text-[#444444] dark:text-white ${compact ? "text-[14px] leading-5" : "text-[18px] leading-6"}`}>{value || " "}</span>
-    </div>
-  );
-  return (
-    <div className={`flex w-[230px] flex-col ${compact ? "gap-1.5 p-2" : "gap-2 p-3"} ${CARD}`}>
-      {!compact && (
-        <span className="flex items-center gap-1.5 text-[12px] leading-4 font-bold text-[#6B7480] dark:text-white/60">
-          <CalculatorIcon aria-hidden className="size-4 text-[#08A4AD]" /> Add two numbers
-        </span>
-      )}
-      {field(first, "First number")}
-      {field(second, "Second number")}
-      <span className={`flex items-center justify-center rounded-lg bg-[#08A4AD] font-semibold text-white shadow-[0_3px_0_#067F86] ${compact ? "h-[26px] text-[12px] leading-4" : "h-9 text-[14px] leading-5"}`}>Add</span>
-      <div
-        className={`flex items-center justify-between rounded-lg border-2 px-3 ${compact ? "h-7" : "h-10"} ${highlight ? "border-[#E5484D] bg-[#FDECEC] dark:bg-[#2E1517]" : "border-dashed border-[#B9C2D0] dark:border-white/25"}`}
-      >
-        <span className="text-[11px] leading-4 font-medium text-[#8A94A0]">Result</span>
-        <span className={`font-bold ${compact ? "text-[14px] leading-5" : "text-[18px] leading-6"} ${highlight ? "text-[#D42421]" : "text-[#444444] dark:text-white"}`}>{result || " "}</span>
-      </div>
     </div>
   );
 }

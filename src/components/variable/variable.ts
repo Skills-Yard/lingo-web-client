@@ -53,25 +53,25 @@ export const STEP = {
 const BOTTLE_STEPS: readonly number[] = [STEP.bottle, STEP.fill, STEP.addWater, STEP.drink, STEP.empty, STEP.meet];
 
 /** The screens about the notebook, pen and eraser (the shop counter), and about the pocket money (the wallet). */
-const SHOP_STEPS: readonly number[] = [STEP.shopping, STEP.prices, STEP.total, STEP.eraser];
+const SHOP_STEPS: readonly number[] = [STEP.shopping, STEP.prices, STEP.total, STEP.eraser, STEP.debug];
 const WALLET_STEPS: readonly number[] = [STEP.pocket, STEP.received, STEP.spent, STEP.follow];
 
 /**
  * The scene behind a screen: the four objects on "Pick the Right Object", the bottle, the
- * labelled bottles on "Which bottle is mine?", the pair of variable cards on "Same Bottle, New
+ * labelled bottles on "Which bottle is mine?" and "Why Meaningful Names?", the pair of variable cards on "Same Bottle, New
  * Amount" and on "Name or Value?" (both its stages), the classroom on "A New Day at School!" and "Three
  * Pieces of Data" (both its stages), the shop, the wallet, and the trail on every other.
  */
 export const sceneOf = (step: number): SceneName =>
   step === STEP.carry
     ? "items"
-    : step === STEP.labels
+    : step === STEP.labels || step === STEP.reflectNames
       ? "names"
       : step === STEP.sameBottle || step === STEP.classify
         ? "varCard"
         : step === STEP.attendance || step === STEP.names || step === STEP.tomorrow
           ? "classroom"
-          : step === STEP.appIntro
+          : step === STEP.appIntro || step === STEP.reflectBoth
             ? "miniApp"
             : BOTTLE_STEPS.includes(step)
               ? "bottle"
