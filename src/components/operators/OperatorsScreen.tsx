@@ -71,7 +71,7 @@ function InteractionHost({
   holdButton: (press: (() => void) | null) => void;
   next: () => void;
 }) {
-  return <>{stage.render({ slip, done, dismissHex: KEEP_HEX, finished, lineTyped, holdButton, next, hexSpoken: lineTyped })}</>;
+  return <>{stage.render?.({ slip, done, dismissHex: KEEP_HEX, finished, lineTyped, holdButton, next, hexSpoken: lineTyped })}</>;
 }
 
 /**

@@ -181,6 +181,100 @@ export const VARIABLE_SCENES = {
 } as const;
 
 /**
+ * The Data Types module's scenes: seven more artboards of `sequence.riv` (390x306 each, the `DT_` ones), each
+ * with its own state machine and a view model that `datatypesHost` writes. None of them takes taps: the screens
+ * drive them. Each has `highlight` (lights one thing up) and the triggers `correct` / `wrong` (a green / red
+ * glow with a tick / cross on the picture), and all but the sorting lab have `mode` (which of its pictures is
+ * up, from 0).
+ *
+ * What `mode` shows (the screens in brackets are the ones that use it):
+ * - `info` ("DT_A01_InfoExplorer"): 0 and 1 the event form (screens 1 and 2; `field` 1-4 lights Name / Age /
+ *   Height / Permission, `fill` 1-4 writes Aarav / 12 / 148.5 cm / Yes in), 2 eight values over three empty
+ *   groups, 3 the groups filled, 4 and up the empty school yard.
+ * - `numbers` ("DT_A02_NumberLab"): 0 three counts, 1 four values, 2 a number line, 3 a ruler, 4 two bins.
+ * - `strings` ("DT_A03_StringDiscovery"): 0 the student list, then text examples and 12 against "12".
+ * - `boolean` ("DT_A04_Boolean"): 0 the attendance card, 1 four yes / no cards, 2 TRUE / FALSE and three flags,
+ *   3 the four types (tap to open), 4 a record with a type on each field.
+ * - `build` ("DT_A05_BuildWithData"): 0 the shopping app, 1 Aarav's info over four type bins, 2 the weather app.
+ * - `mastery` ("DT_A06_DebugMastery"): 0 the student record, 1 the player profile, 2 a value over the four types,
+ *   3 an app over the four types (what it takes is in `MASTERY`).
+ * - `sorting` ("DT_SortingLab"): a belt of four values over four bins (no `mode`).
+ *
+ * What the other numbers do (all numbers, 0 = off; read off the file, see `SCENE_MODE` for the modes):
+ * - `info`, mode 2: `card1`-`card8` is the group (0 on the shelf, 1-3 a group) each value sits in, in the order 12, 25,
+ *   40, Aarav, Mia, Kabir, 148.5, 165.2. Mode 3: `open1`-`open3` outlines a group and names it (Quantities, Names, ...).
+ *   Modes 0 and 1: `field` outlines one row of the form, `fill` n writes the first n rows in (so 4 fills them all).
+ * - `numbers`, mode 1: `sel1`-`sel4` glows a value (12 students, 25 tickets, 148.5 cm, 36.7 kg), `split` 1 sorts them
+ *   into Whole numbers / Decimal parts. Mode 3: `measure` 1 runs the tape up the two heights. Mode 4: `card1`-`card6` is the bin
+ *   (1 Integer, 2 Float, 0 on the shelf) of 15, 25.5, 100, 9.75, 0, 42.8; `hint` 1 puts a magnifier on `hintValue` (a string).
+ * - `strings`, mode 0: `list` shows the first n students (0 shows all four). Mode 1: `sel1`-`sel6` glows a card (Aarav,
+ *   Class 6A, Delhi, SY001, Welcome to Learny!, 9876543210), `rev1`-`rev5` hangs a tag on it, `quotes` 1 puts quote marks on
+ *   the text, `ident` 1 tags the two ids. Mode 2: `step` 1 the 12 on the calculator and "12" on the screen, 2 the sum
+ *   12 + 3 = 15, 3 the text "12" + "3" = "123".
+ * - `boolean`, mode 1: `s1`-`s4` switches a card on (Present, Paid, Logged in, On). Mode 2: `bsel` 1 / 2 outlines TRUE / FALSE.
+ *   Mode 3: `open1`-`open4` opens a type card (Integer, Float, String, Boolean). Mode 4: `m1`-`m4` puts a card in its
+ *   own bin (Age, Student ID, Height, Is_present).
+ * - `sorting` (no mode): `val1`-`val4` (strings) are the four values on the belt, left to right (25, 148.5, "Aarav", True
+ *   as the file has them). `drop1`-`drop4` is the bin each one has dropped into (1 Integer, 2 Float, 3 String, 4 Boolean, the bins
+ *   left to right; 0 on the belt), and a value can be dropped into a wrong bin. `highlight` n (1-4) glows bin n when `correct` plays.
+ *   `run` plays the belt again.
+ * - `build`, mode 0: `n1` / `n2` send a price into "Calculate a total", `n3` the name into "Display information", `total` 1
+ *   adds the "Total 70" tag. Mode 1: `p1`-`p5` is the bin of each card (1 Integer, 2 Float, 3 String, 4 Boolean; 0 on
+ *   the shelf), in the order Name, Age, Height, Is_present, Student ID. Mode 2: `t1`-`t4` is the type on each field
+ *   (the same numbers; City, Temperature, Rainy days, Is raining?), `vals` 1 fills the phone and the fields with Delhi,
+ *   28.5, 3 and False, `boot` 1 puts a tick on the phone.
+ */
+export const DATATYPES_SCENES = {
+  src: SEQUENCE_ROOM.src,
+  width: 390,
+  height: 306,
+  info: { artboard: "DT_A01_InfoExplorer", stateMachine: "A01_SM" },
+  numbers: { artboard: "DT_A02_NumberLab", stateMachine: "A02_SM" },
+  strings: { artboard: "DT_A03_StringDiscovery", stateMachine: "A03_SM" },
+  boolean: { artboard: "DT_A04_Boolean", stateMachine: "A04_SM" },
+  build: { artboard: "DT_A05_BuildWithData", stateMachine: "A05_SM" },
+  mastery: { artboard: "DT_A06_DebugMastery", stateMachine: "A06_SM" },
+  sorting: { artboard: "DT_SortingLab", stateMachine: "SortLab_SM" },
+} as const;
+
+export type DatatypesSceneName = Exclude<keyof typeof DATATYPES_SCENES, "src" | "width" | "height">;
+
+/** What each artboard's `mode` is (see `DATATYPES_SCENES`): the screens use these in place of the bare numbers. */
+export const SCENE_MODE = {
+  info: { form: 0, aaravForm: 1, values: 2, groups: 3 },
+  numbers: { counts: 0, values: 1, numberLine: 2, ruler: 3, bins: 4 },
+  strings: { list: 0, examples: 1, twelve: 2 },
+  boolean: { attendance: 0, states: 1, flags: 2, types: 3, record: 4 },
+  build: { shopping: 0, aarav: 1, weather: 2 },
+} as const;
+
+/**
+ * What `DT_A06_DebugMastery` (`DATATYPES_SCENES.mastery`, state machine `A06_SM`) takes, as the file has it.
+ * `highlight` numbers the artboard's things in one run, whichever `mode` is up: a `correct` / `wrong` then
+ * glows the one that is numbered (a tick / a cross), for about a second, and `highlight` back at 0 clears it
+ * (0 with a trigger plays the whole set). A number that is not on the picture does nothing.
+ */
+export const MASTERY = {
+  mode: { record: 0, profile: 1, value: 2, app: 3 },
+  highlight: {
+    /** Mode 0, the student record's four rows. The Height row always wears the "!" (an Integer where a Float belongs). */
+    row: { name: 1, age: 2, height: 3, present: 4 },
+    /** Mode 1, the player profile's five rows. */
+    profile: { name: 5, score: 6, completion: 7, completed: 8, id: 9 },
+    /** Mode 2, the four type cards under the value. */
+    card: { integer: 10, float: 11, string: 12, boolean: 13 },
+    /** Mode 3, the phone. */
+    phone: 14,
+  },
+  /** `fixed` 1, mode 0: the Height row is a Float and ticked. */
+  fixed: 1,
+  /** Mode 2's `q`: which value stands over the four types. */
+  value: { age: 1, height: 2, studentId: 3, flag: 4, weatherApp: 5 },
+  /** Mode 1's `g1`-`g5`: the type on each row of the profile (0, the empty slot, until it is given). */
+  type: { none: 0, integer: 1, float: 2, string: 3, boolean: 4 },
+} as const;
+
+/**
  * Hex — `hex.riv`, artboard "HEX". The one character rig for every onboarding
  * screen. It has no inputs or view model: each pose is its own state machine
  * (named `HEX-<Pose>`), and a screen plays exactly one of them at a time.

@@ -576,6 +576,7 @@ export function ChooseTypeStage({
   from,
   correct,
   hint,
+  showCard = true,
 }: {
   api: InteractionApi;
   field: string;
@@ -583,6 +584,8 @@ export function ChooseTypeStage({
   from: string;
   correct: string;
   hint: string;
+  /** Draws the field's own card above the types; off where a scene behind the stage already shows it. */
+  showCard?: boolean;
 }) {
   const { slip, done, finished } = api;
   const [wrong, setWrong] = useState<string | null>(null);
@@ -602,14 +605,16 @@ export function ChooseTypeStage({
   };
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-4`}>
-      <WindowCard title={field} icon={<FileText />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
-        <div className={`flex h-[48px] items-center justify-between px-4 ${WINDOW_ROW}`}>
-          <span className="text-[22px] leading-7 font-bold text-[#151E48] dark:text-white">{value}</span>
-          <span className="rounded-full bg-[#E3F6F3] px-3 py-0.5 text-[12px] leading-4 font-semibold text-[#04908F] dark:bg-[#0F2B28]">
-            {chosen ? TYPES.find((type) => type.id === chosen)?.label : from}
-          </span>
-        </div>
-      </WindowCard>
+      {showCard && (
+        <WindowCard title={field} icon={<FileText />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
+          <div className={`flex h-[48px] items-center justify-between px-4 ${WINDOW_ROW}`}>
+            <span className="text-[22px] leading-7 font-bold text-[#151E48] dark:text-white">{value}</span>
+            <span className="rounded-full bg-[#E3F6F3] px-3 py-0.5 text-[12px] leading-4 font-semibold text-[#04908F] dark:bg-[#0F2B28]">
+              {chosen ? TYPES.find((type) => type.id === chosen)?.label : from}
+            </span>
+          </div>
+        </WindowCard>
+      )}
       <div className="grid w-full grid-cols-2 gap-3.5">
         {TYPES.map((type, index) => (
           <motion.button

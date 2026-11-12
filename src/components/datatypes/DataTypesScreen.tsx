@@ -13,10 +13,12 @@ import { TileCards } from "@/components/level-two/TileCards";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
+import { fireSceneTrigger, type SceneValues } from "@/lib/rive/datatypesHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { DATATYPES_STEPS, datatypesNext, datatypesPrevious } from "./datatypes";
 import { noteAnswer, noteStruggle } from "./datatypesScore";
-import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } from "./screen";
+import { HEX_LIFT, SceneBackdrop, sceneHeight, sceneTop } from "./scenes";
+import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef, type VisualContext } from "./screen";
 
 /** A row of the list of answers, and the gap between rows (see `AnswerCards`). */
 const ROW_H = 76;
@@ -68,6 +70,7 @@ function InteractionHost({
   finished,
   hexSpoken,
   takeContinue,
+  setScene,
 }: {
   stage: InteractionStage;
   slip: () => void;
@@ -76,8 +79,9 @@ function InteractionHost({
   finished: boolean;
   hexSpoken: boolean;
   takeContinue: (handler: (() => boolean) | null) => void;
+  setScene: (values: SceneValues) => void;
 }) {
-  return <>{stage.render({ slip, done, dismissHex, finished, hexSpoken, takeContinue })}</>;
+  return <>{stage.render?.({ slip, done, dismissHex, finished, hexSpoken, takeContinue, setScene })}</>;
 }
 
 /**
@@ -105,6 +109,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const [hexSpoken, setHexSpoken] = useState(false);
   // An interaction has sent Hex's line away early, to talk through its own Hex lower down.
   const [hexDismissed, setHexDismissed] = useState(false);
+  // What the interaction has changed in its scene so far (see `InteractionApi.setScene`); each stage starts clean.
+  const [sceneExtra, setSceneExtra] = useState<SceneValues>({});
   // The picture is shrunk to fit the room between Hex's line and the question, if it is taller than that.
   const [roomHeight, setRoomHeight] = useState(0);
   const [pictureHeight, setPictureHeight] = useState(0);
@@ -133,11 +139,18 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none, or if he has been sent away).
   const lookReady = !!interaction?.ready && (hexSpoken || hexDismissed || !interaction.line);
 
+  // The scene behind the stage, if it has one: its data follows what the learner has done (an interaction is "checked" and "correct" once it is finished),
+  // and an interaction can add to it as it goes (a card sent to its bin).
+  const sceneContext: VisualContext = { attempt, picked: selectedId, checked: quiz ? checked : finished, correct: quiz ? correct : finished, hexSpoken };
+  const stageScene = !stage.scene ? null : typeof stage.scene === "function" ? stage.scene(sceneContext) : stage.scene;
+  const scene = stageScene && { ...stageScene, values: { ...stageScene.values, ...sceneExtra } };
+
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
     if (!clean) noteStruggle(screen.step, "miss");
     vibrateForAnswer(clean);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: clean }));
+    if (scene && (clean || scene.markWrong !== false)) fireSceneTrigger(scene.scene, clean ? "correct" : "wrong");
   };
 
   // What an interaction calls: always the same functions, acting on the screen as it is now.
@@ -154,6 +167,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const slip = useCallback(() => slipNow.current(), []);
   const done = useCallback(() => finishNow.current(), []);
   const dismissHex = useCallback(() => setHexDismissed(true), []);
+  const setScene = useCallback((values: SceneValues) => setSceneExtra(values), []);
   // A stage that steps through its own parts can take Continue over (see `InteractionApi.takeContinue`).
   const continueHandler = useRef<(() => boolean) | null>(null);
   const takeContinue = useCallback((handler: (() => boolean) | null) => {
@@ -186,6 +200,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     setFinished(false);
     setHexSpoken(false);
     setHexDismissed(false);
+    setSceneExtra({});
   };
 
   const onContinue = () => {
@@ -232,6 +247,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
   const risen = quiz ? (tiles ? (quiz.cards ? CARD_SETS[quiz.cards].rise : CARDS_RISE) : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
   const celebrate = panel?.right === true && (quiz ? checked : finished);
+  // A right answer sends the answers (and the question standing on them) up and away, as in the earlier modules.
+  // Under a scene they go on a wrong one too (the scene shows what was picked), and they leave from where they stand: the scene stays put.
+  const answersAway = !!quiz && checked && (correct || !!scene);
 
   return (
     <LevelTwoShell
@@ -241,6 +259,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       scene={
         <>
           <SoftBackdrop />
+          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} titleEnd={titleEnd} lifted={gone} />}
           {screen.backdrop}
         </>
       }
@@ -290,7 +309,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
 
       <div
         className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding] duration-500 ease-out"
-        style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: gone ? risen : 0 }}
+        style={{ top: scene ? titleEnd - HEX_LIFT : titleEnd, bottom: bodyBottom, paddingBottom: gone ? risen : 0 }}
       >
         {line && (
           <motion.div
@@ -311,20 +330,37 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
             />
           </motion.div>
         )}
-        <div ref={roomRef} className={`flex min-h-0 w-full flex-1 flex-col items-center ${interaction?.alignTop ? "justify-start" : "justify-center"}`}>
-          <div ref={pictureRef} className="flex flex-col items-center gap-2 transition-transform duration-300 ease-out" style={{ transform: `scale(${fit})`, transformOrigin: interaction?.alignTop ? "top center" : "center" }}>
-            {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct, hexSpoken }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} />}
+        {!scene && (
+          <div ref={roomRef} className={`flex min-h-0 w-full flex-1 flex-col items-center ${interaction?.alignTop ? "justify-start" : "justify-center"}`}>
+            <div ref={pictureRef} className="flex flex-col items-center gap-2 transition-transform duration-300 ease-out" style={{ transform: `scale(${fit})`, transformOrigin: interaction?.alignTop ? "top center" : "center" }}>
+              {quiz
+                ? quiz.visual?.({ attempt, picked: selectedId, checked, correct, hexSpoken })
+                : interaction && <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />}
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* An interaction under a scene stands below it (the scene stays where it is) and leaves once it is done. */}
+      {scene && interaction && (
+        <motion.div
+          initial={false}
+          animate={{ opacity: panel ? 0 : 1 }}
+          transition={{ duration: 0.3 }}
+          className="absolute inset-x-0 flex justify-center"
+          style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)`, pointerEvents: panel ? "none" : "auto" }}
+        >
+          <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
+        </motion.div>
+      )}
 
       {quiz && (
         <>
           {quiz.question && (
             <motion.p
               initial={{ opacity: 0, y: 90 }}
-              animate={{ opacity: 1, y: checked ? -(tiles ? CARDS_RISE : LIST_RISE) : 0 }}
-              transition={checked ? PANEL_SPRING : ANSWERS_IN}
+              animate={{ opacity: answersAway ? 0 : 1, y: checked ? -(tiles ? CARDS_RISE : LIST_RISE) : 0 }}
+              transition={checked ? { ...PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
               className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
               style={{ bottom: `calc(${answersBottom} + ${answersHeight(quiz) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
             >
@@ -335,12 +371,12 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
             <TileCards
               layout={quiz.cards ?? (tileCount(quiz) === 2 ? "pair" : tileCount(quiz) === 3 ? "tiles" : "grid")}
               bottomGap={quiz.cards ? CARD_SETS[quiz.cards].gapAbove : undefined}
-              rise={quiz.cards ? CARD_SETS[quiz.cards].rise : undefined}
+              rise={scene ? 0 : quiz.cards ? CARD_SETS[quiz.cards].rise : undefined}
               choices={quiz.options}
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={false}
+              fadeOut={answersAway}
               hinted={hinted}
               withHint={hasHint}
               bounceIn={quiz.optionsAfterHex}
@@ -353,10 +389,11 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={false}
+              fadeOut={answersAway}
               hinted={hinted}
               withHint={hasHint}
-              rise={LIST_RISE}
+              rise={scene ? 0 : LIST_RISE}
+              compact={!!scene}
               bounceIn={quiz.optionsAfterHex}
               revealed={hexSpoken}
               onPick={setSelectedId}
