@@ -166,6 +166,8 @@ export const VARIABLE_SCENES = {
   height: 306,
   trek: { artboard: "VAR_TrekScene", stateMachine: "Trek_SM" },
   bottle: { artboard: "VAR_Bottle", stateMachine: "Bottle_SM", capOpenSeconds: 0.7, pourSeconds: 1, capacity: 1000 },
+  /** A second copy of the bottle's artboard, for a screen that shows two parts of it apart (screen 6: the bottle, and its variable card below it). */
+  bottleCard: { artboard: "VAR_Bottle", stateMachine: "Bottle_SM" },
   names: { artboard: "VAR_Names", stateMachine: "Names_SM" },
   items: { artboard: "VAR_Items", stateMachine: "Items_SM" },
   shop: { artboard: "VAR_Shop", stateMachine: "Shop_SM" },
