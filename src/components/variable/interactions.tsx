@@ -314,55 +314,53 @@ export function FillSliderStage({ done, finished }: InteractionApi) {
   );
 }
 
-/** A part of a card that can be tapped to say what it is. */
-function Part({ label, children, tapped, next, onTap, note }: { label: string; children: ReactNode; tapped: boolean; next: boolean; onTap: () => void; note: string }) {
-  return (
-    <Tappable label={`Tap the ${label}`} note={note} tapped={tapped} next={next} onTap={onTap} className="w-[150px]">
-      <div className={`flex min-w-[140px] flex-col items-center gap-1 px-3 py-2.5 ${CARD}`}>
-        <span className="text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">{label}</span>
-        {children}
-      </div>
-    </Tappable>
-  );
-}
+/** What the variable card's two rows are, said under the scene from the start. */
+const NAME_VALUE_NOTES = [
+  { label: "Name", text: "What we call the information." },
+  { label: "Value", text: "What it holds right now." },
+] as const;
 
 /**
- * How much of the Name and Value cards stands over the scene (px, from their top down to the scene's bottom edge).
- * They stand under the picture, on the white below it, so no character is covered; only the scene's faded last rows
- * (it fades out over its bottom 26px, which show no more than ground) are under their top. The notes and the key
- * points follow below them, above the button.
+ * Screen 13: a variable has a name and a value. The bottle scene behind the screen (see `BottleBackdrop`) has its
+ * variable card on (`showVariable`), with the name `water_level` and, as its value, the water at 550 ml; what the name
+ * and the value are is said under the scene from the start, with nothing to tap. The cap opens, and once it has
+ * (the jar's animation) the screen is done and Continue can be pressed.
  */
-const NAME_VALUE_OVER_SCENE = 16;
-
-/** Screen 13: a variable has a name and a value; tap each to find out what it is. */
 export function NameValueStage({ done, finished }: InteractionApi) {
-  const [name, setName] = useState(false);
-  const [value, setValue] = useState(false);
+  // The bottle stands at 550 ml with its cap opening, and the variable card beside it says so; both go as the screen is left.
   useEffect(() => {
-    if (!name || !value) return;
-    const timer = window.setTimeout(() => done(), 600);
-    return () => window.clearTimeout(timer);
-  }, [name, value, done]);
+    setSceneValues("bottle", { showVariable: true, varName: "water_level", showLabel: false, pouring: false });
+    setBottleLevel(550);
+    const wait = openBottleCap();
+    const timer = window.setTimeout(() => done(), wait + BRIDGE_SETTLE_MS);
+    return () => {
+      window.clearTimeout(timer);
+      setSceneValues("bottle", { showVariable: false, showLabel: true });
+    };
+  }, [done]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="A variable has a name and a value. Tap each part." entry="variable-meet" />
-      <div
-        className="absolute inset-x-0 flex flex-col items-center gap-3"
-        style={{ top: `calc(min(${SCENE_BOTTOM}, ${SCENE_BOTTOM_PHONE}px) - ${BELOW_TITLE}px - ${NAME_VALUE_OVER_SCENE}px)` }}
-      >
-        <div className="flex w-[340px] items-start justify-between">
-          <Part label="Name" tapped={name} next={!name} onTap={() => setName(true)} note="What we call the information.">
-            <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[15px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">water_level</span>
-          </Part>
-          <motion.svg aria-hidden width={34} height={20} viewBox="0 0 34 20" className="mt-9 shrink-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
-            <motion.path d="M2 10H30M24 4l6 6-6 6" stroke="#04ACAB" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 0.6 }} />
-          </motion.svg>
-          <Part label="Value" tapped={value} next={name && !value} onTap={() => setValue(true)} note="What it holds right now.">
-            <span className="text-[20px] leading-7 font-bold text-[#444444] dark:text-white">550 ml</span>
-          </Part>
-        </div>
-        {finished && <KeyPoints points={["A variable has a name.", "The name tells us what it is.", "The value is what it holds now."]} />}
+      <Narration text="A variable has a name and a value." entry="variable-meet" />
+      {/* Under the scene's bottom edge, on the white: what the name and the value are. */}
+      <div className="absolute inset-x-0 flex flex-col items-center gap-2" style={{ top: `calc(min(${SCENE_BOTTOM}, ${SCENE_BOTTOM_PHONE}px) - ${BELOW_TITLE}px + 12px)` }}>
+        {NAME_VALUE_NOTES.map((note, index) => (
+          <motion.p
+            key={note.label}
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 + index * 0.3 }}
+            className="max-w-[300px] rounded-[12px] bg-white px-3 py-2 text-center text-[14px] leading-5 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
+          >
+            <span className="font-bold text-[#04908F] dark:text-[#7FD8CC]">{note.label}:</span> {note.text}
+          </motion.p>
+        ))}
       </div>
+      {/* The key points stand just above the button row (this stage's bottom), under the notes. */}
+      {finished && (
+        <div className="absolute inset-x-0 bottom-0 flex justify-center">
+          <KeyPoints points={["A variable has a name.", "The name tells us what it is.", "The value is what it holds now."]} />
+        </div>
+      )}
     </div>
   );
 }

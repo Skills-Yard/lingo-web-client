@@ -50,7 +50,7 @@ export const STEP = {
 } as const;
 
 /** The screens where the bottle is filled and drunk from: its scene is their backdrop. */
-const BOTTLE_STEPS: readonly number[] = [STEP.bottle, STEP.fill, STEP.addWater, STEP.drink, STEP.empty];
+const BOTTLE_STEPS: readonly number[] = [STEP.bottle, STEP.fill, STEP.addWater, STEP.drink, STEP.empty, STEP.meet];
 
 /** The screens about the notebook, pen and eraser (the shop counter), and about the pocket money (the wallet). */
 const SHOP_STEPS: readonly number[] = [STEP.shopping, STEP.prices, STEP.total, STEP.eraser];
