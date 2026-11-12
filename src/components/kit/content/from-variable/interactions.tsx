@@ -1,19 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Check, Pointer, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
 import { ArrangeBoard, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
-import { openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
+import { openBottleCap, rampBottleLevel, setBottleLevel, setSceneryHidden, setSceneValues, setSkippedFills } from "@/lib/rive/variableHost";
+import { BELOW_TITLE, HEX_LIFT, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneWindow } from "@/components/variable/scenes";
 import { fireScene, setScene } from "@/components/kit/artboard/scenes";
 import type { SortApi } from "@/components/kit/content/from-datatypes/screen";
 import type { InteractionApi } from "@/components/kit/content/from-variable/quiz";
-import { Bottle, CARD } from "@/components/kit/content/from-variable/visuals";
+import { CARD } from "@/components/kit/content/from-variable/visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
 export function Narration({ text, entry }: { text: string; entry: string }) {
@@ -454,23 +455,47 @@ export function NamesStage({ done, finished }: InteractionApi) {
   );
 }
 
-type PartKind = "name" | "value";
-const CLASSIFY_PARTS: readonly { id: string; text: string; kind: PartKind; card: number }[] = [
-  { id: "n1", text: "water_level", kind: "name", card: 1 },
-  { id: "v1", text: "550 ml", kind: "value", card: 1 },
-  { id: "n2", text: "bottle_capacity", kind: "name", card: 2 },
-  { id: "v2", text: "1,000 ml", kind: "value", card: 2 },
-];
+/** A part of a card to be labelled: `label` is the one it has, `card` which card it is on (1, 2, ...), `mono` sets it in the code font. */
+export type LabelItem = { id: string; text: string; label: string; card: number; mono?: boolean };
+/** A label to press: what a part can be (`label`, as in `LabelItem`) and the words on its button. */
+export type LabelChoice = { label: string; button: string };
 
-/** The height of the block the two cards make with the "It is a name / It is a value" buttons and their note (two 78px cards and an 8px gap, 10px, the 44px buttons, 10px, a 20px note line). */
-const SORT_BLOCK_H = 248;
+/** The height of the cards' block besides the cards themselves: a 10px gap, the 44px buttons, 10px, a 20px note line. */
+const LABEL_BLOCK_REST_H = 84;
+const LABEL_CARD_H = 78;
+const LABEL_CARD_GAP = 8;
 
-/** Screen 14: tap each part of the two cards and say whether it is a name or a value. */
-export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
+/** Screen 14: tap each part of the cards and say which label it has ("It is a name" / "It is a value"). */
+export function LabelStage({
+  api,
+  items,
+  choices,
+  narration,
+  entry,
+  asking,
+  idle,
+  wrong,
+}: {
+  api: SortApi;
+  items: readonly LabelItem[];
+  choices: readonly LabelChoice[];
+  /** What Hex says above the cards. */
+  narration: string;
+  /** Keys Hex's bubble, so a screen's bubble enters once. */
+  entry: string;
+  /** The note once a part is picked, before a label is pressed. */
+  asking: string;
+  /** The note while nothing is picked. */
+  idle: string;
+  /** The note after a wrong label (the part is not placed, and the miss counts). */
+  wrong: string;
+}) {
+  const { slip: slipped, done } = api;
   const [selected, setSelected] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Record<string, string>>({});
   const [slip, setSlip] = useState(false);
   const cards = [...new Set(items.map((item) => item.card))];
+  const blockHeight = cards.length * LABEL_CARD_H + (cards.length - 1) * LABEL_CARD_GAP + LABEL_BLOCK_REST_H;
   const choose = (label: string) => {
     const part = items.find((candidate) => candidate.id === selected);
     if (!part) return;
@@ -489,16 +514,16 @@ export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
   };
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="Is each one a name or a value?" entry="variable-classify" />
-      {/* The cards, the two buttons and the note stand under the scene, on the white below it, so no character is covered. */}
+      <Narration text={narration} entry={entry} />
+      {/* The cards, the buttons and the note stand under the scene, on the white below it, so no character is covered. */}
       <div
         className="absolute inset-x-0 flex flex-col items-center gap-2.5"
-        style={{ top: belowScene(SORT_BLOCK_H) }}
+        style={{ top: belowScene(blockHeight) }}
       >
         <div className="flex w-[340px] flex-col gap-2">
-          {[1, 2].map((card) => (
+          {cards.map((card) => (
             <div key={card} className={`flex items-center justify-around gap-2 px-3 py-1.5 ${CARD}`}>
-              {CLASSIFY_PARTS.filter((part) => part.card === card).map((part) => {
+              {items.filter((part) => part.card === card).map((part) => {
                 const known = placed[part.id];
                 return (
                   <button
@@ -514,7 +539,7 @@ export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
                       known ? "border-[#01A17F] bg-[#E3F6F3] [--edge:#007D60] dark:bg-[#0F2B28]" : selected === part.id ? "border-[#FFB300] bg-[#FFF3DE] [--edge:#C98A00] dark:bg-[#2A2218]" : "border-[#D5DADF] bg-white [--edge:#C9CED6] dark:border-white/20 dark:bg-[#15181E]"
                     }`}
                   >
-                    <span className={`text-[15px] leading-6 font-semibold text-[#444444] dark:text-white ${part.kind === "name" ? "font-mono" : ""}`}>{part.text}</span>
+                    <span className={`text-[15px] leading-6 font-semibold text-[#444444] dark:text-white ${part.mono ? "font-mono" : ""}`}>{part.text}</span>
                     <span className="flex h-4 items-center gap-1 text-[11px] leading-4 font-bold tracking-[0.4px] text-[#01A17F] uppercase">
                       {known && (
                         <>
@@ -529,21 +554,21 @@ export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
           ))}
         </div>
         <div className="pointer-events-auto flex w-[340px] gap-3">
-          {(["name", "value"] as const).map((kind) => (
+          {choices.map((choice) => (
             <button
-              key={kind}
+              key={choice.label}
               type="button"
               disabled={!selected}
-              onClick={() => choose(kind)}
+              onClick={() => choose(choice.label)}
               className="h-11 flex-1 cursor-pointer rounded-lg bg-[#EDFAFE] text-[15px] leading-5 font-semibold text-[#1F4899] shadow-[0_4px_0_#BFE6F2] transition-[translate,box-shadow] duration-100 enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50"
             >
-              It is a {kind}
+              {choice.button}
             </button>
           ))}
         </div>
         {/* One line is reserved; the longer "not quite" line runs a second one down into the gap above the button. */}
         <p className="min-h-5 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-          {slip ? "The name tells what it is; the value is the amount." : <span className="text-[#6B7480] dark:text-white/60">{selected ? "Is it a name or a value?" : "Tap a part to sort it."}</span>}
+          {slip ? wrong : <span className="text-[#6B7480] dark:text-white/60">{selected ? asking : idle}</span>}
         </p>
       </div>
     </div>
@@ -640,33 +665,36 @@ export function MatchStage({
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text={narration} entry={entry} />
-      <div className="pointer-events-auto relative" style={{ width: geo.board.width, height: geo.board.height }}>
-        <ArrangeBoard
-          cards={defs}
-          slots={slots}
-          geo={geo}
-          disabled={finished || (full && !right)}
-          onPlace={(id, slot) => {
-            setSlip(false);
-            placeIn(id, slot);
-            // The place a card is put on is lit in the scene when it is the right one (the first place is 1).
-            if (sceneLit) setScene(sceneName, { [sceneLit]: slot !== null && id === places[slot].id ? slot + 1 : 0 });
-          }}
-          slotContent={(index) => (
-            <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
-              {places[index].emoji && (
-                <span aria-hidden className="text-[26px] leading-none">
-                  {places[index].emoji}
-                </span>
-              )}
-              {places[index].name} {places[index].tag && <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">{places[index].tag}</span>}
-            </span>
-          )}
-        />
+      {/* The board and its note stand under the picture, on the white below it, so no character is covered. */}
+      <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: belowScene(geo.board.height + 12 + 40) }}>
+        <div className="pointer-events-auto relative" style={{ width: geo.board.width, height: geo.board.height }}>
+          <ArrangeBoard
+            cards={defs}
+            slots={slots}
+            geo={geo}
+            disabled={finished || (full && !right)}
+            onPlace={(id, slot) => {
+              setSlip(false);
+              placeIn(id, slot);
+              // The place a card is put on is lit in the scene when it is the right one (the first place is 1).
+              if (sceneLit) setScene(sceneName, { [sceneLit]: slot !== null && id === places[slot].id ? slot + 1 : 0 });
+            }}
+            slotContent={(index) => (
+              <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
+                {places[index].emoji && (
+                  <span aria-hidden className="text-[26px] leading-none">
+                    {places[index].emoji}
+                  </span>
+                )}
+                {places[index].name} {places[index].tag && <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">{places[index].tag}</span>}
+              </span>
+            )}
+          />
+        </div>
+        <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
+          {slip ? wrong : <span className="text-[#6B7480] dark:text-white/60">{finished ? finishedNote : idle}</span>}
+        </p>
       </div>
-      <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? wrong : <span className="text-[#6B7480] dark:text-white/60">{finished ? finishedNote : idle}</span>}
-      </p>
     </div>
   );
 }

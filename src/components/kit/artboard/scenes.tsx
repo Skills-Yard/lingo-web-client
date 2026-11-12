@@ -2,10 +2,11 @@
 
 import { useEffect, type ComponentType } from "react";
 import { BottleBackdrop, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, WalletBackdrop } from "@/components/variable/scenes";
-import { fireSceneTrigger, setSceneValues, type SceneName } from "@/lib/rive/variableHost";
+import { fireSceneTrigger, setSceneValues, type SceneName as HostSceneName } from "@/lib/rive/variableHost";
 import type { TriggerRequest } from "../types";
 
-export type { SceneName };
+/** The scenes a screen's data can name. (The host also has `bottleCard`, the bottle's second copy that a task shows in a card: it is never a backdrop.) */
+export type SceneName = Exclude<HostSceneName, "bottleCard">;
 
 /** What can be set on a scene: its view model's values, by name. */
 export type SceneValues = Record<string, boolean | number | string>;
