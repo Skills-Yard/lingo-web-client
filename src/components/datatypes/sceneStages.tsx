@@ -9,7 +9,8 @@ import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
-import type { SceneValues } from "@/lib/rive/datatypesHost";
+import { fireSceneTrigger, type SceneValues } from "@/lib/rive/datatypesHost";
+import type { DatatypesSceneName } from "@/lib/rive/runtime";
 import { SHAKE, WRONG_MS } from "./interactions";
 import { CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_READING, TINTS, tintAt, type GroupTint } from "./look";
 import type { InteractionApi } from "./screen";
@@ -429,26 +430,35 @@ export type SceneTourGroup = {
   tint: GroupTint;
   /** The colour of the group's name (a text colour class). */
   ink: string;
-  /** The scene's value that outlines the group. */
-  key: string;
+  /** What the scene shows while the group is read (the value that outlines it). */
+  values: SceneValues;
   /** What Hex says about the group once it is read. */
   caption: string;
 };
 
 const TOUR_ENTRY_KEY = "datatypes-groups-tour";
+/** A group's glow is fired this long after its values are written, so the scene has them when it plays. */
+const GLOW_DELAY_MS = 250;
 
 /**
- * The tour of screen 4's three groups: each is read by tapping its name, or by Continue, which goes through them
+ * The tour of screen 4's groups: each is read by tapping its name, or by Continue, which goes through them
  * one by one and, after the last, on to the next screen. Reading a group outlines it in the scene, sends Hex's line
  * above away, and Hex speaks from under the scene about what the group tells us. Nothing has to be tapped.
+ * `glow`: a scene that shows what is read only when its `correct` plays (the sorting lab lights the bin so).
  */
-export function SceneTourStage({ api, groups }: { api: InteractionApi; groups: readonly SceneTourGroup[] }) {
+export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; groups: readonly SceneTourGroup[]; glow?: DatatypesSceneName }) {
   const { dismissHex, takeContinue, hexSpoken } = api;
   const [current, setCurrent] = useState<string | null>(null);
   const shown = groups.find((group) => group.id === current);
 
-  const values = useMemo(() => (shown ? { [shown.key]: 1 } : {}), [shown]);
+  const values = useMemo(() => shown?.values ?? {}, [shown]);
   useSceneValues(api, values);
+
+  useEffect(() => {
+    if (!glow || !shown) return;
+    const timer = window.setTimeout(() => fireSceneTrigger(glow, "correct"), GLOW_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [glow, shown]);
 
   const read = useCallback(
     (id: string) => {
@@ -474,7 +484,7 @@ export function SceneTourStage({ api, groups }: { api: InteractionApi; groups: r
 
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
-      <div className="grid w-full grid-cols-3 gap-2.5">
+      <div className={`grid w-full gap-2.5 ${groups.length >= 4 ? "grid-cols-4" : "grid-cols-3"}`}>
         {groups.map((group, index) => {
           const reading = current === group.id;
           return (

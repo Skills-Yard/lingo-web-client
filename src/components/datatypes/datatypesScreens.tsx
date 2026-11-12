@@ -53,6 +53,7 @@ const strings = sceneOf("strings");
 const boolean = sceneOf("boolean");
 const build = sceneOf("build");
 const mastery = sceneOf("mastery");
+const sorting = sceneOf("sorting");
 const MODE = SCENE_MODE;
 
 /** What the event form lights up for the information that is picked (screen 1): its Name, Age or Height row. */
@@ -81,30 +82,29 @@ function Key({ children }: { children: ReactNode }) {
 /** What is said when a value is put in the wrong type (the PDF's "Incorrect" line of the sorting screens). */
 const WHY_WRONG = "Look at what each value represents. Is it a quantity, decimal measurement, text or logical state?";
 
-/** Screen 3's eight values (the PDF's), in the order they are given out; each knows its place in the scene (`card1` is 12, `card8` is 165.2). */
+/**
+ * Screens 3 and 4 use the sorting lab (`DT_SortingLab`): a belt of four values over four bins, left to right. The
+ * four values (the scene's `val1` to `val4`, in the order they stand on the belt): a whole number, a decimal, a name, a yes/no.
+ */
+const BELT = { val1: "12", val2: "148.5", val3: "Aarav", val4: "True" } as const;
+
+/** Where each belt value is once it is in a bin: `dropN` is its bin, from the left (1 to 4). Here each value is in a bin of its own. */
+const BELT_SORTED = { drop1: 1, drop2: 2, drop3: 3, drop4: 4 } as const;
+
+/** Screen 3's four values, in the order they stand on the belt; each knows its place in the scene (`drop1` is the first). No bin is wrong. */
 const SIMILAR_VALUES: readonly SceneSortItem[] = [
-  { id: "12", label: "12", key: "card1" },
-  { id: "25", label: "25", key: "card2" },
-  { id: "aarav", label: "Aarav", key: "card4" },
-  { id: "148.5", label: "148.5", key: "card7" },
-  { id: "kabir", label: "Kabir", key: "card6" },
-  { id: "mia", label: "Mia", key: "card5" },
-  { id: "165.2", label: "165.2", key: "card8" },
-  { id: "40", label: "40", key: "card3" },
+  { id: "12", label: "12", key: "drop1" },
+  { id: "148.5", label: "148.5", key: "drop2" },
+  { id: "aarav", label: "Aarav", key: "drop3" },
+  { id: "true", label: "True", key: "drop4" },
 ];
 
-/** Screen 3's three groups (ids as the grouping is kept under them), and the group each value goes to in the scene. */
-const SIMILAR_GROUPS: readonly SceneSortBucket[] = [
-  { id: "a", label: "Group 1", value: 1 },
-  { id: "b", label: "Group 2", value: 2 },
-  { id: "c", label: "Group 3", value: 3 },
-];
-
-/** Screen 4's three groups (the PDF's): what Hex says about each once it is read, and the scene's outline for it. */
+/** Screen 4's four groups, one for each bin of the lab: what Hex says about each once it is read, and the bin the scene lights (`highlight`). */
 const TOUR_GROUPS: readonly SceneTourGroup[] = [
-  { id: "a", name: "Group A", tint: "lavender", ink: INK.violet, key: "open1", caption: "These values represent quantities or amounts." },
-  { id: "b", name: "Group B", tint: "cream", ink: INK.orange, key: "open2", caption: "These values identify people using their names." },
-  { id: "c", name: "Group C", tint: "blue", ink: INK.blue, key: "open3", caption: "These values tell us true or false." },
+  { id: "a", name: "Group A", tint: "lavender", ink: INK.violet, values: { highlight: 1 }, caption: "These values represent quantities or amounts." },
+  { id: "b", name: "Group B", tint: "cream", ink: INK.orange, values: { highlight: 2 }, caption: "These values measure things, with a decimal part." },
+  { id: "c", name: "Group C", tint: "blue", ink: INK.blue, values: { highlight: 3 }, caption: "These values identify people using their names." },
+  { id: "d", name: "Group D", tint: "green", ink: INK.teal, values: { highlight: 4 }, caption: "These values tell us true or false." },
 ];
 
 /** The three questions under screen 5's counts (the PDF's, with the same icons as the tiles). */
@@ -215,9 +215,9 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Some of these may belong together.",
         bubbleWidth: 190,
         alignTop: true,
-        scene: info({ mode: MODE.info.values }, false),
-        // No group is wrong: each value goes where the learner thinks it fits, and the scene sends it there.
-        render: (api) => <SceneSortStage api={api} items={SIMILAR_VALUES} buckets={SIMILAR_GROUPS} prompt="Tap the group you think it fits." onSorted={noteGrouping} />,
+        scene: sorting({ ...BELT }, false),
+        // No bin is wrong: each value goes where the learner thinks it fits, and the belt drops it there.
+        render: (api) => <SceneSortStage api={api} items={SIMILAR_VALUES} buckets={SCENE_TYPE_BUCKETS} prompt="Tap the bin you think it fits." onSorted={noteGrouping} />,
         finishPanel: { title: "Interesting!", text: "You started grouping by what values represent." },
       },
     ],
@@ -232,15 +232,15 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Let’s understand what each group tells us.",
         alignTop: true,
-        scene: info({ mode: MODE.info.groups }, false),
+        scene: sorting({ ...BELT, ...BELT_SORTED }, false),
         // Nothing has to be tapped: once Hex has said his line, Continue reads the groups one by one, then goes on.
         ready: true,
-        render: (api) => <SceneTourStage api={api} groups={TOUR_GROUPS} />,
+        render: (api) => <SceneTourStage api={api} groups={TOUR_GROUPS} glow="sorting" />,
       },
       // The PDF's question after the groups: they are not the same kind of information.
       quiz({
         line: "Are these groups the same kind of information?",
-        scene: () => info({ mode: MODE.info.groups }),
+        scene: () => sorting({ ...BELT, ...BELT_SORTED }),
         options: neutral(["Yes, the same kind", "No, different kinds"]),
         correctId: at(1),
         rightTitle: "No!",

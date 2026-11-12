@@ -171,6 +171,10 @@ export const SEQUENCE_ROOM = {
  * - `boolean`, mode 1: `s1`-`s4` switches a card on (Present, Paid, Logged in, On). Mode 2: `bsel` 1 / 2 outlines TRUE / FALSE.
  *   Mode 3: `open1`-`open4` opens a type card (Integer, Float, String, Boolean). Mode 4: `m1`-`m4` puts a card in its
  *   own bin (Age, Student ID, Height, Is_present).
+ * - `sorting` (no mode): `val1`-`val4` (strings) are the four values on the belt, left to right (25, 148.5, "Aarav", True
+ *   as the file has them). `drop1`-`drop4` is the bin each one has dropped into (1 Integer, 2 Float, 3 String, 4 Boolean, the bins
+ *   left to right; 0 on the belt), and a value can be dropped into a wrong bin. `highlight` n (1-4) glows bin n when `correct` plays.
+ *   `run` plays the belt again.
  * - `build`, mode 0: `n1` / `n2` send a price into "Calculate a total", `n3` the name into "Display information", `total` 1
  *   adds the "Total 70" tag. Mode 1: `p1`-`p5` is the bin of each card (1 Integer, 2 Float, 3 String, 4 Boolean; 0 on
  *   the shelf), in the order Name, Age, Height, Is_present, Student ID. Mode 2: `t1`-`t4` is the type on each field
