@@ -56,30 +56,27 @@ const BOTTLE_STEPS: readonly number[] = [STEP.bottle, STEP.bridge, STEP.fill, ST
 const SHOP_STEPS: readonly number[] = [STEP.shopping, STEP.prices, STEP.total, STEP.eraser, STEP.debug];
 const WALLET_STEPS: readonly number[] = [STEP.pocket, STEP.received, STEP.spent, STEP.follow];
 
+/** What stands behind a screen: one of the host scenes, or the bottle and the wallet side by side (screen 31, two scenes at once). */
+export type SceneKind = SceneName | "bottleWallet";
+
 /**
  * The scene behind a screen: the four objects on "Pick the Right Object", the bottle (screens 5-8, 10, 11 and 13; on 6 and 13 with its variable card), the
  * labelled bottles on "Which bottle is mine?" and "Why Meaningful Names?", the pair of variable cards on "Same Bottle, New
  * Amount" and on "Name or Value?" (both its stages), the classroom on "A New Day at School!" and "Three
- * Pieces of Data" (both its stages), the shop, the wallet, and the trail on every other.
+ * Pieces of Data" (both its stages), the shop, the wallet, the bottle and the wallet side by side on "Can Values Change?", and the trail on every other.
  */
-export const sceneOf = (step: number): SceneName =>
-  step === STEP.carry
-    ? "items"
-    : step === STEP.labels || step === STEP.reflectNames
-      ? "names"
-      : step === STEP.sameBottle || step === STEP.classify
-        ? "varCard"
-        : step === STEP.attendance || step === STEP.names || step === STEP.tomorrow
-          ? "classroom"
-          : step === STEP.appIntro || step === STEP.reflectBoth
-            ? "miniApp"
-            : BOTTLE_STEPS.includes(step)
-              ? "bottle"
-              : SHOP_STEPS.includes(step)
-                ? "shop"
-                : WALLET_STEPS.includes(step)
-                  ? "wallet"
-                  : "trek";
+export const sceneOf = (step: number): SceneKind => {
+  if (step === STEP.carry) return "items";
+  if (step === STEP.reflectChange) return "bottleWallet";
+  if (step === STEP.labels || step === STEP.reflectNames) return "names";
+  if (step === STEP.sameBottle || step === STEP.classify) return "varCard";
+  if (step === STEP.attendance || step === STEP.names || step === STEP.tomorrow) return "classroom";
+  if (step === STEP.appIntro || step === STEP.reflectBoth) return "miniApp";
+  if (BOTTLE_STEPS.includes(step)) return "bottle";
+  if (SHOP_STEPS.includes(step)) return "shop";
+  if (WALLET_STEPS.includes(step)) return "wallet";
+  return "trek";
+};
 
 /** The screens where a wrong answer makes the trail point at the drink. */
 export const DRINK_HINT_STEPS: readonly number[] = [STEP.thirsty, STEP.noWater];

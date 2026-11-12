@@ -90,6 +90,11 @@ function BottleStory({ context }: { context: VisualContext }) {
 const EVENT_DELAY_MS = 400;
 /** The eraser takes this long to slide in (see `SHP_Eraser_In`): the sum waits for it. */
 const ERASER_IN_MS = 900;
+/** After `calc` is fired on screen 18, this long (ms) until the Total board is turned on: the notebook and the pen are added up first. */
+const CALC_RUN_MS = 1600;
+/** What the Total board shows once the notebook and the pen are added up (screens 18 and 28), and what the app on screen 28 wrongly shows to begin with (the notebook's price alone). */
+const RIGHT_TOTAL = 70;
+const WRONG_TOTAL = 50;
 
 /** Screen 4's answers, as the object each lights up in the scene (the notebook is 3: it isn't an answer). */
 const ITEM_PICK: Readonly<Record<string, number>> = { bottle: 1, football: 2, lunchbox: 4 };
@@ -110,20 +115,28 @@ function ItemsDrive({ context }: { context: VisualContext }) {
 
 /**
  * Screen 18: the shop counter (see `ShopBackdrop`) with the notebook and the pen. Tapping
- * "Notebook price" or "Pen price" lights that one, "Both prices" adds the two; checking
- * marks the items right or wrong.
+ * "Notebook price" or "Pen price" lights that one ("Both prices" lights nothing, so the tap gives
+ * nothing away); checking marks the items right or wrong. Once the answer is right the scene plays
+ * two things one after the other: `calc` (the notebook and the pen are added up) and then, when that
+ * has run, `showTotal` (the Total board comes up with `total`, ₹70).
  */
 function ShoppingDrive({ context }: { context: VisualContext }) {
+  const settled = context.checked && context.correct;
   useEffect(() => {
-    setSceneValues("shop", { showEraser: false, showNames: false, showTotal: false, highlight: 0 });
-  }, []);
+    setSceneValues("shop", { showEraser: false, showNames: false, showTotal: false, highlight: 0, total: RIGHT_TOTAL });
+  }, [context.attempt]);
   useEffect(() => {
     setSceneValues("shop", { highlight: context.picked === at(0) ? 1 : context.picked === at(1) ? 2 : 0 });
-    if (context.picked === at(2)) fireSceneTrigger("shop", "calc");
   }, [context.picked]);
   useEffect(() => {
     if (context.checked) fireSceneTrigger("shop", context.correct ? "correct" : "wrong");
   }, [context.checked, context.correct]);
+  useEffect(() => {
+    if (!settled) return;
+    fireSceneTrigger("shop", "calc");
+    const timer = window.setTimeout(() => setSceneValues("shop", { showTotal: true }), CALC_RUN_MS);
+    return () => window.clearTimeout(timer);
+  }, [settled]);
   return null;
 }
 
@@ -177,6 +190,48 @@ function WalletDrive({ from, to, event, amount = 0, toy = false, hideCard = fals
   useEffect(() => {
     if (settled) setSceneValues("wallet", { balance: to, showCard: true });
   }, [settled, to]);
+  return null;
+}
+
+/** Screen 31's story, as (value, amount) pairs: the water goes 550 → 800 → 300 ml, the pocket money ₹100 → ₹150 → ₹120. */
+const CHANGE = { water: { start: 550, up: 800, down: 300 }, money: { start: 100, received: 50, spent: 30 } } as const;
+/** Screen 31's beats (ms after the bottle's cap is open): each value grows (the water is poured in, notes fly into the wallet), and then shrinks (the water is drunk, notes fly out). */
+const CHANGE_MS = { grow: 500, shrink: 3600, run: 1600, drink: 1400, cardAfter: 900 } as const;
+
+/**
+ * Screen 31: the bottle and the wallet side by side (see `BottleWalletBackdrop`), both with a value that changes. The
+ * water starts at 550 ml with its amount shown and the wallet's card at ₹100; the water is then poured up to 800 ml
+ * while ₹50 flies into the wallet (`receive`, the card goes to ₹150), and then drunk down to 300 ml while ₹30 flies
+ * out (`spend`, the card goes to ₹120). This draws nothing, it sets the two scenes' data; it plays again on trying again.
+ */
+function BottleWalletDrive({ context }: { context: VisualContext }) {
+  useEffect(() => {
+    const { water, money } = CHANGE;
+    setSceneValues("bottle", { showVariable: false, showLabel: true, pouring: false });
+    setBottleLevel(water.start);
+    setSceneValues("wallet", { showCard: true, showToy: false, balance: money.start, amount: money.received });
+    const wait = openBottleCap();
+    const timers: number[] = [];
+    const at = (ms: number, run: () => void) => timers.push(window.setTimeout(run, wait + ms));
+    at(CHANGE_MS.grow, () => {
+      setSceneValues("bottle", { pouring: true });
+      rampBottleLevel(water.up, CHANGE_MS.run);
+      setSceneValues("wallet", { amount: money.received });
+      fireSceneTrigger("wallet", "receive");
+    });
+    at(CHANGE_MS.grow + CHANGE_MS.run, () => setSceneValues("bottle", { pouring: false }));
+    at(CHANGE_MS.grow + CHANGE_MS.cardAfter, () => setSceneValues("wallet", { balance: money.start + money.received }));
+    at(CHANGE_MS.shrink, () => {
+      rampBottleLevel(water.down, CHANGE_MS.drink);
+      setSceneValues("wallet", { amount: money.spent });
+      fireSceneTrigger("wallet", "spend");
+    });
+    at(CHANGE_MS.shrink + CHANGE_MS.cardAfter, () => setSceneValues("wallet", { balance: money.start + money.received - money.spent }));
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      setSceneValues("bottle", { pouring: false, showLabel: false });
+    };
+  }, [context.attempt]);
   return null;
 }
 
@@ -306,10 +361,6 @@ function ExpenseTracker({ showLeft }: { showLeft: boolean }) {
     </div>
   );
 }
-
-/** What the app on screen 28 wrongly shows (the notebook's price alone), and the total it should (the notebook's and the pen's). */
-const WRONG_TOTAL = 50;
-const RIGHT_TOTAL = 70;
 
 /**
  * Screen 28: the shop counter (see `ShopBackdrop`) with the notebook (₹50) and the pen (₹20), and its Total board
@@ -808,6 +859,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Think of the water and the wallet. Can a value change?",
+        // The bottle and the wallet side by side (see `BottleWalletBackdrop`), their values changing.
+        visual: (context) => <BottleWalletDrive context={context} />,
         options: words(["Yes", "No", "Only once"]),
         correctId: at(0),
         rightTitle: "Yes!",

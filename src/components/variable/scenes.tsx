@@ -74,7 +74,7 @@ function SceneSlot({ scene }: { scene: SceneName }) {
  * A scene behind a screen, the artboard's own size at the stage's width: not boxed, and not shrunk for what stands
  * over it. `lifted`: it has risen into the room Hex and his bubble left (see `SCENE_LIFT`).
  */
-function SceneFrame({ scene, lifted = false }: { scene: SceneName; lifted?: boolean }) {
+function SceneFrame({ scene, lifted = false, children }: { scene?: SceneName; lifted?: boolean; children?: ReactNode }) {
   return (
     <motion.div
       aria-hidden
@@ -85,9 +85,81 @@ function SceneFrame({ scene, lifted = false }: { scene: SceneName; lifted?: bool
       style={{ top: SCENE_TOP, maskImage: FADE, WebkitMaskImage: FADE }}
     >
       <div className="relative shrink-0" style={{ width: SCENE_WIDTH, aspectRatio: `${VARIABLE_SCENES.width} / ${VARIABLE_SCENES.height}` }}>
-        <SceneSlot scene={scene} />
+        {scene ? <SceneSlot scene={scene} /> : children}
       </div>
     </motion.div>
+  );
+}
+
+/*
+ * The pair of scenes ("VAR_Bottle" on the left, "VAR_Wallet" on the right): two whole artboards drawn at `PAIR_SCALE`
+ * of the scene's width, side by side. Each is placed by what it draws (its `*_SPAN`, artboard px: the bottle with its
+ * amount tag and open lid, the wallet with its card, notes and tag), `PAIR_MARGIN` in from the screen's edge, so the
+ * rest of the artboard (empty hills) runs off the screen's edge or under the other one. They are blended where they meet
+ * (the middle of the gap between the two drawings): both are the same landscape on the same ground, so the two
+ * pedestals read as one long one. Below, everything is a share of the scene's width.
+ */
+const PAIR_SCALE = 0.72;
+const PAIR_MARGIN = 10;
+const BOTTLE_SPAN = { from: 136, to: 329 };
+const WALLET_SPAN = { from: 90, to: 360 };
+/** The most the two blend over (px), and the clear room kept on each side of it. */
+const PAIR_BLEND_MAX = 30;
+const PAIR_BLEND_CLEAR = 3;
+/** The pair fades out at its top and bottom edges (px), like a single scene (`FADE`), a little shorter as it is drawn smaller. */
+const PAIR_FADE_V = "linear-gradient(180deg, transparent 0, #000 20px, #000 calc(100% - 18px), transparent 100%)";
+
+const PAIR_LEFT = { left: PAIR_MARGIN - BOTTLE_SPAN.from * PAIR_SCALE, right: VARIABLE_SCENES.width - PAIR_MARGIN - WALLET_SPAN.to * PAIR_SCALE };
+const BOTTLE_ENDS = PAIR_MARGIN + (BOTTLE_SPAN.to - BOTTLE_SPAN.from) * PAIR_SCALE;
+const WALLET_STARTS = PAIR_LEFT.right + WALLET_SPAN.from * PAIR_SCALE;
+const PAIR_BLEND = Math.min(PAIR_BLEND_MAX, WALLET_STARTS - BOTTLE_ENDS - 2 * PAIR_BLEND_CLEAR);
+const PAIR_SEAM = (BOTTLE_ENDS + WALLET_STARTS) / 2;
+
+/**
+ * Where an artboard of the pair stands (its `left`, a share of the scene's width) and how it blends into its neighbour. The
+ * wallet is the layer underneath and is opaque from where the blend starts; the bottle is drawn over it and fades out across
+ * the blend. (Two half-transparent layers would let the white page show through in the middle as a pale band.)
+ */
+const pairPlace = (side: "left" | "right") => {
+  const left = PAIR_LEFT[side];
+  const width = VARIABLE_SCENES.width;
+  const edge = (x: number) => `${(((x - left) / (PAIR_SCALE * width)) * 100).toFixed(2)}%`;
+  const from = PAIR_SEAM - PAIR_BLEND / 2;
+  const to = PAIR_SEAM + PAIR_BLEND / 2;
+  const across = side === "left" ? `linear-gradient(90deg, #000 ${edge(from)}, transparent ${edge(to)})` : `linear-gradient(90deg, transparent ${edge(from - PAIR_BLEND_CLEAR)}, #000 ${edge(from)})`;
+  return { left: `${((left / width) * 100).toFixed(2)}%`, mask: `${across}, ${PAIR_FADE_V}` };
+};
+
+function PairSlot({ scene, side }: { scene: SceneName; side: "left" | "right" }) {
+  const { left, mask } = pairPlace(side);
+  return (
+    <div
+      className="absolute"
+      style={{
+        left,
+        top: `${((1 - PAIR_SCALE) / 2) * 100}%`,
+        width: `${PAIR_SCALE * 100}%`,
+        aspectRatio: `${VARIABLE_SCENES.width} / ${VARIABLE_SCENES.height}`,
+        maskImage: mask,
+        WebkitMaskImage: mask,
+        maskComposite: "intersect",
+        WebkitMaskComposite: "source-in",
+      }}
+    >
+      <SceneSlot scene={scene} />
+    </div>
+  );
+}
+
+/** The bottle and the wallet side by side ("VAR_Bottle", "VAR_Wallet"); the screen sets the water and the balance (see `BottleWalletDrive`). */
+export function BottleWalletBackdrop({ lifted = false }: { lifted?: boolean }) {
+  return (
+    <SceneFrame lifted={lifted}>
+      <div className="absolute inset-0 overflow-hidden">
+        <PairSlot scene="wallet" side="right" />
+        <PairSlot scene="bottle" side="left" />
+      </div>
+    </SceneFrame>
   );
 }
 
