@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from "react";
 import { motion, type Transition } from "framer-motion";
 import { HEX_SLOT } from "@/components/level-two/HexBubble";
 import { VARIABLE_SCENES } from "@/lib/rive/runtime";
@@ -121,6 +121,43 @@ export function BottleBackdrop({ lifted = false }: { lifted?: boolean }) {
 /** The pair of variable cards ("VAR_VarCard"); the screen sets their names and values (see `VarCardDrive`). */
 export function VarCardBackdrop({ lifted = false }: { lifted?: boolean }) {
   return <SceneFrame scene="varCard" lifted={lifted} />;
+}
+
+/** What the pair of variable cards says: the name and value on each. */
+export type VarCards = { name1: string; val1: string; name2: string; val2: string };
+
+/** Screen 14's cards (the file's own): the bottle's level and its size. */
+export const NAME_VALUE_CARDS: VarCards = { name1: "water_level", val1: "550 ml", name2: "bottle_capacity", val2: "1,000 ml" };
+
+/** A part of the artboard, in its own px (see `SceneOverlay`). */
+export type ArtboardRect = { x: number; y: number; width: number; height: number };
+
+/** Where `rect` (artboard px) is, as a style for something placed in a `SceneOverlay`. */
+export const artboardRect = ({ x, y, width, height }: ArtboardRect) => ({
+  left: `${(x / VARIABLE_SCENES.width) * 100}%`,
+  top: `${(y / VARIABLE_SCENES.height) * 100}%`,
+  width: `${(width / VARIABLE_SCENES.width) * 100}%`,
+  height: `${(height / VARIABLE_SCENES.height) * 100}%`,
+});
+
+/**
+ * A box laid exactly over the scene behind the screen (see `SceneFrame`, at rest, not lifted), for what goes on its
+ * parts, such as something to tap on the artboard: place each with `artboardRect`. It is placed inside what starts at
+ * `BELOW_TITLE` (an interaction's area, under a one-line title), and takes no taps itself, only what is in it.
+ */
+export function SceneOverlay({ children }: { children: ReactNode }) {
+  return (
+    <div className="pointer-events-none absolute inset-x-0 flex justify-center" style={{ top: SCENE_TOP - BELOW_TITLE }}>
+      <div className="relative shrink-0" style={{ width: SCENE_WIDTH, aspectRatio: `${VARIABLE_SCENES.width} / ${VARIABLE_SCENES.height}` }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** The classroom and its attendance board ("VAR_Classroom"); the screen sets the counts and what is lit (see `ClassroomDrive`). */
+export function ClassroomBackdrop({ lifted = false }: { lifted?: boolean }) {
+  return <SceneFrame scene="classroom" lifted={lifted} />;
 }
 
 /** The four objects ("VAR_Items"); the screen sets `pick` and fires `correct` / `wrong`. */

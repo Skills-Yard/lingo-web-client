@@ -36,6 +36,8 @@ export type QuizStage = {
   hintOnMiss?: boolean;
   /** A wrong object spills water as it is picked. */
   spill?: boolean;
+  /** The answers are the shorter kind (four short ones stand two by two), for a scene that needs the room above them; a screen with a picture (a card) has them anyway. */
+  compact?: boolean;
   /** The main button before the answer is checked (default "Continue") and after a right one (default "Next"). */
   ctaLabel?: string;
   nextLabel?: string;

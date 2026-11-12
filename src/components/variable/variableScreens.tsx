@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
 import { Bottle, CalculatorApp, Classroom, AttendanceBoard, ShopItem, useChange, CARD } from "./visuals";
 import { BridgeStage, ClassifyStage, FillSliderStage, MatchPricesStage, NameValueStage, NamesStage } from "./interactions";
+import { NAME_VALUE_CARDS, type VarCards } from "./scenes";
 import type { Option, QuizStage, ScreenDef, VisualContext } from "./quiz";
 import { STEP } from "./variable";
 
@@ -179,13 +180,8 @@ function WalletDrive({ from, to, event, amount = 0, toy = false, hideCard = fals
   return null;
 }
 
-/** What the pair of variable cards (see `VarCardBackdrop`) says: the name and value on each. */
-type VarCards = { name1: string; val1: string; name2: string; val2: string };
-
 /** Screen 9's cards: the bottle's water level before and after it was topped up. */
 const WATER_CHANGE_CARDS: VarCards = { name1: "previous water level", val1: "500 ml", name2: "current water level", val2: "750 ml" };
-/** Screen 14's cards, as the interaction before them has them (the file's own): the bottle's level and its size. */
-const NAME_VALUE_CARDS: VarCards = { name1: "water_level", val1: "550 ml", name2: "bottle_capacity", val2: "1,000 ml" };
 /** The part of the pair each answer of screen 14's question stands for, to light up when it is tapped (1 and 3 are the names, 2 and 4 the values). */
 const NAME_VALUE_LIGHTS: Readonly<Record<string, number>> = { "0": 2, "1": 1, "2": 4 };
 const NO_LIGHTS: Readonly<Record<string, number>> = {};
@@ -204,6 +200,27 @@ function VarCardDrive({ cards, lights = NO_LIGHTS, context }: { cards: VarCards;
   }, [lights, context.picked]);
   useEffect(() => {
     if (context.checked) fireSceneTrigger("varCard", context.correct ? "correct" : "wrong");
+  }, [context.checked, context.correct]);
+  return null;
+}
+
+/** The row of the attendance board each answer of screen 15 is about (1 total, 2 present, 3 absent); "All of these" is none in particular. */
+const ATTENDANCE_LIGHTS: Readonly<Record<string, number>> = { "0": 1, "1": 2, "2": 3 };
+
+/**
+ * Screen 15: the classroom and its attendance board are the scene (see `ClassroomBackdrop`): 30 students, 27 here.
+ * This draws nothing, it sets the scene's data. The row of the board an answer is about is lit while it is the one
+ * tapped; checking marks the answer right or wrong.
+ */
+function ClassroomDrive({ context }: { context: VisualContext }) {
+  useEffect(() => {
+    setSceneValues("classroom", { total: 30, present: 27, showNames: false });
+  }, []);
+  useEffect(() => {
+    setSceneValues("classroom", { highlight: ATTENDANCE_LIGHTS[context.picked ?? ""] ?? 0 });
+  }, [context.picked]);
+  useEffect(() => {
+    if (context.checked) fireSceneTrigger("classroom", context.correct ? "correct" : "wrong");
   }, [context.checked, context.correct]);
   return null;
 }
@@ -475,12 +492,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "30 students, attendance time! What should we track?",
-        visual: () => (
-          <div className="flex items-center gap-3">
-            <Classroom present={27} />
-            <AttendanceBoard total={30} present={27} absent={3} />
-          </div>
-        ),
+        // The classroom and its board are the screen's scene (see `ClassroomBackdrop`).
+        visual: (context) => <ClassroomDrive context={context} />,
+        // Four answers would cover the classroom as rows; two by two they stand below it.
+        compact: true,
         options: words(["Total students", "Students present", "Students absent", "All of these"]),
         correctId: at(3),
         rightTitle: "Exactly!",
