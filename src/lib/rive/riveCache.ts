@@ -42,7 +42,7 @@ export const RIVE_FILES = [
   { src: HEX_RIVE_SRC, bytes: 6_160_285 },
   { src: PROGRESS_BAR.src, bytes: 13_198_164 },
   { src: BATTERY.src, bytes: 6_830_856 },
-  { src: SEQUENCE_ROOM.src, bytes: 1_008_207 },
+  { src: SEQUENCE_ROOM.src, bytes: 3_314_628 },
   { src: COMMAND_ROBOT.src, bytes: 264_119 },
   { src: GEM.src, bytes: 96_439 },
 ] as const;

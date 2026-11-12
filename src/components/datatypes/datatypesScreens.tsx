@@ -9,10 +9,12 @@ import { BADGE, INK, TINTS, tintAt } from "./look";
 import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, SortStage, TYPES, ToggleStage, type SortBucket } from "./interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
-import type { Option, QuizStage, ScreenDef } from "./screen";
+import type { SceneValues } from "@/lib/rive/datatypesHost";
+import { MASTERY } from "@/lib/rive/runtime";
+import type { Option, QuizStage, SceneSpec, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
 import { WINDOW_ROW, WindowCard } from "./WindowCard";
-import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
+import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, TwelveCards, TwelveIntro, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "./visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -39,6 +41,24 @@ const FLOAT_QUIZ_OPTIONS: Option[] = [
 
 /** A question: its answers, like screens 1 and 2's, come in once Hex has finished his line. */
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", optionsAfterHex: true, ...stage });
+
+/** The Debug Mastery scene (see `MASTERY`) showing `values`. */
+const mastery = (values: SceneValues): SceneSpec => ({ scene: "mastery", values });
+
+/** The student record's rows, by the answer that names them (screen 23): the pick lights its row up. */
+const recordRow = (picked: string | null) => (picked ? (MASTERY.highlight.row[picked as keyof typeof MASTERY.highlight.row] ?? 0) : 0);
+
+/** A value over the four types (screens 25 to 28): the pick lights its type's card up. */
+const typeCard = (picked: string | null) => (picked ? (MASTERY.highlight.card[picked as keyof typeof MASTERY.highlight.card] ?? 0) : 0);
+
+/** The player profile's five rows, each with its right type (screen 24, once they are sorted). */
+const PLAYER_TYPES = {
+  g1: MASTERY.type.string,
+  g2: MASTERY.type.integer,
+  g3: MASTERY.type.float,
+  g4: MASTERY.type.boolean,
+  g5: MASTERY.type.string,
+} as const;
 
 /** The big, plain sentence under a "Meet ..." screen, as on "Meet the Sequence.". */
 function Key({ children }: { children: ReactNode }) {
@@ -764,7 +784,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Which field has been classified incorrectly?",
-        visual: () => <TypedCards />,
+        scene: ({ picked }) => mastery({ mode: MASTERY.mode.record, highlight: recordRow(picked) }),
         layout: "grid",
         options: tinted([
           { id: "name", text: "Name", icon: P.statement },
@@ -780,8 +800,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       {
         kind: "interaction",
         line: "Now replace the incorrect type with Float.",
-        alignTop: true,
-        render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" />,
+        scene: ({ checked }) => mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height, fixed: checked ? MASTERY.fixed : 0 }),
+        render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" showCard={false} />,
         finishPanel: { title: "Fixed!", text: "Height is now a Float." },
       },
     ],
@@ -814,6 +834,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       },
       quiz({
         line: "Why is Player ID a String rather than an Integer?",
+        scene: () => ({ ...mastery({ mode: MASTERY.mode.profile, highlight: MASTERY.highlight.profile.id, ...PLAYER_TYPES }), markWrong: false }),
         options: neutral(["It identifies a player", "It is a decimal number", "It is a yes/no value", "It is a very big number"]),
         correctId: at(0),
         rightTitle: "Excellent!",
@@ -830,6 +851,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Which data type suits a student’s age of 12?",
+        scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.age, highlight: typeCard(picked) }),
         layout: "grid",
         options: TYPE_OPTIONS,
         correctId: "integer",
@@ -847,6 +869,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Which data type suits a height of 152.5 cm?",
+        scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.height, highlight: typeCard(picked) }),
         layout: "grid",
         options: TYPE_OPTIONS,
         correctId: "float",
@@ -864,6 +887,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Student ID “0045”: why is it treated as text?",
+        scene: () => ({ ...mastery({ mode: MASTERY.mode.value, q: MASTERY.value.studentId, highlight: MASTERY.highlight.card.string }), markWrong: false }),
         options: neutral(["It identifies a student", "It represents a height", "It is a decimal number", "It means True or False"]),
         correctId: at(0),
         rightTitle: "Correct!",
@@ -880,6 +904,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Which data type represents True or False?",
+        scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.flag, highlight: typeCard(picked) }),
         layout: "grid",
         options: TYPE_OPTIONS,
         correctId: "boolean",

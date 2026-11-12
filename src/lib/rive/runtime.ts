@@ -138,6 +138,67 @@ export const SEQUENCE_ROOM = {
 } as const;
 
 /**
+ * The Data Types module's scenes: seven more artboards of `sequence.riv` (390x306 each, the `DT_` ones), each
+ * with its own state machine and a view model that `datatypesHost` writes. None of them takes taps: the screens
+ * drive them. Each has `highlight` (lights one thing up) and the triggers `correct` / `wrong` (a green / red
+ * glow with a tick / cross on the picture), and all but the sorting lab have `mode` (which of its pictures is
+ * up, from 0).
+ *
+ * What `mode` shows (the screens in brackets are the ones that use it):
+ * - `info` ("DT_A01_InfoExplorer"): 0 and 1 the event form (screens 1 and 2; `field` 1-4 lights Name / Age /
+ *   Height / Permission, `fill` 1-4 writes Aarav / 12 / 148.5 cm / Yes in), 2 eight values over three empty
+ *   groups, 3 the groups filled, 4 and up the empty school yard.
+ * - `numbers` ("DT_A02_NumberLab"): 0 three counts, 1 four values, 2 a number line, 3 a ruler, 4 two bins.
+ * - `strings` ("DT_A03_StringDiscovery"): 0 the student list, then text examples and 12 against "12".
+ * - `boolean` ("DT_A04_Boolean"): 0 the attendance card, 1 four yes / no cards, 2 TRUE / FALSE and three flags,
+ *   3 the four types (tap to open), 4 a record with a type on each field.
+ * - `build` ("DT_A05_BuildWithData"): 0 the shopping app, 1 Aarav's info over four type bins, 2 the weather app.
+ * - `mastery` ("DT_A06_DebugMastery"): 0 the student record, 1 the player profile, 2 a value over the four types,
+ *   3 an app over the four types (what it takes is in `MASTERY`).
+ * - `sorting` ("DT_SortingLab"): a belt of four values over four bins (no `mode`).
+ */
+export const DATATYPES_SCENES = {
+  src: SEQUENCE_ROOM.src,
+  width: 390,
+  height: 306,
+  info: { artboard: "DT_A01_InfoExplorer", stateMachine: "A01_SM" },
+  numbers: { artboard: "DT_A02_NumberLab", stateMachine: "A02_SM" },
+  strings: { artboard: "DT_A03_StringDiscovery", stateMachine: "A03_SM" },
+  boolean: { artboard: "DT_A04_Boolean", stateMachine: "A04_SM" },
+  build: { artboard: "DT_A05_BuildWithData", stateMachine: "A05_SM" },
+  mastery: { artboard: "DT_A06_DebugMastery", stateMachine: "A06_SM" },
+  sorting: { artboard: "DT_SortingLab", stateMachine: "SortLab_SM" },
+} as const;
+
+export type DatatypesSceneName = Exclude<keyof typeof DATATYPES_SCENES, "src" | "width" | "height">;
+
+/**
+ * What `DT_A06_DebugMastery` (`DATATYPES_SCENES.mastery`, state machine `A06_SM`) takes, as the file has it.
+ * `highlight` numbers the artboard's things in one run, whichever `mode` is up: a `correct` / `wrong` then
+ * glows the one that is numbered (a tick / a cross), for about a second, and `highlight` back at 0 clears it
+ * (0 with a trigger plays the whole set). A number that is not on the picture does nothing.
+ */
+export const MASTERY = {
+  mode: { record: 0, profile: 1, value: 2, app: 3 },
+  highlight: {
+    /** Mode 0, the student record's four rows. The Height row always wears the "!" (an Integer where a Float belongs). */
+    row: { name: 1, age: 2, height: 3, present: 4 },
+    /** Mode 1, the player profile's five rows. */
+    profile: { name: 5, score: 6, completion: 7, completed: 8, id: 9 },
+    /** Mode 2, the four type cards under the value. */
+    card: { integer: 10, float: 11, string: 12, boolean: 13 },
+    /** Mode 3, the phone. */
+    phone: 14,
+  },
+  /** `fixed` 1, mode 0: the Height row is a Float and ticked. */
+  fixed: 1,
+  /** Mode 2's `q`: which value stands over the four types. */
+  value: { age: 1, height: 2, studentId: 3, flag: 4, weatherApp: 5 },
+  /** Mode 1's `g1`-`g5`: the type on each row of the profile (0, the empty slot, until it is given). */
+  type: { none: 0, integer: 1, float: 2, string: 3, boolean: 4 },
+} as const;
+
+/**
  * Hex — `hex.riv`, artboard "HEX". The one character rig for every onboarding
  * screen. It has no inputs or view model: each pose is its own state machine
  * (named `HEX-<Pose>`), and a screen plays exactly one of them at a time.

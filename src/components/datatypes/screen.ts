@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import type { Choice } from "@/components/level-two/levelTwo";
+import type { SceneValues } from "@/lib/rive/datatypesHost";
+import type { DatatypesSceneName } from "@/lib/rive/runtime";
 
 /** An answer: its words and its picture (`icon` is a file, see `pictures.ts`). */
 export type Option = Choice;
@@ -15,11 +17,26 @@ export type VisualContext = {
   hexSpoken?: boolean;
 };
 
-/** A stage can have a title of its own, in place of the screen's (a screen's second part, such as 5.2, is headed differently from its first). */
+/** The Rive scene behind a stage (see `DATATYPES_SCENES`): which artboard, and the data it is shown with (`mode` and the rest; what is not named is as the file has it). */
+export type SceneSpec = {
+  scene: DatatypesSceneName;
+  values: SceneValues;
+  /** A wrong answer fires the scene's `wrong` (default). Left off where the answers are reasons, so a cross on the picture would blame the wrong thing. */
+  markWrong?: boolean;
+};
+
+/** A stage can have a title of its own, in place of the screen's (a screen's second part, such as 5.2, is headed differently from its first), and a scene. */
 type StageTitle = {
   title?: string;
   /** Sets the stage's own title at this size (px) on one line, as `ScreenDef.titleSize` does. */
   titleSize?: number;
+  /**
+   * A scene stands behind the stage, under Hex's line, in place of its picture, and the answers (or the
+   * interaction) go below it. A function sets the data from what the learner has done (a pick lights up one of
+   * the scene's things; for an interaction `checked` and `correct` mean it is finished). A right or wrong answer
+   * fires the scene's `correct` / `wrong`.
+   */
+  scene?: SceneSpec | ((context: VisualContext) => SceneSpec);
 };
 
 /** One question on a screen: what Hex says, the picture, and the answers. */
