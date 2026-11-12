@@ -89,6 +89,7 @@ function Tappable({
   tapped,
   next,
   enabled = true,
+  showNote = true,
   onTap,
   className = "",
   label,
@@ -98,6 +99,8 @@ function Tappable({
   tapped: boolean;
   next: boolean;
   enabled?: boolean;
+  /** Whether the note shows under the thing once it is tapped (a screen that shows the notes in one place says no). */
+  showNote?: boolean;
   onTap: () => void;
   className?: string;
   label: string;
@@ -123,7 +126,7 @@ function Tappable({
       </motion.button>
       {next && enabled && <TapHint onTap={press} />}
       <AnimatePresence>
-        {tapped && (
+        {tapped && showNote && (
           <motion.span
             key="note"
             initial={{ opacity: 0, y: -6 }}
@@ -367,11 +370,29 @@ export function NameValueStage({ done, finished }: InteractionApi) {
   );
 }
 
+/** How far under the scene's bottom edge a block that stands on the white below it starts (px). */
+const GAP_BELOW_SCENE = 12;
+
+/**
+ * Where a block of `height` px that stands under the scene starts (a CSS `top`, in the interaction's area): right
+ * under the scene's bottom edge, so nothing is over the picture; or higher, where the block would run down behind the
+ * Next button from there (a phone has no more room than the scene's last rows give it, and a taller window lets it
+ * start right under the scene).
+ */
+const belowScene = (height: number) => `min(calc(${SCENE_BOTTOM} - ${BELOW_TITLE}px + ${GAP_BELOW_SCENE}px), calc(100% - ${height}px))`;
+
 const ATTENDANCE_NAMES = [
   { name: "total_students", value: "30", meaning: "All the students in the class" },
   { name: "present_students", value: "27", meaning: "The students who came today" },
   { name: "absent_students", value: "3", meaning: "The students who are not here today" },
 ] as const;
+
+/**
+ * The height `NamesStage` takes once it is done: its three rows (52px each, with two 8px gaps), a 12px gap and the
+ * key points (90px). While the rows are tapped, a one-line note (34px) stands where the key points will, and the
+ * "Tap here" hand (32px) is under the next row's name, so it never takes more than this.
+ */
+const NAMES_BLOCK_H = 172 + 12 + 90;
 
 /** Screen 16: three variables for the attendance; tap each name to see what it stands for. */
 export function NamesStage({ done, finished }: InteractionApi) {
@@ -382,30 +403,52 @@ export function NamesStage({ done, finished }: InteractionApi) {
     return () => window.clearTimeout(timer);
   }, [seen, done]);
   const next = ATTENDANCE_NAMES.find((row) => !seen.includes(row.name))?.name;
+  // What the name tapped last stands for: one note under the rows, so the rows don't grow as they are tapped.
+  const latest = ATTENDANCE_NAMES.find((row) => row.name === seen[seen.length - 1]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Give each piece of information its own name." entry="variable-names" />
-      <div className="flex w-[340px] flex-col gap-2">
-        {ATTENDANCE_NAMES.map((row) => {
-          const tapped = seen.includes(row.name);
-          return (
-            <div key={row.name} className={`flex items-center justify-between gap-2 px-3 py-2 ${CARD}`}>
-              <Tappable
-                label={`Tap ${row.name}`}
-                note={row.meaning}
-                tapped={tapped}
-                next={next === row.name}
-                onTap={() => setSeen((now) => (now.includes(row.name) ? now : [...now, row.name]))}
-                className="items-start"
+      {/* The rows (with the note, then the key points, after them) stand under the picture, on the white below it, so no character is covered. */}
+      <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: belowScene(NAMES_BLOCK_H) }}>
+        <div className="flex w-[340px] flex-col gap-2">
+          {ATTENDANCE_NAMES.map((row) => {
+            const tapped = seen.includes(row.name);
+            return (
+              <div key={row.name} className={`flex items-center justify-between gap-2 px-3 py-2 ${CARD}`}>
+                <Tappable
+                  label={`Tap ${row.name}`}
+                  note={row.meaning}
+                  tapped={tapped}
+                  next={next === row.name}
+                  showNote={false}
+                  onTap={() => setSeen((now) => (now.includes(row.name) ? now : [...now, row.name]))}
+                  className="items-start"
+                >
+                  <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[14px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">{row.name}</span>
+                </Tappable>
+                <span className="text-[22px] leading-7 font-bold text-[#444444] dark:text-white">{row.value}</span>
+              </div>
+            );
+          })}
+        </div>
+        {finished ? (
+          <KeyPoints points={["Each variable tracks one piece of information.", "Good names show what a value means."]} />
+        ) : (
+          <AnimatePresence mode="wait">
+            {latest && (
+              <motion.span
+                key={latest.name}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                className="rounded-[10px] bg-white px-2.5 py-1.5 text-center text-[12px] leading-4 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
               >
-                <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[14px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">{row.name}</span>
-              </Tappable>
-              <span className="text-[22px] leading-7 font-bold text-[#444444] dark:text-white">{row.value}</span>
-            </div>
-          );
-        })}
+                {latest.meaning}
+              </motion.span>
+            )}
+          </AnimatePresence>
+        )}
       </div>
-      {finished && <KeyPoints points={["Each variable tracks one piece of information.", "Good names show what a value means."]} />}
     </div>
   );
 }
@@ -417,6 +460,9 @@ const CLASSIFY_PARTS: readonly { id: string; text: string; kind: PartKind; card:
   { id: "n2", text: "bottle_capacity", kind: "name", card: 2 },
   { id: "v2", text: "1,000 ml", kind: "value", card: 2 },
 ];
+
+/** The height of the block the two cards make with the "It is a name / It is a value" buttons and their note (two 78px cards and an 8px gap, 10px, the 44px buttons, 10px, a 20px note line). */
+const SORT_BLOCK_H = 248;
 
 /** Screen 14: tap each part of the two cards and say whether it is a name or a value. */
 export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
@@ -442,55 +488,62 @@ export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Is each one a name or a value?" entry="variable-classify" />
-      <div className="flex w-[340px] flex-col gap-2">
-        {[1, 2].map((card) => (
-          <div key={card} className={`flex items-center justify-around gap-2 px-3 py-3 ${CARD}`}>
-            {CLASSIFY_PARTS.filter((part) => part.card === card).map((part) => {
-              const known = placed[part.id];
-              return (
-                <button
-                  key={part.id}
-                  type="button"
-                  disabled={!!known}
-                  onClick={() => {
-                    playClickSound();
-                    setSelected(part.id);
-                    setSlip(false);
-                  }}
-                  className={`pointer-events-auto flex min-w-[120px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] border-2 px-3 py-1.5 ${RAISED_SMALL} ${
-                    known ? "border-[#01A17F] bg-[#E3F6F3] [--edge:#007D60] dark:bg-[#0F2B28]" : selected === part.id ? "border-[#FFB300] bg-[#FFF3DE] [--edge:#C98A00] dark:bg-[#2A2218]" : "border-[#D5DADF] bg-white [--edge:#C9CED6] dark:border-white/20 dark:bg-[#15181E]"
-                  }`}
-                >
-                  <span className={`text-[15px] leading-6 font-semibold text-[#444444] dark:text-white ${part.kind === "name" ? "font-mono" : ""}`}>{part.text}</span>
-                  <span className="flex h-4 items-center gap-1 text-[11px] leading-4 font-bold tracking-[0.4px] text-[#01A17F] uppercase">
-                    {known && (
-                      <>
-                        <Check aria-hidden className="size-3" /> {known}
-                      </>
-                    )}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        ))}
+      {/* The cards, the two buttons and the note stand under the scene, on the white below it, so no character is covered. */}
+      <div
+        className="absolute inset-x-0 flex flex-col items-center gap-2.5"
+        style={{ top: belowScene(SORT_BLOCK_H) }}
+      >
+        <div className="flex w-[340px] flex-col gap-2">
+          {[1, 2].map((card) => (
+            <div key={card} className={`flex items-center justify-around gap-2 px-3 py-1.5 ${CARD}`}>
+              {CLASSIFY_PARTS.filter((part) => part.card === card).map((part) => {
+                const known = placed[part.id];
+                return (
+                  <button
+                    key={part.id}
+                    type="button"
+                    disabled={!!known}
+                    onClick={() => {
+                      playClickSound();
+                      setSelected(part.id);
+                      setSlip(false);
+                    }}
+                    className={`pointer-events-auto flex min-w-[120px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] border-2 px-3 py-1.5 ${RAISED_SMALL} ${
+                      known ? "border-[#01A17F] bg-[#E3F6F3] [--edge:#007D60] dark:bg-[#0F2B28]" : selected === part.id ? "border-[#FFB300] bg-[#FFF3DE] [--edge:#C98A00] dark:bg-[#2A2218]" : "border-[#D5DADF] bg-white [--edge:#C9CED6] dark:border-white/20 dark:bg-[#15181E]"
+                    }`}
+                  >
+                    <span className={`text-[15px] leading-6 font-semibold text-[#444444] dark:text-white ${part.kind === "name" ? "font-mono" : ""}`}>{part.text}</span>
+                    <span className="flex h-4 items-center gap-1 text-[11px] leading-4 font-bold tracking-[0.4px] text-[#01A17F] uppercase">
+                      {known && (
+                        <>
+                          <Check aria-hidden className="size-3" /> {known}
+                        </>
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+        <div className="pointer-events-auto flex w-[340px] gap-3">
+          {(["name", "value"] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              disabled={!selected}
+              onClick={() => choose(kind)}
+              className="h-11 flex-1 cursor-pointer rounded-lg bg-[#EDFAFE] text-[15px] leading-5 font-semibold text-[#1F4899] shadow-[0_4px_0_#BFE6F2] transition-[translate,box-shadow] duration-100 enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50"
+            >
+              It is a {kind}
+            </button>
+          ))}
+        </div>
+        {/* One line is reserved; the longer "not quite" line runs a second one down into the gap above the button. */}
+        <p className="min-h-5 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
+          {slip ? "The name tells what it is; the value is the amount." : <span className="text-[#6B7480] dark:text-white/60">{selected ? "Is it a name or a value?" : "Tap a part to sort it."}</span>}
+        </p>
       </div>
-      <div className="pointer-events-auto flex w-[340px] gap-3">
-        {(["name", "value"] as const).map((kind) => (
-          <button
-            key={kind}
-            type="button"
-            disabled={!selected}
-            onClick={() => choose(kind)}
-            className="h-12 flex-1 cursor-pointer rounded-lg bg-[#EDFAFE] text-[15px] leading-5 font-semibold text-[#1F4899] shadow-[0_4px_0_#BFE6F2] transition-[translate,box-shadow] duration-100 enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50"
-          >
-            It is a {kind}
-          </button>
-        ))}
-      </div>
-      <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? "The name tells what it is; the value is the amount." : <span className="text-[#6B7480] dark:text-white/60">{selected ? "Is it a name or a value?" : "Tap a part to sort it."}</span>}
-      </p>
     </div>
   );
 }
@@ -534,31 +587,34 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Drag each name to the price it belongs to." entry="variable-prices" />
-      <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }}>
-        <ArrangeBoard
-          cards={MATCH_CARDS}
-          slots={slots}
-          geo={MATCH_GEO}
-          disabled={finished || (full && !right)}
-          onPlace={(id, slot) => {
-            setSlip(false);
-            placeIn(id, slot);
-            // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
-            setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
-          }}
-          slotContent={(index) => (
-            <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
-              <span aria-hidden className="text-[26px] leading-none">
-                {MATCH_ITEMS[index].emoji}
+      {/* The board and its note stand under the picture, on the white below it, so no character is covered. */}
+      <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: belowScene(MATCH_GEO.board.height + 12 + 40) }}>
+        <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }}>
+          <ArrangeBoard
+            cards={MATCH_CARDS}
+            slots={slots}
+            geo={MATCH_GEO}
+            disabled={finished || (full && !right)}
+            onPlace={(id, slot) => {
+              setSlip(false);
+              placeIn(id, slot);
+              // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
+              setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
+            }}
+            slotContent={(index) => (
+              <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
+                <span aria-hidden className="text-[26px] leading-none">
+                  {MATCH_ITEMS[index].emoji}
+                </span>
+                {MATCH_ITEMS[index].name} <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">₹{MATCH_ITEMS[index].price}</span>
               </span>
-              {MATCH_ITEMS[index].name} <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">₹{MATCH_ITEMS[index].price}</span>
-            </span>
-          )}
-        />
+            )}
+          />
+        </div>
+        <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
+          {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
+        </p>
       </div>
-      <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
-      </p>
     </div>
   );
 }

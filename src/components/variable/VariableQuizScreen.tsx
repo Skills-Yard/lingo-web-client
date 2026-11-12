@@ -43,6 +43,10 @@ const RISE = 150;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
+/** A right answer sends the picture (a card on the screen) up this far (px) as it fades, like Hex and his bubble; a try again brings it back. */
+const PICTURE_EXIT = 90;
+const PICTURE_OUT = { duration: 0.45, ease: [0.22, 1, 0.36, 1] } as const;
+const PICTURE_BACK = { duration: 0.4, ease: [0.22, 1, 0.36, 1] } as const;
 /** A line longer than this goes on a card; a shorter one is Hex's. */
 const BUBBLE_MAX_CHARS = 120;
 /** The title block (px): where it ends, one line or two. */
@@ -74,18 +78,39 @@ const SHORT_ANSWER_CHARS = 12;
 /** The height of a card with words only. */
 const TEXT_CARD_H = 84;
 
-/** Whether the answers are cards across (objects to tap, or three short answers) rather than rows. */
-const acrossCards = (stage: QuizStage) =>
-  stage.layout === "grid" || (stage.options.length === 3 && stage.options.every((option) => !option.icon && option.text.length <= SHORT_ANSWER_CHARS));
+/** Four answers this short stand as two rows of two cards, on a screen with a picture (a card) that would otherwise have no room above four rows. */
+const FOUR_ANSWER_CHARS = 18;
+
+/**
+ * Whether the answers are cards across (objects to tap, or three short answers; or four short ones, two by two, on a
+ * screen with a picture) rather than rows.
+ */
+const acrossCards = (stage: QuizStage, withPicture: boolean) =>
+  stage.layout === "grid" ||
+  (stage.options.length === 3 && stage.options.every((option) => !option.icon && option.text.length <= SHORT_ANSWER_CHARS)) ||
+  (withPicture && stage.options.length === 4 && stage.options.every((option) => !option.icon && !option.node && !option.emoji && option.text.length <= FOUR_ANSWER_CHARS));
 
 const hasPictures = (options: readonly Option[]) => options.some((option) => option.node || option.emoji);
 const columnsFor = (count: number) => (count === 3 ? 3 : 2);
 
-/** Rows of answers in words, or cards to tap: the height they take. */
-const answersHeight = (stage: QuizStage) => {
-  if (!acrossCards(stage)) return stage.options.length * ROW_H + (stage.options.length - 1) * ROW_GAP;
+/**
+ * The answers on a screen with a picture (a card) are the shorter kind (see `AnswerCards`' `compact`; cards of words
+ * are as short), so they stand lower, under the scene's characters, and the picture has room above them.
+ */
+const COMPACT_ROW_H = 56;
+const COMPACT_ROW_GAP = 6;
+const COMPACT_CARD_GAP = 8;
+
+/** Rows of answers in words, or cards to tap: the height they take. `compact`: the screen has a picture. */
+const answersHeight = (stage: QuizStage, compact: boolean) => {
+  if (!acrossCards(stage, compact)) {
+    const rowHeight = compact ? COMPACT_ROW_H : ROW_H;
+    const rowGap = compact ? COMPACT_ROW_GAP : ROW_GAP;
+    return stage.options.length * rowHeight + (stage.options.length - 1) * rowGap;
+  }
   const rows = Math.ceil(stage.options.length / columnsFor(stage.options.length));
-  return rows * (hasPictures(stage.options) ? OBJECT_H : TEXT_CARD_H) + (rows - 1) * OBJECT_GAP;
+  const cardHeight = hasPictures(stage.options) ? OBJECT_H : compact ? COMPACT_ROW_H : TEXT_CARD_H;
+  return rows * cardHeight + (rows - 1) * (compact ? COMPACT_CARD_GAP : OBJECT_GAP);
 };
 
 const LETTERS = ["A", "B", "C", "D", "E"];
@@ -100,6 +125,7 @@ function ObjectGrid({
   hinted,
   withHint,
   spill,
+  compact,
   onPick,
 }: {
   options: readonly Option[];
@@ -111,16 +137,21 @@ function ObjectGrid({
   hinted: boolean;
   withHint: boolean;
   spill: boolean;
+  /** The screen has a picture: cards of words are the shorter kind (see `COMPACT_ROW_H`). */
+  compact: boolean;
   onPick: (id: string) => void;
 }) {
   const pictures = hasPictures(options);
+  const gap = compact ? COMPACT_CARD_GAP : OBJECT_GAP;
+  const wordsHeight = compact ? COMPACT_ROW_H : TEXT_CARD_H;
+  const wordsFont = compact ? ROW_FONT : CARD_FONT;
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
       animate={{ opacity: fadeOut ? 0 : 1, y: checked ? -RISE : 0 }}
       transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
       className="pointer-events-auto absolute z-[1] grid"
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OBJECT_GAP, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(0, 1fr))` }}
+      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(0, 1fr))` }}
     >
       {options.map((option) => {
         const state = optionState(option.id, selectedId, checked, correctId);
@@ -140,7 +171,7 @@ function ObjectGrid({
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, x: spilling ? [0, -5, 5, -4, 4, 0] : 0 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              style={{ height: pictures ? OBJECT_H : TEXT_CARD_H }}
+              style={{ height: pictures ? OBJECT_H : wordsHeight }}
               className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 overflow-visible rounded-[16px] border-4 px-1.5 ${RAISED} ${LOOKS[state].edge} ${
                 state === "idle" ? "border-white bg-white dark:border-transparent dark:bg-[#15181E]" : LOOKS[state].card
               }`}
@@ -153,7 +184,7 @@ function ObjectGrid({
                 className="pointer-events-none absolute inset-0 -z-10 rounded-[12px] bg-[#FFE7D1] dark:bg-[#33220F]"
               />
               {pictures && <span className="flex h-[54px] items-center justify-center text-[44px] leading-none">{option.node ?? option.emoji}</span>}
-              <span className="text-center leading-6 font-semibold text-[#444444] dark:text-white" style={{ fontSize: CARD_FONT }}>
+              <span className="text-center leading-6 font-semibold text-[#444444] dark:text-white" style={{ fontSize: wordsFont }}>
                 {option.text}
               </span>
               <AnimatePresence>
@@ -324,7 +355,9 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
 
   // What stands under the line: the picture and the answers (question stage), or the interaction.
   const answersBottom = quiz ? aboveButtons(GAP_ABOVE_BUTTONS, hasHint) : "0px";
-  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 18}px)` : aboveButtons(24);
+  // A screen with a card (the picture has a height; one that only moves the scene has none) gets the shorter rows.
+  const compactRows = pictureHeight > 0;
+  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz, compactRows) + 18}px)` : aboveButtons(24);
 
   const choices: readonly Choice[] = quiz ? quiz.options.map((option, index) => ({ id: option.id, text: option.text, icon: option.icon ?? "", badge: LETTERS[index] })) : [];
   const longLine = !!quiz && quiz.line.length > BUBBLE_MAX_CHARS;
@@ -409,8 +442,16 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
                 />
               )}
             </motion.div>
-            <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">
-              <div ref={pictureRef} className="flex flex-col items-center gap-2" style={{ transform: `scale(${fit})` }}>
+            {/* The picture stands on the answers (the room's bottom), not in the middle of the room, so it is off the scene's upper half. A right answer sends it up and away, as it does Hex and his bubble. */}
+            <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center justify-end">
+              <motion.div
+                ref={pictureRef}
+                initial={false}
+                animate={{ opacity: cleared ? 0 : 1, y: cleared ? -PICTURE_EXIT : 0 }}
+                transition={cleared ? PICTURE_OUT : PICTURE_BACK}
+                className="flex flex-col items-center gap-2"
+                style={{ scale: fit, originY: 1, pointerEvents: cleared ? "none" : undefined }}
+              >
                 {quiz.visual?.({ attempt, picked: selectedId, checked, correct })}
                 <AnimatePresence>
                   {hintShown && quiz.hintVisual && (
@@ -419,11 +460,11 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
+              </motion.div>
             </div>
           </div>
 
-          {acrossCards(quiz) ? (
+          {acrossCards(quiz, compactRows) ? (
             <ObjectGrid
               options={quiz.options}
               correctId={shownCorrectId}
@@ -433,6 +474,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               hinted={hintShown}
               withHint={hasHint}
               spill={!!quiz.spill}
+              compact={compactRows}
               onPick={setSelectedId}
             />
           ) : (
@@ -445,7 +487,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               hinted={hintShown}
               withHint={hasHint}
               rise={RISE}
-              gap={ROW_GAP}
+              compact={compactRows}
+              gap={compactRows ? COMPACT_ROW_GAP : ROW_GAP}
               fontSize={ROW_FONT}
               onPick={setSelectedId}
             />
