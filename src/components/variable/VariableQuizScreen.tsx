@@ -10,7 +10,7 @@ import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { BELOW_TITLE, BottleBackdrop, HEX_LIFT, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, WalletBackdrop } from "./scenes";
+import { BELOW_TITLE, BottleBackdrop, HEX_LIFT, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
 import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
@@ -25,12 +25,15 @@ import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIAB
 import { noteAnswer, noteStruggle } from "./variableScore";
 
 /**
- * The answers' rows and the cards across: their heights and gaps (px). The rows are
- * the list the other modules use (76px, see `AnswerCards`) and the cards are as tall as
- * their tiles (110px, see `TileCards`), with a little more room between them.
+ * The answers' rows and the cards across: their heights and gaps (px). The cards are as tall as
+ * their tiles (110px, see `TileCards`), with a little more room between them. The rows are
+ * shorter than the list the other modules use (76px, see `AnswerCards`): the scene (about 306px
+ * from under Hex's bubble, 262 of it picture) has to stay clear of three of them, both when a
+ * question is open (they end above the button) and after a check (it has risen to the head and
+ * they have risen clear of the result panel).
  */
-const ROW_H = 76;
-const ROW_GAP = 10;
+const ROW_H = 60;
+const ROW_GAP = 8;
 const OBJECT_H = 110;
 const OBJECT_GAP = 14;
 /** Their text (px): the other modules' is 14 in the rows and 16 on the cards; these are two larger. */
@@ -38,8 +41,9 @@ const ROW_FONT = 16;
 const CARD_FONT = 18;
 /** The least a picture is shrunk to fit its room. */
 const MIN_FIT = 0.6;
-/** The result panel makes room by raising the answers this far (px). */
+/** The result panel makes room by raising the answers this far (px): the cards across, and the rows, which need no more than it takes to stand clear of the panel, so that they stay below the scene. */
 const RISE = 150;
+const ROWS_RISE = 130;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
@@ -57,6 +61,8 @@ const backdropFor = (scene: SceneName, step: number, lifted: boolean) => {
       return <BottleBackdrop lifted={lifted} />;
     case "names":
       return <NamesBackdrop lifted={lifted} />;
+    case "varCard":
+      return <VarCardBackdrop lifted={lifted} />;
     case "shop":
       return <ShopBackdrop lifted={lifted} />;
     case "wallet":
@@ -224,7 +230,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   }, []);
   const fit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
 
-  const sceneKind = sceneOf(screen.step);
+  const sceneKind = sceneOf(screen.step, stageIndex);
   const stage = screen.stages[stageIndex];
   const lastStage = stageIndex === screen.stages.length - 1;
   const quiz = stage.kind === "quiz" ? stage : null;
@@ -238,6 +244,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const hintShown = hinted || (!!quiz?.hintOnMiss && attempt > 0);
   // A right answer clears the screen: the answers fade out and, as Hex and his bubble run off, the scene rises into their room. (A wrong one keeps the answers, for another try.)
   const cleared = !!quiz && checked && right;
+  // Hex and his bubble leave after any check, right or wrong, and the scene rises into their room at the head, clear of the answers that rise from below (a wrong answer's stay for another try).
+  const sceneLifted = !!quiz && checked;
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -335,7 +343,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       step={screen.step}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(screen.step))}
-      scene={backdropFor(sceneKind, screen.step, cleared)}
+      scene={backdropFor(sceneKind, screen.step, sceneLifted)}
       answer={answer}
       ctaDisabled={quiz ? selectedId === null : !finished}
       ctaLabel={
@@ -383,7 +391,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
         <>
           <div
             className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding] duration-500 ease-out"
-            style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: checked ? RISE : 0 }}
+            style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: checked ? (acrossCards(quiz) ? RISE : ROWS_RISE) : 0 }}
           >
             <motion.div
               initial={false}
@@ -443,7 +451,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               fadeOut={cleared}
               hinted={hintShown}
               withHint={hasHint}
-              rise={RISE}
+              rise={ROWS_RISE}
+              rowHeight={ROW_H}
               gap={ROW_GAP}
               fontSize={ROW_FONT}
               onPick={setSelectedId}

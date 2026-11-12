@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { animate, AnimatePresence, motion } from "framer-motion";
 import { Calculator as CalculatorIcon } from "lucide-react";
 
@@ -147,19 +147,6 @@ export function Bottle({
   );
 }
 
-/** A bottle with how much it holds shown under it. */
-export function BottleWithAmount({ ml, label, caption, ...bottle }: { ml: number; label?: string; caption?: string } & Omit<Parameters<typeof Bottle>[0], "ml">) {
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      {caption && <span className="text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{caption}</span>}
-      <Bottle ml={ml} {...bottle} />
-      <span className="rounded-full bg-white px-3 py-1 text-[15px] leading-5 font-semibold text-[#08A4AD] shadow-[0_2px_8px_rgba(31,42,68,0.1)] dark:bg-[#15181E]">
-        {label ?? <Counter value={ml} suffix=" ml" />}
-      </span>
-    </div>
-  );
-}
-
 /* ───────────────────────── Money ───────────────────────── */
 
 /** A wallet showing an amount; a note of what changed floats up from it. */
@@ -199,16 +186,6 @@ export function ShopItem({ emoji, name, price, tint = "bg-[#F6F4FE]" }: { emoji:
       </span>
       <span className="text-[13px] leading-4 font-semibold text-[#444444] dark:text-white">{name}</span>
       <span className="mt-1 rounded-full bg-[#FFB300] px-2.5 py-0.5 text-[13px] leading-4 font-bold text-white shadow-[0_2px_0_#D98E00]">₹{price}</span>
-    </div>
-  );
-}
-
-/** A named amount, as the cards in the practice screens show it: a name above its value. */
-export function NameValue({ name, value, className = "", small = false }: { name: string; value: ReactNode; className?: string; small?: boolean }) {
-  return (
-    <div className={`flex flex-col items-center gap-1 ${small ? "px-2 py-2" : "px-4 py-2.5"} ${CARD} ${className}`}>
-      <span className={`rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC] ${small ? "text-[10px] leading-4" : "text-[13px] leading-5"}`}>{name}</span>
-      <span className={`font-bold text-[#444444] dark:text-white ${small ? "text-[18px] leading-6" : "text-[20px] leading-7"}`}>{value}</span>
     </div>
   );
 }

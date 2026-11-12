@@ -36,6 +36,8 @@ type AnswerCardsProps = {
   rise?: number;
   /** Shorter rows (56px) for answers that are only words, so four fit above the button. */
   compact?: boolean;
+  /** Rows of exactly this height (px), pictures included, for a screen whose picture must stay clear of the list. */
+  rowHeight?: number;
   /** The space between rows (px), where it should differ from the usual 6. */
   gap?: number;
   /** The text's size (px), where it should differ from the usual 14. */
@@ -52,7 +54,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, gap = 6, fontSize, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, rowHeight, gap = 6, fontSize, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
   return (
     <motion.div
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
@@ -83,6 +85,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
+              style={rowHeight ? { height: rowHeight, paddingBlock: 6 } : undefined}
               className={`relative isolate flex ${compact ? "h-[56px] gap-3 py-1.5" : "h-[76px] gap-[34px] py-2.5"} w-full cursor-pointer items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left ${RAISED} ${look.edge} ${
                 state === "idle" ? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]" : look.card
               }`}

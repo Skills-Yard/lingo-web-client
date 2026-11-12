@@ -169,6 +169,8 @@ export const VARIABLE_SCENES = {
   /** A second copy of the bottle's artboard, for a screen that shows two parts of it apart (screen 6: the bottle, and its variable card below it). */
   bottleCard: { artboard: "VAR_Bottle", stateMachine: "Bottle_SM" },
   names: { artboard: "VAR_Names", stateMachine: "Names_SM" },
+  /** Two variable cards side by side ("VAR_VarCard"): `name1` / `val1` and `name2` / `val2`. */
+  varCard: { artboard: "VAR_VarCard", stateMachine: "VarCard_SM" },
   items: { artboard: "VAR_Items", stateMachine: "Items_SM" },
   shop: { artboard: "VAR_Shop", stateMachine: "Shop_SM" },
   wallet: { artboard: "VAR_Wallet", stateMachine: "Wallet_SM" },

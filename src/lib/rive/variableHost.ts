@@ -11,7 +11,7 @@ import { riveSource } from "./riveCache";
  * screen is still full on the next. A scene is created the first time a screen asks
  * for it, and stops drawing while no screen shows it.
  */
-export type SceneName = "trek" | "bottle" | "bottleCard" | "names" | "items" | "shop" | "wallet";
+export type SceneName = "trek" | "bottle" | "bottleCard" | "names" | "varCard" | "items" | "shop" | "wallet";
 
 /** The bottle artboard's data. With `showVariable` it draws a variable card (a heading, `varName`, and the `level` in ml) beside the bottle, and moves the bottle over to make room. */
 type BottleValues = { capOpen: boolean; level: number; pouring: boolean; showLabel: boolean; showVariable: boolean; varName: string };
@@ -22,6 +22,7 @@ type SceneValues = {
   bottle: BottleValues;
   bottleCard: BottleValues;
   names: { showLabels: boolean };
+  varCard: { linked: boolean; mode: number; name1: string; name2: string; select: number; showParts: boolean; val1: string; val2: string };
   items: { pick: number };
   shop: { highlight: number; showEraser: boolean; showNames: boolean; showTotal: boolean; total: number };
   wallet: { amount: number; balance: number; showCard: boolean; showToy: boolean };
@@ -33,6 +34,7 @@ type SceneTriggers = {
   bottle: "pop";
   bottleCard: "pop";
   names: "shuffle";
+  varCard: "correct" | "wrong";
   items: "correct" | "wrong";
   shop: "correct" | "wrong" | "calc" | "calcAll";
   wallet: "receive" | "spend";

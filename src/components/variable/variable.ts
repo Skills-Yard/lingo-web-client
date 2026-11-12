@@ -58,20 +58,24 @@ const WALLET_STEPS: readonly number[] = [STEP.pocket, STEP.received, STEP.spent,
 
 /**
  * The scene behind a screen: the four objects on "Pick the Right Object", the bottle, the
- * labelled bottles on "Which bottle is mine?", the shop, the wallet, and the trail on every other.
+ * labelled bottles on "Which bottle is mine?", the pair of variable cards on "Same Bottle, New
+ * Amount" and on the question after "Name or Value?" (the screen's second stage, `stage` 1), the
+ * shop, the wallet, and the trail on every other.
  */
-export const sceneOf = (step: number): SceneName =>
+export const sceneOf = (step: number, stage = 0): SceneName =>
   step === STEP.carry
     ? "items"
     : step === STEP.labels
       ? "names"
-      : BOTTLE_STEPS.includes(step)
-        ? "bottle"
-        : SHOP_STEPS.includes(step)
-          ? "shop"
-          : WALLET_STEPS.includes(step)
-            ? "wallet"
-            : "trek";
+      : step === STEP.sameBottle || (step === STEP.classify && stage >= 1)
+        ? "varCard"
+        : BOTTLE_STEPS.includes(step)
+          ? "bottle"
+          : SHOP_STEPS.includes(step)
+            ? "shop"
+            : WALLET_STEPS.includes(step)
+              ? "wallet"
+              : "trek";
 
 /** The screens where a wrong answer makes the trail point at the drink. */
 export const DRINK_HINT_STEPS: readonly number[] = [STEP.thirsty, STEP.noWater];

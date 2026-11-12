@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
-import { Bottle, BottleWithAmount, CalculatorApp, Classroom, AttendanceBoard, NameValue, ShopItem, useChange, CARD } from "./visuals";
+import { Bottle, CalculatorApp, Classroom, AttendanceBoard, ShopItem, useChange, CARD } from "./visuals";
 import { BridgeStage, ClassifyStage, FillSliderStage, MatchPricesStage, NameValueStage, NamesStage } from "./interactions";
 import type { Option, QuizStage, ScreenDef, VisualContext } from "./quiz";
 import { STEP } from "./variable";
@@ -13,37 +13,53 @@ const at = (index: number) => String(index);
 
 /* ───────────────────────── Pictures that move ───────────────────────── */
 
-/** How long water takes to be poured in or drunk (ms). */
-const WATER_MS = 1500;
+/** How long the water takes to move to an answer the learner has tapped (ms). */
+const PICK_MS = 1000;
+
+/** The amount an answer such as "1,000 ml" stands for. */
+const mlOf = (text: string) => Number(text.replace(/[^\d]/g, ""));
 
 /**
  * The bottle scene (see `BottleBackdrop`) is the picture on the bottle screens: this
- * draws nothing, it moves the scene. The cap opens, the water is at `from` ml, then goes
- * to `to` ml (with the stream on while it is poured in); all of it again when the learner
- * tries again. The amount on the bottle is left for the learner to read until they have it
- * right.
+ * draws nothing, it moves the scene. The cap opens and the water stands at `from` ml, the
+ * amount the question starts with. It is not moved to the answer: it goes to whichever
+ * answer (of `choices`, in order, as "750 ml") the learner taps, so tapping 750 ml fills it
+ * to 750 ml (with the stream on while it is poured in, if `pour`), and tapping another moves
+ * it again. It is back at `from` when the learner tries again. The amount on the bottle is
+ * left for the learner to read until they have it right.
  */
-function BottleChange({ from, to, pour = false, context }: { from: number; to: number; pour?: boolean; context: VisualContext }) {
+function BottleChange({ from, choices, pour = false, context }: { from: number; choices: readonly string[]; pour?: boolean; context: VisualContext }) {
   const showAmount = context.checked && context.correct;
+  // When the cap is open (a pick before then waits for it), and where the water is heading.
+  const readyAt = useRef(0);
+  const heading = useRef(from);
   useEffect(() => {
     setSceneValues("bottle", { showLabel: showAmount });
   }, [showAmount]);
   useEffect(() => {
     setSceneValues("bottle", { pouring: false });
     setBottleLevel(from);
-    const wait = openBottleCap();
+    heading.current = from;
+    readyAt.current = performance.now() + openBottleCap();
+  }, [from, context.attempt]);
+  useEffect(() => {
+    if (context.picked === null) return;
+    const target = mlOf(choices[Number(context.picked)] ?? "");
+    const filling = pour && target > heading.current;
+    heading.current = target;
+    const wait = Math.max(0, readyAt.current - performance.now());
     const timers = [
       window.setTimeout(() => {
-        if (pour) setSceneValues("bottle", { pouring: true });
-        rampBottleLevel(to, WATER_MS);
+        if (filling) setSceneValues("bottle", { pouring: true });
+        rampBottleLevel(target, PICK_MS);
       }, wait),
     ];
-    if (pour) timers.push(window.setTimeout(() => setSceneValues("bottle", { pouring: false }), wait + WATER_MS));
+    if (filling) timers.push(window.setTimeout(() => setSceneValues("bottle", { pouring: false }), wait + PICK_MS));
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
       setSceneValues("bottle", { pouring: false });
     };
-  }, [from, to, pour, context.attempt]);
+  }, [context.picked, choices, pour]);
   return null;
 }
 
@@ -163,6 +179,35 @@ function WalletDrive({ from, to, event, amount = 0, toy = false, hideCard = fals
   return null;
 }
 
+/** What the pair of variable cards (see `VarCardBackdrop`) says: the name and value on each. */
+type VarCards = { name1: string; val1: string; name2: string; val2: string };
+
+/** Screen 9's cards: the bottle's water level before and after it was topped up. */
+const WATER_CHANGE_CARDS: VarCards = { name1: "previous water level", val1: "500 ml", name2: "current water level", val2: "750 ml" };
+/** Screen 14's cards, as the interaction before them has them (the file's own): the bottle's level and its size. */
+const NAME_VALUE_CARDS: VarCards = { name1: "water_level", val1: "550 ml", name2: "bottle_capacity", val2: "1,000 ml" };
+/** The part of the pair each answer of screen 14's question stands for, to light up when it is tapped (1 and 3 are the names, 2 and 4 the values). */
+const NAME_VALUE_LIGHTS: Readonly<Record<string, number>> = { "0": 2, "1": 1, "2": 4 };
+const NO_LIGHTS: Readonly<Record<string, number>> = {};
+
+/**
+ * Screens 9 and 14's question: the pair of variable cards (see `VarCardBackdrop`). This draws nothing, it sets
+ * the cards' data. `lights` says which part of the pair (`select`) each answer lights up while it is the one
+ * tapped; checking marks the answer right or wrong.
+ */
+function VarCardDrive({ cards, lights = NO_LIGHTS, context }: { cards: VarCards; lights?: Readonly<Record<string, number>>; context: VisualContext }) {
+  useEffect(() => {
+    setSceneValues("varCard", { ...cards, mode: 0, linked: true, showParts: false });
+  }, [cards]);
+  useEffect(() => {
+    setSceneValues("varCard", { select: lights[context.picked ?? ""] ?? 0 });
+  }, [lights, context.picked]);
+  useEffect(() => {
+    if (context.checked) fireSceneTrigger("varCard", context.correct ? "correct" : "wrong");
+  }, [context.checked, context.correct]);
+  return null;
+}
+
 /** Screen 17: two of the absent students come in. */
 function ClassroomChange({ context }: { context: VisualContext }) {
   const present = useChange(27, 29, 900, context.attempt);
@@ -211,16 +256,6 @@ function DebugVisual() {
   );
 }
 
-/** Screen 14's two cards, as the question that follows its interaction shows them. */
-function NameValueCards() {
-  return (
-    <div className="flex items-center gap-3">
-      <NameValue name="water_level" value="550 ml" />
-      <NameValue name="bottle_capacity" value="1,000 ml" />
-    </div>
-  );
-}
-
 /** The three attendance variables, one under the other. */
 function AttendanceCards() {
   return (
@@ -242,6 +277,11 @@ function AttendanceCards() {
 /* ───────────────────────── Screens ───────────────────────── */
 
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", ...stage });
+
+/** The answers on the bottle screens: the same list gives the options and the amounts the bottle fills to (see `BottleChange`). */
+const ADD_WATER_CHOICES = ["500 ml", "750 ml", "1,000 ml"] as const;
+const DRINK_CHOICES = ["200 ml", "550 ml", "750 ml"] as const;
+const EMPTY_CHOICES = ["0 ml", "550 ml", "1,000 ml"] as const;
 
 /** Screens that are a title and one or more stages: the questions and the interactions. */
 export const SCREENS: Readonly<Record<number, ScreenDef>> = {
@@ -331,8 +371,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "We have 500 ml and add 250 ml. How much now?",
-        visual: (context) => <BottleChange from={500} to={750} pour context={context} />,
-        options: words(["500 ml", "750 ml", "1,000 ml"]),
+        visual: (context) => <BottleChange from={500} choices={ADD_WATER_CHOICES} pour context={context} />,
+        options: words(ADD_WATER_CHOICES),
         correctId: at(1),
         rightTitle: "Correct!",
         right: "500 ml + 250 ml = 750 ml.",
@@ -347,12 +387,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "It held 500 ml, now 750 ml. What changed?",
-        visual: () => (
-          <div className="flex items-end gap-6">
-            <BottleWithAmount ml={500} height={140} caption="Earlier" label="500 ml" />
-            <BottleWithAmount ml={750} height={140} caption="Now" label="750 ml" />
-          </div>
-        ),
+        // The pair of cards is the screen's scene (see `VarCardBackdrop`).
+        visual: (context) => <VarCardDrive cards={WATER_CHANGE_CARDS} context={context} />,
         options: words(["The bottle", "The amount of water", "Both"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -368,8 +404,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "We have 750 ml and drink 200 ml. How much is left?",
-        visual: (context) => <BottleChange from={750} to={550} context={context} />,
-        options: words(["200 ml", "550 ml", "750 ml"]),
+        visual: (context) => <BottleChange from={750} choices={DRINK_CHOICES} context={context} />,
+        options: words(DRINK_CHOICES),
         correctId: at(1),
         rightTitle: "Correct!",
         right: "750 ml − 200 ml = 550 ml.",
@@ -384,8 +420,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "We drink all 550 ml. How much is left?",
-        visual: (context) => <BottleChange from={550} to={0} context={context} />,
-        options: words(["0 ml", "550 ml", "1,000 ml"]),
+        visual: (context) => <BottleChange from={550} choices={EMPTY_CHOICES} context={context} />,
+        options: words(EMPTY_CHOICES),
         correctId: at(0),
         rightTitle: "Yes!",
         right: "It's empty, so 0 ml remain.",
@@ -423,7 +459,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       { kind: "interaction", render: (api) => <ClassifyStage {...api} /> },
       quiz({
         line: "Which of these is a variable name?",
-        visual: () => <NameValueCards />,
+        visual: (context) => <VarCardDrive cards={NAME_VALUE_CARDS} lights={NAME_VALUE_LIGHTS} context={context} />,
         options: words(["550 ml", "water_level", "1,000 ml"]),
         correctId: at(1),
         rightTitle: "Correct!",
