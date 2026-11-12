@@ -18,15 +18,12 @@ import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger } from "@/lib/rive/variableHost";
 import { HEX_ROW_TOP, TrekBackdrop } from "./scenes";
+import { OPTION } from "./quiz";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
-/** The cards are as tall as the other modules' tiles or taller (110px, see `TileCards`), 14px apart. */
-const CARD_H = 120;
-const CARD_GAP = 14;
+/** The cards' size, gap, padding, corners, text and rise are `OPTION` (see `quiz.ts`), the same as every other option of the module. */
 const ICON = { width: 58, height: 54 };
-/** The result panel makes room by raising the cards this far (px). */
-const RISE = 150;
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives, not after it. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The cards' own way in (and back down for another try). */
@@ -118,14 +115,15 @@ export function ThirstyScreen() {
       <motion.div
         initial={{ opacity: 0, y: 90 }}
         // A right answer clears the screen: the cards fade out (and the trail rises into the room Hex and his bubble leave).
-        animate={{ opacity: celebrate ? 0 : 1, y: checked ? -RISE : 0 }}
+        animate={{ opacity: celebrate ? 0 : 1, y: checked ? -OPTION.rise : 0 }}
         transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : CARDS_IN}
         className="pointer-events-auto absolute z-[1] grid grid-cols-3"
-        style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS), left: COLUMN_LEFT, width: COLUMN_W, gap: CARD_GAP }}
+        style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
       >
         {CHOICES.map((choice) => {
           const state = optionState(choice.id, selectedId, checked, CORRECT_ID);
-          const ring = state === "selected" ? SELECTED_RING : state === "correct" ? RIGHT_RING : state === "wrong" ? WRONG_RING : "border-white dark:border-transparent";
+          // At rest a thin grey line and a faint shade (as every option); picked, right or wrong a 4px ring. The padding makes up the border's width, so a card is as wide either way.
+          const ring = state === "selected" ? SELECTED_RING : state === "correct" ? RIGHT_RING : state === "wrong" ? WRONG_RING : "border-[#DCE2E9] drop-shadow-[0_1px_2px_rgba(31,42,68,0.07)] dark:border-white/10";
           return (
             <motion.button
               key={choice.id}
@@ -140,12 +138,14 @@ export function ThirstyScreen() {
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              style={{ height: CARD_H }}
-              className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-2 rounded-[16px] border-4 px-1 ${RAISED} ${LOOKS[state].edge} ${choice.tint} ${ring}`}
+              style={{ height: OPTION.pictureHeight, borderRadius: OPTION.radius, paddingInline: state === "idle" ? OPTION.padX - 1 : OPTION.padX - 4 }}
+              className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-2 ${state === "idle" ? "border" : "border-4"} ${RAISED} ${LOOKS[state].edge} ${choice.tint} ${ring}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={choice.icon} alt="" {...ICON} draggable={false} className="select-none" />
-              <span className="text-[18px] leading-6 font-semibold text-[#444444] dark:text-white">{choice.text}</span>
+              <span className="leading-6 font-semibold text-[#444444] dark:text-white" style={{ fontSize: OPTION.font }}>
+                {choice.text}
+              </span>
             </motion.button>
           );
         })}

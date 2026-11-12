@@ -536,8 +536,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "30 students, attendance time! What should we track?",
         // The classroom and its board are the screen's scene (see `ClassroomBackdrop`).
         visual: (context) => <ClassroomDrive context={context} />,
-        // Four answers would cover the classroom as rows; two by two they stand below it.
-        compact: true,
         options: words(["Total students", "Students present", "Students absent", "All of these"]),
         correctId: at(3),
         rightTitle: "Exactly!",
@@ -556,8 +554,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Which variable tells us how many are absent?",
         // The classroom, its board showing the names, is the screen's scene (see `ClassroomBackdrop`); tapping a name lights its row.
         visual: (context) => <ClassroomDrive names context={context} />,
-        // Three rows of words would cover the classroom; the shorter rows stand below it.
-        compact: true,
         options: words(["total_students", "present_students", "absent_students"]),
         correctId: at(2),
         rightTitle: "Correct!",
@@ -575,8 +571,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "2 absent students return. Which values change?",
         // The classroom is the screen's scene (see `ClassroomBackdrop`): the students come in on it.
         visual: (context) => <ClassroomChange context={context} />,
-        // Three rows of words would cover the front desks, where they come in; the shorter rows stand below the classroom.
-        compact: true,
         options: words(["Only total_students", "Present and absent counts", "All three values"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -741,8 +735,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "The app adds two numbers. What should it do first?",
         // The little app on a phone is the screen's scene (see `MiniAppBackdrop`).
         visual: (context) => <MiniAppDrive context={context} />,
-        // Three rows of words would cover the app's lower half; the shorter rows stand below it.
-        compact: true,
         options: words(["Show the result", "Ask for the first number", "Close the app"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -761,8 +753,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Notebook ₹50 and pen ₹20, but the app shows ₹50. Why?",
         // The shop counter, with the app's wrong total on its Total board, is the screen's scene (see `ShopBackdrop`).
         visual: (context) => <ShopDebugDrive context={context} />,
-        // Three rows of words would cover the counter; the shorter rows stand below it.
-        compact: true,
         options: words(["It used only the first price", "It added both prices", "The notebook should cost ₹20"]),
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -834,8 +824,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Remember the labelled bottles. Why name variables?",
         // The labelled bottles are the screen's scene (see `NamesBackdrop`), as on "Which bottle is mine?", standing still.
-        // Three rows of words would cover their bases; the shorter rows stand below them.
-        compact: true,
         options: words(["To know what they represent", "To make the program longer", "To avoid calculations"]),
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -853,8 +841,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "An app must add two numbers. Why keep both?",
         // The addition app, both its numbers kept, is the screen's scene (see `MiniAppBackdrop`); nothing is lit for an answer (no part of the app is about only one of them), and the result shows once the answer is right.
         visual: (context) => <MiniAppDrive filled={2} lights={NO_LIGHTS} reveal context={context} />,
-        // Three rows of words would cover the app's lower half; the shorter rows stand below it.
-        compact: true,
         options: words(["To use them in the calculation", "To delete them", "To show only one number"]),
         correctId: at(0),
         rightTitle: "Exactly!",

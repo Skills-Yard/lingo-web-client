@@ -88,22 +88,6 @@ function SceneFrame({ scene, lifted = false }: { scene: SceneName; lifted?: bool
 }
 
 /**
- * A window onto part of a scene, for a scene shown in a card instead of behind the screen: the scene is drawn
- * `zoom` times its own size and shifted so that `crop` (artboard px) fills the window, which clips the rest.
- * The scene is the one canvas the screens share (see `variableHost`), so it can't be behind the screen at the
- * same time.
- */
-export function SceneWindow({ scene, crop, zoom, className = "" }: { scene: SceneName; crop: { x: number; y: number; width: number; height: number }; zoom: number; className?: string }) {
-  return (
-    <div aria-hidden className={`relative shrink-0 overflow-hidden ${className}`} style={{ width: crop.width * zoom, height: crop.height * zoom }}>
-      <div className="absolute" style={{ left: -crop.x * zoom, top: -crop.y * zoom, width: VARIABLE_SCENES.width * zoom, height: VARIABLE_SCENES.height * zoom }}>
-        <SceneSlot scene={scene} />
-      </div>
-    </div>
-  );
-}
-
-/**
  * The trail ("VAR_TrekScene"), behind every screen that has no scene of its own. The
  * file keeps what it was last given, so each screen says all three: `thirsty` (the
  * friends are thirsty), `noWater` (the river is gone) and `thinking` (a question is open).

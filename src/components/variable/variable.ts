@@ -50,14 +50,14 @@ export const STEP = {
 } as const;
 
 /** The screens where the bottle is filled and drunk from: its scene is their backdrop. */
-const BOTTLE_STEPS: readonly number[] = [STEP.bottle, STEP.fill, STEP.addWater, STEP.drink, STEP.empty, STEP.meet];
+const BOTTLE_STEPS: readonly number[] = [STEP.bottle, STEP.bridge, STEP.fill, STEP.addWater, STEP.drink, STEP.empty, STEP.meet];
 
 /** The screens about the notebook, pen and eraser (the shop counter), and about the pocket money (the wallet). */
 const SHOP_STEPS: readonly number[] = [STEP.shopping, STEP.prices, STEP.total, STEP.eraser, STEP.debug];
 const WALLET_STEPS: readonly number[] = [STEP.pocket, STEP.received, STEP.spent, STEP.follow];
 
 /**
- * The scene behind a screen: the four objects on "Pick the Right Object", the bottle, the
+ * The scene behind a screen: the four objects on "Pick the Right Object", the bottle (screens 5-8, 10, 11 and 13; on 6 and 13 with its variable card), the
  * labelled bottles on "Which bottle is mine?" and "Why Meaningful Names?", the pair of variable cards on "Same Bottle, New
  * Amount" and on "Name or Value?" (both its stages), the classroom on "A New Day at School!" and "Three
  * Pieces of Data" (both its stages), the shop, the wallet, and the trail on every other.

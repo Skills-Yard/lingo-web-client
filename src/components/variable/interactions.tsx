@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
@@ -8,9 +8,9 @@ import { ArrangeBoard, arrangeGeometry, useArrange, type ArrangeCardDef } from "
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneryHidden, setSceneValues, setSkippedFills } from "@/lib/rive/variableHost";
-import type { InteractionApi } from "./quiz";
-import { artboardRect, BELOW_TITLE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, SceneWindow, type ArtboardRect } from "./scenes";
+import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
+import { OPTION, type InteractionApi } from "./quiz";
+import { artboardRect, BELOW_TITLE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, type ArtboardRect } from "./scenes";
 import { CARD } from "./visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
@@ -49,71 +49,50 @@ export function KeyPoints({ points }: { points: readonly string[] }) {
   );
 }
 
-/**
- * What the two windows show of the "VAR_Bottle" artboard (artboard px). The artboard is on the screen twice
- * (`bottle` and `bottleCard`, see `VARIABLE_SCENES`): the first has the variable off, so the bottle stands alone
- * in the middle; the second has it on, and the artboard draws a variable card (a heading, name `water`, the value
- * in ml) beside the bottle (x 197 to 372), of which only that card is shown, next to the first. The scenery is
- * hidden in both (see `setSceneryHidden`): they stand on one white card. The variable is the bigger of the two
- * (about 19px text), as it is what the screen is about; the bottle is just its picture.
- */
-const JAR_CROP = { x: 132, y: 6, width: 160, height: 264 } as const;
-const JAR_ZOOM = 0.78;
-const CARD_CROP = { x: 199, y: 79, width: 178, height: 143 } as const;
-const CARD_ZOOM = 1.2;
-/** The colours the artboard fills the variable card's outline and its shadow (the grey edge under it) with: each is one shape, so they can be left out (see `setSkippedFills`). */
-const CARD_EDGE_FILLS = ["#dce6f4", "rgba(70, 90, 120, 0.14)"] as const;
-/**
- * How much of the combined card stands over the scene (px, from its top down to the scene's bottom edge): the top
- * stays below the characters' faces, and the rest of the card goes on below the edge, into the white under the scene.
- * The edge it is measured from is the phone's: on a wider or shorter window the scene is drawn larger and its edge
- * lower, and the card (with its captions) would run down behind the button.
- */
-const CARD_OVER_SCENE = 196;
 /** The bottle fills to this many ml, over this long (ms). */
 const BRIDGE_ML = 500;
 const BRIDGE_FILL_MS = 2200;
-
-/** A caption under one of the two, shown from the start: it hangs under the card's bottom without taking any room, so the card stays where it is. */
-function Caption({ children }: { children: ReactNode }) {
-  return (
-    <motion.span
-      initial={{ opacity: 0, y: -6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5 }}
-      className="absolute top-full left-1/2 mt-[18px] w-max max-w-[128px] -translate-x-1/2 rounded-[10px] bg-white px-2 py-1.5 text-center text-[12px] leading-4 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
-    >
-      {children}
-    </motion.span>
-  );
-}
-
 /** Once the water has stopped, this long (ms) before Continue can be pressed: the value has been read at 500. */
 const BRIDGE_SETTLE_MS = 300;
 
 /**
- * Screen 6: the bottle and the variable beside it (the artboard's own card: name `water`, value in ml), each with
- * a line under it saying what it is. The bottle is the "VAR_Bottle" artboard: its cap opens and it fills to 500 ml as
- * the screen opens, the variable's value counting up with the water; when it is full the screen is done and Continue
- * can be pressed (nothing to tap). The two stand on the bottom edge of the trail scene behind the screen.
+ * Short notes under the scene's bottom edge, on the white, said from the start: each is a bold label and what it says,
+ * and they fade in one after another (from 0.5 s, 0.3 s apart).
+ */
+function SceneNotes({ notes }: { notes: readonly { label: string; text: string }[] }) {
+  return (
+    <div className="absolute inset-x-0 flex flex-col items-center gap-2" style={{ top: `calc(min(${SCENE_BOTTOM}, ${SCENE_BOTTOM_PHONE}px) - ${BELOW_TITLE}px + 12px)` }}>
+      {notes.map((note, index) => (
+        <motion.p
+          key={note.label}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 + index * 0.3 }}
+          className="max-w-[340px] rounded-[12px] bg-white px-3 py-2 text-center text-[14px] leading-5 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
+        >
+          <span className="font-bold text-[#04908F] dark:text-[#7FD8CC]">{note.label}:</span> {note.text}
+        </motion.p>
+      ))}
+    </div>
+  );
+}
+
+/** What the bottle and its variable are, said under the scene. */
+const BRIDGE_NOTES = [
+  { label: "Bottle", text: "A container for water." },
+  { label: "Variable", text: "A named place for information." },
+] as const;
+
+/**
+ * Screen 6: the bottle artboard ("VAR_Bottle", see `BottleBackdrop`) is the scene, with its variable card on
+ * (`showVariable`): the artboard draws the card beside the bottle (name `water`, its value the water in ml). The cap
+ * opens and the bottle fills to 500 ml as the screen opens, the variable's value counting up with the water; when it is
+ * full the screen is done and Continue can be pressed (nothing to tap). Under the scene a note says what each is.
  */
 export function BridgeStage({ done, finished }: InteractionApi) {
-  // Both copies of the artboard are drawn without their scenery, and the variable card without its own outline and shadow, flat on the white card (and all as they were for the screens after).
-  useLayoutEffect(() => {
-    setSceneryHidden("bottle", true);
-    setSceneryHidden("bottleCard", true);
-    setSkippedFills("bottleCard", CARD_EDGE_FILLS);
-    return () => {
-      setSceneryHidden("bottle", false);
-      setSceneryHidden("bottleCard", false);
-      setSkippedFills("bottleCard", []);
-    };
-  }, []);
-
-  // The bottle starts empty with its cap opening, then the stream is on while it fills (see `BottleChange`). The variable card is the other copy, with the variable on, and takes the same water.
+  // The bottle starts empty with its cap opening, then the stream is on while it fills (see `BottleChange`); the card beside it says `water` and counts up with it. Both go as the screen is left, so the bottle screens that follow are plain.
   useEffect(() => {
-    setSceneValues("bottleCard", { showVariable: true, varName: "water" });
-    setSceneValues("bottle", { showLabel: false, showVariable: false, pouring: false });
+    setSceneValues("bottle", { showVariable: true, varName: "water", showLabel: false, pouring: false });
     setBottleLevel(0);
     const wait = openBottleCap();
     const timers = [
@@ -127,29 +106,15 @@ export function BridgeStage({ done, finished }: InteractionApi) {
     ];
     return () => {
       timers.forEach((timer) => window.clearTimeout(timer));
-      setSceneValues("bottle", { pouring: false, showLabel: true });
+      setSceneValues("bottle", { pouring: false, showVariable: false, showLabel: true });
     };
   }, [done]);
 
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="A variable keeps information, like a bottle keeps water." entry="variable-bridge" />
-      {/* One white card for the two, over the bottom edge of the scene behind the screen (the trail): its top is `CARD_OVER_SCENE` above that edge, and it goes on below it. */}
-      <div className="absolute inset-x-0 flex justify-center" style={{ top: `calc(min(${SCENE_BOTTOM}, ${SCENE_BOTTOM_PHONE}px) - ${BELOW_TITLE}px - ${CARD_OVER_SCENE}px)` }}>
-        <div className="flex items-end rounded-[20px] border-4 border-white bg-white p-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)]">
-          <div className="relative">
-            <SceneWindow scene="bottle" crop={JAR_CROP} zoom={JAR_ZOOM} className="rounded-[12px]" />
-            <Caption>A container for water.</Caption>
-          </div>
-          {/* The artboard's own dotted line, from the bottle across to its variable. */}
-          <div aria-hidden className="h-0 w-3.5 shrink-0 self-center border-t-[3px] border-dotted border-[#17998C]" />
-          <div className="relative">
-            <SceneWindow scene="bottleCard" crop={CARD_CROP} zoom={CARD_ZOOM} className="rounded-[16px]" />
-            <Caption>A named place for information.</Caption>
-          </div>
-        </div>
-      </div>
-      {/* The key points stand just above the button row (this stage's bottom), under the notes: below the scene's edge on a phone, and never behind the button on a short, wide window, where the scene is drawn larger. */}
+      <SceneNotes notes={BRIDGE_NOTES} />
+      {/* The key points stand just above the button row (this stage's bottom), under the notes. */}
       {finished && (
         <div className="absolute inset-x-0 bottom-0 flex justify-center">
           <KeyPoints points={["A bottle holds water.", "A variable holds information.", "Information in a program is called data."]} />
@@ -252,20 +217,7 @@ export function NameValueStage({ done, finished }: InteractionApi) {
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="A variable has a name and a value." entry="variable-meet" />
-      {/* Under the scene's bottom edge, on the white: what the name and the value are. */}
-      <div className="absolute inset-x-0 flex flex-col items-center gap-2" style={{ top: `calc(min(${SCENE_BOTTOM}, ${SCENE_BOTTOM_PHONE}px) - ${BELOW_TITLE}px + 12px)` }}>
-        {NAME_VALUE_NOTES.map((note, index) => (
-          <motion.p
-            key={note.label}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 + index * 0.3 }}
-            className="max-w-[300px] rounded-[12px] bg-white px-3 py-2 text-center text-[14px] leading-5 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
-          >
-            <span className="font-bold text-[#04908F] dark:text-[#7FD8CC]">{note.label}:</span> {note.text}
-          </motion.p>
-        ))}
-      </div>
+      <SceneNotes notes={NAME_VALUE_NOTES} />
       {/* The key points stand just above the button row (this stage's bottom), under the notes. */}
       {finished && (
         <div className="absolute inset-x-0 bottom-0 flex justify-center">
@@ -348,8 +300,8 @@ const CLASSIFY_PARTS = [
   { id: "v2", label: "1,000 ml", kind: "value", select: 4, rect: { x: 224, y: 181, width: 120, height: 44 }, tick: { x: 340, y: 191 } },
 ] as const satisfies readonly { id: string; label: string; kind: PartKind; select: number; rect: ArtboardRect; tick: { x: number; y: number } }[];
 
-/** The height of the block the "It is a name / It is a value" buttons make with their note (the 44px buttons, 10px, a 20px note line). */
-const SORT_BLOCK_H = 74;
+/** The height of the block the "It is a name / It is a value" buttons make with their note (the buttons, 10px, a 20px note line). */
+const SORT_BLOCK_H = OPTION.height + 10 + 20;
 /** The last part has been sorted: this long (ms) for the artboard's right-answer glow to play before the screen is done and its name / value tags show. */
 const SORT_SETTLE_MS = 900;
 
@@ -440,14 +392,16 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
       </SceneOverlay>
       {/* The two buttons and the note stand under the scene, on the white below it, so no character is covered. */}
       <div className="absolute inset-x-0 flex flex-col items-center gap-2.5" style={{ top: belowScene(SORT_BLOCK_H) }}>
-        <div className="pointer-events-auto flex w-[340px] gap-3">
+        <div className="pointer-events-auto flex w-[340px]" style={{ gap: OPTION.gap }}>
           {(["name", "value"] as const).map((kind) => (
             <button
               key={kind}
               type="button"
               disabled={!selected}
               onClick={() => choose(kind)}
-              className="h-11 flex-1 cursor-pointer rounded-lg bg-[#EDFAFE] text-[15px] leading-5 font-semibold text-[#1F4899] shadow-[0_4px_0_#BFE6F2] transition-[translate,box-shadow] duration-100 enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50"
+              // The same size, gap, corners and text as every other option of the module (their colour is the button's own).
+              style={{ height: OPTION.height, borderRadius: OPTION.radius, fontSize: OPTION.font }}
+              className="flex-1 cursor-pointer bg-[#EDFAFE] leading-5 font-semibold text-[#1F4899] shadow-[0_4px_0_#BFE6F2] transition-[translate,box-shadow] duration-100 enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50"
             >
               It is a {kind}
             </button>

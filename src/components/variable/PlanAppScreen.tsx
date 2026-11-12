@@ -17,7 +17,7 @@ import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger, setSceneValues } from "@/lib/rive/variableHost";
 import { HEX_ROW_TOP, MiniAppBackdrop } from "./scenes";
-import { IDLE_LOOK, parseTitle } from "./quiz";
+import { IDLE_LOOK, OPTION, parseTitle } from "./quiz";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
@@ -35,8 +35,6 @@ const STEPS = [
 /** The right order, first step first. */
 const ANSWER = ["ask-first", "keep-first", "ask-second", "keep-second", "add", "show"];
 
-/** Once checked the steps rise this far (px), as far as it takes to stand clear of the result panel (it starts 600px down on a phone, they end 724 down) and no more, so they stay below the scene that has risen to the head. */
-const STEPS_RISE = 132;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The steps' own way in. */
 const STEPS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
@@ -165,10 +163,10 @@ export function PlanAppScreen() {
       {/* The steps stand under the app, on the white below it, two across; a right plan fades them so the example running on the app can be seen. */}
       <motion.div
         initial={{ opacity: 0, y: 90 }}
-        animate={{ opacity: checked && correct ? 0 : 1, y: checked ? -STEPS_RISE : 0 }}
+        animate={{ opacity: checked && correct ? 0 : 1, y: checked ? -OPTION.rise : 0 }}
         transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : STEPS_IN}
-        className="pointer-events-auto absolute z-[1] grid grid-cols-2 gap-2"
-        style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS), left: COLUMN_LEFT, width: COLUMN_W }}
+        className="pointer-events-auto absolute z-[1] grid grid-cols-2"
+        style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
       >
         {STEPS.map((step) => {
           const place = order.indexOf(step.id);
@@ -182,7 +180,9 @@ export function PlanAppScreen() {
               disabled={checked}
               onClick={() => pick(step.id)}
               aria-pressed={picked}
-              className={`relative flex h-12 cursor-pointer items-center justify-center rounded-[14px] px-3 text-center text-[14px] leading-5 font-medium text-[#444444] dark:text-white ${RAISED} ${
+              // The same size, padding (the border's width is made up from `OPTION.padX`: a 1px line at rest, a 2px border picked), corners and text as every other option of the module.
+              style={{ height: OPTION.height, borderRadius: OPTION.radius, paddingInline: picked ? OPTION.padX - 2 : OPTION.padX - 1, fontSize: OPTION.font }}
+              className={`relative flex cursor-pointer items-center justify-center text-center leading-5 font-medium text-[#444444] dark:text-white ${RAISED} ${
                 misplaced
                   ? `${EDGE.red} border-2 border-[#E5484D] bg-[#FFF1F1] dark:bg-[#2A1517]`
                   : picked
