@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { Check, Pointer, Sparkles } from "lucide-react";
+import { motion } from "framer-motion";
+import { Check, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
 import { ArrangeBoard, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import { HexBubble } from "@/components/level-two/HexBubble";
@@ -46,97 +46,6 @@ export function KeyPoints({ points }: { points: readonly string[] }) {
         </li>
       ))}
     </motion.ul>
-  );
-}
-
-/**
- * "Tap here", right under the thing to tap next (where its note will show once it is tapped): a small pill with a
- * hand that taps up at it. Pressing it counts as pressing the thing.
- */
-function TapHint({ onTap }: { onTap: () => void }) {
-  const reduceMotion = useReducedMotion();
-  return (
-    <motion.button
-      type="button"
-      tabIndex={-1}
-      aria-hidden
-      onClick={onTap}
-      initial={{ opacity: 0, y: 6 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.25 }}
-      className="pointer-events-auto mt-1 flex cursor-pointer items-center gap-1.5 rounded-full border-2 border-[#04ACAB] bg-white py-1 pr-3 pl-2 text-[13px] leading-5 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
-    >
-      <motion.span
-        aria-hidden
-        animate={reduceMotion ? { y: 0 } : { y: [0, -4, 0], scale: [1, 0.88, 1] }}
-        transition={reduceMotion ? { duration: 0 } : { duration: 1.3, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <Pointer className="size-5 fill-white stroke-[#04ACAB]" strokeWidth={1.75} />
-      </motion.span>
-      Tap here
-    </motion.button>
-  );
-}
-
-/**
- * A thing to tap: it pulses while it is the next one to tap, with a "Tap here" hand under it, and what it explains
- * shows once it has been tapped.
- */
-function Tappable({
-  children,
-  note,
-  tapped,
-  next,
-  enabled = true,
-  showNote = true,
-  onTap,
-  className = "",
-  label,
-}: {
-  children: ReactNode;
-  note: string;
-  tapped: boolean;
-  next: boolean;
-  enabled?: boolean;
-  /** Whether the note shows under the thing once it is tapped (a screen that shows the notes in one place says no). */
-  showNote?: boolean;
-  onTap: () => void;
-  className?: string;
-  label: string;
-}) {
-  const press = () => {
-    playClickSound();
-    vibrateForTap();
-    onTap();
-  };
-  return (
-    <div className={`flex min-w-0 flex-col items-center gap-1.5 ${className}`}>
-      <motion.button
-        type="button"
-        aria-label={label}
-        disabled={!enabled}
-        onClick={press}
-        animate={next ? { scale: [1, 1.04, 1] } : { scale: 1 }}
-        transition={next ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
-        whileTap={{ scale: 0.96 }}
-        className={`pointer-events-auto relative cursor-pointer rounded-[16px] outline-offset-4 ${tapped ? "outline-2 outline-[#04ACAB]" : next ? "outline-2 outline-dashed outline-[#04ACAB]/60" : ""} disabled:cursor-default`}
-      >
-        {children}
-      </motion.button>
-      {next && enabled && <TapHint onTap={press} />}
-      <AnimatePresence>
-        {tapped && showNote && (
-          <motion.span
-            key="note"
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-[10px] bg-white px-2.5 py-1.5 text-center text-[12px] leading-4 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
-          >
-            {note}
-          </motion.span>
-        )}
-      </AnimatePresence>
-    </div>
   );
 }
 
@@ -378,73 +287,48 @@ const GAP_BELOW_SCENE = 12;
  */
 const belowScene = (height: number) => `min(calc(${SCENE_BOTTOM} - ${BELOW_TITLE}px + ${GAP_BELOW_SCENE}px), calc(100% - ${height}px))`;
 
+/** What each of screen 16's three variables stands for. */
 const ATTENDANCE_NAMES = [
-  { name: "total_students", value: "30", meaning: "All the students in the class" },
-  { name: "present_students", value: "27", meaning: "The students who came today" },
-  { name: "absent_students", value: "3", meaning: "The students who are not here today" },
+  { name: "total_students", meaning: "All the students in the class" },
+  { name: "present_students", meaning: "The students who came today" },
+  { name: "absent_students", meaning: "The students who are not here today" },
 ] as const;
 
-/**
- * The height `NamesStage` takes once it is done: its three rows (52px each, with two 8px gaps), a 12px gap and the
- * key points (90px). While the rows are tapped, a one-line note (34px) stands where the key points will, and the
- * "Tap here" hand (32px) is under the next row's name, so it never takes more than this.
- */
-const NAMES_BLOCK_H = 172 + 12 + 90;
+/** The height `NamesStage`'s three rows take (52px each, with two 8px gaps). */
+const NAMES_BLOCK_H = 172;
+/** The board's names take this long (ms) to come in before the screen is done and Continue can be pressed. */
+const NAMES_SETTLE_MS = 1200;
 
-/** Screen 16: three variables for the attendance; tap each name to see what it stands for. */
-export function NamesStage({ done, finished }: InteractionApi) {
-  const [seen, setSeen] = useState<readonly string[]>([]);
+/**
+ * Screen 16: the classroom of the screen before (see `ClassroomBackdrop`), its board now showing the names of its
+ * three counts (`showNames`); what each name stands for is said under the scene from the start, with nothing to tap.
+ * Once the names have come in the screen is done and Continue can be pressed.
+ */
+export function NamesStage({ done }: InteractionApi) {
   useEffect(() => {
-    if (seen.length < ATTENDANCE_NAMES.length) return;
-    const timer = window.setTimeout(() => done(), 600);
+    setSceneValues("classroom", { total: 30, present: 27, showNames: true, highlight: 0 });
+    const timer = window.setTimeout(() => done(), NAMES_SETTLE_MS);
     return () => window.clearTimeout(timer);
-  }, [seen, done]);
-  const next = ATTENDANCE_NAMES.find((row) => !seen.includes(row.name))?.name;
-  // What the name tapped last stands for: one note under the rows, so the rows don't grow as they are tapped.
-  const latest = ATTENDANCE_NAMES.find((row) => row.name === seen[seen.length - 1]);
+  }, [done]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Give each piece of information its own name." entry="variable-names" />
-      {/* The rows (with the note, then the key points, after them) stand under the picture, on the white below it, so no character is covered. */}
-      <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: belowScene(NAMES_BLOCK_H) }}>
+      {/* The three rows stand under the scene, on the white below it, so no part of the classroom is covered. */}
+      <div className="absolute inset-x-0 flex flex-col items-center" style={{ top: belowScene(NAMES_BLOCK_H) }}>
         <div className="flex w-[340px] flex-col gap-2">
-          {ATTENDANCE_NAMES.map((row) => {
-            const tapped = seen.includes(row.name);
-            return (
-              <div key={row.name} className={`flex items-center justify-between gap-2 px-3 py-2 ${CARD}`}>
-                <Tappable
-                  label={`Tap ${row.name}`}
-                  note={row.meaning}
-                  tapped={tapped}
-                  next={next === row.name}
-                  showNote={false}
-                  onTap={() => setSeen((now) => (now.includes(row.name) ? now : [...now, row.name]))}
-                  className="items-start"
-                >
-                  <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[14px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">{row.name}</span>
-                </Tappable>
-                <span className="text-[22px] leading-7 font-bold text-[#444444] dark:text-white">{row.value}</span>
-              </div>
-            );
-          })}
+          {ATTENDANCE_NAMES.map((row, index) => (
+            <motion.div
+              key={row.name}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 + index * 0.25 }}
+              className={`flex h-[52px] items-center gap-3 px-3 ${CARD}`}
+            >
+              <span className="w-[148px] shrink-0 rounded-md bg-[#E3F6F3] px-1.5 py-0.5 text-center font-mono text-[13px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">{row.name}</span>
+              <span className="text-[14px] leading-5 font-medium text-[#444444] dark:text-white">{row.meaning}</span>
+            </motion.div>
+          ))}
         </div>
-        {finished ? (
-          <KeyPoints points={["Each variable tracks one piece of information.", "Good names show what a value means."]} />
-        ) : (
-          <AnimatePresence mode="wait">
-            {latest && (
-              <motion.span
-                key={latest.name}
-                initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                className="rounded-[10px] bg-white px-2.5 py-1.5 text-center text-[12px] leading-4 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
-              >
-                {latest.meaning}
-              </motion.span>
-            )}
-          </AnimatePresence>
-        )}
       </div>
     </div>
   );

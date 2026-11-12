@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
-import { Bottle, CalculatorApp, Classroom, AttendanceBoard, ShopItem, useChange, CARD } from "./visuals";
+import { Bottle, ShopItem, CARD } from "./visuals";
 import { BridgeStage, ClassifyStage, FillSliderStage, MatchPricesStage, NameValueStage, NamesStage } from "./interactions";
 import { NAME_VALUE_CARDS, type VarCards } from "./scenes";
 import type { Option, QuizStage, ScreenDef, VisualContext } from "./quiz";
@@ -204,18 +204,19 @@ function VarCardDrive({ cards, lights = NO_LIGHTS, context }: { cards: VarCards;
   return null;
 }
 
-/** The row of the attendance board each answer of screen 15 is about (1 total, 2 present, 3 absent); "All of these" is none in particular. */
+/** The row of the attendance board each answer of screens 15 and 16 is about (1 total, 2 present, 3 absent); screen 15's "All of these" is none in particular. */
 const ATTENDANCE_LIGHTS: Readonly<Record<string, number>> = { "0": 1, "1": 2, "2": 3 };
 
 /**
- * Screen 15: the classroom and its attendance board are the scene (see `ClassroomBackdrop`): 30 students, 27 here.
- * This draws nothing, it sets the scene's data. The row of the board an answer is about is lit while it is the one
- * tapped; checking marks the answer right or wrong.
+ * Screens 15 and 16's question: the classroom and its attendance board are the scene (see `ClassroomBackdrop`): 30
+ * students, 27 here. This draws nothing, it sets the scene's data: `names` has the board show the name of each count
+ * (screen 16) instead of its heading. The row of the board an answer is about is lit while it is the one tapped;
+ * checking marks the answer right or wrong.
  */
-function ClassroomDrive({ context }: { context: VisualContext }) {
+function ClassroomDrive({ names = false, context }: { names?: boolean; context: VisualContext }) {
   useEffect(() => {
-    setSceneValues("classroom", { total: 30, present: 27, showNames: false });
-  }, []);
+    setSceneValues("classroom", { total: 30, present: 27, showNames: names });
+  }, [names]);
   useEffect(() => {
     setSceneValues("classroom", { highlight: ATTENDANCE_LIGHTS[context.picked ?? ""] ?? 0 });
   }, [context.picked]);
@@ -225,15 +226,60 @@ function ClassroomDrive({ context }: { context: VisualContext }) {
   return null;
 }
 
-/** Screen 17: two of the absent students come in. */
+/** The part of the little app each answer of screen 26 is about (1 the first number's field, 4 the result); "Close the app" is none. */
+const APP_LIGHTS: Readonly<Record<string, number>> = { "0": 4, "1": 1 };
+
+/**
+ * Screen 26: the little app on a phone ("VAR_MiniApp", see `MiniAppBackdrop`), as the learner is about to build it:
+ * its two number fields empty and its result not yet worked out. This draws nothing, it sets the scene's data. The part
+ * of the app an answer is about is lit while it is the one tapped; checking marks the answer right or wrong.
+ */
+function MiniAppDrive({ context }: { context: VisualContext }) {
+  useEffect(() => {
+    setSceneValues("miniApp", {
+      mode: 0,
+      title: "Addition App",
+      name1: "first_number",
+      name2: "second_number",
+      resultName: "result",
+      formula: "result = first_number + second_number",
+      val1: "10",
+      val2: "20",
+      result: 30,
+      filled: 0,
+      showResult: false,
+      bug: false,
+    });
+  }, []);
+  useEffect(() => {
+    setSceneValues("miniApp", { highlight: APP_LIGHTS[context.picked ?? ""] ?? 0 });
+  }, [context.picked]);
+  useEffect(() => {
+    if (context.checked) fireSceneTrigger("miniApp", context.correct ? "correct" : "wrong");
+  }, [context.checked, context.correct]);
+  return null;
+}
+
+/**
+ * Screen 17: the classroom and its board (see `ClassroomBackdrop`), the names shown. The class stays as it was (27
+ * here, 3 absent) while the question is open, so the picture doesn't give the answer away; once the answer is right
+ * the two absent students come in (`arrive`) and the board shows the new counts (29 here, 1 absent; the total stays
+ * 30). Checking marks the answer right or wrong.
+ */
 function ClassroomChange({ context }: { context: VisualContext }) {
-  const present = useChange(27, 29, 900, context.attempt);
-  return (
-    <div className="flex items-center gap-3">
-      <Classroom present={present} />
-      <AttendanceBoard names total={30} present={present} absent={30 - present} />
-    </div>
-  );
+  const settled = context.checked && context.correct;
+  useEffect(() => {
+    setSceneValues("classroom", { total: 30, present: 27, showNames: true, highlight: 0 });
+  }, [context.attempt]);
+  useEffect(() => {
+    if (!settled) return;
+    setSceneValues("classroom", { present: 29 });
+    fireSceneTrigger("classroom", "arrive");
+  }, [settled]);
+  useEffect(() => {
+    if (context.checked) fireSceneTrigger("classroom", context.correct ? "correct" : "wrong");
+  }, [context.checked, context.correct]);
+  return null;
 }
 
 /** The travel expense tracker; the amount left stays hidden until it has been worked out. */
@@ -269,24 +315,6 @@ function DebugVisual() {
           ⚠️
         </span>
       </div>
-    </div>
-  );
-}
-
-/** The three attendance variables, one under the other. */
-function AttendanceCards() {
-  return (
-    <div className="flex w-[300px] flex-col gap-1.5">
-      {[
-        ["total_students", "30"],
-        ["present_students", "27"],
-        ["absent_students", "3"],
-      ].map(([name, value]) => (
-        <div key={name} className={`flex items-center justify-between px-3 py-1 ${CARD}`}>
-          <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[12px] leading-5 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">{name}</span>
-          <span className="text-[18px] leading-6 font-bold text-[#444444] dark:text-white">{value}</span>
-        </div>
-      ))}
     </div>
   );
 }
@@ -512,7 +540,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       { kind: "interaction", render: (api) => <NamesStage {...api} /> },
       quiz({
         line: "Which variable tells us how many are absent?",
-        visual: () => <AttendanceCards />,
+        // The classroom, its board showing the names, is the screen's scene (see `ClassroomBackdrop`); tapping a name lights its row.
+        visual: (context) => <ClassroomDrive names context={context} />,
+        // Three rows of words would cover the classroom; the shorter rows stand below it.
+        compact: true,
         options: words(["total_students", "present_students", "absent_students"]),
         correctId: at(2),
         rightTitle: "Correct!",
@@ -528,7 +559,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "2 absent students return. Which values change?",
+        // The classroom is the screen's scene (see `ClassroomBackdrop`): the students come in on it.
         visual: (context) => <ClassroomChange context={context} />,
+        // Three rows of words would cover the front desks, where they come in; the shorter rows stand below the classroom.
+        compact: true,
         options: words(["Only total_students", "Present and absent counts", "All three values"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -691,7 +725,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "The app adds two numbers. What should it do first?",
-        visual: () => <CalculatorApp compact />,
+        // The little app on a phone is the screen's scene (see `MiniAppBackdrop`).
+        visual: (context) => <MiniAppDrive context={context} />,
+        // Three rows of words would cover the app's lower half; the shorter rows stand below it.
+        compact: true,
         options: words(["Show the result", "Ask for the first number", "Close the app"]),
         correctId: at(1),
         rightTitle: "Exactly!",

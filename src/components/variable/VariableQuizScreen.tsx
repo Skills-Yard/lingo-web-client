@@ -10,7 +10,7 @@ import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { BELOW_TITLE, BottleBackdrop, ClassroomBackdrop, HEX_LIFT, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
+import { BELOW_TITLE, BottleBackdrop, ClassroomBackdrop, HEX_LIFT, ItemsBackdrop, MiniAppBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
 import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
@@ -49,6 +49,8 @@ const IDLE_LOOK = "border-[#DCE2E9] bg-white drop-shadow-[0_1px_2px_rgba(31,42,6
 const MIN_FIT = 0.6;
 /** The result panel makes room by raising the answers this far (px). */
 const RISE = 150;
+/** The compact rows need no more than this to stand clear of the panel (it starts 600px down on a phone, they end 724 down), so they stop that much lower, under the scene that has risen to the head, rather than climbing over it. */
+const COMPACT_ROWS_RISE = 132;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
@@ -74,6 +76,8 @@ const backdropFor = (scene: SceneName, step: number, lifted: boolean) => {
       return <VarCardBackdrop lifted={lifted} />;
     case "classroom":
       return <ClassroomBackdrop lifted={lifted} />;
+    case "miniApp":
+      return <MiniAppBackdrop lifted={lifted} />;
     case "shop":
       return <ShopBackdrop lifted={lifted} />;
     case "wallet":
@@ -510,7 +514,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               fadeOut={cleared}
               hinted={hintShown}
               withHint={hasHint}
-              rise={RISE}
+              rise={compactRows ? COMPACT_ROWS_RISE : RISE}
               compact={compactRows}
               idleLook={IDLE_LOOK}
               gap={compactRows ? COMPACT_ROW_GAP : ROW_GAP}

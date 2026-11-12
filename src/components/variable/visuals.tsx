@@ -32,24 +32,6 @@ export function Counter({ value, prefix = "", suffix = "", seconds = 1.1 }: { va
   );
 }
 
-/**
- * A value that starts at `from` and moves to `to` after `delayMs`: for a visual
- * that shows something happening (water poured in) when the screen opens or
- * when `replay` changes (the learner tries a question again).
- */
-export function useChange(from: number, to: number, delayMs = 800, replay = 0) {
-  const [value, setValue] = useState(from);
-  useEffect(() => {
-    const reset = window.setTimeout(() => setValue(from), 0);
-    const change = window.setTimeout(() => setValue(to), delayMs);
-    return () => {
-      window.clearTimeout(reset);
-      window.clearTimeout(change);
-    };
-  }, [from, to, delayMs, replay]);
-  return value;
-}
-
 /** A value that goes through `points` in turn (each at `at` ms from the start), and starts over when `replay` changes. */
 export function useTimeline(points: readonly { at: number; value: number }[], replay = 0) {
   const [value, setValue] = useState(points[0].value);
@@ -186,53 +168,6 @@ export function ShopItem({ emoji, name, price, tint = "bg-[#F6F4FE]" }: { emoji:
       </span>
       <span className="text-[13px] leading-4 font-semibold text-[#444444] dark:text-white">{name}</span>
       <span className="mt-1 rounded-full bg-[#FFB300] px-2.5 py-0.5 text-[13px] leading-4 font-bold text-white shadow-[0_2px_0_#D98E00]">₹{price}</span>
-    </div>
-  );
-}
-
-/* ───────────────────────── The classroom ───────────────────────── */
-
-/** A classroom of `total` students, `present` of them in their seats; the rest are empty. */
-export function Classroom({ present, total = 30 }: { present: number; total?: number }) {
-  return (
-    <div className={`flex w-[212px] flex-wrap justify-center gap-1 p-2 ${CARD}`}>
-      {Array.from({ length: total }, (_, index) => {
-        const here = index < present;
-        return (
-          <motion.span
-            key={index}
-            aria-hidden
-            initial={false}
-            animate={{ scale: here ? 1 : 0.9, opacity: here ? 1 : 0.45 }}
-            transition={{ duration: 0.4 }}
-            className={`flex size-[18px] items-center justify-center rounded-full text-[11px] leading-none ${here ? "bg-[#CDEFEA] dark:bg-[#0F2B28]" : "border-2 border-dashed border-[#B9C2D0] dark:border-white/30"}`}
-          >
-            {here ? "🧑‍🎓" : ""}
-          </motion.span>
-        );
-      })}
-    </div>
-  );
-}
-
-/** The attendance board: three counts, each with what it counts. */
-export function AttendanceBoard({ total, present, absent, names = false }: { total: number; present: number; absent: number; names?: boolean }) {
-  const rows = [
-    { label: names ? "total_students" : "Total students", value: total },
-    { label: names ? "present_students" : "Present", value: present },
-    { label: names ? "absent_students" : "Absent", value: absent },
-  ];
-  return (
-    <div className={`flex w-[116px] flex-col gap-1.5 bg-white p-2.5 dark:bg-[#15181E] ${CARD}`}>
-      <span className="text-center text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">Attendance</span>
-      {rows.map((row) => (
-        <div key={row.label} className={names ? "flex flex-col" : "flex items-baseline justify-between gap-1"}>
-          <span className={`font-medium text-[#6B7480] dark:text-white/60 ${names ? "font-mono text-[9px] leading-3" : "text-[10px] leading-3"}`}>{row.label}</span>
-          <span className="text-[17px] leading-5 font-bold text-[#444444] dark:text-white">
-            <Counter value={row.value} />
-          </span>
-        </div>
-      ))}
     </div>
   );
 }

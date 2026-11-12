@@ -59,8 +59,8 @@ const WALLET_STEPS: readonly number[] = [STEP.pocket, STEP.received, STEP.spent,
 /**
  * The scene behind a screen: the four objects on "Pick the Right Object", the bottle, the
  * labelled bottles on "Which bottle is mine?", the pair of variable cards on "Same Bottle, New
- * Amount" and on "Name or Value?" (both its stages), the classroom on "A New Day at School!", the shop,
- * the wallet, and the trail on every other.
+ * Amount" and on "Name or Value?" (both its stages), the classroom on "A New Day at School!" and "Three
+ * Pieces of Data" (both its stages), the shop, the wallet, and the trail on every other.
  */
 export const sceneOf = (step: number): SceneName =>
   step === STEP.carry
@@ -69,15 +69,17 @@ export const sceneOf = (step: number): SceneName =>
       ? "names"
       : step === STEP.sameBottle || step === STEP.classify
         ? "varCard"
-        : step === STEP.attendance
+        : step === STEP.attendance || step === STEP.names || step === STEP.tomorrow
           ? "classroom"
-          : BOTTLE_STEPS.includes(step)
-            ? "bottle"
-            : SHOP_STEPS.includes(step)
-              ? "shop"
-              : WALLET_STEPS.includes(step)
-                ? "wallet"
-                : "trek";
+          : step === STEP.appIntro
+            ? "miniApp"
+            : BOTTLE_STEPS.includes(step)
+              ? "bottle"
+              : SHOP_STEPS.includes(step)
+                ? "shop"
+                : WALLET_STEPS.includes(step)
+                  ? "wallet"
+                  : "trek";
 
 /** The screens where a wrong answer makes the trail point at the drink. */
 export const DRINK_HINT_STEPS: readonly number[] = [STEP.thirsty, STEP.noWater];

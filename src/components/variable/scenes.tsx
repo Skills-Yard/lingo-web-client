@@ -160,6 +160,11 @@ export function ClassroomBackdrop({ lifted = false }: { lifted?: boolean }) {
   return <SceneFrame scene="classroom" lifted={lifted} />;
 }
 
+/** The little app on a phone ("VAR_MiniApp"); the screen sets what it shows and lights (see `MiniAppDrive`). */
+export function MiniAppBackdrop({ lifted = false }: { lifted?: boolean }) {
+  return <SceneFrame scene="miniApp" lifted={lifted} />;
+}
+
 /** The four objects ("VAR_Items"); the screen sets `pick` and fires `correct` / `wrong`. */
 export function ItemsBackdrop({ lifted = false }: { lifted?: boolean }) {
   return <SceneFrame scene="items" lifted={lifted} />;
