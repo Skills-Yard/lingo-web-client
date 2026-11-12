@@ -3,7 +3,7 @@ import type { AnswersLook } from "../options/Answers";
 import { TINT } from "../tokens";
 import { nameOf } from "./registry";
 import { hydrate } from "./hydrate";
-import type { DataOption, FlowData, Json, ModuleData, ModuleLook, NodeContext, OptionData, ScreenData, StageData } from "./schema";
+import type { DataOption, FlowData, Json, ModuleData, ModuleLook, NodeContext, OptionData, SceneData, ScreenData, StageData } from "./schema";
 
 /**
  * Reads the screens the modules define in code and writes them out as data (`schema.ts`). Used by
@@ -379,10 +379,11 @@ function readStage(reader: Reader, stage: AnyStage, where: string, apiKeys: read
   return out as unknown as StageData;
 }
 
-function readScreen(reader: Reader, screen: ScreenLike, label: string, apiKeys: readonly string[], quizLook: QuizLook): ScreenData {
+function readScreen(reader: Reader, screen: ScreenLike, label: string, apiKeys: readonly string[], quizLook: QuizLook, scene: SceneData | undefined): ScreenData {
   const out: Record<string, Json> = { step: screen.step, title: screen.title };
   if (screen.titleSize !== undefined) out.titleSize = screen.titleSize;
   if (screen.finish) out.finish = screen.finish;
+  if (scene) out.scene = scene as unknown as Json;
   if (screen.backdrop !== undefined) out.backdrop = reader.at(`${label} backdrop`, () => reader.node(screen.backdrop));
   out.stages = screen.stages.map((stage, index) => readStage(reader, stage, `${label} stage ${index + 1}`, apiKeys, quizLook)) as unknown as Json;
   return out as unknown as ScreenData;
@@ -404,6 +405,8 @@ export type ModuleSource = {
   quizLook?: QuizLook;
   /** A picture behind every screen of the module. */
   scene?: unknown;
+  /** The Rive scene behind a screen (by its step), where the module's own runner decides it in code: written into each screen as `scene`. */
+  sceneFor?: (step: number) => SceneData | undefined;
   /** What an interaction of the module is given (default: everything the runner can give). */
   apiKeys?: readonly string[];
 };
@@ -411,7 +414,7 @@ export type ModuleSource = {
 export function readModule(source: ModuleSource): { data: ModuleData; issues: Issue[] } {
   const reader = new Reader();
   const screens: Record<string, ScreenData> = {};
-  for (const [step, screen] of Object.entries(source.screens)) screens[step] = readScreen(reader, screen, `${source.id} ${step}`, source.apiKeys ?? API_KEYS, source.quizLook ?? {});
+  for (const [step, screen] of Object.entries(source.screens)) screens[step] = readScreen(reader, screen, `${source.id} ${step}`, source.apiKeys ?? API_KEYS, source.quizLook ?? {}, source.sceneFor?.(Number(step)));
   for (const [step, component] of Object.entries(source.components)) {
     const name = nameOf(component);
     if (!name) reader.issues.push({ where: `${source.id} ${step}`, problem: "a whole-screen component that is not registered" });

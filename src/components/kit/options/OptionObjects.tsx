@@ -4,7 +4,8 @@ import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { feelTap } from "../feel";
-import { HINT_FILL, STATE_CARD } from "../tokens";
+import { RAISED } from "@/components/ui/raised";
+import { HINT_FILL, STATE_CARD, STATE_EDGE } from "../tokens";
 import type { OptionData } from "../types";
 import { optionState } from "./state";
 
@@ -25,8 +26,11 @@ export type OptionObjectsProps = {
   className?: string;
 };
 
-const CARD_WITH_PICTURE = 100;
-const CARD_WORDS_ONLY = 64;
+/** A card's height (px): as tall as an answer tile with a picture, shorter with words only. */
+const CARD_WITH_PICTURE = 110;
+const CARD_WORDS_ONLY = 84;
+/** The room between cards (px). */
+const CARD_GAP = 14;
 
 /**
  * Small cards to tap, side by side (three across, or two): an object's picture over its name
@@ -35,7 +39,7 @@ const CARD_WORDS_ONLY = 64;
 export function OptionObjects({ options, selectedId, onSelect, checked = false, correctId, revealCorrect = true, hintId = null, spill = false, disabled = false, className = "" }: OptionObjectsProps) {
   const pictures = options.some((option) => option.media || option.emoji);
   return (
-    <div role="radiogroup" className={`grid w-full gap-2.5 ${className}`} style={{ gridTemplateColumns: `repeat(${options.length === 3 ? 3 : 2}, minmax(0, 1fr))` }}>
+    <div role="radiogroup" className={`grid w-full ${className}`} style={{ gap: CARD_GAP, gridTemplateColumns: `repeat(${options.length === 3 ? 3 : 2}, minmax(0, 1fr))` }}>
       {options.map((option) => {
         const state = optionState(option.id, selectedId, checked, correctId, revealCorrect);
         const hinted = hintId === option.id && selectedId === null;
@@ -54,7 +58,7 @@ export function OptionObjects({ options, selectedId, onSelect, checked = false, 
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               style={{ height: pictures ? CARD_WITH_PICTURE : CARD_WORDS_ONLY }}
-              className={`pointer-events-auto relative isolate flex min-w-0 flex-1 flex-col items-center justify-center gap-1 overflow-visible rounded-[16px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] enabled:cursor-pointer ${
+              className={`pointer-events-auto relative isolate flex min-w-0 flex-1 flex-col items-center justify-center gap-1 overflow-visible rounded-[16px] border-4 px-1.5 ${RAISED} ${STATE_EDGE[state]} enabled:cursor-pointer ${
                 state === "idle" ? "border-white bg-white dark:border-transparent dark:bg-[#15181E]" : STATE_CARD[state]
               }`}
             >
@@ -66,8 +70,8 @@ export function OptionObjects({ options, selectedId, onSelect, checked = false, 
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className={`pointer-events-none absolute inset-0 -z-10 rounded-[12px] ${HINT_FILL}`}
               />
-              {pictures && <span className="flex h-[46px] items-center justify-center text-[38px] leading-none">{option.media ?? option.emoji}</span>}
-              <span className="text-center text-[14px] leading-5 font-semibold text-[#444444] dark:text-white">{option.text}</span>
+              {pictures && <span className="flex h-[54px] items-center justify-center text-[44px] leading-none">{option.media ?? option.emoji}</span>}
+              <span className="text-center text-[18px] leading-6 font-semibold text-[#444444] dark:text-white">{option.text}</span>
               <AnimatePresence>
                 {spilling &&
                   [0, 1, 2, 3, 4].map((drop) => (

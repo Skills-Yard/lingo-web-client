@@ -1,13 +1,13 @@
 "use client";
 
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "@/components/kit/content/from-operators/helpers";
-import { FlipCarouselStage } from "@/components/kit/content/from-operators/FlipCarousel";
+import { RevealCards } from "@/components/kit/inputs/RevealCards";
 import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "@/components/kit/content/from-operators/interactions";
-import { JobTurnStage, OperatorTurnStage, type JobItem, type OperatorItem } from "@/components/kit/content/from-operators/OperatorCardsStage";
+import type { JobItem, OperatorItem } from "@/components/kit/content/from-operators/OperatorCardsStage";
 import { STEP } from "./operators";
 import { P } from "@/components/kit/content/from-operators/pictures";
 import type { InteractionStage, ScreenDef } from "@/components/kit/content/from-operators/screen";
-import { SituationsStage, type SituationItem } from "@/components/kit/content/from-operators/SituationsStage";
+import type { SituationItem } from "@/components/kit/content/from-operators/SituationsStage";
 import { BagIcon, ExprBig, GroupsPicture, InfoSheet, NotebookIcon, PenIcon, PlantGrid, Pic, ShareScene, ValueCards, Versus, WalletScene } from "@/components/kit/content/from-operators/visuals";
 
 /** The four situations of "Explore the situations!", in the order their questions come. */
@@ -25,7 +25,7 @@ const SITUATION_LINES: readonly string[] = ["We saw four situations. Let's find 
 const situationTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: SITUATION_LINES[focus],
-  render: (api) => <SituationsStage api={api} situations={SITUATIONS} focus={focus} />,
+  render: (api) => <RevealCards look="situations" api={api} situations={SITUATIONS} focus={focus} />,
 });
 
 /** The four operators of "Meet the Operators!", in the order their questions come. */
@@ -48,7 +48,7 @@ const OPERATOR_LINES: readonly string[] = [
 const operatorTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: OPERATOR_LINES[focus],
-  render: (api) => <OperatorTurnStage api={api} operators={OPERATORS} focus={focus} />,
+  render: (api) => <RevealCards look="operators" api={api} operators={OPERATORS} focus={focus} />,
 });
 
 /** The two big jobs of "Calculate or Compare?", in the order they are introduced. */
@@ -67,7 +67,7 @@ const JOB_LINES: readonly string[] = [
 const jobTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: JOB_LINES[focus],
-  render: (api) => <JobTurnStage api={api} jobs={JOBS} focus={focus} />,
+  render: (api) => <RevealCards look="jobs" api={api} jobs={JOBS} focus={focus} />,
 });
 
 /** The three answers of "Same Numbers, Three Answers!" (23 chocolates in groups of 4), in the order they are introduced. */
@@ -92,7 +92,7 @@ const divisionTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: DIVISION_LINES[focus],
   render: (api) => (
-    <OperatorTurnStage
+    <RevealCards look="operators"
       api={api}
       operators={DIVISIONS}
       focus={focus}
@@ -114,7 +114,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Think about everyday things you do without even noticing.",
         render: (api) => (
-          <FlipCarouselStage
+          <RevealCards look="flip"
             api={api}
             cards={[
               { id: "money", image: P.cardMoney, verb: "Combining", label: "Money", caption: "Two stacks of money are put together.", tint: "teal" },

@@ -6,14 +6,16 @@ import { KeyText } from "@/components/kit/text/Prompt";
 import { SortGroups } from "@/components/kit/inputs/SortGroups";
 import { type GroupItem } from "@/components/kit/content/from-datatypes/GroupStage";
 import { FloatLesson } from "@/components/kit/content/from-datatypes/FloatLesson";
-import { GroupTourStage, type TourGroup } from "@/components/kit/content/from-datatypes/GroupTourStage";
+import { RevealCards, type TourGroup } from "@/components/kit/inputs/RevealCards";
 import { BADGE, INK, TINTS, tintAt } from "@/components/kit/content/from-datatypes/look";
-import { ChooseTypeStage, MultiPickStage, PickTilesStage, RevealStage, TYPES, ToggleStage, type SortBucket } from "@/components/kit/content/from-datatypes/interactions";
+import { Answers } from "@/components/kit/options/Answers";
+import type { OptionData } from "@/components/kit/types";
+import { MultiPickStage, PickTilesStage, TYPES, ToggleStage, type SortBucket } from "@/components/kit/content/from-datatypes/interactions";
 import { noteGrouping } from "./datatypesScore";
 import { P } from "@/components/kit/content/from-datatypes/pictures";
 import type { Option, QuizStage, ScreenDef } from "@/components/kit/content/from-datatypes/screen";
 import { STEP } from "./datatypes";
-import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, StudentStatusCard, TwelveCards, TwelveIntro, TypedCards, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "@/components/kit/content/from-datatypes/visuals";
+import { AttendanceBoard, DecimalGroups, EventScene, InfoRows, InfoTiles, IntegerLesson, NamesScene, RegisteredStudents, SchoolScene, StudentProfileCard, StudentStatusCard, TwelveCards, TwelveIntro, TypedCards, TypeFieldCard, WeatherCard, type ExampleTile, type InfoRow, type InfoTile } from "@/components/kit/content/from-datatypes/visuals";
 
 /** Answers: an id for each (their place), their words and a picture. */
 const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
@@ -29,6 +31,8 @@ const tinted = (choices: readonly Option[]): Option[] => choices.map((choice, in
 /** The four types as answers: each always with its own picture. */
 const TYPE_OPTIONS: Option[] = tinted(TYPES.map((type) => ({ id: type.id, text: type.label, icon: type.icon })));
 const TYPE_BUCKETS: readonly SortBucket[] = TYPES.map((type) => ({ id: type.id, label: type.label, icon: type.icon }));
+/** The same four as the kit's `Answers` takes them (where a stage draws the answers itself): the same tiles and tints. */
+const TYPE_ANSWERS: readonly OptionData[] = TYPES.map((type, index) => ({ id: type.id, text: type.label, image: type.icon, tint: tintAt(index) }));
 
 /** Screen 8's four answers, big: in the design's order (Integer and Float, then Boolean and String) and tints (the cream is its own, a shade lighter than the other screens'). */
 const FLOAT_QUIZ_OPTIONS: Option[] = [
@@ -189,7 +193,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         alignTop: true,
         // Nothing has to be tapped: once Hex has said his line, Continue reads the groups one by one, then goes on.
         ready: true,
-        render: (api) => <GroupTourStage api={api} groups={TOUR_GROUPS} />,
+        render: (api) => <RevealCards look="tour" api={api} groups={TOUR_GROUPS} />,
       },
       // The PDF's question after the groups: they are not the same kind of information.
       quiz({
@@ -424,7 +428,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
-          <RevealStage
+          <RevealCards look="cards"
             api={api}
             columns={3}
             need={3}
@@ -549,7 +553,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Information with two values is a Boolean.",
         alignTop: true,
         render: (api) => (
-          <RevealStage
+          <RevealCards look="cards"
             api={api}
             columns={2}
             header={() => <StudentStatusCard />}
@@ -576,7 +580,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         render: (api) => (
-          <RevealStage
+          <RevealCards look="cards"
             api={api}
             columns={2}
             items={[
@@ -769,7 +773,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Now replace the incorrect type with Float.",
         alignTop: true,
-        render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" />,
+        // The field with its wrong type, and the four types as answers that check each tap at once (no Check button).
+        render: (api) => (
+          <Stack fit gap={16} className="w-[340px]">
+            <TypeFieldCard field="Height" value="148.5" from="Integer" to="Float" fixed={api.finished} />
+            <Answers look="tiles" instant options={TYPE_ANSWERS} correctId="float" onRight={api.done} onWrong={api.slip} wrongNote="Which type holds decimal numbers?" />
+          </Stack>
+        ),
         finishPanel: { title: "Fixed!", text: "Height is now a Float." },
       },
     ],

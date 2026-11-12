@@ -100,7 +100,8 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center ${look.inner} overflow-hidden rounded-[8px] border-4 px-1.5 ${RAISED} ${LOOKS[state].edge} ${look.card} ${
-                state === "idle" ? `border-white dark:border-transparent ${choice.tint ?? "bg-white"}` : LOOKS[state].card
+                // A tile with no tint of its own is white, and in dark mode the dark card every other answer is (its words are white there).
+                state === "idle" ? `border-white dark:border-transparent ${choice.tint ?? "bg-white dark:bg-[#15181E]"}` : LOOKS[state].card
               }`}
             >
               {/* The hint's orange fill, wiped in from the left behind the content. */}

@@ -3,7 +3,8 @@
 import { Row } from "@/components/kit/layout/Stack";
 import { Bottle, BottleWithAmount, CalculatorApp, Classroom, AttendanceBoard } from "@/components/kit/content/from-variable/visuals";
 import { SortGroups, type LabelItem } from "@/components/kit/inputs/SortGroups";
-import { BridgeStage, FillSliderStage, MatchPricesStage, NameValueStage, NamesStage } from "@/components/kit/content/from-variable/interactions";
+import { MatchPairs, type MatchCard, type MatchPlace } from "@/components/kit/inputs/MatchPairs";
+import { BridgeStage, FillSliderStage, NameValueStage, NamesStage } from "@/components/kit/content/from-variable/interactions";
 import type { Option, QuizStage, ScreenDef } from "@/components/kit/content/from-variable/quiz";
 import { STEP } from "./variable";
 import { BottleChange, BottleStory, ClassroomChange, ExpenseTracker, DebugVisual, NameValueCards, AttendanceCards, ItemsDrive, ShoppingDrive, PenPriceDrive, ShopTotal, WalletDrive } from "@/components/kit/content/from-variable/screenVisuals";
@@ -15,6 +16,16 @@ const words = (texts: readonly string[]): Option[] => texts.map((text, index) =>
 const at = (index: number) => String(index);
 
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", ...stage });
+
+/** Screen 19: the products with their price tags, and the names that are dragged onto them (in the order they are shown). */
+const PRICE_PLACES: readonly MatchPlace[] = [
+  { id: "notebook_price", name: "Notebook", emoji: "📓", tag: "₹50" },
+  { id: "pen_price", name: "Pen", emoji: "🖊️", tag: "₹20" },
+];
+const PRICE_CARDS: readonly MatchCard[] = [
+  { id: "pen_price", text: "pen_price" },
+  { id: "notebook_price", text: "notebook_price" },
+];
 
 /** Screen 14: the parts of two cards, each a name (in the code font) or a value. */
 const NAME_OR_VALUE: readonly LabelItem[] = [
@@ -306,7 +317,23 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.prices,
     title: "Name *the Prices!*",
     stages: [
-      { kind: "interaction", render: (api) => <MatchPricesStage {...api} /> },
+      {
+        kind: "interaction",
+        render: (api) => (
+          <MatchPairs
+            api={api}
+            places={PRICE_PLACES}
+            cards={PRICE_CARDS}
+            narration="Drag each name to the price it belongs to."
+            entry="variable-prices"
+            idle="Drag a name onto a price."
+            wrong="Check the product and its price tag."
+            finishedNote="Each price has its own name."
+            // The shop counter behind starts with the names shown and nothing lit; a right match lights its product, all right makes it cheer.
+            scene={{ name: "shop", values: { showEraser: false, showNames: true, showTotal: false, highlight: 0 }, lit: "highlight", onRight: "correct" }}
+          />
+        ),
+      },
       quiz({
         line: "Which value belongs to pen_price?",
         visual: (context) => <PenPriceDrive context={context} />,

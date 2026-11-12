@@ -54,8 +54,9 @@
           "kind": "interaction",
           "line": "Think about everyday things you do without even noticing.",
           "content": {
-            "$": "kit:flip-carousel-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "flip",
               "api": {
                 "$ctx": "api"
               },
@@ -110,8 +111,9 @@
           "kind": "interaction",
           "line": "We saw four situations. Let's find the action in each, starting here.",
           "content": {
-            "$": "kit:situations-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "situations",
               "api": {
                 "$ctx": "api"
               },
@@ -204,8 +206,9 @@
           "kind": "interaction",
           "line": "Now the next situation.",
           "content": {
-            "$": "kit:situations-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "situations",
               "api": {
                 "$ctx": "api"
               },
@@ -298,8 +301,9 @@
           "kind": "interaction",
           "line": "And another one.",
           "content": {
-            "$": "kit:situations-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "situations",
               "api": {
                 "$ctx": "api"
               },
@@ -390,8 +394,9 @@
           "kind": "interaction",
           "line": "Now the last one.",
           "content": {
-            "$": "kit:situations-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "situations",
               "api": {
                 "$ctx": "api"
               },
@@ -798,8 +803,9 @@
           "kind": "interaction",
           "line": "In programming, these symbols are called operators. First, +: it combines values.",
           "content": {
-            "$": "kit:operator-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "operators",
               "api": {
                 "$ctx": "api"
               },
@@ -845,8 +851,9 @@
           "kind": "interaction",
           "line": "Next, -: it subtracts one value from another.",
           "content": {
-            "$": "kit:operator-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "operators",
               "api": {
                 "$ctx": "api"
               },
@@ -892,8 +899,9 @@
           "kind": "interaction",
           "line": "Now *: it multiplies values.",
           "content": {
-            "$": "kit:operator-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "operators",
               "api": {
                 "$ctx": "api"
               },
@@ -939,8 +947,9 @@
           "kind": "interaction",
           "line": "Last, /: it divides one value by another.",
           "content": {
-            "$": "kit:operator-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "operators",
               "api": {
                 "$ctx": "api"
               },
@@ -992,8 +1001,9 @@
           "kind": "interaction",
           "line": "A program does two big things with values. First, it calculates, with arithmetic operators.",
           "content": {
-            "$": "kit:job-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "jobs",
               "api": {
                 "$ctx": "api"
               },
@@ -1023,8 +1033,9 @@
           "kind": "interaction",
           "line": "The second big thing is to compare values, with comparison operators.",
           "content": {
-            "$": "kit:job-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "jobs",
               "api": {
                 "$ctx": "api"
               },
@@ -1588,8 +1599,9 @@
           "kind": "interaction",
           "line": "23 chocolates, 4 in each group. First, /: ordinary division, with decimals.",
           "content": {
-            "$": "kit:operator-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "operators",
               "api": {
                 "$ctx": "api"
               },
@@ -1642,8 +1654,9 @@
           "kind": "interaction",
           "line": "Next, //: floor division. It counts the complete groups.",
           "content": {
-            "$": "kit:operator-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "operators",
               "api": {
                 "$ctx": "api"
               },
@@ -1712,8 +1725,9 @@
           "kind": "interaction",
           "line": "Last, %: modulus. It gives what is left over.",
           "content": {
-            "$": "kit:operator-turn-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "operators",
               "api": {
                 "$ctx": "api"
               },

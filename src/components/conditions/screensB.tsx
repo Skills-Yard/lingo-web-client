@@ -3,7 +3,8 @@
 import { P } from "@/components/kit/content/from-operators/pictures";
 import { STEP } from "./conditions";
 import { ALL_ON, ANY_ON, at, build, Condition, eitherOrder, neutral, options, predict, quiz, testRows } from "@/components/kit/content/from-conditions/helpers";
-import { ComboStage, PairUpStage, TableStage } from "@/components/kit/content/from-conditions/interactions";
+import { RevealCards } from "@/components/kit/inputs/RevealCards";
+import { ComboStage, TableStage } from "@/components/kit/content/from-conditions/interactions";
 import type { ScreenDef } from "@/components/kit/content/from-conditions/screen";
 import { RangeLine } from "@/components/kit/content/from-conditions/visuals";
 
@@ -20,7 +21,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
       {
         kind: "interaction",
         line: "Share each number of objects into two equal groups. Tap a number.",
-        render: (api) => <PairUpStage api={api} numbers={[6, 8, 10, 7]} />,
+        render: (api) => <RevealCards look="share" api={api} numbers={[6, 8, 10, 7]} />,
       },
       quiz({
         line: "What is common among even numbers like 6, 8 and 10?",

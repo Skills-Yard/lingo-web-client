@@ -49,6 +49,17 @@
       "29": 21
     }
   },
+  "look": {
+    "bubble": [
+      {
+        "upTo": 30,
+        "width": 190
+      },
+      {
+        "width": 248
+      }
+    ]
+  },
   "screens": {
     "1": {
       "step": 1,
@@ -220,8 +231,9 @@
           "alignTop": true,
           "ready": true,
           "content": {
-            "$": "kit:group-tour-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "tour",
               "api": {
                 "$ctx": "api"
               },
@@ -896,8 +908,9 @@
           "bubbleWidth": 190,
           "alignTop": true,
           "content": {
-            "$": "kit:reveal-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "cards",
               "api": {
                 "$ctx": "api"
               },
@@ -1190,8 +1203,9 @@
           "line": "Information with two values is a Boolean.",
           "alignTop": true,
           "content": {
-            "$": "kit:reveal-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "cards",
               "api": {
                 "$ctx": "api"
               },
@@ -1245,8 +1259,9 @@
           "bubbleWidth": 190,
           "alignTop": true,
           "content": {
-            "$": "kit:reveal-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "cards",
               "api": {
                 "$ctx": "api"
               },
@@ -1751,17 +1766,67 @@
           "line": "Now replace the incorrect type with Float.",
           "alignTop": true,
           "content": {
-            "$": "kit:choose-type-stage",
+            "$": "kit:stack",
             "props": {
-              "api": {
-                "$ctx": "api"
+              "fit": true,
+              "gap": 16,
+              "className": "w-[340px]"
+            },
+            "children": [
+              {
+                "$": "kit:type-field-card",
+                "props": {
+                  "field": "Height",
+                  "value": "148.5",
+                  "from": "Integer",
+                  "to": "Float",
+                  "fixed": {
+                    "$ctx": "api.finished"
+                  }
+                }
               },
-              "field": "Height",
-              "value": "148.5",
-              "from": "Integer",
-              "correct": "float",
-              "hint": "Which type holds decimal numbers?"
-            }
+              {
+                "$": "kit:answers",
+                "props": {
+                  "look": "tiles",
+                  "instant": true,
+                  "options": [
+                    {
+                      "id": "integer",
+                      "text": "Integer",
+                      "image": "/images/level-two/cube.png",
+                      "tint": "bg-[#E5EFFD] dark:bg-[#15233A]"
+                    },
+                    {
+                      "id": "float",
+                      "text": "Float",
+                      "image": "/images/coins.png",
+                      "tint": "bg-[#F6F4FE] dark:bg-[#0F1F26]"
+                    },
+                    {
+                      "id": "string",
+                      "text": "String",
+                      "image": "/images/sequence/icon-alphabet.svg",
+                      "tint": "bg-[#ECF7ED] dark:bg-[#10261A]"
+                    },
+                    {
+                      "id": "boolean",
+                      "text": "Boolean",
+                      "image": "/images/trafficSignal.png",
+                      "tint": "bg-[#FFF3DE] dark:bg-[#2A2218]"
+                    }
+                  ],
+                  "correctId": "float",
+                  "onRight": {
+                    "$ctx": "api.done"
+                  },
+                  "onWrong": {
+                    "$ctx": "api.slip"
+                  },
+                  "wrongNote": "Which type holds decimal numbers?"
+                }
+              }
+            ]
           },
           "finishPanel": {
             "title": "Fixed!",

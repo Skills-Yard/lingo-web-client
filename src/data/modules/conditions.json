@@ -249,8 +249,9 @@
           "kind": "interaction",
           "line": "Each question asks us to check something. Tap each one.",
           "content": {
-            "$": "kit:scenes-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "scenes",
               "api": {
                 "$ctx": "api"
               },
@@ -410,8 +411,9 @@
           "kind": "interaction",
           "line": "Information tells us what we have. Tap each to see a check we could ask.",
           "content": {
-            "$": "kit:scenes-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "scenes",
               "api": {
                 "$ctx": "api"
               },
@@ -1334,8 +1336,9 @@
           "kind": "interaction",
           "line": "Share each number of objects into two equal groups. Tap a number.",
           "content": {
-            "$": "kit:pair-up-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "share",
               "api": {
                 "$ctx": "api"
               },
@@ -4184,8 +4187,9 @@
           "kind": "interaction",
           "line": "Three kinds of condition you can build. Tap each.",
           "content": {
-            "$": "kit:reveal-stage",
+            "$": "kit:reveal-cards",
             "props": {
+              "look": "cards",
               "api": {
                 "$ctx": "api"
               },

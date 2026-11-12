@@ -5,7 +5,8 @@ import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { AnswerMark } from "../feedback/AnswerMark";
 import { feelTap } from "../feel";
-import { HINT_FILL, STATE_CARD } from "../tokens";
+import { RAISED } from "@/components/ui/raised";
+import { HINT_FILL, STATE_CARD, STATE_EDGE, WRONG_SHAKE } from "../tokens";
 import type { OptionData, OptionState } from "../types";
 
 /** What stands at the row's end: nothing, a round radio, or a square checkbox. */
@@ -23,6 +24,10 @@ export type OptionRowProps = {
   marks?: boolean;
   /** Keeps room for a picture even if this row has none, so the text of every row starts at the same place. */
   imageSlot?: boolean;
+  /** The size of the words (px), where it should differ from the usual 14; their line height follows (8 more). */
+  fontSize?: number;
+  /** A wrong row shakes from side to side (answers that check each tap at once). */
+  shake?: boolean;
   disabled?: boolean;
   onPick?: (id: string) => void;
 };
@@ -54,7 +59,7 @@ function Control({ kind, state, marks, compact }: { kind: RowControl; state: Opt
  * One answer as a white card across the column: a picture, the words and, at the
  * end, a radio (or a tick / cross once it is checked). Tap to pick it.
  */
-export function OptionRow({ option, state = "idle", hinted = false, compact = false, control = "none", marks = true, imageSlot, disabled = false, onPick }: OptionRowProps) {
+export function OptionRow({ option, state = "idle", hinted = false, compact = false, control = "none", marks = true, imageSlot, fontSize, shake = false, disabled = false, onPick }: OptionRowProps) {
   const showImage = imageSlot ?? !!option.image;
   return (
     <HintFloat className="relative w-full" spin={false} active={hinted}>
@@ -66,10 +71,10 @@ export function OptionRow({ option, state = "idle", hinted = false, compact = fa
           onPick?.(option.id);
         }}
         aria-pressed={state === "selected"}
-        animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
+        animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, x: shake && state === "wrong" ? WRONG_SHAKE : 0 }}
         whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className={`pointer-events-auto relative isolate flex w-full items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left shadow-[1px_1px_20.9px_-13px_rgba(0,0,0,0.25)] transition-[background-color,border-color] enabled:cursor-pointer ${
+        className={`pointer-events-auto relative isolate flex w-full items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left ${RAISED} ${STATE_EDGE[state]} enabled:cursor-pointer ${
           compact ? "h-[56px] gap-3 py-1.5" : "h-[76px] gap-[34px] py-2.5"
         } ${state === "idle" ? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]" : STATE_CARD[state]}`}
       >
@@ -86,7 +91,9 @@ export function OptionRow({ option, state = "idle", hinted = false, compact = fa
             <span className="flex h-[47px] w-[47px] shrink-0 items-center justify-center">{option.image && <SlotImage file={option.image} className="max-h-full max-w-full object-contain" />}</span>
           )}
           <span className="flex min-w-0 flex-1 flex-col">
-            <span className="text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{option.text}</span>
+            <span className="text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white" style={fontSize ? { fontSize, lineHeight: `${fontSize + 8}px` } : undefined}>
+              {option.text}
+            </span>
             {option.sub && <span className="text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{option.sub}</span>}
           </span>
         </span>

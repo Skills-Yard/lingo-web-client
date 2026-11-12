@@ -5,7 +5,8 @@ import { motion } from "framer-motion";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { feelTap } from "../feel";
-import { HINT_FILL, STATE_CARD, tintClass } from "../tokens";
+import { RAISED } from "@/components/ui/raised";
+import { HINT_FILL, STATE_CARD, STATE_EDGE, tintClass, WRONG_SHAKE } from "../tokens";
 import type { OptionData, OptionState } from "../types";
 
 /** How big a tile is: the card's height, the picture's box, the text's size. */
@@ -29,12 +30,14 @@ export type OptionTileProps = {
   hinted?: boolean;
   /** Draws this in place of the option's picture (an icon, a number). */
   media?: ReactNode;
+  /** A wrong tile shakes from side to side (answers that check each tap at once). */
+  shake?: boolean;
   disabled?: boolean;
   onPick?: (id: string) => void;
 };
 
 /** One answer as a square-ish card: the picture over the words. */
-export function OptionTile({ option, size, state = "idle", hinted = false, media, disabled = false, onPick }: OptionTileProps) {
+export function OptionTile({ option, size, state = "idle", hinted = false, media, shake = false, disabled = false, onPick }: OptionTileProps) {
   const look = TILE_SIZE[size];
   return (
     <HintFloat className="relative flex min-w-0 flex-1" spin={false} active={hinted}>
@@ -46,10 +49,10 @@ export function OptionTile({ option, size, state = "idle", hinted = false, media
           onPick?.(option.id);
         }}
         aria-pressed={state === "selected"}
-        animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
+        animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, x: shake && state === "wrong" ? WRONG_SHAKE : 0 }}
         whileTap={{ scale: 0.96 }}
         transition={{ duration: 0.4, ease: "easeOut" }}
-        className={`pointer-events-auto relative isolate flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[8px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] enabled:cursor-pointer ${look.card} ${look.gap} ${
+        className={`pointer-events-auto relative isolate flex min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-[8px] border-4 px-1.5 ${RAISED} ${STATE_EDGE[state]} enabled:cursor-pointer ${look.card} ${look.gap} ${
           state === "idle" ? `border-white dark:border-transparent ${tintClass(option.tint)}` : STATE_CARD[state]
         }`}
       >

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import { GripVertical } from "lucide-react";
 import { SlotImage } from "@/components/level-two/SlotImage";
+import { OrderStage } from "../content/from-operators/interactions";
 import { AnswerMark } from "../feedback/AnswerMark";
 import { STATE_CARD } from "../tokens";
 
@@ -94,7 +95,9 @@ function Row({
   );
 }
 
-export type OrderStepsProps = {
+/** The `drag` look: the screen holds the order and says when it is checked. */
+type DragOrderProps = {
+  look?: "drag";
   /** The items in the order they are in now. */
   items: readonly OrderItem[];
   /** Called with the new order (the ids) as an item is dragged past another. */
@@ -107,8 +110,15 @@ export type OrderStepsProps = {
   className?: string;
 };
 
-/** "Put these in order": numbered rows to drag up and down. */
-export function OrderSteps({ items, onChange, checked = false, correctOrder, disabled = false, className = "" }: OrderStepsProps) {
+/**
+ * `tap`: the steps are tapped one after another in the order they happen; a right one gets its number and stays, a wrong
+ * one shakes red with a hint. It tells the screen through `api` (`slip` for a miss, `done` when all are in place).
+ * `drag` (default): numbered rows are dragged up and down, then checked by the screen.
+ */
+export type OrderStepsProps = ({ look: "tap" } & ComponentProps<typeof OrderStage>) | DragOrderProps;
+
+/** Numbered rows to drag up and down. */
+function DragOrder({ items, onChange, checked = false, correctOrder, disabled = false, className = "" }: DragOrderProps) {
   const locked = disabled || checked;
   return (
     <div role="list" className={`relative w-full ${className}`} style={{ height: items.length * PITCH - GAP }}>
@@ -125,4 +135,14 @@ export function OrderSteps({ items, onChange, checked = false, correctOrder, dis
       ))}
     </div>
   );
+}
+
+/** "Put these in order": the one component for it, in the look the data asks for (see `OrderStepsProps`). */
+export function OrderSteps(props: OrderStepsProps) {
+  if (props.look === "tap") {
+    const { look, ...rest } = props;
+    void look;
+    return <OrderStage {...rest} />;
+  }
+  return <DragOrder {...props} />;
 }

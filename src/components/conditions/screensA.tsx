@@ -1,6 +1,7 @@
 "use client";
 
-import { OrderStage, ScenesStage } from "@/components/kit/content/from-operators/interactions";
+import { RevealCards } from "@/components/kit/inputs/RevealCards";
+import { OrderStage } from "@/components/kit/content/from-operators/interactions";
 import { P } from "@/components/kit/content/from-operators/pictures";
 import { ValueCards } from "@/components/kit/content/from-operators/visuals";
 import { STEP } from "./conditions";
@@ -65,7 +66,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Each question asks us to check something. Tap each one.",
         render: (api) => (
-          <ScenesStage
+          <RevealCards look="scenes"
             api={api}
             prompt="Tap each question."
             scenes={[
@@ -135,7 +136,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Information tells us what we have. Tap each to see a check we could ask.",
         render: (api) => (
-          <ScenesStage
+          <RevealCards look="scenes"
             api={api}
             prompt="Tap each card."
             scenes={[

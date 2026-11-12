@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { GemPopup } from "@/components/level-one/GemPopup";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
+import { LessonArtboard } from "../artboard/LessonArtboard";
+import { fireScene } from "../artboard/scenes";
 import { Celebration } from "../feedback/Celebration";
 import { ResultSheet } from "../feedback/ResultSheet";
 import { HexGuide } from "../hex/HexGuide";
@@ -81,6 +83,15 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
   }, []);
   const fit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
 
+  // The Rive scene behind this screen, if its data names one.
+  const scene = screen.scene;
+  const sceneName = scene?.name;
+  const sceneOnTry = scene?.onTry;
+  // What the scene plays as the screen opens, and again for each new try (the labelled bottles are shuffled).
+  useEffect(() => {
+    fireScene(sceneName, sceneOnTry);
+  }, [sceneName, sceneOnTry, attempt]);
+
   const stage = screen.stages[stageIndex];
   const lastStage = stageIndex === screen.stages.length - 1;
   const quiz: QuizStageData | null = stage.kind === "quiz" ? stage : null;
@@ -97,6 +108,8 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
   const record = (clean: boolean) => {
     scoring.noteAnswer(screen.step, stageIndex, clean);
     if (!clean) scoring.noteStruggle(screen.step, "miss");
+    // The scene behind the screen plays what the data says for a right or a wrong one (the trail cheers).
+    fireScene(scene?.name, clean ? scene?.onRight : scene?.onWrong);
     vibrateForAnswer(clean);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: clean }));
   };
@@ -197,7 +210,7 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
   const lift = panel ? (quiz ? (bigCards ? (look.tileLift ?? RESULT_LIFT) : answersLook === "objects" ? (look.tileLift ?? LIST_LIFT) : LIST_LIFT) : interaction?.finishPanel ? PANEL_LIFT : 0) : 0;
   // A line too long for Hex's bubble goes on a card.
   const cardLine = !!quiz && !!look.cardLine && line !== null && line.length > look.cardLine;
-  const bubble = line === null ? undefined : (interaction?.bubbleWidth ?? look.bubble?.find((rule) => rule.upTo === undefined || line.length <= rule.upTo)?.width);
+  const bubble = line === null ? undefined : (interaction?.bubbleWidth ?? quiz?.bubbleWidth ?? look.bubble?.find((rule) => rule.upTo === undefined || line.length <= rule.upTo)?.width);
   const celebrate = panel?.right === true && (quiz ? checked : finished);
   // The pick that is shown as the right one: the right answer, or (for a pick that is fine too) the pick itself.
   const shownCorrectId = quiz ? (alsoOk ? (selectedId ?? quiz.correctId) : quiz.correctId) : "";
@@ -209,7 +222,7 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
 
   const backdrop = (
     <>
-      {data.scene === undefined ? <Backdrop kind="soft" /> : hydrateNode(data.scene, {})}
+      {scene ? <LessonArtboard scene={scene.name} properties={scene.values} /> : data.scene === undefined ? <Backdrop kind="soft" /> : hydrateNode(data.scene, {})}
       {screen.backdrop !== undefined && hydrateNode(screen.backdrop, {})}
     </>
   );
@@ -311,6 +324,9 @@ export function ScreenRunner({ mod, screen }: { mod: PlayableModule; screen: Sta
             revealCorrect={right}
             hintId={hintShown ? quiz.correctId : null}
             compact={quiz.compact}
+            rowGap={look.rows?.gap}
+            rowFont={look.rows?.fontSize}
+            pictureRoom
             marks={false}
             spill={quiz.spill}
             stagger={quiz.optionsAfterHex}
