@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
-import { GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, Teal } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
@@ -118,7 +117,7 @@ export function ThirstyScreen() {
         animate={{ opacity: celebrate ? 0 : 1, y: checked ? -OPTION.rise : 0 }}
         transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : CARDS_IN}
         className="pointer-events-auto absolute z-[1] grid grid-cols-3"
-        style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
+        style={{ bottom: aboveButtons(OPTION.aboveButtons), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
       >
         {CHOICES.map((choice) => {
           const state = optionState(choice.id, selectedId, checked, CORRECT_ID);

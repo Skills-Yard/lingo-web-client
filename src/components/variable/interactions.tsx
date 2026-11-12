@@ -10,7 +10,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
 import { OPTION, type InteractionApi } from "./quiz";
-import { artboardRect, BELOW_TITLE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, type ArtboardRect } from "./scenes";
+import { artboardRect, BELOW_TITLE, GAP_BELOW_SCENE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, type ArtboardRect } from "./scenes";
 import { CARD } from "./visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
@@ -227,9 +227,6 @@ export function NameValueStage({ done, finished }: InteractionApi) {
     </div>
   );
 }
-
-/** How far under the scene's bottom edge a block that stands on the white below it starts (px). */
-const GAP_BELOW_SCENE = 12;
 
 /**
  * Where a block of `height` px that stands under the scene starts (a CSS `top`, in the interaction's area): right

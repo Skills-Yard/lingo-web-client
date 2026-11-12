@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
@@ -35,7 +34,6 @@ const STEPS = [
 /** The right order, first step first. */
 const ANSWER = ["ask-first", "keep-first", "ask-second", "keep-second", "add", "show"];
 
-const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The steps' own way in. */
 const STEPS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
 /** The example run of the finished plan on the app: when each part shows (ms after it is right). */
@@ -160,13 +158,13 @@ export function PlanAppScreen() {
       <div className="absolute inset-x-0 flex justify-center" style={{ top: HEX_ROW_TOP }}>
         <HexBubble key={attempt} entryKey={`variable-plan-${attempt}`} hex="left" line={[{ text: "Tap the steps for our app in order." }]} size={{ width: 190 }} leaving={checked} />
       </div>
-      {/* The steps stand under the app, on the white below it, two across; a right plan fades them so the example running on the app can be seen. */}
+      {/* The steps stand under the app, on the white below it, two across. Three rows of them (196px) do not fit between the risen app and the result panel, so any check fades them in place (they never rise over the app): a right plan then runs on the app, a wrong one gets the result panel and a try again. */}
       <motion.div
         initial={{ opacity: 0, y: 90 }}
-        animate={{ opacity: checked && correct ? 0 : 1, y: checked ? -OPTION.rise : 0 }}
-        transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : STEPS_IN}
+        animate={{ opacity: checked ? 0 : 1, y: 0 }}
+        transition={checked ? { opacity: { duration: 0.4, ease: "easeOut" } } : STEPS_IN}
         className="pointer-events-auto absolute z-[1] grid grid-cols-2"
-        style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
+        style={{ bottom: aboveButtons(OPTION.aboveButtons), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, pointerEvents: checked ? "none" : undefined }}
       >
         {STEPS.map((step) => {
           const place = order.indexOf(step.id);

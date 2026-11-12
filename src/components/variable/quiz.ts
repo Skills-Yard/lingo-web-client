@@ -21,7 +21,7 @@ export const OPTION = {
   /**
    * Between options, across and down. Wide enough that rows read as separate lines: each row's raised 4px edge and the
    * faint shade under it sit inside this gap, so about 4px of it would show at 8. Three rows (3 × 56 + 2 × 14 = 196px)
-   * still stand just below the scene (it ends 520 down, they start 524), and three cards across still fit the column.
+   * still stand clear below the scene (it ends 520 down, they start 532), and three cards across still fit the column.
    */
   gap: 14,
   /**
@@ -34,8 +34,18 @@ export const OPTION = {
   radius: 16,
   /** The text. */
   font: 16,
-  /** Once the result panel is up the options rise this far (it starts 600px down on a phone, they end 720 down), so they stay clear of it and stop as low as they can, under the scene that has risen to the head. */
-  rise: 132,
+  /**
+   * How far (px) above the button the options end. With the scene ending y 520 on a phone and the button starting 748,
+   * 20 lets three rows (196px) start y 532, 12px (`GAP_BELOW_SCENE`) below the scene, instead of 4px at 28.
+   */
+  aboveButtons: 20,
+  /** Where the result panel starts once a check has opened it (y, on a phone: its sheet is 244px tall). */
+  panelTop: 600,
+  /**
+   * Once the result panel is up the options rise this far (they end y 728 on a phone, the panel starts 600), so they end
+   * 12px (`GAP_BELOW_SCENE`) above it, as low as they can go under the scene that has risen to the head.
+   */
+  rise: 140,
 } as const;
 
 /** An answer: words, with a small picture (an emoji, or `node`) where the answer is an object to tap. */

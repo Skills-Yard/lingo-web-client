@@ -7,10 +7,10 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
-import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { BELOW_TITLE, BottleBackdrop, ClassroomBackdrop, HEX_LIFT, ItemsBackdrop, MiniAppBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
+import { BELOW_TITLE, BottleBackdrop, ClassroomBackdrop, GAP_BELOW_SCENE, HEX_LIFT, ItemsBackdrop, MiniAppBackdrop, NamesBackdrop, SCENE_BOTTOM_LIFTED_PHONE, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
 import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
@@ -96,6 +96,13 @@ const answersHeight = (stage: QuizStage) => {
   return rows * (hasPictures(stage.options) ? OPTION.pictureHeight : OPTION.height) + (rows - 1) * OPTION.gap;
 };
 
+/**
+ * The most the answers can take once a check has raised them (px): the room between the risen scene's bottom edge
+ * (y 431 on a phone) and the result panel (y 600), with `GAP_BELOW_SCENE` kept clear at both ends: 145. Two rows, one
+ * row of cards and two rows of word cards fit; three rows (196) do not.
+ */
+const ROOM_AFTER_CHECK = OPTION.panelTop - GAP_BELOW_SCENE - (SCENE_BOTTOM_LIFTED_PHONE + GAP_BELOW_SCENE);
+
 const LETTERS = ["A", "B", "C", "D", "E"];
 
 /** Cards to tap, side by side (three across, or two), in the place and the way the rows of answers stand. */
@@ -129,7 +136,7 @@ function ObjectGrid({
       transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
       className="pointer-events-auto absolute z-[1] grid"
       // Equal columns, except that a card of words is never narrower than its words (`water_level` is wider than a third of the column at this size), so the text stays inside it.
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(${pictures ? "0px" : "min-content"}, 1fr))` }}
+      style={{ bottom: aboveButtons(OPTION.aboveButtons, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(${pictures ? "0px" : "min-content"}, 1fr))` }}
     >
       {options.map((option) => {
         const state = optionState(option.id, selectedId, checked, correctId);
@@ -335,7 +342,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       : null;
 
   // What stands under the line: the picture and the answers (question stage), or the interaction.
-  const answersBottom = quiz ? aboveButtons(GAP_ABOVE_BUTTONS, hasHint) : "0px";
+  const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
   const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 18}px)` : aboveButtons(24);
 
   const choices: readonly Choice[] = quiz ? quiz.options.map((option, index) => ({ id: option.id, text: option.text, icon: option.icon ?? "", badge: LETTERS[index] })) : [];
@@ -465,6 +472,9 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               hinted={hintShown}
               withHint={hasHint}
               rise={OPTION.rise}
+              bottomGap={OPTION.aboveButtons}
+              // Answers too tall for the room under the risen scene (three rows) fold away after a wrong check but for the picked one; a right answer clears them all anyway.
+              onlyPicked={answersHeight(quiz) > ROOM_AFTER_CHECK && !cleared}
               compact
               tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
               idleLook={IDLE_LOOK}

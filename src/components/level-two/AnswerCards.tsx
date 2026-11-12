@@ -49,6 +49,15 @@ type AnswerCardsProps = {
   gap?: number;
   /** The text's size (px), where it should differ from the usual 14. */
   fontSize?: number;
+  /** How far (px) above the button the rows end, where it should differ from `GAP_ABOVE_BUTTONS`. */
+  bottomGap?: number;
+  /**
+   * For rows that cannot all stand in the room a check leaves them (a scene above, the result panel below). Pass it
+   * (true or false) and each row goes in a box that can fold away; with `true`, once `checked`, every row but the
+   * picked one folds away (it fades and gives up its height and its gap), so the picked one stands alone, still marked.
+   * It all comes back on trying again (`checked` off). Leave it out and the rows are laid out as ever.
+   */
+  onlyPicked?: boolean;
   /** The rows bounce in one by one instead of the whole list rising together. */
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
@@ -61,8 +70,9 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, onlyPicked, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
+  const folding = onlyPicked !== undefined;
   return (
     <motion.div
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
@@ -73,7 +83,8 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
       className="pointer-events-auto absolute z-[1] flex flex-col"
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap }}
+      // Rows that can fold away carry their own gap (a top margin), so a folded row leaves none behind.
+      style={{ bottom: aboveButtons(bottomGap, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: folding ? 0 : gap }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -125,6 +136,25 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
             </motion.button>
           </HintFloat>
         );
+        if (folding) {
+          const gone = !!onlyPicked && checked && choice.id !== selectedId;
+          return (
+            <motion.div
+              key={choice.id}
+              initial={false}
+              // Hidden overflow only while it folds or is folded (the row's shadow and its pick bounce reach past its box).
+              animate={
+                gone
+                  ? { height: 0, opacity: 0, marginTop: 0, overflow: "hidden" }
+                  : { height: "auto", opacity: 1, marginTop: index === 0 ? 0 : gap, transitionEnd: { overflow: "visible" } }
+              }
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full"
+            >
+              {row}
+            </motion.div>
+          );
+        }
         return bounceIn ? (
           <BounceIn key={choice.id} index={index} shown={revealed} className="w-full">
             {row}

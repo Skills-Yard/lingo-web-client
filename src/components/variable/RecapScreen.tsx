@@ -8,7 +8,7 @@ import { GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
 import { variableHref } from "@/lib/routes";
 import { fireSceneTrigger } from "@/lib/rive/variableHost";
-import { CompleteBackdrop, SCENE_BOTTOM_LIFTED } from "./scenes";
+import { CompleteBackdrop, GAP_BELOW_SCENE, SCENE_BOTTOM_LIFTED } from "./scenes";
 import { parseTitle } from "./quiz";
 import { STEP, variablePrevious, VARIABLE_STEPS } from "./variable";
 
@@ -27,8 +27,6 @@ const FINAL_THOUGHT = "Variables help programs remember information and use it l
 
 /** How tall the takeaways and the closing thought are together (px): the list (six lines), a gap and the thought (two lines). */
 const TEXT_BLOCK_H = 232;
-/** How far under the scene's bottom edge they start (px). */
-const GAP_BELOW_SCENE = 12;
 /** The scene plays its introduction, and then celebrates this long (ms) after the screen opens. */
 const CELEBRATE_MS = 1800;
 

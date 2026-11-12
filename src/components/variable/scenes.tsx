@@ -44,6 +44,10 @@ export const SCENE_BOTTOM = `calc(${SCENE_TOP}px + ${SCENE_WIDTH} * ${VARIABLE_S
 export const SCENE_BOTTOM_PHONE = SCENE_TOP + VARIABLE_SCENES.height;
 /** `SCENE_BOTTOM` for a scene that has risen into the room under the title (see `SCENE_LIFT`): where a screen with no Hex bubble, whose scene starts there, has it end. */
 export const SCENE_BOTTOM_LIFTED = `calc(${SCENE_BOTTOM} - ${SCENE_LIFT}px)`;
+/** `SCENE_BOTTOM_LIFTED` for a scene drawn at its own size (stage px; y 431 on a phone): where the answers' room starts once a check has raised the scene. */
+export const SCENE_BOTTOM_LIFTED_PHONE = SCENE_BOTTOM_PHONE - SCENE_LIFT;
+/** The clear space (px) kept between a scene's bottom edge and what stands under it: the answers, the notes, the takeaways. */
+export const GAP_BELOW_SCENE = 12;
 /** Fades the scene into the page at its top and bottom only: its sides are left sharp. The bottom fade is short, as the scenes put labels and price tags near their lower edge. */
 const FADE = "linear-gradient(180deg, transparent 0, #000 28px, #000 calc(100% - 26px), transparent 100%)";
 
