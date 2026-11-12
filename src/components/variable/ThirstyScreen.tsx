@@ -95,7 +95,7 @@ export function ThirstyScreen() {
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
-          <FeedbackPanel correct={right} title={panel?.title} open={!!panel} hexIn={!!panel} hexCue={right ? HEX_ONBOARDING_TRIGGER.continueThumb : null}>
+          <FeedbackPanel correct={right} title={panel?.title} open={!!panel} hexIn={!!panel} hexCue={right ? HEX_ONBOARDING_TRIGGER.continueThumb : null} grouped>
             {panel?.text ?? ""}
           </FeedbackPanel>
         </div>
