@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
-import { Bottle, CARD } from "./visuals";
+import { CARD } from "./visuals";
 import { BridgeStage, ClassifyStage, FillSliderStage, MatchPricesStage, NameValueStage, NamesStage } from "./interactions";
 import { NAME_VALUE_CARDS, type VarCards } from "./scenes";
 import type { Option, QuizStage, ScreenDef, VisualContext } from "./quiz";
@@ -96,8 +96,8 @@ const CALC_RUN_MS = 1600;
 const RIGHT_TOTAL = 70;
 const WRONG_TOTAL = 50;
 
-/** Screen 4's answers, as the object each lights up in the scene (the notebook is 3: it isn't an answer). */
-const ITEM_PICK: Readonly<Record<string, number>> = { bottle: 1, football: 2, lunchbox: 4 };
+/** Screen 4's answers, as the object each lights up in the scene (its four objects, in order). */
+const ITEM_PICK: Readonly<Record<string, number>> = { bottle: 1, football: 2, notebook: 3, lunchbox: 4 };
 
 /**
  * The four objects (see `ItemsBackdrop`) are the picture on screen 4: this draws nothing.
@@ -422,11 +422,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "We carry water. What should hold it?",
         // The four objects are the screen's scene (see `ItemsBackdrop`); this lights the one picked.
         visual: (context) => <ItemsDrive context={context} />,
-        layout: "grid",
+        // Four short answers in words, no pictures: the module's 2 x 2 cards (see `acrossCards`), in the order of the objects in the scene.
         options: [
-          { id: "bottle", text: "Water bottle", node: <Bottle ml={600} height={54} marks={false} /> },
-          { id: "football", text: "Football", emoji: "⚽" },
-          { id: "lunchbox", text: "Lunchbox", emoji: "🍱" },
+          { id: "bottle", text: "Water bottle" },
+          { id: "football", text: "Football" },
+          { id: "notebook", text: "Notebook" },
+          { id: "lunchbox", text: "Lunchbox" },
         ],
         correctId: "bottle",
         rightTitle: "That's right!",
