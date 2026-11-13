@@ -11,8 +11,9 @@ export type CharacterState =
 const LOADING: CharacterState = { status: "loading", phase: "download", fraction: 0 };
 
 /**
- * Downloads and prepares the character. The GPU memory it holds (four 4096 px
- * textures) is freed when the page unmounts, and a load still in flight is aborted.
+ * Downloads and prepares the character. The GPU memory it holds (its geometry,
+ * skeleton and any textures) is freed when the page unmounts, and a load still in
+ * flight is aborted.
  */
 export const useCharacter = () => {
   const [state, setState] = useState<CharacterState>(LOADING);

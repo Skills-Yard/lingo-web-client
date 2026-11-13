@@ -3,17 +3,17 @@
 import { useEffect, useMemo, useRef, type ComponentRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
-import { AnimationMixer, CanvasTexture, LoopOnce, LoopRepeat, type AnimationAction } from "three";
+import { AnimationMixer, CanvasTexture, LoopRepeat, type AnimationAction } from "three";
 import type { Character } from "./character";
 
 type Vec3 = [number, number, number];
 
 /**
  * The character is 1.8 tall and stands on y = 0: this frames it head to toe, with
- * room below for the stand-up, which starts with the legs stretched out on the floor.
+ * room above for the levitate animation, which lifts it about 0.4.
  */
-const CAMERA_POSITION: Vec3 = [0, 1.2, 3.9];
-const CAMERA_TARGET: Vec3 = [0, 0.8, 0];
+const CAMERA_POSITION: Vec3 = [0, 1.35, 4.5];
+const CAMERA_TARGET: Vec3 = [0, 1.05, 0];
 
 /** A frame this long (a hidden tab, or the loop resuming after a pause) is treated as 100 ms. */
 const MAX_FRAME_SECONDS = 0.1;
@@ -27,41 +27,50 @@ type AnimatedCharacterProps = {
   /** Bumped to start the animation over, including when it is the one already playing. */
   runToken: number;
   playing: boolean;
-  /** A one-shot animation reached its last pose. */
-  onFinished: () => void;
+  /** The animation has played through once and starts over. */
+  onLoop: () => void;
 };
 
-const AnimatedCharacter = ({ character, animationId, runToken, playing, onFinished }: AnimatedCharacterProps) => {
-  const { mixer, actions } = useMemo(() => {
+/** What plays for one animation: the body, and the mouth when it has a lip-sync clip. */
+type Playback = { body: AnimationAction; lips: AnimationAction | null };
+
+const AnimatedCharacter = ({ character, animationId, runToken, playing, onLoop }: AnimatedCharacterProps) => {
+  const { mixer, playbacks } = useMemo(() => {
     const mixer = new AnimationMixer(character.model);
-    const actions = new Map<string, AnimationAction>();
-    for (const { id, clip, loop } of character.animations) {
-      const action = mixer.clipAction(clip);
-      action.setLoop(loop ? LoopRepeat : LoopOnce, loop ? Infinity : 1);
-      action.clampWhenFinished = true; // a one-shot holds its last pose
-      actions.set(id, action);
+    const playbacks = new Map<string, Playback>();
+    for (const { id, clip, lipSync } of character.animations) {
+      const body = mixer.clipAction(clip);
+      body.setLoop(LoopRepeat, Infinity);
+      const lips = lipSync ? mixer.clipAction(lipSync) : null;
+      lips?.setLoop(LoopRepeat, Infinity);
+      playbacks.set(id, { body, lips });
     }
-    return { mixer, actions };
+    return { mixer, playbacks };
   }, [character]);
-  const current = useRef<AnimationAction | null>(null);
+  const current = useRef<Playback | null>(null);
 
   // Start the chosen animation, blending out of the one that was playing.
   useEffect(() => {
-    const next = actions.get(animationId);
+    const next = playbacks.get(animationId);
     if (!next) return;
     const previous = current.current;
-    next.reset().play();
-    if (previous && previous !== next) previous.crossFadeTo(next, FADE_SECONDS, false);
+    next.body.reset().play();
+    next.lips?.reset().play();
+    if (previous && previous !== next) {
+      previous.body.crossFadeTo(next.body, FADE_SECONDS, false);
+      previous.lips?.fadeOut(FADE_SECONDS);
+    }
     current.current = next;
-  }, [actions, animationId, runToken]);
+  }, [playbacks, animationId, runToken]);
 
+  // An animation blending out also loops; only the one that is playing counts.
   useEffect(() => {
-    const handleFinished = (event: { action: AnimationAction }) => {
-      if (event.action === current.current) onFinished();
+    const handleLoop = (event: { action: AnimationAction }) => {
+      if (event.action === current.current?.body) onLoop();
     };
-    mixer.addEventListener("finished", handleFinished);
-    return () => mixer.removeEventListener("finished", handleFinished);
-  }, [mixer, onFinished]);
+    mixer.addEventListener("loop", handleLoop);
+    return () => mixer.removeEventListener("loop", handleLoop);
+  }, [mixer, onLoop]);
 
   useEffect(
     () => () => {
@@ -157,11 +166,9 @@ type CharacterSceneProps = {
   animationId: string;
   runToken: number;
   playing: boolean;
-  /** The animation is a one-shot that has ended, so nothing is moving. */
-  finished: boolean;
   autoRotate: boolean;
   resetToken: number;
-  onFinished: () => void;
+  onLoop: () => void;
 };
 
 export const CharacterScene = ({
@@ -169,10 +176,9 @@ export const CharacterScene = ({
   animationId,
   runToken,
   playing,
-  finished,
   autoRotate,
   resetToken,
-  onFinished,
+  onLoop,
 }: CharacterSceneProps) => (
   <Canvas
     dpr={[1, 2]}
@@ -180,8 +186,8 @@ export const CharacterScene = ({
     gl={{ antialias: true, alpha: true }}
     // No tone mapping: the skin texture shows in its own colours instead of ACES' dimmer, flatter ones.
     flat
-    // Nothing moves while paused or after a one-shot ends: stop drawing frames until the user does something.
-    frameloop={(playing && !finished) || autoRotate ? "always" : "demand"}
+    // Nothing moves while paused: stop drawing frames until the user does something.
+    frameloop={playing || autoRotate ? "always" : "demand"}
   >
     <hemisphereLight args={["#ffffff", "#8a94a6", 1.3]} />
     <directionalLight position={[3, 5, 4]} intensity={2.8} />
@@ -192,7 +198,7 @@ export const CharacterScene = ({
       animationId={animationId}
       runToken={runToken}
       playing={playing}
-      onFinished={onFinished}
+      onLoop={onLoop}
     />
     <GroundShadow />
     <Controls autoRotate={autoRotate} resetToken={resetToken} />

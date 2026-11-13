@@ -249,7 +249,7 @@ Built from the "6. Conditions" spec: one step for each of its 38 screens (the st
 | `/level` | Level path (home), where onboarding ends |
 | `/profile` | Profile |
 | `/hex` | `hex.riv` animation viewer |
-| `/character` | 3D character viewer: `public/animations/Bouncing Fight Idle.glb` with its own "Bouncing Fight Idle" animation (loops) and "Zombie Stand Up" from `Zombie Stand Up.glb` (plays once); three.js via React Three Fiber; drag to rotate (no zoom), pause/replay, auto-rotate, reset view. Add an animation in `ANIMATIONS` (`components/character3d/character.ts`) |
+| `/character` | 3D character viewer: `public/animations/Character_Final.glb` (4 MB, textured, Blender export) with its own animations (Idle A, Talking, Levitate, Sitting, Gesture; all loop), and "Idle B" from `Idle.glb` (all loop). The stage always has the `public/bg/bg.webp` backdrop (a resized copy of `bg.png`); Gesture also shows a picture per round (bottle, mountain, variable, then none). Talking plays a voice clip with the model's `LS_line_12` lip-sync clip. "Play all" runs Levitate, Idle B, Gesture, Talking in turn; the chips play one animation on its own. Pause, auto-rotate, reset view; drag to rotate (no zoom); three.js via React Three Fiber. Add an animation in `ANIMATIONS` (`components/character3d/character.ts`), and its backdrop, pictures, voice or place in the tour in `show.ts` |
 | `/module1/combined`, `/module1/review` | Old instructions-intro design comparison (`?step=<index>`) |
 
 ## Notes

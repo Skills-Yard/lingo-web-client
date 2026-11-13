@@ -3,6 +3,7 @@ import {
   Box3,
   Group,
   Mesh,
+  Quaternion,
   QuaternionKeyframeTrack,
   SkinnedMesh,
   Texture,
@@ -14,28 +15,41 @@ import {
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-/** The character: a Mixamo rig with its skin textures, and its own animation. */
-const MODEL_SRC = "/animations/Bouncing Fight Idle.glb";
+/** The character: a Mixamo-rigged avatar with its textures, and several animations in the same file. */
+const MODEL_SRC = "/animations/Character_Final.glb";
 /** Its size on disk: the progress bar's total until (or unless) the server reports a usable `Content-Length`. */
-const MODEL_BYTES = 75_237_812;
+const MODEL_BYTES = 3_954_748;
 
-type AnimationSpec = {
+type AnimationBase = {
   id: string;
   label: string;
-  /** Loops until another is picked; otherwise plays once and holds its last pose. */
-  loop: boolean;
-  /** The file the clip is in: a Mixamo animation exported "without skin". `null` is the model's own clip. */
-  src: string | null;
 };
 
+type AnimationSpec =
+  /**
+   * One of the clips stored in the model's own file, by the name it was exported with.
+   * `lipSync` names another of its clips, one that only moves the mouth (the face's
+   * morph targets); it plays together with this one.
+   */
+  | (AnimationBase & { clip: string; lipSync?: string })
+  /** A Mixamo animation exported "without skin", in a file of its own. */
+  | (AnimationBase & { src: string });
+
 /**
- * Every animation the page offers. To add one, export it from Mixamo (same
- * character skeleton, "without skin"), put the .glb in `public/animations` and
- * add a line here: it is retargeted onto the character when it loads.
+ * Every animation the page offers; each one loops until another is picked. The
+ * first plays when the page opens. To add one, either name another clip of the
+ * model, or export it from Mixamo (same skeleton, "without skin"), put the .glb in
+ * `public/animations` and add its path: it is retargeted onto the character when it
+ * loads. What goes with an animation on the stage (a backdrop, pictures, a voice)
+ * is in `show.ts`.
  */
 export const ANIMATIONS: readonly AnimationSpec[] = [
-  { id: "fight-idle", label: "Bouncing Fight Idle", loop: true, src: null },
-  { id: "stand-up", label: "Zombie Stand Up", loop: false, src: "/animations/Zombie Stand Up.glb" },
+  { id: "idle-a", label: "Idle A", clip: "Idle_A" },
+  { id: "idle-b", label: "Idle B", src: "/animations/Idle.glb" },
+  { id: "talking", label: "Talking", clip: "Idle_Talking", lipSync: "LS_line_12" },
+  { id: "levitate", label: "Levitate", clip: "Levitate_Idle" },
+  { id: "sitting", label: "Sitting", clip: "Sitting_Idle" },
+  { id: "gesture", label: "Gesture", clip: "mixamo.com" },
 ];
 
 /** The character is scaled to this height, in scene units (metres), whatever units the file is in. */
@@ -44,8 +58,9 @@ export const CHARACTER_HEIGHT = 1.8;
 export type CharacterAnimation = {
   id: string;
   label: string;
-  loop: boolean;
   clip: AnimationClip;
+  /** Moves the mouth while `clip` plays. */
+  lipSync: AnimationClip | null;
 };
 
 export type Character = {
@@ -94,7 +109,10 @@ type DownloadOptions = {
 };
 
 const download = async ({ src, signal, progress }: DownloadOptions): Promise<ArrayBuffer> => {
-  const response = await fetch(versionedUrl(src), { signal });
+  // The headers in next.config.ts let the browser keep an animation for a day. A
+  // versioned URL changes with the file, so it can; an unversioned one (dev) is
+  // checked with the server every time, or a replaced file would show up a day late.
+  const response = await fetch(versionedUrl(src), { signal, cache: versions[src] ? "default" : "no-cache" });
   if (!response.ok) throw new Error(`${src} didn't load (HTTP ${response.status}).`);
   if (!progress || !response.body) return response.arrayBuffer();
 
@@ -128,7 +146,11 @@ const nextPaint = () =>
 /** Parses a GLB; resolves once its textures have decoded, so the character never appears untextured. */
 const parseGlb = (buffer: ArrayBuffer) => new GLTFLoader().parseAsync(buffer, "");
 
-const HIPS = /^mixamorig\d*_Hips$/;
+/**
+ * The hips bone. Files name it `mixamorig_Hips`, `mixamorig1_Hips` or `mixamorig:Hips`;
+ * the loader drops the colon (it is reserved in animation track names), so `mixamorigHips`.
+ */
+const HIPS = /^mixamorig\d*[_:]?Hips$/;
 
 const findHips = (root: Object3D) => {
   const objects: Object3D[] = [];
@@ -136,23 +158,54 @@ const findHips = (root: Object3D) => {
   return objects.find((object) => HIPS.test(object.name));
 };
 
+/** The rotation of the space the hips live in, i.e. of the rig node above them (Blender's export turns it 90° about X). */
+const hipsFrame = (hips: Object3D) => hips.parent?.getWorldQuaternion(new Quaternion()) ?? new Quaternion();
+
 /**
  * Makes a clip exported with another Mixamo skeleton play on this one. The two
- * files name their bones with a different prefix (`mixamorig_` and `mixamorig1_`),
- * so the tracks are renamed; and only the rotations and the hips' movement are
- * kept, since every other bone's position is that character's own bone length,
- * not motion (copying it would reshape the character).
+ * files name their bones with a different prefix (`mixamorig_`, `mixamorig1_`,
+ * `mixamorig`), so the tracks are renamed. Only the rotations and the hips'
+ * movement are kept, since every other bone's position is that character's own
+ * bone length, not motion (copying it would reshape the character).
+ *
+ * The hips' rotation and movement are in the space of the rig above them. When the
+ * two rigs are turned differently (Blender's export stands the armature up with a
+ * 90° turn the other exporters don't have) they are turned into the target's space,
+ * so the character doesn't end up lying down.
  */
 const retarget = (clip: AnimationClip, source: Object3D, target: Object3D, id: string) => {
   const from = findHips(source);
   const to = findHips(target);
   if (!from || !to) {
-    throw new Error(`The ${id} animation needs a Mixamo skeleton (bones named mixamorig…_Hips).`);
+    throw new Error(`The ${id} animation needs a Mixamo skeleton (bones named mixamorig…Hips).`);
   }
   const fromPrefix = from.name.replace(/Hips$/, "");
   const toPrefix = to.name.replace(/Hips$/, "");
+
+  source.updateMatrixWorld(true);
+  target.updateMatrixWorld(true);
+  const intoTarget = hipsFrame(to).invert().multiply(hipsFrame(from));
   // A character whose hips stand lower moves its hips proportionally less.
-  const hipsScale = from.position.y > 0 && to.position.y > 0 ? to.position.y / from.position.y : 1;
+  const fromHeight = from.getWorldPosition(new Vector3()).y;
+  const toHeight = to.getWorldPosition(new Vector3()).y;
+  const hipsScale = fromHeight > 0 && toHeight > 0 ? toHeight / fromHeight : 1;
+
+  const hipsRotations = (values: ArrayLike<number>) => {
+    const out = new Float32Array(values.length);
+    const rotation = new Quaternion();
+    for (let i = 0; i < values.length; i += 4) {
+      rotation.fromArray(values, i).premultiply(intoTarget).toArray(out, i);
+    }
+    return out;
+  };
+  const hipsMovement = (values: ArrayLike<number>) => {
+    const out = new Float32Array(values.length);
+    const position = new Vector3();
+    for (let i = 0; i < values.length; i += 3) {
+      position.fromArray(values, i).applyQuaternion(intoTarget).multiplyScalar(hipsScale).toArray(out, i);
+    }
+    return out;
+  };
 
   const tracks: KeyframeTrack[] = [];
   for (const track of clip.tracks) {
@@ -162,10 +215,11 @@ const retarget = (clip: AnimationClip, source: Object3D, target: Object3D, id: s
     if (!bone.startsWith(fromPrefix)) continue;
 
     const name = `${toPrefix}${bone.slice(fromPrefix.length)}.${property}`;
+    const isHips = bone === from.name;
     if (property === "quaternion") {
-      tracks.push(new QuaternionKeyframeTrack(name, track.times, track.values));
-    } else if (property === "position" && bone === from.name) {
-      tracks.push(new VectorKeyframeTrack(name, track.times, track.values.map((v) => v * hipsScale)));
+      tracks.push(new QuaternionKeyframeTrack(name, track.times, isHips ? hipsRotations(track.values) : track.values));
+    } else if (property === "position" && isHips) {
+      tracks.push(new VectorKeyframeTrack(name, track.times, hipsMovement(track.values)));
     }
   }
   return new AnimationClip(id, clip.duration, tracks);
@@ -173,16 +227,24 @@ const retarget = (clip: AnimationClip, source: Object3D, target: Object3D, id: s
 
 const loadAnimations = async (model: Group, files: Map<string, ArrayBuffer>, own: AnimationClip[]) =>
   Promise.all(
-    ANIMATIONS.map(async ({ id, label, loop, src }): Promise<CharacterAnimation> => {
-      if (src === null) {
-        if (!own[0]) throw new Error(`${MODEL_SRC} has no animation.`);
-        return { id, label, loop, clip: own[0] };
+    ANIMATIONS.map(async (spec): Promise<CharacterAnimation> => {
+      const { id, label } = spec;
+      if ("clip" in spec) {
+        const named = (clipName: string) => {
+          const found = own.find(({ name }) => name === clipName);
+          if (!found) {
+            const available = own.map(({ name }) => `"${name}"`).join(", ");
+            throw new Error(`${MODEL_SRC} has no "${clipName}" animation (it has ${available || "none"}).`);
+          }
+          return found;
+        };
+        return { id, label, clip: named(spec.clip), lipSync: spec.lipSync ? named(spec.lipSync) : null };
       }
-      const buffer = files.get(src);
-      if (!buffer) throw new Error(`${src} was not downloaded.`);
+      const buffer = files.get(spec.src);
+      if (!buffer) throw new Error(`${spec.src} was not downloaded.`);
       const gltf = await parseGlb(buffer);
-      if (!gltf.animations[0]) throw new Error(`${src} has no animation.`);
-      return { id, label, loop, clip: retarget(gltf.animations[0], gltf.scene, model, id) };
+      if (!gltf.animations[0]) throw new Error(`${spec.src} has no animation.`);
+      return { id, label, clip: retarget(gltf.animations[0], gltf.scene, model, id), lipSync: null };
     }),
   );
 
@@ -213,8 +275,8 @@ const stand = (model: Group) => {
 export const loadCharacter = async ({ signal, onProgress }: LoadOptions): Promise<Character> => {
   // The small animation files first: one that's missing fails now, not after the big model.
   const files = new Map<string, ArrayBuffer>();
-  for (const { src } of ANIMATIONS) {
-    if (src) files.set(src, await download({ src, signal }));
+  for (const spec of ANIMATIONS) {
+    if ("src" in spec) files.set(spec.src, await download({ src: spec.src, signal }));
   }
 
   const modelBuffer = await download({
