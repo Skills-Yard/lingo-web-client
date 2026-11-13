@@ -36,6 +36,28 @@ type AnswerCardsProps = {
   rise?: number;
   /** Shorter rows (56px) for answers that are only words, so four fit above the button. */
   compact?: boolean;
+  /**
+   * Rows sized by the caller (a module with one spacing system for all its options), in px: their `height`, the space
+   * from a row's outer edge to what is inside it (`padX`, border included), their corner `radius` and the `iconSize` of
+   * a picture. Rows with no picture at all then drop the empty picture slot, so their text starts at `padX` like the
+   * contents of a card.
+   */
+  tight?: { height: number; padX: number; radius: number; iconSize: number };
+  /** The classes (border and fill) of a row at rest, where they should differ from the usual faint outline. */
+  idleLook?: string;
+  /** The space between rows (px), where it should differ from the usual 6. */
+  gap?: number;
+  /** The text's size (px), where it should differ from the usual 14. */
+  fontSize?: number;
+  /** How far (px) above the button the rows end, where it should differ from `GAP_ABOVE_BUTTONS`. */
+  bottomGap?: number;
+  /**
+   * For rows that cannot all stand in the room a check leaves them (a scene above, the result panel below). Pass it
+   * (true or false) and each row goes in a box that can fold away; with `true`, once `checked`, every row but the
+   * picked one folds away (it fades and gives up its height and its gap), so the picked one stands alone, still marked.
+   * It all comes back on trying again (`checked` off). Leave it out and the rows are laid out as ever.
+   */
+  onlyPicked?: boolean;
   /** The rows bounce in one by one instead of the whole list rising together. */
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
@@ -48,7 +70,9 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, onlyPicked, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+  const anyPicture = choices.some((choice) => !!choice.icon);
+  const folding = onlyPicked !== undefined;
   return (
     <motion.div
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
@@ -58,8 +82,9 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
           ? PANEL_SPRING
           : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
       }
-      className="pointer-events-auto absolute z-[1] flex flex-col gap-1.5"
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W }}
+      className="pointer-events-auto absolute z-[1] flex flex-col"
+      // Rows that can fold away carry their own gap (a top margin), so a folded row leaves none behind.
+      style={{ bottom: aboveButtons(bottomGap, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: folding ? 0 : gap }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -79,8 +104,9 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
+              style={tight ? { height: tight.height, paddingBlock: 6, paddingInline: tight.padX - 1, borderRadius: tight.radius } : undefined}
               className={`relative isolate flex ${compact ? "h-[56px] gap-3 py-1.5" : "h-[76px] gap-[34px] py-2.5"} w-full cursor-pointer items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left ${RAISED} ${look.edge} ${
-                state === "idle" ? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]" : look.card
+                state === "idle" ? (idleLook ?? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]") : look.card
               }`}
             >
               {/* The hint's orange fill, wiped in from the left behind the content. */}
@@ -93,16 +119,42 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               />
               <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`}>
                 {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
-                <span className="flex h-[47.31px] w-[46.68px] shrink-0 items-center justify-center">
-                  <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
+                {(!tight || anyPicture) && (
+                  <span className={`flex shrink-0 items-center justify-center ${tight ? "" : "h-[47.31px] w-[46.68px]"}`} style={tight ? { height: tight.iconSize, width: tight.iconSize } : undefined}>
+                    <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
+                  </span>
+                )}
+                <span
+                  className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white"
+                  style={fontSize ? { fontSize, lineHeight: `${fontSize + 8}px` } : undefined}
+                >
+                  {choice.text}
                 </span>
-                <span className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white">{choice.text}</span>
               </span>
               {/* Figma "Ellipse 3" (34 x 34), at the row's end. */}
               {!compact && <span aria-hidden className="size-[34px] shrink-0 rounded-full" />}
             </motion.button>
           </HintFloat>
         );
+        if (folding) {
+          const gone = !!onlyPicked && checked && choice.id !== selectedId;
+          return (
+            <motion.div
+              key={choice.id}
+              initial={false}
+              // Hidden overflow only while it folds or is folded (the row's shadow and its pick bounce reach past its box).
+              animate={
+                gone
+                  ? { height: 0, opacity: 0, marginTop: 0, overflow: "hidden" }
+                  : { height: "auto", opacity: 1, marginTop: index === 0 ? 0 : gap, transitionEnd: { overflow: "visible" } }
+              }
+              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="w-full"
+            >
+              {row}
+            </motion.div>
+          );
+        }
         return bounceIn ? (
           <BounceIn key={choice.id} index={index} shown={revealed} className="w-full">
             {row}

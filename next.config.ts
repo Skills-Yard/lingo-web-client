@@ -27,7 +27,7 @@ const animationVersions = (): Record<string, string> => {
 
 export default function config(phase: string): NextConfig {
   return {
-    allowedDevOrigins: ["172.30.144.1", "192.168.1.106", "10.135.178.84"],
+    allowedDevOrigins: ["172.30.144.1", "192.168.1.107", "10.135.178.84"],
     env: {
       NEXT_PUBLIC_RIVE_VERSIONS: JSON.stringify(
         phase === PHASE_DEVELOPMENT_SERVER ? {} : animationVersions(),
