@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, type LucideIcon } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { HexBubble } from "@/components/level-two/HexBubble";
@@ -372,7 +372,8 @@ export type SceneToggleItem = {
   title: string;
   on: string;
   off: string;
-  icon: string;
+  /** Its mark: a drawn icon, so every card's is the same size and style (the pictures were big illustrations on white). */
+  icon: LucideIcon;
   /** The scene's switch for it (1 on, 0 off). */
   key: string;
 };
@@ -391,10 +392,12 @@ export function SceneToggleStage({ api, items }: { api: InteractionApi; items: r
     <div className={`pointer-events-auto grid ${STAGE_W} grid-cols-2 gap-2.5`}>
       {items.map((item, index) => {
         const state = !!on[item.id];
+        const Icon = item.icon;
         return (
           <BounceIn key={item.id} index={index} shown={hexSpoken} className="flex min-w-0">
             <motion.button
               type="button"
+              aria-pressed={state}
               onClick={() => {
                 playClickSound();
                 vibrateForTap();
@@ -402,16 +405,22 @@ export function SceneToggleStage({ api, items }: { api: InteractionApi; items: r
                 setFlipped((now) => (now.includes(item.id) ? now : [...now, item.id]));
               }}
               whileTap={{ scale: 0.96 }}
-              className={`${CARD_BODY_FLAT} ${RAISED} h-[66px] min-w-0 flex-1 cursor-pointer gap-2 px-2 ${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`}
+              className={`${CARD_BODY_FLAT} ${RAISED} h-[66px] min-w-0 flex-1 cursor-pointer justify-start gap-2 px-2.5 text-left ${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`}
             >
-              <Pic src={item.icon} className="h-8 w-8 shrink-0" />
-              <span className="flex min-w-0 flex-col items-start gap-0.5">
-                <span className="text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{item.title}</span>
+              {/* The same tile on every card; it turns green with the card, as the scene's pill does. */}
+              <span
+                aria-hidden
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-300 ${state ? "bg-[#01A17F]/15 text-[#01A17F]" : "bg-white/70 text-[#6B7480] dark:bg-white/10 dark:text-white/70"}`}
+              >
+                <Icon className="size-5" strokeWidth={2.25} />
+              </span>
+              <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                <span className="text-[12px] leading-3.5 font-semibold text-[#444444] dark:text-white/80">{item.title}</span>
                 <motion.span
                   key={String(state)}
                   initial={{ scale: 0.7, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
-                  className={`rounded-full px-2.5 py-0.5 text-[13px] leading-4 font-bold text-white ${state ? "bg-[#01A17F]" : "bg-[#8A94A0]"}`}
+                  className={`rounded-full px-2.5 py-0.5 text-[12px] leading-4 font-bold whitespace-nowrap text-white ${state ? "bg-[#01A17F]" : "bg-[#8A94A0]"}`}
                 >
                   {state ? item.on : item.off}
                 </motion.span>

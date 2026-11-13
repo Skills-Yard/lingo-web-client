@@ -175,8 +175,8 @@ export const SEQUENCE_ROOM = {
  *   as the file has them). `drop1`-`drop4` is the bin each one has dropped into (1 Integer, 2 Float, 3 String, 4 Boolean, the bins
  *   left to right; 0 on the belt), and a value can be dropped into a wrong bin. `highlight` n (1-4) glows bin n when `correct` plays.
  *   `run` plays the belt again.
- * - `build`, mode 0: `n1` / `n2` send a price into "Calculate a total", `n3` the name into "Display information", `total` 1
- *   adds the "Total 70" tag. Mode 1: `p1`-`p5` is the bin of each card (1 Integer, 2 Float, 3 String, 4 Boolean; 0 on
+ * - `build`, mode 0: `n1` / `n2` 1 sends a price into "Calculate a total"; `n3` 2 sends the name into "Display
+ *   information" (`n3` 1 would put it in the total box, over the prices); `total` 1 adds the "Total 70" tag. Mode 1: `p1`-`p5` is the bin of each card (1 Integer, 2 Float, 3 String, 4 Boolean; 0 on
  *   the shelf), in the order Name, Age, Height, Is_present, Student ID. Mode 2: `t1`-`t4` is the type on each field
  *   (the same numbers; City, Temperature, Rainy days, Is raining?), `vals` 1 fills the phone and the fields with Delhi,
  *   28.5, 3 and False, `boot` 1 puts a tick on the phone.
