@@ -1,123 +1,182 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { CircleAlert } from "lucide-react";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
+import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { EDGE, RAISED } from "@/components/ui/raised";
+import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
-import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
-import { COLUMN_W } from "@/lib/questionColumn";
+import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { fireSceneTrigger, setSceneValues } from "@/lib/rive/variableHost";
+import { HEX_ROW_TOP } from "./scenes";
 import { useBubbleSize } from "./bubbleWidth";
-import { HEX_ROW_TOP, MiniAppBackdrop } from "./scenes";
-import { IDLE_LOOK, OPTION, parseTitle } from "./quiz";
+import { OPTION, parseTitle } from "./quiz";
+import { TapHint, type TapTarget } from "./TapHint";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
 const TITLE = parseTitle("Plan the *App's Steps*");
 
-/** The steps, listed out of order, so the list doesn't give the plan away. */
-const STEPS = [
-  { id: "add", text: "Add both numbers." },
-  { id: "ask-first", text: "Ask for the first number." },
-  { id: "keep-second", text: "Keep the second number." },
-  { id: "show", text: "Display the result." },
-  { id: "ask-second", text: "Ask for the second number." },
-  { id: "keep-first", text: "Keep the first number." },
-] as const;
+/** The steps, listed out of order, so the list doesn't give the plan away. They look like every other option of the module: white, with its thin grey line. */
+const STEP_TINT = "bg-white dark:bg-[#15181E]";
+const STEPS: readonly ArrangeCardDef[] = [
+  { id: "add", kind: "add", text: "Add both numbers.", tint: STEP_TINT },
+  { id: "ask-first", kind: "ask-first", text: "Ask for the first number.", tint: STEP_TINT },
+  { id: "keep-second", kind: "keep-second", text: "Keep the second number.", tint: STEP_TINT },
+  { id: "show", kind: "show", text: "Display the result.", tint: STEP_TINT },
+  { id: "ask-second", kind: "ask-second", text: "Ask for the second number.", tint: STEP_TINT },
+  { id: "keep-first", kind: "keep-first", text: "Keep the first number.", tint: STEP_TINT },
+];
 /** The right order, first step first. */
 const ANSWER = ["ask-first", "keep-first", "ask-second", "keep-second", "add", "show"];
-
-/** The steps' own way in. */
-const STEPS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
-/** The example run of the finished plan on the app: when each part shows (ms after it is right). */
-const EXAMPLE_MS = { first: 500, second: 1500, result: 2600 } as const;
+/** What the alert says when a step that is not the right one for the number that is next is chosen, for each number (a reason, not the answer). */
+const WRONG_STEP = [
+  "Not yet. The app can't use a number before it asks for one.",
+  "Not yet. Keep the number the app just asked for.",
+  "Not yet. Now the app needs its second number.",
+  "Not yet. Keep the second number too.",
+  "Not yet. The app can only add once it has both numbers.",
+  "Not yet. The result is shown last, after the adding.",
+] as const;
 
 /**
- * "Plan the App's Steps": the six steps of the addition application, to be tapped in the order the app does them (ask,
- * keep, ask, keep, add, display). The app on a phone (the same artboard as the screen before, "VAR_MiniApp", see
- * `MiniAppBackdrop`) is the scene, and the steps stand under it; each step tapped shows its place in the plan on a
- * green round badge at its top left, and tapping a step again takes it out. A right plan runs as an example on the app
- * (10 and 20 are asked for and kept, and 30 is shown); a wrong one is tried again. This is the point where the learner
- * sees why the app has to keep the two numbers.
+ * Two columns, 340 wide: the steps on the left, as wide as the room allows (282 × the module's one option height, 56,
+ * 12px between rows), and a numbered circle for each place in the plan on the right (44 across, 14px from the steps,
+ * each centred on its row). The steps never leave their rows: a step is given a number by dragging it to the open
+ * circle, or by tapping it (see `ArrangeBoard`'s `circles`). Text, corners and line as the module's answer buttons.
  */
-/** What Hex says, in a bubble wide enough to hold it in two lines (see `useBubbleSize`). */
-const HEX_LINE = "Tap the steps for our app in order.";
+const GEO = arrangeGeometry({
+  mode: "columns",
+  card: { width: 282, height: OPTION.height },
+  circles: 44,
+  count: STEPS.length,
+  gap: 12,
+  lane: 14,
+  line: "border-2 border-[#D2D8DE] dark:border-white/20",
+  radius: OPTION.radius,
+  sink: true,
+  fontSize: OPTION.font,
+});
+/** The board starts 12px under Hex's bubble (which ends at y 214). */
+const BOARD_TOP = 226;
+/** Once the plan is done the board rises this far (px), so its last row ends clear above the result panel (y 600). */
+const BOARD_RISE = 40;
+/** The line under the board, and the room it takes. */
+const NOTE_GAP = 10;
+/** A step chosen wrongly shows red (and shakes) this long (ms); the alert stays this long (ms). */
+const WRONG_MS = 900;
+const ALERT_MS = 3400;
+/**
+ * What the hint's pointing hand shows (see `TapHint`): it taps the right step for the number that is next, then the open
+ * circle it goes to. The fingertip lands just inside the step's left end (the words start about 33px in, so the hand
+ * stands left of them) and just inside the circle's left side. The hand waits this long (ms) before it comes in: the
+ * press should be answered at once.
+ */
+const HINT_STEP_FROM_LEFT = 26;
+const HINT_CIRCLE_FROM_LEFT = 12;
+const HINT_PRESS_DELAY_MS = 200;
 
+/** What Hex says, in a bubble wide enough to hold it in two lines (see `useBubbleSize`). */
+const HEX_LINE = "Pick the steps in order, one at a time.";
+
+/**
+ * "Plan the App's Steps": the six steps of the addition application, to be numbered in the order the app does them
+ * (ask, keep, ask, keep, add, display), one number at a time. The steps stand in a column on the left and the numbers 1
+ * to 6 are circles on the right, only the next one open (the others dimmed). The learner taps a step, or drags it to the
+ * open circle: a right step is given the number (the circle and the step turn green, the step shows its number, and it
+ * is locked); a wrong one is refused, with an alert saying why not yet (the step shakes red, the progress bar reacts,
+ * and it counts as a miss), so the next number can only be chosen once the one before is right. The board has what the
+ * other drag screens of the module have (a pressed 3D step, a shadow left in its place while it is dragged, a bounce
+ * with a shine and stars when the plan is whole). With the sixth step in, the plan is right: the steps bounce in the
+ * order of their numbers. This is the point where the learner sees why the app has to keep the two numbers.
+ */
 export function PlanAppScreen() {
   const router = useRouter();
-  const [order, setOrder] = useState<readonly string[]>([]);
-  const [checked, setChecked] = useState(false);
+  const { slots, placeIn } = useArrange(STEPS.map((step) => step.id), GEO.count);
+  // The alert (what to tell the learner) and the step that was chosen wrongly, for a moment.
+  const [alert, setAlert] = useState<{ text: string; key: number } | null>(null);
+  const [wrongId, setWrongId] = useState<string | null>(null);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [attempt, setAttempt] = useState(0);
+  const timers = useRef<{ alert?: number; wrong?: number }>({});
+  // The hint's demonstration: the targets the hand visits (and which press it is, so a second press plays it again).
+  const [demo, setDemo] = useState<{ press: number; targets: readonly TapTarget[] } | null>(null);
+  const hintPresses = useRef(0);
   const bubble = useBubbleSize(HEX_LINE);
-  const full = order.length === STEPS.length;
-  const correct = full && ANSWER.every((id, index) => order[index] === id);
+  // Steps are only given numbers in order, so the numbers given are the first `done` ones.
+  const given = slots.filter((id): id is string => id !== null);
+  const done = given.length;
+  const complete = done === STEPS.length;
 
-  // The app starts empty, as on the screen before: nothing asked for yet, no result.
-  useEffect(() => {
-    setSceneValues("miniApp", {
-      mode: 0,
-      title: "Addition App",
-      name1: "first_number",
-      name2: "second_number",
-      resultName: "result",
-      formula: "result = first_number + second_number",
-      val1: "10",
-      val2: "20",
-      result: 30,
-      filled: 0,
-      showResult: false,
-      bug: false,
-      highlight: 0,
-    });
-  }, [attempt]);
+  useEffect(
+    () => () => {
+      window.clearTimeout(timers.current.alert);
+      window.clearTimeout(timers.current.wrong);
+    },
+    [],
+  );
 
-  // A right plan runs: the numbers are asked for and kept, then the result is shown.
-  useEffect(() => {
-    if (!checked || !correct) return;
-    const timers = [
-      window.setTimeout(() => setSceneValues("miniApp", { filled: 1 }), EXAMPLE_MS.first),
-      window.setTimeout(() => setSceneValues("miniApp", { filled: 2 }), EXAMPLE_MS.second),
-      window.setTimeout(() => setSceneValues("miniApp", { showResult: true }), EXAMPLE_MS.result),
-    ];
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [checked, correct]);
-
-  const pick = (id: string) => {
-    playClickSound();
-    vibrateForTap();
-    setOrder((now) => (now.includes(id) ? now.filter((other) => other !== id) : [...now, id]));
+  /** The hint button: the pointing hand shows the right step for the number that is next, and the open circle it goes to. It counts as a hint for the screen's score. */
+  const showHint = () => {
+    if (complete) return;
+    noteStruggle(STEP.plan, "hint");
+    window.clearTimeout(timers.current.alert);
+    setAlert(null);
+    hintPresses.current += 1;
+    setDemo({ press: hintPresses.current, targets: [{ id: ANSWER[done], fromLeft: HINT_STEP_FROM_LEFT }, { id: `slot-${done}`, fromLeft: HINT_CIRCLE_FROM_LEFT }] });
   };
 
-  const check = () => {
-    setChecked(true);
-    noteAnswer(STEP.plan, 0, correct);
-    if (!correct) noteStruggle(STEP.plan, "miss");
-    // The app marks a right plan and a wrong one.
-    fireSceneTrigger("miniApp", correct ? "correct" : "wrong");
-    vibrateForAnswer(correct);
-    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
+  /** Tells the learner a step is not the one for the number that is next: the step shakes red, the alert says why not yet, and it counts as a miss. */
+  const refuse = (id: string) => {
+    window.clearTimeout(timers.current.alert);
+    window.clearTimeout(timers.current.wrong);
+    setAlert({ text: WRONG_STEP[done], key: Date.now() });
+    setWrongId(id);
+    noteAnswer(STEP.plan, 0, false);
+    noteStruggle(STEP.plan, "miss");
+    vibrateForAnswer(false);
+    setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: false }));
+    timers.current.wrong = window.setTimeout(() => setWrongId(null), WRONG_MS);
+    timers.current.alert = window.setTimeout(() => setAlert(null), ALERT_MS);
   };
 
-  const tryAgain = () => {
-    setOrder([]);
-    setChecked(false);
-    setAnswer(null);
-    setAttempt((previous) => previous + 1);
+  /** A step is chosen (tapped, or dropped on the open circle): if it is the right one for the number that is next it is given the number, and it is locked. */
+  const choose = (id: string) => {
+    if (complete || given.includes(id)) return;
+    // The learner acts: the hand goes.
+    setDemo(null);
+    if (id !== ANSWER[done]) return refuse(id);
+    window.clearTimeout(timers.current.alert);
+    setAlert(null);
+    placeIn(id, done);
+    if (done === STEPS.length - 1) {
+      // The sixth is in: the whole plan is right.
+      noteAnswer(STEP.plan, 0, true);
+      vibrateForAnswer(true);
+      setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: true }));
+    }
   };
 
-  const onContinue = () => {
-    if (!checked) check();
-    else if (correct) router.push(variableNext(STEP.plan));
-    else tryAgain();
+  const tapStep = (id: string) => {
+    if (id !== ANSWER[done]) playClickSound();
+    choose(id);
+  };
+
+  /** A step is dropped on a circle: only the open one takes it; another circle is told the number that is next. */
+  const place = (id: string, slot: number | null) => {
+    if (slot === null || complete) return;
+    setDemo(null);
+    if (slot !== done) {
+      window.clearTimeout(timers.current.alert);
+      setAlert({ text: `Number ${done + 1} comes first.`, key: Date.now() });
+      timers.current.alert = window.setTimeout(() => setAlert(null), ALERT_MS);
+      return;
+    }
+    choose(id);
   };
 
   return (
@@ -125,24 +184,17 @@ export function PlanAppScreen() {
       step={STEP.plan}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(STEP.plan))}
-      scene={<MiniAppBackdrop lifted={checked} />}
+      scene={<SoftBackdrop />}
       answer={answer}
-      ctaDisabled={!full}
-      ctaLabel={!checked ? "Check" : correct ? "Next" : "Try again"}
-      onContinue={onContinue}
+      ctaDisabled={!complete}
+      ctaLabel={complete ? "Next" : "Continue"}
+      // The hint button (until the plan is done): the pointing hand shows the right step.
+      hint={{ visible: !complete, onUse: showHint }}
+      onContinue={() => router.push(variableNext(STEP.plan))}
       overlay={
         <div className="pointer-events-none absolute inset-0">
-          <FeedbackPanel
-            correct={correct}
-            title={correct ? "Excellent!" : "Not quite"}
-            open={checked}
-            hexIn={checked}
-            hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
-            grouped
-          >
-            {correct
-              ? "You planned the app's logic."
-              : "Can an app add before it has both numbers?"}
+          <FeedbackPanel correct title="Excellent!" open={complete} hexIn={complete} hexCue={complete ? HEX_ONBOARDING_TRIGGER.continueThumb : null} grouped>
+            You planned the app&apos;s logic.
           </FeedbackPanel>
         </div>
       }
@@ -161,53 +213,49 @@ export function PlanAppScreen() {
         </span>
       </ScreenTitle>
       <div className="absolute inset-x-0 flex justify-center" style={{ top: HEX_ROW_TOP }}>
-        <HexBubble key={attempt} entryKey={`variable-plan-${attempt}`} hex="left" line={[{ text: HEX_LINE }]} size={bubble} leaving={checked} />
+        <HexBubble entryKey="variable-plan" hex="left" line={[{ text: HEX_LINE }]} size={bubble} leaving={complete} />
       </div>
-      {/* The steps stand under the app, on the white below it, two across. Three rows of them (196px) do not fit between the risen app and the result panel, so any check fades them in place (they never rise over the app): a right plan then runs on the app, a wrong one gets the result panel and a try again. */}
-      <motion.div
-        initial={{ opacity: 0, y: 90 }}
-        animate={{ opacity: checked ? 0 : 1, y: 0 }}
-        transition={checked ? { opacity: { duration: 0.4, ease: "easeOut" } } : STEPS_IN}
-        className="pointer-events-auto absolute z-[1] grid grid-cols-2"
-        style={{ bottom: aboveButtons(OPTION.aboveButtons), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, pointerEvents: checked ? "none" : undefined }}
-      >
-        {STEPS.map((step) => {
-          const place = order.indexOf(step.id);
-          const picked = place >= 0;
-          // Once a wrong plan is checked, the steps that are not in their place show red.
-          const misplaced = checked && !correct && picked && ANSWER[place] !== step.id;
-          return (
-            <button
-              key={step.id}
-              type="button"
-              disabled={checked}
-              onClick={() => pick(step.id)}
-              aria-pressed={picked}
-              // The same size, padding (the border's width is made up from `OPTION.padX`: a 1px line at rest, a 2px border picked), corners and text as every other option of the module.
-              style={{ height: OPTION.height, borderRadius: OPTION.radius, paddingInline: picked ? OPTION.padX - 2 : OPTION.padX - 1, fontSize: OPTION.font }}
-              className={`relative flex cursor-pointer items-center justify-center text-center leading-5 font-medium text-[#444444] dark:text-white ${RAISED} ${
-                misplaced
-                  ? `${EDGE.red} border-2 border-[#E5484D] bg-[#FFF1F1] dark:bg-[#2A1517]`
-                  : picked
-                    ? `${EDGE.green} border-2 border-[#01A17F] bg-[#F2FBF8] dark:bg-[#0F2921]`
-                    : `${EDGE.khaki} border ${IDLE_LOOK}`
-              }`}
-            >
-              {picked && (
-                <span
-                  aria-hidden
-                  className={`absolute -top-2 -left-2 flex size-6 items-center justify-center rounded-full border-2 border-white text-[13px] leading-none font-bold text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)] dark:border-[#15181E] ${misplaced ? "bg-[#E5484D]" : "bg-[#01A17F]"}`}
-                >
-                  {place + 1}
-                </span>
-              )}
-              {step.text}
-            </button>
-          );
-        })}
-      </motion.div>
-      <Confetti active={checked && correct} />
-      <XpBurst show={checked && correct} />
+      {/* The steps (left) and their number circles (right), the next circle open. Once the plan is done the board rises to clear the result panel. */}
+      <ArrangeDock geo={GEO} top={BOARD_TOP} rise={complete ? BOARD_RISE : 0}>
+        <ArrangeBoard
+          cards={STEPS}
+          slots={slots}
+          geo={GEO}
+          disabled={false}
+          // A step with its number cannot be moved; only the next circle is open.
+          lockedIds={given}
+          activeSlot={complete ? undefined : done}
+          // The whole plan is right: the steps bounce one after the other in the order of their numbers, with their shine and stars, their shadows staying on the ground.
+          bounce={complete}
+          wrongIds={wrongId ? [wrongId] : []}
+          onPlace={place}
+          onTap={tapStep}
+        />
+        {/* Under the board: which number is next, or, for a moment after a wrong step, the alert. */}
+        {!complete && (
+          <div className="pointer-events-none absolute inset-x-0 flex justify-center" style={{ top: GEO.board.height + NOTE_GAP }}>
+            {alert ? (
+              <motion.p
+                key={alert.key}
+                role="alert"
+                initial={{ opacity: 0, y: -6, scale: 0.96 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ type: "spring", stiffness: 400, damping: 22 }}
+                className="flex max-w-[340px] items-start gap-2 rounded-[12px] border border-[#E5484D] bg-[#FFF1F1] px-3 py-2 text-[13px] leading-5 font-medium text-[#D42421]"
+              >
+                <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />
+                {alert.text}
+              </motion.p>
+            ) : (
+              <p className="text-center text-[13px] leading-5 font-medium text-[#6B7480] dark:text-white/60">{`Which step is number ${done + 1}?`}</p>
+            )}
+          </div>
+        )}
+      </ArrangeDock>
+      {/* The hint's hand: taps the right step, then its circle; it goes as soon as the learner does something. */}
+      {demo && <TapHint targets={demo.targets} runKey={demo.press} startAfterMs={HINT_PRESS_DELAY_MS} active={!complete} />}
+      <Confetti active={complete} />
+      <XpBurst show={complete} />
     </LevelTwoShell>
   );
 }

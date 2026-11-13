@@ -479,6 +479,8 @@ const MATCH_GEO = arrangeGeometry({
   sink: true,
   // The same text size as the answer buttons (16), not the 12 a card this short would get.
   fontSize: OPTION.font,
+  // A name leaves a faint print of itself (its shadow) where it rests when it is dragged or bounces (see `bounce` below).
+  printStays: true,
 });
 /** The note under the board: one line (the longer "check" line fits it too). */
 const MATCH_NOTE_H = 20;
@@ -547,6 +549,8 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
             geo={MATCH_GEO}
             disabled={finished || (full && !right)}
             selectedId={picked}
+            // Every name on its right price: they bounce one after the other, one big bounce and one small, their shadows staying on the ground.
+            bounce={right}
             onPlace={place}
             onTap={tapName}
             onSlotTap={tapSpot}

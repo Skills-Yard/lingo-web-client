@@ -29,6 +29,8 @@ const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
 export const SHAKE = [0, -7, 7, -5, 5, 0];
 /** A press that moves less than this far (px) is a tap, not a drag. */
 const TAP_SLOP = 6;
+/** A card's print stays showing this long (ms) after it is dropped, while the card glides back or leaves. */
+const AWAY_AFTER_DROP_MS = 450;
 /** A wrong card shakes red for this long (ms). */
 export const WRONG_MS = 600;
 
@@ -46,6 +48,7 @@ export function DragCard({
   className,
   style,
   disabled,
+  placed = false,
   onTap,
   onDrop,
   label,
@@ -54,6 +57,8 @@ export function DragCard({
   className: string;
   style?: React.CSSProperties;
   disabled?: boolean;
+  /** The card has been put in its group: it is no longer here (it fades out and cannot be touched) and only its shadow stays, keeping its place in the tray. */
+  placed?: boolean;
   onTap: () => void;
   onDrop: (clientX: number, clientY: number) => void;
   label: string;
@@ -62,15 +67,32 @@ export function DragCard({
   const y = useMotionValue(0);
   const drag = useRef<{ startX: number; startY: number; scale: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
+  // Dragged off its place (or just dropped and still gliding back): the print of the card shows there.
+  const [away, setAway] = useState(false);
+  const awayTimer = useRef<number | undefined>(undefined);
+  const settleAway = () => {
+    window.clearTimeout(awayTimer.current);
+    awayTimer.current = window.setTimeout(() => setAway(false), AWAY_AFTER_DROP_MS);
+  };
+  useEffect(() => () => window.clearTimeout(awayTimer.current), []);
   const home = () => {
     animate(x, 0, SPRING);
     animate(y, 0, SPRING);
   };
   return (
+    <div className="relative flex">
+    {/* The card's shadow where it was: a plain shape the size of the card (its own classes, with nothing in it) that stays in place while the card is dragged away, and for good once the card has been placed (`placed`). Hidden with the card in place. */}
+    <div
+      aria-hidden
+      className={`${className} pointer-events-none absolute inset-0 transition-opacity duration-150 ${away || placed ? "opacity-100" : "opacity-0"}`}
+      style={{ ...style, boxShadow: "none", backgroundColor: "rgba(0,0,0,0.09)", borderColor: "transparent" }}
+    />
     <motion.button
       type="button"
       aria-label={label}
-      disabled={disabled}
+      aria-hidden={placed || undefined}
+      tabIndex={placed ? -1 : undefined}
+      disabled={disabled || placed}
       onPointerDown={(event) => {
         const box = event.currentTarget;
         box.setPointerCapture(event.pointerId);
@@ -82,7 +104,11 @@ export function DragCard({
         if (!now) return;
         const dx = event.clientX - now.startX;
         const dy = event.clientY - now.startY;
-        if (Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) {
+          now.moved = true;
+          window.clearTimeout(awayTimer.current);
+          setAway(true);
+        }
         x.set(dx / now.scale);
         y.set(dy / now.scale);
       }}
@@ -91,21 +117,25 @@ export function DragCard({
         drag.current = null;
         setDragging(false);
         if (!now) return;
-        if (now.moved) onDrop(event.clientX, event.clientY);
-        else onTap();
+        if (now.moved) {
+          settleAway();
+          onDrop(event.clientX, event.clientY);
+        } else onTap();
         home();
       }}
       onPointerCancel={() => {
+        if (drag.current?.moved) settleAway();
         drag.current = null;
         setDragging(false);
         home();
       }}
       animate={{ scale: dragging ? 1.06 : 1 }}
       style={{ ...style, x, y, zIndex: dragging ? 5 : 1 }}
-      className={`pointer-events-auto relative touch-none enabled:cursor-grab enabled:active:cursor-grabbing ${className}`}
+      className={`pointer-events-auto relative touch-none transition-opacity duration-150 enabled:cursor-grab enabled:active:cursor-grabbing ${placed ? "pointer-events-none opacity-0" : ""} ${className}`}
     >
       {children}
     </motion.button>
+    </div>
   );
 }
 
@@ -197,7 +227,6 @@ export function SortStage({
     );
   };
 
-  const tray = items.filter((item) => !placed[item.id]);
   const columns = buckets.length === 3 ? "grid-cols-3" : "grid-cols-2";
   const rows = Math.ceil(buckets.length / (buckets.length === 3 ? 3 : 2));
 
@@ -205,11 +234,13 @@ export function SortStage({
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-4`}>
       <div className="flex min-h-[52px] flex-wrap justify-center gap-3.5">
         <AnimatePresence>
-          {tray.map((item) => (
-            <motion.div key={item.id} layout exit={{ opacity: 0, scale: 0.6 }} animate={{ x: wrongId === item.id ? SHAKE : 0 }} transition={{ x: { duration: 0.35 } }}>
+          {/* Every card keeps its place in the tray: one that has been put in its group fades out and leaves its plain shadow there, and the others do not move up. */}
+          {items.map((item) => (
+            <motion.div key={item.id} layout animate={{ x: wrongId === item.id ? SHAKE : 0 }} transition={{ x: { duration: 0.35 } }}>
               {/* The cards all share one tint: here a card's colour must not hint at its group. */}
               <DragCard
                 label={item.label}
+                placed={!!placed[item.id]}
                 disabled={finished}
                 onTap={() => {
                   playClickSound();

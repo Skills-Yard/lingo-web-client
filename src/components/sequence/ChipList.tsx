@@ -18,6 +18,8 @@ const TAP_SLOP = 6;
 /** A chip dropped within this far (px) of a place goes there. */
 const REACH = 70;
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
+/** A chip's print stays showing this long (ms) after it is dropped, while the chip settles. */
+const AWAY_AFTER_DROP_MS = 450;
 
 /** How the `max` places are laid out: rows as even as they can be (5 is 3 + 2). */
 const rowsFor = (max: number) => {
@@ -71,6 +73,14 @@ function Chip({
   const y = useMotionValue(at.y);
   const drag = useRef<{ startX: number; startY: number; fromX: number; fromY: number; scale: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
+  // Dragged off its place (or just dropped and still settling): the print of the chip shows there.
+  const [away, setAway] = useState(false);
+  const awayTimer = useRef<number | undefined>(undefined);
+  const settleAway = () => {
+    window.clearTimeout(awayTimer.current);
+    awayTimer.current = window.setTimeout(() => setAway(false), AWAY_AFTER_DROP_MS);
+  };
+  useEffect(() => () => window.clearTimeout(awayTimer.current), []);
 
   useEffect(() => {
     if (drag.current) return;
@@ -83,7 +93,26 @@ function Chip({
     animate(y, at.y, SPRING);
   };
 
+  // What is on the chip (its arrow and its word).
+  const glyph = (
+    <>
+      {item.command === "forward" ? (
+        <ArrowUp aria-hidden className="size-7 shrink-0 text-[#0F88E5]" strokeWidth={3} />
+      ) : (
+        <RotateCw aria-hidden className="size-7 shrink-0 text-[#E07B1F]" strokeWidth={3} />
+      )}
+      <span className="text-center text-[10px] leading-3 font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">{COMMAND_LABEL[item.command]}</span>
+    </>
+  );
+
   return (
+    <>
+    {/* The chip's shadow where it was: a plain shape the size of the chip, with nothing in it, that stays in its place while the chip is dragged away (and a moment after the drop). A chip has no place of its own to leave it for good: the list reorders, and the numbered outlines are its places. Hidden with the chip in place. */}
+    <span
+      aria-hidden
+      className={`pointer-events-none absolute rounded-[10px] transition-opacity duration-150 ${away ? "opacity-100" : "opacity-0"}`}
+      style={{ left: at.x, top: at.y, width: CHIP.width, height: CHIP.height, zIndex: 0, backgroundColor: "rgba(0,0,0,0.09)" }}
+    />
     <motion.button
       type="button"
       layout={false}
@@ -109,7 +138,11 @@ function Chip({
         if (!now) return;
         const dx = event.clientX - now.startX;
         const dy = event.clientY - now.startY;
-        if (Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) {
+          now.moved = true;
+          window.clearTimeout(awayTimer.current);
+          setAway(true);
+        }
         x.set(now.fromX + dx / now.scale);
         y.set(now.fromY + dy / now.scale);
       }}
@@ -119,6 +152,7 @@ function Chip({
         setDragging(false);
         if (!now) return;
         if (!now.moved) return onRemove(index);
+        settleAway();
         let nearest = index;
         let nearestDistance = Infinity;
         for (let place = 0; place < count; place += 1) {
@@ -133,6 +167,7 @@ function Chip({
         else home();
       }}
       onPointerCancel={() => {
+        if (drag.current?.moved) settleAway();
         drag.current = null;
         setDragging(false);
         home();
@@ -152,13 +187,9 @@ function Chip({
           <X aria-hidden className="size-2.5" strokeWidth={3.5} />
         </span>
       )}
-      {item.command === "forward" ? (
-        <ArrowUp aria-hidden className="size-7 shrink-0 text-[#0F88E5]" strokeWidth={3} />
-      ) : (
-        <RotateCw aria-hidden className="size-7 shrink-0 text-[#E07B1F]" strokeWidth={3} />
-      )}
-      <span className="text-center text-[10px] leading-3 font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">{COMMAND_LABEL[item.command]}</span>
+      {glyph}
     </motion.button>
+    </>
   );
 }
 

@@ -106,7 +106,9 @@ export function GroupStage({
         <div className={`${COLUMNS} pb-3`}>
           {items.map((item) => (
             // Each card keeps its own place in the grid: one taken away leaves a gap, the others don't move.
-            <div key={item.id} className="h-[52px] w-[104px]">
+            <div key={item.id} className="relative h-[52px] w-[104px]">
+              {/* The card's shadow in its place: a plain shape with nothing in it, left there once the card is in a column (until the empty grid folds away). */}
+              <div aria-hidden className={`${CARD_LOOK_FLAT} pointer-events-none absolute inset-0 transition-opacity duration-150 ${item.id in placed ? "opacity-100" : "opacity-0"}`} style={{ backgroundColor: "rgba(0,0,0,0.09)", borderColor: "transparent" }} />
               <AnimatePresence>
                 {!(item.id in placed) && (
                   <motion.div key={item.id} initial={false} exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.2 }}>
