@@ -212,8 +212,8 @@ function ObjectGrid({
 }
 
 /** An interaction stage's own picture and controls. */
-function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, finished })}</>;
+function InteractionHost({ stage, slip, done, finished, hint }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean; hint: number }) {
+  return <>{stage.render({ slip, done, finished, hint })}</>;
 }
 
 /**
@@ -232,6 +232,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [hinted, setHinted] = useState(false);
+  // How many times the hint button has been pressed on this stage: an interaction shows its own help for each press.
+  const [hintPresses, setHintPresses] = useState(0);
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
@@ -265,7 +267,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const right = correct || alsoOk;
   // A pick that is fine too is shown as right (the other right answer isn't lit up beside it).
   const shownCorrectId = checked && !right ? "" : alsoOk ? (selectedId ?? "") : (quiz?.correctId ?? "");
-  const hasHint = !!quiz && (!!quiz.hintText || !!quiz.hintVisual);
+  const hasHint = quiz ? !!quiz.hintText || !!quiz.hintVisual : !!interaction?.hint;
   const hintShown = hinted || (!!quiz?.hintOnMiss && attempt > 0);
   // A right answer clears the screen: the answers fade out and, as Hex and his bubble run off, the scene rises into their room. (A wrong one keeps the answers, for another try.)
   const cleared = !!quiz && checked && right;
@@ -325,6 +327,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
     setChecked(false);
     setAnswer(null);
     setHinted(false);
+    setHintPresses(0);
     setAttempt(0);
     setFinished(false);
   };
@@ -338,6 +341,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
 
   const useHint = () => {
     setHinted(true);
+    setHintPresses((previous) => previous + 1);
     noteStruggle(screen.step, "hint");
   };
 
@@ -382,7 +386,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
             ? (interaction?.nextLabel ?? "Next")
             : (interaction?.ctaLabel ?? "Continue")
       }
-      hint={hasHint ? { visible: !checked, onUse: useHint } : undefined}
+      // A question's hint goes once it is checked; an interaction's goes once it is done.
+      hint={hasHint ? { visible: quiz ? !checked : !finished, onUse: useHint } : undefined}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -500,7 +505,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
         </>
       ) : (
         <div className="pointer-events-none absolute inset-x-0 flex flex-col items-center" style={{ top: titleEnd, bottom: bodyBottom }}>
-          {interaction && <InteractionHost stage={interaction} slip={slip} done={done} finished={finished} />}
+          {interaction && <InteractionHost stage={interaction} slip={slip} done={done} finished={finished} hint={hintPresses} />}
         </div>
       )}
 

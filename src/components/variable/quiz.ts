@@ -102,12 +102,16 @@ export type InteractionApi = {
   /** The learner has done it. */
   done: () => void;
   finished: boolean;
+  /** How many times the learner has pressed the hint button on this stage (0 until they do); only a stage with `hint` set gets any. */
+  hint: number;
 };
 
 /** Something to do instead of a question: tap, drag, slide. The main button waits until it is done. */
 export type InteractionStage = {
   kind: "interaction";
   render: (api: InteractionApi) => ReactNode;
+  /** Shows the hint button; each press is counted in `InteractionApi.hint` and the stage shows its own help. It goes once the stage is done. */
+  hint?: boolean;
   /** Hex's panel on finishing (a right outcome), if the interaction has one. */
   finishPanel?: { title: string; text: string };
   ctaLabel?: string;

@@ -12,6 +12,7 @@ import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSc
 import { OPTION, type InteractionApi } from "./quiz";
 import { artboardRect, BELOW_TITLE, GAP_BELOW_SCENE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, type ArtboardRect } from "./scenes";
 import { ArcMeter } from "./ArcMeter";
+import { TapHint, type TapTarget } from "./TapHint";
 import { CARD } from "./visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
@@ -293,6 +294,30 @@ const CLASSIFY_PARTS = [
 const SORT_BLOCK_H = OPTION.height + 10 + 20;
 /** The last part has been sorted: this long (ms) for the artboard's right-answer glow to play before the screen is done and its name / value tags show. */
 const SORT_SETTLE_MS = 900;
+/**
+ * What the pointing hand shows as the screen opens (see `TapHint`): tap the `water_level` pill, then "It is a name". Each
+ * is the element marked `data-hint` with that id; the fingertip lands just inside its left end, so the hand stands to
+ * the left and does not cover the words (they start about 36px in on the button, and further in on the pill).
+ */
+const SORT_HINT = [
+  { id: "n1", fromLeft: 20 },
+  { id: "name", fromLeft: 24 },
+] as const satisfies readonly TapTarget[];
+/** How long (ms) the hand waits to come in when the hint button asked for it: the screen opening waits longer, but a press should be answered at once. */
+const HINT_PRESS_DELAY_MS = 200;
+
+/**
+ * What the hint button shows (the same hand, see `SORT_HINT`): the right way to sort a part that is not sorted yet. It
+ * is the part the learner has tapped and not answered, if there is one (the hand only goes to its right button, as its
+ * pill is already lit), else the first part still to be sorted (the hand taps its pill, then its right button). A part
+ * already sorted is skipped: with `water_level` done, the hand goes on to `550 ml` and "It is a value".
+ */
+function hintTargets(selected: string | null, placed: Record<string, PartKind>): readonly TapTarget[] {
+  const part = CLASSIFY_PARTS.find((candidate) => candidate.id === selected) ?? CLASSIFY_PARTS.find((candidate) => !placed[candidate.id]);
+  if (!part) return [];
+  const answer: TapTarget = { id: part.kind, fromLeft: 24 };
+  return part.id === selected ? [answer] : [{ id: part.id, fromLeft: 20 }, answer];
+}
 
 /**
  * Screen 14: tap each part of the two cards and say whether it is a name or a value. The cards are the artboard
@@ -301,11 +326,18 @@ const SORT_SETTLE_MS = 900;
  * `correct` and `wrong` triggers). Each part sorted keeps a tick, and once all four are the artboard shows its
  * "name" and "value" tags (`showParts`).
  */
-export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi) {
+export function ClassifyStage({ slip: slipped, done, finished, hint }: InteractionApi) {
   const [selected, setSelected] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Record<string, PartKind>>({});
   const [slip, setSlip] = useState(false);
   const sorted = Object.keys(placed).length === CLASSIFY_PARTS.length;
+  // Each press of the hint button shows the hand again, on the part that is still to be sorted (until the learner taps something).
+  const [handledHint, setHandledHint] = useState(0);
+  const [demo, setDemo] = useState<{ press: number; targets: readonly TapTarget[] } | null>(null);
+  if (hint !== handledHint) {
+    setHandledHint(hint);
+    setDemo(hint > 0 ? { press: hint, targets: hintTargets(selected, placed) } : null);
+  }
 
   // The cards say their names and values, with nothing lit and no tags yet.
   useEffect(() => {
@@ -331,6 +363,7 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
     if (!part) return;
     playClickSound();
     vibrateForTap();
+    setDemo(null);
     if (part.kind !== kind) {
       slipped();
       setSlip(true);
@@ -345,6 +378,13 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Is each one a name or a value?" entry="variable-classify" />
+      {/* Once, as the screen opens, a hand shows the learner what to tap; it goes as soon as they tap anything. The hint button brings it back, on the right answer still to be given. */}
+      <TapHint
+        targets={demo ? demo.targets : SORT_HINT}
+        runKey={demo?.press}
+        startAfterMs={demo ? HINT_PRESS_DELAY_MS : undefined}
+        active={!finished && (demo !== null || (selected === null && Object.keys(placed).length === 0))}
+      />
       {/* A target over each pill of the artboard to tap it, and a tick on each one that has been sorted. */}
       <SceneOverlay>
         {CLASSIFY_PARTS.map((part) => {
@@ -354,9 +394,11 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
               <button
                 type="button"
                 aria-label={`Sort ${part.label}`}
+                data-hint={part.id}
                 disabled={!!known || finished}
                 onClick={() => {
                   playClickSound();
+                  setDemo(null);
                   setSelected(part.id);
                   setSlip(false);
                 }}
@@ -386,6 +428,7 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
             <button
               key={kind}
               type="button"
+              data-hint={kind}
               disabled={!selected}
               onClick={() => choose(kind)}
               // The same size, gap, corners and text as every other option of the module (their colour is the button's own).

@@ -567,7 +567,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.classify,
     title: "Name *or Value?*",
     stages: [
-      { kind: "interaction", render: (api) => <ClassifyStage {...api} /> },
+      // The hint button replays the pointing hand on the next part still to be sorted.
+      { kind: "interaction", hint: true, render: (api) => <ClassifyStage {...api} /> },
       quiz({
         line: "Which of these is a variable name?",
         visual: (context) => <VarCardDrive cards={NAME_VALUE_CARDS} lights={NAME_VALUE_LIGHTS} context={context} />,
