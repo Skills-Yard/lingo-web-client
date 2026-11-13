@@ -249,6 +249,7 @@ Built from the "6. Conditions" spec: one step for each of its 38 screens (the st
 | `/level` | Level path (home), where onboarding ends |
 | `/profile` | Profile |
 | `/hex` | `hex.riv` animation viewer |
+| `/character` | 3D character viewer: `public/animations/Bouncing Fight Idle.glb` with its own "Bouncing Fight Idle" animation (loops) and "Zombie Stand Up" from `Zombie Stand Up.glb` (plays once); three.js via React Three Fiber; drag to rotate (no zoom), pause/replay, auto-rotate, reset view. Add an animation in `ANIMATIONS` (`components/character3d/character.ts`) |
 | `/module1/combined`, `/module1/review` | Old instructions-intro design comparison (`?step=<index>`) |
 
 ## Notes
