@@ -34,10 +34,16 @@ type ArrangeLayout = {
   solidSlots?: boolean;
   /** The cards' text is a sentence: set in plain case, not the small capitals of a command's name. */
   sentence?: boolean;
+  /** The cards' border, width and colour (Tailwind classes, light and dark): a 4px white one by default. */
+  line?: string;
+  /** The corner radius (px) of the cards and the slots: 8, so a thick border needs a larger one for the face inside it to keep rounded corners. */
+  radius?: number;
+  /** A card held (pressed or dragged) is pressed like a button: its face sinks onto its raised edge, instead of growing a little and keeping the edge. */
+  sink?: boolean;
 };
 
 /** Where everything stands on the board, and how big the board is. */
-export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false }: ArrangeLayout) => {
+export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false, line = "border-4 border-white dark:border-[#818185]", radius = 8, sink = false }: ArrangeLayout) => {
   const columns = mode === "columns";
   const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: tray && slotsOnTop ? card.height + lane : 0 });
   const slot = (index: number): Point =>
@@ -49,9 +55,12 @@ export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "
     : { width: count * card.width + (count - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
   /** A card dropped within this far (px) of a slot's corner goes in it. */
   const reach = card.height * 0.87;
-  return { count, card, tray, solidSlots, home, slot, board, reach, sentence };
+  return { count, card, tray, solidSlots, home, slot, board, reach, sentence, line, radius, sink };
 };
 export type ArrangeGeometry = ReturnType<typeof arrangeGeometry>;
+
+/** The look of a button held down (see `RAISED`): the face has sunk the edge's 4px and the edge is gone. It moves with `translate`, which sits beside the `transform` the drag sets. */
+const PRESSED = "translate-y-1 shadow-[0_0_0_var(--edge)]";
 
 /** Below this far (px) a press and release is a tap, not a drag. */
 const TAP_SLOP = 6;
@@ -126,6 +135,9 @@ function ArrangeCard({
   card,
   size,
   sentence,
+  line,
+  radius,
+  sink,
   at,
   disabled,
   hinted,
@@ -135,6 +147,9 @@ function ArrangeCard({
   card: ArrangeCardDef;
   size: { width: number; height: number };
   sentence: boolean;
+  line: string;
+  radius: number;
+  sink: boolean;
   at: Point;
   disabled: boolean;
   hinted: boolean;
@@ -198,9 +213,10 @@ function ArrangeCard({
         animate(x, at.x, CARD_SPRING);
         animate(y, at.y, CARD_SPRING);
       }}
-      animate={{ scale: dragging ? 1.05 : 1 }}
-      style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1 }}
-      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center rounded-[8px] border-4 border-white px-1.5 ${RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+      // A pressed card (`sink`) does not grow: it is pushed down onto its edge, like the buttons.
+      animate={{ scale: dragging && !sink ? 1.05 : 1 }}
+      style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1, borderRadius: radius }}
+      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center px-1.5 ${line} ${sink ? `${dragging ? PRESSED : RAISED_DRAG} transition-[translate,box-shadow] duration-100 ease-out` : RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
       {/* The hint's orange fill, wiped in from the left behind the content. */}
       <motion.span
@@ -254,12 +270,12 @@ export function ArrangeBoard({
         <div
           key={index}
           aria-hidden
-          className={`absolute flex items-center justify-center rounded-[8px] border-2 ${
+          className={`absolute flex items-center justify-center border-2 ${
             geo.solidSlots
               ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
               : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
           }`}
-          style={{ left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height }}
+          style={{ left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height, borderRadius: geo.radius }}
         >
           {slotContent ? (
             slotContent(index)
@@ -278,6 +294,9 @@ export function ArrangeBoard({
             card={card}
             size={geo.card}
             sentence={geo.sentence}
+            line={geo.line}
+            radius={geo.radius}
+            sink={geo.sink}
             at={placed >= 0 ? geo.slot(placed) : geo.home(index)}
             disabled={disabled}
             hinted={card.id === hintedId}
