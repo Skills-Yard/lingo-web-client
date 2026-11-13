@@ -43,10 +43,11 @@ type ArrangeLayout = {
   /** The cards' text size (px), on a 20px line, in place of the size their height gives them (12px for a short card). */
   fontSize?: number;
   /**
-   * A card leaves a plain shadow (its shape, with nothing in it) where it started, its place in the tray: it shows
-   * from the moment the card is dragged off it and stays for good while the card is in a slot, until the card comes
-   * back. A card that bounces (see `bounce`) also has the shadow under it where it rests. The card itself, 3D edge
-   * and all, is what moves. On by default; `false` leaves no shadow.
+   * Each card has a plain shadow (its shape, with nothing in it) in its place in the tray, there from the start,
+   * behind the card (which covers it), so it is already showing when the card is dragged off it and stays for as long as
+   * the card is away, in a slot or being dragged, until the card comes back. A card that bounces (see `bounce`) also has
+   * the shadow under it where it rests. The card itself, 3D edge and all, is what moves. On by default; `false` leaves
+   * no shadow.
    */
   printStays?: boolean;
   /**
@@ -85,8 +86,6 @@ const PRESSED = "translate-y-1 shadow-[0_0_0_var(--edge)]";
 const TAP_SLOP = 6;
 /** A pressed card (`sink`) stays pushed down at least this long (ms), so a quick tap still shows its 3D press. */
 const MIN_PRESS_MS = 160;
-/** A card's shadow stays showing this long (ms) after it is dropped, while the card glides back to where it started (if it did not go to a slot). */
-const AWAY_AFTER_DROP_MS = 450;
 /** The shadow itself: a plain, soft grey shape. */
 const SHADOW = "rgba(0,0,0,0.09)";
 /** A card picked by a tap looks like the module's picked answers: a 4px green border, a pale mint face and the green raised edge. */
@@ -114,6 +113,8 @@ const BOUNCE_TIMES = [0, 0.31, 0.625, 0.815, 1];
 const SHINE_AFTER_S = 0.05;
 const SHINE_S = 0.7;
 const SHINE_BAND = "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)";
+/** The shine on a card a hint's hand points at (see `ArrangeBoard`'s `pointedId`): one quick crossing, as long as the hand's stay on it (about half a second). */
+const POINT_SHINE_S = 0.5;
 const STAR_S = 0.9;
 const STAR_PEAK = 0.5;
 const STAR_COLOUR = "#FFB300";
@@ -229,6 +230,8 @@ function ArrangeCard({
   selected,
   wrong,
   locked,
+  pointed,
+  tapOnly,
   filled,
   number,
   onDrop,
@@ -258,6 +261,10 @@ function ArrangeCard({
   wrong?: boolean;
   /** Cannot be touched (given its place for good). */
   locked?: boolean;
+  /** A hint's hand is pointing at it: a tint and one shine, while it is. */
+  pointed?: boolean;
+  /** Cannot be dragged: it is pressed (3D) and tapped like a button, and never leaves its place. */
+  tapOnly?: boolean;
   /** Given its number (circle slots): filled with green, its words white. */
   filled?: boolean;
   /** The place the card is in, shown as a round badge on its corner; `undefined` for no badge. */
@@ -278,27 +285,12 @@ function ArrangeCard({
     window.clearTimeout(letGoTimer.current);
     letGoTimer.current = window.setTimeout(() => setHeld(false), Math.max(0, MIN_PRESS_MS - (performance.now() - heldSince.current)));
   };
-  // Away from where it rests (dragged off it, or just dropped and still settling): its print shows there (see `printStays`).
-  const [away, setAway] = useState(false);
-  const awayTimer = useRef<number | undefined>(undefined);
-  const settleAway = () => {
-    window.clearTimeout(awayTimer.current);
-    awayTimer.current = window.setTimeout(() => setAway(false), AWAY_AFTER_DROP_MS);
-  };
-  useEffect(
-    () => () => {
-      window.clearTimeout(letGoTimer.current);
-      window.clearTimeout(awayTimer.current);
-    },
-    [],
-  );
+  useEffect(() => () => window.clearTimeout(letGoTimer.current), []);
   // The card is in the air on its bounce: the shadow under it shows.
   const [bouncing, setBouncing] = useState(false);
   // Its one-time shine and corner stars are playing.
   const [shining, setShining] = useState(false);
   const compact = size.height < 90;
-  // The card is somewhere other than its place in the tray (in a slot).
-  const offHome = at.x !== home.x || at.y !== home.y;
 
   useEffect(() => {
     if (drag.current) return;
@@ -358,11 +350,11 @@ function ArrangeCard({
 
   return (
     <HintFloat className={dragging ? "relative z-20" : undefined} spin={false} active={hinted}>
-    {/* The card's shadow where it started (its place in the tray): a plain shape the size of the card, with nothing in it. It shows whenever the card is not on that place: while it is dragged off it and for good once it has been dropped in a slot, until the card comes back (it is hidden, and covered by the card anyway, while the card is there). */}
-    {printStays && tray && (
+    {/* The card's shadow in its place in the tray: a plain shape the size of the card, with nothing in it. It is there from the start, behind the card (which covers it), so the card leaves it showing the moment it is dragged off, and it stays for as long as the card is away, until the card comes back. A card that cannot be dragged (`tapOnly`) has none. */}
+    {printStays && tray && !tapOnly && (
       <span
         aria-hidden
-        className={`pointer-events-none absolute transition-opacity duration-150 ${away || offHome ? "opacity-100" : "opacity-0"}`}
+        className="pointer-events-none absolute"
         style={{ left: home.x, top: home.y, width: size.width, height: size.height, zIndex: 0, borderRadius: radius, backgroundColor: SHADOW }}
       />
     )}
@@ -397,54 +389,55 @@ function ArrangeCard({
           offsetY: (event.clientY - rect.top) / scale,
           moved: false,
         };
-        setDragging(true);
+        if (!tapOnly) setDragging(true);
         window.clearTimeout(letGoTimer.current);
         heldSince.current = performance.now();
         setHeld(true);
       }}
       onPointerMove={(event) => {
         const now = drag.current;
-        if (!now) return;
+        // A tap-only card stays where it is, whatever the pointer does.
+        if (!now || tapOnly) return;
         const dx = event.clientX - now.startX;
         const dy = event.clientY - now.startY;
-        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) {
-          now.moved = true;
-          window.clearTimeout(awayTimer.current);
-          setAway(true);
-        }
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
         x.set(now.fromX + dx / now.scale);
         y.set(now.fromY + dy / now.scale);
       }}
-      onPointerUp={() => {
+      onPointerUp={(event) => {
         const now = drag.current;
         drag.current = null;
         setDragging(false);
         letGo();
         if (!now) return;
-        if (now.moved) {
-          onDrop({ x: x.get(), y: y.get() }, { x: x.get() + now.offsetX, y: y.get() + now.offsetY });
-          settleAway();
+        if (tapOnly) {
+          // Like a button: it is a tap if the pointer is let go over the card (the pointer is captured, so the card is told wherever it is let go).
+          const rect = event.currentTarget.getBoundingClientRect();
+          if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) onTap?.();
+          return;
         }
+        if (now.moved) onDrop({ x: x.get(), y: y.get() }, { x: x.get() + now.offsetX, y: y.get() + now.offsetY });
         else onTap?.();
         // Back to its place if nothing changed; a move gets here through `at`.
         animate(x, at.x, CARD_SPRING);
         animate(y, at.y, CARD_SPRING);
       }}
       onPointerCancel={() => {
-        if (drag.current?.moved) settleAway();
         drag.current = null;
         setDragging(false);
         letGo();
         animate(x, at.x, CARD_SPRING);
         animate(y, at.y, CARD_SPRING);
       }}
+      // A tap-only card is also pressed with the keyboard (Enter or Space is a click with no pointer: `detail` 0).
+      onClick={tapOnly ? (event) => { if (event.detail === 0) onTap?.(); } : undefined}
       // A pressed card (`sink`) does not grow: it is pushed down onto its edge, like the buttons.
       // Picked by a tap (`selected`): it bounces (scale 1, 0.95, 1.05, 1) as the module's picked answers do.
       animate={{ scale: selected ? [1, 0.95, 1.05, 1] : dragging && !sink ? 1.05 : 1 }}
       transition={selected !== undefined ? { duration: 0.4, ease: "easeOut" } : undefined}
       // Picked by a tap: the module's picked-answer look (see `PICKED_LOOK`), its edge green and still raised.
       style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1, borderRadius: radius, ...(wrong ? WRONG_LOOK : selected ? PICKED_LOOK : filled ? FILLED_LOOK : null) }}
-      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center px-1.5 ${line} ${sink ? `${held ? PRESSED : RAISED_DRAG} transition-[translate,box-shadow] duration-100 ease-out` : RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center px-1.5 ${line} ${sink ? `${held ? PRESSED : RAISED_DRAG} transition-[translate,box-shadow] duration-100 ease-out` : RAISED_DRAG} ${EDGE.khaki} ${tapOnly ? "enabled:cursor-pointer" : "enabled:cursor-grab enabled:active:cursor-grabbing"} ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
       {/* The hint's orange fill, wiped in from the left behind the content. */}
       <motion.span
@@ -455,6 +448,24 @@ function ArrangeCard({
         className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
       />
       {content}
+      {/* Pointed at (by a hint's hand): a pale orange tint behind the words while the hand is on it, and a shine crossing it once. No float; it goes with the hand. */}
+      <motion.span
+        aria-hidden
+        initial={false}
+        animate={{ opacity: pointed ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
+      />
+      {pointed && (
+        <motion.span
+          aria-hidden
+          initial={{ x: -60, opacity: 0 }}
+          animate={{ x: [-60, size.width + 20], opacity: [0, 1, 1, 0] }}
+          transition={{ duration: POINT_SHINE_S, ease: "easeInOut", opacity: { duration: POINT_SHINE_S, times: [0, 0.2, 0.8, 1] } }}
+          style={{ skewX: -20, backgroundImage: SHINE_BAND }}
+          className="pointer-events-none absolute inset-y-0 left-0 w-14"
+        />
+      )}
       {/* The shine: a slim slanted band of light crossing the card once, from left to right, clipped by the card. */}
       {shining && (
         <motion.span
@@ -516,6 +527,8 @@ export function ArrangeBoard({
   bounce = false,
   wrongIds = [],
   lockedIds = [],
+  pointedId = null,
+  tapOnly = false,
   activeSlot,
   numbered = false,
   onPlace,
@@ -538,11 +551,16 @@ export function ArrangeBoard({
   wrongIds?: readonly string[];
   /** Cards that can no longer be moved (they were given their place for good): they cannot be touched. */
   lockedIds?: readonly string[];
+  /** The card a hint's hand is pointing at, for as long as it points: it takes a pale orange tint and one shine, and nothing else (it does not float, unlike `hintedId`). */
+  pointedId?: string | null;
+  /** The cards cannot be dragged, only tapped (so `onPlace` is not needed): they stay in their places and are given their numbers by `onTap`. */
+  tapOnly?: boolean;
   /** Only this slot is open (the one that is next, with circle slots): it is outlined in green and pulses, an empty slot after it is dimmed. `undefined`: all slots are alike. */
   activeSlot?: number;
   /** A card in a slot shows the slot's number on its corner (a round badge), as the slot's own number is under the card. */
   numbered?: boolean;
-  onPlace: (id: string, slot: number | null) => void;
+  /** A card is dropped: `slot` is the slot it was let go on (`null` for none). Not needed with `tapOnly`. */
+  onPlace?: (id: string, slot: number | null) => void;
   /** Tapping a card; without it a tap does nothing (cards that can only be swapped). */
   onTap?: (id: string) => void;
   /** Makes each slot a button; tapping one is how a picked card (see `selectedId`) is put in it. Without it the slots are only drawn. */
@@ -626,9 +644,11 @@ export function ArrangeBoard({
             selected={onSlotTap ? card.id === selectedId : undefined}
             wrong={wrongIds.includes(card.id)}
             locked={lockedIds.includes(card.id)}
+            pointed={card.id === pointedId}
+            tapOnly={tapOnly}
             filled={!!geo.circles && placed >= 0}
             number={(numbered || !!geo.circles) && placed >= 0 ? placed + 1 : undefined}
-            onDrop={(to, pointer) => onPlace(card.id, geo.circles ? slotNear(pointer, geo) : slotAt(to, geo))}
+            onDrop={(to, pointer) => onPlace?.(card.id, geo.circles ? slotNear(pointer, geo) : slotAt(to, geo))}
             onTap={onTap ? () => onTap(card.id) : undefined}
           />
         );

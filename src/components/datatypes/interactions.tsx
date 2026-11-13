@@ -29,8 +29,6 @@ const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
 export const SHAKE = [0, -7, 7, -5, 5, 0];
 /** A press that moves less than this far (px) is a tap, not a drag. */
 const TAP_SLOP = 6;
-/** A card's print stays showing this long (ms) after it is dropped, while the card glides back or leaves. */
-const AWAY_AFTER_DROP_MS = 450;
 /** A wrong card shakes red for this long (ms). */
 export const WRONG_MS = 600;
 
@@ -49,6 +47,7 @@ export function DragCard({
   style,
   disabled,
   placed = false,
+  shadow = true,
   onTap,
   onDrop,
   label,
@@ -59,6 +58,8 @@ export function DragCard({
   disabled?: boolean;
   /** The card has been put in its group: it is no longer here (it fades out and cannot be touched) and only its shadow stays, keeping its place in the tray. */
   placed?: boolean;
+  /** Whether the card brings its own shadow (it does by default); `false` when what holds the card already has one in the card's place (see `GroupStage`). */
+  shadow?: boolean;
   onTap: () => void;
   onDrop: (clientX: number, clientY: number) => void;
   label: string;
@@ -67,26 +68,20 @@ export function DragCard({
   const y = useMotionValue(0);
   const drag = useRef<{ startX: number; startY: number; scale: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
-  // Dragged off its place (or just dropped and still gliding back): the print of the card shows there.
-  const [away, setAway] = useState(false);
-  const awayTimer = useRef<number | undefined>(undefined);
-  const settleAway = () => {
-    window.clearTimeout(awayTimer.current);
-    awayTimer.current = window.setTimeout(() => setAway(false), AWAY_AFTER_DROP_MS);
-  };
-  useEffect(() => () => window.clearTimeout(awayTimer.current), []);
   const home = () => {
     animate(x, 0, SPRING);
     animate(y, 0, SPRING);
   };
   return (
     <div className="relative flex">
-    {/* The card's shadow where it was: a plain shape the size of the card (its own classes, with nothing in it) that stays in place while the card is dragged away, and for good once the card has been placed (`placed`). Hidden with the card in place. */}
-    <div
-      aria-hidden
-      className={`${className} pointer-events-none absolute inset-0 transition-opacity duration-150 ${away || placed ? "opacity-100" : "opacity-0"}`}
-      style={{ ...style, boxShadow: "none", backgroundColor: "rgba(0,0,0,0.09)", borderColor: "transparent" }}
-    />
+    {/* The card's shadow in its place: a plain shape the size of the card (its own classes, with nothing in it), there from the start behind the card (which covers it), so it is already showing when the card is dragged away; it stays in place while the card is away, and for good once the card has been placed (`placed`). */}
+    {shadow && (
+      <div
+        aria-hidden
+        className={`${className} pointer-events-none absolute inset-0`}
+        style={{ ...style, boxShadow: "none", backgroundColor: "rgba(0,0,0,0.09)", borderColor: "transparent" }}
+      />
+    )}
     <motion.button
       type="button"
       aria-label={label}
@@ -104,11 +99,7 @@ export function DragCard({
         if (!now) return;
         const dx = event.clientX - now.startX;
         const dy = event.clientY - now.startY;
-        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) {
-          now.moved = true;
-          window.clearTimeout(awayTimer.current);
-          setAway(true);
-        }
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
         x.set(dx / now.scale);
         y.set(dy / now.scale);
       }}
@@ -117,14 +108,11 @@ export function DragCard({
         drag.current = null;
         setDragging(false);
         if (!now) return;
-        if (now.moved) {
-          settleAway();
-          onDrop(event.clientX, event.clientY);
-        } else onTap();
+        if (now.moved) onDrop(event.clientX, event.clientY);
+        else onTap();
         home();
       }}
       onPointerCancel={() => {
-        if (drag.current?.moved) settleAway();
         drag.current = null;
         setDragging(false);
         home();

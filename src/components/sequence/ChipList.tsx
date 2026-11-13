@@ -18,8 +18,6 @@ const TAP_SLOP = 6;
 /** A chip dropped within this far (px) of a place goes there. */
 const REACH = 70;
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
-/** A chip's print stays showing this long (ms) after it is dropped, while the chip settles. */
-const AWAY_AFTER_DROP_MS = 450;
 
 /** How the `max` places are laid out: rows as even as they can be (5 is 3 + 2). */
 const rowsFor = (max: number) => {
@@ -73,14 +71,6 @@ function Chip({
   const y = useMotionValue(at.y);
   const drag = useRef<{ startX: number; startY: number; fromX: number; fromY: number; scale: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
-  // Dragged off its place (or just dropped and still settling): the print of the chip shows there.
-  const [away, setAway] = useState(false);
-  const awayTimer = useRef<number | undefined>(undefined);
-  const settleAway = () => {
-    window.clearTimeout(awayTimer.current);
-    awayTimer.current = window.setTimeout(() => setAway(false), AWAY_AFTER_DROP_MS);
-  };
-  useEffect(() => () => window.clearTimeout(awayTimer.current), []);
 
   useEffect(() => {
     if (drag.current) return;
@@ -107,11 +97,14 @@ function Chip({
 
   return (
     <>
-    {/* The chip's shadow where it was: a plain shape the size of the chip, with nothing in it, that stays in its place while the chip is dragged away (and a moment after the drop). A chip has no place of its own to leave it for good: the list reorders, and the numbered outlines are its places. Hidden with the chip in place. */}
-    <span
+    {/* The chip's shadow in its place: a plain shape the size of the chip, with nothing in it, there from the start behind the chip (which covers it, and which it appears with), so it is already showing when the chip is dragged away and stays in its place while the chip is away. It follows the chip's place when the list reorders. */}
+    <motion.span
       aria-hidden
-      className={`pointer-events-none absolute rounded-[10px] transition-opacity duration-150 ${away ? "opacity-100" : "opacity-0"}`}
-      style={{ left: at.x, top: at.y, width: CHIP.width, height: CHIP.height, zIndex: 0, backgroundColor: "rgba(0,0,0,0.09)" }}
+      initial={{ opacity: 0, left: at.x, top: at.y }}
+      animate={{ opacity: 1, left: at.x, top: at.y }}
+      transition={{ opacity: { duration: 0.2 }, left: SPRING, top: SPRING }}
+      className="pointer-events-none absolute rounded-[10px]"
+      style={{ width: CHIP.width, height: CHIP.height, zIndex: 0, backgroundColor: "rgba(0,0,0,0.09)" }}
     />
     <motion.button
       type="button"
@@ -138,11 +131,7 @@ function Chip({
         if (!now) return;
         const dx = event.clientX - now.startX;
         const dy = event.clientY - now.startY;
-        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) {
-          now.moved = true;
-          window.clearTimeout(awayTimer.current);
-          setAway(true);
-        }
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
         x.set(now.fromX + dx / now.scale);
         y.set(now.fromY + dy / now.scale);
       }}
@@ -152,7 +141,6 @@ function Chip({
         setDragging(false);
         if (!now) return;
         if (!now.moved) return onRemove(index);
-        settleAway();
         let nearest = index;
         let nearestDistance = Infinity;
         for (let place = 0; place < count; place += 1) {
@@ -167,7 +155,6 @@ function Chip({
         else home();
       }}
       onPointerCancel={() => {
-        if (drag.current?.moved) settleAway();
         drag.current = null;
         setDragging(false);
         home();
