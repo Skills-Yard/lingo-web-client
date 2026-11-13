@@ -85,7 +85,7 @@ type ActionRowProps = {
   /** The row's widest width (px) — it keeps its phone size on a desktop. */
   maxWidth: number;
   /** Shows the hint button at the left end of the row; `visible` slides it in / out. */
-  hint?: { visible: boolean; onUse: () => void };
+  hint?: { visible: boolean; onUse: () => void; /** Shown dimmed, and takes no taps. */ disabled?: boolean };
   answer?: AnswerResult | null;
   /** Label of the main button. */
   ctaLabel: string;
@@ -126,6 +126,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
             visible={hint.visible}
             count={HINTS_LEFT}
             size={HINT_SIZE}
+            disabled={hint.disabled}
             onPress={() => {
               playClickSound();
               hint.onUse();

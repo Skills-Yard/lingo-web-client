@@ -68,6 +68,14 @@ Built from the "2. Sequence - Scenario 1" spec (its screen number is in brackets
 | `/module/sequence?step=24` | "You've mastered Sequence!" (recap, then the gem popup) [20] |
 | `/module/sequence?step=complete` | "Lesson complete!" |
 
+Copies of three of these screens with the 3D character (see `/character`) in Hex's place, played in order (`STEPS_3D` in `components/sequence/sequence3d.ts`; after the last, Next carries on in the original module). A loading bar loads everything first (the route's layout, `Sequence3dAssetsGate`: the character model, the voices in `public/audios/3D-Screens`, the pictures, and the character's canvas drawing its first frames). The character can't be touched and talks while the voiceover plays (or, with none, for as long as the line takes to read); there is no speech bubble. It starts in the middle of the screen; a fifth into the voice it moves to the far left and the room, on a framed board (`RoomBoard.tsx`), slides in at the right; at three quarters the answers slide up; the main button and the hint stay off until the voice is done:
+
+| Route | Screen |
+|---|---|
+| `/module/sequence-3d?step=1` (also `/module/sequence-3d`) | Copy of step 1, "What to put on first?" |
+| `/module/sequence-3d?step=3` | Copy of step 3, "Let's Put On Shoes!" |
+| `/module/sequence-3d?step=7` | Copy of step 7, "Think one step ahead." |
+
 ## Variable module
 
 Built from the "3. Variable" spec (its screen number is in brackets; screens with an interaction and a question have two stages on the one step). `step` numbers are the module's own order (`STEP` in `components/variable/variable.ts`).

@@ -29,12 +29,18 @@ type AnimatedCharacterProps = {
   playing: boolean;
   /** The animation has played through once and starts over. */
   onLoop: () => void;
+  /**
+   * The mouth moves, for an animation that has a lip-sync clip. Turning it on starts
+   * that clip from its start and the body carries on, so a voice that says the lip clip's
+   * line only after something else can have it begin with that line.
+   */
+  lipSync?: boolean;
 };
 
 /** What plays for one animation: the body, and the mouth when it has a lip-sync clip. */
 type Playback = { body: AnimationAction; lips: AnimationAction | null };
 
-const AnimatedCharacter = ({ character, animationId, runToken, playing, onLoop }: AnimatedCharacterProps) => {
+export const AnimatedCharacter = ({ character, animationId, runToken, playing, onLoop, lipSync = true }: AnimatedCharacterProps) => {
   const { mixer, playbacks } = useMemo(() => {
     const mixer = new AnimationMixer(character.model);
     const playbacks = new Map<string, Playback>();
@@ -55,13 +61,20 @@ const AnimatedCharacter = ({ character, animationId, runToken, playing, onLoop }
     if (!next) return;
     const previous = current.current;
     next.body.reset().play();
-    next.lips?.reset().play();
     if (previous && previous !== next) {
       previous.body.crossFadeTo(next.body, FADE_SECONDS, false);
       previous.lips?.fadeOut(FADE_SECONDS);
     }
     current.current = next;
   }, [playbacks, animationId, runToken]);
+
+  // The mouth: starts over with the body, or when `lipSync` turns on, and goes still when it turns off.
+  useEffect(() => {
+    const lips = current.current?.lips;
+    if (!lips) return;
+    if (lipSync) lips.reset().play();
+    else lips.fadeOut(FADE_SECONDS);
+  }, [playbacks, animationId, runToken, lipSync]);
 
   // An animation blending out also loops; only the one that is playing counts.
   useEffect(() => {
@@ -87,10 +100,19 @@ const AnimatedCharacter = ({ character, animationId, runToken, playing, onLoop }
   return <primitive object={character.scene} />;
 };
 
+/** The light the character is seen in, wherever it is shown. */
+export const SceneLights = () => (
+  <>
+    <hemisphereLight args={["#ffffff", "#8a94a6", 1.3]} />
+    <directionalLight position={[3, 5, 4]} intensity={2.8} />
+    <directionalLight position={[-4, 3, -3]} intensity={1.6} color="#7fe0c8" />
+  </>
+);
+
 const SHADOW_TEXTURE_SIZE = 128;
 
 /** A soft dark disc under the feet: a baked radial gradient, so it costs no render pass of its own. */
-const GroundShadow = () => {
+export const GroundShadow = () => {
   const texture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = SHADOW_TEXTURE_SIZE;
@@ -189,9 +211,7 @@ export const CharacterScene = ({
     // Nothing moves while paused: stop drawing frames until the user does something.
     frameloop={playing || autoRotate ? "always" : "demand"}
   >
-    <hemisphereLight args={["#ffffff", "#8a94a6", 1.3]} />
-    <directionalLight position={[3, 5, 4]} intensity={2.8} />
-    <directionalLight position={[-4, 3, -3]} intensity={1.6} color="#7fe0c8" />
+    <SceneLights />
 
     <AnimatedCharacter
       character={character}

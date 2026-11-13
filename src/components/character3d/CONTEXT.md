@@ -34,6 +34,16 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 | `StageDecor.tsx` | Backdrop and picture overlay (both load with the page so nothing pops in late). |
 | `CharacterViewer.tsx` | The page UI: chips, buttons, stage, loading and error messages. |
 
+The character is also used as a **picture on other screens** (the 3D copies of the Sequence screens, `/module/sequence-3d`):
+
+| File | Job |
+|---|---|
+| `sharedCharacter.ts` | Loads the character **once** per visit (never freed) and reports progress; `useSharedCharacter()`. |
+| `portraitHost.tsx` | `PortraitHost` (mounted in the route's layout, behind its loading bar) makes **one** R3F canvas, draws its first frames there (shaders, textures), and keeps it. The canvas lives in a parking box off screen and is moved into whichever screen's slot asks; its own size is fixed (380 x 680) and it is scaled to the slot by CSS, because a resized canvas rebuilds its drawing buffers (seconds on a slow machine). The screen sets the pose (animation, lip-sync) through `setPortraitPose`. |
+| `CharacterPortrait.tsx` | The slot a screen renders: takes the shared canvas into its box (no controls, no taps) and sets the pose. Needs `PortraitHost` above it. |
+
+`AnimatedCharacter` / `SceneLights` / `GroundShadow` are exported from `CharacterScene.tsx` for this; `AnimatedCharacter` has a `lipSync` prop (default true).
+
 Add an animation: name another clip of the model, or export it from Mixamo ("without skin", same
 skeleton), put the `.glb` in `public/animations`, add a line to `ANIMATIONS`.
 
