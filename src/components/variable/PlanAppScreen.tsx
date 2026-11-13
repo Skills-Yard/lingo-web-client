@@ -15,6 +15,7 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger, setSceneValues } from "@/lib/rive/variableHost";
+import { useBubbleSize } from "./bubbleWidth";
 import { HEX_ROW_TOP, MiniAppBackdrop } from "./scenes";
 import { IDLE_LOOK, OPTION, parseTitle } from "./quiz";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
@@ -47,12 +48,16 @@ const EXAMPLE_MS = { first: 500, second: 1500, result: 2600 } as const;
  * (10 and 20 are asked for and kept, and 30 is shown); a wrong one is tried again. This is the point where the learner
  * sees why the app has to keep the two numbers.
  */
+/** What Hex says, in a bubble wide enough to hold it in two lines (see `useBubbleSize`). */
+const HEX_LINE = "Tap the steps for our app in order.";
+
 export function PlanAppScreen() {
   const router = useRouter();
   const [order, setOrder] = useState<readonly string[]>([]);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const bubble = useBubbleSize(HEX_LINE);
   const full = order.length === STEPS.length;
   const correct = full && ANSWER.every((id, index) => order[index] === id);
 
@@ -156,7 +161,7 @@ export function PlanAppScreen() {
         </span>
       </ScreenTitle>
       <div className="absolute inset-x-0 flex justify-center" style={{ top: HEX_ROW_TOP }}>
-        <HexBubble key={attempt} entryKey={`variable-plan-${attempt}`} hex="left" line={[{ text: "Tap the steps for our app in order." }]} size={{ width: 190 }} leaving={checked} />
+        <HexBubble key={attempt} entryKey={`variable-plan-${attempt}`} hex="left" line={[{ text: HEX_LINE }]} size={bubble} leaving={checked} />
       </div>
       {/* The steps stand under the app, on the white below it, two across. Three rows of them (196px) do not fit between the risen app and the result panel, so any check fades them in place (they never rise over the app): a right plan then runs on the app, a wrong one gets the result panel and a try again. */}
       <motion.div

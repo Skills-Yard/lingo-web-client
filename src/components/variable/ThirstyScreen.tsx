@@ -16,6 +16,7 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger } from "@/lib/rive/variableHost";
+import { useBubbleSize } from "./bubbleWidth";
 import { HEX_ROW_TOP, TrekBackdrop } from "./scenes";
 import { OPTION } from "./quiz";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
@@ -40,12 +41,16 @@ const RIGHT_RING = "border-[#58CC02]";
 const WRONG_RING = "border-[#E5484D]";
 
 /** "What do we need now?": the friends are thirsty; the learner picks what they need from three objects. */
+/** What Hex says, in a bubble wide enough to hold it in two lines (see `useBubbleSize`). */
+const HEX_LINE = "You and your friends are getting thirsty!!!";
+
 export function ThirstyScreen() {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [attempt, setAttempt] = useState(0);
+  const bubble = useBubbleSize(HEX_LINE);
 
   const right = selectedId === CORRECT_ID;
 
@@ -105,8 +110,8 @@ export function ThirstyScreen() {
           key={attempt}
           entryKey={`variable-thirsty-${attempt}`}
           hex="left"
-          line={[{ text: "You and your friends are getting thirsty!!!" }]}
-          size={{ width: 190 }}
+          line={[{ text: HEX_LINE }]}
+          size={bubble}
           leaving={checked}
         />
       </CentredRow>

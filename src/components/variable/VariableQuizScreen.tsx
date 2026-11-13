@@ -11,7 +11,7 @@ import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
 import { BELOW_TITLE, BottleBackdrop, BottleWalletBackdrop, ClassroomBackdrop, GAP_BELOW_SCENE, HEX_LIFT, ItemsBackdrop, MiniAppBackdrop, NamesBackdrop, SCENE_BOTTOM_LIFTED_PHONE, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
-import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
+import { COLUMN_LEFT, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -20,6 +20,7 @@ import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger } from "@/lib/rive/variableHost";
 import { TipCard } from "@/components/sequence/HexScreen";
+import { useBubbleSize } from "./bubbleWidth";
 import { IDLE_LOOK, MAX_OPTION_WORDS, OPTION, parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
 import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIABLE_STEPS, type SceneKind } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
@@ -70,9 +71,6 @@ const backdropFor = (scene: SceneKind, step: number, lifted: boolean) => {
       return <TrekBackdrop noWater={step === STEP.noWater} lifted={lifted} />;
   }
 };
-
-/** Hex's line is two lines at most: a short one fits the narrow bubble. */
-const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 44 ? 190 : 240 });
 
 /** Four answers this short stand as two rows of two cards. */
 const FOUR_ANSWER_CHARS = 18;
@@ -269,6 +267,9 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const shownCorrectId = checked && !right ? "" : alsoOk ? (selectedId ?? "") : (quiz?.correctId ?? "");
   const hasHint = quiz ? !!quiz.hintText || !!quiz.hintVisual : !!interaction?.hint;
   const hintShown = hinted || (!!quiz?.hintOnMiss && attempt > 0);
+  // What Hex says (the hint's sentence replaces the line once it is shown), and the bubble that holds it in two lines.
+  const sayLine = quiz ? (hintShown && quiz.hintText ? quiz.hintText : quiz.line) : "";
+  const bubble = useBubbleSize(sayLine);
   // A right answer clears the screen: the answers fade out and, as Hex and his bubble run off, the scene rises into their room. (A wrong one keeps the answers, for another try.)
   const cleared = !!quiz && checked && right;
   // Hex and his bubble leave after any check, right or wrong, and the scene rises into their room at the head, clear of the answers that rise from below (a wrong answer's stay for another try).
@@ -430,7 +431,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               transition={{ duration: 0.35 }}
               // Hex's bubble is lifted (see `HEX_LIFT`), clear of the picture's top; only it moves, what is under it stays where it was.
               style={{ overflow: checked ? "hidden" : "visible", top: longLine ? 0 : -HEX_LIFT }}
-              className="relative flex w-full shrink-0 justify-center px-4"
+              // Only 4px in from the edges: Hex and a wide bubble (up to 272px, see `bubbleWidth`) need the room.
+              className="relative flex w-full shrink-0 justify-center px-1"
             >
               {longLine ? (
                 <div className="w-[340px]">
@@ -442,7 +444,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
                   entryKey={`variable-${screen.step}-${stageIndex}-${attempt}`}
                   hex="left"
                   line={[{ text: hintShown && quiz.hintText ? quiz.hintText : quiz.line }]}
-                  size={bubbleSize(hintShown && quiz.hintText ? quiz.hintText : quiz.line)}
+                  size={bubble}
                   leaving={checked}
                 />
               )}

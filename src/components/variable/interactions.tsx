@@ -12,11 +12,13 @@ import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSc
 import { OPTION, type InteractionApi } from "./quiz";
 import { artboardRect, BELOW_TITLE, GAP_BELOW_SCENE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, type ArtboardRect } from "./scenes";
 import { ArcMeter } from "./ArcMeter";
+import { useBubbleSize } from "./bubbleWidth";
 import { TapHint, type TapTarget } from "./TapHint";
 import { CARD } from "./visuals";
 
-/** A line of narration: Hex says a short one, a long one goes on a card. */
+/** A line of narration: Hex says a short one (in a bubble wide enough to hold it in two lines), a long one goes on a card. */
 export function Narration({ text, entry }: { text: string; entry: string }) {
+  const bubble = useBubbleSize(text);
   if (text.length > 120) {
     return (
       <div className="w-[340px] shrink-0">
@@ -24,11 +26,10 @@ export function Narration({ text, entry }: { text: string; entry: string }) {
       </div>
     );
   }
-  const width = text.length <= 44 ? 190 : 240;
   return (
     // Lifted like the quiz screens' bubble (see `HEX_LIFT`); what is under it stays where it was.
     <div className="relative shrink-0" style={{ top: -HEX_LIFT }}>
-      <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={{ width }} />
+      <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={bubble} />
     </div>
   );
 }
@@ -448,13 +449,15 @@ export function ClassifyStage({ slip: slipped, done, finished, hint }: Interacti
   );
 }
 
+/** The spots, left to right: each shows only its amount (not which product it is, which would give the answer away), and the id of the name that belongs on it. */
 const MATCH_ITEMS = [
-  { id: "notebook_price", emoji: "📓", name: "Notebook", price: 50 },
-  { id: "pen_price", emoji: "🖊️", name: "Pen", price: 20 },
+  { id: "notebook_price", price: 50 },
+  { id: "pen_price", price: 20 },
 ] as const;
+/** The names to drag are set as plain words, as a button's label, without "price" (the screen's line already says it is a price they are matched to); the ids stay the variables' names. */
 const MATCH_CARDS: readonly ArrangeCardDef[] = [
-  { id: "pen_price", kind: "pen_price", text: "pen_price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
-  { id: "notebook_price", kind: "notebook_price", text: "notebook_price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
+  { id: "pen_price", kind: "pen_price", text: "Pen", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
+  { id: "notebook_price", kind: "notebook_price", text: "Notebook", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
 ];
 /**
  * The spots (a product and its price) stand in a row on top and the names to drag in a row under them: what is dragged
@@ -474,16 +477,43 @@ const MATCH_GEO = arrangeGeometry({
   radius: OPTION.radius,
   // Held, a name is pressed like their buttons are: its face sinks onto the raised edge.
   sink: true,
+  // The same text size as the answer buttons (16), not the 12 a card this short would get.
+  fontSize: OPTION.font,
 });
 /** The note under the board: one line (the longer "check" line fits it too). */
 const MATCH_NOTE_H = 20;
 
-/** Screen 19: drag each product's name up onto the spot of its price. */
+/**
+ * Screen 19: drag each product's name up onto the spot of its price, or tap a name to pick it (it is framed in green
+ * and the spots light up) and then tap the price it belongs to. Tapping the picked name again lets it go; with a name
+ * picked, tapping a name that is already on a spot puts the picked one there instead (the two swap places).
+ */
 export function MatchPricesStage({ slip: slipped, done, finished }: InteractionApi) {
   const { slots, placeIn, reset } = useArrange(MATCH_CARDS.map((card) => card.id), MATCH_GEO.count);
   const [slip, setSlip] = useState(false);
+  // The name picked by a tap, waiting for a price.
+  const [picked, setPicked] = useState<string | null>(null);
   const full = slots.every((slot) => slot !== null);
   const right = full && slots.every((id, index) => id === MATCH_ITEMS[index].id);
+
+  /** Puts a name on a spot (dragged or tapped there); the product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2). */
+  const place = (id: string, slot: number | null) => {
+    setSlip(false);
+    setPicked(null);
+    placeIn(id, slot);
+    setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
+  };
+  const tapName = (id: string) => {
+    const spot = slots.indexOf(id);
+    // A name that is on a spot stands for that spot: with another name picked, that one goes there.
+    if (picked && picked !== id && spot >= 0) return place(picked, spot);
+    playClickSound();
+    vibrateForTap();
+    setPicked(picked === id ? null : id);
+  };
+  const tapSpot = (index: number) => {
+    if (picked) place(picked, index);
+  };
   // The shop counter behind (see `ShopBackdrop`) starts with the names shown and nothing lit.
   useEffect(() => {
     setSceneValues("shop", { showEraser: false, showNames: true, showTotal: false, highlight: 0 });
@@ -499,6 +529,7 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
     const timer = window.setTimeout(() => {
       slipped();
       setSlip(true);
+      setPicked(null);
       setSceneValues("shop", { highlight: 0 });
       reset();
     }, 900);
@@ -515,24 +546,17 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
             slots={slots}
             geo={MATCH_GEO}
             disabled={finished || (full && !right)}
-            onPlace={(id, slot) => {
-              setSlip(false);
-              placeIn(id, slot);
-              // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
-              setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
-            }}
-            slotContent={(index) => (
-              <span className="flex items-center gap-1.5 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
-                <span aria-hidden className="text-[26px] leading-none">
-                  {MATCH_ITEMS[index].emoji}
-                </span>
-                {MATCH_ITEMS[index].name} <span className="rounded-full bg-[#FFB300] px-1.5 py-0.5 text-[12px] font-bold text-white">₹{MATCH_ITEMS[index].price}</span>
-              </span>
-            )}
+            selectedId={picked}
+            onPlace={place}
+            onTap={tapName}
+            onSlotTap={tapSpot}
+            slotLabel={(index) => `Price ₹${MATCH_ITEMS[index].price}`}
+            // An empty spot shows only its amount: which name belongs on it is for the learner to work out from the shop counter.
+            slotContent={(index) => <span className="rounded-full bg-[#FFB300] px-3.5 py-1 text-[18px] leading-6 font-bold text-white">₹{MATCH_ITEMS[index].price}</span>}
           />
         </div>
         <p className="w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]" style={{ height: MATCH_NOTE_H }}>
-          {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
+          {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : picked ? "Now tap the price it belongs to." : "Drag or tap a name, then a price."}</span>}
         </p>
       </div>
     </div>

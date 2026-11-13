@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { aboveButtons } from "@/components/level-two/LevelTwoShell";
@@ -40,10 +40,12 @@ type ArrangeLayout = {
   radius?: number;
   /** A card held (pressed or dragged) is pressed like a button: its face sinks onto its raised edge, instead of growing a little and keeping the edge. */
   sink?: boolean;
+  /** The cards' text size (px), on a 20px line, in place of the size their height gives them (12px for a short card). */
+  fontSize?: number;
 };
 
 /** Where everything stands on the board, and how big the board is. */
-export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false, line = "border-4 border-white dark:border-[#818185]", radius = 8, sink = false }: ArrangeLayout) => {
+export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false, line = "border-4 border-white dark:border-[#818185]", radius = 8, sink = false, fontSize }: ArrangeLayout) => {
   const columns = mode === "columns";
   const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: tray && slotsOnTop ? card.height + lane : 0 });
   const slot = (index: number): Point =>
@@ -55,7 +57,7 @@ export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "
     : { width: count * card.width + (count - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
   /** A card dropped within this far (px) of a slot's corner goes in it. */
   const reach = card.height * 0.87;
-  return { count, card, tray, solidSlots, home, slot, board, reach, sentence, line, radius, sink };
+  return { count, card, tray, solidSlots, home, slot, board, reach, sentence, line, radius, sink, fontSize };
 };
 export type ArrangeGeometry = ReturnType<typeof arrangeGeometry>;
 
@@ -64,6 +66,10 @@ const PRESSED = "translate-y-1 shadow-[0_0_0_var(--edge)]";
 
 /** Below this far (px) a press and release is a tap, not a drag. */
 const TAP_SLOP = 6;
+/** A pressed card (`sink`) stays pushed down at least this long (ms), so a quick tap still shows its 3D press. */
+const MIN_PRESS_MS = 160;
+/** A card picked by a tap looks like the module's picked answers: a 4px green border, a pale mint face and the green raised edge. */
+const PICKED_LOOK = { borderWidth: 4, borderColor: "#01A17F", backgroundColor: "#F2FBF8", "--edge": "#008566" } as CSSProperties;
 const CARD_SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
@@ -138,9 +144,11 @@ function ArrangeCard({
   line,
   radius,
   sink,
+  fontSize,
   at,
   disabled,
   hinted,
+  selected,
   onDrop,
   onTap,
 }: {
@@ -150,9 +158,12 @@ function ArrangeCard({
   line: string;
   radius: number;
   sink: boolean;
+  fontSize?: number;
   at: Point;
   disabled: boolean;
   hinted: boolean;
+  /** Picked by a tap: framed in green. `undefined` on a board whose cards cannot be picked (no `aria-pressed` then). */
+  selected?: boolean;
   onDrop: (to: Point) => void;
   onTap?: () => void;
 }) {
@@ -160,6 +171,15 @@ function ArrangeCard({
   const y = useMotionValue(at.y);
   const drag = useRef<{ startX: number; startY: number; fromX: number; fromY: number; scale: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
+  // The pressed look of a `sink` card: from the press until the release, but for `MIN_PRESS_MS` at least.
+  const [held, setHeld] = useState(false);
+  const heldSince = useRef(0);
+  const letGoTimer = useRef<number | undefined>(undefined);
+  const letGo = () => {
+    window.clearTimeout(letGoTimer.current);
+    letGoTimer.current = window.setTimeout(() => setHeld(false), Math.max(0, MIN_PRESS_MS - (performance.now() - heldSince.current)));
+  };
+  useEffect(() => () => window.clearTimeout(letGoTimer.current), []);
   const compact = size.height < 90;
 
   useEffect(() => {
@@ -174,6 +194,7 @@ function ArrangeCard({
       type="button"
       disabled={disabled}
       aria-label={card.text}
+      aria-pressed={selected}
       onPointerDown={(event) => {
         const box = event.currentTarget;
         box.setPointerCapture(event.pointerId);
@@ -186,6 +207,9 @@ function ArrangeCard({
           moved: false,
         };
         setDragging(true);
+        window.clearTimeout(letGoTimer.current);
+        heldSince.current = performance.now();
+        setHeld(true);
       }}
       onPointerMove={(event) => {
         const now = drag.current;
@@ -200,6 +224,7 @@ function ArrangeCard({
         const now = drag.current;
         drag.current = null;
         setDragging(false);
+        letGo();
         if (!now) return;
         if (now.moved) onDrop({ x: x.get(), y: y.get() });
         else onTap?.();
@@ -210,13 +235,17 @@ function ArrangeCard({
       onPointerCancel={() => {
         drag.current = null;
         setDragging(false);
+        letGo();
         animate(x, at.x, CARD_SPRING);
         animate(y, at.y, CARD_SPRING);
       }}
       // A pressed card (`sink`) does not grow: it is pushed down onto its edge, like the buttons.
-      animate={{ scale: dragging && !sink ? 1.05 : 1 }}
-      style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1, borderRadius: radius }}
-      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center px-1.5 ${line} ${sink ? `${dragging ? PRESSED : RAISED_DRAG} transition-[translate,box-shadow] duration-100 ease-out` : RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+      // Picked by a tap (`selected`): it bounces (scale 1, 0.95, 1.05, 1) as the module's picked answers do.
+      animate={{ scale: selected ? [1, 0.95, 1.05, 1] : dragging && !sink ? 1.05 : 1 }}
+      transition={selected !== undefined ? { duration: 0.4, ease: "easeOut" } : undefined}
+      // Picked by a tap: the module's picked-answer look (see `PICKED_LOOK`), its edge green and still raised.
+      style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1, borderRadius: radius, ...(selected ? PICKED_LOOK : null) }}
+      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center px-1.5 ${line} ${sink ? `${held ? PRESSED : RAISED_DRAG} transition-[translate,box-shadow] duration-100 ease-out` : RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
       {/* The hint's orange fill, wiped in from the left behind the content. */}
       <motion.span
@@ -231,8 +260,9 @@ function ArrangeCard({
       )}
       <span
         className={`text-center font-semibold text-[#444444] dark:text-white ${
-          compact ? (sentence ? "text-[12px] leading-4" : "text-[11px] leading-[14px] tracking-[0.2px] uppercase") : "text-[14px] leading-[18px]"
+          fontSize ? "" : compact ? (sentence ? "text-[12px] leading-4" : "text-[11px] leading-[14px] tracking-[0.2px] uppercase") : "text-[14px] leading-[18px]"
         }`}
+        style={fontSize ? { fontSize, lineHeight: "20px" } : undefined}
       >
         {card.text}
       </span>
@@ -248,8 +278,11 @@ export function ArrangeBoard({
   geo,
   disabled,
   hintedId = null,
+  selectedId = null,
   onPlace,
   onTap,
+  onSlotTap,
+  slotLabel,
   slotContent,
 }: {
   cards: readonly ArrangeCardDef[];
@@ -258,34 +291,55 @@ export function ArrangeBoard({
   disabled: boolean;
   /** The card the hint points at: filled in orange and floating. */
   hintedId?: string | null;
+  /** The card picked by a tap, waiting for a slot to be tapped: framed in green (and the slots, if they can be tapped, light up). */
+  selectedId?: string | null;
   onPlace: (id: string, slot: number | null) => void;
   /** Tapping a card; without it a tap does nothing (cards that can only be swapped). */
   onTap?: (id: string) => void;
+  /** Makes each slot a button; tapping one is how a picked card (see `selectedId`) is put in it. Without it the slots are only drawn. */
+  onSlotTap?: (index: number) => void;
+  /** The slot buttons' names for a screen reader (with `onSlotTap`). */
+  slotLabel?: (index: number) => string;
   /** What an empty slot shows in place of its number (its card, when it holds one, is drawn over it). */
   slotContent?: (index: number) => ReactNode;
 }) {
   return (
     <>
-      {Array.from({ length: geo.count }, (_, index) => (
-        <div
-          key={index}
-          aria-hidden
-          className={`absolute flex items-center justify-center border-2 ${
-            geo.solidSlots
-              ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+      {Array.from({ length: geo.count }, (_, index) => {
+        const lit = onSlotTap && selectedId !== null;
+        const className = `absolute flex items-center justify-center border-2 ${
+          geo.solidSlots
+            ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+            : lit
+              ? "border-dashed border-[#01A17F] bg-[#F2FBF8] dark:border-[#4DBDA5] dark:bg-white/5"
               : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
-          }`}
-          style={{ left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height, borderRadius: geo.radius }}
-        >
-          {slotContent ? (
-            slotContent(index)
-          ) : (
-            <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
-              {index + 1}
-            </span>
-          )}
-        </div>
-      ))}
+        }`;
+        const style = { left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height, borderRadius: geo.radius };
+        const content = slotContent ? (
+          slotContent(index)
+        ) : (
+          <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
+            {index + 1}
+          </span>
+        );
+        return onSlotTap ? (
+          <button
+            key={index}
+            type="button"
+            aria-label={slotLabel?.(index) ?? `Spot ${index + 1}`}
+            disabled={disabled}
+            onClick={() => onSlotTap(index)}
+            className={`${className} enabled:cursor-pointer`}
+            style={style}
+          >
+            {content}
+          </button>
+        ) : (
+          <div key={index} aria-hidden className={className} style={style}>
+            {content}
+          </div>
+        );
+      })}
       {cards.map((card, index) => {
         const placed = slots.indexOf(card.id);
         return (
@@ -297,9 +351,11 @@ export function ArrangeBoard({
             line={geo.line}
             radius={geo.radius}
             sink={geo.sink}
+            fontSize={geo.fontSize}
             at={placed >= 0 ? geo.slot(placed) : geo.home(index)}
             disabled={disabled}
             hinted={card.id === hintedId}
+            selected={onSlotTap ? card.id === selectedId : undefined}
             onDrop={(to) => onPlace(card.id, slotAt(to, geo))}
             onTap={onTap ? () => onTap(card.id) : undefined}
           />
