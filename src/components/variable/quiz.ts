@@ -48,6 +48,12 @@ export const OPTION = {
   rise: 140,
 } as const;
 
+/**
+ * The most words an answer may have. Three answers this short stand as mini cards in one row (see `acrossCards`), so
+ * the row is one card tall and stays clear of the scene; a longer answer would not fit its card.
+ */
+export const MAX_OPTION_WORDS = 2;
+
 /** An answer: words, with a small picture (an emoji, or `node`) where the answer is an object to tap. */
 export type Option = { id: string; text: string; emoji?: string; node?: ReactNode; /** A picture file shown beside an answer in words. */ icon?: string };
 
