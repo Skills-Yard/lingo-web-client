@@ -5,29 +5,26 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { AnswerCards, CARDS_RISE, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT, type BubbleSize } from "@/components/level-two/levelTwo";
-import { TileCards } from "@/components/level-two/TileCards";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { IDLE_LOOK, OPTION } from "@/components/variable/quiz";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { fireSceneTrigger, type SceneValues } from "@/lib/rive/datatypesHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { DATATYPES_STEPS, datatypesNext, datatypesPrevious } from "./datatypes";
 import { noteAnswer, noteStruggle } from "./datatypesScore";
+import { acrossCards, answersHeight, OptionGrid } from "./OptionCards";
 import { HEX_LIFT, SceneBackdrop, sceneHeight, sceneTop } from "./scenes";
-import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef, type VisualContext } from "./screen";
+import { parseTitle, type InteractionStage, type ScreenDef, type VisualContext } from "./screen";
 
-/** A row of the list of answers, and the gap between rows (see `AnswerCards`). */
-const ROW_H = 76;
-const ROW_GAP = 6;
-/** The tiles: a card's height by how many there are, and the gap between rows. */
-const TILE_H = { 2: 184, 3: 110, 4: 104 } as const;
-const TILE_GAP = 14;
-/** How far the list of answers rises once the result panel is up (the tiles rise `CARDS_RISE`). */
-const LIST_RISE = 150;
+/*
+ * The answers (rows or cards) are the Variable module's: `OPTION` gives their size, gap, padding, corners, text and rise
+ * (see `OptionCards.tsx`).
+ */
 /** How much room the result panel takes from an interaction's area once it is up. */
 const PANEL_ROOM = 215;
 /** The least a picture is shrunk to fit its room. */
@@ -42,24 +39,6 @@ const QUESTION_CHARS = 36;
 
 /** Hex's bubble: 190 wide holds two lines of up to about 30 letters (a long word wraps early); a longer line takes the widest the row has room for (about 248), two lines of up to about 46. */
 const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 30 ? 190 : 248 });
-
-/** How the answers stand: rows, or tiles (two, three or four across and down). */
-const tileCount = (stage: QuizStage) => Math.min(4, Math.max(2, stage.options.length)) as 2 | 3 | 4;
-
-/** The special cards (see `cards`): their height, how far above the button they stand, and how far they rise once the result panel is up. */
-const CARD_SETS = {
-  big: { height: 184 * 2 + 31, gapAbove: 100, rise: 100 },
-  badges: { height: 119, gapAbove: 94, rise: 60 },
-} as const;
-
-const answersHeight = (stage: QuizStage) =>
-  stage.layout === "grid"
-    ? stage.cards
-      ? CARD_SETS[stage.cards].height
-      : tileCount(stage) === 4
-        ? TILE_H[4] * 2 + TILE_GAP
-        : TILE_H[tileCount(stage)]
-    : stage.options.length * ROW_H + (stage.options.length - 1) * ROW_GAP;
 
 /** An interaction stage's own picture and controls. */
 function InteractionHost({
@@ -234,18 +213,19 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       : null;
 
   // Hex's line for this stage (the hint replaces it).
-  const line = quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
+  const line =quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
   const gone = quiz ? checked : finished || hexDismissed;
   const bubbleWidth = interaction?.bubbleWidth ?? quiz?.bubbleWidth;
 
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
-  const tiles = !!quiz && quiz.layout === "grid";
-  const answersBottom = quiz ? aboveButtons(quiz.cards ? CARD_SETS[quiz.cards].gapAbove : GAP_ABOVE_BUTTONS, hasHint) : "0px";
+  const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
   const questionLines = quiz?.question ? Math.ceil(quiz.question.length / QUESTION_CHARS) : 0;
   const questionHeight = questionLines ? questionLines * 22 + 14 : 0;
-  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 10 + questionHeight + 8}px)` : aboveButtons(24);
+  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz.options) + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
-  const risen = quiz ? (tiles ? (quiz.cards ? CARD_SETS[quiz.cards].rise : CARDS_RISE) : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
+  const risen = quiz ? OPTION.rise : interaction?.finishPanel ? PANEL_ROOM : 0;
+  // Under a scene the answers stay where they stand (the scene has risen clear of them); without one they rise above the panel.
+  const answersRise = scene ? 0 : OPTION.rise;
   const celebrate = panel?.right === true && (quiz ? checked : finished);
   // A right answer sends the answers (and the question standing on them) up and away, as in the earlier modules.
   // Under a scene they go on a wrong one too (the scene shows what was picked), and they leave from where they stand: the scene stays put.
@@ -359,26 +339,24 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
           {quiz.question && (
             <motion.p
               initial={{ opacity: 0, y: 90 }}
-              animate={{ opacity: answersAway ? 0 : 1, y: checked ? -(tiles ? CARDS_RISE : LIST_RISE) : 0 }}
+              animate={{ opacity: answersAway ? 0 : 1, y: checked ? -answersRise : 0 }}
               transition={checked ? { ...PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
               className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
-              style={{ bottom: `calc(${answersBottom} + ${answersHeight(quiz) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
+              style={{ bottom: `calc(${answersBottom} + ${answersHeight(quiz.options) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
             >
               {quiz.question}
             </motion.p>
           )}
-          {tiles ? (
-            <TileCards
-              layout={quiz.cards ?? (tileCount(quiz) === 2 ? "pair" : tileCount(quiz) === 3 ? "tiles" : "grid")}
-              bottomGap={quiz.cards ? CARD_SETS[quiz.cards].gapAbove : undefined}
-              rise={scene ? 0 : quiz.cards ? CARD_SETS[quiz.cards].rise : undefined}
-              choices={quiz.options}
+          {acrossCards(quiz.options) ? (
+            <OptionGrid
+              options={quiz.options}
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}
               checked={checked}
               fadeOut={answersAway}
               hinted={hinted}
               withHint={hasHint}
+              rise={answersRise}
               bounceIn={quiz.optionsAfterHex}
               revealed={hexSpoken}
               onPick={setSelectedId}
@@ -392,8 +370,13 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               fadeOut={answersAway}
               hinted={hinted}
               withHint={hasHint}
-              rise={scene ? 0 : LIST_RISE}
-              compact={!!scene}
+              rise={answersRise}
+              bottomGap={OPTION.aboveButtons}
+              compact
+              tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
+              idleLook={IDLE_LOOK}
+              gap={OPTION.gap}
+              fontSize={OPTION.font}
               bounceIn={quiz.optionsAfterHex}
               revealed={hexSpoken}
               onPick={setSelectedId}

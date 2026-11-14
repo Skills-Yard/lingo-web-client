@@ -50,7 +50,11 @@ export type QuizStage = StageTitle & {
   question?: string;
   /** The picture between Hex's line and the answers. */
   visual?: (context: VisualContext) => ReactNode;
-  /** `rows`: a list of answers; `grid`: tiles (two across for four or two answers, three for three). */
+  /**
+   * `rows`: a list of answers; `grid`: tiles (two across for four or two answers, three for three). Only the Operators and
+   * Conditions modules, which share this type, set `layout` and `cards`: the Data Types screens' answers are the Variable
+   * module's, laid out by their words alone (see `OptionCards.tsx`).
+   */
   layout?: "rows" | "grid";
   /** A `grid` of special cards that stand higher above the button than the usual tiles: `big` (four, screen 8), `badges` (three, each a badge over its word, screen 10). */
   cards?: "big" | "badges";

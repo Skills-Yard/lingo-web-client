@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Lightbulb, LogIn, UserCheck, Wallet } from "lucide-react";
-import { INK, TINTS, BADGE, tintAt } from "./look";
+import { INK } from "./look";
 import { ChooseTypeStage, SortStage, TYPES, type SortBucket } from "./interactions";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
 import { noteGrouping } from "./datatypesScore";
@@ -13,30 +13,28 @@ import type { Option, QuizStage, SceneSpec, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
 import { InfoRows, type InfoRow } from "./visuals";
 
-/** Answers: an id for each (their place), their words and a picture. */
-const options = (rows: readonly (readonly [string, string])[]): Option[] => rows.map(([text, icon], index) => ({ id: String(index), text, icon }));
+/**
+ * Answers are the Variable module's: words only, a card or a row of the same size on every screen (see `OptionCards.tsx`).
+ * Three answers are at most two words each (they stand as mini cards in one row), four are 18 letters or fewer (cards
+ * two by two), and the wrong ones are believable mix-ups, not random lines. Each answer's id is its place.
+ */
+const words = (rows: readonly (readonly [id: string, text: string])[]): Option[] => rows.map(([id, text]) => ({ id, text, icon: "" }));
+const options = (texts: readonly string[]): Option[] => words(texts.map((text, index) => [String(index), text] as const));
 const at = (index: number) => String(index);
 
-/** Pictures for answers that mustn't hint at which is right. */
-const NEUTRAL = [P.order, P.actions, P.goal, P.short] as const;
-const neutral = (texts: readonly string[]) => options(texts.map((text, index) => [text, NEUTRAL[index % NEUTRAL.length]] as const));
-
-/** Answer tiles in the first screens' tints (screen 1's tiles): the tints go round the four and say nothing about which is right. */
-const tinted = (choices: readonly Option[]): Option[] => choices.map((choice, index) => ({ ...choice, tint: tintAt(index) }));
-
-/** The four types as answers: each always with its own picture. */
-const TYPE_OPTIONS: Option[] = tinted(TYPES.map((type) => ({ id: type.id, text: type.label, icon: type.icon })));
+/** The four types as answers (a card each, in the order the sorting screens have them). */
+const TYPE_OPTIONS: Option[] = words(TYPES.map((type) => [type.id, type.label] as const));
 const TYPE_BUCKETS: readonly SortBucket[] = TYPES.map((type) => ({ id: type.id, label: type.label, icon: type.icon }));
 /** The same four places in a scene: their number is the type's (1 Integer, 2 Float, 3 String, 4 Boolean). */
 const SCENE_TYPE_BUCKETS: readonly SceneSortBucket[] = TYPES.map((type, index) => ({ id: type.id, label: type.label, icon: type.icon, value: index + 1 }));
 
-/** Screen 8's four answers, in the design's order (Integer and Float, then Boolean and String) and tints (the cream is its own, a shade lighter than the other screens'). */
-const FLOAT_QUIZ_OPTIONS: Option[] = [
-  { id: "integer", text: "Integer", icon: P.integer, tint: TINTS.lavender },
-  { id: "float", text: "Float", icon: P.float, tint: "bg-[#FFF9F0] dark:bg-[#2A2218]" },
-  { id: "boolean", text: "Boolean", icon: P.boolean, tint: TINTS.green },
-  { id: "string", text: "String", icon: P.string, tint: TINTS.blue },
-];
+/** Screen 8's four answers, in the design's order (Integer and Float, then Boolean and String). */
+const FLOAT_QUIZ_OPTIONS = words([
+  ["integer", "Integer"],
+  ["float", "Float"],
+  ["boolean", "Boolean"],
+  ["string", "String"],
+]);
 
 /** A question: its answers, like screens 1 and 2's, come in once Hex has finished his line. */
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", optionsAfterHex: true, ...stage });
@@ -115,8 +113,8 @@ const PLAN_ROWS: readonly InfoRow[] = [
   { id: "prizes", text: "How many prizes are available?", icon: P.planPrizes },
 ];
 
-/** Screen 5.2's four answers (what the values share), with pictures that don't hint at the right one. The first is right. */
-const SIMILAR_OPTIONS = neutral(["Quantities", "People’s names", "Colours", "Yes/no answers"]);
+/** Screen 5.2's four answers (what the values share). The first is right. */
+const SIMILAR_OPTIONS = options(["Quantities", "People’s names", "Colours", "Yes/no answers"]);
 
 /** Screen 6's four values, as the scene lights them (`sel1` is 12 students). */
 const VALUE_PICKS = [
@@ -167,14 +165,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "What information might the school need?",
         // The pick outlines its row of the form; the right answer, all of them, fills the whole form in.
         scene: ({ picked, checked, correct }) => info({ mode: MODE.info.form, field: FORM_FIELD[picked as keyof typeof FORM_FIELD] ?? 0, fill: checked && correct ? 4 : 0 }),
-        layout: "grid",
         optionsAfterHex: true,
-        options: [
-          { id: "name", text: "Student’s name", icon: P.needName, tint: TINTS.blue },
-          { id: "age", text: "Student’s age", icon: P.needAge, tint: TINTS.green },
-          { id: "height", text: "Student’s height", icon: P.needHeight, tint: TINTS.cream },
-          { id: "all", text: "All of these", icon: P.needAll, tint: TINTS.lavender },
-        ],
+        options: words([
+          ["name", "Student’s name"],
+          ["age", "Student’s age"],
+          ["height", "Student’s height"],
+          ["all", "All of these"],
+        ]),
         correctId: "all",
         rightTitle: "Exactly!",
         right: "The school needs different details of each student.",
@@ -192,12 +189,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Notice anything about these four values?",
         scene: () => info({ mode: MODE.info.aaravForm, fill: 4 }),
         optionsAfterHex: true,
-        options: [
-          { id: "same", text: "They all look the same", icon: P.lookSame },
-          { id: "different", text: "Different kinds of info", icon: P.lookDifferent },
-          { id: "numbers", text: "They are all numbers", icon: P.allNumbers },
-          { id: "words", text: "They are all words", icon: P.string },
-        ],
+        options: words([
+          ["same", "All the same"],
+          ["different", "Different kinds"],
+          ["numbers", "All numbers"],
+          ["words", "All words"],
+        ]),
         correctId: "different",
         rightTitle: "Exactly!",
         right: "Each value is a different kind of information.",
@@ -242,7 +239,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Are these groups the same kind of information?",
         scene: () => sorting({ ...BELT, ...BELT_SORTED }),
-        options: neutral(["Yes, the same kind", "No, different kinds"]),
+        options: options(["Same kind", "Different kinds"]),
         correctId: at(1),
         rightTitle: "No!",
         right: "They represent different kinds of information.",
@@ -346,7 +343,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Choose the best value to represent 148.5 cm.",
         bubbleWidth: 176,
         scene: () => numbers({ mode: MODE.numbers.ruler, measure: 1 }),
-        layout: "grid",
         options: FLOAT_QUIZ_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
@@ -401,13 +397,11 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Can a program understand names too?",
         bubbleWidth: 160,
         scene: () => strings({ mode: MODE.strings.list }),
-        layout: "grid",
-        cards: "badges",
-        options: [
-          { id: "numerical", text: "Numerical", icon: "", tint: TINTS.green, tag: { text: "30", look: BADGE.mint } },
-          { id: "textual", text: "Textual", icon: "", tint: TINTS.cream, tag: { text: "abc", look: BADGE.purple } },
-          { id: "decimal", text: "Decimal", icon: "", tint: TINTS.blue, tag: { text: "1.2", look: BADGE.sky } },
-        ],
+        options: words([
+          ["numerical", "Numerical"],
+          ["textual", "Textual"],
+          ["decimal", "Decimal"],
+        ]),
         correctId: "textual",
         rightTitle: "Exactly!",
         right: "These are names written as text.",
@@ -491,8 +485,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "If we add 12 and 3 as numbers, what do we get?",
         // The 12 goes onto the calculator; a right answer lets it work the sum out.
         scene: ({ checked, correct }) => strings({ mode: MODE.strings.twelve, step: checked && correct ? 2 : 1 }),
-        layout: "grid",
-        options: tinted(neutral(["9", "15", "123", "36"])),
+        options: options(["9", "15", "123", "36"]),
         correctId: at(1),
         rightTitle: "Yes!",
         right: "As numbers, 12 + 3 = 15.",
@@ -502,8 +495,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Join the text “12” and “3”. What text do we get?",
         // The calculator keeps its sum; a right answer joins the text on the screen.
         scene: ({ checked, correct }) => strings({ mode: MODE.strings.twelve, step: checked && correct ? 3 : 2 }),
-        layout: "grid",
-        options: tinted(neutral(["“15”", "“123”", "“312”", "“9”"])),
+        options: options(["“15”", "“123”", "“312”", "“9”"]),
         correctId: at(1),
         rightTitle: "Exactly!",
         right: "A value’s look doesn’t always show its type.",
@@ -520,12 +512,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "What kind of information is the teacher collecting?",
         scene: () => boolean({ mode: MODE.boolean.attendance }),
-        options: options([
-          ["Person’s name", P.string],
-          ["Numerical quantity", P.integer],
-          ["Yes/no status", P.boolean],
-          ["Decimal measurement", P.float],
-        ]),
+        options: options(["Person’s name", "A quantity", "Yes/no status", "A measurement"]),
         correctId: at(2),
         rightTitle: "Exactly!",
         right: "It tells us whether something is true or false.",
@@ -559,12 +546,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "What do these situations have in common?",
         scene: () => boolean({ mode: MODE.boolean.states, s1: 1, s2: 1, s3: 1, s4: 1 }),
-        options: options([
-          ["Two possible states", P.boolean],
-          ["They are all numbers", P.integer],
-          ["They are all names", P.string],
-          ["They are all decimals", P.float],
-        ]),
+        options: options(["Two states", "All numbers", "All names", "All decimals"]),
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "Each situation has two possible logical states.",
@@ -657,7 +639,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Why is Student ID text, though it has digits?",
         scene: () => boolean({ mode: MODE.boolean.record, m1: 1, m2: 1, m3: 1, m4: 1 }),
-        options: neutral(["It identifies a student", "It is a decimal number", "It is a height", "It is True or False"]),
+        options: options(["Identifies someone", "A decimal number", "A height", "True or False"]),
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "It isn’t a quantity. It keeps its leading zero.",
@@ -790,12 +772,11 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which field has been classified incorrectly?",
         scene: ({ picked }) => mastery({ mode: MASTERY.mode.record, highlight: recordRow(picked) }),
-        layout: "grid",
-        options: tinted([
-          { id: "name", text: "Name", icon: P.statement },
-          { id: "age", text: "Age", icon: P.question },
-          { id: "height", text: "Height", icon: P.idea },
-          { id: "present", text: "Is_present", icon: P.command },
+        options: words([
+          ["name", "Name"],
+          ["age", "Age"],
+          ["height", "Height"],
+          ["present", "Is_present"],
         ]),
         correctId: "height",
         rightTitle: "Exactly!",
@@ -840,7 +821,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Why is Player ID a String rather than an Integer?",
         scene: () => mastery({ mode: MASTERY.mode.profile, highlight: MASTERY.highlight.profile.id, ...PLAYER_TYPES }, false),
-        options: neutral(["It identifies a player", "It is a decimal number", "It is a yes/no value", "It is a very big number"]),
+        options: options(["Identifies players", "A decimal number", "A yes/no value", "A big number"]),
         correctId: at(0),
         rightTitle: "Excellent!",
         right: "You used data type thinking in a new app.",
@@ -857,7 +838,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which data type suits a student’s age of 12?",
         scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.age, highlight: typeCard(picked) }),
-        layout: "grid",
         options: TYPE_OPTIONS,
         correctId: "integer",
         rightTitle: "Correct!",
@@ -875,7 +855,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which data type suits a height of 152.5 cm?",
         scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.height, highlight: typeCard(picked) }),
-        layout: "grid",
         options: TYPE_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
@@ -893,7 +872,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Student ID “0045”: why is it treated as text?",
         scene: () => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.studentId, highlight: MASTERY.highlight.card.string }, false),
-        options: neutral(["It identifies a student", "It represents a height", "It is a decimal number", "It means True or False"]),
+        options: options(["Identifies someone", "A height", "A decimal number", "True or False"]),
         correctId: at(0),
         rightTitle: "Correct!",
         right: "It identifies a student, not a quantity.",
@@ -910,7 +889,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which data type represents True or False?",
         scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.flag, highlight: typeCard(picked) }),
-        layout: "grid",
         options: TYPE_OPTIONS,
         correctId: "boolean",
         rightTitle: "Correct!",
