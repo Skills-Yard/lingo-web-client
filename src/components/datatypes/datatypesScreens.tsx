@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { Lightbulb, LogIn, UserCheck, Wallet } from "lucide-react";
 import { INK, TINTS, BADGE, tintAt } from "./look";
 import { ChooseTypeStage, SortStage, TYPES, type SortBucket } from "./interactions";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
@@ -547,10 +548,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
           <SceneToggleStage
             api={api}
             items={[
-              { id: "a", title: "Student attendance", on: "Present", off: "Absent", icon: P.programmer, key: "s1" },
-              { id: "b", title: "Payment confirmation", on: "Complete", off: "Pending", icon: P.float, key: "s2" },
-              { id: "c", title: "Login status", on: "Logged in", off: "Logged out", icon: P.computer, key: "s3" },
-              { id: "d", title: "Light switch", on: "On", off: "Off", icon: P.idea, key: "s4" },
+              { id: "a", title: "Student attendance", on: "Present", off: "Absent", icon: UserCheck, key: "s1" },
+              { id: "b", title: "Payment confirmation", on: "Paid", off: "Pending", icon: Wallet, key: "s2" },
+              { id: "c", title: "Login status", on: "Logged in", off: "Logged out", icon: LogIn, key: "s3" },
+              { id: "d", title: "Light switch", on: "On", off: "Off", icon: Lightbulb, key: "s4" },
             ]}
           />
         ),
@@ -688,7 +689,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             ]}
             buckets={[
               { id: "total", label: "Calculate a total", icon: P.integer, value: 1 },
-              { id: "display", label: "Display information", icon: P.statement, value: 1 },
+              // The scene's `n3` takes 2 for this box (1 is the total box), so the name lands here.
+              { id: "display", label: "Display information", icon: P.statement, value: 2 },
             ]}
           />
         ),
@@ -741,10 +743,10 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             api={api}
             prompt="Tap the data type it needs."
             items={[
-              { id: "city", label: "City name", key: "t1", bucket: "string", hint: "A name is text." },
-              { id: "temp", label: "Temperature", key: "t2", bucket: "float", hint: "Temperatures can have decimals." },
-              { id: "rain", label: "Number of rainy days", key: "t3", bucket: "integer", hint: "Days are counted in whole numbers." },
-              { id: "now", label: "Is it raining?", key: "t4", bucket: "boolean", hint: "It is a yes/no state." },
+              { id: "city", label: "City name", sub: "Delhi", key: "t1", bucket: "string", hint: "A name is text." },
+              { id: "temp", label: "Temperature", sub: "28.5°C", key: "t2", bucket: "float", hint: "Temperatures can have decimals." },
+              { id: "rain", label: "Number of rainy days", sub: "3", key: "t3", bucket: "integer", hint: "Days are counted in whole numbers." },
+              { id: "now", label: "Is it raining?", sub: "False", key: "t4", bucket: "boolean", hint: "It is a yes/no state." },
             ]}
             buckets={SCENE_TYPE_BUCKETS}
           />
