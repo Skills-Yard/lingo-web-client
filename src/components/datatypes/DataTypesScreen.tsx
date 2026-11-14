@@ -18,7 +18,7 @@ import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { DATATYPES_STEPS, datatypesNext, datatypesPrevious } from "./datatypes";
 import { noteAnswer, noteStruggle } from "./datatypesScore";
 import { acrossCards, answersHeight, OptionGrid } from "./OptionCards";
-import { HEX_LIFT, SceneBackdrop, sceneHeight, sceneTop } from "./scenes";
+import { HEX_LIFT, LARGE_SCENE, LIFT_DOWN, LIFT_UP, SceneBackdrop, sceneHeight, sceneLift, sceneTop } from "./scenes";
 import { parseTitle, type InteractionStage, type ScreenDef, type VisualContext } from "./screen";
 
 /*
@@ -123,6 +123,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const sceneContext: VisualContext = { attempt, picked: selectedId, checked: quiz ? checked : finished, correct: quiz ? correct : finished, hexSpoken };
   const stageScene = !stage.scene ? null : typeof stage.scene === "function" ? stage.scene(sceneContext) : stage.scene;
   const scene = stageScene && { ...stageScene, values: { ...stageScene.values, ...sceneExtra } };
+  // A look-only stage (a scene, and nothing under it to tap or pick) draws its scene larger, the same for all of them.
+  const lookOnly = !!scene && !!interaction && !interaction.render;
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -239,7 +241,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       scene={
         <>
           <SoftBackdrop />
-          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} titleEnd={titleEnd} lifted={gone} />}
+          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} titleEnd={titleEnd} lifted={gone} scale={lookOnly ? LARGE_SCENE : 1} />}
           {screen.backdrop}
         </>
       }
@@ -248,7 +250,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       ctaLabel={
         quiz
           ? !checked
-            ? (quiz.ctaLabel ?? "Continue")
+            ? (quiz.ctaLabel ?? "Check")
             : correct
               ? (quiz.nextLabel ?? "Next")
               : "Try again"
@@ -321,16 +323,24 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         )}
       </div>
 
-      {/* An interaction under a scene stands below it (the scene stays where it is) and leaves once it is done. */}
+      {/* An interaction under a scene stands below it and leaves once it is done. When it sends Hex's line above away the scene rises into his room (see `SceneBackdrop`), and the interaction rises with it, so it stays right under the scene. */}
       {scene && interaction && (
         <motion.div
           initial={false}
-          animate={{ opacity: panel ? 0 : 1 }}
-          transition={{ duration: 0.3 }}
-          className="absolute inset-x-0 flex justify-center"
-          style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)`, pointerEvents: panel ? "none" : "auto" }}
+          animate={{ y: hexDismissed ? -sceneLift(titleEnd) : 0 }}
+          transition={hexDismissed ? LIFT_UP : LIFT_DOWN}
+          className="absolute inset-x-0"
+          style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)` }}
         >
-          <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
+          <motion.div
+            initial={false}
+            animate={{ opacity: panel ? 0 : 1 }}
+            transition={{ duration: 0.3 }}
+            className="flex justify-center"
+            style={{ pointerEvents: panel ? "none" : "auto" }}
+          >
+            <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
+          </motion.div>
         </motion.div>
       )}
 

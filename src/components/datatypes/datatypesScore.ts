@@ -20,24 +20,7 @@ export const struggled = score.struggled;
 /** Right the first time and without the hint: the learner has this one. */
 export const cleanRight = (step: number) => score.firstTryOf(questionId(step)) === true && !score.struggled(step);
 
-/** Where the learner's first grouping of the values is kept (screen 3 only records it, it isn't marked). */
-const GROUPING_KEY = "lingo.datatypes-grouping";
-
-/** Records how the learner first grouped the values on screen 3. */
-export const noteGrouping = (groups: Readonly<Record<string, string>>) => {
-  try {
-    sessionStorage.setItem(GROUPING_KEY, JSON.stringify(groups));
-  } catch {
-    // Storage blocked: the grouping is simply not kept.
-  }
-};
-
 /** Starts the score over, when the module is opened from the path. */
 export const resetDatatypesScore = () => {
   score.reset();
-  try {
-    sessionStorage.removeItem(GROUPING_KEY);
-  } catch {
-    // Nothing was kept.
-  }
 };

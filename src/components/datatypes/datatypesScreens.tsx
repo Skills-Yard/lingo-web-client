@@ -4,8 +4,8 @@ import type { ReactNode } from "react";
 import { Lightbulb, LogIn, UserCheck, Wallet } from "lucide-react";
 import { INK } from "./look";
 import { ChooseTypeStage, SortStage, TYPES, type SortBucket } from "./interactions";
+import { MeasureLine } from "./MeasureLine";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
-import { noteGrouping } from "./datatypesScore";
 import { P } from "./pictures";
 import type { SceneValues } from "@/lib/rive/datatypesHost";
 import { MASTERY, SCENE_MODE, type DatatypesSceneName } from "@/lib/rive/runtime";
@@ -54,9 +54,10 @@ const build = sceneOf("build");
 const mastery = sceneOf("mastery");
 const sorting = sceneOf("sorting");
 const MODE = SCENE_MODE;
-
 /** What the event form lights up for the information that is picked (screen 1): its Name, Age or Height row. */
 const FORM_FIELD = { name: 1, age: 2, height: 3 } as const;
+/** `fill` for the form's first three rows written in (Aarav, 12, 148.5 cm), the Height row among them (screen 8). */
+const HEIGHT_FILLED = 3;
 
 /** The student record's rows, by the answer that names them (screen 23): the pick lights its row up. */
 const recordRow = (picked: string | null) => (picked ? (MASTERY.highlight.row[picked as keyof typeof MASTERY.highlight.row] ?? 0) : 0);
@@ -90,13 +91,19 @@ const BELT = { val1: "12", val2: "148.5", val3: "Aarav", val4: "True" } as const
 /** Where each belt value is once it is in a bin: `dropN` is its bin, from the left (1 to 4). Here each value is in a bin of its own. */
 const BELT_SORTED = { drop1: 1, drop2: 2, drop3: 3, drop4: 4 } as const;
 
-/** Screen 3's four values, in the order they stand on the belt; each knows its place in the scene (`drop1` is the first). No bin is wrong. */
+/** Screen 3's four values, in the order they stand on the belt; each knows its place in the scene (`drop1` is the first) and the one bin that is right for it (any other is wrong, with its hint). */
 const SIMILAR_VALUES: readonly SceneSortItem[] = [
-  { id: "12", label: "12", key: "drop1" },
-  { id: "148.5", label: "148.5", key: "drop2" },
-  { id: "aarav", label: "Aarav", key: "drop3" },
-  { id: "true", label: "True", key: "drop4" },
+  { id: "12", label: "12", key: "drop1", bucket: "integer", hint: "12 is a whole number." },
+  { id: "148.5", label: "148.5", key: "drop2", bucket: "float", hint: "It has a decimal part." },
+  { id: "aarav", label: "Aarav", key: "drop3", bucket: "string", hint: "A name is text." },
+  { id: "true", label: "True", key: "drop4", bucket: "boolean", hint: "It is a yes/no state." },
 ];
+
+/** Screen 3's four bins as buttons: the type's words and place, without its picture. */
+const withoutIcons = (buckets: readonly SceneSortBucket[]): readonly SceneSortBucket[] => buckets.map((bucket) => ({ id: bucket.id, label: bucket.label, value: bucket.value }));
+const SIMILAR_BUCKETS = withoutIcons(SCENE_TYPE_BUCKETS);
+/** Screen 9's two bins as buttons, the same way (Integer and Float, words only). */
+const CLASSIFY_BUCKETS = withoutIcons(SCENE_TYPE_BUCKETS.filter((bucket) => bucket.id === "integer" || bucket.id === "float"));
 
 /** Screen 4's four groups, one for each bin of the lab: what Hex says about each once it is read, and the bin the scene lights (`highlight`). */
 const TOUR_GROUPS: readonly SceneTourGroup[] = [
@@ -116,23 +123,18 @@ const PLAN_ROWS: readonly InfoRow[] = [
 /** Screen 5.2's four answers (what the values share). The first is right. */
 const SIMILAR_OPTIONS = options(["Quantities", "People’s names", "Colours", "Yes/no answers"]);
 
-/** Screen 6's four values, as the scene lights them (`sel1` is 12 students). */
-const VALUE_PICKS = [
-  { id: "students", label: "12 students", key: "sel1" },
-  { id: "tickets", label: "25 tickets", key: "sel2" },
-  { id: "height", label: "148.5 cm height", key: "sel3" },
-  { id: "weight", label: "36.7 kg weight", key: "sel4" },
-] as const;
-
-/** Screen 9's six numbers, each with its place on the scene's shelf (`card1` is 15, `card6` is 42.8). */
+/**
+ * Screen 9 stands on the sorting lab, as screen 3 does: a belt of four numbers, left to right, over the lab's four bins
+ * (Integer, Float, String, Boolean). Only the first two bins are used here (a number is whole or has a decimal part).
+ */
+const CLASSIFY_BELT = { val1: "15", val2: "25.5", val3: "100", val4: "9.75" } as const;
+/** Screen 9's four numbers, in the order they stand on the belt (`drop1` is the first); each has its one right bin. */
 const DECIMAL_HINT = "Check whether the value contains a decimal part.";
 const CLASSIFY_ITEMS: readonly SceneSortItem[] = [
-  { id: "15", label: "15", key: "card1", bucket: "integer", hint: DECIMAL_HINT },
-  { id: "25.5", label: "25.5", key: "card2", bucket: "float", hint: DECIMAL_HINT },
-  { id: "100", label: "100", key: "card3", bucket: "integer", hint: DECIMAL_HINT },
-  { id: "9.75", label: "9.75", key: "card4", bucket: "float", hint: DECIMAL_HINT },
-  { id: "0", label: "0", key: "card5", bucket: "integer", hint: DECIMAL_HINT },
-  { id: "42.8", label: "42.8", key: "card6", bucket: "float", hint: DECIMAL_HINT },
+  { id: "15", label: "15", key: "drop1", bucket: "integer", hint: DECIMAL_HINT },
+  { id: "25.5", label: "25.5", key: "drop2", bucket: "float", hint: DECIMAL_HINT },
+  { id: "100", label: "100", key: "drop3", bucket: "integer", hint: DECIMAL_HINT },
+  { id: "9.75", label: "9.75", key: "drop4", bucket: "float", hint: DECIMAL_HINT },
 ];
 
 /** Screen 11's six texts, as the scene lights them (`sel1` is Aarav). All of them are text. */
@@ -210,13 +212,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "Some of these may belong together.",
+        line: "Match each value with its type.",
         bubbleWidth: 190,
         alignTop: true,
         scene: sorting({ ...BELT }, false),
-        // No bin is wrong: each value goes where the learner thinks it fits, and the belt drops it there.
-        render: (api) => <SceneSortStage api={api} items={SIMILAR_VALUES} buckets={SCENE_TYPE_BUCKETS} prompt="Tap the bin you think it fits." onSorted={noteGrouping} />,
-        finishPanel: { title: "Interesting!", text: "You started grouping by what values represent." },
+        // Each value has one right bin: the belt drops it there, a wrong bin shows red at once (with a hint) and the value stays to try again. The buttons are words only (no icons).
+        render: (api) => <SceneSortStage api={api} items={SIMILAR_VALUES} buckets={SIMILAR_BUCKETS} columns={2} plain slimCard prompt="Tap the bin it belongs to." />,
+        finishPanel: { title: "Well matched!", text: "Each value has the type that fits what it is." },
       },
     ],
   },
@@ -280,29 +282,36 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.wholeDecimal,
     title: "Look at these *numbers!*",
     titleSize: 28,
+    // All three stages stand on the student record of `DT_A06_DebugMastery` (Aarav's Age 12 and Height 148.5 are the two numbers in it).
     stages: [
       {
         kind: "interaction",
-        line: "Here are some values from different situations.",
+        line: "Here is Aarav’s record. Some values are numbers.",
         alignTop: true,
-        scene: numbers({ mode: MODE.numbers.values }, false),
+        scene: mastery({ mode: MASTERY.mode.record }, false),
         ready: true,
       },
-      // The PDF's question: tap the numbers with a part after the decimal point; the scene lights each right one.
+      // The question: the pick outlines its row of the record; the right answer ticks it.
+      quiz({
+        line: "Which number has a decimal part?",
+        // A glow only on the right answer: "Both" is not a row, and a cross on the whole record would blame all of it.
+        scene: ({ picked }) => mastery({ mode: MASTERY.mode.record, highlight: recordRow(picked) }, false),
+        options: words([
+          ["age", "Age"],
+          ["height", "Height"],
+          ["both", "Both"],
+        ]),
+        correctId: "height",
+        rightTitle: "That’s right!",
+        right: "148.5 has a decimal part. 12 is a whole number.",
+        wrong: "Look at the two numbers: 12 and 148.5. Which has a decimal point?",
+      }),
+      // The follow-up: the two kinds of number, on the record.
       {
         kind: "interaction",
-        line: "Which numbers have a decimal part?",
+        line: "Age is a whole number. Height has a decimal part.",
         alignTop: true,
-        scene: numbers({ mode: MODE.numbers.values }, false),
-        render: (api) => <ScenePickStage api={api} items={VALUE_PICKS} correct={["height", "weight"]} hint="Look for a number with a decimal point." />,
-        finishPanel: { title: "That’s right!", text: "148.5 and 36.7 contain decimal parts." },
-      },
-      // The PDF's follow-up: the two kinds of number sorted apart.
-      {
-        kind: "interaction",
-        line: "Some numbers are whole, others have decimal parts.",
-        alignTop: true,
-        scene: numbers({ mode: MODE.numbers.values, split: 1 }, false),
+        scene: mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height }, false),
         ready: true,
       },
     ],
@@ -317,8 +326,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Integers are whole numbers without decimal parts.",
         bubbleWidth: 190,
-        alignTop: true,
-        scene: numbers({ mode: MODE.numbers.numberLine }, false),
+        // No artboard and no picture: a small 4 cm line drawn in code, numbered 1 to 4 at its whole marks.
+        render: ({ hexSpoken }) => <MeasureLine shown={hexSpoken} />,
         ready: true,
       },
     ],
@@ -328,13 +337,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.floats,
     title: "Can we be more *precise?*",
     titleSize: 28,
+    // Until this screen's own artboard is ready it stands on the event form of `DT_A01_InfoExplorer` (screens 1 and 2), its Height row outlined and filled in with 148.5 cm.
     stages: [
       {
         kind: "interaction",
         line: "Whole numbers can miss details like a height of 148.5 cm!!",
         bubbleWidth: 190,
         alignTop: true,
-        scene: numbers({ mode: MODE.numbers.ruler, measure: 1 }, false),
+        scene: info({ mode: MODE.info.form, field: FORM_FIELD.height, fill: HEIGHT_FILLED }, false),
         ready: true,
       },
       quiz({
@@ -342,7 +352,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         titleSize: 28,
         line: "Choose the best value to represent 148.5 cm.",
         bubbleWidth: 176,
-        scene: () => numbers({ mode: MODE.numbers.ruler, measure: 1 }),
+        // The answers are types, not rows of the form: only the right one ticks the Height row (no cross on a wrong pick).
+        scene: () => info({ mode: MODE.info.form, field: FORM_FIELD.height, fill: HEIGHT_FILLED }, false),
         options: FLOAT_QUIZ_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
@@ -361,15 +372,17 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Sort each number into Integer or Float.",
         alignTop: true,
-        scene: numbers({ mode: MODE.numbers.bins }, false),
+        scene: sorting({ ...CLASSIFY_BELT }, false),
         render: (api) => (
           <SceneSortStage
             api={api}
             items={CLASSIFY_ITEMS}
-            buckets={SCENE_TYPE_BUCKETS.filter((bucket) => bucket.id === "integer" || bucket.id === "float")}
-            prompt="Tap the group it belongs to."
-            // After a slip the scene puts a magnifier on the number, to look for the decimal point.
-            slipValues={(item) => ({ hint: 1, hintValue: item.label })}
+            buckets={CLASSIFY_BUCKETS}
+            // As screen 3: words-only plain buttons, and the number to place on a slimmer card with the shine.
+            columns={2}
+            plain
+            slimCard
+            prompt="Tap the bin it belongs to."
           />
         ),
         finishPanel: { title: "Excellent!", text: "You can tell whole and decimal numbers apart." },

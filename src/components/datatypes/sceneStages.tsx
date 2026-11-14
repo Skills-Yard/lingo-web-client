@@ -11,6 +11,7 @@ import { EDGE, RAISED } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
 import { fireSceneTrigger, type SceneValues } from "@/lib/rive/datatypesHost";
 import type { DatatypesSceneName } from "@/lib/rive/runtime";
+import { IDLE_LOOK } from "@/components/variable/quiz";
 import { SHAKE, WRONG_MS } from "./interactions";
 import { CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_READING, TINTS, tintAt, type GroupTint } from "./look";
 import type { InteractionApi } from "./screen";
@@ -39,6 +40,10 @@ const useSceneValues = (api: InteractionApi, values: SceneValues) => {
 const buttonLook = (state: "right" | "wrong" | "idle", index: number) =>
   state === "right" ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : state === "wrong" ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`;
 
+/** The Variable module's plain look for a button: white with a thin grey line and its rounded corners, red once it is wrong. */
+const plainLook = (wrong: boolean) =>
+  `flex items-center justify-center rounded-[16px] ${wrong ? `border-4 ${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `border ${IDLE_LOOK} ${EDGE.khaki}`}`;
+
 /** Runs `done` a moment after `ready` turns on (so the last change is seen first). */
 const useFinishWhen = (ready: boolean, done: () => void, delay = 500) => {
   useEffect(() => {
@@ -54,7 +59,7 @@ export type SceneSortItem = {
   sub?: string;
   /** The scene's value for this card (`card1`, `p3`, ...). */
   key: string;
-  /** The group it belongs to. Left out where any group will do (screen 3 has no right answer). */
+  /** The group it belongs to. Left out where any group will do (there is no right answer). */
   bucket?: string;
   /** What is said when it is put in the wrong group. */
   hint?: string;
@@ -80,6 +85,9 @@ export function SceneSortStage({
   items,
   buckets,
   prompt = "Tap the group it belongs to.",
+  columns,
+  plain = false,
+  slimCard = false,
   base,
   doneValues,
   slipValues,
@@ -89,6 +97,12 @@ export function SceneSortStage({
   items: readonly SceneSortItem[];
   buckets: readonly SceneSortBucket[];
   prompt?: string;
+  /** How many buttons stand across (default: all of them up to four, in one row). Four buttons in 2 columns are two by two. */
+  columns?: 2 | 3 | 4;
+  /** The buttons are plain (white, a thin grey line), as the Variable module's options are, instead of each in its own tint. */
+  plain?: boolean;
+  /** The card to place is shorter and has the shine (the pale slanted sweep of the main button) crossing it. */
+  slimCard?: boolean;
   /** More for the scene, from where the cards are (card id to group id): a total once both prices are in. */
   base?: (placed: Readonly<Record<string, string>>) => SceneValues;
   /** More for the scene once it is done. */
@@ -139,11 +153,14 @@ export function SceneSortStage({
     window.setTimeout(() => setWrongBucket(null), WRONG_MS);
   };
 
-  const columns = buckets.length >= 4 ? "grid-cols-4" : buckets.length === 3 ? "grid-cols-3" : "grid-cols-2";
-  const stacked = buckets.length >= 4;
+  const across = columns ?? (buckets.length >= 4 ? 4 : buckets.length === 3 ? 3 : 2);
+  const gridColumns = { 2: "grid-cols-2", 3: "grid-cols-3", 4: "grid-cols-4" }[across];
+  // Four across: the picture over the word. Several rows (two by two): flat, shorter buttons, so the two rows still stand clear of the main button.
+  const stacked = across >= 4;
+  const rows = Math.ceil(buckets.length / across);
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
-      <div className="flex h-[62px] items-center justify-center">
+      <div className={`flex ${slimCard ? "h-[50px]" : "h-[62px]"} items-center justify-center`}>
         <AnimatePresence mode="wait" initial={false}>
           {current && (
             <motion.div
@@ -153,16 +170,25 @@ export function SceneSortStage({
               exit={{ scale: 0.7, opacity: 0 }}
               // The shake is a run of keyframes, which a spring can't do: it keeps its own timing.
               transition={{ type: "spring", stiffness: 420, damping: 26, x: { duration: 0.35 } }}
-              className={`${CARD_BODY_FLAT} ${RAISED} ${TINTS.lavender} ${wrongBucket ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${EDGE_IDLE} ${EDGE.khaki}`} min-h-[58px] min-w-[160px] flex-col px-5 py-1`}
+              className={`${CARD_BODY_FLAT} ${RAISED} ${TINTS.lavender} ${wrongBucket ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${EDGE_IDLE} ${EDGE.khaki}`} ${slimCard ? "relative isolate min-h-[44px] overflow-hidden" : "min-h-[58px]"} min-w-[160px] flex-col px-5 py-1`}
             >
-              <span className={CARD_TEXT}>{current.label}</span>
-              {current.sub && <span className="text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{current.sub}</span>}
+              {/* The main button's shine: a pale slanted band sweeping across, from the moment the value arrives and then every few seconds. */}
+              {slimCard && (
+                <span aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <span className="animate-button-shine absolute inset-y-0 left-0 w-1/4">
+                    <span className="absolute inset-y-0 left-[10%] w-[45%] -skew-x-12 bg-white/90 dark:bg-white/20" />
+                    <span className="absolute inset-y-0 left-[65%] w-[30%] -skew-x-12 bg-white/90 dark:bg-white/20" />
+                  </span>
+                </span>
+              )}
+              <span className={`${CARD_TEXT} relative`}>{current.label}</span>
+              {current.sub && <span className="relative text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{current.sub}</span>}
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      <div className={`grid w-full gap-2.5 ${columns}`}>
+      <div className={`grid w-full gap-2.5 ${gridColumns}`}>
         {buckets.map((bucket, index) => (
           <BounceIn key={bucket.id} index={index} shown={hexSpoken} className="flex min-w-0">
             <motion.button
@@ -172,10 +198,12 @@ export function SceneSortStage({
               animate={{ x: wrongBucket === bucket.id ? SHAKE : 0 }}
               transition={{ duration: 0.35 }}
               whileTap={{ scale: 0.97 }}
-              className={`${CARD_BODY_FLAT} ${RAISED} min-w-0 flex-1 cursor-pointer gap-1.5 px-1 ${stacked ? "h-[68px] flex-col" : "h-[58px]"} ${buttonLook(wrongBucket === bucket.id ? "wrong" : "idle", index)}`}
+              className={`${RAISED} min-w-0 flex-1 cursor-pointer gap-1.5 px-1 ${stacked ? "h-[68px] flex-col" : rows > 1 ? "h-[50px]" : "h-[58px]"} ${
+                plain ? plainLook(wrongBucket === bucket.id) : `${CARD_BODY_FLAT} ${buttonLook(wrongBucket === bucket.id ? "wrong" : "idle", index)}`
+              }`}
             >
               {bucket.icon && <Pic src={bucket.icon} className={stacked ? "h-6 w-6" : "h-7 w-7"} />}
-              <span className={`${stacked ? "text-[13px]" : "text-[15px]"} leading-[110%] font-semibold text-[#444444] dark:text-white`}>{bucket.label}</span>
+              <span className={`${plain ? "text-[16px]" : stacked ? "text-[13px]" : "text-[15px]"} leading-[110%] font-semibold text-[#444444] dark:text-white`}>{bucket.label}</span>
             </motion.button>
           </BounceIn>
         ))}
@@ -446,6 +474,10 @@ export type SceneTourGroup = {
 };
 
 const TOUR_ENTRY_KEY = "datatypes-groups-tour";
+/** The tour's width (px, `STAGE_W`), the gap between its group buttons (`gap-2.5`) and the width of Hex's bubble when he stands under a group. */
+const TOUR_W = 354;
+const TOUR_GAP = 10;
+const TOUR_BUBBLE_W = 220;
 /** A group's glow is fired this long after its values are written, so the scene has them when it plays. */
 const GLOW_DELAY_MS = 250;
 
@@ -491,9 +523,15 @@ export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; gro
     return () => takeContinue(null);
   }, [takeContinue, groups, current, read]);
 
+  // Hex stands where the group being read does: at the left for the first group, at the right for the last, and for those between (the two in the middle of four) under the group, his bubble below him.
+  const columns = groups.length >= 4 ? 4 : 3;
+  const columnWidth = (TOUR_W - (columns - 1) * TOUR_GAP) / columns;
+  const shownIndex = groups.findIndex((group) => group.id === current);
+  const hexAt = shownIndex === 0 ? "left" : shownIndex === groups.length - 1 ? "right" : "top";
+  const underGroup = Math.min(TOUR_W - TOUR_BUBBLE_W, Math.max(0, shownIndex * (columnWidth + TOUR_GAP) + columnWidth / 2 - TOUR_BUBBLE_W / 2));
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
-      <div className={`grid w-full gap-2.5 ${groups.length >= 4 ? "grid-cols-4" : "grid-cols-3"}`}>
+      <div className={`grid w-full gap-2.5 ${columns === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
         {groups.map((group, index) => {
           const reading = current === group.id;
           return (
@@ -515,9 +553,9 @@ export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; gro
           );
         })}
       </div>
-      {/* Hex's row is kept free from the start, so nothing moves when he arrives. */}
-      <div className="flex h-[110px] w-full items-start justify-start">
-        {shown && <HexBubble key={shown.id} entryKey={TOUR_ENTRY_KEY} hex="left" line={[{ text: shown.caption }]} size={{ width: 220 }} />}
+      {/* Hex's row is kept free from the start (at least his own height), so little moves when he arrives. */}
+      <div className={`flex min-h-[110px] w-full items-start ${hexAt === "right" ? "justify-end" : "justify-start"}`} style={hexAt === "top" ? { paddingLeft: underGroup } : undefined}>
+        {shown && <HexBubble key={shown.id} entryKey={TOUR_ENTRY_KEY} hex={hexAt} line={[{ text: shown.caption }]} size={{ width: TOUR_BUBBLE_W }} />}
       </div>
     </div>
   );

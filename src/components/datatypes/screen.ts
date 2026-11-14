@@ -22,8 +22,7 @@ export type SceneSpec = {
   scene: DatatypesSceneName;
   values: SceneValues;
   /** A wrong answer fires the scene's `wrong` (default). Left off where the answers are reasons, so a cross on the picture would blame the wrong thing. */
-  markWrong?: boolean;
-};
+  markWrong?: boolean;};
 
 /** A stage can have a title of its own, in place of the screen's (a screen's second part, such as 5.2, is headed differently from its first), and a scene. */
 type StageTitle = {
