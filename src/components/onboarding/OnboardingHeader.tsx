@@ -1,12 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 import { batteryCount, useBattery } from "@/components/home/batteryStore";
 import { EDGE, RAISED_SMALL } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
-import { BatteryMenu } from "./BatteryMenu";
+import { useTheme } from "@/context/ThemeContext";
+import { BatteryMenu, PanelButton } from "./BatteryMenu";
 import { WIPE } from "./themeWipe";
 
 export { WIPE };
@@ -68,6 +70,18 @@ function BatteryCount() {
     >
       {batteryCount(battery)}
     </span>
+  );
+}
+
+/** The light / dark switch in the battery's hidden panel, wiping to this screen's own background. */
+function ThemeOption() {
+  const { theme, toggleTheme } = useTheme();
+  const dark = theme === "dark";
+  return (
+    <PanelButton onClick={() => toggleTheme(WIPE)}>
+      {dark ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5" />}
+      {dark ? "Light mode" : "Dark mode"}
+    </PanelButton>
   );
 }
 
@@ -142,7 +156,12 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
 
           {/* Each screen's `step` spends its share of the battery. Also the way
               into the hidden dev panel (see BatteryMenu). */}
-          <BatteryMenu className="relative shrink-0" buttonClassName={BATTERY_BUTTON} onBack={onPrevious ?? onBack}>
+          <BatteryMenu
+            className="relative shrink-0"
+            buttonClassName={BATTERY_BUTTON}
+            onBack={onPrevious ?? onBack}
+            extraOptions={() => <ThemeOption />}
+          >
             <span className="flex h-[25px] items-center gap-1">
               <PersistentBattery step={batteryStep ?? progress?.step} className="w-[40px]" />
               <BatteryCount />

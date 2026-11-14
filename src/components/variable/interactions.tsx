@@ -1,16 +1,17 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { Check, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
 import { ArrangeBoard, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { RAISED_SMALL } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
-import type { InteractionApi } from "./quiz";
-import { Bottle, BottleWithAmount, CARD, ShopItem } from "./visuals";
+import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
+import { OPTION, type InteractionApi } from "./quiz";
+import { artboardRect, BELOW_TITLE, GAP_BELOW_SCENE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, type ArtboardRect } from "./scenes";
+import { CARD } from "./visuals";
 
 /** A line of narration: Hex says a short one, a long one goes on a card. */
 export function Narration({ text, entry }: { text: string; entry: string }) {
@@ -23,7 +24,8 @@ export function Narration({ text, entry }: { text: string; entry: string }) {
   }
   const width = text.length <= 44 ? 190 : 240;
   return (
-    <div className="shrink-0">
+    // Lifted like the quiz screens' bubble (see `HEX_LIFT`); what is under it stays where it was.
+    <div className="relative shrink-0" style={{ top: -HEX_LIFT }}>
       <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={{ width }} />
     </div>
   );
@@ -47,106 +49,77 @@ export function KeyPoints({ points }: { points: readonly string[] }) {
   );
 }
 
-/** A thing to tap: it pulses while it is the next one to tap, and what it explains shows once it has been tapped. */
-function Tappable({
-  children,
-  note,
-  tapped,
-  next,
-  enabled = true,
-  onTap,
-  className = "",
-  label,
-}: {
-  children: ReactNode;
-  note: string;
-  tapped: boolean;
-  next: boolean;
-  enabled?: boolean;
-  onTap: () => void;
-  className?: string;
-  label: string;
-}) {
+/** The bottle fills to this many ml, over this long (ms). */
+const BRIDGE_ML = 500;
+const BRIDGE_FILL_MS = 2200;
+/** Once the water has stopped, this long (ms) before Continue can be pressed: the value has been read at 500. */
+const BRIDGE_SETTLE_MS = 300;
+
+/**
+ * Short notes under the scene's bottom edge, on the white, said from the start: each is a bold label and what it says,
+ * and they fade in one after another (from 0.5 s, 0.3 s apart).
+ */
+function SceneNotes({ notes }: { notes: readonly { label: string; text: string }[] }) {
   return (
-    <div className={`flex min-w-0 flex-col items-center gap-1.5 ${className}`}>
-      <motion.button
-        type="button"
-        aria-label={label}
-        disabled={!enabled}
-        onClick={() => {
-          playClickSound();
-          vibrateForTap();
-          onTap();
-        }}
-        animate={next ? { scale: [1, 1.04, 1] } : { scale: 1 }}
-        transition={next ? { duration: 1.2, repeat: Infinity, ease: "easeInOut" } : { duration: 0.2 }}
-        whileTap={{ scale: 0.96 }}
-        className={`pointer-events-auto relative cursor-pointer rounded-[16px] outline-offset-4 ${tapped ? "outline-2 outline-[#04ACAB]" : next ? "outline-2 outline-dashed outline-[#04ACAB]/60" : ""} disabled:cursor-default`}
-      >
-        {children}
-      </motion.button>
-      <AnimatePresence>
-        {tapped && (
-          <motion.span
-            key="note"
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="rounded-[10px] bg-white px-2.5 py-1.5 text-center text-[12px] leading-4 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
-          >
-            {note}
-          </motion.span>
-        )}
-      </AnimatePresence>
+    <div className="absolute inset-x-0 flex flex-col items-center gap-2" style={{ top: `calc(min(${SCENE_BOTTOM}, ${SCENE_BOTTOM_PHONE}px) - ${BELOW_TITLE}px + 12px)` }}>
+      {notes.map((note, index) => (
+        <motion.p
+          key={note.label}
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 + index * 0.3 }}
+          className="max-w-[340px] rounded-[12px] bg-white px-3 py-2 text-center text-[14px] leading-5 font-semibold text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]"
+        >
+          <span className="font-bold text-[#04908F] dark:text-[#7FD8CC]">{note.label}:</span> {note.text}
+        </motion.p>
+      ))}
     </div>
   );
 }
 
-/** Screen 6: tap the bottle, then the information panel; the word "variable" is the bridge between them. */
+/** What the bottle and its variable are, said under the scene. */
+const BRIDGE_NOTES = [
+  { label: "Bottle", text: "A container for water." },
+  { label: "Variable", text: "A named place for information." },
+] as const;
+
+/**
+ * Screen 6: the bottle artboard ("VAR_Bottle", see `BottleBackdrop`) is the scene, with its variable card on
+ * (`showVariable`): the artboard draws the card beside the bottle (name `water`, its value the water in ml). The cap
+ * opens and the bottle fills to 500 ml as the screen opens, the variable's value counting up with the water; when it is
+ * full the screen is done and Continue can be pressed (nothing to tap). Under the scene a note says what each is.
+ */
 export function BridgeStage({ done, finished }: InteractionApi) {
-  const [bottle, setBottle] = useState(false);
-  const [panel, setPanel] = useState(false);
+  // The bottle starts empty with its cap opening, then the stream is on while it fills (see `BottleChange`); the card beside it says `water` and counts up with it. Both go as the screen is left, so the bottle screens that follow are plain.
   useEffect(() => {
-    if (!bottle || !panel) return;
-    const timer = window.setTimeout(() => done(), 700);
-    return () => window.clearTimeout(timer);
-  }, [bottle, panel, done]);
+    setSceneValues("bottle", { showVariable: true, varName: "water", showLabel: false, pouring: false });
+    setBottleLevel(0);
+    const wait = openBottleCap();
+    const timers = [
+      window.setTimeout(() => {
+        setSceneValues("bottle", { pouring: true });
+        rampBottleLevel(BRIDGE_ML, BRIDGE_FILL_MS);
+      }, wait),
+      window.setTimeout(() => setSceneValues("bottle", { pouring: false }), wait + BRIDGE_FILL_MS),
+      // Full: the screen is done, and Continue is let through.
+      window.setTimeout(() => done(), wait + BRIDGE_FILL_MS + BRIDGE_SETTLE_MS),
+    ];
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+      setSceneValues("bottle", { pouring: false, showVariable: false, showLabel: true });
+    };
+  }, [done]);
+
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="A variable keeps information, like a bottle keeps water." entry="variable-bridge" />
-      <div className="flex w-[340px] items-start justify-between gap-1">
-        <Tappable label="Tap the bottle" note="A container for water." tapped={bottle} next={!bottle} onTap={() => setBottle(true)} className="w-[132px]">
-          <div className={`flex flex-col items-center gap-1 px-3 py-2 ${CARD}`}>
-            <Bottle ml={600} height={104} marks={false} />
-            <span className="text-[12px] leading-4 font-semibold text-[#08A4AD]">Water</span>
-          </div>
-        </Tappable>
-        <div className="flex shrink-0 flex-col items-center gap-1 pt-12">
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.5 }}
-            className="rounded-full bg-[#08A4AD] px-2.5 py-1 text-[12px] leading-4 font-bold text-white"
-          >
-            Variable
-          </motion.span>
-          <ArrowRight aria-hidden className="size-5 text-[#04ACAB]" />
+      <SceneNotes notes={BRIDGE_NOTES} />
+      {/* The key points stand just above the button row (this stage's bottom), under the notes. */}
+      {finished && (
+        <div className="absolute inset-x-0 bottom-0 flex justify-center">
+          <KeyPoints points={["A bottle holds water.", "A variable holds information.", "Information in a program is called data."]} />
         </div>
-        <Tappable
-          label="Tap the information panel"
-          note="A named place for information."
-          tapped={panel}
-          next={bottle && !panel}
-          enabled={bottle}
-          onTap={() => setPanel(true)}
-          className="w-[132px]"
-        >
-          <div className="flex h-[148px] w-[120px] flex-col items-center justify-center gap-1 rounded-[16px] border-4 border-white bg-[#1E293B] px-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent">
-            <span className="text-[10px] leading-3 font-semibold tracking-[0.6px] text-[#7FD8CC] uppercase">Information</span>
-            <span className="text-[22px] leading-7 font-bold text-white">500 ml</span>
-          </div>
-        </Tappable>
-      </div>
-      {finished && <KeyPoints points={["A bottle holds water.", "A variable holds information.", "Information in a program is called data."]} />}
+      )}
     </div>
   );
 }
@@ -155,26 +128,47 @@ const SLIDER_STEP = 50;
 const SLIDER_THUMB =
   "[&::-webkit-slider-thumb]:size-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#08A4AD] [&::-webkit-slider-thumb]:shadow-[0_2px_6px_rgba(0,0,0,0.3)] [&::-moz-range-thumb]:size-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[#08A4AD]";
 
-/** Screen 7: drag a slider to fill the bottle to its 500 ml mark; letting go there finishes it. */
+/** How long the stream stays on after the slider last moved up (ms). */
+const POUR_HOLD_MS = 600;
+
+/** Screen 7: drag a slider to fill the bottle (the bottle scene behind it) to 500 ml; letting go there finishes it. */
 export function FillSliderStage({ done, finished }: InteractionApi) {
   const [ml, setMl] = useState(0);
   const [tried, setTried] = useState(false);
+  const pourTimer = useRef(0);
+
+  // The bottle starts empty with its cap opening, and the stream stops when the screen is left.
+  useEffect(() => {
+    setSceneValues("bottle", { showLabel: true, pouring: false });
+    setBottleLevel(0);
+    openBottleCap();
+    return () => {
+      window.clearTimeout(pourTimer.current);
+      setSceneValues("bottle", { pouring: false });
+    };
+  }, []);
+
+  const slide = (next: number) => {
+    // The water follows the slider, and the stream is on while it goes up.
+    rampBottleLevel(next, 250);
+    if (next > ml) {
+      setSceneValues("bottle", { pouring: true });
+      window.clearTimeout(pourTimer.current);
+      pourTimer.current = window.setTimeout(() => setSceneValues("bottle", { pouring: false }), POUR_HOLD_MS);
+    }
+    setMl(next);
+  };
   const letGo = () => {
+    window.clearTimeout(pourTimer.current);
+    setSceneValues("bottle", { pouring: false });
     if (finished) return;
     if (ml === 500) done();
     else setTried(true);
   };
   return (
-    <div className="flex w-full flex-col items-center gap-3">
+    <div className="flex w-full flex-1 flex-col items-center gap-3">
       <Narration text="The bottle holds 1,000 ml. Fill it with 500 ml." entry="variable-fill" />
-      <div className="relative">
-        <BottleWithAmount ml={ml} height={190} label={`${ml.toLocaleString("en-IN")} ml`} />
-        {/* The target mark, level with 500 ml on the bottle (a share of its drawn height). */}
-        <span aria-hidden className="absolute -right-[72px] flex items-center gap-1 text-[12px] leading-4 font-bold text-[#FF8D42]" style={{ top: "calc(10px + 190px * 0.52)" }}>
-          <span className="h-0 w-5 border-t-2 border-dashed border-[#FF8D42]" /> 500 ml
-        </span>
-      </div>
-      <div className="pointer-events-auto flex w-[300px] flex-col items-center gap-1.5">
+      <div className="pointer-events-auto mt-auto flex w-[300px] flex-col items-center gap-1.5">
         <input
           type="range"
           min={0}
@@ -183,7 +177,7 @@ export function FillSliderStage({ done, finished }: InteractionApi) {
           value={ml}
           disabled={finished}
           aria-label="Amount of water"
-          onChange={(event) => setMl(Number(event.target.value))}
+          onChange={(event) => slide(Number(event.target.value))}
           onPointerUp={letGo}
           onKeyUp={letGo}
           className={`h-3 w-full cursor-pointer appearance-none rounded-full bg-[#D5DADF] accent-[#08A4AD] dark:bg-white/20 ${SLIDER_THUMB}`}
@@ -196,102 +190,150 @@ export function FillSliderStage({ done, finished }: InteractionApi) {
   );
 }
 
-/** A part of a card that can be tapped to say what it is. */
-function Part({ label, children, tapped, next, onTap, note }: { label: string; children: ReactNode; tapped: boolean; next: boolean; onTap: () => void; note: string }) {
-  return (
-    <Tappable label={`Tap the ${label}`} note={note} tapped={tapped} next={next} onTap={onTap} className="w-[150px]">
-      <div className={`flex min-w-[140px] flex-col items-center gap-1 px-3 py-2.5 ${CARD}`}>
-        <span className="text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">{label}</span>
-        {children}
-      </div>
-    </Tappable>
-  );
-}
+/** What the variable card's two rows are, said under the scene from the start. */
+const NAME_VALUE_NOTES = [
+  { label: "Name", text: "What we call the information." },
+  { label: "Value", text: "What it holds right now." },
+] as const;
 
-/** Screen 13: a variable has a name and a value; tap each to find out what it is. */
+/**
+ * Screen 13: a variable has a name and a value. The bottle scene behind the screen (see `BottleBackdrop`) has its
+ * variable card on (`showVariable`), with the name `water_level` and, as its value, the water at 550 ml; what the name
+ * and the value are is said under the scene from the start, with nothing to tap. The cap opens, and once it has
+ * (the jar's animation) the screen is done and Continue can be pressed.
+ */
 export function NameValueStage({ done, finished }: InteractionApi) {
-  const [name, setName] = useState(false);
-  const [value, setValue] = useState(false);
+  // The bottle stands at 550 ml with its cap opening, and the variable card beside it says so; both go as the screen is left.
   useEffect(() => {
-    if (!name || !value) return;
-    const timer = window.setTimeout(() => done(), 600);
-    return () => window.clearTimeout(timer);
-  }, [name, value, done]);
+    setSceneValues("bottle", { showVariable: true, varName: "water_level", showLabel: false, pouring: false });
+    setBottleLevel(550);
+    const wait = openBottleCap();
+    const timer = window.setTimeout(() => done(), wait + BRIDGE_SETTLE_MS);
+    return () => {
+      window.clearTimeout(timer);
+      setSceneValues("bottle", { showVariable: false, showLabel: true });
+    };
+  }, [done]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
-      <Narration text="A variable has a name and a value. Tap each part." entry="variable-meet" />
-      <div className="flex w-[340px] items-start justify-between">
-        <Part label="Name" tapped={name} next={!name} onTap={() => setName(true)} note="What we call the information.">
-          <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[15px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">water_level</span>
-        </Part>
-        <motion.svg aria-hidden width={34} height={20} viewBox="0 0 34 20" className="mt-9 shrink-0" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
-          <motion.path d="M2 10H30M24 4l6 6-6 6" stroke="#04ACAB" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" fill="none" initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ delay: 0.5, duration: 0.6 }} />
-        </motion.svg>
-        <Part label="Value" tapped={value} next={name && !value} onTap={() => setValue(true)} note="What it holds right now.">
-          <span className="text-[20px] leading-7 font-bold text-[#444444] dark:text-white">550 ml</span>
-        </Part>
-      </div>
-      {finished && <KeyPoints points={["A variable has a name.", "The name tells us what it is.", "The value is what it holds now."]} />}
+      <Narration text="A variable has a name and a value." entry="variable-meet" />
+      <SceneNotes notes={NAME_VALUE_NOTES} />
+      {/* The key points stand just above the button row (this stage's bottom), under the notes. */}
+      {finished && (
+        <div className="absolute inset-x-0 bottom-0 flex justify-center">
+          <KeyPoints points={["A variable has a name.", "The name tells us what it is.", "The value is what it holds now."]} />
+        </div>
+      )}
     </div>
   );
 }
 
+/**
+ * Where a block of `height` px that stands under the scene starts (a CSS `top`, in the interaction's area): right
+ * under the scene's bottom edge, so nothing is over the picture; or higher, where the block would run down behind the
+ * Next button from there (a phone has no more room than the scene's last rows give it, and a taller window lets it
+ * start right under the scene).
+ */
+const belowScene = (height: number) => `min(calc(${SCENE_BOTTOM} - ${BELOW_TITLE}px + ${GAP_BELOW_SCENE}px), calc(100% - ${height}px))`;
+
+/** What each of screen 16's three variables stands for. */
 const ATTENDANCE_NAMES = [
-  { name: "total_students", value: "30", meaning: "All the students in the class" },
-  { name: "present_students", value: "27", meaning: "The students who came today" },
-  { name: "absent_students", value: "3", meaning: "The students who are not here today" },
+  { name: "total_students", meaning: "All the students in the class" },
+  { name: "present_students", meaning: "The students who came today" },
+  { name: "absent_students", meaning: "The students who are not here today" },
 ] as const;
 
-/** Screen 16: three variables for the attendance; tap each name to see what it stands for. */
-export function NamesStage({ done, finished }: InteractionApi) {
-  const [seen, setSeen] = useState<readonly string[]>([]);
+/** The height `NamesStage`'s three rows take (52px each, with two 8px gaps). */
+const NAMES_BLOCK_H = 172;
+/** The board's names take this long (ms) to come in before the screen is done and Continue can be pressed. */
+const NAMES_SETTLE_MS = 1200;
+
+/**
+ * Screen 16: the classroom of the screen before (see `ClassroomBackdrop`), its board now showing the names of its
+ * three counts (`showNames`); what each name stands for is said under the scene from the start, with nothing to tap.
+ * Once the names have come in the screen is done and Continue can be pressed.
+ */
+export function NamesStage({ done }: InteractionApi) {
   useEffect(() => {
-    if (seen.length < ATTENDANCE_NAMES.length) return;
-    const timer = window.setTimeout(() => done(), 600);
+    setSceneValues("classroom", { total: 30, present: 27, showNames: true, highlight: 0 });
+    const timer = window.setTimeout(() => done(), NAMES_SETTLE_MS);
     return () => window.clearTimeout(timer);
-  }, [seen, done]);
-  const next = ATTENDANCE_NAMES.find((row) => !seen.includes(row.name))?.name;
+  }, [done]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Give each piece of information its own name." entry="variable-names" />
-      <div className="flex w-[340px] flex-col gap-2">
-        {ATTENDANCE_NAMES.map((row) => {
-          const tapped = seen.includes(row.name);
-          return (
-            <div key={row.name} className={`flex items-center justify-between gap-2 px-3 py-2 ${CARD}`}>
-              <Tappable
-                label={`Tap ${row.name}`}
-                note={row.meaning}
-                tapped={tapped}
-                next={next === row.name}
-                onTap={() => setSeen((now) => (now.includes(row.name) ? now : [...now, row.name]))}
-                className="items-start"
-              >
-                <span className="rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono text-[14px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">{row.name}</span>
-              </Tappable>
-              <span className="text-[22px] leading-7 font-bold text-[#444444] dark:text-white">{row.value}</span>
-            </div>
-          );
-        })}
+      {/* The three rows stand under the scene, on the white below it, so no part of the classroom is covered. */}
+      <div className="absolute inset-x-0 flex flex-col items-center" style={{ top: belowScene(NAMES_BLOCK_H) }}>
+        <div className="flex w-[340px] flex-col gap-2">
+          {ATTENDANCE_NAMES.map((row, index) => (
+            <motion.div
+              key={row.name}
+              initial={{ opacity: 0, y: -6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 + index * 0.25 }}
+              className={`flex h-[52px] items-center gap-3 px-3 ${CARD}`}
+            >
+              <span className="w-[148px] shrink-0 rounded-md bg-[#E3F6F3] px-1.5 py-0.5 text-center font-mono text-[13px] leading-6 font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC]">{row.name}</span>
+              <span className="text-[14px] leading-5 font-medium text-[#444444] dark:text-white">{row.meaning}</span>
+            </motion.div>
+          ))}
+        </div>
       </div>
-      {finished && <KeyPoints points={["Each variable tracks one piece of information.", "Good names show what a value means."]} />}
     </div>
   );
 }
 
 type PartKind = "name" | "value";
-const CLASSIFY_PARTS: readonly { id: string; text: string; kind: PartKind; card: number }[] = [
-  { id: "n1", text: "water_level", kind: "name", card: 1 },
-  { id: "v1", text: "550 ml", kind: "value", card: 1 },
-  { id: "n2", text: "bottle_capacity", kind: "name", card: 2 },
-  { id: "v2", text: "1,000 ml", kind: "value", card: 2 },
-];
 
-/** Screen 14: tap each part of the two cards and say whether it is a name or a value. */
-export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
+/**
+ * Screen 14's four parts, as the pair of cards (see `VarCardBackdrop`) draws them. `select` is the number that lights
+ * a part on the artboard (1 and 3 the names, 2 and 4 the values); `rect` is where it is (artboard px), a little larger
+ * than its pill, for tapping it; `tick` is the pill's top right corner, where its tick stands once it is sorted.
+ */
+const CLASSIFY_PARTS = [
+  { id: "n1", label: "water_level", kind: "name", select: 1, rect: { x: 36, y: 138, width: 140, height: 38 }, tick: { x: 172, y: 145 } },
+  { id: "v1", label: "550 ml", kind: "value", select: 2, rect: { x: 46, y: 180, width: 120, height: 44 }, tick: { x: 162, y: 190 } },
+  { id: "n2", label: "bottle_capacity", kind: "name", select: 3, rect: { x: 214, y: 139, width: 140, height: 38 }, tick: { x: 350, y: 147 } },
+  { id: "v2", label: "1,000 ml", kind: "value", select: 4, rect: { x: 224, y: 181, width: 120, height: 44 }, tick: { x: 340, y: 191 } },
+] as const satisfies readonly { id: string; label: string; kind: PartKind; select: number; rect: ArtboardRect; tick: { x: number; y: number } }[];
+
+/** The height of the block the "It is a name / It is a value" buttons make with their note (the buttons, 10px, a 20px note line). */
+const SORT_BLOCK_H = OPTION.height + 10 + 20;
+/** The last part has been sorted: this long (ms) for the artboard's right-answer glow to play before the screen is done and its name / value tags show. */
+const SORT_SETTLE_MS = 900;
+
+/**
+ * Screen 14: tap each part of the two cards and say whether it is a name or a value. The cards are the artboard
+ * behind the screen ("VAR_VarCard", see `VarCardBackdrop`): a tap on a part (a target laid over its pill) lights it
+ * there (`select`), the buttons under the scene say what it is, and the artboard marks it right or wrong (the
+ * `correct` and `wrong` triggers). Each part sorted keeps a tick, and once all four are the artboard shows its
+ * "name" and "value" tags (`showParts`).
+ */
+export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi) {
   const [selected, setSelected] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Record<string, PartKind>>({});
   const [slip, setSlip] = useState(false);
+  const sorted = Object.keys(placed).length === CLASSIFY_PARTS.length;
+
+  // The cards say their names and values, with nothing lit and no tags yet.
+  useEffect(() => {
+    setSceneValues("varCard", { ...NAME_VALUE_CARDS, mode: 0, linked: true, showParts: false, select: 0 });
+  }, []);
+  // The part tapped is lit on the artboard, and stays lit (its right-answer glow plays on it) until another is tapped.
+  useEffect(() => {
+    const part = CLASSIFY_PARTS.find((candidate) => candidate.id === selected);
+    if (part) setSceneValues("varCard", { select: part.select });
+  }, [selected]);
+  // All four are sorted: once the last one's glow has played, the screen is done and the artboard names each part.
+  useEffect(() => {
+    if (!sorted) return;
+    const timer = window.setTimeout(() => {
+      setSceneValues("varCard", { select: 0, showParts: true });
+      done();
+    }, SORT_SETTLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [sorted, done]);
+
   const choose = (kind: PartKind) => {
     const part = CLASSIFY_PARTS.find((candidate) => candidate.id === selected);
     if (!part) return;
@@ -300,66 +342,73 @@ export function ClassifyStage({ slip: slipped, done }: InteractionApi) {
     if (part.kind !== kind) {
       slipped();
       setSlip(true);
+      fireSceneTrigger("varCard", "wrong");
       return;
     }
     setSlip(false);
-    const next = { ...placed, [part.id]: kind };
-    setPlaced(next);
+    setPlaced({ ...placed, [part.id]: kind });
     setSelected(null);
-    if (Object.keys(next).length === CLASSIFY_PARTS.length) done();
+    fireSceneTrigger("varCard", "correct");
   };
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Is each one a name or a value?" entry="variable-classify" />
-      <div className="flex w-[340px] flex-col gap-2">
-        {[1, 2].map((card) => (
-          <div key={card} className={`flex items-center justify-around gap-2 px-3 py-3 ${CARD}`}>
-            {CLASSIFY_PARTS.filter((part) => part.card === card).map((part) => {
-              const known = placed[part.id];
-              return (
-                <button
-                  key={part.id}
-                  type="button"
-                  disabled={!!known}
-                  onClick={() => {
-                    playClickSound();
-                    setSelected(part.id);
-                    setSlip(false);
-                  }}
-                  className={`pointer-events-auto flex min-w-[120px] cursor-pointer flex-col items-center gap-0.5 rounded-[12px] border-2 px-3 py-1.5 ${RAISED_SMALL} ${
-                    known ? "border-[#01A17F] bg-[#E3F6F3] [--edge:#007D60] dark:bg-[#0F2B28]" : selected === part.id ? "border-[#FFB300] bg-[#FFF3DE] [--edge:#C98A00] dark:bg-[#2A2218]" : "border-[#D5DADF] bg-white [--edge:#C9CED6] dark:border-white/20 dark:bg-[#15181E]"
-                  }`}
+      {/* A target over each pill of the artboard to tap it, and a tick on each one that has been sorted. */}
+      <SceneOverlay>
+        {CLASSIFY_PARTS.map((part) => {
+          const known = placed[part.id];
+          return (
+            <div key={part.id}>
+              <button
+                type="button"
+                aria-label={`Sort ${part.label}`}
+                disabled={!!known || finished}
+                onClick={() => {
+                  playClickSound();
+                  setSelected(part.id);
+                  setSlip(false);
+                }}
+                className="pointer-events-auto absolute cursor-pointer rounded-[14px] disabled:cursor-default"
+                style={artboardRect(part.rect)}
+              />
+              {known && (
+                <motion.span
+                  aria-hidden
+                  initial={{ opacity: 0, scale: 0.4 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.7, type: "spring", stiffness: 400, damping: 18 }}
+                  className="pointer-events-none absolute flex items-center justify-center rounded-full bg-[#01A17F] text-white shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
+                  style={artboardRect({ x: part.tick.x - 9, y: part.tick.y - 9, width: 18, height: 18 })}
                 >
-                  <span className={`text-[15px] leading-6 font-semibold text-[#444444] dark:text-white ${part.kind === "name" ? "font-mono" : ""}`}>{part.text}</span>
-                  <span className="flex h-4 items-center gap-1 text-[11px] leading-4 font-bold tracking-[0.4px] text-[#01A17F] uppercase">
-                    {known && (
-                      <>
-                        <Check aria-hidden className="size-3" /> {known}
-                      </>
-                    )}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        ))}
+                  <Check className="size-3" strokeWidth={3} />
+                </motion.span>
+              )}
+            </div>
+          );
+        })}
+      </SceneOverlay>
+      {/* The two buttons and the note stand under the scene, on the white below it, so no character is covered. */}
+      <div className="absolute inset-x-0 flex flex-col items-center gap-2.5" style={{ top: belowScene(SORT_BLOCK_H) }}>
+        <div className="pointer-events-auto flex w-[340px]" style={{ gap: OPTION.gap }}>
+          {(["name", "value"] as const).map((kind) => (
+            <button
+              key={kind}
+              type="button"
+              disabled={!selected}
+              onClick={() => choose(kind)}
+              // The same size, gap, corners and text as every other option of the module (their colour is the button's own).
+              style={{ height: OPTION.height, borderRadius: OPTION.radius, fontSize: OPTION.font }}
+              className="flex-1 cursor-pointer bg-[#EDFAFE] leading-5 font-semibold text-[#1F4899] shadow-[0_4px_0_#BFE6F2] transition-[translate,box-shadow] duration-100 enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50"
+            >
+              It is a {kind}
+            </button>
+          ))}
+        </div>
+        {/* One line is reserved; the longer "not quite" line runs a second one down into the gap above the button. */}
+        <p className="min-h-5 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
+          {slip ? "The name tells what it is; the value is the amount." : <span className="text-[#6B7480] dark:text-white/60">{selected ? "Is it a name or a value?" : "Tap a part to sort it."}</span>}
+        </p>
       </div>
-      <div className="pointer-events-auto flex w-[340px] gap-3">
-        {(["name", "value"] as const).map((kind) => (
-          <button
-            key={kind}
-            type="button"
-            disabled={!selected}
-            onClick={() => choose(kind)}
-            className="h-12 flex-1 cursor-pointer rounded-lg bg-[#EDFAFE] text-[15px] leading-5 font-semibold text-[#1F4899] shadow-[0_4px_0_#BFE6F2] transition-[translate,box-shadow] duration-100 enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50"
-          >
-            It is a {kind}
-          </button>
-        ))}
-      </div>
-      <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? "The name tells what it is; the value is the amount." : <span className="text-[#6B7480] dark:text-white/60">{selected ? "Is it a name or a value?" : "Tap a part to sort it."}</span>}
-      </p>
     </div>
   );
 }
@@ -380,15 +429,22 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
   const [slip, setSlip] = useState(false);
   const full = slots.every((slot) => slot !== null);
   const right = full && slots.every((id, index) => id === MATCH_ITEMS[index].id);
+  // The shop counter behind (see `ShopBackdrop`) starts with the names shown and nothing lit.
+  useEffect(() => {
+    setSceneValues("shop", { showEraser: false, showNames: true, showTotal: false, highlight: 0 });
+  }, []);
   useEffect(() => {
     if (!full) return;
     if (right) {
+      setSceneValues("shop", { highlight: 0 });
+      fireSceneTrigger("shop", "correct");
       const timer = window.setTimeout(() => done(), 500);
       return () => window.clearTimeout(timer);
     }
     const timer = window.setTimeout(() => {
       slipped();
       setSlip(true);
+      setSceneValues("shop", { highlight: 0 });
       reset();
     }, 900);
     return () => window.clearTimeout(timer);
@@ -396,40 +452,34 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Drag each name to the price it belongs to." entry="variable-prices" />
-      <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }}>
-        <ArrangeBoard
-          cards={MATCH_CARDS}
-          slots={slots}
-          geo={MATCH_GEO}
-          disabled={finished || (full && !right)}
-          onPlace={(id, slot) => {
-            setSlip(false);
-            placeIn(id, slot);
-          }}
-          slotContent={(index) => (
-            <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
-              <span aria-hidden className="text-[26px] leading-none">
-                {MATCH_ITEMS[index].emoji}
+      {/* The board and its note stand under the picture, on the white below it, so no character is covered. */}
+      <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: belowScene(MATCH_GEO.board.height + 12 + 40) }}>
+        <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }}>
+          <ArrangeBoard
+            cards={MATCH_CARDS}
+            slots={slots}
+            geo={MATCH_GEO}
+            disabled={finished || (full && !right)}
+            onPlace={(id, slot) => {
+              setSlip(false);
+              placeIn(id, slot);
+              // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
+              setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
+            }}
+            slotContent={(index) => (
+              <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
+                <span aria-hidden className="text-[26px] leading-none">
+                  {MATCH_ITEMS[index].emoji}
+                </span>
+                {MATCH_ITEMS[index].name} <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">₹{MATCH_ITEMS[index].price}</span>
               </span>
-              {MATCH_ITEMS[index].name} <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">₹{MATCH_ITEMS[index].price}</span>
-            </span>
-          )}
-        />
+            )}
+          />
+        </div>
+        <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
+          {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
+        </p>
       </div>
-      <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
-      </p>
-    </div>
-  );
-}
-
-/** The two items and their prices, as a row of cards (for the screens that talk about them). */
-export function Items({ eraser = false }: { eraser?: boolean }) {
-  return (
-    <div className="flex items-start justify-center gap-2.5">
-      <ShopItem emoji="📓" name="Notebook" price={50} />
-      <ShopItem emoji="🖊️" name="Pen" price={20} tint="bg-[#FFF9F0]" />
-      {eraser && <ShopItem emoji="🧽" name="Eraser" price={10} tint="bg-[#ECF7ED]" />}
     </div>
   );
 }

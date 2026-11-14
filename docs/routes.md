@@ -68,6 +68,14 @@ Built from the "2. Sequence - Scenario 1" spec (its screen number is in brackets
 | `/module/sequence?step=24` | "You've mastered Sequence!" (recap, then the gem popup) [20] |
 | `/module/sequence?step=complete` | "Lesson complete!" |
 
+Copies of three of these screens with the 3D character (see `/character`) in Hex's place, played in order (`STEPS_3D` in `components/sequence/sequence3d.ts`; after the last, Next carries on in the original module). A loading bar loads everything first (the route's layout, `Sequence3dAssetsGate`: the character model, the voices in `public/audios/3D-Screens`, the pictures, and the character's canvas drawing its first frames). The character can't be touched and talks while the voiceover plays (or, with none, for as long as the line takes to read); there is no speech bubble. It starts in the middle of the screen; a fifth into the voice it moves to the far left and the room, on a framed board (`RoomBoard.tsx`), slides in at the right; at three quarters the answers slide up; the main button and the hint stay off until the voice is done:
+
+| Route | Screen |
+|---|---|
+| `/module/sequence-3d?step=1` (also `/module/sequence-3d`) | Copy of step 1, "What to put on first?" |
+| `/module/sequence-3d?step=3` | Copy of step 3, "Let's Put On Shoes!" |
+| `/module/sequence-3d?step=7` | Copy of step 7, "Think one step ahead." |
+
 ## Variable module
 
 Built from the "3. Variable" spec (its screen number is in brackets; screens with an interaction and a question have two stages on the one step). `step` numbers are the module's own order (`STEP` in `components/variable/variable.ts`).
@@ -249,6 +257,7 @@ Built from the "6. Conditions" spec: one step for each of its 38 screens (the st
 | `/level` | Level path (home), where onboarding ends |
 | `/profile` | Profile |
 | `/hex` | `hex.riv` animation viewer |
+| `/character` | 3D character viewer: `public/animations/Character_Final.glb` (4 MB, textured, Blender export) with its own animations (Idle A, Talking, Levitate, Sitting, Gesture; all loop), and "Idle B" from `Idle.glb` (all loop). The stage always has the `public/bg/bg.webp` backdrop (a resized copy of `bg.png`); Gesture also shows a picture per round (bottle, mountain, variable, then none). Talking plays a voice clip with the model's `LS_line_12` lip-sync clip. "Play all" runs Levitate, Idle B, Gesture, Talking in turn; the chips play one animation on its own. Pause, auto-rotate, reset view; drag to rotate (no zoom); three.js via React Three Fiber. Add an animation in `ANIMATIONS` (`components/character3d/character.ts`), and its backdrop, pictures, voice or place in the tour in `show.ts` |
 | `/module1/combined`, `/module1/review` | Old instructions-intro design comparison (`?step=<index>`) |
 
 ## Notes
