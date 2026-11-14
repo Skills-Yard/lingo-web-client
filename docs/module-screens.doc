@@ -105,7 +105,7 @@
 <tr><td>Main button</td><td>Rive "AllButton" artboard (<code>ModuleButton_SM</code>), module look. <b>Green</b> when enabled (same art as "correct"), <b>grey</b> when disabled, <b>white ("light")</b> for the Pick Up button on step 2. Label is set on the artboard text.</td></tr>
 <tr><td>Press feel</td><td>Click holds the button pressed 150 ms (<code>PRESS_HOLD_MS</code>), then runs the caller's <code>onClick</code> at 330 ms (<code>CLICK_DELAY_MS</code>) so the press animation is visible before navigating. Click sound plays on press.</td></tr>
 <tr><td>Shine</td><td>A highlight sweep (<code>shine</code> trigger) plays about every 5 s.</td></tr>
-<tr><td>Electric effect</td><td>When a strike or battery charge plays, the button plays an <b>electric</b> glow clip (0.67 s) reaching about 17 units past the artboard. The button takes no clicks during it (held), but is not drawn disabled.</td></tr>
+<tr><td>Electric effect</td><td>When a strike or battery charge plays, the button plays an <b>electric</b> glow clip (0.67 s) reaching about 17 units past the artboard. The button stays clickable during it, so the learner can skip the lightning by pressing Continue.</td></tr>
 <tr><td>Locked</td><td><code>ctaLocked</code>: drawn enabled but ignores clicks (used while a robot move or Hex line is playing).</td></tr>
 <tr><td>With hint</td><td>Main button shrinks to <b>72% width / 82% height</b> and sits next to the hint. Resize uses <code>transition-[width,height] 500ms ease-out</code>. Pair is centred in the row.</td></tr>
 <tr><td>Without hint</td><td>Button is drawn to the header's drawn width, about 20.4 px from each screen edge.</td></tr>

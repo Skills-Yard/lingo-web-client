@@ -337,7 +337,7 @@ Continue on the last line -> navigates to step 8
 <tr><td>Shine cadence</td><td><code>BUTTON.shineEveryMs = 5000</code>: fired once on mount and then every 5 s while the face's <code>shine</code> prop is on. If asked before load, it is queued and fired on load.</td></tr>
 <tr><td>Click</td><td><code>pressCount</code> changes on each click; each change fires <code>click</code> (plus the 150 ms press hold and 330 ms delayed <code>onClick</code> of <code>Button3D</code>).</td></tr>
 <tr><td>Electric</td><td><code>electrifyModuleButton()</code> fires <code>electric</code>; dropped if the file is not loaded (a late one would play after its strike is long over). Fired with every strike and battery charge.</td></tr>
-<tr><td>Hold</td><td><code>holdModuleButton(ms)</code> sets a store flag; <code>ActionRow</code> passes <code>locked = ctaLocked || held</code>, so the button takes no clicks but is not drawn disabled. Duration on a strike = 150 ms strike delay + max(strike length, 0.67 s electric). <code>releaseModuleButton()</code> ends it.</td></tr>
+<tr><td>Skip</td><td>The button is <b>never locked</b> by a strike or battery charge: the learner can press Continue at any moment while the lightning plays. <code>ActionRow</code> passes only <code>locked = ctaLocked</code> (a screen's own busy state). Pressing Continue calls <code>endStrikes()</code>, which cancels a beat still waiting for its 150 ms delay and switches the loop off, then the next screen opens.</td></tr>
 <tr><td>Anti-flash</td><td>The host element starts at <code>opacity:0</code>; it is shown two animation frames after <code>wanted</code> (label + state) is drawn, because on load Rive first paints the artboard's default text. State and label are written in <b>layout effects</b>, so a screen never paints the previous screen's label or leftover correct/wrong state.</td></tr>
 <tr><td>Redraw</td><td>Changing a property does not repaint a still artboard, so <code>rive.drawFrame()</code> is called explicitly after every write.</td></tr>
 <tr><td>Stretch</td><td><code>setModuleButtonStretch</code>: <code>Fit.Fill</code> (artwork squeezed to the box) when the hint is present, <code>Fit.Contain</code> otherwise; <code>resizeToCanvas()</code> re-applies the frame. Used so the artwork does not jump when the hint appears.</td></tr>
@@ -441,11 +441,11 @@ t=0 ms     Check pressed (Button3D press hold 150 ms, onClick at 330 ms)
 t=+150 ms  (PROGRESS_BAR.strikeDelayMs) streak beat plays if earned:
              strikeDuo2[Check] (2nd in a row)   strikeMix[Check] (4th)
              strikeLoop on for 1 / 4 / 7 s (5th)    battery gain + fullFlash (every 3rd)
-             module button: electric (0.67 s), held (no clicks) for the strike length
+             module button: electric (0.67 s); stays clickable, so Continue can skip it
 t=+250 ms  panel Hex enters (enter, entryStyle 7)
 t=+1150 ms RIGHT: continueThumb (thumbs up)
            confetti (120 pieces) + "+10 XP" burst start with the right answer
-t=...      Continue: endStrikes() stops the loop and releases the button, then navigates
+t=...      Continue (allowed at any time, even mid-strike): endStrikes() cancels a pending beat and stops the loop, then navigates
 Wrong:     noteWrongAnswer() resets the run to 0, endStrikes(); no strike, no confetti
 </pre>
 

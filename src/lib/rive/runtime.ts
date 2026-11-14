@@ -694,8 +694,6 @@ export const BUTTON = {
   /** Plays the electric effect, which reaches up to 17 units past the artboard
    * (see `bleed`): fired with every strike and battery charge of the progress bar. */
   electricTrigger: "electric",
-  /** How long the `Electric` clip plays, in seconds. */
-  electricSeconds: 0.67,
   /** Same cadence the old CSS shine used (`animate-button-shine`, 5s). */
   shineEveryMs: 5000,
 } as const;
