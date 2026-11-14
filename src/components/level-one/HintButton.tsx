@@ -34,7 +34,7 @@ export type HintSize = { width: string; height: string; lift: string };
  * ease-out the main button's own width and height use, so the two move as one.
  * Opening is the same in reverse.
  */
-export function HintButton({ visible, onPress, count, size }: { visible: boolean; onPress: () => void; count: number; size: HintSize }) {
+export function HintButton({ visible, onPress, count, size, disabled = false }: { visible: boolean; onPress: () => void; count: number; size: HintSize; disabled?: boolean }) {
   // The slot first renders closed and opens on the next frame, so the hint
   // arrives (and the button beside it makes room) instead of just being there.
   const [armed, setArmed] = useState(false);
@@ -68,13 +68,14 @@ export function HintButton({ visible, onPress, count, size }: { visible: boolean
         <motion.button
           type="button"
           aria-label={`Hint, ${count} left`}
-          tabIndex={visible ? 0 : -1}
+          tabIndex={visible && !disabled ? 0 : -1}
+          disabled={disabled}
           onClick={onPress}
           // A normal border with a solid shadow edge under it. Pressed, the shadow goes
-          // and the button sinks onto where it was, then bounces back.
-          whileTap={{ scale: 0.95, y: 4, boxShadow: "0 0px 0 0 rgba(0,0,0,0)" }}
+          // and the button sinks onto where it was, then bounces back. Disabled, it is dimmed and doesn't move.
+          whileTap={disabled ? undefined : { scale: 0.95, y: 4, boxShadow: "0 0px 0 0 rgba(0,0,0,0)" }}
           transition={{ type: "spring", stiffness: 500, damping: 14 }}
-          className="relative flex cursor-pointer items-center justify-center border-[#DFE3E8] bg-white shadow-[0_4px_0_#BFC6CF] outline-none focus-visible:ring-2 focus-visible:ring-[#FF8D42] dark:border-[#0B0D11] dark:bg-[#22262E] dark:shadow-[0_4px_0_#05070A]"
+          className="relative flex cursor-pointer items-center justify-center border-[#DFE3E8] disabled:cursor-default disabled:opacity-50 bg-white shadow-[0_4px_0_#BFC6CF] outline-none focus-visible:ring-2 focus-visible:ring-[#FF8D42] dark:border-[#0B0D11] dark:bg-[#22262E] dark:shadow-[0_4px_0_#05070A]"
           style={{ width: "100%", height: `calc(100% - ${EDGE}px)`, borderWidth: "1.5px", borderStyle: "solid", borderRadius: 16 }}
         >
           <Lightbulb className="h-[48%] w-[48%] text-[#FF8D42]" strokeWidth={1.98} />

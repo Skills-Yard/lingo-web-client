@@ -60,6 +60,25 @@ export const SEQUENCE_AUDIO = {
   guideHex: [sequenceAudio("Lets_guide_Hex.mp3")],
 } as const;
 
+const sequence3dAudio = (file: string) => encodeURI(`/audios/3D-Screens/${file}`);
+
+/**
+ * The 3D copies of the Sequence screens (`/module/sequence-3d`, named by the screen they
+ * copy): one clip each that the character says when the screen opens, and for a
+ * question one read once it is checked, for a right answer and for a wrong one. The
+ * original screens keep `SEQUENCE_AUDIO`.
+ */
+export const SEQUENCE_3D_AUDIO = {
+  screen1: {
+    question: [sequence3dAudio("Screen 1.m4a")],
+    right: [sequence3dAudio("Screen 1 Correct.m4a")],
+    wrong: [sequence3dAudio("Screen 1 Wrong.m4a")],
+  },
+  /** `done`: once the shoes are on, before Continue unlocks. */
+  screen3: { question: [sequence3dAudio("Screen 3.m4a")], done: [sequence3dAudio("Screen 3 Continue.m4a")] },
+  screen7: { question: [sequence3dAudio("Screen 7.m4a")] },
+} as const;
+
 const datatypesAudio = (file: string) => encodeURI(`/audios/datatypesAudios/${file}`);
 
 /** The Data Types module's voice clips, in `public/audios/datatypesAudios/` (not recorded yet: the player's stand-in plays the length meanwhile). */

@@ -78,7 +78,7 @@ interface LevelOneShellProps {
   /** The latest checked answer — plays the progress bar's correct / wrong reaction. */
   answer?: AnswerResult | null;
   /** Shows the hint button left of the main button; `visible` slides it in / out. */
-  hint?: { visible: boolean; onUse: () => void };
+  hint?: { visible: boolean; onUse: () => void; /** Shown dimmed, and takes no taps. */ disabled?: boolean };
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
