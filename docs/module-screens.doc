@@ -190,13 +190,18 @@
   <li><b>"Yayyy!" panel</b> (step 2) is the same design with its own title and text, min height 251 px (Figma panel top 593), 10 px above the button.</li>
 </ul>
 
-<h3>3.7 Hint effect (<code>HintFloat</code> and the orange fill)</h3>
+<h3>3.7 Hint effect (the pointing hand: <code>useAnswerHint</code> and <code>PointedLook</code>)</h3>
+<ul>
+  <li><b>One hint for every question (all modules, every screen where the learner picks an answer and presses Check):</b> the hint button, left of the main button, makes the white pointing hand (<code>TapHint</code>) tap the <b>right answer</b>, exactly as on Variable screen 27. Nothing is picked for the learner, and nothing floats, flips or moves. It is there until the answer is checked; pressing it again plays it again.</li>
+  <li><b>Hand:</b> waits 200 ms after the press, moves in (0.42 s), presses and lets go (0.08 s / 0.14 s, with a teal ring), holds 0.28 s and leaves 0.3 s later. The fingertip lands 26 px inside the answer's left edge at its middle height (the answer is found by <code>data-hint="id"</code>).</li>
+  <li><b>Look (<code>PointedLook</code>):</b> from 620 ms after the press, for 800 ms (as long as the hand is on it), the right answer takes a pale orange tint (<code>#FFE7D1</code>, dark <code>#33220F</code>) behind its words, fading in over 0.2 s, and one slanted white shine crosses it from left to right in 0.5 s.</li>
+  <li><b>Stops at once</b> when the learner picks an answer, checks, or the stage changes. It counts as a hint for the screen's score (<code>noteStruggle(step, "hint")</code>) as before.</li>
+  <li>The hint button stays greyed until the answers are there: DataTypes stages whose answers wait for Hex's line (<code>optionsAfterHex</code>), and the 3D Sequence quizzes until the character has spoken.</li>
+</ul>
+<h3>3.7b Older hint effect (<code>HintFloat</code> and the orange fill): only the Match screen and the Sequence arrange boards still use it</h3>
 <ul>
   <li><b>Fill wipe:</b> a peach fill <code>#FFE7D1</code> (dark <code>#33220F</code>) is revealed from left to right behind the card content using <code>clip-path inset(0 100% 0 0)</code> &rarr; <code>inset(0 0% 0 0)</code> over 0.8 s with ease <code>[0.45, 0, 0.25, 1]</code>.</li>
   <li><b>List and tile cards (spin off):</b> after the fill, the card <b>floats</b> up and down 8 px (0 &rarr; -8 &rarr; 0) over 2.4 s, repeating forever, until something is picked (then it settles in 0.25 s).</li>
-  <li><b>Spin mode (steps 11 and 13, spin on):</b> the card scales to 1.15 and <b>flips twice on its Y axis</b> (720 degrees) in 1.2 s, then eases back to scale 1 in 0.6 s, then floats. Perspective 800 px. Hex flies to the card when the flip is about 65% done so he arrives as it stops.</li>
-  <li>On step 13 the hinted card also gets a warm glow: fill <code>#FFF3E8</code> and shadow <code>0 0 14px 2px rgba(255,141,66,0.25)</code> fading in over 2.5 s.</li>
-  <li>On quizzes with <code>targetHint</code> the hint also lights the robot's target box (<code>showHint</code>).</li>
 </ul>
 
 <h3>3.8 Reward effects</h3>
@@ -308,7 +313,7 @@
 <tr><td>Cards after right</td><td>Stay visible (<code>keepCards</code>) while the robot replays.</td></tr>
 <tr><td>Right panel</td><td>"Exactly!" - The robot followed the instructions and picked up the cube.</td></tr>
 <tr><td>Wrong panel</td><td>"Let's look again!" - Watch what robot does after you select the instruction.</td></tr>
-<tr><td>Hint</td><td>Yes (orange fill on the right card).</td></tr>
+<tr><td>Hint</td><td>Yes: the pointing hand taps the right card, which takes the pale orange tint and one shine (see 3.7).</td></tr>
 </table>
 
 <h3>Screen 4: Let's release the cube. (<code>/module?step=4</code>)</h3>
@@ -445,7 +450,7 @@
 <tr><td>Question audio</td><td><code>screen_4_audio_trim.m4a</code> (just the question), read once until checked. Hex talks while it plays. Options are not read.</td></tr>
 <tr><td>Options</td><td>Two cards 221 px tall, 19 px apart, 116 px picture: <b>Asking Question</b> (lavender) and <b>Giving Instruction</b> (cream, correct). They rise in 90 px with a spring after 0.3 s and exit 24 px down in 0.25 s if the screen steps back.</td></tr>
 <tr><td>Select</td><td>Bounce [1, 0.95, 1.05, 1]; press 0.96; green or red looks as other quizzes.</td></tr>
-<tr><td>Hint</td><td>Card does the 2-turn flip and float with an orange glow; <b>Hex flies to the top of the card</b> (small, 80/130 scale) when the flip finishes.</td></tr>
+<tr><td>Hint</td><td>The pointing hand taps the right card, which takes the pale orange tint and one shine (see 3.7). Hex stays where he is: he no longer flies to the card.</td></tr>
 <tr><td>Check</td><td>Hex <b>sinks behind the options</b> (spot 228,200 on the panel spring) as they rise; the panel brings its own Hex.</td></tr>
 <tr><td>Panel text</td><td>"Yes! The teacher is giving an <b>instruction.</b>" or "Remember: The teacher is giving an <b>instruction.</b>"</td></tr>
 <tr><td>Right extras</td><td>Confetti + "+10 XP".</td></tr>
@@ -543,7 +548,8 @@
 <tr><td>Electric effect</td><td>0.67 s</td></tr>
 <tr><td>Strike delay</td><td>150 ms after correct/wrong</td></tr>
 <tr><td>Robot move gap</td><td>150 ms + clip length; first move 600 ms after load</td></tr>
-<tr><td>Hint fill</td><td>0.8 s; float 2.4 s loop; flip 1.2 s x 2 turns</td></tr>
+<tr><td>Hint (questions)</td><td>hand waits 200 ms; tint from 620 ms for 800 ms; shine 0.5 s</td></tr>
+<tr><td>Hint fill (Match and arrange boards only)</td><td>0.8 s; float 2.4 s loop</td></tr>
 <tr><td>Match: wrong shake / release</td><td>0.28 s / 300 ms</td></tr>
 <tr><td>Match: right lift / grey</td><td>1.2 s / 540 ms</td></tr>
 <tr><td>Examples carousel</td><td>3.6 s auto, 0.9 s move</td></tr>

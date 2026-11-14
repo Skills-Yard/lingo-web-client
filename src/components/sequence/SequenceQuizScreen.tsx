@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
@@ -56,7 +57,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // The hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // A right answer in a `clearOnRight` room: the boy waits until the cards have gone, then moves.
@@ -75,6 +77,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   }, [checked, correct]);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     noteFirstTry(quiz.step, correct);
     if (!correct) noteStruggle(quiz.step, "miss");
@@ -96,8 +99,15 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
     else tryAgain();
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    answerHint.press(quiz.correctId);
     noteStruggle(quiz.step, "hint");
   };
 
@@ -107,7 +117,6 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const shownCorrectId = checked && !correct ? "" : quiz.correctId;
   const wrongNote = !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
   const line = quiz.line;
-  const withHint = !quiz.noHint;
   // A picture above the answers (or one shown after a wrong try) needs them to rise less, so they don't reach it.
   const listRise = quiz.pictures || quiz.closeUp || quiz.wrongPicture ? LIST_RISE : LIST_RISE_OPEN;
 
@@ -128,8 +137,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       }
       answer={answer}
       ctaDisabled={selectedId === null}
-      ctaLabel={!checked ? (quiz.ctaLabel ?? "Continue") : quiz.noRetry ? "Continue" : correct ? "Next" : "Try again"}
-      hint={withHint ? { visible: !checked, onUse: useHint } : undefined}
+      ctaLabel={!checked ? (quiz.ctaLabel ?? "Check") : quiz.noRetry ? "Continue" : correct ? "Next" : "Try again"}
+      hint={{ visible: !checked, onUse: useHint }}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -208,10 +217,10 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
-          hinted={hinted}
-          withHint={withHint}
+          pointedId={answerHint.pointedId}
+          withHint
           rise={listRise}
-          onPick={setSelectedId}
+          onPick={pick}
         />
       ) : (
         <TileCards
@@ -221,14 +230,16 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
-          hinted={hinted}
-          withHint={withHint}
+          pointedId={answerHint.pointedId}
+          withHint
           pictureWidth={quiz.pictureWidth}
           pictureHeight={quiz.pictureHeight}
           cardHeight={quiz.cardHeight}
-          onPick={setSelectedId}
+          onPick={pick}
         />
       )}
+      {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+      {answerHint.hand}
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />
     </LevelTwoShell>

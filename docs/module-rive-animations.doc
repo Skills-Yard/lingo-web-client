@@ -150,7 +150,7 @@
 <table>
 <tr><th>Component</th><th>What it does to Hex's canvas</th></tr>
 <tr><td><code>HexBubble</code></td><td>Hex in a 110 x 110 slot. When <code>leaving</code>: after 80 ms the slot slides left by two window widths in 0.2 s (<code>easeIn</code>) while <code>exitLeft</code> plays; while leaving he is z-10 over the bubble.</td></tr>
-<tr><td><code>HexGlide</code> (step 11)</td><td>One Hex that glides between slots (question slot, hint slot on the card, panel). Re-measured every animation frame; position/size springs (see 5.7).</td></tr>
+<tr><td><code>HexGlide</code> (step 11)</td><td>One Hex that glides between slots (question slot, panel; a hint no longer sends him to the card). Re-measured every animation frame; position/size springs (see 5.7).</td></tr>
 <tr><td><code>TeacherSpeech</code> (steps 12, 13)</td><td>Hex in a 130 px box, moved with springs between four spots and floated (see 5.8).</td></tr>
 <tr><td><code>FeedbackPanel</code> slot</td><td>Hex at 219.3 x 159.9 px (2x Figma's 109.65 x 79.95), centred in a slot only 136 x 79.95 wide/tall; the artboard has roughly 38% empty margin, so he is drawn about 136 px wide.</td></tr>
 </table>
@@ -230,7 +230,7 @@ Continue on the last line -> navigates to step 8
 <tr><td>Cue to move up</td><td>2800 ms after the voice starts (<code>CUE_AFTER_VOICE_MS</code>), or 6000 ms after mount with no voice (<code>CUE_WITHOUT_VOICE_MS</code>), <code>cued</code> becomes true: Hex glides to beside the teacher (x228 y84) on a slow spring (stiffness 70, damping 16, mass 1) and the speech bubble pops in (scale 0.8 to 1, 0.25 s, 350 ms delay) and types "Open Your Notebook".</td></tr>
 <tr><td>Float</td><td>Once cued, an inner wrapper floats up and down 7 px (y 0, -7, 0) every 2.4 s, easeInOut, forever, starting 1.2 s later.</td></tr>
 <tr><td>Step 13 voiceover</td><td><code>screen_4_audio_trim.m4a</code>, the question only, read once until checked: random talk trigger, <code>stopTalk</code> at the end.</td></tr>
-<tr><td>Hint</td><td>When the hinted card's flip is about 65% done, <code>hexToCard</code> sends Hex to the top edge of the right card (x262 y198, scale 80/130 = 0.615) with a quicker spring (stiffness 170, damping 24, mass 0.9), timed to land as the spin stops.</td></tr>
+<tr><td>Hint</td><td>Does not move Hex any more: the hint is the pointing hand on the right card (module-screens.doc 3.7). <code>TeacherSpeech</code> still supports <code>hexToCard</code>, but nothing sets it.</td></tr>
 <tr><td>Check</td><td><code>tucked</code>: Hex moves to x228 y200, scale 1, on the result panel spring (360/32), z-5 so the options (z-10) cover him as they rise. The panel brings its own Hex (key <code>feedback</code>).</td></tr>
 <tr><td>Back to step 12</td><td><code>hexAway</code> toggling creates a fresh Hex (<code>hexRun</code> key increments) rather than reusing the one that left; <code>skipIntro</code> remains false only on a fresh "says".</td></tr>
 </table>
@@ -244,7 +244,7 @@ Continue on the last line -> navigates to step 8
 <tr><th>Phase</th><th>Behaviour</th></tr>
 <tr><td>Open</td><td>Hex fills the question slot (180 x 177) drawn at <b>1.1x</b> its size (<code>HEX_SCALE</code>) around its centre, because the artboard has padding. <code>entryKey "quiz"</code>, <code>entryStyle 6</code>, trigger <code>enter</code>.</td></tr>
 <tr><td>Tracking</td><td>The target slot is re-measured every animation frame (divided by the shell's stage scale) so he keeps pace with a slot that is itself sliding. The box is framer-motion animated: x, y, width, height, opacity.</td></tr>
-<tr><td>Hint</td><td>When the hinted card has flipped (<code>onFlipEnd</code> about 0.78 s into the 1.2 s flip) <code>moved</code> becomes true and he glides to the 72 x 72 slot standing on the card's top edge (58 px above the card, 12 px from the right). Spring: stiffness 170, damping 24, mass 0.9, restDelta 0.5, restSpeed 2. Without a hint the normal glide is stiffness 70, damping 18, mass 1.</td></tr>
+<tr><td>Hint</td><td>Does not send him to the card any more (the hint is the pointing hand on the right card, module-screens.doc 3.7). <code>HexGlide</code> still supports <code>toEl</code> / <code>moved</code>, but nothing sets them. The normal glide is stiffness 70, damping 18, mass 1.</td></tr>
 <tr><td>Arrival cue</td><td>The component supports <code>arrivedCue</code> (a trigger played once he reaches the target); step 11 does not pass one.</td></tr>
 <tr><td>Check (<code>rising</code>)</td><td>He freezes at the size and position he had while his slot had room, drops to z-5, and sinks <code>rideDown = BUTTON_DROP = 37</code> px on the options' spring (stiffness 360, damping 32) so the rising options cover him. The question slot animates height 177 to 0 and top margin 8 to 0 on the same spring.</td></tr>
 <tr><td>Leaving</td><td>If <code>leaving</code> were set he fades out (opacity 0 after 0.8 s, 0.15 s long) and is removed 1.1 s later so a resizing canvas is not left behind. Not used on this screen.</td></tr>
@@ -293,7 +293,7 @@ Continue on the last line -> navigates to step 8
 <tr><td><code>reset</code></td><td>Returns the cube to the table (resets the scene)</td><td>0.8 s</td><td>idle</td><td>Step 3 right answer (before pickUp); pose sync. A <code>reset</code> fired before placeInTarget has played out is dropped.</td></tr>
 <tr><td><code>wrongClaw</code></td><td>Claw does a wrong move</td><td>1.17 s</td><td>unchanged</td><td>Wrong answers by default; "Pick Up" on step 4, 8; "MOVE to the table" on 5; "Nothing happened" on 3</td></tr>
 <tr><td><code>wrongCube</code></td><td>Cube does a wrong move</td><td>1.17 s</td><td>unchanged</td><td>"Robot moved the table" (3), "Place the cube" (5), "Put Down" (8)</td></tr>
-<tr><td><code>showHint</code></td><td><b>Lights up (glow) the target box</b></td><td>0 (runs beside others)</td><td>-</td><td>Hint on quizzes with <code>targetHint</code>; step 8 from the start; step 7 from line 2</td></tr>
+<tr><td><code>showHint</code></td><td><b>Lights up (glow) the target box</b></td><td>0 (runs beside others)</td><td>-</td><td>Step 8 from the start; step 7 from line 2 (a hint no longer lights it)</td></tr>
 <tr><td><code>hideHint</code></td><td>Turns the glow off</td><td>0</td><td>-</td><td>On check (before the move), and on unmount of a lit screen</td></tr>
 </table>
 <p><code>targetLabel</code> (string) is the text on the target box ("TARGET AREA"). It is stored and written when the file loads, and written live afterwards.</p>

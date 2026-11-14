@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
+import { PointedLook } from "@/components/level-one/answerHint";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
 import { aboveButtons } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
@@ -45,7 +46,7 @@ type ArrangeLayout = {
   /**
    * Each card has a plain shadow (its shape, with nothing in it) in its place in the tray, there from the start,
    * behind the card (which covers it), so it is already showing when the card is dragged off it and stays for as long as
-   * the card is away, in a slot or being dragged, until the card comes back. A card that bounces (see `bounce`) also has
+   * the card is away, in a slot or being dragged, until the card comes back. A card that bounces (see `bouncedIds`) also has
    * the shadow under it where it rests. The card itself, 3D edge and all, is what moves. On by default; `false` leaves
    * no shadow.
    */
@@ -95,15 +96,25 @@ const FILLED_LOOK = { borderColor: "#01A17F", backgroundColor: "#01A17F", "--edg
 /** A card marked wrong (see `ArrangeBoard`'s `wrongIds`) looks like the module's wrong answers: a 4px red border, a pale pink face and the red raised edge. */
 const WRONG_LOOK = { borderWidth: 4, borderColor: "#E5484D", backgroundColor: "#FFF1F1", "--edge": "#B3261E" } as CSSProperties;
 /**
- * The bounce of a board that is all right (`bounce`): each card in turn, in the order of the slots, springs up high,
- * comes down, springs up a little (about a third as high, in about 0.6 of the time, as a real ball loses height and
- * hang time) and settles. Up decelerates and down accelerates, as under gravity. The card's print stays on the ground.
+ * The bounce of a card that has just been rightly matched (see `bouncedIds`): it springs up high, comes down, springs
+ * up a little (about a third as high, in about 0.6 of the time, as a real ball loses height and hang time) and settles.
+ * Up decelerates and down accelerates, as under gravity. The card's print stays on the ground. It plays the moment the
+ * learner can tell the match is right, one card at a time, and not again when the whole board is done. It starts this
+ * long (s) after the match: at once for a card that never leaves its row (circle slots), and once a card that was
+ * dragged or sent to a slot has glided into it (a new animation on its `y` would cut that glide short).
+ * It begins with a squeeze, as a ball does before it jumps: the card's top comes down a little (its bottom edge stays
+ * on the ground, and it widens a touch to keep its bulk), then it springs back to its actual size as it leaves the
+ * ground and goes up, and drops. The squeeze comes first and the bounce itself keeps its own time (`BOUNCE_S`).
  */
-const BOUNCE_FIRST_S = 0.4;
-const BOUNCE_STAGGER_S = 0.25;
+const BOUNCE_AT_ONCE_S = 0.05;
+const BOUNCE_AFTER_GLIDE_S = 0.35;
+const SQUEEZE_Y = 0.86;
+const SQUEEZE_X = 1.03;
+const SQUEEZE_S = 0.1;
+const SPRING_BACK_S = 0.09;
 const BOUNCE_BIG = 24;
 const BOUNCE_MINI = 9;
-const BOUNCE_S = 1;
+const BOUNCE_S = 0.65;
 const BOUNCE_TIMES = [0, 0.31, 0.625, 0.815, 1];
 /**
  * And once, with the bounce, a shine: a slim slanted band of light crossing the card from left to right (as the match
@@ -113,8 +124,6 @@ const BOUNCE_TIMES = [0, 0.31, 0.625, 0.815, 1];
 const SHINE_AFTER_S = 0.05;
 const SHINE_S = 0.7;
 const SHINE_BAND = "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)";
-/** The shine on a card a hint's hand points at (see `ArrangeBoard`'s `pointedId`): one quick crossing, as long as the hand's stay on it (about half a second). */
-const POINT_SHINE_S = 0.5;
 const STAR_S = 0.9;
 const STAR_PEAK = 0.5;
 const STAR_COLOUR = "#FFB300";
@@ -288,6 +297,10 @@ function ArrangeCard({
   useEffect(() => () => window.clearTimeout(letGoTimer.current), []);
   // The card is in the air on its bounce: the shadow under it shows.
   const [bouncing, setBouncing] = useState(false);
+  // The squeeze before the jump (see `SQUEEZE_Y`): the card's height and width, pivoting on its bottom edge while it lasts.
+  const squeezeY = useMotionValue(1);
+  const squeezeX = useMotionValue(1);
+  const [squeezing, setSqueezing] = useState(false);
   // Its one-time shine and corner stars are playing.
   const [shining, setShining] = useState(false);
   const compact = size.height < 90;
@@ -305,31 +318,47 @@ function ArrangeCard({
     return () => shake.stop();
   }, [wrong, at.x, x]);
 
-  // The bounce: the card goes up and down about where it rests; its print (see `printStays`) stays on the ground.
+  // The bounce: the card squeezes, then goes up and down about where it rests; its print (see `printStays`) stays on the ground.
   useEffect(() => {
     if (bounceDelay === undefined) return;
-    // Started from a timer, not with the animation's own delay: a new animation on `y` stops the one running, and the card may still be gliding into its slot.
-    let bounce: { stop: () => void } | undefined;
-    const timer = window.setTimeout(() => {
+    // Started from timers, not with the animations' own delay: a new animation on `y` stops the one running, and the card may still be gliding into its slot.
+    const running: { stop: () => void }[] = [];
+    // The squeeze: the top comes down (the bottom edge stays put) and the card widens a touch.
+    const squeezeTimer = window.setTimeout(() => {
+      setSqueezing(true);
+      running.push(animate(squeezeY, SQUEEZE_Y, { duration: SQUEEZE_S, ease: "easeOut" }), animate(squeezeX, SQUEEZE_X, { duration: SQUEEZE_S, ease: "easeOut" }));
+    }, bounceDelay * 1000);
+    // The jump: it springs back to its actual size as it leaves the ground, goes up, comes down, hops a little and settles.
+    const jumpTimer = window.setTimeout(() => {
       setBouncing(true);
       setShining(true);
-      bounce = animate(y, [at.y, at.y - BOUNCE_BIG, at.y, at.y - BOUNCE_MINI, at.y], {
-        duration: BOUNCE_S,
-        times: BOUNCE_TIMES,
-        ease: ["easeOut", "easeIn", "easeOut", "easeIn"],
-      });
-    }, bounceDelay * 1000);
+      running.push(
+        animate(squeezeY, 1, { duration: SPRING_BACK_S, ease: "easeOut" }),
+        animate(squeezeX, 1, { duration: SPRING_BACK_S, ease: "easeOut" }),
+        animate(y, [at.y, at.y - BOUNCE_BIG, at.y, at.y - BOUNCE_MINI, at.y], {
+          duration: BOUNCE_S,
+          times: BOUNCE_TIMES,
+          ease: ["easeOut", "easeIn", "easeOut", "easeIn"],
+        }),
+      );
+    }, (bounceDelay + SQUEEZE_S) * 1000);
+    // Back at its size, the card no longer pivots on its bottom edge (the pick bounce and the drag scale it about its middle).
+    const pivotTimer = window.setTimeout(() => setSqueezing(false), (bounceDelay + SQUEEZE_S + SPRING_BACK_S) * 1000 + 30);
     // The shadow under the card goes a moment after it has landed.
-    const endTimer = window.setTimeout(() => setBouncing(false), bounceDelay * 1000 + BOUNCE_S * 1000 + 150);
+    const endTimer = window.setTimeout(() => setBouncing(false), (bounceDelay + SQUEEZE_S) * 1000 + BOUNCE_S * 1000 + 150);
     // The shine and the stars play once, and are taken out when they are done.
-    const shineEndTimer = window.setTimeout(() => setShining(false), (bounceDelay + SHINE_ENDS_S) * 1000);
+    const shineEndTimer = window.setTimeout(() => setShining(false), (bounceDelay + SQUEEZE_S + SHINE_ENDS_S) * 1000);
     return () => {
-      window.clearTimeout(timer);
+      window.clearTimeout(squeezeTimer);
+      window.clearTimeout(jumpTimer);
+      window.clearTimeout(pivotTimer);
       window.clearTimeout(endTimer);
       window.clearTimeout(shineEndTimer);
-      bounce?.stop();
+      running.forEach((animation) => animation.stop());
+      squeezeY.set(1);
+      squeezeX.set(1);
     };
-  }, [bounceDelay, at.y, y]);
+  }, [bounceDelay, at.y, y, squeezeX, squeezeY]);
 
   // What is on the card (its picture and its words).
   const content = (
@@ -374,6 +403,8 @@ function ArrangeCard({
       aria-label={card.text}
       aria-pressed={selected}
       onPointerDown={(event) => {
+        // Disabled or given its place for good: it takes no press, no drag and no tap (a disabled button may still get pointer events).
+        if (disabled || locked) return;
         const box = event.currentTarget;
         box.setPointerCapture(event.pointerId);
         const rect = box.getBoundingClientRect();
@@ -436,7 +467,7 @@ function ArrangeCard({
       animate={{ scale: selected ? [1, 0.95, 1.05, 1] : dragging && !sink ? 1.05 : 1 }}
       transition={selected !== undefined ? { duration: 0.4, ease: "easeOut" } : undefined}
       // Picked by a tap: the module's picked-answer look (see `PICKED_LOOK`), its edge green and still raised.
-      style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1, borderRadius: radius, ...(wrong ? WRONG_LOOK : selected ? PICKED_LOOK : filled ? FILLED_LOOK : null) }}
+      style={{ x, y, scaleX: squeezeX, scaleY: squeezeY, originX: 0.5, originY: squeezing ? 1 : 0.5, width: size.width, height: size.height, zIndex: dragging ? 2 : 1, borderRadius: radius, ...(wrong ? WRONG_LOOK : selected ? PICKED_LOOK : filled ? FILLED_LOOK : null) }}
       className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center px-1.5 ${line} ${sink ? `${held ? PRESSED : RAISED_DRAG} transition-[translate,box-shadow] duration-100 ease-out` : RAISED_DRAG} ${EDGE.khaki} ${tapOnly ? "enabled:cursor-pointer" : "enabled:cursor-grab enabled:active:cursor-grabbing"} ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
       {/* The hint's orange fill, wiped in from the left behind the content. */}
@@ -448,24 +479,8 @@ function ArrangeCard({
         className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
       />
       {content}
-      {/* Pointed at (by a hint's hand): a pale orange tint behind the words while the hand is on it, and a shine crossing it once. No float; it goes with the hand. */}
-      <motion.span
-        aria-hidden
-        initial={false}
-        animate={{ opacity: pointed ? 1 : 0 }}
-        transition={{ duration: 0.2 }}
-        className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
-      />
-      {pointed && (
-        <motion.span
-          aria-hidden
-          initial={{ x: -60, opacity: 0 }}
-          animate={{ x: [-60, size.width + 20], opacity: [0, 1, 1, 0] }}
-          transition={{ duration: POINT_SHINE_S, ease: "easeInOut", opacity: { duration: POINT_SHINE_S, times: [0, 0.2, 0.8, 1] } }}
-          style={{ skewX: -20, backgroundImage: SHINE_BAND }}
-          className="pointer-events-none absolute inset-y-0 left-0 w-14"
-        />
-      )}
+      {/* Pointed at (by a hint's hand): the one hint look every question has (see `PointedLook`). No float; it goes with the hand. */}
+      <PointedLook pointed={!!pointed} />
       {/* The shine: a slim slanted band of light crossing the card once, from left to right, clipped by the card. */}
       {shining && (
         <motion.span
@@ -480,7 +495,7 @@ function ArrangeCard({
     </motion.button>
     {/* What stands on the card's corners: on a box that goes where the card goes (the same x and y), over the card and not clipped by it, so each thing sits on a corner, half outside. The place number is a round badge on the top left (green, red when the card is marked wrong); the stars are four corner stars that twinkle in turn, once, at low opacity. */}
     {(shining || number !== undefined) && (
-      <motion.div aria-hidden className="pointer-events-none absolute top-0 left-0" style={{ x, y, width: size.width, height: size.height, zIndex: 3 }}>
+      <motion.div aria-hidden className="pointer-events-none absolute top-0 left-0" style={{ x, y, scaleX: squeezeX, scaleY: squeezeY, originX: 0.5, originY: squeezing ? 1 : 0.5, width: size.width, height: size.height, zIndex: 3 }}>
         {number !== undefined && (
           <motion.span
             initial={{ scale: 0.4, opacity: 0 }}
@@ -524,7 +539,7 @@ export function ArrangeBoard({
   disabled,
   hintedId = null,
   selectedId = null,
-  bounce = false,
+  bouncedIds = [],
   wrongIds = [],
   lockedIds = [],
   pointedId = null,
@@ -545,11 +560,15 @@ export function ArrangeBoard({
   hintedId?: string | null;
   /** The card picked by a tap, waiting for a slot to be tapped: framed in green (and the slots, if they can be tapped, light up). */
   selectedId?: string | null;
-  /** Every card is right: each card in a slot bounces in turn, in the order of the slots (their prints stay down with `geo.printStays`). */
-  bounce?: boolean;
+  /**
+   * Cards that were rightly matched: each bounces once, the moment it joins this list, with its shine and stars (its
+   * print stays down with `geo.printStays`). For a board where the learner knows each match is right as it is made (so
+   * the bounce is the answer, not a result kept for the end): list a card here as soon as it is right, and never all at once.
+   */
+  bouncedIds?: readonly string[];
   /** Cards marked wrong: they look like the module's wrong answers (red), badge included. */
   wrongIds?: readonly string[];
-  /** Cards that can no longer be moved (they were given their place for good): they cannot be touched. */
+  /** Cards that can no longer be moved (they were given their place for good): they cannot be touched, and nor can the slot they hold (a slot that is a button is disabled). */
   lockedIds?: readonly string[];
   /** The card a hint's hand is pointing at, for as long as it points: it takes a pale orange tint and one shine, and nothing else (it does not float, unlike `hintedId`). */
   pointedId?: string | null;
@@ -608,7 +627,8 @@ export function ArrangeBoard({
             type="button"
             data-hint={`slot-${index}`}
             aria-label={slotLabel?.(index) ?? `Spot ${index + 1}`}
-            disabled={disabled}
+            // A spot whose card is rightly matched (locked) is done with, like the card: nothing can be put on it.
+            disabled={disabled || (holder !== null && lockedIds.includes(holder))}
             onClick={() => onSlotTap(index)}
             className={`${className} pointer-events-auto enabled:cursor-pointer`}
             style={style}
@@ -636,7 +656,7 @@ export function ArrangeBoard({
             printStays={geo.printStays}
             tray={geo.tray}
             home={geo.home(index)}
-            bounceDelay={bounce && placed >= 0 ? BOUNCE_FIRST_S + placed * BOUNCE_STAGGER_S : undefined}
+            bounceDelay={bouncedIds.includes(card.id) && placed >= 0 ? (geo.circles ? BOUNCE_AT_ONCE_S : BOUNCE_AFTER_GLIDE_S) : undefined}
             // With circle slots a card never leaves its row: it is only given a number.
             at={placed >= 0 && !geo.circles ? geo.slot(placed) : geo.home(index)}
             disabled={disabled}

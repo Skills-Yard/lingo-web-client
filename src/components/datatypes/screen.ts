@@ -60,11 +60,9 @@ export type QuizStage = StageTitle & {
   right: string;
   wrongTitle?: string;
   wrong: string;
-  /** The hint button's help: a sentence in place of Hex's line. */
-  hintText?: string;
   /** The answers stay hidden until Hex has finished his line, then bounce in one by one (screens 1 and 2). */
   optionsAfterHex?: boolean;
-  /** The main button before the answer is checked (default "Continue") and after a right one (default "Next"). */
+  /** The main button before the answer is checked (default "Check") and after a right one (default "Next"). */
   ctaLabel?: string;
   nextLabel?: string;
 };

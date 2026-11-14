@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { useCelebrate } from "@/components/level-one/Celebration";
 import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards, CARDS_RISE, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
@@ -90,7 +91,8 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // A question's hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
@@ -125,7 +127,8 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   const quiz = stage.kind === "quiz" ? stage : null;
   const interaction = stage.kind === "interaction" ? stage : null;
   const correct = !!quiz && selectedId === quiz.correctId;
-  const hasHint = !!quiz?.hintText;
+  // Every question has the hint button.
+  const hasHint = !!quiz;
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -152,6 +155,7 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   const next = useCallback(() => nextNow.current(), []);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     record(correct);
   };
@@ -164,6 +168,12 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
     setAttempt((previous) => previous + 1);
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
   const advance = () => {
     if (lastStage) {
       router.push(operatorsNext(screen.step));
@@ -173,7 +183,7 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
+    answerHint.stop();
     setAttempt(0);
     setFinished(false);
     setLineIsTyped(false);
@@ -193,8 +203,9 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
     else tryAgain();
   };
 
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    if (quiz) answerHint.press(quiz.correctId);
     noteStruggle(screen.step, "hint");
   };
 
@@ -208,8 +219,8 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
       ? { right: true, title: interaction.finishPanel.title, text: interaction.finishPanel.text }
       : null;
 
-  // Hex's line for this stage (the hint replaces it).
-  const line = quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
+  // Hex's line for this stage.
+  const line = quiz ? quiz.line : (interaction?.line ?? null);
   const gone = quiz ? checked : finished;
   // A question can keep Hex and his line in place once it is checked (they do not leave, nor come back with each try).
   const lineStays = !!quiz?.keepLine;
@@ -243,7 +254,7 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
       ctaLabel={
         quiz
           ? !checked
-            ? (quiz.ctaLabel ?? "Continue")
+            ? (quiz.ctaLabel ?? "Check")
             : correct
               ? (quiz.nextLabel ?? "Next")
               : "Try again"
@@ -339,9 +350,9 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={false}
-              hinted={hinted}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           ) : (
             <AnswerCards
@@ -351,13 +362,15 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={false}
-              hinted={hinted}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
               rise={LIST_RISE}
               compact={quiz.compact}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           )}
+          {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+          {answerHint.hand}
         </>
       )}
 

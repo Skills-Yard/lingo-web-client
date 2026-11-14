@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { PointedLook, useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
@@ -51,10 +52,13 @@ export function ThirstyScreen() {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [attempt, setAttempt] = useState(0);
   const bubble = useBubbleSize(HEX_LINE);
+  // The hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
 
   const right = selectedId === CORRECT_ID;
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     noteAnswer(STEP.thirsty, 0, right);
     if (!right) noteStruggle(STEP.thirsty, "miss");
@@ -77,6 +81,12 @@ export function ThirstyScreen() {
     else tryAgain();
   };
 
+  // The hint points at the right answer; it is not picked for the learner.
+  const useHint = () => {
+    answerHint.press(CORRECT_ID);
+    noteStruggle(STEP.thirsty, "hint");
+  };
+
   const panel = checked
     ? right
       ? { title: "Yes!", text: "We need water to drink." }
@@ -92,7 +102,9 @@ export function ThirstyScreen() {
       scene={<TrekBackdrop thirsty lifted={celebrate} />}
       answer={answer}
       ctaDisabled={selectedId === null}
-      ctaLabel={!checked ? "Continue" : right ? "Next" : "Try again"}
+      ctaLabel={!checked ? "Check" : right ? "Next" : "Try again"}
+      // Once the answer is checked the hint folds away and Next takes its room.
+      hint={{ visible: !checked, onUse: useHint }}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -122,7 +134,7 @@ export function ThirstyScreen() {
         animate={{ opacity: celebrate ? 0 : 1, y: checked ? -OPTION.rise : 0 }}
         transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : CARDS_IN}
         className="pointer-events-auto absolute z-[1] grid grid-cols-3"
-        style={{ bottom: aboveButtons(OPTION.aboveButtons), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
+        style={{ bottom: aboveButtons(OPTION.aboveButtons, true), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
       >
         {CHOICES.map((choice) => {
           const state = optionState(choice.id, selectedId, checked, CORRECT_ID);
@@ -132,10 +144,12 @@ export function ThirstyScreen() {
             <motion.button
               key={choice.id}
               type="button"
+              data-hint={choice.id}
               disabled={checked}
               onClick={() => {
                 playClickSound();
                 vibrateForTap();
+                answerHint.stop();
                 setSelectedId(choice.id);
               }}
               aria-pressed={state === "selected"}
@@ -143,17 +157,20 @@ export function ThirstyScreen() {
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               style={{ height: OPTION.pictureHeight, borderRadius: OPTION.radius, paddingInline: state === "idle" ? OPTION.padX - 1 : OPTION.padX - 4 }}
-              className={`flex min-w-0 cursor-pointer flex-col items-center justify-center gap-2 ${state === "idle" ? "border" : "border-4"} ${RAISED} ${LOOKS[state].edge} ${choice.tint} ${ring}`}
+              className={`relative isolate flex min-w-0 cursor-pointer flex-col items-center justify-center gap-2 ${state === "idle" ? "border" : "border-4"} ${RAISED} ${LOOKS[state].edge} ${choice.tint} ${ring}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={choice.icon} alt="" {...ICON} draggable={false} className="select-none" />
               <span className="leading-6 font-semibold text-[#444444] dark:text-white" style={{ fontSize: OPTION.font }}>
                 {choice.text}
               </span>
+              <PointedLook pointed={answerHint.pointedId === choice.id && state === "idle"} />
             </motion.button>
           );
         })}
       </motion.div>
+      {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+      {answerHint.hand}
 
       <Confetti active={celebrate} />
       <XpBurst show={celebrate} />

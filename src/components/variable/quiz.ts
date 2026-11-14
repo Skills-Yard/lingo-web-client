@@ -83,14 +83,9 @@ export type QuizStage = {
   right: string;
   wrongTitle?: string;
   wrong: string;
-  /** The hint button's help: a sentence in place of Hex's line, and/or a picture. Either makes the button show. */
-  hintText?: string;
-  hintVisual?: ReactNode;
-  /** The hint is shown by itself when the learner tries again. */
-  hintOnMiss?: boolean;
   /** A wrong object spills water as it is picked. */
   spill?: boolean;
-  /** The main button before the answer is checked (default "Continue") and after a right one (default "Next"). */
+  /** The main button before the answer is checked (default "Check") and after a right one (default "Next"). */
   ctaLabel?: string;
   nextLabel?: string;
 };

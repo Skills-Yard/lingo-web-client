@@ -479,7 +479,7 @@ const MATCH_GEO = arrangeGeometry({
   sink: true,
   // The same text size as the answer buttons (16), not the 12 a card this short would get.
   fontSize: OPTION.font,
-  // A name leaves a faint print of itself (its shadow) where it rests when it is dragged or bounces (see `bounce` below).
+  // A name leaves a faint print of itself (its shadow) where it rests when it is dragged or bounces (see `bouncedIds` below).
   printStays: true,
 });
 /** The note under the board: one line (the longer "check" line fits it too). */
@@ -495,15 +495,21 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
   const [slip, setSlip] = useState(false);
   // The name picked by a tap, waiting for a price.
   const [picked, setPicked] = useState<string | null>(null);
+  // The names that are on their own price: each bounced the moment it was put there, and it and its price are done with.
+  const [matched, setMatched] = useState<readonly string[]>([]);
   const full = slots.every((slot) => slot !== null);
   const right = full && slots.every((id, index) => id === MATCH_ITEMS[index].id);
 
-  /** Puts a name on a spot (dragged or tapped there); the product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2). */
+  /** Puts a name on a spot (dragged or tapped there); the product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2). A right one bounces now and stays: it and its price are disabled. */
   const place = (id: string, slot: number | null) => {
+    // A name that is on its price for good cannot be moved, and nothing can be put on its price.
+    if (matched.includes(id) || (slot !== null && matched.includes(slots[slot] ?? ""))) return;
     setSlip(false);
     setPicked(null);
     placeIn(id, slot);
-    setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
+    const rightSpot = slot !== null && id === MATCH_ITEMS[slot].id ? slot : null;
+    setSceneValues("shop", { highlight: rightSpot !== null ? rightSpot + 1 : 0 });
+    if (rightSpot !== null) setMatched((now) => [...now, id]);
   };
   const tapName = (id: string) => {
     const spot = slots.indexOf(id);
@@ -534,6 +540,7 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
       setPicked(null);
       setSceneValues("shop", { highlight: 0 });
       reset();
+      setMatched([]);
     }, 900);
     return () => window.clearTimeout(timer);
   }, [full, right, done, slipped, reset]);
@@ -549,8 +556,9 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
             geo={MATCH_GEO}
             disabled={finished || (full && !right)}
             selectedId={picked}
-            // Every name on its right price: they bounce one after the other, one big bounce and one small, their shadows staying on the ground.
-            bounce={right}
+            // A name on its right price bounces at once (one big bounce and one small, its shadow staying on the ground), and it and its price are disabled. Nothing bounces together at the end.
+            bouncedIds={matched}
+            lockedIds={matched}
             onPlace={place}
             onTap={tapName}
             onSlotTap={tapSpot}

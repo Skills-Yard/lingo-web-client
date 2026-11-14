@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
+import { PointedLook } from "@/components/level-one/answerHint";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { RAISED } from "@/components/ui/raised";
 import { BounceIn } from "./BounceIn";
@@ -28,8 +28,8 @@ type AnswerCardsProps = {
   checked: boolean;
   /** The cards fade out completely, so the robot's move behind them can be seen. */
   fadeOut: boolean;
-  /** The hint was used: the right card is filled in orange until something is picked. */
-  hinted: boolean;
+  /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
+  pointedId: string | null;
   /** The screen has the hint button beside its main button. */
   withHint: boolean;
   /** How far they rise once the result panel is up (default `CARDS_RISE`). */
@@ -70,7 +70,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, onlyPicked, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, onlyPicked, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
   const folding = onlyPicked !== undefined;
   return (
@@ -89,11 +89,12 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
         const look = LOOKS[state];
-        const hintHere = hinted && selectedId === null && choice.id === correctId;
+        const pointed = pointedId === choice.id && state === "idle";
         const row = (
-          <HintFloat key={choice.id} className="relative w-full" spin={false} active={hintHere}>
+          <div key={choice.id} className="relative w-full">
             <motion.button
               type="button"
+              data-hint={choice.id}
               disabled={checked}
               onClick={() => {
                 playClickSound();
@@ -109,14 +110,6 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 state === "idle" ? (idleLook ?? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]") : look.card
               }`}
             >
-              {/* The hint's orange fill, wiped in from the left behind the content. */}
-              <motion.span
-                aria-hidden
-                initial={false}
-                animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
-              />
               <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`}>
                 {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
                 {(!tight || anyPicture) && (
@@ -133,8 +126,9 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               </span>
               {/* Figma "Ellipse 3" (34 x 34), at the row's end. */}
               {!compact && <span aria-hidden className="size-[34px] shrink-0 rounded-full" />}
+              <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
         );
         if (folding) {
           const gone = !!onlyPicked && checked && choice.id !== selectedId;

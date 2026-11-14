@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { CircleAlert } from "lucide-react";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
@@ -16,7 +17,6 @@ import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { HEX_ROW_TOP } from "./scenes";
 import { useBubbleSize } from "./bubbleWidth";
 import { OPTION, parseTitle } from "./quiz";
-import { TapHint, type TapTarget } from "./TapHint";
 import { STEP, variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
@@ -71,22 +71,6 @@ const NOTE_GAP = 10;
 /** A step chosen wrongly shows red (and shakes) this long (ms); the alert stays this long (ms). */
 const WRONG_MS = 900;
 const ALERT_MS = 3400;
-/**
- * What the hint's pointing hand shows (see `TapHint`): it taps the right step for the number that is next. The fingertip
- * lands just inside the step's left end (the words start about 33px in, so the hand stands left of them). The hand waits
- * this long (ms) before it comes in: the press should be answered at once.
- */
-const HINT_STEP_FROM_LEFT = 26;
-const HINT_PRESS_DELAY_MS = 200;
-/**
- * The step the hand points at takes a pale orange tint and one shine (see `ArrangeBoard`'s `pointedId`) for as long as
- * the hand is on it, and no longer: it starts this long (ms) after the press, as the hand (200ms wait, 0.42s to move in)
- * gets there, and ends this long after that, as the hand (press 0.08s, release 0.14s, hold 0.28s, then 0.3s before it
- * leaves: about 0.8s) starts to leave. It does not float.
- */
-const HINT_GLOW_AFTER_MS = 620;
-const HINT_GLOW_FOR_MS = 800;
-
 /** What Hex says, in a bubble wide enough to hold it in two lines (see `useBubbleSize`). */
 const HEX_LINE = "Pick the steps in order, one at a time.";
 
@@ -97,9 +81,9 @@ const HEX_LINE = "Pick the steps in order, one at a time.";
  * dragging): a right step is given the number (the circle and the step turn green, the step shows its number, and it is
  * locked); a wrong one is refused, with an alert saying why not yet (the step shakes red, the progress bar reacts, and it
  * counts as a miss), so the next number can only be chosen once the one before is right. The steps are pressed like the
- * module's buttons (3D), and bounce with a shine and stars when the plan is whole. With the sixth step in, the plan is
- * right: the steps bounce in the order of their numbers. This is the point where the learner sees why the app has to keep
- * the two numbers.
+ * module's buttons (3D). A step that is rightly matched bounces at once, with a shine and stars, and it and its number
+ * are done with (neither can be pressed again); with the sixth step in, the plan is right. This is the point where the
+ * learner sees why the app has to keep the two numbers.
  */
 export function PlanAppScreen() {
   const router = useRouter();
@@ -108,11 +92,9 @@ export function PlanAppScreen() {
   const [alert, setAlert] = useState<{ text: string; key: number } | null>(null);
   const [wrongId, setWrongId] = useState<string | null>(null);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const timers = useRef<{ alert?: number; wrong?: number; glow?: number; glowEnd?: number }>({});
-  // The hint's demonstration: the targets the hand visits (and which press it is, so a second press plays it again), and the step that glows (the one the hand points at).
-  const [demo, setDemo] = useState<{ press: number; targets: readonly TapTarget[] } | null>(null);
-  const [glowing, setGlowing] = useState<string | null>(null);
-  const hintPresses = useRef(0);
+  const timers = useRef<{ alert?: number; wrong?: number }>({});
+  // The hint: the pointing hand shows the right step, and the step takes a pale orange tint and one shine while the hand is on it (it does not float). The same hint every question of the app gives (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   const bubble = useBubbleSize(HEX_LINE);
   // Steps are only given numbers in order, so the numbers given are the first `done` ones.
   const given = slots.filter((id): id is string => id !== null);
@@ -123,19 +105,9 @@ export function PlanAppScreen() {
     () => () => {
       window.clearTimeout(timers.current.alert);
       window.clearTimeout(timers.current.wrong);
-      window.clearTimeout(timers.current.glow);
-      window.clearTimeout(timers.current.glowEnd);
     },
     [],
   );
-
-  /** The learner acts (or the plan is done): the hand goes and the step stops glowing. */
-  const stopHint = () => {
-    window.clearTimeout(timers.current.glow);
-    window.clearTimeout(timers.current.glowEnd);
-    setDemo(null);
-    setGlowing(null);
-  };
 
   /** The hint button: the pointing hand shows the right step for the number that is next. It counts as a hint for the screen's score. */
   const showHint = () => {
@@ -143,15 +115,7 @@ export function PlanAppScreen() {
     noteStruggle(STEP.plan, "hint");
     window.clearTimeout(timers.current.alert);
     setAlert(null);
-    hintPresses.current += 1;
-    window.clearTimeout(timers.current.glow);
-    window.clearTimeout(timers.current.glowEnd);
-    setGlowing(null);
-    setDemo({ press: hintPresses.current, targets: [{ id: ANSWER[done], fromLeft: HINT_STEP_FROM_LEFT }] });
-    // The step glows for as long as the hand is on it.
-    const right = ANSWER[done];
-    timers.current.glow = window.setTimeout(() => setGlowing(right), HINT_GLOW_AFTER_MS);
-    timers.current.glowEnd = window.setTimeout(() => setGlowing(null), HINT_GLOW_AFTER_MS + HINT_GLOW_FOR_MS);
+    answerHint.press(ANSWER[done]);
   };
 
   /** Tells the learner a step is not the one for the number that is next: the step shakes red, the alert says why not yet, and it counts as a miss. */
@@ -172,7 +136,7 @@ export function PlanAppScreen() {
   const tapStep = (id: string) => {
     if (complete || given.includes(id)) return;
     // The learner acts: the hand goes and the step stops glowing.
-    stopHint();
+    answerHint.stop();
     if (id !== ANSWER[done]) {
       playClickSound();
       return refuse(id);
@@ -234,10 +198,10 @@ export function PlanAppScreen() {
           // A step with its number cannot be moved; only the next circle is open.
           lockedIds={given}
           // The step the hand points at takes a tint and one shine while the hand is on it.
-          pointedId={glowing}
+          pointedId={answerHint.pointedId}
           activeSlot={complete ? undefined : done}
-          // The whole plan is right: the steps bounce one after the other in the order of their numbers, with their shine and stars, their shadows staying on the ground.
-          bounce={complete}
+          // Each step bounces (with its shine and stars, its shadow staying on the ground) the moment it is rightly matched to its number, since that is when the learner knows it is right. Nothing bounces together at the end.
+          bouncedIds={given}
           wrongIds={wrongId ? [wrongId] : []}
           // The steps are tapped, not dragged.
           tapOnly
@@ -265,7 +229,7 @@ export function PlanAppScreen() {
         )}
       </ArrangeDock>
       {/* The hint's hand: taps the right step; it goes as soon as the learner does something. */}
-      {demo && <TapHint targets={demo.targets} runKey={demo.press} startAfterMs={HINT_PRESS_DELAY_MS} active={!complete} />}
+      {answerHint.hand}
       <Confetti active={complete} />
       <XpBurst show={complete} />
     </LevelTwoShell>

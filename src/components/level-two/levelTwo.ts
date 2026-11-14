@@ -63,11 +63,8 @@ export type Quiz = {
   pose: RobotPose;
   /** The cards stay in view on a right answer, though the robot plays a move (they fade out otherwise). */
   keepCards?: boolean;
-  /** The hint also lights up the target box. */
-  targetHint?: boolean;
   /** The target box is lit from the start, with this text on it (as on the "Move cube to target" screen). */
   targetLabel?: string;
-  hint: boolean;
   /** The main button before the answer is checked (default "Check"). */
   ctaLabel?: string;
   /** Clips read when the screen opens (the title, then Hex's line); cut off once the answer is checked. */
@@ -97,7 +94,6 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   wrong: "Watch what robot does after you select the instruction.",
   pose: "holding",
   keepCards: true,
-  hint: true,
   voiceover: MODULE_AUDIO.whatJustHappened,
 };
 
@@ -119,7 +115,6 @@ export const WHAT_NEXT: Quiz = {
   wrongTitle: "Let’s look again!",
   wrong: "Which command lifts the cube?",
   pose: "idle",
-  hint: true,
   voiceover: MODULE_AUDIO.yourTurn,
 };
 
@@ -140,7 +135,6 @@ export const ROBOT_PICKED_UP: Quiz = {
   wrongTitle: "Not quite!",
   wrong: "Robot is not releasing it, it will grab it.",
   pose: "holding",
-  hint: true,
   voiceover: MODULE_AUDIO.releaseCube,
 };
 
@@ -163,7 +157,6 @@ export const LETS_PICK_UP: Quiz = {
   right: "Yes! PICK UP makes the robot lift the cube.",
   wrong: "Remember: PICK UP makes the robot lift the cube.",
   pose: "idle",
-  hint: false,
 };
 
 /** Screen 8 — `/module/commands?step=8`. */
@@ -184,8 +177,6 @@ export const WHERE_SHOULD_GO: Quiz = {
   right: "Place in Target moves the cube to the target area.",
   wrong: "Remember: Place in Target moves the cube to the target area.",
   pose: "holding",
-  hint: true,
-  ctaLabel: "Let’s do it!",
   voiceover: MODULE_AUDIO.reachTarget,
 };
 
@@ -205,5 +196,4 @@ export const WILL_REACH: Quiz = {
   right: "Yes! Put Down releases the cube right where the robot is.",
   wrong: "Remember: Put Down releases the cube at the robot’s current position.",
   pose: "holding",
-  hint: true,
 };
