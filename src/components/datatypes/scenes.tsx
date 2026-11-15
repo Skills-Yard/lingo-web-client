@@ -11,8 +11,16 @@ export const HEX_LIFT = 12;
 const SCENE_BELOW_ROW = 101;
 /** The widest a scene is drawn on screen (px): a phone's width fills the screen, a wider one gets the plain background at its sides. */
 const MAX_SCREEN_W = 560;
-/** The scene's width on the stage (a CSS length): the stage's full width, up to `MAX_SCREEN_W` on screen (the stage is scaled, so what is capped in screen px is divided by its scale). */
-const SCENE_WIDTH = `min(var(--stage-w, ${DATATYPES_SCENES.width}px), calc(${MAX_SCREEN_W}px / var(--stage-scale, 1)))`;
+/**
+ * The widest a scene is drawn on the stage (px): the stage is 844 tall however wide it gets, and a phone shaped 9:16 (the
+ * widest a phone is) makes it 475 wide. The scene always fills the device's width (it is never narrower than the screen),
+ * so it has to be at least that wide, and so about 70px taller than its own size there: what stands under it (see
+ * `UnderScene`) then sits over its floor, instead of under the main button. A window wider than a phone gets the plain
+ * background at the scene's sides, as the scene stops growing here (a wider one would be taller than the room it has).
+ */
+const MAX_SCENE_W = 480;
+/** The scene's width on the stage (a CSS length): the stage's full width, which is the device's width, up to `MAX_SCENE_W` and up to `MAX_SCREEN_W` on screen (the stage is scaled, so what is capped in screen px is divided by its scale). */
+const SCENE_WIDTH = `min(var(--stage-w, ${DATATYPES_SCENES.width}px), calc(${MAX_SCREEN_W}px / var(--stage-scale, 1)), ${MAX_SCENE_W}px)`;
 /** Fades the scene into the page at its top and bottom only: its sides are left sharp. */
 const FADE = "linear-gradient(180deg, transparent 0, #000 28px, #000 calc(100% - 26px), transparent 100%)";
 /** Its way up once a right answer has sent Hex and his bubble away: it sets off as they do and settles after them. */

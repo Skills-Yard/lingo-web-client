@@ -6,6 +6,7 @@ import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { aboveButtons } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
+import { RightBounce } from "@/components/level-two/RightBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
 import { IDLE_LOOK, OPTION } from "@/components/variable/quiz";
@@ -27,6 +28,12 @@ const FOUR_ANSWER_CHARS = 18;
 
 const wordCount = (text: string) => text.trim().split(/\s+/).length;
 const columnsFor = (count: number) => (count === 3 ? 3 : 2);
+/**
+ * The side padding (px, border included) of a card. Three across on a phone are (340 - 2 x 14) / 3 = 104px cards, and the widest
+ * two-word answer's widest word ("Numerical") is about 87px, so the usual 12px a side (80px inside) does not hold it: the cards
+ * take 8px here, so the three stay the same size instead of the one with the long word growing at the others' cost.
+ */
+const padXFor = (count: number) => (count === 3 ? 8 : OPTION.padX);
 
 /** Whether the answers are cards across (three of at most `MAX_OPTION_WORDS` words, or four short ones two by two) rather than rows. */
 export const acrossCards = (options: readonly Option[]) =>
@@ -62,7 +69,7 @@ export function OptionGrid({
   correctId: string;
   selectedId: string | null;
   checked: boolean;
-  /** The cards fade out (a right answer clears the screen). */
+  /** The cards fade out (a wrong answer, where a scene shows what was picked). */
   fadeOut: boolean;
   hinted: boolean;
   withHint: boolean;
@@ -80,13 +87,14 @@ export function OptionGrid({
       animate={{ opacity: fadeOut ? 0 : 1, y: checked ? -rise : 0 }}
       transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
       className="pointer-events-auto absolute z-[1] grid"
-      // Equal columns, except that a card is never narrower than its longest word, so the text stays inside it.
-      style={{ bottom: aboveButtons(OPTION.aboveButtons, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(min-content, 1fr))` }}
+      // Equal columns, always: every card on a screen is the same size (a card's own words never widen its column).
+      style={{ bottom: aboveButtons(OPTION.aboveButtons, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(0, 1fr))` }}
     >
       {options.map((option, index) => {
         const state = optionState(option.id, selectedId, checked, correctId);
+        const padX = padXFor(options.length);
         const hintHere = hinted && selectedId === null && option.id === correctId;
-        const card = (
+        const plainCard = (
           <HintFloat key={option.id} className="relative flex min-w-0 flex-1" spin={false} active={hintHere}>
             <motion.button
               type="button"
@@ -100,8 +108,8 @@ export function OptionGrid({
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              // The side padding makes up the border's width (a 1px line + the rest at rest, a 4px border + the rest picked: `OPTION.padX` either way), so a card is as wide picked as at rest and nothing around it moves.
-              style={{ height: OPTION.height, borderRadius: OPTION.radius, paddingInline: state === "idle" ? OPTION.padX - 1 : OPTION.padX - 4 }}
+              // The side padding makes up the border's width (a 1px line + the rest at rest, a 4px border + the rest picked: `padX` either way), so a card is as wide picked as at rest and nothing around it moves.
+              style={{ height: OPTION.height, borderRadius: OPTION.radius, paddingInline: state === "idle" ? padX - 1 : padX - 4 }}
               className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center overflow-visible ${RAISED} ${LOOKS[state].edge} ${
                 state === "idle" ? `border ${IDLE_LOOK}` : `border-4 ${LOOKS[state].card}`
               }`}
@@ -119,6 +127,13 @@ export function OptionGrid({
               </span>
             </motion.button>
           </HintFloat>
+        );
+        // The right card jumps a little after the check, so the cards have risen above the result panel by the time it does.
+        const card = (
+          // `flex-1`: inside the bounce-in box (a flex row) it must fill the grid cell, or each card is only as wide as its words.
+          <RightBounce key={option.id} play={state === "correct"} delay={0.2} radius={OPTION.radius} className="flex min-w-0 flex-1">
+            {plainCard}
+          </RightBounce>
         );
         return bounceIn ? (
           <BounceIn key={option.id} index={index} shown={revealed} className="flex min-w-0">

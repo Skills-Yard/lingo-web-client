@@ -1,10 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Confetti } from "@/components/level-one/Confetti";
-import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
+import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
@@ -61,6 +60,56 @@ function InteractionHost({
   setScene: (values: SceneValues) => void;
 }) {
   return <>{stage.render?.({ slip, done, dismissHex, finished, hexSpoken, takeContinue, setScene })}</>;
+}
+
+/** The least room (px) kept between what stands under a scene and the main button's top edge. */
+const BUTTON_CLEAR = 6;
+
+/**
+ * What an interaction draws under a scene: it stands right below the scene, and rises with it when it sends Hex's line
+ * away. Where the stage leaves it too little room (a wide window makes the main button taller), it stands higher instead,
+ * over the scene's faded floor, so none of it is ever under the main button.
+ */
+function UnderScene({ titleEnd, lifted, hidden, children }: { titleEnd: number; lifted: boolean; hidden: boolean; children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const edge = useRef<HTMLDivElement>(null);
+  // How far (px) it has to stand higher.
+  const [over, setOver] = useState(0);
+  // Once Hex's line has gone the whole box stands this much higher already (the scene rose into his room), so it needs no more room.
+  const lift = lifted ? sceneLift(titleEnd) : 0;
+  useLayoutEffect(() => {
+    const element = box.current;
+    const inner = content.current;
+    const line = edge.current;
+    const stage = element?.offsetParent;
+    if (!element || !inner || !line || !stage) return;
+    // Layout px of the stage, which the box's own move (the transform) does not change: its bottom (where it stands, as tall as what it holds, less the lift) against the line that stands `BUTTON_CLEAR` above the button.
+    const measure = () => setOver(Math.max(0, element.offsetTop + inner.offsetHeight - lift - line.offsetTop));
+    const observer = new ResizeObserver(measure);
+    observer.observe(inner);
+    observer.observe(stage);
+    measure();
+    return () => observer.disconnect();
+  }, [lift]);
+  return (
+    <>
+      <motion.div
+        ref={box}
+        initial={false}
+        // The lift and the extra room it needs are one move (not two that could pull against each other), so it never jumps.
+        animate={{ y: -(lift + over) }}
+        transition={lifted ? LIFT_UP : LIFT_DOWN}
+        className="absolute inset-x-0"
+        style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)` }}
+      >
+        <motion.div ref={content} initial={false} animate={{ opacity: hidden ? 0 : 1 }} transition={{ duration: 0.3 }} className="flex justify-center" style={{ pointerEvents: hidden ? "none" : "auto" }}>
+          {children}
+        </motion.div>
+      </motion.div>
+      <div ref={edge} aria-hidden className="pointer-events-none absolute inset-x-0" style={{ bottom: aboveButtons(BUTTON_CLEAR), height: 0 }} />
+    </>
+  );
 }
 
 /**
@@ -226,12 +275,10 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz.options) + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
   const risen = quiz ? OPTION.rise : interaction?.finishPanel ? PANEL_ROOM : 0;
-  // Under a scene the answers stay where they stand (the scene has risen clear of them); without one they rise above the panel.
-  const answersRise = scene ? 0 : OPTION.rise;
-  const celebrate = panel?.right === true && (quiz ? checked : finished);
-  // A right answer sends the answers (and the question standing on them) up and away, as in the earlier modules.
-  // Under a scene they go on a wrong one too (the scene shows what was picked), and they leave from where they stand: the scene stays put.
-  const answersAway = !!quiz && checked && (correct || !!scene);
+  // A right answer stays: the answers rise above the panel (the scene has risen clear of them) and the right one bounces.
+  // Under a scene a wrong one clears them instead (the scene shows what was picked), and they leave from where they stand.
+  const answersAway = !!quiz && checked && !correct && !!scene;
+  const answersRise = answersAway ? 0 : OPTION.rise;
 
   return (
     <LevelTwoShell
@@ -325,23 +372,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
 
       {/* An interaction under a scene stands below it and leaves once it is done. When it sends Hex's line above away the scene rises into his room (see `SceneBackdrop`), and the interaction rises with it, so it stays right under the scene. */}
       {scene && interaction && (
-        <motion.div
-          initial={false}
-          animate={{ y: hexDismissed ? -sceneLift(titleEnd) : 0 }}
-          transition={hexDismissed ? LIFT_UP : LIFT_DOWN}
-          className="absolute inset-x-0"
-          style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)` }}
-        >
-          <motion.div
-            initial={false}
-            animate={{ opacity: panel ? 0 : 1 }}
-            transition={{ duration: 0.3 }}
-            className="flex justify-center"
-            style={{ pointerEvents: panel ? "none" : "auto" }}
-          >
-            <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
-          </motion.div>
-        </motion.div>
+        <UnderScene titleEnd={titleEnd} lifted={hexDismissed} hidden={!!panel}>
+          <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
+        </UnderScene>
       )}
 
       {quiz && (
@@ -389,14 +422,12 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               fontSize={OPTION.font}
               bounceIn={quiz.optionsAfterHex}
               revealed={hexSpoken}
+              bounceRight
               onPick={setSelectedId}
             />
           )}
         </>
       )}
-
-      <Confetti active={celebrate} />
-      <XpBurst show={celebrate} />
     </LevelTwoShell>
   );
 }
