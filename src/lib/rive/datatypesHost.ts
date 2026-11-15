@@ -14,6 +14,14 @@ export type { DatatypesSceneName };
 export type SceneValue = boolean | number | string;
 /** Data for a scene's artboard, by name (see `DATATYPES_SCENES`). */
 export type SceneValues = Readonly<Record<string, SceneValue>>;
+/**
+ * Words for a scene's artboard: its text runs have no names, so each is changed by its place in the artboard (see
+ * `STRINGS_LIST_TEXT`). Every run a screen does not name is as the file has it.
+ */
+export type SceneTexts = Readonly<Record<number, string>>;
+
+/** The part of the artboard's own object this uses (the library keeps it private). */
+type TextRuns = { textValueRunCount(): number; textValueRunByIndex(index: number): { text: string } | undefined };
 export type SceneTrigger = "correct" | "wrong" | "run";
 
 type Host = {
@@ -26,6 +34,9 @@ type Host = {
   defaults: Record<string, SceneValue>;
   /** What the screen last asked for. */
   wanted: SceneValues;
+  /** The artboard's words as the file has them (by place, see `SceneTexts`), and the ones the screen last asked for. */
+  defaultTexts: string[];
+  wantedTexts: SceneTexts;
   /** Triggers to fire, one at a time. */
   queue: SceneTrigger[];
   firing: boolean;
@@ -66,6 +77,27 @@ const apply = (host: Host) => {
     if (!(name in host.wanted)) write(host, name, value);
   });
   Object.entries(host.wanted).forEach(([name, value]) => write(host, name, value));
+  applyTexts(host);
+};
+
+/** The artboard's own object, if the file has loaded. */
+const textRuns = (host: Host) => (host.rive as unknown as { artboard?: TextRuns | null } | null)?.artboard ?? null;
+
+const readTexts = (host: Host) => {
+  const artboard = textRuns(host);
+  if (!artboard) return;
+  host.defaultTexts = Array.from({ length: artboard.textValueRunCount() }, (_, index) => artboard.textValueRunByIndex(index)?.text ?? "");
+};
+
+/** Writes the artboard's words: what the screen asked for, and the file's own for every other run (so a word a screen before changed is put back). */
+const applyTexts = (host: Host) => {
+  const artboard = textRuns(host);
+  if (!artboard) return;
+  host.defaultTexts.forEach((original, index) => {
+    const run = artboard.textValueRunByIndex(index);
+    const wanted = host.wantedTexts[index] ?? original;
+    if (run && run.text !== wanted) run.text = wanted;
+  });
 };
 
 const readDefaults = (host: Host) => {
@@ -97,7 +129,7 @@ const createHost = (scene: DatatypesSceneName): Host => {
   const canvas = document.createElement("canvas");
   canvas.style.cssText = "display:block;width:100%;height:100%";
   element.appendChild(canvas);
-  const host: Host = { element, rive: null, loaded: false, settled: false, defaults: {}, wanted: {}, queue: [], firing: false, slots: 0, parked: undefined };
+  const host: Host = { element, rive: null, loaded: false, settled: false, defaults: {}, wanted: {}, defaultTexts: [], wantedTexts: {}, queue: [], firing: false, slots: 0, parked: undefined };
   // A cached file can finish loading before `new Rive` has returned, so wait for the instance.
   const onLoad = () => {
     const rive = host.rive;
@@ -109,6 +141,7 @@ const createHost = (scene: DatatypesSceneName): Host => {
     rive.resizeDrawingSurfaceToCanvas();
     Object.assign(rive, { layout: LAYOUT() });
     readDefaults(host);
+    readTexts(host);
     apply(host);
     // Shown once the machine has settled on what was asked for, so the scene never opens on its first picture.
     window.setTimeout(() => {
@@ -154,11 +187,12 @@ export const detachScene = (scene: DatatypesSceneName) => {
 /**
  * Says what the scene shows: `values` is all the data the screen sets, and every other value goes back to what
  * the file has (so a highlight a screen before left on is cleared). Safe to call before the file has loaded: it
- * is written as soon as it has.
+ * is written as soon as it has. `texts` is the same for the artboard's words (see `SceneTexts`).
  */
-export const showScene = (scene: DatatypesSceneName, values: SceneValues) => {
+export const showScene = (scene: DatatypesSceneName, values: SceneValues, texts: SceneTexts = {}) => {
   const host = getHost(scene);
   host.wanted = values;
+  host.wantedTexts = texts;
   if (host.loaded) apply(host);
 };
 

@@ -7,8 +7,8 @@ import { ChooseTypeStage, SortStage, TYPES, type SortBucket } from "./interactio
 import { MeasureLine } from "./MeasureLine";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
 import { P } from "./pictures";
-import type { SceneValues } from "@/lib/rive/datatypesHost";
-import { MASTERY, SCENE_MODE, type DatatypesSceneName } from "@/lib/rive/runtime";
+import type { SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
+import { MASTERY, SCENE_MODE, STRINGS_EXAMPLE_TEXT, type DatatypesSceneName } from "@/lib/rive/runtime";
 import type { Option, QuizStage, SceneSpec, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
 import { InfoRows, type InfoRow } from "./visuals";
@@ -45,7 +45,7 @@ const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", opt
  */
 const sceneOf =
   (scene: DatatypesSceneName) =>
-  (values: SceneValues, markWrong = true): SceneSpec => ({ scene, values, markWrong });
+  (values: SceneValues, markWrong = true, texts?: SceneTexts): SceneSpec => ({ scene, values, markWrong, texts });
 const info = sceneOf("info");
 const numbers = sceneOf("numbers");
 const strings = sceneOf("strings");
@@ -137,15 +137,36 @@ const CLASSIFY_ITEMS: readonly SceneSortItem[] = [
   { id: "9.75", label: "9.75", key: "drop4", bucket: "float", hint: DECIMAL_HINT },
 ];
 
-/** Screen 11's six texts, as the scene lights them (`sel1` is Aarav). All of them are text. */
+/**
+ * Screen 11's six texts, as the scene lights them (`sel1` is Aarav). All of them are text. The greeting is "Hello!" (the file
+ * has "Welcome to Learny!", too long for a button three across), written over the card's own text (see `EXAMPLE_TEXTS`).
+ */
 const TEXT_PICKS = [
   { id: "a", label: "Aarav", key: "sel1" },
   { id: "b", label: "Class 6A", key: "sel2" },
   { id: "c", label: "Delhi", key: "sel3" },
   { id: "d", label: "SY001", key: "sel4" },
-  { id: "e", label: "Welcome to Learny!", key: "sel5" },
+  { id: "e", label: "Hello!", key: "sel5" },
   { id: "f", label: "9876543210", key: "sel6" },
 ] as const;
+
+/**
+ * Screen 12's values, written as text in quotes, each with what is said once it is tapped (`rev1` hangs the tag on the first
+ * card). The same artboard as screen 11, so the same greeting. They are told apart by their caption, and none is wrong.
+ */
+const STRING_PICKS = [
+  { id: "a", label: "“Aarav”", key: "rev1", caption: "A name, written as text." },
+  { id: "b", label: "“Class 6A”", key: "rev2", caption: "Words and a number, as text." },
+  { id: "c", label: "“Delhi”", key: "rev3", caption: "A city, written as text." },
+  { id: "d", label: "“SY001”", key: "rev4", caption: "An ID: letters and digits, as text." },
+  { id: "e", label: "“Hello!”", key: "rev5", caption: "A word and a symbol, as text." },
+] as const;
+
+/** The artboard's long greeting, "Welcome to Learny!" and its quoted twin, written as "Hello!" on screens 11 and 12, so what is on the buttons is what is on the cards. */
+const EXAMPLE_TEXTS: SceneTexts = {
+  [STRINGS_EXAMPLE_TEXT.greeting]: "Hello!",
+  [STRINGS_EXAMPLE_TEXT.greetingQuoted]: "“Hello!”",
+};
 
 /** Screen 22's four fields, each with the value the app holds for it (`t1` is City in the scene), and the type it needs. */
 const WEATHER_PLAN: readonly SceneSortItem[] = [
@@ -235,6 +256,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         scene: sorting({ ...BELT, ...BELT_SORTED }, false),
         // Nothing has to be tapped: once Hex has said his line, Continue reads the groups one by one, then goes on.
         ready: true,
+        // Hex stands under the groups and his bubble grows downward, so the groups hang from the scene (they must not move when he arrives).
+        follow: true,
         render: (api) => <SceneTourStage api={api} groups={TOUR_GROUPS} glow="sorting" />,
       },
       // The PDF's question after the groups: they are not the same kind of information.
@@ -432,18 +455,9 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Which of these can be treated as text?",
         alignTop: true,
-        scene: strings({ mode: MODE.strings.examples }, false),
-        render: (api) => (
-          <ScenePickStage
-            api={api}
-            columns={3}
-            items={TEXT_PICKS}
-            correct={TEXT_PICKS.map((pick) => pick.id)}
-            hint="Text can hold letters, digits and symbols."
-            // Once all are picked the scene tags the two ids: they identify someone, they are not added.
-            doneValues={{ ident: 1 }}
-          />
-        ),
+        // The text examples, each card lit as its button is picked; once all are, the scene tags the two ids: they identify someone, they are not added.
+        scene: strings({ mode: MODE.strings.examples }, false, EXAMPLE_TEXTS),
+        render: (api) => <ScenePickStage api={api} columns={3} items={TEXT_PICKS} correct={TEXT_PICKS.map((pick) => pick.id)} hint="Text can hold letters, digits and symbols." doneValues={{ ident: 1 }} />,
         finishPanel: { title: "All of them!", text: "Text holds letters, digits and symbols. An ID or a phone number identifies someone: we don’t add it." },
       },
     ],
@@ -459,24 +473,21 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Text information is called a String.",
         bubbleWidth: 190,
         alignTop: true,
-        scene: strings({ mode: MODE.strings.examples }, false),
+        // The same artboard and the same buttons as screen 11 (a pick bounces, drops and goes grey). Three taps are enough: once the scene has put the quote marks on, they are all disabled, and the result panel comes.
+        scene: strings({ mode: MODE.strings.examples }, false, EXAMPLE_TEXTS),
         render: (api) => (
-          <SceneRevealStage
+          <ScenePickStage
             api={api}
             columns={3}
             need={3}
+            items={STRING_PICKS}
+            correct={STRING_PICKS.map((pick) => pick.id)}
+            hint="Tap each one."
             // The scene hangs a tag on the card (name, class, city, ...); once enough are read it puts the quote marks on.
             doneValues={{ quotes: 1 }}
-            items={[
-              { id: "a", label: "“Aarav”", key: "rev1", caption: "A name, written as text." },
-              { id: "b", label: "“Class 6A”", key: "rev2", caption: "Words and a number, as text." },
-              { id: "c", label: "“Delhi”", key: "rev3", caption: "A city, written as text." },
-              { id: "d", label: "“SY001”", key: "rev4", caption: "An ID: letters and digits, as text." },
-              { id: "e", label: "“Hello Learny!”", key: "rev5", caption: "Words, a space and a symbol." },
-            ]}
-            footer={<Key>String (str) represents text information.</Key>}
           />
         ),
+        finishPanel: { title: "That’s a String!", text: "String (str) represents text information." },
       },
     ],
   },

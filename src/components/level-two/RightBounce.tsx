@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 
 /**
@@ -51,9 +51,16 @@ const STAR_PATH = "M12 0C12.9 7.2 16.8 11.1 24 12C16.8 12.9 12.9 16.8 12 24C11.1
 /**
  * Wraps an answer; it bounces once, `delay` seconds after `play` turns on, with its shine and stars, and is as it was when
  * `play` turns off again (trying again). `radius` is the answer's corner (px), for the shine and the shadow. `className`
- * sizes the wrapper in its row or grid (it goes on the box that stands still and on the one that bounces).
+ * sizes the wrapper in its row or grid (it goes on the box that stands still and on the one that bounces). `onDrop`
+ * is called the moment the card first comes down from its big jump (its hops after that are still to come), for what
+ * is to change then.
  */
-export function RightBounce({ play, delay = 0, radius = 16, className = "", children }: { play: boolean; delay?: number; radius?: number; className?: string; children: ReactNode }) {
+export function RightBounce({ play, delay = 0, radius = 16, className = "", onDrop, children }: { play: boolean; delay?: number; radius?: number; className?: string; onDrop?: () => void; children: ReactNode }) {
+  // The latest callback, so a new one each render does not restart the bounce.
+  const dropRef = useRef(onDrop);
+  useEffect(() => {
+    dropRef.current = onDrop;
+  });
   const y = useMotionValue(0);
   const scaleX = useMotionValue(1);
   const scaleY = useMotionValue(1);
@@ -83,11 +90,14 @@ export function RightBounce({ play, delay = 0, radius = 16, className = "", chil
     );
     // The shadow goes a moment after it has landed; the shine and the stars are taken out when they are done.
     const landed = window.setTimeout(() => setBouncing(false), (delay + SQUEEZE_S + BOUNCE_S) * 1000 + SHADOW_STAYS_MS);
+    // The first time it is back on the ground is the third beat of the jump.
+    const dropped = window.setTimeout(() => dropRef.current?.(), (delay + SQUEEZE_S + BOUNCE_S * BOUNCE_TIMES[2]) * 1000);
     const shone = window.setTimeout(() => setShining(false), (delay + SQUEEZE_S + SHINE_ENDS_S) * 1000);
     return () => {
       window.clearTimeout(squeeze);
       window.clearTimeout(jump);
       window.clearTimeout(landed);
+      window.clearTimeout(dropped);
       window.clearTimeout(shone);
       running.forEach((animation) => animation.stop());
       y.set(0);

@@ -211,6 +211,8 @@ export const VARIABLE_SCENES = {
  *   Class 6A, Delhi, SY001, Welcome to Learny!, 9876543210), `rev1`-`rev5` hangs a tag on it, `quotes` 1 puts quote marks on
  *   the text, `ident` 1 tags the two ids. Mode 2: `step` 1 the 12 on the calculator and "12" on the screen, 2 the sum
  *   12 + 3 = 15, 3 the text "12" + "3" = "123".
+ *   The words on the pictures are text runs with no names (so no data field and no `setTextRunValue`): a screen changes
+ *   one by its place in the artboard (`STRINGS_EXAMPLE_TEXT`), see `SceneTexts`.
  * - `boolean`, mode 1: `s1`-`s4` switches a card on (Present, Paid, Logged in, On). Mode 2: `bsel` 1 / 2 outlines TRUE / FALSE.
  *   Mode 3: `open1`-`open4` opens a type card (Integer, Float, String, Boolean). Mode 4: `m1`-`m4` puts a card in its
  *   own bin (Age, Student ID, Height, Is_present).
@@ -238,6 +240,19 @@ export const DATATYPES_SCENES = {
 } as const;
 
 export type DatatypesSceneName = Exclude<keyof typeof DATATYPES_SCENES, "src" | "width" | "height">;
+
+/**
+ * Some words of `DT_A03_StringDiscovery`'s text examples (mode 1), as the text runs of the artboard are numbered in the file
+ * (`textValueRunByIndex`: they have no names, read off the file 2026-11-15, 33 runs; the laptop's list, mode 0, is runs 24 to
+ * 32: rows 30/31, 28/29, 26/27 and 24/25 as name / badge letter from the top row, and 32 its heading). They are changed by
+ * `SceneTexts`, and are as the file has them whenever a screen does not say.
+ */
+export const STRINGS_EXAMPLE_TEXT = {
+  /** "Welcome to Learny!", the greeting's card. */
+  greeting: 10,
+  /** `"Hello Learny!"`, the same greeting with its quote marks (the picture puts them on when `quotes` is 1). */
+  greetingQuoted: 9,
+} as const;
 
 /** What each artboard's `mode` is (see `DATATYPES_SCENES`): the screens use these in place of the bare numbers. */
 export const SCENE_MODE = {

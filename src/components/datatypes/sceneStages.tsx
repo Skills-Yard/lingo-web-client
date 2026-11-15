@@ -6,6 +6,7 @@ import { Check, type LucideIcon } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { HexBubble } from "@/components/level-two/HexBubble";
+import { RightBounce } from "@/components/level-two/RightBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
@@ -36,9 +37,20 @@ const useSceneValues = (api: InteractionApi, values: SceneValues) => {
   }, [setScene, key]);
 };
 
-/** The look of a button that has been got right, got wrong, or is waiting. */
-const buttonLook = (state: "right" | "wrong" | "idle", index: number) =>
-  state === "right" ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : state === "wrong" ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`;
+/** A button that is done with: grey and flat-looking, as the main button is when it is disabled. */
+const OFF_LOOK = `border-[#DADDE3] bg-[#E9EBEF] dark:border-white/10 dark:bg-[#252931] ${EDGE.pale}`;
+/** The text on it. */
+const OFF_TEXT = "text-[16px] leading-[110%] font-semibold text-[#8E959F] dark:text-white/40";
+
+/** The look of a button that has been got right, got wrong, is waiting, or is `off` (got right, and done with: disabled in grey). */
+const buttonLook = (state: "right" | "wrong" | "idle" | "off", index: number) =>
+  state === "off"
+    ? OFF_LOOK
+    : state === "right"
+      ? `${LOOKS.correct.card} ${LOOKS.correct.edge}`
+      : state === "wrong"
+        ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}`
+        : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`;
 
 /** The Variable module's plain look for a button: white with a thin grey line and its rounded corners, red once it is wrong. */
 const plainLook = (wrong: boolean) =>
@@ -188,6 +200,9 @@ export function SceneSortStage({
         </AnimatePresence>
       </div>
 
+      {/* The line under the card to place stands over the buttons, so the buttons are the lowest thing: on the main button, as every screen's options are. */}
+      <p className={NOTE}>{note || <span className={PROMPT}>{finished ? "" : prompt}</span>}</p>
+
       <div className={`grid w-full gap-2.5 ${gridColumns}`}>
         {buckets.map((bucket, index) => (
           <BounceIn key={bucket.id} index={index} shown={hexSpoken} className="flex min-w-0">
@@ -208,8 +223,6 @@ export function SceneSortStage({
           </BounceIn>
         ))}
       </div>
-
-      <p className={NOTE}>{note || <span className={PROMPT}>{finished ? "" : prompt}</span>}</p>
     </div>
   );
 }
@@ -218,13 +231,20 @@ export type ScenePickItem = {
   id: string;
   label: string;
   sub?: string;
-  /** The scene's value that lights this one up. */
-  key: string;
+  /** The scene's value that lights this one up. Left out where the scene has nothing to light for it (the picks only turn their own buttons green). */
+  key?: string;
+  /** What is said under the buttons once it is picked (a stage with captions is one of finding out what each is, with no wrong pick). */
+  caption?: string;
 };
 
+/** How long (ms) after the last right pick the stage is done: its whole bounce (about 1.1 s) is seen, the button grey from its first drop, before the result panel comes. */
+const PICK_FINISH_MS = 1500;
+
 /**
- * Tap the values that fit: each right one lights up in the scene and its button turns green; a wrong one shakes red
- * with a hint (and counts as a slip). It is done when every right one has been tapped.
+ * Tap the values that fit: each right one lights up in the scene (where it has a `key`) and its button turns green and
+ * bounces, with the shine and stars, as a right answer does, and takes no more taps; a wrong one shakes red with a hint
+ * (and counts as a slip). It is done when `need` right ones (all of them, by default) have been tapped, and every
+ * button is then disabled and grey. Where the items have `caption`s, the one just picked is said over the buttons.
  */
 export function ScenePickStage({
   api,
@@ -232,6 +252,7 @@ export function ScenePickStage({
   correct,
   hint,
   columns = 2,
+  need = correct.length,
   doneValues,
 }: {
   api: InteractionApi;
@@ -240,6 +261,8 @@ export function ScenePickStage({
   correct: readonly string[];
   hint: string;
   columns?: 2 | 3;
+  /** How many right picks finish the stage (all of `correct` by default). */
+  need?: number;
   /** More for the scene once it is done (the ids tagged on the text screen). */
   doneValues?: SceneValues;
 }) {
@@ -247,10 +270,19 @@ export function ScenePickStage({
   const [got, setGot] = useState<readonly string[]>([]);
   const [wrongId, setWrongId] = useState<string | null>(null);
   const [note, setNote] = useState("");
+  // The right picks that have dropped from their big jump: they go grey then (their small hops after it are in grey).
+  const [landed, setLanded] = useState<readonly string[]>([]);
 
-  const values = useMemo(() => ({ ...Object.fromEntries(items.filter((item) => got.includes(item.id)).map((item) => [item.key, 1])), ...(finished ? doneValues : undefined) }), [items, got, doneValues, finished]);
+  const values = useMemo(
+    () => ({ ...Object.fromEntries(items.flatMap((item) => (item.key && got.includes(item.id) ? [[item.key, 1] as const] : []))), ...(finished ? doneValues : undefined) }),
+    [items, got, doneValues, finished],
+  );
   useSceneValues(api, values);
-  useFinishWhen(got.length >= correct.length, done, 600);
+  useFinishWhen(got.length >= need, done, PICK_FINISH_MS);
+  const shown = items.find((item) => item.id === got[got.length - 1]);
+  const hasCaptions = items.some((item) => item.caption);
+  // A button is grey from the drop of its pick, and all that were not picked are once the stage is done: nothing is left to tap.
+  const off = (id: string) => landed.includes(id) || (finished && !got.includes(id));
 
   const tap = (id: string) => {
     if (finished || got.includes(id)) return;
@@ -269,24 +301,49 @@ export function ScenePickStage({
 
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-2`}>
+      {/* What is said stands over the buttons, in a room of its own (the same height whether it is a hint or a caption), so the buttons are the lowest thing: on the main button, as every screen's options are. */}
+      <div className="flex min-h-[48px] w-full items-center justify-center">
+        {hasCaptions ? (
+          <AnimatePresence mode="wait">
+            {/* Nothing before the first pick: the room is kept, so nothing moves when the first caption comes. */}
+            {shown?.caption && (
+              <motion.p
+                key={shown.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-[12px] bg-white px-3 py-2 text-center text-[15px] leading-5 font-semibold text-[#444444] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-white"
+              >
+                {shown.caption}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        ) : (
+          <p className={NOTE}>{note}</p>
+        )}
+      </div>
       <div className={`grid w-full gap-2.5 ${columns === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
         {items.map((item, index) => (
           <BounceIn key={item.id} index={index} shown={hexSpoken} className="flex min-w-0">
-            <motion.button
-              type="button"
-              onClick={() => tap(item.id)}
-              animate={{ x: wrongId === item.id ? SHAKE : 0, scale: got.includes(item.id) ? [1, 1.05, 1] : 1 }}
-              transition={{ duration: 0.35 }}
-              whileTap={{ scale: 0.97 }}
-              className={`${CARD_BODY_FLAT} ${RAISED} min-h-[60px] min-w-0 flex-1 cursor-pointer flex-col gap-0.5 px-1.5 py-1.5 ${buttonLook(got.includes(item.id) ? "right" : wrongId === item.id ? "wrong" : "idle", index)}`}
-            >
-              <span className={CARD_TEXT}>{item.label}</span>
-              {item.sub && <span className="text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
-            </motion.button>
+            {/* A right pick turns green and bounces at once (the moment the learner can tell it is right), is disabled from then on, and goes grey the moment it drops from the jump. */}
+            <RightBounce play={got.includes(item.id)} radius={8} onDrop={() => setLanded((now) => (now.includes(item.id) ? now : [...now, item.id]))} className="flex min-w-0 flex-1">
+              <motion.button
+                type="button"
+                disabled={finished || got.includes(item.id)}
+                onClick={() => tap(item.id)}
+                animate={{ x: wrongId === item.id ? SHAKE : 0 }}
+                transition={{ duration: 0.35 }}
+                whileTap={{ scale: 0.97 }}
+                className={`${CARD_BODY_FLAT} ${RAISED} min-h-[60px] min-w-0 flex-1 cursor-pointer flex-col gap-0.5 px-1.5 py-1.5 disabled:cursor-default ${buttonLook(off(item.id) ? "off" : got.includes(item.id) ? "right" : wrongId === item.id ? "wrong" : "idle", index)}`}
+              >
+                <span className={off(item.id) ? OFF_TEXT : CARD_TEXT}>{item.label}</span>
+                {item.sub && <span className="text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
+              </motion.button>
+            </RightBounce>
           </BounceIn>
         ))}
       </div>
-      <p className={NOTE}>{note}</p>
     </div>
   );
 }
@@ -342,6 +399,29 @@ export function SceneRevealStage({
   const small = columns >= 4;
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
+      {/* What is said stands over the buttons, so the buttons are the lowest thing: on the main button, as every screen's options are. */}
+      {(hasCaptions || footer) && (
+        <div className="flex min-h-[48px] w-full items-center justify-center">
+          <AnimatePresence mode="wait">
+            {finished && footer ? (
+              <motion.div key="footer" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+                {footer}
+              </motion.div>
+            ) : (
+              <motion.p
+                key={shown?.id ?? "none"}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className={`rounded-[12px] px-3 py-2 text-center text-[15px] leading-5 font-semibold ${shown?.caption ? "bg-white text-[#444444] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-white" : `${PROMPT}`}`}
+              >
+                {shown?.caption ?? "Tap each one."}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
       <div className={`grid w-full ${small ? "gap-2" : "gap-2.5"} ${grid}`}>
         {items.map((item, index) => {
           const tapped = seen.includes(item.id);
@@ -369,28 +449,6 @@ export function SceneRevealStage({
           );
         })}
       </div>
-      {(hasCaptions || footer) && (
-        <div className="flex min-h-[48px] w-full items-center justify-center">
-          <AnimatePresence mode="wait">
-            {finished && footer ? (
-              <motion.div key="footer" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-                {footer}
-              </motion.div>
-            ) : (
-              <motion.p
-                key={shown?.id ?? "none"}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className={`rounded-[12px] px-3 py-2 text-center text-[15px] leading-5 font-semibold ${shown?.caption ? "bg-white text-[#444444] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-white" : `${PROMPT}`}`}
-              >
-                {shown?.caption ?? "Tap each one."}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
     </div>
   );
 }

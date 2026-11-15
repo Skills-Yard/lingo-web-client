@@ -615,6 +615,8 @@ export function ChooseTypeStage({
           </div>
         </WindowCard>
       )}
+      {/* The hint stands over the types, so they are the lowest thing: on the main button, as every screen's options are. */}
+      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
       <div className="grid w-full grid-cols-2 gap-3.5">
         {TYPES.map((type, index) => (
           <motion.button
@@ -633,7 +635,6 @@ export function ChooseTypeStage({
           </motion.button>
         ))}
       </div>
-      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { motion, type Transition } from "framer-motion";
-import { attachScene, detachScene, showScene, type SceneValues } from "@/lib/rive/datatypesHost";
+import { attachScene, detachScene, showScene, type SceneTexts, type SceneValues } from "@/lib/rive/datatypesHost";
 import { DATATYPES_SCENES, type DatatypesSceneName } from "@/lib/rive/runtime";
 
 /** How far Hex's row (him and his bubble) is lifted on a screen with a scene, up into the title's room (px): the Variable module's. */
@@ -68,15 +68,37 @@ function SceneSlot({ scene }: { scene: DatatypesSceneName }) {
 
 /**
  * A scene behind a screen (see `DATATYPES_SCENES`), the artboard's own size at the stage's width: not boxed, and
- * not shrunk for what stands over it. `values` is what it shows. `titleEnd` is where the screen's title block
- * ends. `lifted`: a right answer has sent Hex and his bubble away, and the scene rises into their room.
+ * not shrunk for what stands over it. `values` is what it shows, and `texts` the words it has in place of the file's
+ * own (see `SceneTexts`). `titleEnd` is where the screen's title block ends. `lifted`: a right answer has sent Hex
+ * and his bubble away, and the scene rises into their room.
  */
-export function SceneBackdrop({ scene, values, titleEnd, lifted = false, scale = 1 }: { scene: DatatypesSceneName; values: SceneValues; titleEnd: number; lifted?: boolean; scale?: number }) {
+export function SceneBackdrop({
+  scene,
+  values,
+  texts,
+  titleEnd,
+  lifted = false,
+  scale = 1,
+  maxHeight,
+}: {
+  scene: DatatypesSceneName;
+  values: SceneValues;
+  texts?: SceneTexts;
+  titleEnd: number;
+  lifted?: boolean;
+  scale?: number;
+  /**
+   * The most height (a CSS length) the scene shows. The scene always fills the device's width, so on a short, wide screen it is taller than the room
+   * the controls leave it: it is then cut at that height, from the bottom (its floor), and fades out there, instead of the controls standing over it.
+   */
+  maxHeight?: string;
+}) {
   const top = sceneTop(titleEnd);
   const key = JSON.stringify(values);
+  const textsKey = JSON.stringify(texts ?? {});
   useEffect(() => {
-    showScene(scene, JSON.parse(key) as SceneValues);
-  }, [scene, key]);
+    showScene(scene, JSON.parse(key) as SceneValues, JSON.parse(textsKey) as SceneTexts);
+  }, [scene, key, textsKey]);
 
   return (
     <motion.div
@@ -85,8 +107,8 @@ export function SceneBackdrop({ scene, values, titleEnd, lifted = false, scale =
       // `scale`: how large it is drawn (1 is its own size), from its top edge; a change (a larger look at it on one stage, its own size on the next) is eased slowly.
       animate={{ y: lifted ? -sceneLift(titleEnd) : 0, scale }}
       transition={{ ...(lifted ? LIFT_UP : LIFT_DOWN), scale: SCALE_EASE }}
-      className="pointer-events-none absolute inset-x-0 -z-10 flex justify-center dark:brightness-[0.75]"
-      style={{ top, maskImage: FADE, WebkitMaskImage: FADE, transformOrigin: "50% 0%" }}
+      className="pointer-events-none absolute inset-x-0 -z-10 flex justify-center overflow-hidden dark:brightness-[0.75]"
+      style={{ top, maxHeight, maskImage: FADE, WebkitMaskImage: FADE, transformOrigin: "50% 0%" }}
     >
       <div className="relative shrink-0" style={{ width: SCENE_WIDTH, aspectRatio: `${DATATYPES_SCENES.width} / ${DATATYPES_SCENES.height}` }}>
         <SceneSlot scene={scene} />

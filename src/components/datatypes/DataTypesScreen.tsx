@@ -62,15 +62,77 @@ function InteractionHost({
   return <>{stage.render?.({ slip, done, dismissHex, finished, hexSpoken, takeContinue, setScene })}</>;
 }
 
-/** The least room (px) kept between what stands under a scene and the main button's top edge. */
+/** How far (px) above the main button the lowest buttons stand under a scene: the same as a question's answers (`OPTION.aboveButtons`), so every screen's options are at the same place. */
+const DOCK_GAP = OPTION.aboveButtons;
+/** The room (px) kept between the scene and what stands docked under it. */
+const SCENE_GAP = 4;
+/**
+ * The height (px) a docked stage is counted as at least when it is worked out how much room the scene may keep: the tallest of the
+ * tap-the-buttons stages (two rows of 60px buttons and the caption's room, screen 12). So the scene is cut to the same height on every
+ * one of them (11, 12, 15, 16, 17) whatever the screen's shape, not by how much its own stage happens to hold.
+ */
+const DOCK_MIN_H = 186;
+/** The room (px) kept between the scene and a question's answers once they have risen above the result panel. */
+const ANSWERS_SCENE_GAP = 12;
+/** The least height (px) the scene is ever cut to. */
+const SCENE_MIN_H = 160;
+/** The least room (px) kept between what hangs from a scene and the main button's top edge. */
 const BUTTON_CLEAR = 6;
 
 /**
- * What an interaction draws under a scene: it stands right below the scene, and rises with it when it sends Hex's line
- * away. Where the stage leaves it too little room (a wide window makes the main button taller), it stands higher instead,
- * over the scene's faded floor, so none of it is ever under the main button.
+ * What an interaction draws under a scene. By default it stands on the main button (`DOCK_GAP` above it, like a question's
+ * answers), so the buttons are at the same place on every screen, and it never goes under the button or over the scene (the
+ * scene is cut short to leave it room: see `SceneBackdrop`). It rises with the scene when that rises into Hex's room, so the
+ * space between them stays. `follow`: it hangs from the scene instead (`HangingUnderScene`).
  */
-function UnderScene({ titleEnd, lifted, hidden, children }: { titleEnd: number; lifted: boolean; hidden: boolean; children: ReactNode }) {
+function UnderScene({ titleEnd, lifted, hidden, follow, onHeight, children }: { titleEnd: number; lifted: boolean; hidden: boolean; follow: boolean; onHeight: (height: number) => void; children: ReactNode }) {
+  return follow ? (
+    <HangingUnderScene titleEnd={titleEnd} lifted={lifted} hidden={hidden}>
+      {children}
+    </HangingUnderScene>
+  ) : (
+    <DockedUnderScene titleEnd={titleEnd} lifted={lifted} hidden={hidden} onHeight={onHeight}>
+      {children}
+    </DockedUnderScene>
+  );
+}
+
+/** A stage standing on the main button; it tells the screen how tall it is, so the scene can be cut to the room it leaves. */
+function DockedUnderScene({ titleEnd, lifted, hidden, onHeight, children }: { titleEnd: number; lifted: boolean; hidden: boolean; onHeight: (height: number) => void; children: ReactNode }) {
+  const content = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const element = content.current;
+    if (!element) return;
+    const measure = () => onHeight(element.offsetHeight);
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    measure();
+    return () => {
+      observer.disconnect();
+      onHeight(0);
+    };
+  }, [onHeight]);
+  return (
+    <motion.div
+      initial={false}
+      animate={{ y: lifted ? -sceneLift(titleEnd) : 0 }}
+      transition={lifted ? LIFT_UP : LIFT_DOWN}
+      className="absolute inset-x-0"
+      style={{ bottom: aboveButtons(DOCK_GAP) }}
+    >
+      <motion.div ref={content} initial={false} animate={{ opacity: hidden ? 0 : 1 }} transition={{ duration: 0.3 }} className="flex justify-center" style={{ pointerEvents: hidden ? "none" : "auto" }}>
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/**
+ * A stage that hangs from the scene (it stands right below it, and rises with it when Hex's line is sent away), for one whose parts
+ * grow downward (screen 4's tour). Where the screen leaves it too little room (a wide window makes the main button taller), it
+ * stands higher instead, over the scene's faded floor, so none of it is ever under the main button.
+ */
+function HangingUnderScene({ titleEnd, lifted, hidden, children }: { titleEnd: number; lifted: boolean; hidden: boolean; children: ReactNode }) {
   const box = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const edge = useRef<HTMLDivElement>(null);
@@ -139,6 +201,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const [hexDismissed, setHexDismissed] = useState(false);
   // What the interaction has changed in its scene so far (see `InteractionApi.setScene`); each stage starts clean.
   const [sceneExtra, setSceneExtra] = useState<SceneValues>({});
+  // How tall the stage standing on the main button is (px), 0 while there is none: the scene is cut to the room it leaves.
+  const [dockHeight, setDockHeight] = useState(0);
   // The picture is shrunk to fit the room between Hex's line and the question, if it is taller than that.
   const [roomHeight, setRoomHeight] = useState(0);
   const [pictureHeight, setPictureHeight] = useState(0);
@@ -280,6 +344,15 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const answersAway = !!quiz && checked && !correct && !!scene;
   const answersRise = answersAway ? 0 : OPTION.rise;
 
+  // The scene fills the device's width, so on a short, wide screen it is taller than the room the buttons leave it. It is cut there (at its floor) instead of their standing over it:
+  // above a stage docked on the main button, and above a question's answers once they have risen over the result panel (the scene has risen too, by `sceneLift`).
+  const docked = !!scene && !!interaction?.render && !interaction.follow;
+  const sceneMaxHeight = docked
+    ? `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${aboveButtons(DOCK_GAP)} - ${Math.max(dockHeight, DOCK_MIN_H) + SCENE_GAP}px))`
+    : scene && quiz
+      ? `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${answersBottom} - ${answersHeight(quiz.options) + OPTION.rise + ANSWERS_SCENE_GAP - sceneLift(titleEnd)}px))`
+      : undefined;
+
   return (
     <LevelTwoShell
       step={screen.step}
@@ -288,7 +361,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       scene={
         <>
           <SoftBackdrop />
-          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} titleEnd={titleEnd} lifted={gone} scale={lookOnly ? LARGE_SCENE : 1} />}
+          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} texts={scene.texts} titleEnd={titleEnd} lifted={gone} scale={lookOnly ? LARGE_SCENE : 1} maxHeight={sceneMaxHeight} />}
           {screen.backdrop}
         </>
       }
@@ -370,9 +443,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         )}
       </div>
 
-      {/* An interaction under a scene stands below it and leaves once it is done. When it sends Hex's line above away the scene rises into his room (see `SceneBackdrop`), and the interaction rises with it, so it stays right under the scene. */}
+      {/* An interaction under a scene stands on the main button (see `UnderScene`), and fades once its result panel is up. Whenever the scene rises into Hex's room (his line sent away, or the stage done: see `SceneBackdrop`) it rises with it, so the space between them stays. */}
       {scene && interaction && (
-        <UnderScene titleEnd={titleEnd} lifted={hexDismissed} hidden={!!panel}>
+        <UnderScene titleEnd={titleEnd} lifted={gone} hidden={!!panel} follow={!!interaction.follow} onHeight={setDockHeight}>
           <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
         </UnderScene>
       )}

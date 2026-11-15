@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Choice } from "@/components/level-two/levelTwo";
-import type { SceneValues } from "@/lib/rive/datatypesHost";
+import type { SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
 import type { DatatypesSceneName } from "@/lib/rive/runtime";
 
 /** An answer: its words and its picture (`icon` is a file, see `pictures.ts`). */
@@ -21,6 +21,8 @@ export type VisualContext = {
 export type SceneSpec = {
   scene: DatatypesSceneName;
   values: SceneValues;
+  /** The words the artboard has in place of the file's own, by their place in it (see `SceneTexts`); every other word is the file's. */
+  texts?: SceneTexts;
   /** A wrong answer fires the scene's `wrong` (default). Left off where the answers are reasons, so a cross on the picture would blame the wrong thing. */
   markWrong?: boolean;};
 
@@ -114,6 +116,12 @@ export type InteractionStage = StageTitle & {
   alignTop?: boolean;
   /** Nothing to do, only to look at (screens 5 and 6): Continue waits only for Hex to finish his line, and his line stays. */
   ready?: boolean;
+  /**
+   * Under a scene, what the stage draws stands on the main button by default (its lowest buttons the same 20px above it as a
+   * question's answers are, the scene cut short if it needs the room), the same place on every screen. `follow`: it hangs from the
+   * scene instead, as a stage does whose parts grow downward (screen 4's tour, with Hex standing under its groups).
+   */
+  follow?: boolean;
   /** What stands under the line (or under the scene). Left out where the scene is all there is to look at. */
   render?: (api: InteractionApi) => ReactNode;
   /** Hex's panel on finishing, if the interaction has one. */
