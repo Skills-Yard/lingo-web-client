@@ -23,6 +23,8 @@ export type SceneSpec = {
   values: SceneValues;
   /** The words the artboard has in place of the file's own, by their place in it (see `SceneTexts`); every other word is the file's. */
   texts?: SceneTexts;
+  /** How large (times its own size) a look-only stage draws this scene, in place of the usual `LARGE_SCENE` (a scene whose sides the usual size cuts off). */
+  lookScale?: number;
   /** A wrong answer fires the scene's `wrong` (default). Left off where the answers are reasons, so a cross on the picture would blame the wrong thing. */
   markWrong?: boolean;};
 

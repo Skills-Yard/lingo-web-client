@@ -22,7 +22,7 @@ export type SceneTexts = Readonly<Record<number, string>>;
 
 /** The part of the artboard's own object this uses (the library keeps it private). */
 type TextRuns = { textValueRunCount(): number; textValueRunByIndex(index: number): { text: string } | undefined };
-export type SceneTrigger = "correct" | "wrong" | "run";
+export type SceneTrigger = "correct" | "wrong" | "run" | "celebrate";
 
 type Host = {
   element: HTMLDivElement;

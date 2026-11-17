@@ -80,6 +80,7 @@ export function SceneBackdrop({
   lifted = false,
   scale = 1,
   maxHeight,
+  top: startsAt,
 }: {
   scene: DatatypesSceneName;
   values: SceneValues;
@@ -87,13 +88,15 @@ export function SceneBackdrop({
   titleEnd: number;
   lifted?: boolean;
   scale?: number;
+  /** Where it starts (a CSS length, stage px), in place of just under Hex's row: for a screen with no Hex line, whose scene stands where the screen wants it. */
+  top?: string;
   /**
    * The most height (a CSS length) the scene shows. The scene always fills the device's width, so on a short, wide screen it is taller than the room
    * the controls leave it: it is then cut at that height, from the bottom (its floor), and fades out there, instead of the controls standing over it.
    */
   maxHeight?: string;
 }) {
-  const top = sceneTop(titleEnd);
+  const top = startsAt ?? sceneTop(titleEnd);
   const key = JSON.stringify(values);
   const textsKey = JSON.stringify(texts ?? {});
   useEffect(() => {

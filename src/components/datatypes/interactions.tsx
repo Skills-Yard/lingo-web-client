@@ -8,8 +8,8 @@ import { BounceIn } from "@/components/level-two/BounceIn";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForTap } from "@/lib/haptics";
-import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
-import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
+import { EDGE, RAISED } from "@/components/ui/raised";
+import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_READING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
 import { INFO_LAYOUT, InfoTileBody, Pic, type InfoTile } from "./visuals";
@@ -31,14 +31,6 @@ export const SHAKE = [0, -7, 7, -5, 5, 0];
 const TAP_SLOP = 6;
 /** A wrong card shakes red for this long (ms). */
 export const WRONG_MS = 600;
-
-/** The places things are sorted into: each its own coloured name box, as screen 4's groups have. */
-const HEADS = [
-  { tint: "lavender", ink: INK.violet },
-  { tint: "cream", ink: INK.orange },
-  { tint: "blue", ink: INK.blue },
-  { tint: "green", ink: INK.teal },
-] as const satisfies readonly { tint: GroupTint; ink: string }[];
 
 /** A card that can be dragged, or tapped; it settles back where it was if it isn't dropped on a place. */
 export function DragCard({
@@ -106,183 +98,6 @@ export function DragCard({
     >
       {children}
     </motion.button>
-  );
-}
-
-export type SortItem = {
-  id: string;
-  label: string;
-  sub?: string;
-  icon?: string;
-  /** The group it belongs to. */
-  bucket: string;
-  /** What is said when it is put in the wrong group. */
-  hint?: string;
-};
-export type SortBucket = { id: string; label: string; icon?: string };
-
-/**
- * Sorting: cards are dragged into groups (or a card is tapped, then the group).
- * A right drop stays and a wrong one shakes red and comes back with a hint (and
- * counts as a slip); the stage is done when everything is in its group. (Grouping
- * with no right answer is `GroupStage`.)
- */
-export function SortStage({
-  api,
-  items,
-  buckets,
-  prompt = "Drag each card to its group.",
-  cardWidth = 104,
-  decimalHint = false,
-  after,
-}: {
-  api: InteractionApi;
-  items: readonly SortItem[];
-  buckets: readonly SortBucket[];
-  prompt?: string;
-  cardWidth?: number;
-  /** After a slip the decimal points in the cards are picked out. */
-  decimalHint?: boolean;
-  /** What shows once it is done. */
-  after?: ReactNode;
-}) {
-  const { slip, done, finished } = api;
-  const [placed, setPlaced] = useState<Record<string, string>>({});
-  const [selected, setSelected] = useState<string | null>(null);
-  const [wrongId, setWrongId] = useState<string | null>(null);
-  const [note, setNote] = useState("");
-  const [slipped, setSlipped] = useState(false);
-  const bucketEls = useRef<Record<string, HTMLDivElement | null>>({});
-  const all = items.length === Object.keys(placed).length;
-
-  useEffect(() => {
-    if (!all) return;
-    const timer = window.setTimeout(done, 450);
-    return () => window.clearTimeout(timer);
-  }, [all, done]);
-
-  const place = (id: string, bucket: string) => {
-    const item = items.find((candidate) => candidate.id === id);
-    if (!item || finished) return;
-    setSelected(null);
-    if (item.bucket === bucket) {
-      playClickSound();
-      vibrateForTap();
-      setNote("");
-      setPlaced((now) => ({ ...now, [id]: bucket }));
-      return;
-    }
-    slip();
-    setSlipped(true);
-    setWrongId(id);
-    setNote(item.hint ?? "Not that group. Look again at what it is.");
-    window.setTimeout(() => setWrongId(null), WRONG_MS);
-  };
-
-  const bucketAt = (clientX: number, clientY: number) =>
-    buckets.find((bucket) => {
-      const rect = bucketEls.current[bucket.id]?.getBoundingClientRect();
-      return !!rect && clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
-    });
-
-  const labelOf = (item: SortItem) => {
-    if (!decimalHint || !slipped || !item.label.includes(".")) return item.label;
-    const [whole, decimal] = item.label.split(".");
-    return (
-      <>
-        {whole}
-        <span className="mx-px rounded bg-[#FFB300] px-0.5 text-white">.</span>
-        {decimal}
-      </>
-    );
-  };
-
-  const tray = items.filter((item) => !placed[item.id]);
-  const columns = buckets.length === 3 ? "grid-cols-3" : "grid-cols-2";
-  const rows = Math.ceil(buckets.length / (buckets.length === 3 ? 3 : 2));
-
-  return (
-    <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-4`}>
-      <div className="flex min-h-[52px] flex-wrap justify-center gap-3.5">
-        <AnimatePresence>
-          {tray.map((item) => (
-            <motion.div key={item.id} layout exit={{ opacity: 0, scale: 0.6 }} animate={{ x: wrongId === item.id ? SHAKE : 0 }} transition={{ x: { duration: 0.35 } }}>
-              {/* The cards all share one tint: here a card's colour must not hint at its group. */}
-              <DragCard
-                label={item.label}
-                disabled={finished}
-                onTap={() => {
-                  playClickSound();
-                  setSelected((now) => (now === item.id ? null : item.id));
-                }}
-                onDrop={(clientX, clientY) => {
-                  const target = bucketAt(clientX, clientY);
-                  if (target) place(item.id, target.id);
-                }}
-                style={{ width: cardWidth }}
-                className={`${CARD_BODY_FLAT} ${RAISED_DRAG} min-h-[52px] flex-col gap-0.5 px-1.5 py-1 ${
-                  wrongId === item.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${TINTS.lavender} ${selected === item.id ? `${EDGE_PICKED} ${EDGE.blue}` : `${EDGE_IDLE} ${EDGE.khaki}`}`
-                }`}
-              >
-                {item.icon && <Pic src={item.icon} className="h-7 w-7" />}
-                <span className={CARD_TEXT}>{labelOf(item)}</span>
-                {item.sub && <span className="text-[11px] leading-3 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
-              </DragCard>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-
-      <div className={`grid w-full gap-3.5 ${columns}`}>
-        {buckets.map((bucket, index) => {
-          const head = HEADS[index % HEADS.length];
-          const inside = items.filter((item) => placed[item.id] === bucket.id);
-          return (
-            <div
-              key={bucket.id}
-              ref={(element) => {
-                bucketEls.current[bucket.id] = element;
-              }}
-              role="group"
-              aria-label={bucket.label || `Group ${index + 1}`}
-              onClick={() => selected && place(selected, bucket.id)}
-              className={`flex flex-col gap-2 rounded-[12px] p-1.5 transition-colors ${selected ? RECEIVING : ""}`}
-              style={{ minHeight: rows > 1 ? 120 : 176 }}
-            >
-              {/* The group's name box: 40 tall, 8px radius, Poppins 600 16px, in the group's own colour. */}
-              <div className={`flex h-10 items-center justify-center gap-1.5 rounded-[8px] px-1.5 ${TINTS[head.tint]} ${head.ink}`}>
-                {bucket.icon && <Pic src={bucket.icon} className="h-5 w-5" />}
-                <span className="text-[16px] leading-none font-semibold">{bucket.label || `Group ${index + 1}`}</span>
-              </div>
-              <div className="flex flex-1 flex-col justify-end gap-1.5">
-                {/* An empty group is a gray slot at its foot, where its first card will land. */}
-                {inside.length === 0 && (
-                  <div className={EMPTY_SLOT}>
-                    <Pic src={P.dropSlot} className="h-6 w-6" />
-                  </div>
-                )}
-                {inside.map((item) => (
-                  // A card that is in its group stays (green): it takes no taps, so a tap on the group still reaches the group.
-                  <motion.span
-                    key={item.id}
-                    initial={{ scale: 0.6, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className={`pointer-events-none ${CARD_BODY} min-h-[40px] px-2 py-1 text-center ${CARD_TEXT} ${TINTS.green} ${EDGE_IDLE}`}
-                  >
-                    {item.label}
-                  </motion.span>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <p className="min-h-5 w-full text-center text-[13px] leading-5 font-medium text-[#D42421]">
-        {note || <span className="text-[#6B7480] dark:text-white/60">{finished ? "" : prompt}</span>}
-      </p>
-      {finished && after}
-    </div>
   );
 }
 

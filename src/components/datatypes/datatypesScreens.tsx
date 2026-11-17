@@ -3,12 +3,13 @@
 import type { ReactNode } from "react";
 import { Lightbulb, LogIn, UserCheck, Wallet } from "lucide-react";
 import { INK } from "./look";
-import { ChooseTypeStage, SortStage, TYPES, type SortBucket } from "./interactions";
+import { ChooseTypeStage, TYPES } from "./interactions";
+import { SortStage, type SortBucket } from "./SortStage";
 import { MeasureLine } from "./MeasureLine";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
 import { P } from "./pictures";
 import type { SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
-import { MASTERY, SCENE_MODE, STRINGS_EXAMPLE_TEXT, type DatatypesSceneName } from "@/lib/rive/runtime";
+import { MASTERY, SCENE_MODE, STRINGS_EXAMPLE_TEXT, STRINGS_TWELVE_TEXT, type DatatypesSceneName } from "@/lib/rive/runtime";
 import type { Option, QuizStage, SceneSpec, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
 import { InfoRows, type InfoRow } from "./visuals";
@@ -167,6 +168,21 @@ const EXAMPLE_TEXTS: SceneTexts = {
   [STRINGS_EXAMPLE_TEXT.greeting]: "Hello!",
   [STRINGS_EXAMPLE_TEXT.greetingQuoted]: "“Hello!”",
 };
+
+/** How large screen 13's first stage draws its artboard (times its own size): a little less than the usual `LARGE_SCENE`, which cuts the calculator and the display off at the sides. */
+const TWELVE_LOOK_SCALE = 1.15;
+
+/**
+ * Screen 13's questions use the artboard's own two little boxes, where the first stage has them (over the calculator and the text
+ * display, with their tags under them): they are not thrown into the devices, they stay put and carry the question's values. The
+ * left one (over the calculator) is `first`, the right one `second`, and both are tagged `tag`.
+ */
+const twelveBoxes = (first: string, second: string, tag: string): SceneTexts => ({
+  [STRINGS_TWELVE_TEXT.numberBox]: first,
+  [STRINGS_TWELVE_TEXT.textBox]: second,
+  [STRINGS_TWELVE_TEXT.numberTag]: tag,
+  [STRINGS_TWELVE_TEXT.textTag]: tag,
+});
 
 /** Screen 22's four fields, each with the value the app holds for it (`t1` is City in the scene), and the type it needs. */
 const WEATHER_PLAN: readonly SceneSortItem[] = [
@@ -502,13 +518,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Look at these two values: 12 and “12”.",
         alignTop: true,
-        scene: strings({ mode: MODE.strings.twelve }, false),
+        // As the artboard has it: the two little boxes over the calculator and the text display, each with its tag ("a number", "text"). Drawn a little smaller than other look-only screens: at the usual size the calculator and the display are cut off at the sides.
+        scene: { ...strings({ mode: MODE.strings.twelve }, false), lookScale: TWELVE_LOOK_SCALE },
         ready: true,
       },
       quiz({
         line: "If we add 12 and 3 as numbers, what do we get?",
-        // The 12 goes onto the calculator; a right answer lets it work the sum out.
-        scene: ({ checked, correct }) => strings({ mode: MODE.strings.twelve, step: checked && correct ? 2 : 1 }),
+        // The same two boxes stay where they were (step 0: the artboard's later steps throw them into the devices, so a right answer does not move on either) and carry 12 and 3.
+        scene: strings({ mode: MODE.strings.twelve }, true, twelveBoxes("12", "3", "a number")),
         options: options(["9", "15", "123", "36"]),
         correctId: at(1),
         rightTitle: "Yes!",
@@ -517,8 +534,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "Join the text “12” and “3”. What text do we get?",
-        // The calculator keeps its sum; a right answer joins the text on the screen.
-        scene: ({ checked, correct }) => strings({ mode: MODE.strings.twelve, step: checked && correct ? 3 : 2 }),
+        // The boxes stay put here too and carry “12” and “3”.
+        scene: strings({ mode: MODE.strings.twelve }, true, twelveBoxes("“12”", "“3”", "text")),
         options: options(["“15”", "“123”", "“312”", "“9”"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -935,8 +952,6 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         render: (api) => (
           <SortStage
             api={api}
-            cardWidth={104}
-            prompt="Drag each field to its data type."
             items={[
               { id: "city", label: "City name", bucket: "string", hint: "A name is text." },
               { id: "temp", label: "Temperature", bucket: "float", hint: "Temperatures can have decimals." },

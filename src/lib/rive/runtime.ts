@@ -181,11 +181,11 @@ export const VARIABLE_SCENES = {
 } as const;
 
 /**
- * The Data Types module's scenes: seven more artboards of `sequence.riv` (390x306 each, the `DT_` ones), each
- * with its own state machine and a view model that `datatypesHost` writes. None of them takes taps: the screens
- * drive them. Each has `highlight` (lights one thing up) and the triggers `correct` / `wrong` (a green / red
- * glow with a tick / cross on the picture), and all but the sorting lab have `mode` (which of its pictures is
- * up, from 0).
+ * The Data Types module's scenes: eight more artboards of `sequence.riv` (390x306 each, the `DT_` ones and the
+ * wrap-up), each with its own state machine and a view model that `datatypesHost` writes. None of them takes taps:
+ * the screens drive them. Each of the seven `DT_` ones has `highlight` (lights one thing up) and the triggers
+ * `correct` / `wrong` (a green / red glow with a tick / cross on the picture), and all but the sorting lab have
+ * `mode` (which of its pictures is up, from 0). The wrap-up (`complete`) has only `focus` and `celebrate`.
  *
  * What `mode` shows (the screens in brackets are the ones that use it):
  * - `info` ("DT_A01_InfoExplorer"): 0 and 1 the event form (screens 1 and 2; `field` 1-4 lights Name / Age /
@@ -237,6 +237,8 @@ export const DATATYPES_SCENES = {
   build: { artboard: "DT_A05_BuildWithData", stateMachine: "A05_SM" },
   mastery: { artboard: "DT_A06_DebugMastery", stateMachine: "A06_SM" },
   sorting: { artboard: "DT_SortingLab", stateMachine: "SortLab_SM" },
+  /** The chapter's wrap-up ("VAR_Complete 2", the Data Types one of the four `VAR_Complete` artboards): the idea in the middle with Integer, Float, String, Boolean and a value around it. `focus` 1-5 puts one of them forward, and `celebrate` is a trigger. */
+  complete: { artboard: "VAR_Complete 2", stateMachine: "Complete_SM" },
 } as const;
 
 export type DatatypesSceneName = Exclude<keyof typeof DATATYPES_SCENES, "src" | "width" | "height">;
@@ -252,6 +254,26 @@ export const STRINGS_EXAMPLE_TEXT = {
   greeting: 10,
   /** `"Hello Learny!"`, the same greeting with its quote marks (the picture puts them on when `quotes` is 1). */
   greetingQuoted: 9,
+} as const;
+
+/**
+ * The words of `DT_A03_StringDiscovery`'s 12 against "12" (mode 2): the two little boxes that stand over the calculator and the
+ * text display (`step` 0), each with its tag under it. `step` 1 throws the boxes into the devices, so a screen that wants them to
+ * stay where they are keeps `step` at 0 and writes its own values in them (see `SceneTexts`). The sums that come after
+ * (12 + 3 = 15, "12" + "3" = "123") are other runs.
+ */
+export const STRINGS_TWELVE_TEXT = {
+  /** The box over the calculator (12), and its tag ("a number"). */
+  numberBox: 3,
+  numberTag: 1,
+  /** The box over the text display (`"12"`), and its tag ("text: 1 and 2"). */
+  textBox: 2,
+  textTag: 0,
+} as const;
+
+/** The words of `DATATYPES_SCENES.complete` as its text runs are numbered in the file (read off it 2026-11-17, 7 runs: String, Boolean, total_price, Float, Integer, "score = 100", then the central title, which the file copied from the Variable one as "VARIABLES MASTER"). */
+export const COMPLETE_TEXT = {
+  title: 6,
 } as const;
 
 /** What each artboard's `mode` is (see `DATATYPES_SCENES`): the screens use these in place of the bare numbers. */

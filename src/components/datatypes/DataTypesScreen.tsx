@@ -16,7 +16,7 @@ import { fireSceneTrigger, type SceneValues } from "@/lib/rive/datatypesHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { DATATYPES_STEPS, datatypesNext, datatypesPrevious } from "./datatypes";
 import { noteAnswer, noteStruggle } from "./datatypesScore";
-import { acrossCards, answersHeight, OptionGrid } from "./OptionCards";
+import { acrossCards, answersHeight, optionFont, OptionGrid } from "./OptionCards";
 import { HEX_LIFT, LARGE_SCENE, LIFT_DOWN, LIFT_UP, SceneBackdrop, sceneHeight, sceneLift, sceneTop } from "./scenes";
 import { parseTitle, type InteractionStage, type ScreenDef, type VisualContext } from "./screen";
 
@@ -32,7 +32,7 @@ const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in, so a question standing on them comes in with them. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
 /** The title block (px): where it ends, one line or two. */
-const TITLE_END = { one: 125, two: 163 } as const;
+export const TITLE_END = { one: 125, two: 163 } as const;
 /** How many letters of a question fit a line, for the room it takes. */
 const QUESTION_CHARS = 36;
 
@@ -361,7 +361,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       scene={
         <>
           <SoftBackdrop />
-          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} texts={scene.texts} titleEnd={titleEnd} lifted={gone} scale={lookOnly ? LARGE_SCENE : 1} maxHeight={sceneMaxHeight} />}
+          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} texts={scene.texts} titleEnd={titleEnd} lifted={gone} scale={lookOnly ? (scene.lookScale ?? LARGE_SCENE) : 1} maxHeight={sceneMaxHeight} />}
           {screen.backdrop}
         </>
       }
@@ -492,7 +492,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
               idleLook={IDLE_LOOK}
               gap={OPTION.gap}
-              fontSize={OPTION.font}
+              fontSize={Math.min(...quiz.options.map((option) => optionFont(option.text)))}
               bounceIn={quiz.optionsAfterHex}
               revealed={hexSpoken}
               bounceRight

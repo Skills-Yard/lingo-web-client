@@ -26,6 +26,15 @@ export const MAX_OPTION_WORDS = 2;
 /** Four answers this short (letters) stand as two rows of two cards. */
 const FOUR_ANSWER_CHARS = 18;
 
+/** An answer that is only a number (digits and signs, no letters: 15, “123”, 25.5) is set larger than words are: it is short, and a card has the room. A long one (a phone number) gets a smaller size so it still fits a card. */
+const NUMBER_FONT = 24;
+const LONG_NUMBER_FONT = 20;
+const LONG_NUMBER_CHARS = 7;
+export const optionFont = (text: string) => {
+  if (/\p{L}/u.test(text) || !/\d/.test(text)) return OPTION.font;
+  return text.length <= LONG_NUMBER_CHARS ? NUMBER_FONT : LONG_NUMBER_FONT;
+};
+
 const wordCount = (text: string) => text.trim().split(/\s+/).length;
 const columnsFor = (count: number) => (count === 3 ? 3 : 2);
 /**
@@ -122,7 +131,7 @@ export function OptionGrid({
                 className="pointer-events-none absolute inset-0 -z-10 rounded-[12px] bg-[#FFE7D1] dark:bg-[#33220F]"
               />
               {/* Two words stand on two lines when they do not fit on one (the card is 56px tall, two lines are 40). */}
-              <span className="text-center leading-5 font-semibold text-[#444444] dark:text-white" style={{ fontSize: OPTION.font }}>
+              <span className="text-center leading-5 font-semibold text-[#444444] dark:text-white" style={{ fontSize: optionFont(option.text), lineHeight: optionFont(option.text) > OPTION.font ? 1.2 : undefined }}>
                 {option.text}
               </span>
             </motion.button>
