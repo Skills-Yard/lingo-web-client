@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, type LucideIcon } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
-import { HexBubble } from "@/components/level-two/HexBubble";
+import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
+import { HEX_SLOT, SpeechBubble } from "@/components/level-two/HexBubble";
 import { RightBounce } from "@/components/level-two/RightBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED } from "@/components/ui/raised";
@@ -536,6 +537,17 @@ const TOUR_ENTRY_KEY = "datatypes-groups-tour";
 const TOUR_W = 354;
 const TOUR_GAP = 10;
 const TOUR_BUBBLE_W = 220;
+/**
+ * Hex's row under the groups. He is one Hex that floats from group to group (he does not leave and come in again), so the row has
+ * the same height for every group and nothing under the scene moves when he does. His box is `HEX_SLOT` (110) square, and he is drawn
+ * in the middle of it with some air above him, so for the two groups between the first and last (his bubble is below him there) the
+ * box is pulled up by `TOUR_HEX_PULL` so that he stands close to the groups and the bubble ends higher (the bottom keeps its room).
+ */
+const TOUR_HEX_PULL = 30;
+const TOUR_BUBBLE_H = 86;
+const TOUR_ROW_H = HEX_SLOT - TOUR_HEX_PULL + TOUR_BUBBLE_H;
+/** How Hex floats from one group to the next. */
+const TOUR_FLOAT = { type: "spring", stiffness: 120, damping: 19 } as const;
 /** A group's glow is fired this long after its values are written, so the scene has them when it plays. */
 const GLOW_DELAY_MS = 250;
 
@@ -587,9 +599,18 @@ export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; gro
   const shownIndex = groups.findIndex((group) => group.id === current);
   const hexAt = shownIndex === 0 ? "left" : shownIndex === groups.length - 1 ? "right" : "top";
   const underGroup = Math.min(TOUR_W - TOUR_BUBBLE_W, Math.max(0, shownIndex * (columnWidth + TOUR_GAP) + columnWidth / 2 - TOUR_BUBBLE_W / 2));
+  // Hex's box and his bubble's place in the row (px from its top left): beside him, or (for a group in the middle) under him, centred on each other.
+  const hexBox = hexAt === "left" ? { x: 0, y: 0 } : hexAt === "right" ? { x: TOUR_W - HEX_SLOT, y: 0 } : { x: underGroup + (TOUR_BUBBLE_W - HEX_SLOT) / 2, y: -TOUR_HEX_PULL };
+  const bubbleBox =
+    hexAt === "left"
+      ? { left: HEX_SLOT, top: 0, height: HEX_SLOT, alignItems: "center" }
+      : hexAt === "right"
+        ? { left: TOUR_W - HEX_SLOT - TOUR_BUBBLE_W, top: 0, height: HEX_SLOT, alignItems: "center" }
+        : { left: underGroup, top: HEX_SLOT - TOUR_HEX_PULL, height: TOUR_BUBBLE_H, alignItems: "flex-start" };
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
-      <div className={`grid w-full gap-2.5 ${columns === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
+      {/* Above Hex's row, so his empty margin (pulled up over the groups) never takes a tap meant for a group. */}
+      <div className={`relative z-10 grid w-full gap-2.5 ${columns === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
         {groups.map((group, index) => {
           const reading = current === group.id;
           return (
@@ -611,9 +632,20 @@ export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; gro
           );
         })}
       </div>
-      {/* Hex's row is kept free from the start (at least his own height), so little moves when he arrives. */}
-      <div className={`flex min-h-[110px] w-full items-start ${hexAt === "right" ? "justify-end" : "justify-start"}`} style={hexAt === "top" ? { paddingLeft: underGroup } : undefined}>
-        {shown && <HexBubble key={shown.id} entryKey={TOUR_ENTRY_KEY} hex={hexAt} line={[{ text: shown.caption }]} size={{ width: TOUR_BUBBLE_W }} />}
+      {/* Hex's row is kept free from the start, at the height the tallest place needs, so nothing moves when he arrives or goes on to the next group. */}
+      <div className="relative w-full" style={{ height: TOUR_ROW_H }}>
+        {shown && (
+          <>
+            {/* He comes in once (at the group first read); after that this box only moves, and he floats to the next group. */}
+            <motion.div aria-hidden className="absolute top-0 left-0" style={{ width: HEX_SLOT, height: HEX_SLOT }} initial={false} animate={hexBox} transition={TOUR_FLOAT}>
+              <OnboardingHex entryKey={TOUR_ENTRY_KEY} />
+            </motion.div>
+            {/* The bubble is a new one for each group (its line is typed afresh), beside or under him where he now stands. */}
+            <div key={shown.id} className="absolute flex justify-center" style={{ ...bubbleBox, width: TOUR_BUBBLE_W }}>
+              <SpeechBubble line={[{ text: shown.caption }]} size={{ width: TOUR_BUBBLE_W }} tail={hexAt} leaving={false} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

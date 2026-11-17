@@ -5,7 +5,6 @@ import { Lightbulb, LogIn, UserCheck, Wallet } from "lucide-react";
 import { INK } from "./look";
 import { ChooseTypeStage, TYPES } from "./interactions";
 import { SortStage, type SortBucket } from "./SortStage";
-import { MeasureLine } from "./MeasureLine";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
 import { P } from "./pictures";
 import type { SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
@@ -57,8 +56,16 @@ const sorting = sceneOf("sorting");
 const MODE = SCENE_MODE;
 /** What the event form lights up for the information that is picked (screen 1): its Name, Age or Height row. */
 const FORM_FIELD = { name: 1, age: 2, height: 3 } as const;
-/** `fill` for the form's first three rows written in (Aarav, 12, 148.5 cm), the Height row among them (screen 8). */
-const HEIGHT_FILLED = 3;
+
+/** How large screen 6's look-only stages draw the number lab (times its own size): its four value tags run edge to edge, so the usual `LARGE_SCENE` cuts "12 students" and "36.7 kg" off at the sides. */
+const NUMBERS_LOOK_SCALE = 1;
+
+/** Screen 6's four values (12 students, 25 tickets, 148.5 cm, 36.7 kg: `sel1`-`sel4`); the answer picked glows the one(s) it names. */
+const NUMBER_PICKS = {
+  height: { sel3: 1 },
+  weight: { sel4: 1 },
+  both: { sel3: 1, sel4: 1 },
+} as const;
 
 /** The student record's rows, by the answer that names them (screen 23): the pick lights its row up. */
 const recordRow = (picked: string | null) => (picked ? (MASTERY.highlight.row[picked as keyof typeof MASTERY.highlight.row] ?? 0) : 0);
@@ -321,36 +328,36 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.wholeDecimal,
     title: "Look at these *numbers!*",
     titleSize: 28,
-    // All three stages stand on the student record of `DT_A06_DebugMastery` (Aarav's Age 12 and Height 148.5 are the two numbers in it).
+    // All three stages stand on the number lab (`DT_A02_NumberLab`, mode 1): four values, 12 students, 25 tickets, 148.5 cm and 36.7 kg.
     stages: [
       {
         kind: "interaction",
-        line: "Here is Aarav’s record. Some values are numbers.",
+        line: "Look at these four values. All of them are numbers.",
         alignTop: true,
-        scene: mastery({ mode: MASTERY.mode.record }, false),
+        scene: { ...numbers({ mode: MODE.numbers.values }, false), lookScale: NUMBERS_LOOK_SCALE },
         ready: true,
       },
-      // The question: the pick outlines its row of the record; the right answer ticks it.
+      // The question: the pick glows the values it names (`sel1`-`sel4`).
       quiz({
-        line: "Which number has a decimal part?",
-        // A glow only on the right answer: "Both" is not a row, and a cross on the whole record would blame all of it.
-        scene: ({ picked }) => mastery({ mode: MASTERY.mode.record, highlight: recordRow(picked) }, false),
+        line: "Which numbers have a decimal part?",
+        scene: ({ picked }) => numbers({ mode: MODE.numbers.values, ...(NUMBER_PICKS[picked as keyof typeof NUMBER_PICKS] ?? {}) }, false),
+        // Three one-word answers: mini cards in one row, all words (a number alone is set larger), so they share one size. Height (148.5 cm) and weight (36.7 kg) both have a decimal part, so "Both" is right.
         options: words([
-          ["age", "Age"],
           ["height", "Height"],
+          ["weight", "Weight"],
           ["both", "Both"],
         ]),
-        correctId: "height",
+        correctId: "both",
         rightTitle: "That’s right!",
-        right: "148.5 has a decimal part. 12 is a whole number.",
-        wrong: "Look at the two numbers: 12 and 148.5. Which has a decimal point?",
+        right: "148.5 cm and 36.7 kg both have a decimal part. 12 and 25 are whole numbers.",
+        wrong: "Check each one: 148.5 cm and 36.7 kg. Does it have a decimal point?",
       }),
-      // The follow-up: the two kinds of number, on the record.
+      // The follow-up: the lab sorts them into whole numbers and numbers with a decimal part (`split`).
       {
         kind: "interaction",
-        line: "Age is a whole number. Height has a decimal part.",
+        line: "Some numbers are whole. Others have a decimal part.",
         alignTop: true,
-        scene: mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height }, false),
+        scene: { ...numbers({ mode: MODE.numbers.values, split: 1 }, false), lookScale: NUMBERS_LOOK_SCALE },
         ready: true,
       },
     ],
@@ -365,8 +372,9 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Integers are whole numbers without decimal parts.",
         bubbleWidth: 190,
-        // No artboard and no picture: a small 4 cm line drawn in code, numbered 1 to 4 at its whole marks.
-        render: ({ hexSpoken }) => <MeasureLine shown={hexSpoken} />,
+        alignTop: true,
+        // The number lab's number line (mode 2), the whole artboard on the screen (`NUMBERS_LOOK_SCALE`).
+        scene: { ...numbers({ mode: MODE.numbers.numberLine }, false), lookScale: NUMBERS_LOOK_SCALE },
         ready: true,
       },
     ],
@@ -376,14 +384,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.floats,
     title: "Can we be more *precise?*",
     titleSize: 28,
-    // Until this screen's own artboard is ready it stands on the event form of `DT_A01_InfoExplorer` (screens 1 and 2), its Height row outlined and filled in with 148.5 cm.
+    // Both stages stand on the number lab's ruler (`DT_A02_NumberLab`, mode 3), the tape run up to the heights (`measure` 1): 148.5 cm is the first.
     stages: [
       {
         kind: "interaction",
         line: "Whole numbers can miss details like a height of 148.5 cm!!",
         bubbleWidth: 190,
         alignTop: true,
-        scene: info({ mode: MODE.info.form, field: FORM_FIELD.height, fill: HEIGHT_FILLED }, false),
+        scene: { ...numbers({ mode: MODE.numbers.ruler, measure: 1 }, false), lookScale: NUMBERS_LOOK_SCALE },
         ready: true,
       },
       quiz({
@@ -391,8 +399,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         titleSize: 28,
         line: "Choose the best value to represent 148.5 cm.",
         bubbleWidth: 176,
-        // The answers are types, not rows of the form: only the right one ticks the Height row (no cross on a wrong pick).
-        scene: () => info({ mode: MODE.info.form, field: FORM_FIELD.height, fill: HEIGHT_FILLED }, false),
+        // The answers are types, not things on the ruler: no cross on a wrong pick, and the right one plays the lab's own right glow.
+        scene: () => numbers({ mode: MODE.numbers.ruler, measure: 1 }, false),
         options: FLOAT_QUIZ_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
