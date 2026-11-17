@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
+import { PointedLook } from "@/components/level-one/answerHint";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { aboveButtons } from "@/components/level-two/LevelTwoShell";
@@ -67,7 +67,7 @@ export function OptionGrid({
   selectedId,
   checked,
   fadeOut,
-  hinted,
+  pointedId,
   withHint,
   rise,
   bounceIn,
@@ -80,7 +80,8 @@ export function OptionGrid({
   checked: boolean;
   /** The cards fade out (a wrong answer, where a scene shows what was picked). */
   fadeOut: boolean;
-  hinted: boolean;
+  /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
+  pointedId: string | null;
   withHint: boolean;
   /** How far (px) they rise once the result panel is up. */
   rise: number;
@@ -102,11 +103,12 @@ export function OptionGrid({
       {options.map((option, index) => {
         const state = optionState(option.id, selectedId, checked, correctId);
         const padX = padXFor(options.length);
-        const hintHere = hinted && selectedId === null && option.id === correctId;
+        const pointed = pointedId === option.id && state === "idle";
         const plainCard = (
-          <HintFloat key={option.id} className="relative flex min-w-0 flex-1" spin={false} active={hintHere}>
+          <div key={option.id} className="relative flex min-w-0 flex-1">
             <motion.button
               type="button"
+              data-hint={option.id}
               disabled={checked}
               onClick={() => {
                 playClickSound();
@@ -123,19 +125,13 @@ export function OptionGrid({
                 state === "idle" ? `border ${IDLE_LOOK}` : `border-4 ${LOOKS[state].card}`
               }`}
             >
-              <motion.span
-                aria-hidden
-                initial={false}
-                animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                className="pointer-events-none absolute inset-0 -z-10 rounded-[12px] bg-[#FFE7D1] dark:bg-[#33220F]"
-              />
               {/* Two words stand on two lines when they do not fit on one (the card is 56px tall, two lines are 40). */}
               <span className="text-center leading-5 font-semibold text-[#444444] dark:text-white" style={{ fontSize: optionFont(option.text), lineHeight: optionFont(option.text) > OPTION.font ? 1.2 : undefined }}>
                 {option.text}
               </span>
+              <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
         );
         // The right card jumps a little after the check, so the cards have risen above the result panel by the time it does.
         const card = (

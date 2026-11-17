@@ -8,8 +8,8 @@ import { BounceIn } from "@/components/level-two/BounceIn";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForTap } from "@/lib/haptics";
-import { EDGE, RAISED } from "@/components/ui/raised";
-import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_READING, TINTS, tintAt, type GroupTint } from "./look";
+import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
+import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
 import { INFO_LAYOUT, InfoTileBody, Pic, type InfoTile } from "./visuals";
@@ -31,6 +31,14 @@ export const SHAKE = [0, -7, 7, -5, 5, 0];
 const TAP_SLOP = 6;
 /** A wrong card shakes red for this long (ms). */
 export const WRONG_MS = 600;
+
+/** The places things are sorted into: each its own coloured name box, as screen 4's groups have. */
+const HEADS = [
+  { tint: "lavender", ink: INK.violet },
+  { tint: "cream", ink: INK.orange },
+  { tint: "blue", ink: INK.blue },
+  { tint: "green", ink: INK.teal },
+] as const satisfies readonly { tint: GroupTint; ink: string }[];
 
 /** A card that can be dragged, or tapped; it settles back where it was if it isn't dropped on a place. */
 export function DragCard({

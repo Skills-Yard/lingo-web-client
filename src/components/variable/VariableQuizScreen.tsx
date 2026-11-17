@@ -217,7 +217,7 @@ function InteractionHost({ stage, slip, done, finished, hint }: { stage: Interac
  * result panel (with Hex) slides up. A right answer goes on; a wrong one is
  * tried again, with the right one never shown. An interaction stage is
  * something to do (tap, drag, slide) that unlocks Continue when it is done.
- * Going on from the last stage follows the module's flow (skips and detours).
+ * Going on from the last stage goes to the next screen (`variableNext`).
  */
 export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const router = useRouter();

@@ -79,7 +79,7 @@ export function AnswerCards({
   selectedId,
   checked,
   fadeOut,
-  hinted,
+  pointedId,
   withHint,
   rise = CARDS_RISE,
   compact = false,
@@ -120,15 +120,9 @@ export function AnswerCards({
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
         const look = LOOKS[state];
-        const hintHere =
-          hinted && selectedId === null && choice.id === correctId;
+        const pointed = pointedId === choice.id && state === "idle";
         const plainRow = (
-          <HintFloat
-            key={choice.id}
-            className="relative w-full"
-            spin={false}
-            active={hintHere}
-          >
+          <div key={choice.id} className="relative w-full">
             <motion.button
               type="button"
               data-hint={choice.id}
@@ -201,7 +195,7 @@ export function AnswerCards({
               )}
               <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
         );
         // A little after the check, so the rows have risen above the result panel by the time it jumps.
         const row = bounceRight ? (

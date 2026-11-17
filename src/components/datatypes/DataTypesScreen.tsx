@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
@@ -337,8 +338,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       ? { right: true, title: interaction.finishPanel.title, text: interaction.finishPanel.text }
       : null;
 
-  // Hex's line for this stage (the hint replaces it).
-  const line =quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
+  // Hex's line for this stage.
+  const line = quiz ? quiz.line : (interaction?.line ?? null);
   const gone = quiz ? checked : finished || hexDismissed;
   const bubbleWidth = interaction?.bubbleWidth ?? quiz?.bubbleWidth;
 
@@ -380,7 +381,6 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       ctaLabel={
         quiz
           ? !checked
-            ? (quiz.ctaLabel ?? "Check")
             ? (quiz.ctaLabel ?? "Check")
             : correct
               ? (quiz.nextLabel ?? "Next")
@@ -508,7 +508,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               bounceIn={quiz.optionsAfterHex}
               revealed={hexSpoken}
               bounceRight
-              onPick={setSelectedId}
+              onPick={pick}
             />
           )}
           {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}

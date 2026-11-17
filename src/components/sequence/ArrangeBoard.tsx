@@ -59,8 +59,6 @@ type ArrangeLayout = {
    * circles take little room.
    */
   circles?: number;
-  /** The cards' text size (px), in place of the 11-14px the card's height picks. */
-  fontSize?: number;
 };
 
 /** Where everything stands on the board, and how big the board is. */
@@ -545,6 +543,7 @@ export function ArrangeBoard({
   wrongIds = [],
   lockedIds = [],
   pointedId = null,
+  highlightEmpty = false,
   tapOnly = false,
   activeSlot,
   numbered = false,
@@ -574,6 +573,8 @@ export function ArrangeBoard({
   lockedIds?: readonly string[];
   /** The card a hint's hand is pointing at, for as long as it points: it takes a pale orange tint and one shine, and nothing else (it does not float, unlike `hintedId`). */
   pointedId?: string | null;
+  /** Every empty slot is picked out (a green dashed line and a soft pulse), so it is plain that something is to be dragged onto it. */
+  highlightEmpty?: boolean;
   /** The cards cannot be dragged, only tapped (so `onPlace` is not needed): they stay in their places and are given their numbers by `onTap`. */
   tapOnly?: boolean;
   /** Only this slot is open (the one that is next, with circle slots): it is outlined in green and pulses, an empty slot after it is dimmed. `undefined`: all slots are alike. */
@@ -602,19 +603,24 @@ export function ArrangeBoard({
         const holder = slots[index];
         const taken = geo.circles && holder !== null;
         const slotWrong = taken && wrongIds.includes(holder);
+        // An open slot, when the board asks for them all to be picked out (`highlightEmpty`).
+        const glow = highlightEmpty && holder === null && !disabled;
         const className = `absolute flex items-center justify-center ${geo.circles ? "rounded-full" : ""} ${dim ? "opacity-50" : ""} ${isActive ? "animate-pulse" : ""} border-2 ${
           taken
             ? slotWrong
               ? "border-[#E5484D] bg-[#E5484D] text-white"
               : "border-[#01A17F] bg-[#01A17F] text-white"
-            : geo.solidSlots
+            : glow
+              ? // A solid well that stands off the page in both themes: a clear step darker than white, and a slate lighter than the dark page.
+                "border-dashed border-[#01A17F] bg-[#DFE6EC] shadow-[inset_0_2px_6px_rgba(0,0,0,0.16)] dark:border-[#3FD9B4] dark:bg-[#2C3B49] dark:shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]"
+              : geo.solidSlots
               ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
               : lit
                 ? "border-dashed border-[#01A17F] bg-[#F2FBF8] dark:border-[#4DBDA5] dark:bg-white/5"
                 : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
         }`;
         const style = { left: geo.slot(index).x, top: geo.slot(index).y, width: geo.slotSize.width, height: geo.slotSize.height, borderRadius: geo.circles ? undefined : geo.radius };
-        const content = slotContent ? (
+        const inside = slotContent ? (
           slotContent(index)
         ) : geo.circles ? (
           <span className={`text-[16px] leading-none font-bold ${taken ? "text-white" : "text-[#5C6670] dark:text-white/70"}`}>{index + 1}</span>
@@ -622,6 +628,22 @@ export function ArrangeBoard({
           <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
             {index + 1}
           </span>
+        );
+        const content = (
+          <>
+            {glow && (
+              // A soft green ring that breathes round the slot, outside its edge.
+              <motion.span
+                aria-hidden
+                initial={{ opacity: 0.25, scale: 1 }}
+                animate={{ opacity: [0.25, 0.9, 0.25], scale: [1, 1.03, 1] }}
+                transition={{ duration: 1.6, ease: "easeInOut", repeat: Infinity }}
+                className="pointer-events-none absolute -inset-1 border-[3px] border-[#01A17F]/60 dark:border-[#3FD9B4]/70"
+                style={{ borderRadius: geo.radius + 4 }}
+              />
+            )}
+            {inside}
+          </>
         );
         return onSlotTap ? (
           <button

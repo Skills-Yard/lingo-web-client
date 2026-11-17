@@ -453,8 +453,6 @@ export function ClassifyStage({ slip: slipped, done, finished, hint }: Interacti
 const MATCH_ITEMS = [
   { id: "notebook_price", price: 50 },
   { id: "pen_price", price: 20 },
-  { id: "notebook_price", price: 50 },
-  { id: "pen_price", price: 20 },
 ] as const;
 // The ids are the variables' names; what the buttons say is the same words without the underscore.
 const MATCH_CARDS: readonly ArrangeCardDef[] = [
@@ -490,7 +488,13 @@ const MATCH_GEO = arrangeGeometry({
 /** The note under the board: one line (the longer "check" line fits it too). */
 const MATCH_NOTE_H = 20;
 
-/** Screen 19: drag each product's name up onto the spot of its price. */
+/**
+ * Screen 19: drag each product's name up onto the spot of its price, or tap a name to pick it (it is framed in green
+ * and the spots light up) and then tap the price it belongs to. Tapping the picked name again lets it go; with a name
+ * picked, tapping a name that is already on a spot puts the picked one there instead (the two swap places). The empty
+ * spots are picked out (`highlightEmpty`), and the hint button sends a hand to the name for the first spot still wrong,
+ * then to that spot.
+ */
 export function MatchPricesStage({ slip: slipped, done, finished, hint }: InteractionApi) {
   const { slots, placeIn, reset } = useArrange(MATCH_CARDS.map((card) => card.id), MATCH_GEO.count);
   const [slip, setSlip] = useState(false);
@@ -508,6 +512,31 @@ export function MatchPricesStage({ slip: slipped, done, finished, hint }: Intera
     const open = MATCH_ITEMS.findIndex((item, index) => slots[index] !== item.id);
     setDemo(hint > 0 && open >= 0 ? { press: hint, targets: [{ id: MATCH_ITEMS[open].id, fromLeft: MATCH_HINT_NAME_X }, { id: `slot-${open}`, fromLeft: MATCH_HINT_SPOT_X }] } : null);
   }
+
+  /** Puts a name on a spot (dragged or tapped there); the product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2). A right one bounces now and stays: it and its price are disabled. */
+  const place = (id: string, slot: number | null) => {
+    setDemo(null);
+    // A name that is on its price for good cannot be moved, and nothing can be put on its price.
+    if (matched.includes(id) || (slot !== null && matched.includes(slots[slot] ?? ""))) return;
+    setSlip(false);
+    setPicked(null);
+    placeIn(id, slot);
+    const rightSpot = slot !== null && id === MATCH_ITEMS[slot].id ? slot : null;
+    setSceneValues("shop", { highlight: rightSpot !== null ? rightSpot + 1 : 0 });
+    if (rightSpot !== null) setMatched((now) => [...now, id]);
+  };
+  const tapName = (id: string) => {
+    setDemo(null);
+    const spot = slots.indexOf(id);
+    // A name that is on a spot stands for that spot: with another name picked, that one goes there.
+    if (picked && picked !== id && spot >= 0) return place(picked, spot);
+    playClickSound();
+    vibrateForTap();
+    setPicked(picked === id ? null : id);
+  };
+  const tapSpot = (index: number) => {
+    if (picked) place(picked, index);
+  };
   // The shop counter behind (see `ShopBackdrop`) starts with the names shown and nothing lit.
   useEffect(() => {
     setSceneValues("shop", { showEraser: false, showNames: true, showTotal: false, highlight: 0 });
@@ -543,16 +572,17 @@ export function MatchPricesStage({ slip: slipped, done, finished, hint }: Intera
             slots={slots}
             geo={MATCH_GEO}
             disabled={finished || (full && !right)}
+            selectedId={picked}
             highlightEmpty
-            onPlace={(id, slot) => {
-              setDemo(null);
-              setSlip(false);
-              placeIn(id, slot);
-              // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
-              setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
-            }}
-            // Only the price: no name, no picture, so the learner has to match it from the shop counter.
-            slotContent={(index) => <span className="rounded-full bg-[#FFB300] px-3 py-1 text-[18px] leading-6 font-bold text-white">₹{MATCH_ITEMS[index].price}</span>}
+            // A name on its right price bounces at once (one big bounce and one small, its shadow staying on the ground), and it and its price are disabled. Nothing bounces together at the end.
+            bouncedIds={matched}
+            lockedIds={matched}
+            onPlace={place}
+            onTap={tapName}
+            onSlotTap={tapSpot}
+            slotLabel={(index) => `Price ₹${MATCH_ITEMS[index].price}`}
+            // An empty spot shows only its amount: which name belongs on it is for the learner to work out from the shop counter.
+            slotContent={(index) => <span className="rounded-full bg-[#FFB300] px-3.5 py-1 text-[18px] leading-6 font-bold text-white">₹{MATCH_ITEMS[index].price}</span>}
           />
         </div>
         <p className="w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]" style={{ height: MATCH_NOTE_H }}>
