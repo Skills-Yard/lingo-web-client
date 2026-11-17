@@ -190,7 +190,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // A question's hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
@@ -227,7 +228,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const quiz = stage.kind === "quiz" ? stage : null;
   const interaction = stage.kind === "interaction" ? stage : null;
   const correct = !!quiz && selectedId === quiz.correctId;
-  const hasHint = !!quiz?.hintText;
+  // Every question has the hint button.
+  const hasHint = !!quiz;
   // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none, or if he has been sent away).
   const lookReady = !!interaction?.ready && (hexSpoken || hexDismissed || !interaction.line);
 
@@ -269,6 +271,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   }, []);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     record(correct);
   };
@@ -280,6 +283,12 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     setAttempt((previous) => previous + 1);
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
   const advance = () => {
     if (lastStage) {
       router.push(datatypesNext(screen.step));
@@ -289,7 +298,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
+    answerHint.stop();
     setAttempt(0);
     setFinished(false);
     setHexSpoken(false);
@@ -306,8 +315,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     else tryAgain();
   };
 
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    if (quiz) answerHint.press(quiz.correctId);
     noteStruggle(screen.step, "hint");
   };
 
@@ -371,6 +381,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         quiz
           ? !checked
             ? (quiz.ctaLabel ?? "Check")
+            ? (quiz.ctaLabel ?? "Check")
             : correct
               ? (quiz.nextLabel ?? "Next")
               : "Try again"
@@ -378,7 +389,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
             ? (interaction?.nextLabel ?? "Next")
             : (interaction?.ctaLabel ?? "Continue")
       }
-      hint={hasHint ? { visible: !checked, onUse: useHint } : undefined}
+      // Answers that wait for Hex's line come in after it: the hand has nothing to point at before then.
+      hint={hasHint ? { visible: !checked, onUse: useHint, disabled: !!quiz?.optionsAfterHex && !hexSpoken } : undefined}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -470,12 +482,12 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={answersAway}
-              hinted={hinted}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
               rise={answersRise}
               bounceIn={quiz.optionsAfterHex}
               revealed={hexSpoken}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           ) : (
             <AnswerCards
@@ -484,7 +496,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={answersAway}
-              hinted={hinted}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
               rise={answersRise}
               bottomGap={OPTION.aboveButtons}
@@ -499,6 +511,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               onPick={setSelectedId}
             />
           )}
+          {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+          {answerHint.hand}
         </>
       )}
     </LevelTwoShell>

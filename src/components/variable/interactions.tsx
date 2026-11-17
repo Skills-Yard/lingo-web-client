@@ -12,11 +12,13 @@ import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSc
 import { OPTION, type InteractionApi } from "./quiz";
 import { artboardRect, BELOW_TITLE, GAP_BELOW_SCENE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, type ArtboardRect } from "./scenes";
 import { ArcMeter } from "./ArcMeter";
+import { useBubbleSize } from "./bubbleWidth";
 import { TapHint, type TapTarget } from "./TapHint";
 import { CARD } from "./visuals";
 
-/** A line of narration: Hex says a short one, a long one goes on a card. */
+/** A line of narration: Hex says a short one (in a bubble wide enough to hold it in two lines), a long one goes on a card. */
 export function Narration({ text, entry }: { text: string; entry: string }) {
+  const bubble = useBubbleSize(text);
   if (text.length > 120) {
     return (
       <div className="w-[340px] shrink-0">
@@ -24,11 +26,10 @@ export function Narration({ text, entry }: { text: string; entry: string }) {
       </div>
     );
   }
-  const width = text.length <= 44 ? 190 : 240;
   return (
     // Lifted like the quiz screens' bubble (see `HEX_LIFT`); what is under it stays where it was.
     <div className="relative shrink-0" style={{ top: -HEX_LIFT }}>
-      <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={{ width }} />
+      <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={bubble} />
     </div>
   );
 }
@@ -452,6 +453,8 @@ export function ClassifyStage({ slip: slipped, done, finished, hint }: Interacti
 const MATCH_ITEMS = [
   { id: "notebook_price", price: 50 },
   { id: "pen_price", price: 20 },
+  { id: "notebook_price", price: 50 },
+  { id: "pen_price", price: 20 },
 ] as const;
 // The ids are the variables' names; what the buttons say is the same words without the underscore.
 const MATCH_CARDS: readonly ArrangeCardDef[] = [
@@ -491,6 +494,10 @@ const MATCH_NOTE_H = 20;
 export function MatchPricesStage({ slip: slipped, done, finished, hint }: InteractionApi) {
   const { slots, placeIn, reset } = useArrange(MATCH_CARDS.map((card) => card.id), MATCH_GEO.count);
   const [slip, setSlip] = useState(false);
+  // The name picked by a tap, waiting for a price.
+  const [picked, setPicked] = useState<string | null>(null);
+  // The names that are on their own price: each bounced the moment it was put there, and it and its price are done with.
+  const [matched, setMatched] = useState<readonly string[]>([]);
   const full = slots.every((slot) => slot !== null);
   const right = full && slots.every((id, index) => id === MATCH_ITEMS[index].id);
   // Each press of the hint button shows the hand: it taps the name that belongs on the first spot still wrong, then that spot (until the learner touches the board).
@@ -516,8 +523,10 @@ export function MatchPricesStage({ slip: slipped, done, finished, hint }: Intera
     const timer = window.setTimeout(() => {
       slipped();
       setSlip(true);
+      setPicked(null);
       setSceneValues("shop", { highlight: 0 });
       reset();
+      setMatched([]);
     }, 900);
     return () => window.clearTimeout(timer);
   }, [full, right, done, slipped, reset]);
@@ -547,7 +556,7 @@ export function MatchPricesStage({ slip: slipped, done, finished, hint }: Intera
           />
         </div>
         <p className="w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]" style={{ height: MATCH_NOTE_H }}>
-          {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
+          {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : picked ? "Now tap the price it belongs to." : "Drag or tap a name, then a price."}</span>}
         </p>
       </div>
     </div>

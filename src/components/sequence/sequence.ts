@@ -111,11 +111,9 @@ export type SequenceQuiz = {
   wrongBy?: Readonly<Record<string, { title: string; text: string }>>;
   /** A wrong answer is not tried again: the button just moves on. */
   noRetry?: boolean;
-  /** The screen has no hint button. */
-  noHint?: boolean;
   /** Hex and his line stay where they are once checked, instead of leaving to the left. */
   hexStays?: boolean;
-  /** The main button before the answer is checked (default "Continue"). */
+  /** The main button before the answer is checked (default "Check"). */
   ctaLabel?: string;
   /** Clips read when the screen opens (the title, then Hex's line). */
   voiceover?: readonly string[];
@@ -173,7 +171,6 @@ export const WHAT_DID_YOU_DO: SequenceQuiz = {
     unsure: { title: "No worry!", text: "Socks came first, then shoes. That is an order." },
   },
   noRetry: true,
-  noHint: true,
   ctaLabel: "Check",
 };
 
@@ -247,7 +244,6 @@ export const FIRST_COMMAND: SequenceQuiz = {
   right: "Now the robot is holding the cube. What’s next?",
   wrongTitle: "Almost!",
   wrong: "The cube isn’t picked up yet. What comes first?",
-  ctaLabel: "Next",
   voiceover: SEQUENCE_AUDIO.firstCommand,
 };
 
@@ -271,7 +267,6 @@ export const REFLECT_ORDER: SequenceQuiz = {
   wrongTitle: "Not quite",
   wrong: "Order isn’t alphabetical. It helps reach the goal.",
   noRetry: true,
-  noHint: true,
   hexStays: true,
   ctaLabel: "Check",
 };
@@ -297,6 +292,5 @@ export const REFLECT_DECIDE: SequenceQuiz = {
   wrongTitle: "Not quite",
   wrong: "What must happen first decides the order.",
   noRetry: true,
-  noHint: true,
   ctaLabel: "Check",
 };

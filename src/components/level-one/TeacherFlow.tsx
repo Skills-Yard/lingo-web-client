@@ -11,8 +11,8 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { BUTTON_DROP } from "./ActionRow";
+import { PointedLook, useAnswerHint } from "./answerHint";
 import { FeedbackPanel, XpBurst } from "./FeedbackPanel";
-import { HintFloat } from "./HintFloat";
 import { TeacherSpeech } from "./TeacherSpeech";
 import { SpokenText } from "./SpokenText";
 import type { TextSpan } from "@/lib/constants/onboarding";
@@ -100,16 +100,14 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
   const [checked, setChecked] = useState(false);
   const quiz = step === "quiz";
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
-  // Once the hinted card has finished flipping, Hex floats over to it.
-  const [flipped, setFlipped] = useState(false);
+  // The hint: the hand that points at the right card (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
 
   const show = (next: Step) => {
     // Coming back to the quiz later starts it fresh.
     if (next === "says") {
       setSelectedId(null);
-      setHinted(false);
-      setFlipped(false);
+      answerHint.stop();
       setChecked(false);
       // The button (and bar) go back to their resting state too.
       setAnswer(null);
@@ -131,7 +129,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
       ctaDisabled={quiz && selectedId === null}
       ctaLabel={quiz && !checked ? "Check" : "Continue"}
       // Only the quiz has a hint, and it folds away once the answer is checked.
-      hint={{ visible: quiz && !checked, onUse: () => setHinted(true) }}
+      hint={{ visible: quiz && !checked, onUse: () => answerHint.press(CORRECT_ID) }}
       onBack={() => {
         if (!quiz) return router.push(commandsHref(levelOneStep(3) - 1));
         show("says");
@@ -155,6 +153,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
           show("quiz");
           router.push(levelOneHref(4));
         } else if (!checked) {
+          answerHint.stop();
           setChecked(true);
           noteAnswer(levelOneStep(4), selectedId === CORRECT_ID);
           vibrateForAnswer(selectedId === CORRECT_ID);
@@ -216,7 +215,7 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
           />
         </div>
         {/* Hex stays through the pick and the check; the options slide up over him. */}
-        <TeacherSpeech key="speech" tucked={checked} hexToCard={hinted && flipped} skipIntro={openedOnQuiz || quiz} />
+        <TeacherSpeech key="speech" tucked={checked} skipIntro={openedOnQuiz || quiz} />
       </motion.div>
 
       <AnimatePresence>
@@ -238,22 +237,24 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
             {OPTIONS.map((option) => {
               const state = optionState(option.id, selectedId, checked);
               return (
-                <HintFloat key={option.id} className="flex min-w-0 flex-1" active={hinted && selectedId === null && option.id === CORRECT_ID} onFlipEnd={() => setFlipped(true)}>
+                <div key={option.id} className="flex min-w-0 flex-1">
                 <motion.button
                   animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
                   whileTap={{ scale: 0.96 }}
                   transition={{ duration: 0.4, ease: "easeOut" }}
                   type="button"
+                  data-hint={option.id}
                   disabled={checked}
                   onClick={() => {
                     playClickSound();
                     vibrateForTap();
+                    answerHint.stop();
                     setSelectedId(option.id);
                   }}
                   aria-pressed={state === "selected"}
-                  className={`relative flex h-[221px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[8px] border-4 ${RAISED} ${LOOKS[state].edge} ${
+                  className={`relative isolate flex h-[221px] min-w-0 flex-1 flex-col items-center justify-center gap-3.5 rounded-[8px] border-4 ${RAISED} ${LOOKS[state].edge} ${
                     state === "idle" ? `border-white dark:border-transparent ${option.tint}` : LOOKS[state].card
-                  } ${hinted && state === "idle" && option.id === CORRECT_ID ? "bg-[#FFF3E8]! shadow-[0_4px_0_var(--edge),0_0_14px_2px_rgba(255,141,66,0.25)]! duration-[2500ms] dark:bg-[#2A1E12]!" : ""}`}
+                  }`}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={option.icon} alt="" draggable={false} className="h-[116px] w-[116px] shrink-0 object-contain" />
@@ -261,13 +262,16 @@ export function TeacherFlow({ step: urlStep = "says" }: { step?: Step }) {
                   <span className="max-w-[120px] text-center text-[20px] leading-6 font-semibold text-[#444444] dark:text-white">
                     {option.title}
                   </span>
+                  <PointedLook pointed={answerHint.pointedId === option.id && state === "idle"} />
                 </motion.button>
-                </HintFloat>
+                </div>
               );
             })}
           </motion.div>
         )}
       </AnimatePresence>
+      {/* The hint's hand: taps the right card; it goes as soon as the learner does something. */}
+      {answerHint.hand}
       <Confetti active={checked && selectedId === CORRECT_ID} />
       <XpBurst show={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>

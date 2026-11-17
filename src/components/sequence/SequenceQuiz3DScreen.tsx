@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
@@ -67,7 +68,8 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // The hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // A wrong answer has been tried again: the question is not asked a second time.
   const [retried, setRetried] = useState(false);
   // How far the character is in what it says (the question, then the result): the main button and the hint stay off until it has said it all.
@@ -96,6 +98,7 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
   }, [checked, correct]);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     noteFirstTry(quiz.step, correct);
     if (!correct) noteStruggle(quiz.step, "miss");
@@ -116,8 +119,15 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
     else tryAgain();
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    answerHint.press(quiz.correctId);
     noteStruggle(quiz.step, "hint");
   };
 
@@ -126,7 +136,6 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
   // After a wrong answer the right card isn't revealed: the learner gets to try again.
   const shownCorrectId = checked && !correct ? "" : quiz.correctId;
   const wrongNote = !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
-  const withHint = !quiz.noHint;
   const listRise = quiz.wrongPicture ? LIST_RISE : LIST_RISE_OPEN;
   const resultVoiceover = correct ? audio.right : audio.wrong;
   // The question when the screen opens, the result once checked; the buttons wait for whichever is playing to finish.
@@ -141,8 +150,8 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
       scene={room ? <RoomBoard dress={roomDress(room, checked, correct, cardsGone)} hidden={showsWrongPicture} shown={boardIn} /> : <SoftBackdrop />}
       answer={answer}
       ctaDisabled={selectedId === null || !spoken}
-      ctaLabel={!checked ? (quiz.ctaLabel ?? "Continue") : quiz.noRetry ? "Continue" : correct ? "Next" : "Try again"}
-      hint={withHint ? { visible: !checked, onUse: useHint, disabled: !spoken } : undefined}
+      ctaLabel={!checked ? (quiz.ctaLabel ?? "Check") : quiz.noRetry ? "Continue" : correct ? "Next" : "Try again"}
+      hint={{ visible: !checked, onUse: useHint, disabled: !spoken }}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -161,7 +170,7 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
     >
       <Column>
         {/* Silent when there is nothing to say: once checked with no result voice of its own (screen 1 has one for right and wrong), or on a retry. */}
-        <CharacterOnStage line={quiz.line} silenced={!voiceover} onStage={setStage} centered={!boardIn} withHint={withHint} />
+        <CharacterOnStage line={quiz.line} silenced={!voiceover} onStage={setStage} centered={!boardIn} withHint />
         <AnimatePresence>
           {quiz.wrongPicture && showsWrongPicture && (
             <motion.div
@@ -198,10 +207,10 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
-          hinted={hinted}
-          withHint={withHint}
+          pointedId={answerHint.pointedId}
+          withHint
           rise={listRise}
-          onPick={setSelectedId}
+          onPick={pick}
         />
       ) : (
         <TileCards
@@ -211,14 +220,16 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
-          hinted={hinted}
-          withHint={withHint}
+          pointedId={answerHint.pointedId}
+          withHint
           pictureWidth={quiz.pictureWidth}
           pictureHeight={quiz.pictureHeight}
           cardHeight={quiz.cardHeight}
-          onPick={setSelectedId}
+          onPick={pick}
         />
       ))}
+      {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+      {answerHint.hand}
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />
     </LevelTwoShell>

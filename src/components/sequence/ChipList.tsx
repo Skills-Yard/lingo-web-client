@@ -83,7 +83,29 @@ function Chip({
     animate(y, at.y, SPRING);
   };
 
+  // What is on the chip (its arrow and its word).
+  const glyph = (
+    <>
+      {item.command === "forward" ? (
+        <ArrowUp aria-hidden className="size-7 shrink-0 text-[#0F88E5]" strokeWidth={3} />
+      ) : (
+        <RotateCw aria-hidden className="size-7 shrink-0 text-[#E07B1F]" strokeWidth={3} />
+      )}
+      <span className="text-center text-[10px] leading-3 font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">{COMMAND_LABEL[item.command]}</span>
+    </>
+  );
+
   return (
+    <>
+    {/* The chip's shadow in its place: a plain shape the size of the chip, with nothing in it, there from the start behind the chip (which covers it, and which it appears with), so it is already showing when the chip is dragged away and stays in its place while the chip is away. It follows the chip's place when the list reorders. */}
+    <motion.span
+      aria-hidden
+      initial={{ opacity: 0, left: at.x, top: at.y }}
+      animate={{ opacity: 1, left: at.x, top: at.y }}
+      transition={{ opacity: { duration: 0.2 }, left: SPRING, top: SPRING }}
+      className="pointer-events-none absolute rounded-[10px]"
+      style={{ width: CHIP.width, height: CHIP.height, zIndex: 0, backgroundColor: "rgba(0,0,0,0.09)" }}
+    />
     <motion.button
       type="button"
       layout={false}
@@ -109,7 +131,7 @@ function Chip({
         if (!now) return;
         const dx = event.clientX - now.startX;
         const dy = event.clientY - now.startY;
-        if (Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
         x.set(now.fromX + dx / now.scale);
         y.set(now.fromY + dy / now.scale);
       }}
@@ -152,13 +174,9 @@ function Chip({
           <X aria-hidden className="size-2.5" strokeWidth={3.5} />
         </span>
       )}
-      {item.command === "forward" ? (
-        <ArrowUp aria-hidden className="size-7 shrink-0 text-[#0F88E5]" strokeWidth={3} />
-      ) : (
-        <RotateCw aria-hidden className="size-7 shrink-0 text-[#E07B1F]" strokeWidth={3} />
-      )}
-      <span className="text-center text-[10px] leading-3 font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">{COMMAND_LABEL[item.command]}</span>
+      {glyph}
     </motion.button>
+    </>
   );
 }
 

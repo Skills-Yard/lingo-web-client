@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Teal } from "@/components/level-two/LevelTwoShell";
 import { TileCards } from "@/components/level-two/TileCards";
 import type { Choice } from "@/components/level-two/levelTwo";
@@ -70,8 +71,6 @@ const OPTIONS_RISE = OPTIONS_TOP + OPTION_HEIGHT - (844 - 236) + 16;
 const OPTION_PICTURE_HEIGHT = 60;
 /** The answers wear the tint of the Hex Order cards, with the same border in dark. */
 const OPTION_TINT = "bg-[#EDFAFE] dark:bg-[#15233A] dark:border-[#818185]!";
-/** A beat before the hint picks the right answer for the learner. */
-const HINT_READ_MS = 600;
 const ORANGE = "#FF8D42";
 const TEAL = "#04ACAB";
 
@@ -79,7 +78,7 @@ const TEAL = "#04ACAB";
  * "Think before you move!": the commands are shown, and the learner picks where
  * Hex will end up, before he moves. Checking plays the commands on the board.
  * A wrong pick draws the way Hex faced at the start and after the turn. The hint
- * button picks the right answer for the learner.
+ * button points the hand at the right answer (it is not picked for the learner).
  */
 export function PredictScreen({ variant }: { variant: PredictVariant }) {
   const router = useRouter();
@@ -88,10 +87,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
-  const hintTimer = useRef<number | undefined>(undefined);
-  const stopHintTimer = () => window.clearTimeout(hintTimer.current);
-  useEffect(() => stopHintTimer, []);
+  const answerHint = useAnswerHint();
 
   const correctId = useMemo(() => tileName(endOf(GRID_START, config.commands, GRID)), [config.commands]);
   const choices: readonly Choice[] = config.options.map((name) => ({ id: name, text: name, icon: `${IMAGES}/icon-tile-${name.toLowerCase()}.svg`, tint: OPTION_TINT }));
@@ -104,21 +100,20 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
     return dirs;
   }, [config.commands]);
 
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    answerHint.press(correctId);
     noteStruggle(config.step, "hint");
-    stopHintTimer();
-    hintTimer.current = window.setTimeout(() => setSelectedId(correctId), HINT_READ_MS);
   };
 
-  // The learner's own pick stands: the hint doesn't overwrite it when its wait runs out.
+  // The learner picks an answer: the hint's hand goes.
   const pick = (id: string) => {
-    stopHintTimer();
+    answerHint.stop();
     setSelectedId(id);
   };
 
   const check = () => {
-    stopHintTimer();
+    answerHint.stop();
     setChecked(true);
     noteFirstTry(config.step, correct);
     if (!correct) noteStruggle(config.step, "miss");
@@ -132,7 +127,6 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
   };
 
   const onContinue = () => {
@@ -163,7 +157,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
       }}
       celebrate={checked && correct}
       answer={answer}
-      hint={{ visible: !checked && !hinted, onUse: useHint }}
+      hint={{ visible: !checked, onUse: useHint }}
       ctaLabel={!checked ? "Check" : correct ? "Next" : "Try again"}
       ctaDisabled={selectedId === null}
       onContinue={onContinue}
@@ -178,7 +172,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
         selectedId={selectedId}
         checked={checked}
         fadeOut={false}
-        hinted={false}
+        pointedId={answerHint.pointedId}
         withHint
         longText
         top={OPTIONS_TOP}
@@ -187,6 +181,8 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
         pictureHeight={OPTION_PICTURE_HEIGHT}
         onPick={pick}
       />
+      {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+      {answerHint.hand}
     </HexScreen>
   );
 }

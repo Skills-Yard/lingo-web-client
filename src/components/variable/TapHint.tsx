@@ -66,7 +66,7 @@ export function TapHint({ targets, active, runKey = 0, startAfterMs = START_AFTE
     /** Where the hand's top left must be (the area's own px) for its fingertip to be on `target`, or null if it is not on the screen. */
     const place = (target: TapTarget) => {
       const box = area.current;
-      const element = document.querySelector<HTMLElement>(`[data-hint="${target.id}"]`);
+      const element = document.querySelector<HTMLElement>(`[data-hint="${CSS.escape(target.id)}"]`);
       if (!box || !element) return null;
       // The stage may be scaled: a screen px is `scale` of the area's own px.
       const outer = box.getBoundingClientRect();

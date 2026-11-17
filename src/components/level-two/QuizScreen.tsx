@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -29,15 +30,23 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // The hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   const correct = selectedId === quiz.correctId;
   const picked = quiz.choices.find((choice) => choice.id === selectedId);
   // A right answer that plays a robot move: the cards go clear so it can be seen.
   const fadeCards = checked && correct && !quiz.keepCards && !!picked?.moves?.length;
-  // The target box is lit from the start (`targetLabel`) or by the hint, until the answer is checked.
-  const targetLit = quiz.targetLabel !== undefined || (!!quiz.targetHint && hinted);
+  // The target box is lit from the start (`targetLabel`) until the answer is checked.
+  const targetLit = quiz.targetLabel !== undefined;
+
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     noteAnswer(step, correct);
     vibrateForAnswer(correct);
@@ -63,7 +72,7 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : (quiz.ctaLabel ?? "Check")}
       // Once the answer is checked the hint folds away and Continue takes its room.
-      hint={quiz.hint ? { visible: !checked, onUse: () => setHinted(true) } : undefined}
+      hint={{ visible: !checked, onUse: () => answerHint.press(quiz.correctId) }}
       onContinue={() => (checked ? router.push(nextAfter(step, correct, levelTwoHref(step + 1))) : check())}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -93,9 +102,9 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
-          hinted={hinted}
-          withHint={quiz.hint}
-          onPick={setSelectedId}
+          pointedId={answerHint.pointedId}
+          withHint
+          onPick={pick}
         />
       ) : (
         <TileCards
@@ -105,12 +114,14 @@ export function QuizScreen({ step, quiz }: { step: number; quiz: Quiz }) {
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
-          hinted={hinted}
-          withHint={quiz.hint}
+          pointedId={answerHint.pointedId}
+          withHint
           longText={quiz.longText}
-          onPick={setSelectedId}
+          onPick={pick}
         />
       )}
+      {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+      {answerHint.hand}
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />
     </LevelTwoShell>
