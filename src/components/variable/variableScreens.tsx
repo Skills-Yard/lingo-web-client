@@ -653,7 +653,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.prices,
     title: "Name *the Prices!*",
     stages: [
-      { kind: "interaction", render: (api) => <MatchPricesStage {...api} /> },
+      // The hint button shows the hand: the name for the first wrong spot, then that spot.
+      { kind: "interaction", hint: true, render: (api) => <MatchPricesStage {...api} /> },
       quiz({
         line: "Which value belongs to pen_price?",
         visual: (context) => <PenPriceDrive context={context} />,

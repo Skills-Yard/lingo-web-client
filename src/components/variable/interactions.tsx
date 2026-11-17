@@ -448,14 +448,19 @@ export function ClassifyStage({ slip: slipped, done, finished, hint }: Interacti
   );
 }
 
+/** The two spots, first spot first: each shows only its price (the product's name is on the shop counter behind). */
 const MATCH_ITEMS = [
-  { id: "notebook_price", emoji: "📓", name: "Notebook", price: 50 },
-  { id: "pen_price", emoji: "🖊️", name: "Pen", price: 20 },
+  { id: "notebook_price", price: 50 },
+  { id: "pen_price", price: 20 },
 ] as const;
+// The ids are the variables' names; what the buttons say is the same words without the underscore.
 const MATCH_CARDS: readonly ArrangeCardDef[] = [
-  { id: "pen_price", kind: "pen_price", text: "pen_price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
-  { id: "notebook_price", kind: "notebook_price", text: "notebook_price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
+  { id: "pen_price", kind: "pen_price", text: "Pen price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
+  { id: "notebook_price", kind: "notebook_price", text: "Notebook price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
 ];
+/** Where the hint's fingertip lands (px from the left edge) on a name and on a price spot: left of their words. */
+const MATCH_HINT_NAME_X = 14;
+const MATCH_HINT_SPOT_X = 28;
 /**
  * The spots (a product and its price) stand in a row on top and the names to drag in a row under them: what is dragged
  * is always at the bottom, and goes up to its spot. Two across fill the module's 340px column.
@@ -474,16 +479,28 @@ const MATCH_GEO = arrangeGeometry({
   radius: OPTION.radius,
   // Held, a name is pressed like their buttons are: its face sinks onto the raised edge.
   sink: true,
+  // The empty spots are light grey wells.
+  solidSlots: true,
+  // The names read at the size of the module's answer buttons.
+  fontSize: OPTION.font,
 });
 /** The note under the board: one line (the longer "check" line fits it too). */
 const MATCH_NOTE_H = 20;
 
 /** Screen 19: drag each product's name up onto the spot of its price. */
-export function MatchPricesStage({ slip: slipped, done, finished }: InteractionApi) {
+export function MatchPricesStage({ slip: slipped, done, finished, hint }: InteractionApi) {
   const { slots, placeIn, reset } = useArrange(MATCH_CARDS.map((card) => card.id), MATCH_GEO.count);
   const [slip, setSlip] = useState(false);
   const full = slots.every((slot) => slot !== null);
   const right = full && slots.every((id, index) => id === MATCH_ITEMS[index].id);
+  // Each press of the hint button shows the hand: it taps the name that belongs on the first spot still wrong, then that spot (until the learner touches the board).
+  const [handledHint, setHandledHint] = useState(0);
+  const [demo, setDemo] = useState<{ press: number; targets: readonly TapTarget[] } | null>(null);
+  if (hint !== handledHint) {
+    setHandledHint(hint);
+    const open = MATCH_ITEMS.findIndex((item, index) => slots[index] !== item.id);
+    setDemo(hint > 0 && open >= 0 ? { press: hint, targets: [{ id: MATCH_ITEMS[open].id, fromLeft: MATCH_HINT_NAME_X }, { id: `slot-${open}`, fromLeft: MATCH_HINT_SPOT_X }] } : null);
+  }
   // The shop counter behind (see `ShopBackdrop`) starts with the names shown and nothing lit.
   useEffect(() => {
     setSceneValues("shop", { showEraser: false, showNames: true, showTotal: false, highlight: 0 });
@@ -507,28 +524,26 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Drag each name to the price it belongs to." entry="variable-prices" />
+      {/* The hint button's hand; it goes as soon as the learner touches a name or drops one. */}
+      <TapHint targets={demo ? demo.targets : []} runKey={demo?.press} startAfterMs={HINT_PRESS_DELAY_MS} active={!finished && demo !== null} />
       {/* The board and its note stand under the picture, on the white below it, so no character is covered. */}
       <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: belowScene(MATCH_GEO.board.height + 12 + MATCH_NOTE_H) }}>
-        <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }}>
+        <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }} onPointerDownCapture={() => setDemo(null)}>
           <ArrangeBoard
             cards={MATCH_CARDS}
             slots={slots}
             geo={MATCH_GEO}
             disabled={finished || (full && !right)}
+            highlightEmpty
             onPlace={(id, slot) => {
+              setDemo(null);
               setSlip(false);
               placeIn(id, slot);
               // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
               setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
             }}
-            slotContent={(index) => (
-              <span className="flex items-center gap-1.5 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
-                <span aria-hidden className="text-[26px] leading-none">
-                  {MATCH_ITEMS[index].emoji}
-                </span>
-                {MATCH_ITEMS[index].name} <span className="rounded-full bg-[#FFB300] px-1.5 py-0.5 text-[12px] font-bold text-white">₹{MATCH_ITEMS[index].price}</span>
-              </span>
-            )}
+            // Only the price: no name, no picture, so the learner has to match it from the shop counter.
+            slotContent={(index) => <span className="rounded-full bg-[#FFB300] px-3 py-1 text-[18px] leading-6 font-bold text-white">₹{MATCH_ITEMS[index].price}</span>}
           />
         </div>
         <p className="w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]" style={{ height: MATCH_NOTE_H }}>

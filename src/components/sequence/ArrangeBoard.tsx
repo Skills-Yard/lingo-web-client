@@ -40,10 +40,12 @@ type ArrangeLayout = {
   radius?: number;
   /** A card held (pressed or dragged) is pressed like a button: its face sinks onto its raised edge, instead of growing a little and keeping the edge. */
   sink?: boolean;
+  /** The cards' text size (px), in place of the 11-14px the card's height picks. */
+  fontSize?: number;
 };
 
 /** Where everything stands on the board, and how big the board is. */
-export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false, line = "border-4 border-white dark:border-[#818185]", radius = 8, sink = false }: ArrangeLayout) => {
+export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false, line = "border-4 border-white dark:border-[#818185]", radius = 8, sink = false, fontSize }: ArrangeLayout) => {
   const columns = mode === "columns";
   const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: tray && slotsOnTop ? card.height + lane : 0 });
   const slot = (index: number): Point =>
@@ -55,7 +57,7 @@ export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "
     : { width: count * card.width + (count - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
   /** A card dropped within this far (px) of a slot's corner goes in it. */
   const reach = card.height * 0.87;
-  return { count, card, tray, solidSlots, home, slot, board, reach, sentence, line, radius, sink };
+  return { count, card, tray, solidSlots, home, slot, board, reach, sentence, line, radius, sink, fontSize };
 };
 export type ArrangeGeometry = ReturnType<typeof arrangeGeometry>;
 
@@ -138,6 +140,7 @@ function ArrangeCard({
   line,
   radius,
   sink,
+  fontSize,
   at,
   disabled,
   hinted,
@@ -150,6 +153,7 @@ function ArrangeCard({
   line: string;
   radius: number;
   sink: boolean;
+  fontSize?: number;
   at: Point;
   disabled: boolean;
   hinted: boolean;
@@ -174,6 +178,7 @@ function ArrangeCard({
       type="button"
       disabled={disabled}
       aria-label={card.text}
+      data-hint={card.id}
       onPointerDown={(event) => {
         const box = event.currentTarget;
         box.setPointerCapture(event.pointerId);
@@ -230,6 +235,7 @@ function ArrangeCard({
         <span className={`flex w-full items-center justify-center ${compact ? "min-h-[30px]" : "min-h-[46px]"}`}>{card.art}</span>
       )}
       <span
+        style={fontSize ? { fontSize, lineHeight: `${Math.round(fontSize * 1.25)}px` } : undefined}
         className={`text-center font-semibold text-[#444444] dark:text-white ${
           compact ? (sentence ? "text-[12px] leading-4" : "text-[11px] leading-[14px] tracking-[0.2px] uppercase") : "text-[14px] leading-[18px]"
         }`}
@@ -248,6 +254,7 @@ export function ArrangeBoard({
   geo,
   disabled,
   hintedId = null,
+  highlightEmpty = false,
   onPlace,
   onTap,
   slotContent,
@@ -258,6 +265,8 @@ export function ArrangeBoard({
   disabled: boolean;
   /** The card the hint points at: filled in orange and floating. */
   hintedId?: string | null;
+  /** Every empty slot is picked out (a green dashed line and a soft pulse), so it is plain that something is to be dragged onto it. */
+  highlightEmpty?: boolean;
   onPlace: (id: string, slot: number | null) => void;
   /** Tapping a card; without it a tap does nothing (cards that can only be swapped). */
   onTap?: (id: string) => void;
@@ -266,26 +275,45 @@ export function ArrangeBoard({
 }) {
   return (
     <>
-      {Array.from({ length: geo.count }, (_, index) => (
-        <div
-          key={index}
-          aria-hidden
-          className={`absolute flex items-center justify-center border-2 ${
-            geo.solidSlots
-              ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
-              : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
-          }`}
-          style={{ left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height, borderRadius: geo.radius }}
-        >
-          {slotContent ? (
-            slotContent(index)
-          ) : (
-            <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
-              {index + 1}
-            </span>
-          )}
-        </div>
-      ))}
+      {Array.from({ length: geo.count }, (_, index) => {
+        // An open slot, when the board asks for them to be picked out.
+        const lit = highlightEmpty && slots[index] === null && !disabled;
+        return (
+          <div
+            key={index}
+            aria-hidden
+            data-hint={`slot-${index}`}
+            className={`absolute flex items-center justify-center border-2 ${
+              lit
+                ? // A solid well that stands off the page in both themes: a clear step darker than white, and a slate lighter than the dark page.
+                  "border-dashed border-[#01A17F] bg-[#DFE6EC] shadow-[inset_0_2px_6px_rgba(0,0,0,0.16)] dark:border-[#3FD9B4] dark:bg-[#2C3B49] dark:shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]"
+                : geo.solidSlots
+                  ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+                  : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
+            }`}
+            style={{ left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height, borderRadius: geo.radius }}
+          >
+            {lit && (
+              // A soft green ring that breathes round the slot, outside its edge.
+              <motion.span
+                aria-hidden
+                initial={{ opacity: 0.25, scale: 1 }}
+                animate={{ opacity: [0.25, 0.9, 0.25], scale: [1, 1.03, 1] }}
+                transition={{ duration: 1.6, ease: "easeInOut", repeat: Infinity }}
+                className="pointer-events-none absolute -inset-1 border-[3px] border-[#01A17F]/60 dark:border-[#3FD9B4]/70"
+                style={{ borderRadius: geo.radius + 4 }}
+              />
+            )}
+            {slotContent ? (
+              slotContent(index)
+            ) : (
+              <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
+                {index + 1}
+              </span>
+            )}
+          </div>
+        );
+      })}
       {cards.map((card, index) => {
         const placed = slots.indexOf(card.id);
         return (
@@ -297,6 +325,7 @@ export function ArrangeBoard({
             line={geo.line}
             radius={geo.radius}
             sink={geo.sink}
+            fontSize={geo.fontSize}
             at={placed >= 0 ? geo.slot(placed) : geo.home(index)}
             disabled={disabled}
             hinted={card.id === hintedId}
