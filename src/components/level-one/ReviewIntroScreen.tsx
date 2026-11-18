@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { MODULE_STEPS } from "@/lib/moduleFlow";
 import { missedCount, startReview, useMissedCount } from "@/lib/moduleReview";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 import { OnboardingHex } from "./FeedbackPanel";
 import { LevelOneShell } from "./LevelOneShell";
 
 /**
- * `/module?step=review` — after the last screen, when some questions were
+ * `/module/commands?step=review` — after the last screen, when some questions were
  * answered wrong the first time: Hex says they are coming round again, until
  * every one is right. Continue starts the review (see `moduleReview`). The bar
  * is full at the last screen, with the questions to redo added to its total.
@@ -22,7 +22,7 @@ export function ReviewIntroScreen() {
   // Nothing to redo (a reload with the answers gone, or a link): straight to the end.
   // Read in the effect, once the store has been restored from the session.
   useEffect(() => {
-    if (missedCount() === 0) router.replace(moduleHref("complete"));
+    if (missedCount() === 0) router.replace(commandsHref("complete"));
   }, [router]);
 
   return (
@@ -31,7 +31,7 @@ export function ReviewIntroScreen() {
       total={MODULE_STEPS + count}
       ctaLabel="Let’s go"
       onBack={() => router.push("/level")}
-      onContinue={() => router.push(moduleHref(startReview() ?? "complete"))}
+      onContinue={() => router.push(commandsHref(startReview() ?? "complete"))}
     >
       <div className="mt-14 flex flex-col items-center text-center">
         <div aria-hidden className="h-[190px] w-[190px] shrink-0">

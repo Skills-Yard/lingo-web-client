@@ -1,18 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Moon, Sun } from "lucide-react";
 import { batteryCount, useBattery } from "@/components/home/batteryStore";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
-import { BatteryMenu } from "./BatteryMenu";
+import { useTheme } from "@/context/ThemeContext";
+import { BatteryMenu, PanelButton } from "./BatteryMenu";
 import { WIPE } from "./themeWipe";
 
 export { WIPE };
 
-/** The close button's look. */
-const ICON_BUTTON =
-  "flex items-center justify-center rounded-[6px] border border-black/8 text-[#444444] transition-all active:scale-95 cursor-pointer dark:border-white/15 dark:text-white/70 dark:hover:bg-white/10";
+/** The close button's look: flat, just the cross in its own 30 x 30 box. */
+const ICON_BUTTON = "flex cursor-pointer items-center justify-center text-[#444444] transition-transform active:scale-95 dark:text-white/70";
+
+/** The battery's: flat, just the battery and its count. */
+const BATTERY_BUTTON = "block";
 
 interface OnboardingHeaderProps {
   onBack: () => void;
@@ -68,6 +72,18 @@ function BatteryCount() {
   );
 }
 
+/** The light / dark switch in the battery's hidden panel, wiping to this screen's own background. */
+function ThemeOption() {
+  const { theme, toggleTheme } = useTheme();
+  const dark = theme === "dark";
+  return (
+    <PanelButton onClick={() => toggleTheme(WIPE)}>
+      {dark ? <Sun className="h-5 w-5 text-amber-400" /> : <Moon className="h-5 w-5" />}
+      {dark ? "Light mode" : "Dark mode"}
+    </PanelButton>
+  );
+}
+
 export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, answer, showCount, level }: OnboardingHeaderProps) {
   const [fromStep] = useState(() => (progress ? (lastShown?.step ?? progress.step - 1) : null));
   useEffect(() => {
@@ -112,7 +128,7 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
           <button
             type="button"
             onClick={onBack}
-            className={`h-[30px] w-[30px] shrink-0 border-0! dark:hover:bg-transparent! ${ICON_BUTTON}`}
+            className={`h-[30px] w-[30px] shrink-0 ${ICON_BUTTON}`}
             aria-label="Close"
           >
             {/* The cross is 19.3px across with a 3px stroke, in the 30 x 30 box: the row sits 5.35px up, so the cross itself meets the page margin. */}
@@ -139,7 +155,12 @@ export function OnboardingHeader({ onBack, onPrevious, progress, batteryStep, an
 
           {/* Each screen's `step` spends its share of the battery. Also the way
               into the hidden dev panel (see BatteryMenu). */}
-          <BatteryMenu className="relative shrink-0" buttonClassName="block" onBack={onPrevious ?? onBack}>
+          <BatteryMenu
+            className="relative shrink-0"
+            buttonClassName={BATTERY_BUTTON}
+            onBack={onPrevious ?? onBack}
+            extraOptions={() => <ThemeOption />}
+          >
             <span className="flex h-[25px] items-center gap-1">
               <PersistentBattery step={batteryStep ?? progress?.step} className="w-[40px]" />
               <BatteryCount />

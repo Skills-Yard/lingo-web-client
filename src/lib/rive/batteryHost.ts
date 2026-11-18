@@ -1,5 +1,6 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { BATTERY, configureRiveRuntime } from "./runtime";
+import { riveSource } from "./riveCache";
 
 // Same as `progressBarHost`: a hot reload would leave a second, unloaded battery beside the one on screen.
 import.meta.turbopackHot?.decline();
@@ -82,7 +83,7 @@ export const getBatteryHost = (): Host => {
   const created: Host = { element, canvas, rive: null, loaded: false };
   host = created;
   created.rive = new Rive({
-    src: BATTERY.src,
+    ...riveSource(BATTERY.src),
     canvas,
     artboard: BATTERY.artboard,
     stateMachine: BATTERY.stateMachine,

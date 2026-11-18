@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { GemPopup } from "@/components/level-one/GemPopup";
@@ -52,9 +53,12 @@ const answersHeight = (stage: QuizStage) => {
   return stage.options.length * row + (stage.options.length - 1) * ROW_GAP;
 };
 
+/** Hex's line is never sent away here, and no stage waits for it to be said. */
+const KEEP_HEX = () => {};
+
 /** An interaction stage's own picture and controls. */
 function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, finished })}</>;
+  return <>{stage.render?.({ slip, done, dismissHex: KEEP_HEX, finished, hexSpoken: true })}</>;
 }
 
 /**
@@ -73,7 +77,8 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // A question's hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
@@ -108,7 +113,8 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
   const quiz = stage.kind === "quiz" ? stage : null;
   const interaction = stage.kind === "interaction" ? stage : null;
   const correct = !!quiz && selectedId === quiz.correctId;
-  const hasHint = !!quiz?.hintText;
+  // Every question has the hint button.
+  const hasHint = !!quiz;
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -132,6 +138,7 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
   const done = useCallback(() => finishNow.current(), []);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     record(correct);
   };
@@ -141,6 +148,12 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
     setChecked(false);
     setAnswer(null);
     setAttempt((previous) => previous + 1);
+  };
+
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
   };
 
   const advance = () => {
@@ -153,7 +166,7 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
+    answerHint.stop();
     setAttempt(0);
     setFinished(false);
   };
@@ -165,8 +178,9 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
     else tryAgain();
   };
 
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    if (quiz) answerHint.press(quiz.correctId);
     noteStruggle(screen.step, "hint");
   };
 
@@ -180,8 +194,8 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
       ? { right: true, title: interaction.finishPanel.title, text: interaction.finishPanel.text }
       : null;
 
-  // Hex's line for this stage (the hint replaces it).
-  const line = quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
+  // Hex's line for this stage.
+  const line = quiz ? quiz.line : (interaction?.line ?? null);
   const gone = quiz ? checked : finished;
 
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
@@ -205,7 +219,7 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
       ctaLabel={
         quiz
           ? !checked
-            ? (quiz.ctaLabel ?? "Continue")
+            ? (quiz.ctaLabel ?? "Check")
             : correct
               ? (quiz.nextLabel ?? "Next")
               : "Try again"
@@ -303,9 +317,9 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={false}
-              hinted={hinted}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           ) : (
             <AnswerCards
@@ -315,13 +329,15 @@ export function ConditionsScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={false}
-              hinted={hinted}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
               rise={LIST_RISE}
               compact={quiz.compact}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           )}
+          {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+          {answerHint.hand}
         </>
       )}
 

@@ -13,6 +13,9 @@ export type BoardKind = "grid" | "row";
 /** Each board's own size (px), before it is scaled to the width it is drawn at. */
 const BASE = { grid: { width: 356, height: 227 }, row: { width: 356, height: 112 } } as const;
 
+/** The height (px) a board takes when drawn at `width`, so a screen can stand things right under it. */
+export const boardHeight = (kind: BoardKind, width: number) => (BASE[kind].height * width) / BASE[kind].width;
+
 /**
  * Module one's 3 x 3 platform is drawn in perspective, so its tile centres (a share of its width, by row then column)
  * and its rows' centres (a share of its height) are measured off the picture.

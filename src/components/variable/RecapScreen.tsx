@@ -1,27 +1,18 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Quote } from "lucide-react";
 import { GemPopup } from "@/components/level-one/GemPopup";
-import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "./TrekScreen";
+import { GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
 import { variableHref } from "@/lib/routes";
+import { fireSceneTrigger } from "@/lib/rive/variableHost";
+import { CompleteBackdrop, GAP_BELOW_SCENE, SCENE_BOTTOM_LIFTED } from "./scenes";
 import { parseTitle } from "./quiz";
 import { STEP, variablePrevious, VARIABLE_STEPS } from "./variable";
-import { CARD } from "./visuals";
 
 const TITLE = parseTitle("You *Unlocked Variables!*");
-
-/** The things the chapter used, each a step toward the idea. */
-const OBJECTS = [
-  { emoji: "🍶", label: "Water bottle" },
-  { emoji: "📋", label: "Attendance board" },
-  { emoji: "🛍️", label: "Shopping items" },
-  { emoji: "👛", label: "Wallet" },
-  { emoji: "🧮", label: "Addition app" },
-] as const;
 
 const TAKEAWAYS = [
   "Programs keep track of information.",
@@ -34,10 +25,15 @@ const TAKEAWAYS = [
 
 const FINAL_THOUGHT = "Variables help programs remember information and use it later.";
 
+/** How tall the takeaways and the closing thought are together (px): the list (six lines), a gap and the thought (two lines). */
+const TEXT_BLOCK_H = 232;
+/** The scene plays its introduction, and then celebrates this long (ms) after the screen opens. */
+const CELEBRATE_MS = 1800;
+
 /**
- * "You Unlocked Variables!": the chapter's things connect to one central
- * idea, its takeaways and its closing thought. "Complete Chapter" opens the
- * gem popup, then "Lesson complete!".
+ * "You Unlocked Variables!": the chapter's things connect to one central idea, in the scene behind the screen
+ * ("VAR_Complete", see `CompleteBackdrop`; there is no Hex bubble here, so it stands in the room under the title), with
+ * the takeaways and the closing thought under it. "Complete Chapter" opens the gem popup, then "Lesson complete!".
  */
 export function RecapScreen() {
   const router = useRouter();
@@ -47,12 +43,18 @@ export function RecapScreen() {
     router.push(variableHref("complete"));
   }, [router]);
 
+  // Once the scene has put the chapter's things around the idea, it celebrates.
+  useEffect(() => {
+    const timer = window.setTimeout(() => fireSceneTrigger("complete", "celebrate"), CELEBRATE_MS);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   return (
     <LevelTwoShell
       step={STEP.recap}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(STEP.recap))}
-      scene={<TrekBackdrop />}
+      scene={<CompleteBackdrop lifted />}
       ctaLabel="Complete Chapter"
       onContinue={() => setGemOpen(true)}
       overlay={<GemPopup open={gemOpen} onClose={closeGem} />}
@@ -71,52 +73,11 @@ export function RecapScreen() {
         </span>
       </ScreenTitle>
 
-      <div className="absolute inset-x-0 flex flex-col items-center" style={{ top: 168 }}>
-        <motion.span
-          initial={{ opacity: 0, scale: 0.7 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: "spring", stiffness: 200, damping: 14, delay: 0.8 }}
-          className="rounded-full bg-[#08A4AD] px-4 py-1.5 text-[15px] leading-5 font-bold text-white shadow-[0_3px_0_#067F86]"
-        >
-          variable
-        </motion.span>
-        <svg aria-hidden width={340} height={28} viewBox="0 0 340 28" fill="none">
-          {OBJECTS.map((_, index) => {
-            const x = 34 + index * 68;
-            return (
-              <motion.path
-                key={index}
-                d={`M170 0 C170 14 ${x} 12 ${x} 28`}
-                stroke="#04ACAB"
-                strokeWidth={2}
-                strokeLinecap="round"
-                strokeDasharray="4 5"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ delay: 0.3 + index * 0.12, duration: 0.6 }}
-              />
-            );
-          })}
-        </svg>
-        <div className="flex w-[340px] justify-between">
-          {OBJECTS.map((object, index) => (
-            <motion.div
-              key={object.label}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 + index * 0.12 }}
-              className="flex w-[64px] flex-col items-center gap-1"
-            >
-              <span aria-hidden className={`flex size-[48px] items-center justify-center text-[26px] leading-none ${CARD}`}>
-                {object.emoji}
-              </span>
-              <span className="text-center text-[10px] leading-3 font-semibold text-[#6B7480] dark:text-white/60">{object.label}</span>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      <div className="absolute left-1/2 flex w-[340px] -translate-x-1/2 flex-col gap-2.5" style={{ top: 318 }}>
+      {/* Right under the scene's bottom edge, or higher where that would run down behind the button (a wider window draws the scene larger). */}
+      <div
+        className="absolute left-1/2 flex w-[340px] -translate-x-1/2 flex-col gap-2.5"
+        style={{ top: `min(calc(${SCENE_BOTTOM_LIFTED} + ${GAP_BELOW_SCENE}px), calc(100% - ${aboveButtons(GAP_ABOVE_BUTTONS)} - ${TEXT_BLOCK_H}px))` }}
+      >
         <ol className="flex flex-col gap-1.5 rounded-[14px] bg-[#E3F6F3] px-4 py-3 dark:bg-[#0F2B28]">
           {TAKEAWAYS.map((point, index) => (
             <li key={point} className="flex items-start gap-2 text-[13px] leading-[18px] font-medium text-[#2F5D59] dark:text-[#BFE6E2]">

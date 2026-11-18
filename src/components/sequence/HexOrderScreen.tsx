@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowUp, RotateCw } from "lucide-react";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
+import { Teal } from "@/components/level-two/LevelTwoShell";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { HexBoard } from "./HexBoard";
@@ -14,7 +16,6 @@ import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
 const BATTERY = { col: 1, row: 1 };
-const HINT = "Look at the direction HEX is facing after the first command.";
 
 /** The right order, first slot first. */
 const ANSWER: readonly Command[] = ["forward", "right", "forward"];
@@ -30,8 +31,6 @@ const GEO = arrangeGeometry({ mode: "rows", card: { width: 108, height: 100 }, c
 /** The picture's place (stage px) and how far down the arrange board hangs: its slots start just under the picture, clear of it, and the result panel stays below them. */
 const PICTURE_TOP = 160;
 const BOARD_TOP = 429;
-/** The hint's sentence stands under the board. */
-const TIP_TOP = BOARD_TOP + GEO.board.height + 22;
 /** How long Hex's first command is left to be seen (ms) before he goes back, on a second go. */
 const DEMO_HOLD_MS = 1000;
 
@@ -51,9 +50,9 @@ export function HexOrderScreen() {
   const [phase, setPhase] = useState<Phase>("edit");
   const [correct, setCorrect] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
   const [hintCard, setHintCard] = useState<string | null>(null);
   const pending = useRef<number[]>([]);
+  const { win, popup } = useBatteryClaim(undefined, { rationed: true });
 
   useEffect(() => {
     const timers = pending.current;
@@ -78,6 +77,7 @@ export function HexOrderScreen() {
       if (!right) noteStruggle(STEP.hexOrder, "miss");
       vibrateForAnswer(right);
       setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: right }));
+      if (right) win();
     });
   };
 
@@ -87,7 +87,6 @@ export function HexOrderScreen() {
     resetHex();
     setPhase("edit");
     setAnswer(null);
-    setHinted(false);
     setHintCard(null);
     if (!first) return;
     // The first command alone, then back to the start.
@@ -109,27 +108,25 @@ export function HexOrderScreen() {
   return (
     <HexScreen
       step={STEP.hexOrder}
-      title="Can you put the commands in the right order?"
-      titleSize={22}
-      wrapTitle
-      board={<HexBoard kind="grid" hex={hex} battery={BATTERY} width={290} entryKey="hex-order" />}
+      title={
+        <>
+          Arrange the <Teal>commands!</Teal>
+        </>
+      }
+      board={<HexBoard kind="grid" hex={hex} battery={BATTERY} collected={phase === "checked" && correct} width={290} entryKey="hex-order" />}
       boardTop={PICTURE_TOP}
-      tip={hinted && phase === "edit" ? HINT : undefined}
-      tipTop={TIP_TOP}
       panel={{
         correct,
         title: correct ? "Exactly!" : "Not quite",
-        text: correct
-          ? "The commands worked because you arranged them in the right order."
-          : "Both commands were valid, but their order changed where HEX moved. What should happen before HEX moves toward the battery?",
+        text: correct ? "The right order got HEX to the battery." : "The order changed where HEX went. What should come first?",
         open: phase === "checked",
       }}
       celebrate={phase === "checked" && correct}
+      overlay={popup}
       answer={answer}
       hint={{
         visible: phase === "edit",
         onUse: () => {
-          setHinted(true);
           setHintCard(nextHintId(CARDS, slots, ANSWER));
           noteStruggle(STEP.hexOrder, "hint");
         },

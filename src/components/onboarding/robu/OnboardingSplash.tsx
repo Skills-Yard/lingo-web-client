@@ -11,6 +11,7 @@ import { Layout, Fit, Alignment } from "@rive-app/canvas";
 import { motion } from "framer-motion";
 import {
   configureRiveRuntime,
+  SPLASH_RIVE_SRC,
   SPLASH_ARTBOARD,
   SPLASH_STATE_MACHINE,
   SPLASH_VIEW_MODEL,
@@ -18,7 +19,7 @@ import {
 } from "@/lib/rive/runtime";
 import { useScreenTop } from "@/hooks/useFullscreen";
 import { wordmarkFont } from "@/lib/fonts";
-import { hexRiveSource } from "@/lib/rive/hexFile";
+import { riveSource } from "@/lib/rive/riveCache";
 
 // The "Lingo" wordmark: 60px / 100%, #444444 in light theme and #E8E8E8 in
 // dark, in its own font (which only comes in one weight).
@@ -82,7 +83,7 @@ interface OnboardingSplashProps {
 export function OnboardingSplash({ className, bottomInset = 0, showSignUpWordmark = false, startOnSignUp = false, replayKey = 0, onSignUpSettled, onComplete }: OnboardingSplashProps) {
   const { rive, RiveComponent } = useRive({
     // `SPLASH_RIVE_SRC` is `hex.riv`, so it loads from the same preloaded bytes.
-    ...hexRiveSource(),
+    ...riveSource(SPLASH_RIVE_SRC),
     artboard: SPLASH_ARTBOARD,
     stateMachine: SPLASH_STATE_MACHINE,
     autoplay: true,

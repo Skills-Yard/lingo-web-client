@@ -11,7 +11,7 @@ const TEXT_GAP = 54;
 const TEXT_H = 46;
 
 /**
- * `/module?step=1` — "Meet your robot.": the title and a line about the
+ * `/module/commands?step=1` — "Meet your robot.": the title and a line about the
  * robot, with the robot resting above that line.
  */
 export function MeetRobotScreen() {

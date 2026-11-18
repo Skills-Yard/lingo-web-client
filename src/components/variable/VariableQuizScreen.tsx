@@ -5,61 +5,110 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
+import { PointedLook, useAnswerHint } from "@/components/level-one/answerHint";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
-import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
-import { TrekBackdrop } from "./TrekScreen";
-import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
+import { BELOW_TITLE, BottleBackdrop, BottleWalletBackdrop, ClassroomBackdrop, GAP_BELOW_SCENE, HEX_LIFT, ItemsBackdrop, MiniAppBackdrop, NamesBackdrop, SCENE_BOTTOM_LIFTED_PHONE, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
+import { COLUMN_LEFT, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { RAISED } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { fireSceneTrigger } from "@/lib/rive/variableHost";
 import { TipCard } from "@/components/sequence/HexScreen";
-import { parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
-import { variableNext, variablePrevious, VARIABLE_STEPS } from "./variable";
+import { useBubbleSize } from "./bubbleWidth";
+import { IDLE_LOOK, MAX_OPTION_WORDS, OPTION, parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
+import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIABLE_STEPS, type SceneKind } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
-/** The answers' rows and the object cards: their heights and gaps (px). */
-const ROW_H = 56;
-const ROW_GAP = 6;
-const OBJECT_H = 100;
-const OBJECT_GAP = 10;
+/**
+ * The answers' size, gap, padding, corners, text and rise are `OPTION` (see `quiz.ts`): one set for every option of
+ * every screen, rows and cards alike, so the scene (about 306px from under Hex's bubble, 262 of it picture) has the
+ * same room above them everywhere, both when a question is open (they end above the button) and after a check (it has
+ * risen to the head and they have risen clear of the result panel).
+ */
+
 /** The least a picture is shrunk to fit its room. */
 const MIN_FIT = 0.6;
-/** The result panel makes room by raising the answers this far (px). */
-const RISE = 150;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
+/** A right answer sends the picture (a card on the screen) up this far (px) as it fades, like Hex and his bubble; a try again brings it back. */
+const PICTURE_EXIT = 90;
+const PICTURE_OUT = { duration: 0.45, ease: [0.22, 1, 0.36, 1] } as const;
+const PICTURE_BACK = { duration: 0.4, ease: [0.22, 1, 0.36, 1] } as const;
 /** A line longer than this goes on a card; a shorter one is Hex's. */
 const BUBBLE_MAX_CHARS = 120;
 /** The title block (px): where it ends, one line or two. */
-const TITLE_END = { one: 125, two: 163 } as const;
+const TITLE_END = { one: BELOW_TITLE, two: 163 } as const;
 
-/** Hex's line is two lines at most: a short one fits the narrow bubble. */
-const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 44 ? 190 : 240 });
+/** The scene behind a screen (see `sceneOf`); the trail says whether the river is gone. `lifted`: a right answer has sent Hex and his bubble away, and the scene rises into their room. */
+const backdropFor = (scene: SceneKind, step: number, lifted: boolean) => {
+  switch (scene) {
+    case "bottleWallet":
+      return <BottleWalletBackdrop lifted={lifted} />;
+    case "items":
+      return <ItemsBackdrop lifted={lifted} />;
+    case "bottle":
+      return <BottleBackdrop lifted={lifted} />;
+    case "names":
+      return <NamesBackdrop lifted={lifted} />;
+    case "varCard":
+      return <VarCardBackdrop lifted={lifted} />;
+    case "classroom":
+      return <ClassroomBackdrop lifted={lifted} />;
+    case "miniApp":
+      return <MiniAppBackdrop lifted={lifted} />;
+    case "shop":
+      return <ShopBackdrop lifted={lifted} />;
+    case "wallet":
+      return <WalletBackdrop lifted={lifted} />;
+    default:
+      return <TrekBackdrop noWater={step === STEP.noWater} lifted={lifted} />;
+  }
+};
 
-/** Answers this short (and without a picture) stand as cards side by side; longer ones are rows. */
-const SHORT_ANSWER_CHARS = 12;
-/** The height of a card with words only. */
-const TEXT_CARD_H = 64;
+/** Four answers this short stand as two rows of two cards. */
+const FOUR_ANSWER_CHARS = 18;
+/**
+ * A name longer than this (a variable such as `present_students`) may break after its underscores, so three of them
+ * fit three cards across; a shorter one (`water_level`) stays whole and widens its card instead.
+ */
+const LONG_NAME_CHARS = 12;
 
-/** Whether the answers are cards across (objects to tap, or three short answers) rather than rows. */
+const wordCount = (text: string) => text.trim().split(/\s+/).length;
+/** `text` as set in a card: a long name gets a place to break after each underscore (a zero-width space). */
+const cardText = (text: string) => (text.length > LONG_NAME_CHARS ? text.replace(/_/g, "_​") : text);
+
+/**
+ * Whether the answers are cards across rather than rows: objects to tap, three answers of at most `MAX_OPTION_WORDS`
+ * words (mini cards in one row, with a picture above the words if they have one), or four short ones two by two.
+ */
 const acrossCards = (stage: QuizStage) =>
-  stage.layout === "grid" || (stage.options.length === 3 && stage.options.every((option) => !option.icon && option.text.length <= SHORT_ANSWER_CHARS));
+  stage.layout === "grid" ||
+  (stage.options.length === 3 && stage.options.every((option) => wordCount(option.text) <= MAX_OPTION_WORDS)) ||
+  (stage.options.length === 4 && stage.options.every((option) => !option.icon && !option.node && !option.emoji && option.text.length <= FOUR_ANSWER_CHARS));
 
-const hasPictures = (options: readonly Option[]) => options.some((option) => option.node || option.emoji);
+const hasPictures = (options: readonly Option[]) => options.some((option) => option.node || option.emoji || option.icon);
 const columnsFor = (count: number) => (count === 3 ? 3 : 2);
 
 /** Rows of answers in words, or cards to tap: the height they take. */
 const answersHeight = (stage: QuizStage) => {
-  if (!acrossCards(stage)) return stage.options.length * ROW_H + (stage.options.length - 1) * ROW_GAP;
+  if (!acrossCards(stage)) return stage.options.length * OPTION.height + (stage.options.length - 1) * OPTION.gap;
   const rows = Math.ceil(stage.options.length / columnsFor(stage.options.length));
-  return rows * (hasPictures(stage.options) ? OBJECT_H : TEXT_CARD_H) + (rows - 1) * OBJECT_GAP;
+  return rows * (hasPictures(stage.options) ? OPTION.pictureHeight : OPTION.height) + (rows - 1) * OPTION.gap;
 };
+
+/**
+ * The most the answers can take once a check has raised them (px): the room between the risen scene's bottom edge
+ * (y 431 on a phone) and the result panel (y 600), with `GAP_BELOW_SCENE` kept clear at both ends: 145. Two rows, one
+ * row of cards and two rows of word cards fit; three rows (196) do not.
+ */
+const ROOM_AFTER_CHECK = OPTION.panelTop - GAP_BELOW_SCENE - (SCENE_BOTTOM_LIFTED_PHONE + GAP_BELOW_SCENE);
 
 const LETTERS = ["A", "B", "C", "D", "E"];
 
@@ -69,7 +118,8 @@ function ObjectGrid({
   correctId,
   selectedId,
   checked,
-  hinted,
+  fadeOut,
+  pointedId,
   withHint,
   spill,
   onPick,
@@ -78,7 +128,10 @@ function ObjectGrid({
   correctId: string;
   selectedId: string | null;
   checked: boolean;
-  hinted: boolean;
+  /** The cards fade out (a right answer clears the screen). */
+  fadeOut: boolean;
+  /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
+  pointedId: string | null;
   withHint: boolean;
   spill: boolean;
   onPick: (id: string) => void;
@@ -87,19 +140,21 @@ function ObjectGrid({
   return (
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -RISE : 0 }}
-      transition={checked ? PANEL_SPRING : ANSWERS_IN}
+      animate={{ opacity: fadeOut ? 0 : 1, y: checked ? -OPTION.rise : 0 }}
+      transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
       className="pointer-events-auto absolute z-[1] grid"
-      style={{ bottom: aboveButtons(GAP_ABOVE_BUTTONS, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OBJECT_GAP, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(0, 1fr))` }}
+      // Equal columns, except that a card of words is never narrower than its words (`water_level` is wider than a third of the column at this size), so the text stays inside it.
+      style={{ bottom: aboveButtons(OPTION.aboveButtons, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(${pictures ? "0px" : "min-content"}, 1fr))` }}
     >
       {options.map((option) => {
         const state = optionState(option.id, selectedId, checked, correctId);
-        const hintHere = hinted && selectedId === null && option.id === correctId;
+        const pointed = pointedId === option.id && state === "idle";
         const spilling = spill && checked && state === "wrong";
         return (
-          <HintFloat key={option.id} className="relative flex min-w-0" spin={false} active={hintHere}>
+          <div key={option.id} className="relative flex min-w-0">
             <motion.button
               type="button"
+              data-hint={option.id}
               disabled={checked}
               onClick={() => {
                 playClickSound();
@@ -110,20 +165,21 @@ function ObjectGrid({
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, x: spilling ? [0, -5, 5, -4, 4, 0] : 0 }}
               whileTap={{ scale: 0.96 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              style={{ height: pictures ? OBJECT_H : TEXT_CARD_H }}
-              className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 overflow-visible rounded-[16px] border-4 px-1.5 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] transition-[background-color,border-color] ${
-                state === "idle" ? "border-white bg-white dark:border-transparent dark:bg-[#15181E]" : LOOKS[state].card
+              // The side padding makes up the border's width (a 1px line + the rest at rest, a 4px border + the rest picked: `OPTION.padX` either way), so a card is as wide picked as at rest and nothing around it moves.
+              style={{ height: pictures ? OPTION.pictureHeight : OPTION.height, borderRadius: OPTION.radius, paddingInline: state === "idle" ? OPTION.padX - 1 : OPTION.padX - 4 }}
+              className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 overflow-visible ${RAISED} ${LOOKS[state].edge} ${
+                state === "idle" ? `border ${IDLE_LOOK}` : `border-4 ${LOOKS[state].card}`
               }`}
             >
-              <motion.span
-                aria-hidden
-                initial={false}
-                animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                className="pointer-events-none absolute inset-0 -z-10 rounded-[12px] bg-[#FFE7D1] dark:bg-[#33220F]"
-              />
-              {pictures && <span className="flex h-[46px] items-center justify-center text-[38px] leading-none">{option.node ?? option.emoji}</span>}
-              <span className="text-center text-[14px] leading-5 font-semibold text-[#444444] dark:text-white">{option.text}</span>
+              {pictures && (
+                <span className="flex h-[54px] items-center justify-center text-[44px] leading-none">
+                  {option.icon ? <img src={option.icon} alt="" width={58} height={54} draggable={false} className="h-[54px] w-auto select-none object-contain" /> : (option.node ?? option.emoji)}
+                </span>
+              )}
+              {/* Two words stand on two lines when they do not fit on one (the card is 56px tall, two lines are 40). */}
+              <span className="text-center leading-5 font-semibold text-[#444444] dark:text-white" style={{ fontSize: OPTION.font }}>
+                {cardText(option.text)}
+              </span>
               <AnimatePresence>
                 {spilling &&
                   [0, 1, 2, 3, 4].map((drop) => (
@@ -140,8 +196,9 @@ function ObjectGrid({
                     </motion.span>
                   ))}
               </AnimatePresence>
+              <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
         );
       })}
     </motion.div>
@@ -149,8 +206,8 @@ function ObjectGrid({
 }
 
 /** An interaction stage's own picture and controls. */
-function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, finished })}</>;
+function InteractionHost({ stage, slip, done, finished, hint }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean; hint: number }) {
+  return <>{stage.render({ slip, done, finished, hint })}</>;
 }
 
 /**
@@ -160,7 +217,7 @@ function InteractionHost({ stage, slip, done, finished }: { stage: InteractionSt
  * result panel (with Hex) slides up. A right answer goes on; a wrong one is
  * tried again, with the right one never shown. An interaction stage is
  * something to do (tap, drag, slide) that unlocks Continue when it is done.
- * Going on from the last stage follows the module's flow (skips and detours).
+ * Going on from the last stage goes to the next screen (`variableNext`).
  */
 export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const router = useRouter();
@@ -168,7 +225,10 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // A question's hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
+  // How many times the hint button has been pressed on this stage: an interaction shows its own help for each press.
+  const [hintPresses, setHintPresses] = useState(0);
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
@@ -192,6 +252,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   }, []);
   const fit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
 
+  const sceneKind = sceneOf(screen.step);
   const stage = screen.stages[stageIndex];
   const lastStage = stageIndex === screen.stages.length - 1;
   const quiz = stage.kind === "quiz" ? stage : null;
@@ -201,15 +262,32 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const right = correct || alsoOk;
   // A pick that is fine too is shown as right (the other right answer isn't lit up beside it).
   const shownCorrectId = checked && !right ? "" : alsoOk ? (selectedId ?? "") : (quiz?.correctId ?? "");
-  const hasHint = !!quiz && (!!quiz.hintText || !!quiz.hintVisual);
-  const hintShown = hinted || (!!quiz?.hintOnMiss && attempt > 0);
+  // Every question has the hint button; an interaction has it only if it says so.
+  const hasHint = !!quiz || !!interaction?.hint;
+  // What Hex says, and the bubble that holds it in two lines.
+  const sayLine = quiz ? quiz.line : "";
+  const bubble = useBubbleSize(sayLine);
+  // A right answer clears the screen: the answers fade out and, as Hex and his bubble run off, the scene rises into their room. (A wrong one keeps the answers, for another try.)
+  const cleared = !!quiz && checked && right;
+  // Hex and his bubble leave after any check, right or wrong, and the scene rises into their room at the head, clear of the answers that rise from below (a wrong answer's stay for another try).
+  const sceneLifted = !!quiz && checked;
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
     if (!clean) noteStruggle(screen.step, "miss");
+    // The trail behind cheers a right answer, and points at the drink after a wrong one on the first screens.
+    if (sceneKind === "trek") {
+      if (clean) fireSceneTrigger("trek", "cheer");
+      else if (DRINK_HINT_STEPS.includes(screen.step)) fireSceneTrigger("trek", "drinkHint");
+    }
     vibrateForAnswer(clean);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: clean }));
   };
+
+  // The labelled bottles are shuffled when "Which bottle is mine?" opens, and again for each new try (on the reflection screen that brings them back they just stand there).
+  useEffect(() => {
+    if (sceneKind === "names" && screen.step === STEP.labels) fireSceneTrigger("names", "shuffle");
+  }, [sceneKind, screen.step, attempt]);
 
   // What an interaction calls: always the same functions, acting on the screen as it is now.
   const slipNow = useRef<() => void>(() => {});
@@ -226,6 +304,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const done = useCallback(() => finishNow.current(), []);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     record(right);
   };
@@ -237,6 +316,12 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
     setAttempt((previous) => previous + 1);
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
   const advance = () => {
     if (lastStage) {
       router.push(variableNext(screen.step));
@@ -246,7 +331,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
+    answerHint.stop();
+    setHintPresses(0);
     setAttempt(0);
     setFinished(false);
   };
@@ -258,8 +344,10 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
     else tryAgain();
   };
 
+  // A question's hint points at the right answer (it is not picked for the learner); an interaction shows its own help for each press.
   const useHint = () => {
-    setHinted(true);
+    if (quiz) answerHint.press(quiz.correctId);
+    else setHintPresses((previous) => previous + 1);
     noteStruggle(screen.step, "hint");
   };
 
@@ -278,7 +366,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       : null;
 
   // What stands under the line: the picture and the answers (question stage), or the interaction.
-  const answersBottom = quiz ? aboveButtons(GAP_ABOVE_BUTTONS, hasHint) : "0px";
+  const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
   const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 18}px)` : aboveButtons(24);
 
   const choices: readonly Choice[] = quiz ? quiz.options.map((option, index) => ({ id: option.id, text: option.text, icon: option.icon ?? "", badge: LETTERS[index] })) : [];
@@ -290,13 +378,13 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       step={screen.step}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(screen.step))}
-      scene={<TrekBackdrop />}
+      scene={backdropFor(sceneKind, screen.step, sceneLifted)}
       answer={answer}
       ctaDisabled={quiz ? selectedId === null : !finished}
       ctaLabel={
         quiz
           ? !checked
-            ? (quiz.ctaLabel ?? "Continue")
+            ? (quiz.ctaLabel ?? "Check")
             : right
               ? (quiz.nextLabel ?? "Next")
               : "Try again"
@@ -304,7 +392,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
             ? (interaction?.nextLabel ?? "Next")
             : (interaction?.ctaLabel ?? "Continue")
       }
-      hint={hasHint ? { visible: !checked, onUse: useHint } : undefined}
+      // A question's hint goes once it is checked; an interaction's goes once it is done.
+      hint={hasHint ? { visible: quiz ? !checked : !finished, onUse: useHint } : undefined}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -314,6 +403,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
             open={!!panel}
             hexIn={!!panel}
             hexCue={panel?.right ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            grouped
           >
             {panel?.text ?? ""}
           </FeedbackPanel>
@@ -338,41 +428,44 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
         <>
           <div
             className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding] duration-500 ease-out"
-            style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: checked ? RISE : 0 }}
+            style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: checked ? OPTION.rise : 0 }}
           >
             <motion.div
               initial={false}
               animate={{ opacity: checked ? 0 : 1, height: checked ? 0 : "auto" }}
               transition={{ duration: 0.35 }}
-              style={{ overflow: checked ? "hidden" : "visible" }}
-              className="flex w-full shrink-0 justify-center px-4"
+              // Hex's bubble is lifted (see `HEX_LIFT`), clear of the picture's top; only it moves, what is under it stays where it was.
+              style={{ overflow: checked ? "hidden" : "visible", top: longLine ? 0 : -HEX_LIFT }}
+              // Only 4px in from the edges: Hex and a wide bubble (up to 272px, see `bubbleWidth`) need the room.
+              className="relative flex w-full shrink-0 justify-center px-1"
             >
               {longLine ? (
                 <div className="w-[340px]">
-                  <TipCard>{hintShown && quiz.hintText ? quiz.hintText : quiz.line}</TipCard>
+                  <TipCard>{quiz.line}</TipCard>
                 </div>
               ) : (
                 <HexBubble
                   key={`${stageIndex}-${attempt}`}
                   entryKey={`variable-${screen.step}-${stageIndex}-${attempt}`}
                   hex="left"
-                  line={[{ text: hintShown && quiz.hintText ? quiz.hintText : quiz.line }]}
-                  size={bubbleSize(hintShown && quiz.hintText ? quiz.hintText : quiz.line)}
+                  line={[{ text: quiz.line }]}
+                  size={bubble}
                   leaving={checked}
                 />
               )}
             </motion.div>
-            <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">
-              <div ref={pictureRef} className="flex flex-col items-center gap-2" style={{ transform: `scale(${fit})` }}>
+            {/* The picture stands on the answers (the room's bottom), not in the middle of the room, so it is off the scene's upper half. A right answer sends it up and away, as it does Hex and his bubble. */}
+            <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center justify-end">
+              <motion.div
+                ref={pictureRef}
+                initial={false}
+                animate={{ opacity: cleared ? 0 : 1, y: cleared ? -PICTURE_EXIT : 0 }}
+                transition={cleared ? PICTURE_OUT : PICTURE_BACK}
+                className="flex flex-col items-center gap-2"
+                style={{ scale: fit, originY: 1, pointerEvents: cleared ? "none" : undefined }}
+              >
                 {quiz.visual?.({ attempt, picked: selectedId, checked, correct })}
-                <AnimatePresence>
-                  {hintShown && quiz.hintVisual && (
-                    <motion.div key="hint-visual" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
-                      {quiz.hintVisual}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
+              </motion.div>
             </div>
           </div>
 
@@ -382,10 +475,11 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               correctId={shownCorrectId}
               selectedId={selectedId}
               checked={checked}
-              hinted={hintShown}
+              fadeOut={cleared}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
               spill={!!quiz.spill}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           ) : (
             <AnswerCards
@@ -393,18 +487,27 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               correctId={shownCorrectId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={false}
-              hinted={hintShown}
+              fadeOut={cleared}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
-              rise={RISE}
+              rise={OPTION.rise}
+              bottomGap={OPTION.aboveButtons}
+              // Answers too tall for the room under the risen scene (three rows) fold away after a wrong check but for the picked one; a right answer clears them all anyway.
+              onlyPicked={answersHeight(quiz) > ROOM_AFTER_CHECK && !cleared}
               compact
-              onPick={setSelectedId}
+              tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
+              idleLook={IDLE_LOOK}
+              gap={OPTION.gap}
+              fontSize={OPTION.font}
+              onPick={pick}
             />
           )}
+          {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+          {answerHint.hand}
         </>
       ) : (
         <div className="pointer-events-none absolute inset-x-0 flex flex-col items-center" style={{ top: titleEnd, bottom: bodyBottom }}>
-          {interaction && <InteractionHost stage={interaction} slip={slip} done={done} finished={finished} />}
+          {interaction && <InteractionHost stage={interaction} slip={slip} done={done} finished={finished} hint={hintPresses} />}
         </div>
       )}
 

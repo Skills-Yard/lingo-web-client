@@ -5,12 +5,10 @@ import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkle, X } from "lucide-react";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED_SMALL } from "@/components/ui/raised";
 
 /** How long the popup stays open when nobody closes it. */
 const AUTO_CLOSE_MS = 3000;
-
-/** The gem with its burst of confetti, and the gem alone (from the level images). */
-const GEM_BURST_SRC = "/images/level-one/gem-burst.png";
 
 /**
  * "Congratulations! +10 XP, 1 Gem" — the reward popup for finishing the game,
@@ -56,7 +54,7 @@ export function GemPopup({ open, onClose }: { open: boolean; onClose: () => void
               type="button"
               aria-label="Close"
               onClick={close}
-              className="absolute top-6 right-6 flex h-[39px] w-[39px] cursor-pointer items-center justify-center rounded-md border border-black/8 transition-transform active:scale-95 dark:border-white/15"
+              className={`absolute top-6 right-6 flex h-[39px] w-[39px] cursor-pointer items-center justify-center rounded-md border border-black/8 bg-white dark:border-white/15 dark:bg-[#15181E] ${RAISED_SMALL} ${EDGE.khaki}`}
             >
               <X className="h-[22px] w-[22px]" strokeWidth={1.4} />
             </button>
@@ -67,13 +65,10 @@ export function GemPopup({ open, onClose }: { open: boolean; onClose: () => void
               +10 XP
             </span>
 
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={GEM_BURST_SRC}
-              alt=""
-              draggable={false}
-              className="absolute top-[63px] left-1/2 h-[156px] w-[235px] -translate-x-1/2 object-contain"
-            />
+            {/* The animated gem, filling the room between "+10 XP" and "Congratulations!" (the small one in the chip below is the same file). */}
+            <div className="absolute top-[63px] left-1/2 h-[156px] w-[156px] -translate-x-1/2">
+              <GemRive className="h-full w-full" />
+            </div>
 
             <h2
               className={`absolute inset-x-0 top-[219px] text-center text-[32px] leading-[134%] font-semibold`}

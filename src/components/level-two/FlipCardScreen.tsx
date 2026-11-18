@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { preload } from "react-dom";
 import { useRouter } from "next/navigation";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { motion } from "framer-motion";
@@ -11,6 +10,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { applyArtboardBleed, artboardBleedBox } from "@/lib/rive/bleed";
 import { configureRiveRuntime, FLIP_CARD } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
 import { LevelTwoShell, ScreenTitle, Teal } from "./LevelTwoShell";
 import { levelTwoHref } from "./levelTwo";
 
@@ -48,17 +48,23 @@ function RoomBackdrop() {
  * the card over (and back). It stays hidden, and takes no taps, until the file has loaded.
  */
 function FlipCard({ onFlip }: { onFlip: () => void }) {
-  // `crossOrigin: "anonymous"` matches the credentials mode of Rive's own `fetch()`,
-  // or the browser ignores the preload and downloads the file a second time.
-  preload(FLIP_CARD.src, { as: "fetch", crossOrigin: "anonymous" });
-
+  // The file is the app's shared, already parsed copy (see `riveCache`).
   const { rive, canvas, RiveComponent } = useRive({
-    src: FLIP_CARD.src,
+    ...riveSource(FLIP_CARD.src),
     artboard: FLIP_CARD.artboard,
     stateMachines: FLIP_CARD.stateMachine,
     autoplay: true,
+    // The file's `FlipCard` view model decides which turn the machine plays; with it
+    // unbound the trigger is ignored and a tap does nothing.
+    autoBind: true,
     layout: LAYOUT,
   });
+
+  // Its own card: the module's "what a command is".
+  useEffect(() => {
+    const cardType = rive?.viewModelInstance?.number(FLIP_CARD.cardTypeProperty);
+    if (cardType) cardType.value = FLIP_CARD.cardType.command;
+  }, [rive]);
 
   // The canvas is bigger than the card by the bleed on every side, so the swell of
   // the turn isn't clipped at the artboard's edge.
@@ -94,7 +100,7 @@ function FlipCard({ onFlip }: { onFlip: () => void }) {
 }
 
 /**
- * `/module?step=10` — "Flip the card to reveal.": a card that turns over when tapped,
+ * `/module/commands?step=10` — "Flip the card to reveal.": a card that turns over when tapped,
  * to what a command is. Next unlocks once it has been turned.
  */
 export function FlipCardScreen() {

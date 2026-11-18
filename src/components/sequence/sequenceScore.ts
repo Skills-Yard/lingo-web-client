@@ -19,8 +19,5 @@ export const assistFor = score.assistFor;
 /** True once the learner needed a wrong attempt or the hint on screen `step`. */
 export const struggled = score.struggled;
 
-/** Claims reward `id` once per run of the module, so replaying a screen doesn't pay again. */
-export const claimReward = score.claimReward;
-
 /** Starts the score over, when the module is opened from the path. */
 export const resetFirstTry = score.reset;

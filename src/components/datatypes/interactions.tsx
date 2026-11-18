@@ -2,12 +2,18 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, AnimatePresence, motion, useMotionValue } from "framer-motion";
+import { Check, FileText } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
+import { BounceIn } from "@/components/level-two/BounceIn";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForTap } from "@/lib/haptics";
+import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
+import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
-import { CARD, CREAM, LAVENDER, Pic } from "./visuals";
+import { INFO_LAYOUT, InfoTileBody, Pic, type InfoTile } from "./visuals";
+import { WINDOW_ROW, WindowCard } from "./WindowCard";
 
 /** The four data types, as the places things are sorted into and the chips they are chosen from. */
 export const TYPES = [
@@ -17,28 +23,31 @@ export const TYPES = [
   { id: "boolean", label: "Boolean", icon: P.boolean },
 ] as const;
 
-const BLUE_CARD = "border-[#5B9BFF] bg-[#EEF4FF] dark:bg-[#15213A]";
+/** The width of what a stage draws, as the first screens' cards stand in it. */
+const STAGE_W = "w-[354px]";
 const SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
-const SHAKE = [0, -7, 7, -5, 5, 0];
+export const SHAKE = [0, -7, 7, -5, 5, 0];
 /** A press that moves less than this far (px) is a tap, not a drag. */
 const TAP_SLOP = 6;
 /** A wrong card shakes red for this long (ms). */
-const WRONG_MS = 600;
+export const WRONG_MS = 600;
 
-/** The places things are sorted into: each its own colour, as the Command module's column headers have. */
-const TONES = [
-  { box: "bg-[#F1EEFF] dark:bg-[#2E2A5C]", title: "text-[#5B3FD0] dark:text-[#A79BFF]", edge: "border-[#B8A9F5]" },
-  { box: "bg-[#FFF4E3] dark:bg-[#4A3418]", title: "text-[#A85B00] dark:text-[#FF9D3D]", edge: "border-[#F2C98B]" },
-  { box: "bg-[#E3F6F3] dark:bg-[#0F2B28]", title: "text-[#04908F] dark:text-[#7FD8CC]", edge: "border-[#7FD8CC]" },
-  { box: "bg-[#E5EFFD] dark:bg-[#15233A]", title: "text-[#1F4899] dark:text-[#8FB6FF]", edge: "border-[#9DBEF2]" },
-] as const;
+/** The places things are sorted into: each its own coloured name box, as screen 4's groups have. */
+const HEADS = [
+  { tint: "lavender", ink: INK.violet },
+  { tint: "cream", ink: INK.orange },
+  { tint: "blue", ink: INK.blue },
+  { tint: "green", ink: INK.teal },
+] as const satisfies readonly { tint: GroupTint; ink: string }[];
 
 /** A card that can be dragged, or tapped; it settles back where it was if it isn't dropped on a place. */
-function DragCard({
+export function DragCard({
   children,
   className,
   style,
   disabled,
+  placed = false,
+  shadow = true,
   onTap,
   onDrop,
   label,
@@ -47,6 +56,10 @@ function DragCard({
   className: string;
   style?: React.CSSProperties;
   disabled?: boolean;
+  /** The card has been put in its group: it is no longer here (it fades out and cannot be touched) and only its shadow stays, keeping its place in the tray. */
+  placed?: boolean;
+  /** Whether the card brings its own shadow (it does by default); `false` when what holds the card already has one in the card's place (see `GroupStage`). */
+  shadow?: boolean;
   onTap: () => void;
   onDrop: (clientX: number, clientY: number) => void;
   label: string;
@@ -60,10 +73,21 @@ function DragCard({
     animate(y, 0, SPRING);
   };
   return (
+    <div className="relative flex">
+    {/* The card's shadow in its place: a plain shape the size of the card (its own classes, with nothing in it), there from the start behind the card (which covers it), so it is already showing when the card is dragged away; it stays in place while the card is away, and for good once the card has been placed (`placed`). */}
+    {shadow && (
+      <div
+        aria-hidden
+        className={`${className} pointer-events-none absolute inset-0`}
+        style={{ ...style, boxShadow: "none", backgroundColor: "rgba(0,0,0,0.09)", borderColor: "transparent" }}
+      />
+    )}
     <motion.button
       type="button"
       aria-label={label}
-      disabled={disabled}
+      aria-hidden={placed || undefined}
+      tabIndex={placed ? -1 : undefined}
+      disabled={disabled || placed}
       onPointerDown={(event) => {
         const box = event.currentTarget;
         box.setPointerCapture(event.pointerId);
@@ -75,7 +99,7 @@ function DragCard({
         if (!now) return;
         const dx = event.clientX - now.startX;
         const dy = event.clientY - now.startY;
-        if (Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
         x.set(dx / now.scale);
         y.set(dy / now.scale);
       }}
@@ -95,10 +119,11 @@ function DragCard({
       }}
       animate={{ scale: dragging ? 1.06 : 1 }}
       style={{ ...style, x, y, zIndex: dragging ? 5 : 1 }}
-      className={`pointer-events-auto relative touch-none enabled:cursor-grab enabled:active:cursor-grabbing ${className}`}
+      className={`pointer-events-auto relative touch-none transition-opacity duration-150 enabled:cursor-grab enabled:active:cursor-grabbing ${placed ? "pointer-events-none opacity-0" : ""} ${className}`}
     >
       {children}
     </motion.button>
+    </div>
   );
 }
 
@@ -107,7 +132,7 @@ export type SortItem = {
   label: string;
   sub?: string;
   icon?: string;
-  /** The group it belongs to (`free` sorting has no right group: anything goes). */
+  /** The group it belongs to. */
   bucket: string;
   /** What is said when it is put in the wrong group. */
   hint?: string;
@@ -116,34 +141,28 @@ export type SortBucket = { id: string; label: string; icon?: string };
 
 /**
  * Sorting: cards are dragged into groups (or a card is tapped, then the group).
- * In `check` mode a right drop stays and a wrong one shakes red and comes back
- * with a hint (and counts as a slip); the stage is done when everything is in its
- * group. In `free` mode anything goes where it is put (and can be taken out again)
- * and it is done when every card is placed: nothing is marked.
+ * A right drop stays and a wrong one shakes red and comes back with a hint (and
+ * counts as a slip); the stage is done when everything is in its group. (Grouping
+ * with no right answer is `GroupStage`.)
  */
 export function SortStage({
   api,
   items,
   buckets,
-  mode = "check",
   prompt = "Drag each card to its group.",
   cardWidth = 104,
   decimalHint = false,
   after,
-  onSorted,
 }: {
   api: InteractionApi;
   items: readonly SortItem[];
   buckets: readonly SortBucket[];
-  mode?: "check" | "free";
   prompt?: string;
   cardWidth?: number;
   /** After a slip the decimal points in the cards are picked out. */
   decimalHint?: boolean;
   /** What shows once it is done. */
   after?: ReactNode;
-  /** Told how the cards ended up (item id to group id). */
-  onSorted?: (placed: Readonly<Record<string, string>>) => void;
 }) {
   const { slip, done, finished } = api;
   const [placed, setPlaced] = useState<Record<string, string>>({});
@@ -152,23 +171,19 @@ export function SortStage({
   const [note, setNote] = useState("");
   const [slipped, setSlipped] = useState(false);
   const bucketEls = useRef<Record<string, HTMLDivElement | null>>({});
-  const free = mode === "free";
   const all = items.length === Object.keys(placed).length;
 
   useEffect(() => {
     if (!all) return;
-    const timer = window.setTimeout(() => {
-      onSorted?.(placed);
-      done();
-    }, 450);
+    const timer = window.setTimeout(done, 450);
     return () => window.clearTimeout(timer);
-  }, [all, done, onSorted, placed]);
+  }, [all, done]);
 
   const place = (id: string, bucket: string) => {
     const item = items.find((candidate) => candidate.id === id);
     if (!item || finished) return;
     setSelected(null);
-    if (free || item.bucket === bucket) {
+    if (item.bucket === bucket) {
       playClickSound();
       vibrateForTap();
       setNote("");
@@ -200,18 +215,20 @@ export function SortStage({
     );
   };
 
-  const tray = items.filter((item) => !placed[item.id]);
   const columns = buckets.length === 3 ? "grid-cols-3" : "grid-cols-2";
   const rows = Math.ceil(buckets.length / (buckets.length === 3 ? 3 : 2));
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
-      <div className="flex min-h-[52px] flex-wrap justify-center gap-2">
+    <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-4`}>
+      <div className="flex min-h-[52px] flex-wrap justify-center gap-3.5">
         <AnimatePresence>
-          {tray.map((item) => (
-            <motion.div key={item.id} layout exit={{ opacity: 0, scale: 0.6 }} animate={{ x: wrongId === item.id ? SHAKE : 0 }} transition={{ x: { duration: 0.35 } }}>
+          {/* Every card keeps its place in the tray: one that has been put in its group fades out and leaves its plain shadow there, and the others do not move up. */}
+          {items.map((item) => (
+            <motion.div key={item.id} layout animate={{ x: wrongId === item.id ? SHAKE : 0 }} transition={{ x: { duration: 0.35 } }}>
+              {/* The cards all share one tint: here a card's colour must not hint at its group. */}
               <DragCard
                 label={item.label}
+                placed={!!placed[item.id]}
                 disabled={finished}
                 onTap={() => {
                   playClickSound();
@@ -222,12 +239,12 @@ export function SortStage({
                   if (target) place(item.id, target.id);
                 }}
                 style={{ width: cardWidth }}
-                className={`flex flex-col items-center justify-center gap-0.5 px-1.5 py-1.5 ${CARD} ${
-                  wrongId === item.id ? LOOKS.wrong.card : selected === item.id ? BLUE_CARD : `${LAVENDER}`
+                className={`${CARD_BODY_FLAT} ${RAISED_DRAG} min-h-[52px] flex-col gap-0.5 px-1.5 py-1 ${
+                  wrongId === item.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${TINTS.lavender} ${selected === item.id ? `${EDGE_PICKED} ${EDGE.blue}` : `${EDGE_IDLE} ${EDGE.khaki}`}`
                 }`}
               >
                 {item.icon && <Pic src={item.icon} className="h-7 w-7" />}
-                <span className="text-[15px] leading-5 font-semibold text-[#444444] dark:text-white">{labelOf(item)}</span>
+                <span className={CARD_TEXT}>{labelOf(item)}</span>
                 {item.sub && <span className="text-[11px] leading-3 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
               </DragCard>
             </motion.div>
@@ -235,9 +252,9 @@ export function SortStage({
         </AnimatePresence>
       </div>
 
-      <div className={`grid w-full gap-2 ${columns}`}>
+      <div className={`grid w-full gap-3.5 ${columns}`}>
         {buckets.map((bucket, index) => {
-          const tone = TONES[index % TONES.length];
+          const head = HEADS[index % HEADS.length];
           const inside = items.filter((item) => placed[item.id] === bucket.id);
           return (
             <div
@@ -248,48 +265,32 @@ export function SortStage({
               role="group"
               aria-label={bucket.label || `Group ${index + 1}`}
               onClick={() => selected && place(selected, bucket.id)}
-              className={`flex flex-col gap-1.5 rounded-[12px] border-2 border-dashed p-1.5 transition-colors ${tone.edge} ${selected ? "cursor-pointer" : ""} ${selected ? "bg-white/80 dark:bg-white/10" : "bg-white/50 dark:bg-white/5"}`}
-              style={{ minHeight: rows > 1 ? 88 : 128 }}
+              className={`flex flex-col gap-2 rounded-[12px] p-1.5 transition-colors ${selected ? RECEIVING : ""}`}
+              style={{ minHeight: rows > 1 ? 120 : 176 }}
             >
-              <div className={`flex items-center justify-center gap-1.5 rounded-[8px] px-1.5 py-1 ${tone.box}`}>
+              {/* The group's name box: 40 tall, 8px radius, Poppins 600 16px, in the group's own colour. */}
+              <div className={`flex h-10 items-center justify-center gap-1.5 rounded-[8px] px-1.5 ${TINTS[head.tint]} ${head.ink}`}>
                 {bucket.icon && <Pic src={bucket.icon} className="h-5 w-5" />}
-                <span className={`text-[13px] leading-5 font-bold ${tone.title}`}>{bucket.label || `Group ${index + 1}`}</span>
+                <span className="text-[16px] leading-none font-semibold">{bucket.label || `Group ${index + 1}`}</span>
               </div>
-              <div className="flex flex-wrap justify-center gap-1">
-                {inside.map((item) =>
-                  free && !finished ? (
-                    <motion.button
-                      key={item.id}
-                      type="button"
-                      initial={{ scale: 0.6, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      onClick={(event) => {
-                        // With a card picked, a tap anywhere in the group puts it there; otherwise a tap takes this one out.
-                        if (selected) return;
-                        event.stopPropagation();
-                        setPlaced((now) => {
-                          const next = { ...now };
-                          delete next[item.id];
-                          return next;
-                        });
-                      }}
-                      aria-label={`${item.label} (tap to take out)`}
-                      className="pointer-events-auto rounded-[8px] border-2 border-[#B8A9F5] bg-[#F1EEFF] px-2 py-0.5 text-[13px] leading-5 font-semibold text-[#444444] dark:bg-[#2E2A5C] dark:text-white"
-                    >
-                      {item.label}
-                    </motion.button>
-                  ) : (
-                    // A card that is in its group stays: it takes no taps, so a tap on the group still reaches the group.
-                    <motion.span
-                      key={item.id}
-                      initial={{ scale: 0.6, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      className={`pointer-events-none rounded-[8px] border-2 px-2 py-0.5 text-[13px] leading-5 font-semibold text-[#444444] dark:text-white ${LOOKS.correct.card}`}
-                    >
-                      {item.label}
-                    </motion.span>
-                  ),
+              <div className="flex flex-1 flex-col justify-end gap-1.5">
+                {/* An empty group is a gray slot at its foot, where its first card will land. */}
+                {inside.length === 0 && (
+                  <div className={EMPTY_SLOT}>
+                    <Pic src={P.dropSlot} className="h-6 w-6" />
+                  </div>
                 )}
+                {inside.map((item) => (
+                  // A card that is in its group stays (green): it takes no taps, so a tap on the group still reaches the group.
+                  <motion.span
+                    key={item.id}
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className={`pointer-events-none ${CARD_BODY} min-h-[40px] px-2 py-1 text-center ${CARD_TEXT} ${TINTS.green} ${EDGE_IDLE}`}
+                  >
+                    {item.label}
+                  </motion.span>
+                ))}
               </div>
             </div>
           );
@@ -355,9 +356,9 @@ export function MultiPickStage({
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
-      <div className={`grid w-full gap-2.5 ${columns === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
-        {items.map((item) => (
+    <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
+      <div className={`grid w-full gap-3.5 ${columns === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
+        {items.map((item, index) => (
           <motion.button
             key={item.id}
             type="button"
@@ -365,18 +366,88 @@ export function MultiPickStage({
             animate={{ x: wrongId === item.id ? SHAKE : 0, scale: got.includes(item.id) ? [1, 1.05, 1] : 1 }}
             transition={{ duration: 0.35 }}
             whileTap={{ scale: 0.97 }}
-            className={`flex min-h-[78px] cursor-pointer flex-col items-center justify-center gap-0.5 px-2 py-2 ${CARD} ${
-              got.includes(item.id) ? LOOKS.correct.card : wrongId === item.id ? LOOKS.wrong.card : CREAM
+            className={`${CARD_BODY_FLAT} ${RAISED} min-h-[64px] cursor-pointer flex-col gap-0.5 px-2 py-2 ${
+              got.includes(item.id) ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrongId === item.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
             }`}
           >
             {item.icon && <Pic src={item.icon} className="h-8 w-8" />}
-            <span className="text-[16px] leading-5 font-semibold text-[#444444] dark:text-white">{item.label}</span>
+            <span className={CARD_TEXT}>{item.label}</span>
             {item.sub && <span className="text-[12px] leading-4 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
           </motion.button>
         ))}
       </div>
       <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{note}</p>
       {finished && footer}
+    </div>
+  );
+}
+
+/**
+ * Tap the big picture cards (screen 6's four numbers, standing as in its first part)
+ * that fit: each right one turns green and stays; a wrong one shakes red with a
+ * hint (and counts as a slip). It is done when every right card has been tapped.
+ * The cards bounce in once Hex has finished his line.
+ */
+export function PickTilesStage({
+  api,
+  tiles,
+  correct,
+  hint,
+}: {
+  api: InteractionApi;
+  tiles: readonly InfoTile[];
+  /** The ids of the cards that fit. */
+  correct: readonly string[];
+  hint: string;
+}) {
+  const { slip, done, finished, hexSpoken } = api;
+  const [got, setGot] = useState<readonly string[]>([]);
+  const [wrongId, setWrongId] = useState<string | null>(null);
+  const [note, setNote] = useState("");
+
+  useEffect(() => {
+    if (got.length < correct.length) return;
+    const timer = window.setTimeout(() => done(), 600);
+    return () => window.clearTimeout(timer);
+  }, [got, correct, done]);
+
+  const tap = (id: string) => {
+    if (finished || got.includes(id)) return;
+    playClickSound();
+    vibrateForTap();
+    if (correct.includes(id)) {
+      setNote("");
+      setGot((now) => [...now, id]);
+      return;
+    }
+    slip();
+    setNote(hint);
+    setWrongId(id);
+    window.setTimeout(() => setWrongId(null), WRONG_MS);
+  };
+
+  const look = INFO_LAYOUT.grid;
+  return (
+    <div className="pointer-events-auto flex flex-col items-center gap-2">
+      <div className={look.box} style={{ width: COLUMN_W }}>
+        {tiles.map((tile, index) => (
+          <BounceIn key={tile.id} index={index} shown={hexSpoken} className="flex min-w-0 flex-1">
+            <motion.button
+              type="button"
+              onClick={() => tap(tile.id)}
+              animate={{ x: wrongId === tile.id ? SHAKE : 0, scale: got.includes(tile.id) ? [1, 1.05, 1] : 1 }}
+              transition={{ duration: 0.35 }}
+              whileTap={{ scale: 0.97 }}
+              className={`${CARD_BODY} min-w-0 flex-1 cursor-pointer flex-col px-1.5 ${look.card} ${
+                got.includes(tile.id) ? LOOKS.correct.card : wrongId === tile.id ? LOOKS.wrong.card : `${tile.tint} ${EDGE_IDLE}`
+              }`}
+            >
+              <InfoTileBody tile={tile} layout="grid" />
+            </motion.button>
+          </BounceIn>
+        ))}
+      </div>
+      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{note}</p>
     </div>
   );
 }
@@ -396,7 +467,7 @@ export function RevealStage({
   columns = 2,
   header,
   footer,
-  tone = "lavender",
+  tone,
 }: {
   api: InteractionApi;
   items: readonly RevealItem[];
@@ -404,7 +475,8 @@ export function RevealStage({
   columns?: 2 | 3 | 5;
   header?: (current: string | null) => ReactNode;
   footer?: ReactNode;
-  tone?: "lavender" | "cream";
+  /** All the cards in this tint; without it they go round the four tints, as screen 3's cards do. */
+  tone?: GroupTint;
 }) {
   const { done, finished } = api;
   const [seen, setSeen] = useState<readonly string[]>([]);
@@ -419,10 +491,10 @@ export function RevealStage({
   const grid = columns === 5 ? "grid-cols-5" : columns === 3 ? "grid-cols-3" : "grid-cols-2";
   const shown = items.find((item) => item.id === current);
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
+    <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
       {header?.(current)}
-      <div className={`grid w-full gap-2 ${grid}`}>
-        {items.map((item) => {
+      <div className={`grid w-full ${columns === 5 ? "gap-2" : "gap-3.5"} ${grid}`}>
+        {items.map((item, index) => {
           const tapped = seen.includes(item.id);
           return (
             <motion.button
@@ -434,15 +506,15 @@ export function RevealStage({
                 setCurrent(item.id);
                 setSeen((now) => (now.includes(item.id) ? now : [...now, item.id]));
               }}
-              animate={{ scale: current === item.id ? [1, 0.95, 1.05, 1] : 1 }}
+              animate={{ scale: current === item.id ? [1, 0.96, 1.03, 1] : 1 }}
               transition={{ duration: 0.35 }}
               whileTap={{ scale: 0.97 }}
-              className={`flex min-h-[64px] cursor-pointer flex-col items-center justify-center gap-0.5 px-1 py-1.5 ${CARD} ${
-                current === item.id ? BLUE_CARD : tapped ? LOOKS.correct.card : tone === "cream" ? CREAM : LAVENDER
-              }`}
+              // The card being read has screen 4's green-teal edge; one that has been read keeps its tint and gets a small tick.
+              className={`${CARD_BODY_FLAT} ${RAISED} relative min-h-[64px] cursor-pointer flex-col gap-0.5 px-1 py-1.5 ${tone ? TINTS[tone] : tintAt(index)} ${current === item.id ? `${EDGE_READING} ${EDGE.mint}` : `${EDGE_IDLE} ${EDGE.khaki}`}`}
             >
+              {tapped && <Check aria-hidden className="absolute top-0.5 right-0.5 size-3.5 text-[#10B48C]" strokeWidth={3} />}
               {item.icon && <Pic src={item.icon} className="h-7 w-7" />}
-              <span className={`${columns === 5 ? "text-[15px]" : "text-[17px]"} leading-6 font-bold text-[#444444] dark:text-white`}>{item.label}</span>
+              <span className={CARD_TEXT}>{item.label}</span>
               {item.sub && <span className="text-[11px] leading-3 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
             </motion.button>
           );
@@ -456,7 +528,7 @@ export function RevealStage({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className={`rounded-[12px] px-3 py-2 text-center text-[15px] leading-5 font-semibold ${shown ? "bg-white text-[#2F5D59] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-[#BFE6E2]" : "text-[#6B7480] dark:text-white/60"}`}
+            className={`rounded-[12px] px-3 py-2 text-center text-[15px] leading-5 font-semibold ${shown ? "bg-white text-[#444444] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-white" : "text-[#6B7480] dark:text-white/60"}`}
           >
             {shown ? shown.caption : "Tap each card."}
           </motion.p>
@@ -482,8 +554,8 @@ export function ToggleStage({ api, items }: { api: InteractionApi; items: readon
   }, [flipped, items, done]);
 
   return (
-    <div className="pointer-events-auto grid w-[340px] grid-cols-2 gap-2.5">
-      {items.map((item) => {
+    <div className={`pointer-events-auto grid ${STAGE_W} grid-cols-2 gap-3.5`}>
+      {items.map((item, index) => {
         const on = state[item.id];
         return (
           <motion.button
@@ -496,7 +568,7 @@ export function ToggleStage({ api, items }: { api: InteractionApi; items: readon
               setFlipped((now) => (now.includes(item.id) ? now : [...now, item.id]));
             }}
             whileTap={{ scale: 0.96 }}
-            className={`flex min-h-[110px] cursor-pointer flex-col items-center justify-center gap-1 px-2 py-2 ${CARD} ${CREAM}`}
+            className={`${CARD_BODY_FLAT} ${RAISED} min-h-[110px] cursor-pointer flex-col gap-1 px-2 py-2 ${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`}
           >
             <Pic src={item.icon} className="h-10 w-10" />
             <span className="text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{item.title}</span>
@@ -523,6 +595,7 @@ export function ChooseTypeStage({
   from,
   correct,
   hint,
+  showCard = true,
 }: {
   api: InteractionApi;
   field: string;
@@ -530,6 +603,8 @@ export function ChooseTypeStage({
   from: string;
   correct: string;
   hint: string;
+  /** Draws the field's own card above the types; off where a scene behind the stage already shows it. */
+  showCard?: boolean;
 }) {
   const { slip, done, finished } = api;
   const [wrong, setWrong] = useState<string | null>(null);
@@ -548,16 +623,21 @@ export function ChooseTypeStage({
     window.setTimeout(() => setWrong(null), WRONG_MS);
   };
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
-      <div className={`flex w-[250px] flex-col items-center gap-1 px-3 py-2.5 ${CARD} ${LAVENDER}`}>
-        <span className="text-[12px] leading-4 font-medium text-[#8A94A0]">{field}</span>
-        <span className="text-[22px] leading-7 font-bold text-[#444444] dark:text-white">{value}</span>
-        <span className="rounded-full bg-[#E3F6F3] px-3 py-0.5 text-[12px] leading-4 font-semibold text-[#04908F] dark:bg-[#0F2B28]">
-          {chosen ? TYPES.find((type) => type.id === chosen)?.label : from}
-        </span>
-      </div>
-      <div className="grid w-full grid-cols-2 gap-2.5">
-        {TYPES.map((type) => (
+    <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-4`}>
+      {showCard && (
+        <WindowCard title={field} icon={<FileText />} panel="pt-3.5 pr-[21px] pb-4 pl-[21px]">
+          <div className={`flex h-[48px] items-center justify-between px-4 ${WINDOW_ROW}`}>
+            <span className="text-[22px] leading-7 font-bold text-[#151E48] dark:text-white">{value}</span>
+            <span className="rounded-full bg-[#E3F6F3] px-3 py-0.5 text-[12px] leading-4 font-semibold text-[#04908F] dark:bg-[#0F2B28]">
+              {chosen ? TYPES.find((type) => type.id === chosen)?.label : from}
+            </span>
+          </div>
+        </WindowCard>
+      )}
+      {/* The hint stands over the types, so they are the lowest thing: on the main button, as every screen's options are. */}
+      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
+      <div className="grid w-full grid-cols-2 gap-3.5">
+        {TYPES.map((type, index) => (
           <motion.button
             key={type.id}
             type="button"
@@ -565,16 +645,15 @@ export function ChooseTypeStage({
             animate={{ x: wrong === type.id ? SHAKE : 0 }}
             transition={{ duration: 0.35 }}
             whileTap={{ scale: 0.97 }}
-            className={`flex h-[64px] cursor-pointer items-center justify-center gap-2 px-2 ${CARD} ${
-              chosen === type.id ? LOOKS.correct.card : wrong === type.id ? LOOKS.wrong.card : CREAM
+            className={`${CARD_BODY_FLAT} ${RAISED} h-[64px] cursor-pointer gap-2 px-2 ${
+              chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
             }`}
           >
             <Pic src={type.icon} className="h-8 w-8" />
-            <span className="text-[16px] leading-5 font-semibold text-[#444444] dark:text-white">{type.label}</span>
+            <span className={CARD_TEXT}>{type.label}</span>
           </motion.button>
         ))}
       </div>
-      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
     </div>
   );
 }

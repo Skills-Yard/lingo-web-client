@@ -5,6 +5,7 @@ import { useRive } from "@rive-app/react-canvas";
 import { Alignment, Fit, Layout } from "@rive-app/canvas";
 import { useTheme } from "@/context/ThemeContext";
 import { BATTERY, configureRiveRuntime } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
 
 const BATTERY_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
 
@@ -12,7 +13,7 @@ const BATTERY_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Cente
 export function PlatformBattery({ className = "" }: { className?: string }) {
   const darkTheme = useTheme().theme === "dark";
   const { rive, RiveComponent } = useRive({
-    src: BATTERY.src,
+    ...riveSource(BATTERY.src),
     artboard: BATTERY.artboard,
     stateMachines: BATTERY.stateMachine,
     autoplay: true,

@@ -1,7 +1,7 @@
 import { useState, useSyncExternalStore } from "react";
 import { GRADED_STEPS, MODULE_STEPS } from "./moduleFlow";
 import { resetStreak } from "./moduleStreak";
-import { moduleHref } from "./routes";
+import { commandsHref } from "./routes";
 
 /**
  * Asking again what was missed, like Duolingo. On the way through the module
@@ -114,9 +114,9 @@ export const nextAfter = (step: number, correct: boolean, next: string): string 
     const [, ...rest] = saved.queue;
     const queue = correct ? rest : [...rest, step];
     write({ ...saved, queue, done: correct ? saved.done + 1 : saved.done });
-    return queue.length > 0 ? moduleHref(queue[0]) : moduleHref("complete");
+    return queue.length > 0 ? commandsHref(queue[0]) : commandsHref("complete");
   }
-  if (step === MODULE_STEPS && !saved.queue) return missedSteps(saved).length > 0 ? moduleHref("review") : moduleHref("complete");
+  if (step === MODULE_STEPS && !saved.queue) return missedSteps(saved).length > 0 ? commandsHref("review") : commandsHref("complete");
   return next;
 };
 

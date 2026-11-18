@@ -6,15 +6,16 @@ import { CheckCircle2, Maximize, Play, Sparkles } from "lucide-react";
 import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
+import { EDGE, RAISED } from "@/components/ui/raised";
 import { sequenceHref } from "@/lib/routes";
 import { SEQUENCE_STEPS, STEP, sequencePrevious } from "./sequence";
 import { SequenceRoom } from "./SequenceRoom";
 
 const LEARNED = [
-  "A task can require multiple commands.",
-  "The order of commands can change the result.",
-  "Some actions depend on earlier actions.",
-  "A well-planned sequence helps achieve a goal.",
+  "Tasks can need many commands.",
+  "Order can change the result.",
+  "Some actions need earlier ones.",
+  "A good sequence reaches the goal.",
 ];
 /** Stage px down (the title ends at about 117). */
 const VIDEO_TOP = 140;
@@ -59,7 +60,7 @@ export function RecapScreen() {
             type="button"
             aria-label="Play video"
             onClick={playClickSound}
-            className="pointer-events-auto absolute top-[56px] left-1/2 flex h-[69px] w-[69px] -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-[2.5px] border-[#F0F0FF] bg-white shadow-[1px_1px_13.2px_3px_rgba(0,0,0,0.25)] transition-transform active:scale-95"
+            className={`pointer-events-auto absolute top-[56px] left-1/2 flex h-[69px] w-[69px] -translate-x-1/2 cursor-pointer items-center justify-center rounded-full border-[2.5px] border-[#F0F0FF] bg-white ${RAISED} ${EDGE.pale}`}
           >
             <Play className="ml-1 h-[26px] w-[26px] fill-[#00B8A9] text-[#00B8A9]" />
           </button>

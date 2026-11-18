@@ -1,14 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Teal } from "@/components/level-two/LevelTwoShell";
 import { TileCards } from "@/components/level-two/TileCards";
 import type { Choice } from "@/components/level-two/levelTwo";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
-import { HexBoard } from "./HexBoard";
-import { CommandChips, HexScreen } from "./HexScreen";
+import { boardHeight, HexBoard } from "./HexBoard";
+import { COMMAND_CHIP_HEIGHT, CommandChips, HexScreen } from "./HexScreen";
 import { endOf, GRID, GRID_START, tileName, trace, type Command, type Dir } from "./hexGrid";
 import { IMAGES, STEP, sequenceNext } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
@@ -18,11 +19,9 @@ export type PredictVariant = "base" | "longer" | "simpler";
 
 type Config = {
   step: number;
-  title: ReactNode;
   commands: readonly Command[];
   /** The tiles offered, in order; one is where Hex ends up. */
   options: readonly string[];
-  hint: string;
   right: { title: string; text: string };
   wrong: string;
 };
@@ -30,56 +29,48 @@ type Config = {
 const CONFIG: Record<PredictVariant, Config> = {
   base: {
     step: STEP.predict,
-    title: (
-      <>
-        Think before you <Teal>move!</Teal>
-      </>
-    ),
     commands: ["right", "forward"],
     options: ["Centre-left", "Bottom-middle", "Bottom-right"],
-    hint: "After turning right, which direction will MOVE FORWARD take HEX?",
-    right: { title: "Good prediction!", text: "You thought about how the first command changed HEX’s direction." },
-    wrong: "Look at how the turn changed the way HEX faces.",
+    right: { title: "Good!", text: "The turn changed which way HEX faces." },
+    wrong: "Watch which way HEX faces after the turn.",
   },
   // After a right first try: a longer sequence.
   longer: {
     step: STEP.predictNext,
-    title: (
-      <>
-        A longer <Teal>sequence!</Teal>
-      </>
-    ),
     commands: ["forward", "right", "forward", "forward"],
     options: ["Centre", "Top-right", "Centre-right"],
-    hint: "Follow the commands one at a time. Which way is HEX facing after each one?",
-    right: { title: "Great prediction!", text: "You followed every command in order, turns included." },
-    wrong: "Follow the commands one at a time and watch which way HEX faces.",
+    right: { title: "Great!", text: "You followed every command, turns included." },
+    wrong: "Follow one command at a time. Which way does HEX face?",
   },
   // After a miss or a hint: a simpler two-command one.
   simpler: {
     step: STEP.predictNext,
-    title: (
-      <>
-        Let’s try a <Teal>simpler one.</Teal>
-      </>
-    ),
     commands: ["forward", "forward"],
     options: ["Top-left", "Centre-left", "Top-right"],
-    hint: "Each MOVE FORWARD takes HEX one tile in the direction he faces. Count the tiles.",
-    right: { title: "That’s it!", text: "Each MOVE FORWARD took HEX one tile in the direction he faces." },
-    wrong: "Each MOVE FORWARD takes HEX one tile up. Count the tiles.",
+    right: { title: "That’s it!", text: "Each MOVE FORWARD takes HEX one tile." },
+    wrong: "Each MOVE FORWARD is one tile up. Count them.",
   },
 };
 
+/** The question is the heading, on every variant. */
+const TITLE = (
+  <>
+    Where will HEX <Teal>end up?</Teal>
+  </>
+);
+
 const BOARD_WIDTH = 320;
 const BOARD_TOP = 138;
-const CHIPS_TOP = 350;
+/** The commands stand right under the board (the gap leaves room for the number on each card's corner). */
+const CHIPS_TOP = Math.round(BOARD_TOP + boardHeight("grid", BOARD_WIDTH)) + 18;
+/** The answers stand this far under the commands (half the space they had before). */
+const OPTIONS_TOP = CHIPS_TOP + COMMAND_CHIP_HEIGHT + 72;
+const OPTION_HEIGHT = 128;
+/** The result sheet is 236px tall at the bottom of Figma's 844px frame; the answers rise to clear it (with 16px to spare) when it opens. */
+const OPTIONS_RISE = OPTIONS_TOP + OPTION_HEIGHT - (844 - 236) + 16;
+const OPTION_PICTURE_HEIGHT = 60;
 /** The answers wear the tint of the Hex Order cards, with the same border in dark. */
 const OPTION_TINT = "bg-[#EDFAFE] dark:bg-[#15233A] dark:border-[#818185]!";
-/** The question, or the hint in its place, stands under the command cards. */
-const QUESTION_TOP = CHIPS_TOP + 92;
-/** How long the hint can be read before the right answer is picked for the learner. */
-const HINT_READ_MS = 1800;
 const ORANGE = "#FF8D42";
 const TEAL = "#04ACAB";
 
@@ -87,7 +78,7 @@ const TEAL = "#04ACAB";
  * "Think before you move!": the commands are shown, and the learner picks where
  * Hex will end up, before he moves. Checking plays the commands on the board.
  * A wrong pick draws the way Hex faced at the start and after the turn. The hint
- * button shows the hint, then picks the right answer once it has been read.
+ * button points the hand at the right answer (it is not picked for the learner).
  */
 export function PredictScreen({ variant }: { variant: PredictVariant }) {
   const router = useRouter();
@@ -96,10 +87,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
-  const hintTimer = useRef<number | undefined>(undefined);
-  const stopHintTimer = () => window.clearTimeout(hintTimer.current);
-  useEffect(() => stopHintTimer, []);
+  const answerHint = useAnswerHint();
 
   const correctId = useMemo(() => tileName(endOf(GRID_START, config.commands, GRID)), [config.commands]);
   const choices: readonly Choice[] = config.options.map((name) => ({ id: name, text: name, icon: `${IMAGES}/icon-tile-${name.toLowerCase()}.svg`, tint: OPTION_TINT }));
@@ -112,21 +100,20 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
     return dirs;
   }, [config.commands]);
 
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    answerHint.press(correctId);
     noteStruggle(config.step, "hint");
-    stopHintTimer();
-    hintTimer.current = window.setTimeout(() => setSelectedId(correctId), HINT_READ_MS);
   };
 
-  // The learner's own pick stands: the hint doesn't overwrite it when its wait runs out.
+  // The learner picks an answer: the hint's hand goes.
   const pick = (id: string) => {
-    stopHintTimer();
+    answerHint.stop();
     setSelectedId(id);
   };
 
   const check = () => {
-    stopHintTimer();
+    answerHint.stop();
     setChecked(true);
     noteFirstTry(config.step, correct);
     if (!correct) noteStruggle(config.step, "miss");
@@ -140,7 +127,6 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
   };
 
   const onContinue = () => {
@@ -152,7 +138,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
   return (
     <HexScreen
       step={config.step}
-      title={config.title}
+      title={TITLE}
       board={
         <HexBoard
           kind="grid"
@@ -163,8 +149,6 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
         />
       }
       boardTop={BOARD_TOP}
-      tip={hinted && !checked ? config.hint : undefined}
-      tipTop={QUESTION_TOP}
       panel={{
         correct,
         title: correct ? config.right.title : "Not quite",
@@ -173,7 +157,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
       }}
       celebrate={checked && correct}
       answer={answer}
-      hint={{ visible: !checked && !hinted, onUse: useHint }}
+      hint={{ visible: !checked, onUse: useHint }}
       ctaLabel={!checked ? "Check" : correct ? "Next" : "Try again"}
       ctaDisabled={selectedId === null}
       onContinue={onContinue}
@@ -181,14 +165,6 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
       <div className="absolute inset-x-0 flex justify-center px-4" style={{ top: CHIPS_TOP }}>
         <CommandChips commands={config.commands} />
       </div>
-      {!hinted && !checked && (
-        <p
-          className="absolute left-1/2 w-[340px] -translate-x-1/2 rounded-[12px] bg-white px-3.5 py-3 text-center text-[14px] leading-5 font-semibold text-[#444444] shadow-[1px_1px_6px_rgba(0,0,0,0.12)] dark:bg-[#15181E] dark:text-white"
-          style={{ top: QUESTION_TOP }}
-        >
-          Where will HEX end up?
-        </p>
-      )}
       <TileCards
         layout="tiles"
         choices={choices}
@@ -196,11 +172,17 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
         selectedId={selectedId}
         checked={checked}
         fadeOut={false}
-        hinted={false}
+        pointedId={answerHint.pointedId}
         withHint
         longText
+        top={OPTIONS_TOP}
+        rise={OPTIONS_RISE}
+        cardHeight={OPTION_HEIGHT}
+        pictureHeight={OPTION_PICTURE_HEIGHT}
         onPick={pick}
       />
+      {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+      {answerHint.hand}
     </HexScreen>
   );
 }

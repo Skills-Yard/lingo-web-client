@@ -2,16 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { addBatteryUnits } from "@/components/home/batteryStore";
 import { MoveArrow, MoveButton } from "@/components/level-one/MoveHexScreen";
+import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { Teal } from "@/components/level-two/LevelTwoShell";
-import { BATTERY_UNITS } from "@/lib/moduleStreak";
-import { chargeBattery } from "@/lib/rive/batteryHost";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { ROW_START, type HexState } from "./hexGrid";
 import { STEP, sequenceNext } from "./sequence";
-import { claimReward } from "./sequenceScore";
 
 /** The battery is this many tiles from Hex: that many commands reach it. */
 const DISTANCE = 3;
@@ -29,7 +26,8 @@ const TIPS = [
 /**
  * "How will HEX reach the battery?": the only command is MOVE FORWARD, and one
  * is not enough: each press walks Hex a tile (the card says how far he has to
- * go) until the third reaches the battery. Taking it charges the header's battery.
+ * go) until the third reaches the battery. Taking it opens the "Congratulations!"
+ * popup; closing that claims the battery and plays the Battery Doctor.
  */
 export function OneCommandScreen() {
   const router = useRouter();
@@ -37,6 +35,7 @@ export function OneCommandScreen() {
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
   const pending = useRef<number[]>([]);
+  const { win, popup } = useBatteryClaim(undefined, { rationed: true });
 
   useEffect(() => {
     const timers = pending.current;
@@ -53,10 +52,7 @@ export function OneCommandScreen() {
         setBusy(false);
         if (now < DISTANCE) return;
         setDone(true);
-        if (claimReward("sequence-one-command")) {
-          addBatteryUnits(BATTERY_UNITS);
-          chargeBattery();
-        }
+        win();
       }, STEP_MS),
     );
   };
@@ -68,17 +64,17 @@ export function OneCommandScreen() {
       step={STEP.oneCommand}
       title={
         <>
-          How will <Teal>HEX</Teal> reach the battery?
+          How will <Teal>HEX</Teal> get the battery?
         </>
       }
-      titleSize={26}
-      wrapTitle
+      titleSize={22}
       board={<HexBoard kind="row" hex={hex} battery={BATTERY_TILE} collected={done} width={356} entryKey="hex-one-command" />}
       boardTop={200}
       tip={TIPS[moves]}
       tipTop={340}
-      panel={{ correct: true, title: "Great!", text: "HEX needed more than one command to reach its goal.", open: done }}
+      panel={{ correct: true, title: "Nice!", text: "More than one command was needed.", open: done }}
       celebrate={done}
+      overlay={popup}
       ctaDisabled={!done}
       onContinue={() => router.push(sequenceNext(STEP.oneCommand))}
     >

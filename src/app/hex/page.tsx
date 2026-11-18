@@ -3,9 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRive } from "@rive-app/react-canvas";
 import { Layout, Fit, Alignment, EventType } from "@rive-app/canvas";
-import { configureRiveRuntime } from "@/lib/rive/runtime";
-import { hexRiveSource } from "@/lib/rive/hexFile";
-import { HexRiveGate } from "@/components/rive/HexRiveGate";
+import { configureRiveRuntime, HEX_RIVE_SRC } from "@/lib/rive/runtime";
+import { riveSource } from "@/lib/rive/riveCache";
 import { useTheme } from "@/context/ThemeContext";
 
 configureRiveRuntime();
@@ -91,7 +90,7 @@ const IconButton = ({ label, active = false, onClick, children }: IconButtonProp
 const HexPlayer = ({ artboard, onArtboards }: HexPlayerProps) => {
   const [ready, setReady] = useState(false);
   const { rive, RiveComponent } = useRive({
-    ...hexRiveSource(),
+    ...riveSource(HEX_RIVE_SRC),
     artboard,
     autoplay: false,
     layout: LAYOUT,
@@ -291,9 +290,7 @@ const HexPage = () => {
         </div>
       </div>
 
-      <HexRiveGate>
-        <HexPlayer key={artboard ?? "default"} artboard={artboard} onArtboards={pickHexArtboard} />
-      </HexRiveGate>
+      <HexPlayer key={artboard ?? "default"} artboard={artboard} onArtboards={pickHexArtboard} />
     </main>
   );
 };

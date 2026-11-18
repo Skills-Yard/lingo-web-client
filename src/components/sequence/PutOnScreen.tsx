@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Confetti } from "@/components/level-one/Confetti";
+import { XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
 import type { BubbleSize, Span, TitleLines } from "@/components/level-two/levelTwo";
@@ -16,22 +17,22 @@ type Config = { step: number; title: TitleLines; titleSize?: number; line: reado
 const CONFIG: Record<PutOnStage, Config> = {
   socks: {
     step: STEP.socks,
-    title: [[{ text: "Let’s Put On " }, { text: "Socks First!!", teal: true }]],
+    title: [[{ text: "Let’s Put On " }, { text: "Socks!", teal: true }]],
     titleSize: 26,
-    line: [{ text: "Your socks are on. That is the right first step!" }],
+    line: [{ text: "Socks are on. That’s the right first step!" }],
     bubble: { width: 190 },
   },
   shoes: {
     step: STEP.shoes,
-    title: [[{ text: "Let’s Put On " }, { text: "Shoes Now!!", teal: true }]],
+    title: [[{ text: "Let’s Put On " }, { text: "Shoes!", teal: true }]],
     titleSize: 26,
     line: [{ text: "Socks are on. Now it is time for the shoes!" }],
     bubble: { width: 190 },
   },
   ready: {
     step: STEP.ready,
-    title: [[{ text: "Ready to " }, { text: "Go", teal: true }, { text: " Now" }]],
-    line: [{ text: "Yeah! You are now ready to go outside." }],
+    title: [[{ text: "All " }, { text: "Set!", teal: true }]],
+    line: [{ text: "Yay! You’re ready to go outside." }],
     bubble: { width: 190 },
   },
 };
@@ -99,6 +100,7 @@ export function PutOnScreen({ stage }: { stage: PutOnStage }) {
         <HexBubble entryKey={`put-on-${stage}`} hex="left" line={config.line} size={config.bubble} />
       </CentredRow>
       <Confetti active={stage === "ready"} />
+      <XpBurst show={stage === "ready"} />
     </LevelTwoShell>
   );
 }

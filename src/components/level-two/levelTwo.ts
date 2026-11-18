@@ -1,10 +1,10 @@
 import { COLUMN_W } from "@/lib/questionColumn";
 import type { RobotMove, RobotPose } from "@/lib/rive/robotHost";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 
 /** The module's `step`th screen, or its "Lesson complete!". */
-export const levelTwoHref = (step: number | "complete") => moduleHref(step);
+export const levelTwoHref = (step: number | "complete") => commandsHref(step);
 
 /** The Figma frame is 390 x 844 with its own status bar; the Level 1 shell's
  * header sits this much higher, so everything pinned to the top (title, Hex's
@@ -34,6 +34,8 @@ export type Choice = {
   text: string;
   icon: string;
   tint?: string;
+  /** A short text in a coloured badge (its `look` is the fill and text classes), drawn in place of the picture. */
+  tag?: { text: string; look: string };
   moves?: readonly RobotMove[];
 };
 
@@ -61,11 +63,8 @@ export type Quiz = {
   pose: RobotPose;
   /** The cards stay in view on a right answer, though the robot plays a move (they fade out otherwise). */
   keepCards?: boolean;
-  /** The hint also lights up the target box. */
-  targetHint?: boolean;
   /** The target box is lit from the start, with this text on it (as on the "Move cube to target" screen). */
   targetLabel?: string;
-  hint: boolean;
   /** The main button before the answer is checked (default "Check"). */
   ctaLabel?: string;
   /** Clips read when the screen opens (the title, then Hex's line); cut off once the answer is checked. */
@@ -75,7 +74,7 @@ export type Quiz = {
 const LAVENDER = "bg-[#F6F4FE] dark:bg-[#0F1F26]";
 const CREAM = "bg-[#FFF9F0] dark:bg-[#0F1F26]";
 
-/** Screen 3 — `/module?step=3`. */
+/** Screen 3 — `/module/commands?step=3`. */
 export const WHAT_JUST_HAPPENED: Quiz = {
   title: [[{ text: "What just " }, { text: "happened?", teal: true }]],
   line: [{ text: "What did the robot do after " }, { text: "Pick Up", teal: true }, { text: "?" }],
@@ -95,11 +94,10 @@ export const WHAT_JUST_HAPPENED: Quiz = {
   wrong: "Watch what robot does after you select the instruction.",
   pose: "holding",
   keepCards: true,
-  hint: true,
   voiceover: MODULE_AUDIO.whatJustHappened,
 };
 
-/** Screen 5 — `/module?step=5`. */
+/** Screen 5 — `/module/commands?step=5`. */
 export const WHAT_NEXT: Quiz = {
   title: [[{ text: "It’s " }, { text: "your turn", teal: true }, { text: " now!" }]],
   line: [{ text: "Let’s make the robot pick up the cube." }],
@@ -117,11 +115,10 @@ export const WHAT_NEXT: Quiz = {
   wrongTitle: "Let’s look again!",
   wrong: "Which command lifts the cube?",
   pose: "idle",
-  hint: true,
   voiceover: MODULE_AUDIO.yourTurn,
 };
 
-/** Screen 4 — `/module?step=4`. */
+/** Screen 4 — `/module/commands?step=4`. */
 export const ROBOT_PICKED_UP: Quiz = {
   title: [[{ text: "Let’s " }, { text: "release", teal: true }, { text: " the cube." }]],
   line: [{ text: "Which command releases the cube?" }],
@@ -138,7 +135,6 @@ export const ROBOT_PICKED_UP: Quiz = {
   wrongTitle: "Not quite!",
   wrong: "Robot is not releasing it, it will grab it.",
   pose: "holding",
-  hint: true,
   voiceover: MODULE_AUDIO.releaseCube,
 };
 
@@ -161,10 +157,9 @@ export const LETS_PICK_UP: Quiz = {
   right: "Yes! PICK UP makes the robot lift the cube.",
   wrong: "Remember: PICK UP makes the robot lift the cube.",
   pose: "idle",
-  hint: false,
 };
 
-/** Screen 8 — `/module?step=8`. */
+/** Screen 8 — `/module/commands?step=8`. */
 export const WHERE_SHOULD_GO: Quiz = {
   title: [[{ text: "How to " }, { text: "reach the target?", teal: true }]],
   line: [{ text: "Pick an instruction to reach the target area." }],
@@ -182,12 +177,10 @@ export const WHERE_SHOULD_GO: Quiz = {
   right: "Place in Target moves the cube to the target area.",
   wrong: "Remember: Place in Target moves the cube to the target area.",
   pose: "holding",
-  hint: true,
-  ctaLabel: "Let’s do it!",
   voiceover: MODULE_AUDIO.reachTarget,
 };
 
-/** Screen 18 — `/module?step=18`. */
+/** Screen 18 — `/module/commands?step=18`. */
 export const WILL_REACH: Quiz = {
   title: [[{ text: "Will it reach " }, { text: "the target?", teal: true }]],
   line: [{ text: "What happens if you choose PUT DOWN?" }],
@@ -203,5 +196,4 @@ export const WILL_REACH: Quiz = {
   right: "Yes! Put Down releases the cube right where the robot is.",
   wrong: "Remember: Put Down releases the cube at the robot’s current position.",
   pose: "holding",
-  hint: true,
 };

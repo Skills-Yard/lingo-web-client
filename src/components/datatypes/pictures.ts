@@ -2,6 +2,7 @@ const SEQUENCE = "/images/sequence";
 const COMMAND = "/images/level-two";
 const LEVEL_ONE = "/images/level-one";
 const ROOT = "/images";
+const DATATYPES = "/images/datatypes";
 
 /**
  * Every picture on an option or a card, as a stand-in from the Sequence and
@@ -10,6 +11,36 @@ const ROOT = "/images";
  * types have the same picture wherever they appear.
  */
 export const P = {
+  // The module's own art: the scenes of screens 1 and 2.
+  eventScene: `${DATATYPES}/event-scene.webp`,
+  studentProfile: `${DATATYPES}/student-profile.webp`,
+  // Screen 1's answers (what the event needs): name, age, height, all of them.
+  needName: `${DATATYPES}/datatypeModule-1.1.svg`,
+  needAge: `${DATATYPES}/datatypeModule-1.2.svg`,
+  needHeight: `${DATATYPES}/datatypeModule-1.3.svg`,
+  needAll: `${DATATYPES}/datatypeModule-1.4.svg`,
+  // Screen 2's answers (what is noticed about Aarav's details).
+  lookSame: `${DATATYPES}/datatypeModule-2.1.svg`,
+  lookDifferent: `${DATATYPES}/datatypeModule-2.2.svg`,
+  allNumbers: `${DATATYPES}/datatypeModule-2.3.svg`,
+  // The empty slot on the grouping screen (3): the download-arrow mark.
+  dropSlot: `${DATATYPES}/drop-slot.svg`,
+  // Screen 8's picture: two students and their heights, with the decimal part of each picked out (the card is part of the art).
+  floatHeights: `${DATATYPES}/float-heights.webp`,
+  // The backdrop of screen 10: the desk with books and a plant, and the teal shapes behind the list (not supplied yet: an empty slot until the file is in).
+  namesScene: `${DATATYPES}/names-scene.webp`,
+  // The backdrop of screens 5 and 6: the school yard, without the student.
+  schoolScene: `${DATATYPES}/school-scene.webp`,
+  // Screen 5's three cards (planning the school event) use screen 2's icons: the same files.
+  planStudents: `${DATATYPES}/datatypeModule-2.2.svg`,
+  planTickets: `${DATATYPES}/datatypeModule-2.1.svg`,
+  planPrizes: `${DATATYPES}/datatypeModule-2.3.svg`,
+  // (Screen 5.2's number badges, 30 students, 45 tickets and 12 prizes, are drawn in code: see `SIMILAR_TILES`.)
+  // Screen 6's four cards (values from different situations): students, tickets, height, weight.
+  valueStudents: `${DATATYPES}/datatypeModule-6.1.svg`,
+  valueTickets: `${DATATYPES}/datatypeModule-6.2.svg`,
+  valueHeight: `${DATATYPES}/datatypeModule-6.3.svg`,
+  valueWeight: `${DATATYPES}/datatypeModule-6.4.svg`,
   // The four data types.
   integer: `${COMMAND}/cube.png`,
   float: `${ROOT}/coins.png`,

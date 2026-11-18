@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Confetti } from "@/components/level-one/Confetti";
-import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
+import { useAnswerHint } from "@/components/level-one/answerHint";
+import { useCelebrate } from "@/components/level-one/Celebration";
+import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards, CARDS_RISE, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
@@ -50,9 +51,28 @@ const answersHeight = (stage: QuizStage) => {
   return stage.options.length * row + (stage.options.length - 1) * ROW_GAP;
 };
 
+/** Hex's line is never sent away here. */
+const KEEP_HEX = () => {};
+
 /** An interaction stage's own picture and controls. */
-function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, finished })}</>;
+function InteractionHost({
+  stage,
+  slip,
+  done,
+  finished,
+  lineTyped,
+  holdButton,
+  next,
+}: {
+  stage: InteractionStage;
+  slip: () => void;
+  done: () => void;
+  finished: boolean;
+  lineTyped: boolean;
+  holdButton: (press: (() => void) | null) => void;
+  next: () => void;
+}) {
+  return <>{stage.render?.({ slip, done, dismissHex: KEEP_HEX, finished, lineTyped, holdButton, next, hexSpoken: lineTyped })}</>;
 }
 
 /**
@@ -71,11 +91,18 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // A question's hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
   const [finished, setFinished] = useState(false);
+  // Hex has typed this stage's line to the end (an interaction can wait for it).
+  const [lineIsTyped, setLineIsTyped] = useState(false);
+  const onLineTyped = useCallback(() => setLineIsTyped(true), []);
+  // What an interaction has taken the main button for (each press steps it on instead of going to the next stage).
+  const [heldPress, setHeldPress] = useState<(() => void) | null>(null);
+  const holdButton = useCallback((press: (() => void) | null) => setHeldPress(() => press), []);
   // The picture is shrunk to fit the room between Hex's line and the question, if it is taller than that.
   const [roomHeight, setRoomHeight] = useState(0);
   const [pictureHeight, setPictureHeight] = useState(0);
@@ -100,7 +127,8 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   const quiz = stage.kind === "quiz" ? stage : null;
   const interaction = stage.kind === "interaction" ? stage : null;
   const correct = !!quiz && selectedId === quiz.correctId;
-  const hasHint = !!quiz?.hintText;
+  // Every question has the hint button.
+  const hasHint = !!quiz;
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
@@ -122,8 +150,12 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   });
   const slip = useCallback(() => slipNow.current(), []);
   const done = useCallback(() => finishNow.current(), []);
+  // An interaction can send the learner straight on to the next stage (`advance` is defined below).
+  const nextNow = useRef<() => void>(() => {});
+  const next = useCallback(() => nextNow.current(), []);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     record(correct);
   };
@@ -132,7 +164,14 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
+    setLineIsTyped(false);
     setAttempt((previous) => previous + 1);
+  };
+
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
   };
 
   const advance = () => {
@@ -144,20 +183,29 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
+    answerHint.stop();
     setAttempt(0);
     setFinished(false);
+    setLineIsTyped(false);
   };
 
+  useEffect(() => {
+    nextNow.current = advance;
+  });
+
   const onContinue = () => {
-    if (!quiz) advance();
+    if (!quiz) {
+      if (heldPress && !finished) heldPress();
+      else advance();
+    }
     else if (!checked) check();
     else if (correct) advance();
     else tryAgain();
   };
 
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    if (quiz) answerHint.press(quiz.correctId);
     noteStruggle(screen.step, "hint");
   };
 
@@ -171,9 +219,14 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
       ? { right: true, title: interaction.finishPanel.title, text: interaction.finishPanel.text }
       : null;
 
-  // Hex's line for this stage (the hint replaces it).
-  const line = quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
+  // Hex's line for this stage.
+  const line = quiz ? quiz.line : (interaction?.line ?? null);
   const gone = quiz ? checked : finished;
+  // A question can keep Hex and his line in place once it is checked (they do not leave, nor come back with each try).
+  const lineStays = !!quiz?.keepLine;
+  const lineGone = gone && !lineStays;
+  // With no line there is nothing to wait for.
+  const lineTyped = !line || lineIsTyped;
 
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
   const tiles = !!quiz && quiz.layout === "grid";
@@ -184,6 +237,11 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
   const risen = quiz ? (tiles ? CARDS_RISE : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
   const celebrate = panel?.right === true && (quiz ? checked : finished);
+  // The burst belongs to the module's layout, so it plays on when Next leaves this screen.
+  const startCelebration = useCelebrate();
+  useEffect(() => {
+    if (celebrate) startCelebration();
+  }, [celebrate, startCelebration]);
 
   return (
     <LevelTwoShell
@@ -192,11 +250,11 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
       onBack={() => router.push(operatorsPrevious(screen.step))}
       scene={<SoftBackdrop />}
       answer={answer}
-      ctaDisabled={quiz ? selectedId === null : !finished}
+      ctaDisabled={quiz ? selectedId === null : !finished && !heldPress}
       ctaLabel={
         quiz
           ? !checked
-            ? (quiz.ctaLabel ?? "Continue")
+            ? (quiz.ctaLabel ?? "Check")
             : correct
               ? (quiz.nextLabel ?? "Next")
               : "Try again"
@@ -242,18 +300,19 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
         {line && (
           <motion.div
             initial={false}
-            animate={{ opacity: gone ? 0 : 1, height: gone ? 0 : "auto" }}
+            animate={{ opacity: lineGone ? 0 : 1, height: lineGone ? 0 : "auto" }}
             transition={{ duration: 0.35 }}
-            style={{ overflow: gone ? "hidden" : "visible" }}
+            style={{ overflow: lineGone ? "hidden" : "visible" }}
             className="flex w-full shrink-0 justify-center px-4"
           >
             <HexBubble
-              key={`${stageIndex}-${attempt}`}
-              entryKey={`operators-${screen.step}-${stageIndex}-${attempt}`}
+              key={`${stageIndex}-${lineStays ? 0 : attempt}`}
+              entryKey={`operators-${screen.step}-${stageIndex}-${lineStays ? 0 : attempt}`}
               hex="left"
               line={[{ text: line }]}
               size={bubbleSize(line)}
-              leaving={gone}
+              leaving={lineGone}
+              onTyped={onLineTyped}
             />
           </motion.div>
         )}
@@ -262,7 +321,7 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
             {quiz ? (
               quiz.visual?.({ attempt, picked: selectedId, checked, correct })
             ) : (
-              interaction && <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} finished={finished} />
+              interaction && <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} finished={finished} lineTyped={lineTyped} holdButton={holdButton} next={next} />
             )}
           </div>
         </div>
@@ -291,9 +350,9 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={false}
-              hinted={hinted}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           ) : (
             <AnswerCards
@@ -303,18 +362,18 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={false}
-              hinted={hinted}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
               rise={LIST_RISE}
               compact={quiz.compact}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           )}
+          {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+          {answerHint.hand}
         </>
       )}
 
-      <Confetti active={celebrate} />
-      <XpBurst show={celebrate} />
     </LevelTwoShell>
   );
 }

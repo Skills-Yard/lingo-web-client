@@ -10,7 +10,7 @@ import { isVoiceoverSettled, useVoiceover } from "@/components/onboarding/useVoi
 import { questionSpoken } from "@/components/onboarding/QuestionHeading";
 import { LEVEL_ONE_STEP, MODULE_STEPS, type LevelOneStepKey } from "@/lib/moduleFlow";
 import { useReviewProgress } from "@/lib/moduleReview";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 import { ActionRow } from "./ActionRow";
 import { LevelVoiceContext } from "./LevelVoice";
 import { useLevelMuted } from "./levelMuted";
@@ -33,8 +33,8 @@ export const TITLE_HEIGHT = 38;
 /** Where Level 1's `n`th screen sits in the module (see `LEVEL_ONE_STEP`). */
 export const levelOneStep = (n: LevelOneStepKey) => LEVEL_ONE_STEP[n];
 
-/** Level 1's `n`th screen — `/module?step=N`. */
-export const levelOneHref = (n: LevelOneStepKey) => moduleHref(LEVEL_ONE_STEP[n]);
+/** Level 1's `n`th screen — `/module/commands?step=N`. */
+export const levelOneHref = (n: LevelOneStepKey) => commandsHref(LEVEL_ONE_STEP[n]);
 
 interface LevelOneShellProps {
   /** 1-based screen number, shown in the progress bar. */
@@ -78,7 +78,7 @@ interface LevelOneShellProps {
   /** The latest checked answer — plays the progress bar's correct / wrong reaction. */
   answer?: AnswerResult | null;
   /** Shows the hint button left of the main button; `visible` slides it in / out. */
-  hint?: { visible: boolean; onUse: () => void };
+  hint?: { visible: boolean; onUse: () => void; /** Shown dimmed, and takes no taps. */ disabled?: boolean };
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */

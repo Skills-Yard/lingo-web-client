@@ -8,13 +8,15 @@ import { LevelTwoShell, ScreenTitle, stageTop, Teal } from "@/components/level-t
 import { useSound } from "@/hooks/useSound";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
-import { moduleHref } from "@/lib/routes";
+import { commandsHref } from "@/lib/routes";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { PlatformBattery } from "@/components/ui/PlatformBattery";
-import { FeedbackPanel, OnboardingHex } from "./FeedbackPanel";
-import { GemPopup } from "./GemPopup";
+import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { Confetti } from "./Confetti";
+import { FeedbackPanel, OnboardingHex, XpBurst } from "./FeedbackPanel";
 import { levelOneStep } from "./LevelOneShell";
 import { useLevelMuted } from "./levelMuted";
+import { useBatteryClaim } from "./useBatteryClaim";
 
 /** Its place in the module. */
 const STEP = 16;
@@ -54,7 +56,8 @@ const BUTTONS_TOP = 508;
 /**
  * The game played as part of another module: the board opens on a tip with Hex
  * on the top tile, "Let's Try" sets the battery there and brings him to the middle,
- * and the result is a panel (no gem popup) reported through `onAnswer` and `onDone`.
+ * and the result is a panel reported through `onAnswer`; Continue then opens the gem
+ * popup and, once the battery is claimed, goes on through `onDone`.
  */
 export type MoveHexFlow = {
   step: number;
@@ -72,7 +75,13 @@ export type MoveHexFlow = {
   onDone: () => void;
 };
 
-const WRONG_WAY = "Oops, that’s the wrong way! The battery is straight ahead. Tap anywhere on this panel to try again.";
+/** This screen's own results (a flow brings its own): Go Straight reaches the battery, Go Back walks away from it. */
+const RIGHT_WAY = (
+  <>
+    Yes! Hex followed <b>Go Straight</b> and reached the battery.
+  </>
+);
+const WRONG_WAY = "Go Back took Hex away from the battery. It is straight ahead!";
 
 /** Like the robot screens' picture: it starts under the top bar (52px) and the gap below it (8px). It stays clear for 35px then fades in over 185px, and fades out again from 330px to 448px (stage 508, where the buttons start), instead of ending in a hard line. */
 const TOP_BAR_CLEARANCE = 60;
@@ -120,7 +129,7 @@ export function MoveButton({ label, look, disabled, onPress, children }: { label
 }
 
 /**
- * `/module?step=16` — "Let's guide Hex": Hex stands on the middle of a 3 x 3
+ * `/module/commands?step=16` — "Let's guide Hex": Hex stands on the middle of a 3 x 3
  * platform with the battery one tile ahead, and each button walks him a tile at
  * once. Go Straight reaches the battery, which opens the gem popup and unlocks
  * Continue; Go Back misses it, which offers Try again.
@@ -133,14 +142,26 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
   const [intro, setIntro] = useState(!!flow);
   const [tile, setTile] = useState<Tile>(flow ? "top" : "centre");
   const [result, setResult] = useState<"solved" | "failed" | null>(null);
+  // Outside a flow the right result waits for the gem popup, the claim and the
+  // Battery Doctor to finish, then its panel comes up by itself.
+  const [claimed, setClaimed] = useState(false);
+  // The progress bar's reaction, as for a checked quiz answer (not in a flow, whose screens note their own).
+  const [answer, setAnswer] = useState<AnswerResult | null>(null);
+  const report = useCallback((correct: boolean) => setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct })), []);
   // The gem popup opens once, the moment Hex reaches the battery; closing it
-  // (or its 3 second countdown running out) leaves Continue to go on.
-  const [gemOpen, setGemOpen] = useState(false);
-  // In a flow the popup comes after the result panel, so closing it moves on.
-  const closeGem = useCallback(() => {
-    setGemOpen(false);
-    flow?.onDone();
-  }, [flow]);
+  // (or its 3 second countdown running out) claims the battery and plays the
+  // Battery Doctor, and the end of that brings up the right result and leaves
+  // Continue to go on. In a flow the popup comes after the result panel, and
+  // the end of the Doctor moves on.
+  const afterClaim = useCallback(() => {
+    if (flow) {
+      flow.onDone();
+      return;
+    }
+    setClaimed(true);
+    report(true);
+  }, [flow, report]);
+  const { win, popup } = useBatteryClaim(afterClaim);
   // A miss counts against this question: the first go is what is noted, and
   // Continue asks to be shown it again unless the first go made it.
   const missed = useRef(false);
@@ -152,18 +173,19 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
         triggerSound("win");
         setResult("solved");
         if (flow) flow.onAnswer(true);
-        else setGemOpen(true);
+        else win();
         return;
       }
       triggerSound("lose");
       setResult("failed");
       flow?.onAnswer(false);
+      if (!flow) report(false);
       if (missed.current) return;
       missed.current = true;
       if (!flow) noteAnswer(STEP, false);
     }, STEP_MS);
     return () => window.clearTimeout(timer);
-  }, [tile, intro, flow, triggerSound]);
+  }, [tile, intro, flow, triggerSound, win, report]);
 
   const walk = (to: Tile) => {
     triggerSound("step");
@@ -176,6 +198,8 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
 
   const solved = result === "solved";
   const failed = result === "failed";
+  // The right panel: at once in a flow, after the claim's effects otherwise.
+  const rightOpen = flow ? solved : claimed;
 
   return (
     <LevelTwoShell
@@ -185,24 +209,24 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
       voiceover={flow?.voiceover ?? MODULE_AUDIO.guideHex}
       scene={<MeadowBackdrop />}
       ctaLabel={failed ? "Try again" : flow && !solved ? "Let’s Try" : "Continue"}
-      ctaDisabled={!intro && !solved && !failed}
-      // The wrong-result panel sits below the Continue row, like on the quizzes;
-      // a tap on it takes Hex back to try again. The gem popup is above all.
+      // Outside a flow Continue waits for the right panel, so it can't be pressed under the gem popup.
+      ctaDisabled={!intro && !rightOpen && !failed}
+      answer={answer}
+      // The result panels sit below the Continue row, like on the quizzes;
+      // a tap on the wrong one takes Hex back to try again. The gem popup is above all.
       overlay={
         <>
           <div className="absolute inset-0 z-[9]" style={{ pointerEvents: failed ? "auto" : "none" }} onClick={tryAgain}>
-            <FeedbackPanel correct={false} title={flow?.wrongTitle} open={failed} hexIn={failed} centred={!!flow}>
+            <FeedbackPanel correct={false} title={flow?.wrongTitle} open={failed} hexIn={failed} centred={!!flow} grouped={!flow}>
               {flow?.wrong ?? WRONG_WAY}
             </FeedbackPanel>
           </div>
-          {flow && (
-            <div className="pointer-events-none absolute inset-0">
-              <FeedbackPanel correct title={flow.rightTitle} open={solved} hexIn={solved} hexCue={HEX_ONBOARDING_TRIGGER.continueThumb} centred>
-                {flow.right}
-              </FeedbackPanel>
-            </div>
-          )}
-          <GemPopup open={gemOpen} onClose={closeGem} />
+          <div className="pointer-events-none absolute inset-0">
+            <FeedbackPanel correct title={flow?.rightTitle} open={rightOpen} hexIn={rightOpen} hexCue={HEX_ONBOARDING_TRIGGER.continueThumb} centred={!!flow} grouped={!flow}>
+              {flow?.right ?? RIGHT_WAY}
+            </FeedbackPanel>
+          </div>
+          {popup}
         </>
       }
       onContinue={() => {
@@ -216,16 +240,18 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
           return;
         }
         if (flow) {
-          setGemOpen(true);
+          win();
           return;
         }
         noteAnswer(STEP, !missed.current);
-        router.push(nextAfter(STEP, !missed.current, moduleHref("complete")));
+        router.push(nextAfter(STEP, !missed.current, commandsHref("complete")));
       }}
     >
       <ScreenTitle oneLine>
         Let’s <Teal>guide</Teal> Hex
       </ScreenTitle>
+      <Confetti active={claimed} />
+      <XpBurst show={claimed} />
 
       <div
         className="absolute left-1/2 -translate-x-1/2"

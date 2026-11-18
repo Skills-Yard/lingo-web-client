@@ -14,7 +14,7 @@ import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCar
 import { SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
-const LINE: readonly Span[] = [{ text: "You’re preparing a cup of tea. Arrange these actions into a sensible order." }];
+const LINE: readonly Span[] = [{ text: "Time for tea! Arrange the steps in order." }];
 const BUBBLE: BubbleSize = { width: 250 };
 const BUBBLE_TOP = 150;
 
@@ -25,14 +25,18 @@ const emoji = (symbol: string) => (
 );
 /** Listed with the pouring first, so the tray doesn't give the order away. */
 const CARDS: readonly ArrangeCardDef[] = [
-  { id: "pour", kind: "pour", text: "Pour the hot water into a cup", art: emoji("☕"), tint: "bg-[#E5EFFD] dark:bg-[#15233A]" },
-  { id: "heat", kind: "heat", text: "Heat the water", art: emoji("🔥"), tint: "bg-[#FFF3DE] dark:bg-[#2A2218]" },
-  { id: "bag", kind: "bag", text: "Add the tea bag", art: emoji("🍃"), tint: "bg-[#ECF7ED] dark:bg-[#10261A]" },
+  { id: "pour", kind: "pour", text: "Pour water", art: emoji("☕"), tint: "bg-[#E5EFFD] dark:bg-[#15233A]" },
+  { id: "heat", kind: "heat", text: "Heat water", art: emoji("🔥"), tint: "bg-[#FFF3DE] dark:bg-[#2A2218]" },
+  { id: "bag", kind: "bag", text: "Add tea bag", art: emoji("🍃"), tint: "bg-[#ECF7ED] dark:bg-[#10261A]" },
 ];
 
-const GEO = arrangeGeometry({ mode: "columns", card: { width: 150, height: 112 }, count: 3, gap: 10, lane: 24 });
-/** Once checked the board rises this far (px), so the result panel doesn't cover it. */
-const BOARD_RISE = 160;
+/** In a row, as on "Arrange the instructions!": the slots across the top, the cards in a tray under them. */
+const GEO = arrangeGeometry({ mode: "rows", card: { width: 108, height: 124 }, count: 3, gap: 8, lane: 14, slotsOnTop: true, solidSlots: true });
+/**
+ * Once checked the board rises this far (px): the filled slots (the tray is empty by then)
+ * stand between Hex's line, which stays, and the result panel, so the learner's order stays in view.
+ */
+const BOARD_RISE = 180;
 
 /**
  * "One last challenge.": the same idea away from the robot. Three tea-making
@@ -46,6 +50,8 @@ export function TeaScreen() {
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const [attempt, setAttempt] = useState(0);
   const correct = full && slots.indexOf("heat") < slots.indexOf("pour");
+  // The wrong message depends on what was put first.
+  const wrongNote = slots[0] === "pour" ? { title: "Oops!", text: "There’s no hot water yet. Heat it first!" } : { title: "Not quite", text: "Heat the water before you pour it." };
 
   const check = () => {
     setChecked(true);
@@ -82,12 +88,13 @@ export function TeaScreen() {
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
-            title={correct ? "Nice!" : "Not quite"}
+            title={correct ? "Nice!" : wrongNote.title}
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
+            centred
           >
-            {correct ? "You used the same idea in a different situation." : "What needs to happen before you can pour hot water?"}
+            {correct ? "Same idea, new situation. Order matters!" : wrongNote.text}
           </FeedbackPanel>
         </div>
       }
@@ -96,7 +103,7 @@ export function TeaScreen() {
         One last <Teal>challenge.</Teal>
       </ScreenTitle>
       <CentredRow top={stageTop(BUBBLE_TOP)}>
-        <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} leaving={checked} />
+        <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} />
       </CentredRow>
       <ArrangeDock geo={GEO} rise={checked ? BOARD_RISE : 0}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />

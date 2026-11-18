@@ -1,11 +1,9 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
 import { Button3D } from "@/components/ui/Button3D";
 import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { playClickSound } from "@/components/onboarding/clickSound";
-import { moduleButtonHeld, subscribeModuleButtonHold } from "@/lib/rive/moduleButtonHost";
 import { BUTTON } from "@/lib/rive/runtime";
 import { HintButton, type HintSize } from "./HintButton";
 
@@ -85,7 +83,7 @@ type ActionRowProps = {
   /** The row's widest width (px) — it keeps its phone size on a desktop. */
   maxWidth: number;
   /** Shows the hint button at the left end of the row; `visible` slides it in / out. */
-  hint?: { visible: boolean; onUse: () => void };
+  hint?: { visible: boolean; onUse: () => void; /** Shown dimmed, and takes no taps. */ disabled?: boolean };
   answer?: AnswerResult | null;
   /** Label of the main button. */
   ctaLabel: string;
@@ -110,8 +108,6 @@ type ActionRowProps = {
  */
 export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, ctaLight, ctaCube, onContinue }: ActionRowProps) {
   const withHint = !!hint?.visible;
-  // A strike is playing for the answer just checked: the button takes no clicks, but is drawn as it was.
-  const held = useSyncExternalStore(subscribeModuleButtonHold, moduleButtonHeld, () => false);
   // The row is the stage's width (capped at `maxWidth`) less the padding at each
   // side. With the hint the button is shorter, so its art ends higher in the row.
   const rowWidth = `(min(var(--stage-w, 390px), ${maxWidth}px) - 12px)`;
@@ -126,6 +122,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
             visible={hint.visible}
             count={HINTS_LEFT}
             size={HINT_SIZE}
+            disabled={hint.disabled}
             onPress={() => {
               playClickSound();
               hint.onUse();
@@ -141,7 +138,7 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
           onClick={() => onContinue?.()}
           onPress={playClickSound}
           disabled={ctaDisabled}
-          locked={ctaLocked || held}
+          locked={ctaLocked}
           className={hint ? "z-2 min-w-0 shrink-0 transition-[width,height] duration-500 ease-out" : "min-w-0 shrink-0"}
           style={{
             aspectRatio: "auto",

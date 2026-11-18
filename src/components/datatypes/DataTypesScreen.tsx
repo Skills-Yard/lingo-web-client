@@ -1,31 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Confetti } from "@/components/level-one/Confetti";
-import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { AnswerCards, CARDS_RISE, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { useAnswerHint } from "@/components/level-one/answerHint";
+import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
+import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT, type BubbleSize } from "@/components/level-two/levelTwo";
-import { TileCards } from "@/components/level-two/TileCards";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { IDLE_LOOK, OPTION } from "@/components/variable/quiz";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
+import { fireSceneTrigger, type SceneValues } from "@/lib/rive/datatypesHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { DATATYPES_STEPS, datatypesNext, datatypesPrevious } from "./datatypes";
 import { noteAnswer, noteStruggle } from "./datatypesScore";
-import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } from "./screen";
+import { acrossCards, answersHeight, optionFont, OptionGrid } from "./OptionCards";
+import { HEX_LIFT, LARGE_SCENE, LIFT_DOWN, LIFT_UP, SceneBackdrop, sceneHeight, sceneLift, sceneTop } from "./scenes";
+import { parseTitle, type InteractionStage, type ScreenDef, type VisualContext } from "./screen";
 
-/** A row of the list of answers, and the gap between rows (see `AnswerCards`). */
-const ROW_H = 76;
-const ROW_GAP = 6;
-/** The tiles: a card's height by how many there are, and the gap between rows. */
-const TILE_H = { 2: 184, 3: 110, 4: 104 } as const;
-const TILE_GAP = 14;
-/** How far the list of answers rises once the result panel is up (the tiles rise `CARDS_RISE`). */
-const LIST_RISE = 150;
+/*
+ * The answers (rows or cards) are the Variable module's: `OPTION` gives their size, gap, padding, corners, text and rise
+ * (see `OptionCards.tsx`).
+ */
 /** How much room the result panel takes from an interaction's area once it is up. */
 const PANEL_ROOM = 215;
 /** The least a picture is shrunk to fit its room. */
@@ -34,25 +33,146 @@ const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in, so a question standing on them comes in with them. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
 /** The title block (px): where it ends, one line or two. */
-const TITLE_END = { one: 125, two: 163 } as const;
+export const TITLE_END = { one: 125, two: 163 } as const;
 /** How many letters of a question fit a line, for the room it takes. */
 const QUESTION_CHARS = 36;
 
-const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 50 ? 190 : line.length <= 90 ? 240 : 262 });
-
-/** How the answers stand: rows, or tiles (two, three or four across and down). */
-const tileCount = (stage: QuizStage) => Math.min(4, Math.max(2, stage.options.length)) as 2 | 3 | 4;
-
-const answersHeight = (stage: QuizStage) =>
-  stage.layout === "grid"
-    ? tileCount(stage) === 4
-      ? TILE_H[4] * 2 + TILE_GAP
-      : TILE_H[tileCount(stage)]
-    : stage.options.length * ROW_H + (stage.options.length - 1) * ROW_GAP;
+/** Hex's bubble: 190 wide holds two lines of up to about 30 letters (a long word wraps early); a longer line takes the widest the row has room for (about 248), two lines of up to about 46. */
+const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 30 ? 190 : 248 });
 
 /** An interaction stage's own picture and controls. */
-function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, finished })}</>;
+function InteractionHost({
+  stage,
+  slip,
+  done,
+  dismissHex,
+  finished,
+  hexSpoken,
+  takeContinue,
+  setScene,
+}: {
+  stage: InteractionStage;
+  slip: () => void;
+  done: () => void;
+  dismissHex: () => void;
+  finished: boolean;
+  hexSpoken: boolean;
+  takeContinue: (handler: (() => boolean) | null) => void;
+  setScene: (values: SceneValues) => void;
+}) {
+  return <>{stage.render?.({ slip, done, dismissHex, finished, hexSpoken, takeContinue, setScene })}</>;
+}
+
+/** How far (px) above the main button the lowest buttons stand under a scene: the same as a question's answers (`OPTION.aboveButtons`), so every screen's options are at the same place. */
+const DOCK_GAP = OPTION.aboveButtons;
+/** The room (px) kept between the scene and what stands docked under it. */
+const SCENE_GAP = 4;
+/**
+ * The height (px) a docked stage is counted as at least when it is worked out how much room the scene may keep: the tallest of the
+ * tap-the-buttons stages (two rows of 60px buttons and the caption's room, screen 12). So the scene is cut to the same height on every
+ * one of them (11, 12, 15, 16, 17) whatever the screen's shape, not by how much its own stage happens to hold.
+ */
+const DOCK_MIN_H = 186;
+/** The room (px) kept between the scene and a question's answers once they have risen above the result panel. */
+const ANSWERS_SCENE_GAP = 12;
+/** The least height (px) the scene is ever cut to. */
+const SCENE_MIN_H = 160;
+/** The least room (px) kept between what hangs from a scene and the main button's top edge. */
+const BUTTON_CLEAR = 6;
+
+/**
+ * What an interaction draws under a scene. By default it stands on the main button (`DOCK_GAP` above it, like a question's
+ * answers), so the buttons are at the same place on every screen, and it never goes under the button or over the scene (the
+ * scene is cut short to leave it room: see `SceneBackdrop`). It rises with the scene when that rises into Hex's room, so the
+ * space between them stays. `follow`: it hangs from the scene instead (`HangingUnderScene`).
+ */
+function UnderScene({ titleEnd, lifted, hidden, follow, onHeight, children }: { titleEnd: number; lifted: boolean; hidden: boolean; follow: boolean; onHeight: (height: number) => void; children: ReactNode }) {
+  return follow ? (
+    <HangingUnderScene titleEnd={titleEnd} lifted={lifted} hidden={hidden}>
+      {children}
+    </HangingUnderScene>
+  ) : (
+    <DockedUnderScene titleEnd={titleEnd} lifted={lifted} hidden={hidden} onHeight={onHeight}>
+      {children}
+    </DockedUnderScene>
+  );
+}
+
+/** A stage standing on the main button; it tells the screen how tall it is, so the scene can be cut to the room it leaves. */
+function DockedUnderScene({ titleEnd, lifted, hidden, onHeight, children }: { titleEnd: number; lifted: boolean; hidden: boolean; onHeight: (height: number) => void; children: ReactNode }) {
+  const content = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const element = content.current;
+    if (!element) return;
+    const measure = () => onHeight(element.offsetHeight);
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    measure();
+    return () => {
+      observer.disconnect();
+      onHeight(0);
+    };
+  }, [onHeight]);
+  return (
+    <motion.div
+      initial={false}
+      animate={{ y: lifted ? -sceneLift(titleEnd) : 0 }}
+      transition={lifted ? LIFT_UP : LIFT_DOWN}
+      className="absolute inset-x-0"
+      style={{ bottom: aboveButtons(DOCK_GAP) }}
+    >
+      <motion.div ref={content} initial={false} animate={{ opacity: hidden ? 0 : 1 }} transition={{ duration: 0.3 }} className="flex justify-center" style={{ pointerEvents: hidden ? "none" : "auto" }}>
+        {children}
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/**
+ * A stage that hangs from the scene (it stands right below it, and rises with it when Hex's line is sent away), for one whose parts
+ * grow downward (screen 4's tour). Where the screen leaves it too little room (a wide window makes the main button taller), it
+ * stands higher instead, over the scene's faded floor, so none of it is ever under the main button.
+ */
+function HangingUnderScene({ titleEnd, lifted, hidden, children }: { titleEnd: number; lifted: boolean; hidden: boolean; children: ReactNode }) {
+  const box = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
+  const edge = useRef<HTMLDivElement>(null);
+  // How far (px) it has to stand higher.
+  const [over, setOver] = useState(0);
+  // Once Hex's line has gone the whole box stands this much higher already (the scene rose into his room), so it needs no more room.
+  const lift = lifted ? sceneLift(titleEnd) : 0;
+  useLayoutEffect(() => {
+    const element = box.current;
+    const inner = content.current;
+    const line = edge.current;
+    const stage = element?.offsetParent;
+    if (!element || !inner || !line || !stage) return;
+    // Layout px of the stage, which the box's own move (the transform) does not change: its bottom (where it stands, as tall as what it holds, less the lift) against the line that stands `BUTTON_CLEAR` above the button.
+    const measure = () => setOver(Math.max(0, element.offsetTop + inner.offsetHeight - lift - line.offsetTop));
+    const observer = new ResizeObserver(measure);
+    observer.observe(inner);
+    observer.observe(stage);
+    measure();
+    return () => observer.disconnect();
+  }, [lift]);
+  return (
+    <>
+      <motion.div
+        ref={box}
+        initial={false}
+        // The lift and the extra room it needs are one move (not two that could pull against each other), so it never jumps.
+        animate={{ y: -(lift + over) }}
+        transition={lifted ? LIFT_UP : LIFT_DOWN}
+        className="absolute inset-x-0"
+        style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)` }}
+      >
+        <motion.div ref={content} initial={false} animate={{ opacity: hidden ? 0 : 1 }} transition={{ duration: 0.3 }} className="flex justify-center" style={{ pointerEvents: hidden ? "none" : "auto" }}>
+          {children}
+        </motion.div>
+      </motion.div>
+      <div ref={edge} aria-hidden className="pointer-events-none absolute inset-x-0" style={{ bottom: aboveButtons(BUTTON_CLEAR), height: 0 }} />
+    </>
+  );
 }
 
 /**
@@ -71,11 +191,20 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // A question's hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
   const [finished, setFinished] = useState(false);
+  // Hex has said his line (the answers of a stage that waits for him come in then).
+  const [hexSpoken, setHexSpoken] = useState(false);
+  // An interaction has sent Hex's line away early, to talk through its own Hex lower down.
+  const [hexDismissed, setHexDismissed] = useState(false);
+  // What the interaction has changed in its scene so far (see `InteractionApi.setScene`); each stage starts clean.
+  const [sceneExtra, setSceneExtra] = useState<SceneValues>({});
+  // How tall the stage standing on the main button is (px), 0 while there is none: the scene is cut to the room it leaves.
+  const [dockHeight, setDockHeight] = useState(0);
   // The picture is shrunk to fit the room between Hex's line and the question, if it is taller than that.
   const [roomHeight, setRoomHeight] = useState(0);
   const [pictureHeight, setPictureHeight] = useState(0);
@@ -100,13 +229,25 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const quiz = stage.kind === "quiz" ? stage : null;
   const interaction = stage.kind === "interaction" ? stage : null;
   const correct = !!quiz && selectedId === quiz.correctId;
-  const hasHint = !!quiz?.hintText;
+  // Every question has the hint button.
+  const hasHint = !!quiz;
+  // A look-only stage can be gone on from once Hex has said all of his line (at once, if he has none, or if he has been sent away).
+  const lookReady = !!interaction?.ready && (hexSpoken || hexDismissed || !interaction.line);
+
+  // The scene behind the stage, if it has one: its data follows what the learner has done (an interaction is "checked" and "correct" once it is finished),
+  // and an interaction can add to it as it goes (a card sent to its bin).
+  const sceneContext: VisualContext = { attempt, picked: selectedId, checked: quiz ? checked : finished, correct: quiz ? correct : finished, hexSpoken };
+  const stageScene = !stage.scene ? null : typeof stage.scene === "function" ? stage.scene(sceneContext) : stage.scene;
+  const scene = stageScene && { ...stageScene, values: { ...stageScene.values, ...sceneExtra } };
+  // A look-only stage (a scene, and nothing under it to tap or pick) draws its scene larger, the same for all of them.
+  const lookOnly = !!scene && !!interaction && !interaction.render;
 
   const record = (clean: boolean) => {
     noteAnswer(screen.step, stageIndex, clean);
     if (!clean) noteStruggle(screen.step, "miss");
     vibrateForAnswer(clean);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct: clean }));
+    if (scene && (clean || scene.markWrong !== false)) fireSceneTrigger(scene.scene, clean ? "correct" : "wrong");
   };
 
   // What an interaction calls: always the same functions, acting on the screen as it is now.
@@ -122,8 +263,16 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   });
   const slip = useCallback(() => slipNow.current(), []);
   const done = useCallback(() => finishNow.current(), []);
+  const dismissHex = useCallback(() => setHexDismissed(true), []);
+  const setScene = useCallback((values: SceneValues) => setSceneExtra(values), []);
+  // A stage that steps through its own parts can take Continue over (see `InteractionApi.takeContinue`).
+  const continueHandler = useRef<(() => boolean) | null>(null);
+  const takeContinue = useCallback((handler: (() => boolean) | null) => {
+    continueHandler.current = handler;
+  }, []);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     record(correct);
   };
@@ -135,6 +284,12 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     setAttempt((previous) => previous + 1);
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
   const advance = () => {
     if (lastStage) {
       router.push(datatypesNext(screen.step));
@@ -144,25 +299,37 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
+    answerHint.stop();
     setAttempt(0);
     setFinished(false);
+    setHexSpoken(false);
+    setHexDismissed(false);
+    setSceneExtra({});
   };
 
   const onContinue = () => {
-    if (!quiz) advance();
-    else if (!checked) check();
+    if (!quiz) {
+      // A stage that steps through its own parts uses the press until it has shown them all.
+      if (!continueHandler.current?.()) advance();
+    } else if (!checked) check();
     else if (correct) advance();
     else tryAgain();
   };
 
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    if (quiz) answerHint.press(quiz.correctId);
     noteStruggle(screen.step, "hint");
   };
 
-  const title = parseTitle(screen.title);
-  const titleEnd = title.twoLines ? TITLE_END.two : TITLE_END.one;
+  // A stage can be headed differently from its screen (and then sets its own title size).
+  const ownTitle = stage.title !== undefined;
+  const title = parseTitle(stage.title ?? screen.title);
+  // A screen can set its title's size: it is then on one line, as the design has it.
+  const setSize = ownTitle ? stage.titleSize : screen.titleSize;
+  const titleLines = setSize === undefined && title.twoLines;
+  const titleSize = setSize ?? title.size;
+  const titleEnd = titleLines ? TITLE_END.two : TITLE_END.one;
   const panel = quiz
     ? checked
       ? { right: correct, title: correct ? quiz.rightTitle : (quiz.wrongTitle ?? "Not quite"), text: correct ? quiz.right : quiz.wrong }
@@ -171,32 +338,50 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       ? { right: true, title: interaction.finishPanel.title, text: interaction.finishPanel.text }
       : null;
 
-  // Hex's line for this stage (the hint replaces it).
-  const line = quiz ? (hinted && quiz.hintText ? quiz.hintText : quiz.line) : (interaction?.line ?? null);
-  const gone = quiz ? checked : finished;
+  // Hex's line for this stage.
+  const line = quiz ? quiz.line : (interaction?.line ?? null);
+  const gone = quiz ? checked : finished || hexDismissed;
+  const bubbleWidth = interaction?.bubbleWidth ?? quiz?.bubbleWidth;
 
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
-  const tiles = !!quiz && quiz.layout === "grid";
-  const answersBottom = quiz ? aboveButtons(GAP_ABOVE_BUTTONS, hasHint) : "0px";
+  const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
   const questionLines = quiz?.question ? Math.ceil(quiz.question.length / QUESTION_CHARS) : 0;
   const questionHeight = questionLines ? questionLines * 22 + 14 : 0;
-  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 10 + questionHeight + 8}px)` : aboveButtons(24);
+  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz.options) + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
-  const risen = quiz ? (tiles ? CARDS_RISE : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
-  const celebrate = panel?.right === true && (quiz ? checked : finished);
+  const risen = quiz ? OPTION.rise : interaction?.finishPanel ? PANEL_ROOM : 0;
+  // A right answer stays: the answers rise above the panel (the scene has risen clear of them) and the right one bounces.
+  // Under a scene a wrong one clears them instead (the scene shows what was picked), and they leave from where they stand.
+  const answersAway = !!quiz && checked && !correct && !!scene;
+  const answersRise = answersAway ? 0 : OPTION.rise;
+
+  // The scene fills the device's width, so on a short, wide screen it is taller than the room the buttons leave it. It is cut there (at its floor) instead of their standing over it:
+  // above a stage docked on the main button, and above a question's answers once they have risen over the result panel (the scene has risen too, by `sceneLift`).
+  const docked = !!scene && !!interaction?.render && !interaction.follow;
+  const sceneMaxHeight = docked
+    ? `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${aboveButtons(DOCK_GAP)} - ${Math.max(dockHeight, DOCK_MIN_H) + SCENE_GAP}px))`
+    : scene && quiz
+      ? `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${answersBottom} - ${answersHeight(quiz.options) + OPTION.rise + ANSWERS_SCENE_GAP - sceneLift(titleEnd)}px))`
+      : undefined;
 
   return (
     <LevelTwoShell
       step={screen.step}
       total={DATATYPES_STEPS}
       onBack={() => router.push(datatypesPrevious(screen.step))}
-      scene={<SoftBackdrop />}
+      scene={
+        <>
+          <SoftBackdrop />
+          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} texts={scene.texts} titleEnd={titleEnd} lifted={gone} scale={lookOnly ? (scene.lookScale ?? LARGE_SCENE) : 1} maxHeight={sceneMaxHeight} />}
+          {screen.backdrop}
+        </>
+      }
       answer={answer}
-      ctaDisabled={quiz ? selectedId === null : !finished}
+      ctaDisabled={quiz ? selectedId === null : !finished && !lookReady}
       ctaLabel={
         quiz
           ? !checked
-            ? (quiz.ctaLabel ?? "Continue")
+            ? (quiz.ctaLabel ?? "Check")
             : correct
               ? (quiz.nextLabel ?? "Next")
               : "Try again"
@@ -204,7 +389,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
             ? (interaction?.nextLabel ?? "Next")
             : (interaction?.ctaLabel ?? "Continue")
       }
-      hint={hasHint ? { visible: !checked, onUse: useHint } : undefined}
+      // Answers that wait for Hex's line come in after it: the hand has nothing to point at before then.
+      hint={hasHint ? { visible: !checked, onUse: useHint, disabled: !!quiz?.optionsAfterHex && !hexSpoken } : undefined}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -221,8 +407,8 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         </div>
       }
     >
-      <ScreenTitle key={screen.step} oneLine={!title.twoLines}>
-        <span style={{ fontSize: title.size }}>
+      <ScreenTitle key={ownTitle ? `${screen.step}-${stageIndex}` : screen.step} oneLine={!titleLines}>
+        <span style={{ fontSize: titleSize }}>
           {title.parts.map((part, index) =>
             index % 2 === 1 ? (
               <span key={index} className="text-level-gradient">
@@ -237,7 +423,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
 
       <div
         className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding] duration-500 ease-out"
-        style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: gone ? risen : 0 }}
+        style={{ top: scene ? titleEnd - HEX_LIFT : titleEnd, bottom: bodyBottom, paddingBottom: gone ? risen : 0 }}
       >
         {line && (
           <motion.div
@@ -252,42 +438,56 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               entryKey={`datatypes-${screen.step}-${stageIndex}-${attempt}`}
               hex="left"
               line={[{ text: line }]}
-              size={bubbleSize(line)}
+              size={bubbleWidth ? { width: bubbleWidth } : bubbleSize(line)}
               leaving={gone}
+              onSpoken={() => setHexSpoken(true)}
             />
           </motion.div>
         )}
-        <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">
-          <div ref={pictureRef} className="flex flex-col items-center gap-2" style={{ transform: `scale(${fit})` }}>
-            {quiz ? quiz.visual?.({ attempt, picked: selectedId, checked, correct }) : interaction && <InteractionHost stage={interaction} slip={slip} done={done} finished={finished} />}
+        {!scene && (
+          <div ref={roomRef} className={`flex min-h-0 w-full flex-1 flex-col items-center ${interaction?.alignTop ? "justify-start" : "justify-center"}`}>
+            <div ref={pictureRef} className="flex flex-col items-center gap-2 transition-transform duration-300 ease-out" style={{ transform: `scale(${fit})`, transformOrigin: interaction?.alignTop ? "top center" : "center" }}>
+              {quiz
+                ? quiz.visual?.({ attempt, picked: selectedId, checked, correct, hexSpoken })
+                : interaction && <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />}
+            </div>
           </div>
-        </div>
+        )}
       </div>
+
+      {/* An interaction under a scene stands on the main button (see `UnderScene`), and fades once its result panel is up. Whenever the scene rises into Hex's room (his line sent away, or the stage done: see `SceneBackdrop`) it rises with it, so the space between them stays. */}
+      {scene && interaction && (
+        <UnderScene titleEnd={titleEnd} lifted={gone} hidden={!!panel} follow={!!interaction.follow} onHeight={setDockHeight}>
+          <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
+        </UnderScene>
+      )}
 
       {quiz && (
         <>
           {quiz.question && (
             <motion.p
               initial={{ opacity: 0, y: 90 }}
-              animate={{ opacity: 1, y: checked ? -(tiles ? CARDS_RISE : LIST_RISE) : 0 }}
-              transition={checked ? PANEL_SPRING : ANSWERS_IN}
+              animate={{ opacity: answersAway ? 0 : 1, y: checked ? -answersRise : 0 }}
+              transition={checked ? { ...PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
               className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
-              style={{ bottom: `calc(${answersBottom} + ${answersHeight(quiz) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
+              style={{ bottom: `calc(${answersBottom} + ${answersHeight(quiz.options) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
             >
               {quiz.question}
             </motion.p>
           )}
-          {tiles ? (
-            <TileCards
-              layout={tileCount(quiz) === 2 ? "pair" : tileCount(quiz) === 3 ? "tiles" : "grid"}
-              choices={quiz.options}
+          {acrossCards(quiz.options) ? (
+            <OptionGrid
+              options={quiz.options}
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={false}
-              hinted={hinted}
+              fadeOut={answersAway}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
-              onPick={setSelectedId}
+              rise={answersRise}
+              bounceIn={quiz.optionsAfterHex}
+              revealed={hexSpoken}
+              onPick={pick}
             />
           ) : (
             <AnswerCards
@@ -295,18 +495,26 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={false}
-              hinted={hinted}
+              fadeOut={answersAway}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
-              rise={LIST_RISE}
-              onPick={setSelectedId}
+              rise={answersRise}
+              bottomGap={OPTION.aboveButtons}
+              compact
+              tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
+              idleLook={IDLE_LOOK}
+              gap={OPTION.gap}
+              fontSize={Math.min(...quiz.options.map((option) => optionFont(option.text)))}
+              bounceIn={quiz.optionsAfterHex}
+              revealed={hexSpoken}
+              bounceRight
+              onPick={pick}
             />
           )}
+          {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+          {answerHint.hand}
         </>
       )}
-
-      <Confetti active={celebrate} />
-      <XpBurst show={celebrate} />
     </LevelTwoShell>
   );
 }

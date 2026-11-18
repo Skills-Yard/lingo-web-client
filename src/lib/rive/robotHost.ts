@@ -1,5 +1,6 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { COMMAND_ROBOT, configureRiveRuntime } from "./runtime";
+import { riveSource } from "./riveCache";
 
 /**
  * One robot arm for the whole module, like the battery (see `batteryHost`):
@@ -138,7 +139,7 @@ export const getRobotHost = (): Host => {
     }, SETTLE_MS);
   };
   created.rive = new Rive({
-    src: COMMAND_ROBOT.src,
+    ...riveSource(COMMAND_ROBOT.src),
     canvas,
     artboard: COMMAND_ROBOT.artboard,
     stateMachine: COMMAND_ROBOT.stateMachine,

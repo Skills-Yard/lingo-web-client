@@ -2,6 +2,7 @@ const SEQUENCE = "/images/sequence";
 const COMMAND = "/images/level-two";
 const LEVEL_ONE = "/images/level-one";
 const ROOT = "/images";
+const MODULE = "/images/operators-module";
 
 /**
  * Every picture on an option or a card, as a stand-in from the Sequence and
@@ -26,6 +27,16 @@ export const P = {
   gate: `${ROOT}/stop.png`,
   computer: `${ROOT}/computer.png`,
   light: `${ROOT}/trafficSignal.png`,
+  // The whole cards of "Have you tried these?": the picture and its name are in the image.
+  cardMoney: `${MODULE}/example_card1.png`,
+  cardChocolates: `${MODULE}/example_card2.png`,
+  cardSpending: `${MODULE}/example_card3.png`,
+  cardHeights: `${MODULE}/example_card4.png`,
+  // The situations of "Explore the situations!".
+  iconMoney: `${MODULE}/money-icon.png`,
+  iconChocolate: `${MODULE}/chocolate_icon.png`,
+  iconHeight: `${MODULE}/height_icon.png`,
+  iconWallet: `${MODULE}/money_bag.png`,
   // Answers and ideas.
   think: `${SEQUENCE}/icon-think.svg`,
   order: `${SEQUENCE}/icon-order.svg`,

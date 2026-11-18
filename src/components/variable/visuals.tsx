@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { animate, AnimatePresence, motion } from "framer-motion";
-import { Calculator as CalculatorIcon } from "lucide-react";
 
 /** A card, in the style of the picture cards of the other modules. */
 export const CARD =
@@ -30,24 +29,6 @@ export function Counter({ value, prefix = "", suffix = "", seconds = 1.1 }: { va
       {suffix}
     </span>
   );
-}
-
-/**
- * A value that starts at `from` and moves to `to` after `delayMs`: for a visual
- * that shows something happening (water poured in) when the screen opens or
- * when `replay` changes (the learner tries a question again).
- */
-export function useChange(from: number, to: number, delayMs = 800, replay = 0) {
-  const [value, setValue] = useState(from);
-  useEffect(() => {
-    const reset = window.setTimeout(() => setValue(from), 0);
-    const change = window.setTimeout(() => setValue(to), delayMs);
-    return () => {
-      window.clearTimeout(reset);
-      window.clearTimeout(change);
-    };
-  }, [from, to, delayMs, replay]);
-  return value;
 }
 
 /** A value that goes through `points` in turn (each at `at` ms from the start), and starts over when `replay` changes. */
@@ -147,19 +128,6 @@ export function Bottle({
   );
 }
 
-/** A bottle with how much it holds shown under it. */
-export function BottleWithAmount({ ml, label, caption, ...bottle }: { ml: number; label?: string; caption?: string } & Omit<Parameters<typeof Bottle>[0], "ml">) {
-  return (
-    <div className="flex flex-col items-center gap-1.5">
-      {caption && <span className="text-[12px] leading-4 font-semibold text-[#6B7480] dark:text-white/60">{caption}</span>}
-      <Bottle ml={ml} {...bottle} />
-      <span className="rounded-full bg-white px-3 py-1 text-[15px] leading-5 font-semibold text-[#08A4AD] shadow-[0_2px_8px_rgba(31,42,68,0.1)] dark:bg-[#15181E]">
-        {label ?? <Counter value={ml} suffix=" ml" />}
-      </span>
-    </div>
-  );
-}
-
 /* ───────────────────────── Money ───────────────────────── */
 
 /** A wallet showing an amount; a note of what changed floats up from it. */
@@ -186,118 +154,6 @@ export function Wallet({ amount, caption = "Pocket money", note }: { amount: num
           </motion.span>
         )}
       </AnimatePresence>
-    </div>
-  );
-}
-
-/** An item to buy, with its price on a tag. */
-export function ShopItem({ emoji, name, price, tint = "bg-[#F6F4FE]" }: { emoji: string; name: string; price: number; tint?: string }) {
-  return (
-    <div className={`relative flex w-[92px] flex-col items-center gap-0.5 rounded-[14px] border-4 border-white px-2 pt-3 pb-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-transparent dark:bg-[#0F1F26] ${tint}`}>
-      <span aria-hidden className="text-[34px] leading-none">
-        {emoji}
-      </span>
-      <span className="text-[13px] leading-4 font-semibold text-[#444444] dark:text-white">{name}</span>
-      <span className="mt-1 rounded-full bg-[#FFB300] px-2.5 py-0.5 text-[13px] leading-4 font-bold text-white shadow-[0_2px_0_#D98E00]">₹{price}</span>
-    </div>
-  );
-}
-
-/** A named amount, as the cards in the practice screens show it: a name above its value. */
-export function NameValue({ name, value, className = "", small = false }: { name: string; value: ReactNode; className?: string; small?: boolean }) {
-  return (
-    <div className={`flex flex-col items-center gap-1 ${small ? "px-2 py-2" : "px-4 py-2.5"} ${CARD} ${className}`}>
-      <span className={`rounded-md bg-[#E3F6F3] px-2 py-0.5 font-mono font-semibold text-[#04908F] dark:bg-[#0F2B28] dark:text-[#7FD8CC] ${small ? "text-[10px] leading-4" : "text-[13px] leading-5"}`}>{name}</span>
-      <span className={`font-bold text-[#444444] dark:text-white ${small ? "text-[18px] leading-6" : "text-[20px] leading-7"}`}>{value}</span>
-    </div>
-  );
-}
-
-/* ───────────────────────── The classroom ───────────────────────── */
-
-/** A classroom of `total` students, `present` of them in their seats; the rest are empty. */
-export function Classroom({ present, total = 30 }: { present: number; total?: number }) {
-  return (
-    <div className={`flex w-[212px] flex-wrap justify-center gap-1 p-2 ${CARD}`}>
-      {Array.from({ length: total }, (_, index) => {
-        const here = index < present;
-        return (
-          <motion.span
-            key={index}
-            aria-hidden
-            initial={false}
-            animate={{ scale: here ? 1 : 0.9, opacity: here ? 1 : 0.45 }}
-            transition={{ duration: 0.4 }}
-            className={`flex size-[18px] items-center justify-center rounded-full text-[11px] leading-none ${here ? "bg-[#CDEFEA] dark:bg-[#0F2B28]" : "border-2 border-dashed border-[#B9C2D0] dark:border-white/30"}`}
-          >
-            {here ? "🧑‍🎓" : ""}
-          </motion.span>
-        );
-      })}
-    </div>
-  );
-}
-
-/** The attendance board: three counts, each with what it counts. */
-export function AttendanceBoard({ total, present, absent, names = false }: { total: number; present: number; absent: number; names?: boolean }) {
-  const rows = [
-    { label: names ? "total_students" : "Total students", value: total },
-    { label: names ? "present_students" : "Present", value: present },
-    { label: names ? "absent_students" : "Absent", value: absent },
-  ];
-  return (
-    <div className={`flex w-[116px] flex-col gap-1.5 bg-white p-2.5 dark:bg-[#15181E] ${CARD}`}>
-      <span className="text-center text-[11px] leading-4 font-bold tracking-[0.5px] text-[#6B7480] uppercase dark:text-white/60">Attendance</span>
-      {rows.map((row) => (
-        <div key={row.label} className={names ? "flex flex-col" : "flex items-baseline justify-between gap-1"}>
-          <span className={`font-medium text-[#6B7480] dark:text-white/60 ${names ? "font-mono text-[9px] leading-3" : "text-[10px] leading-3"}`}>{row.label}</span>
-          <span className="text-[17px] leading-5 font-bold text-[#444444] dark:text-white">
-            <Counter value={row.value} />
-          </span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-/* ───────────────────────── Small apps ───────────────────────── */
-
-/** The addition app the learner is about to plan: two number fields, an Add button and a result. `compact` is the short version, for where there is little room. */
-export function CalculatorApp({
-  first = "",
-  second = "",
-  result = "",
-  highlight = false,
-  compact = false,
-}: {
-  first?: string;
-  second?: string;
-  result?: string;
-  highlight?: boolean;
-  compact?: boolean;
-}) {
-  const field = (value: string, label: string) => (
-    <div className={`flex items-center justify-between rounded-lg border-2 border-[#D5DADF] bg-white px-3 dark:border-white/20 dark:bg-[#15181E] ${compact ? "h-7" : "h-10"}`}>
-      <span className="text-[11px] leading-4 font-medium text-[#8A94A0]">{label}</span>
-      <span className={`font-semibold text-[#444444] dark:text-white ${compact ? "text-[14px] leading-5" : "text-[18px] leading-6"}`}>{value || " "}</span>
-    </div>
-  );
-  return (
-    <div className={`flex w-[230px] flex-col ${compact ? "gap-1.5 p-2" : "gap-2 p-3"} ${CARD}`}>
-      {!compact && (
-        <span className="flex items-center gap-1.5 text-[12px] leading-4 font-bold text-[#6B7480] dark:text-white/60">
-          <CalculatorIcon aria-hidden className="size-4 text-[#08A4AD]" /> Add two numbers
-        </span>
-      )}
-      {field(first, "First number")}
-      {field(second, "Second number")}
-      <span className={`flex items-center justify-center rounded-lg bg-[#08A4AD] font-semibold text-white shadow-[0_3px_0_#067F86] ${compact ? "h-[26px] text-[12px] leading-4" : "h-9 text-[14px] leading-5"}`}>Add</span>
-      <div
-        className={`flex items-center justify-between rounded-lg border-2 px-3 ${compact ? "h-7" : "h-10"} ${highlight ? "border-[#E5484D] bg-[#FDECEC] dark:bg-[#2E1517]" : "border-dashed border-[#B9C2D0] dark:border-white/25"}`}
-      >
-        <span className="text-[11px] leading-4 font-medium text-[#8A94A0]">Result</span>
-        <span className={`font-bold ${compact ? "text-[14px] leading-5" : "text-[18px] leading-6"} ${highlight ? "text-[#D42421]" : "text-[#444444] dark:text-white"}`}>{result || " "}</span>
-      </div>
     </div>
   );
 }

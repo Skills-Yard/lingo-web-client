@@ -15,14 +15,13 @@ export function HexIntroScreen() {
       step={STEP.hexIntro}
       title={
         <>
-          Let’s help <Teal>HEX</Teal> reach the energy!
+          Help <Teal>HEX</Teal> reach the battery!
         </>
       }
-      titleSize={26}
-      wrapTitle
+      titleSize={24}
       board={<HexBoard kind="row" hex={ROW_START} battery={{ col: 3, row: 0 }} width={356} entryKey="hex-intro" />}
       boardTop={200}
-      tip="HEX needs energy. Help it reach the battery by giving it the right instructions."
+      tip="HEX needs energy! Give it instructions to reach the battery."
       tipTop={340}
       ctaLabel="Let’s Try"
       onContinue={() => router.push(sequenceNext(STEP.hexIntro))}

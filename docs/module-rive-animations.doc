@@ -39,6 +39,7 @@
   <li>Battery (<code>battery.riv</code>)</li>
   <li>Flip card (<code>progressBar.riv</code>)</li>
   <li>Lesson complete "LESSON_Complete" (<code>hex.riv</code>)</li>
+  <li>Reward chest "REWARD_BG" and "REWARD_Chest" (<code>hex.riv</code>), after Lesson complete</li>
   <li>Combined effect chain: what fires when an answer is checked</li>
   <li>Canvas bleed and layout rules</li>
   <li>Other artboards in the files that the module does not use</li>
@@ -51,6 +52,8 @@
 <tr><th>File</th><th>Artboard</th><th>State machine</th><th>View model</th><th>Size</th><th>Module use</th></tr>
 <tr><td><code>hex.riv</code></td><td><code>HEX</code></td><td><code>Onboarding</code></td><td><code>Onboarding</code></td><td>drawn into 110 px slots or larger</td><td>Hex on steps 2, 3, 4, 5, 7, 8, 11, 12, 13, 16, review, and every result panel</td></tr>
 <tr><td><code>hex.riv</code></td><td><code>LESSON_Complete</code></td><td><code>LessonComplete_SM</code></td><td><code>LessonComplete</code></td><td>full screen, fit width, max 430 px</td><td>Lesson complete screen</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>REWARD_BG</code></td><td><code>REWARD_BG_SM</code></td><td>none</td><td>full screen, <code>Fit.Cover</code></td><td>Reward screen backdrop (a looping sunburst)</td></tr>
+<tr><td><code>hex.riv</code></td><td><code>REWARD_Chest</code></td><td><code>State Machine 1</code></td><td><code>reward</code></td><td>box 150 vw wide (max 640 px), <code>Fit.Contain</code></td><td>Reward screen chest</td></tr>
 <tr><td><code>command.riv</code></td><td><code>CMD_RobotArm</code></td><td><code>Main</code></td><td><code>RobotVM</code></td><td>390 x 306 (picture 390 x 600)</td><td>Robot on steps 1, 2, 3, 4, 5, 7, 8, 9</td></tr>
 <tr><td><code>progressBar.riv</code></td><td><code>AllButton</code></td><td><code>ModuleButton_SM</code></td><td><code>AllButtonVM</code></td><td>360 x 73</td><td>Every Continue / Check / Next button, Lesson complete's button</td></tr>
 <tr><td><code>progressBar.riv</code></td><td><code>LESSON_ProgressBar</code></td><td><code>ProgressBar_SM</code></td><td>(bound view model)</td><td>350 wide artboard</td><td>Header progress bar on every screen</td></tr>
@@ -64,8 +67,8 @@
 <table>
 <tr><th>Piece</th><th>Details</th></tr>
 <tr><td>WASM runtime</td><td><code>configureRiveRuntime()</code> points <code>@rive-app/canvas</code> at same-origin <code>/rive/rive.wasm</code> and <code>/rive/rive_fallback.wasm</code> (about 1.9 MB) instead of unpkg. Must run before the first canvas mounts; safe to call repeatedly. Runtime version 2.42.0; the copy in <code>public/rive</code> must be updated on upgrade.</td></tr>
-<tr><td><code>hex.riv</code> preload (<code>hexFile.ts</code>)</td><td>Downloaded once, app-wide, with the WASM, using <code>fetch(..., {cache: "no-cache"})</code> (revalidates every page load; a 304 reuses cached bytes, so a redeploy is never stale). Streamed in chunks; progress = download share 95% + parse share 5%. If the server does not give a usable <code>Content-Length</code> (compressed responses), an estimate of 5,958,848 bytes is used. Then parsed once into a <code>RiveFile</code>, and one reference is held forever so the file outlives any canvas. Each canvas then instantiates its artboard from that shared file (<code>hexRiveSource()</code>: shared file, else buffer, else URL).</td></tr>
-<tr><td><code>HexRiveGate</code></td><td>The module layout renders its screens only after status leaves "loading" and shows <code>HexRiveLoading</code> with the progress meanwhile. If the preload fails, status becomes "failed", nothing is blocked, and canvases fetch the file themselves.</td></tr>
+<tr><td>Rive file cache (<code>riveCache.ts</code>)</td><td>Every <code>.riv</code> in <code>RIVE_FILES</code> is downloaded once, app-wide, all at the same time and together with the WASM, then parsed once each into a <code>RiveFile</code> (one reference held forever so it outlives any canvas). Every canvas and host takes its file from <code>riveSource(src)</code> (shared file, else buffer, else URL) instead of <code>src</code>, so nothing is downloaded or parsed again: an artboard made from the parsed file costs 0.2&ndash;9&nbsp;ms, parsing a file costs 130&ndash;180&nbsp;ms on a desktop (measured). Progress = download share 90% + parse share 10%, weighted by file size; sizes in <code>RIVE_FILES</code> are used when the server gives no usable <code>Content-Length</code> (compressed responses). Production builds request <code>/animations/x.riv?v=&lt;content hash&gt;</code> (hashes made in <code>next.config.ts</code>), which the server lets the browser keep for a year; dev revalidates on every load (<code>no-cache</code>). Add <code>?riveDebug</code> to any URL to log what each file cost.</td></tr>
+<tr><td><code>RiveAssetsGate</code></td><td>In the root layout, so it holds for whichever route the app opens on: renders the page only after status leaves "loading" and shows <code>RiveLoading</code> with the progress meanwhile. After the first load it passes straight through. If a file fails, nothing is blocked, and that file's canvases fetch it themselves.</td></tr>
 <tr><td>Warm-ups</td><td><code>ModuleButtonWarmup</code> creates the module button host and <code>RobotWarmup</code> creates the robot host at module open, while hex.riv is still downloading, so the first screen's button and robot are already drawn.</td></tr>
 <tr><td>Hot reload</td><td>Button, progress bar and battery hosts call <code>import.meta.turbopackHot?.decline()</code>: a hot reload would otherwise create a second, unloaded instance beside the one on screen and send triggers to it.</td></tr>
 <tr><td><code>progressBar.riv</code> preload</td><td>Flip card and onboarding button faces call <code>preload(src, {as:"fetch", crossOrigin:"anonymous"})</code>; the CORS mode must match Rive's own fetch or the browser downloads the file twice.</td></tr>
@@ -147,7 +150,7 @@
 <table>
 <tr><th>Component</th><th>What it does to Hex's canvas</th></tr>
 <tr><td><code>HexBubble</code></td><td>Hex in a 110 x 110 slot. When <code>leaving</code>: after 80 ms the slot slides left by two window widths in 0.2 s (<code>easeIn</code>) while <code>exitLeft</code> plays; while leaving he is z-10 over the bubble.</td></tr>
-<tr><td><code>HexGlide</code> (step 11)</td><td>One Hex that glides between slots (question slot, hint slot on the card, panel). Re-measured every animation frame; position/size springs (see 5.7).</td></tr>
+<tr><td><code>HexGlide</code> (step 11)</td><td>One Hex that glides between slots (question slot, panel; a hint no longer sends him to the card). Re-measured every animation frame; position/size springs (see 5.7).</td></tr>
 <tr><td><code>TeacherSpeech</code> (steps 12, 13)</td><td>Hex in a 130 px box, moved with springs between four spots and floated (see 5.8).</td></tr>
 <tr><td><code>FeedbackPanel</code> slot</td><td>Hex at 219.3 x 159.9 px (2x Figma's 109.65 x 79.95), centred in a slot only 136 x 79.95 wide/tall; the artboard has roughly 38% empty margin, so he is drawn about 136 px wide.</td></tr>
 </table>
@@ -227,7 +230,7 @@ Continue on the last line -> navigates to step 8
 <tr><td>Cue to move up</td><td>2800 ms after the voice starts (<code>CUE_AFTER_VOICE_MS</code>), or 6000 ms after mount with no voice (<code>CUE_WITHOUT_VOICE_MS</code>), <code>cued</code> becomes true: Hex glides to beside the teacher (x228 y84) on a slow spring (stiffness 70, damping 16, mass 1) and the speech bubble pops in (scale 0.8 to 1, 0.25 s, 350 ms delay) and types "Open Your Notebook".</td></tr>
 <tr><td>Float</td><td>Once cued, an inner wrapper floats up and down 7 px (y 0, -7, 0) every 2.4 s, easeInOut, forever, starting 1.2 s later.</td></tr>
 <tr><td>Step 13 voiceover</td><td><code>screen_4_audio_trim.m4a</code>, the question only, read once until checked: random talk trigger, <code>stopTalk</code> at the end.</td></tr>
-<tr><td>Hint</td><td>When the hinted card's flip is about 65% done, <code>hexToCard</code> sends Hex to the top edge of the right card (x262 y198, scale 80/130 = 0.615) with a quicker spring (stiffness 170, damping 24, mass 0.9), timed to land as the spin stops.</td></tr>
+<tr><td>Hint</td><td>Does not move Hex any more: the hint is the pointing hand on the right card (module-screens.doc 3.7). <code>TeacherSpeech</code> still supports <code>hexToCard</code>, but nothing sets it.</td></tr>
 <tr><td>Check</td><td><code>tucked</code>: Hex moves to x228 y200, scale 1, on the result panel spring (360/32), z-5 so the options (z-10) cover him as they rise. The panel brings its own Hex (key <code>feedback</code>).</td></tr>
 <tr><td>Back to step 12</td><td><code>hexAway</code> toggling creates a fresh Hex (<code>hexRun</code> key increments) rather than reusing the one that left; <code>skipIntro</code> remains false only on a fresh "says".</td></tr>
 </table>
@@ -241,7 +244,7 @@ Continue on the last line -> navigates to step 8
 <tr><th>Phase</th><th>Behaviour</th></tr>
 <tr><td>Open</td><td>Hex fills the question slot (180 x 177) drawn at <b>1.1x</b> its size (<code>HEX_SCALE</code>) around its centre, because the artboard has padding. <code>entryKey "quiz"</code>, <code>entryStyle 6</code>, trigger <code>enter</code>.</td></tr>
 <tr><td>Tracking</td><td>The target slot is re-measured every animation frame (divided by the shell's stage scale) so he keeps pace with a slot that is itself sliding. The box is framer-motion animated: x, y, width, height, opacity.</td></tr>
-<tr><td>Hint</td><td>When the hinted card has flipped (<code>onFlipEnd</code> about 0.78 s into the 1.2 s flip) <code>moved</code> becomes true and he glides to the 72 x 72 slot standing on the card's top edge (58 px above the card, 12 px from the right). Spring: stiffness 170, damping 24, mass 0.9, restDelta 0.5, restSpeed 2. Without a hint the normal glide is stiffness 70, damping 18, mass 1.</td></tr>
+<tr><td>Hint</td><td>Does not send him to the card any more (the hint is the pointing hand on the right card, module-screens.doc 3.7). <code>HexGlide</code> still supports <code>toEl</code> / <code>moved</code>, but nothing sets them. The normal glide is stiffness 70, damping 18, mass 1.</td></tr>
 <tr><td>Arrival cue</td><td>The component supports <code>arrivedCue</code> (a trigger played once he reaches the target); step 11 does not pass one.</td></tr>
 <tr><td>Check (<code>rising</code>)</td><td>He freezes at the size and position he had while his slot had room, drops to z-5, and sinks <code>rideDown = BUTTON_DROP = 37</code> px on the options' spring (stiffness 360, damping 32) so the rising options cover him. The question slot animates height 177 to 0 and top margin 8 to 0 on the same spring.</td></tr>
 <tr><td>Leaving</td><td>If <code>leaving</code> were set he fades out (opacity 0 after 0.8 s, 0.15 s long) and is removed 1.1 s later so a resizing canvas is not left behind. Not used on this screen.</td></tr>
@@ -290,7 +293,7 @@ Continue on the last line -> navigates to step 8
 <tr><td><code>reset</code></td><td>Returns the cube to the table (resets the scene)</td><td>0.8 s</td><td>idle</td><td>Step 3 right answer (before pickUp); pose sync. A <code>reset</code> fired before placeInTarget has played out is dropped.</td></tr>
 <tr><td><code>wrongClaw</code></td><td>Claw does a wrong move</td><td>1.17 s</td><td>unchanged</td><td>Wrong answers by default; "Pick Up" on step 4, 8; "MOVE to the table" on 5; "Nothing happened" on 3</td></tr>
 <tr><td><code>wrongCube</code></td><td>Cube does a wrong move</td><td>1.17 s</td><td>unchanged</td><td>"Robot moved the table" (3), "Place the cube" (5), "Put Down" (8)</td></tr>
-<tr><td><code>showHint</code></td><td><b>Lights up (glow) the target box</b></td><td>0 (runs beside others)</td><td>-</td><td>Hint on quizzes with <code>targetHint</code>; step 8 from the start; step 7 from line 2</td></tr>
+<tr><td><code>showHint</code></td><td><b>Lights up (glow) the target box</b></td><td>0 (runs beside others)</td><td>-</td><td>Step 8 from the start; step 7 from line 2 (a hint no longer lights it)</td></tr>
 <tr><td><code>hideHint</code></td><td>Turns the glow off</td><td>0</td><td>-</td><td>On check (before the move), and on unmount of a lit screen</td></tr>
 </table>
 <p><code>targetLabel</code> (string) is the text on the target box ("TARGET AREA"). It is stored and written when the file loads, and written live afterwards.</p>
@@ -334,7 +337,7 @@ Continue on the last line -> navigates to step 8
 <tr><td>Shine cadence</td><td><code>BUTTON.shineEveryMs = 5000</code>: fired once on mount and then every 5 s while the face's <code>shine</code> prop is on. If asked before load, it is queued and fired on load.</td></tr>
 <tr><td>Click</td><td><code>pressCount</code> changes on each click; each change fires <code>click</code> (plus the 150 ms press hold and 330 ms delayed <code>onClick</code> of <code>Button3D</code>).</td></tr>
 <tr><td>Electric</td><td><code>electrifyModuleButton()</code> fires <code>electric</code>; dropped if the file is not loaded (a late one would play after its strike is long over). Fired with every strike and battery charge.</td></tr>
-<tr><td>Hold</td><td><code>holdModuleButton(ms)</code> sets a store flag; <code>ActionRow</code> passes <code>locked = ctaLocked || held</code>, so the button takes no clicks but is not drawn disabled. Duration on a strike = 150 ms strike delay + max(strike length, 0.67 s electric). <code>releaseModuleButton()</code> ends it.</td></tr>
+<tr><td>Skip</td><td>The button is <b>never locked</b> by a strike or battery charge: the learner can press Continue at any moment while the lightning plays. <code>ActionRow</code> passes only <code>locked = ctaLocked</code> (a screen's own busy state). Pressing Continue calls <code>endStrikes()</code>, which cancels a beat still waiting for its 150 ms delay and switches the loop off, then the next screen opens.</td></tr>
 <tr><td>Anti-flash</td><td>The host element starts at <code>opacity:0</code>; it is shown two animation frames after <code>wanted</code> (label + state) is drawn, because on load Rive first paints the artboard's default text. State and label are written in <b>layout effects</b>, so a screen never paints the previous screen's label or leftover correct/wrong state.</td></tr>
 <tr><td>Redraw</td><td>Changing a property does not repaint a still artboard, so <code>rive.drawFrame()</code> is called explicitly after every write.</td></tr>
 <tr><td>Stretch</td><td><code>setModuleButtonStretch</code>: <code>Fit.Fill</code> (artwork squeezed to the box) when the hint is present, <code>Fit.Contain</code> otherwise; <code>resizeToCanvas()</code> re-applies the frame. Used so the artwork does not jump when the hint appears.</td></tr>
@@ -409,6 +412,17 @@ Continue on the last line -> navigates to step 8
 <tr><td>Layout</td><td>Held to a phone width (max 430 px) in a box centred on the page. The cap is on the wrapper because <code>RiveComponent</code> drops its <code>style</code> when it has a <code>className</code>.</td></tr>
 </table>
 
+<!-- ===================================================== 11b -->
+<h2>11b. Reward chest "REWARD_BG" + "REWARD_Chest" (<code>hex.riv</code>)</h2>
+<table>
+<tr><th>Item</th><th>Details</th></tr>
+<tr><td>Where</td><td>After "Lesson complete!" in every module (Module 1, Sequence, Variable, Data Types: they all use <code>LessonCompleteScreen</code>). Continue on the results records the module as finished and shows the reward on the same URL; Continue on the reward goes back to <code>/level</code>. Code: <code>RewardScreen</code>, constants <code>REWARD_SCREEN</code> in <code>lib/rive/runtime.ts</code>.</td></tr>
+<tr><td>Backdrop</td><td><code>REWARD_BG</code> (390 x 844) plays <code>REWARD_BG_SM</code> (no inputs, loops <code>REWARD_BG_LOOP</code>) on its own full-screen canvas, <code>Fit.Cover</code>. It has no view model, so it is loaded with <code>useRive</code> directly rather than <code>useHexRive</code>.</td></tr>
+<tr><td>Chest</td><td><code>REWARD_Chest</code> (440 x 430, the box in its middle) plays <code>State Machine 1</code> (no inputs) through <code>useHexRive</code>, bound to the view model <code>reward</code>, whose only property is the <b>number</b> <code>tap</code> (not a trigger). It is drawn 150 vw wide (max 640 px) so the box is large; the empty margins are clipped by the screen.</td></tr>
+<tr><td>Taps</td><td>Each tap <b>anywhere on the screen</b> (mouse, touch or keyboard: a full-screen button sits over the chest) sets <code>tap</code> to the next of <b>1, 2, 3</b>. 1 and 2 are two wobbles; 3 opens the lid and shows the gems, and the chest stays open. A fourth tap does nothing. The machine copes with quick taps: three taps 250 ms apart still end open. A short buzz on taps 1 and 2, the long claim buzz on the third.</td></tr>
+<tr><td>Continue</td><td>Nothing else is on the screen. About 1.9 s after the third tap (the lid has settled) the Continue button slides in. It is the same solo button as on Lesson complete (<code>SoloContinue</code>).</td></tr>
+</table>
+
 <!-- ===================================================== 12 -->
 <h2>12. Combined effect chain: what fires when an answer is checked</h2>
 <pre>
@@ -427,11 +441,11 @@ t=0 ms     Check pressed (Button3D press hold 150 ms, onClick at 330 ms)
 t=+150 ms  (PROGRESS_BAR.strikeDelayMs) streak beat plays if earned:
              strikeDuo2[Check] (2nd in a row)   strikeMix[Check] (4th)
              strikeLoop on for 1 / 4 / 7 s (5th)    battery gain + fullFlash (every 3rd)
-             module button: electric (0.67 s), held (no clicks) for the strike length
+             module button: electric (0.67 s); stays clickable, so Continue can skip it
 t=+250 ms  panel Hex enters (enter, entryStyle 7)
 t=+1150 ms RIGHT: continueThumb (thumbs up)
            confetti (120 pieces) + "+10 XP" burst start with the right answer
-t=...      Continue: endStrikes() stops the loop and releases the button, then navigates
+t=...      Continue (allowed at any time, even mid-strike): endStrikes() cancels a pending beat and stops the loop, then navigates
 Wrong:     noteWrongAnswer() resets the run to 0, endStrikes(); no strike, no confetti
 </pre>
 
