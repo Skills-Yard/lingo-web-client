@@ -7,6 +7,7 @@ import { BounceIn } from "@/components/level-two/BounceIn";
 import { aboveButtons } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
 import { RightBounce } from "@/components/level-two/RightBounce";
+import { WaveBounce, waveDelay } from "@/components/level-two/WaveBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
 import { IDLE_LOOK, OPTION } from "@/components/variable/quiz";
@@ -72,6 +73,7 @@ export function OptionGrid({
   rise,
   bounceIn,
   revealed,
+  wave = false,
   onPick,
 }: {
   options: readonly Option[];
@@ -89,8 +91,12 @@ export function OptionGrid({
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on. */
   revealed: boolean;
+  /** A right answer sends a wave through the cards (each hops a little, one after another in reading order) and the right one's jump comes as the wave reaches it. */
+  wave?: boolean;
   onPick: (id: string) => void;
 }) {
+  // The wave runs once the right card shows as right.
+  const won = wave && options.some((option) => optionState(option.id, selectedId, checked, correctId) === "correct");
   return (
     <motion.div
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
@@ -134,11 +140,18 @@ export function OptionGrid({
           </div>
         );
         // The right card jumps a little after the check, so the cards have risen above the result panel by the time it does.
-        const card = (
+        const bounce = (
           // `flex-1`: inside the bounce-in box (a flex row) it must fill the grid cell, or each card is only as wide as its words.
-          <RightBounce key={option.id} play={state === "correct"} delay={0.2} radius={OPTION.radius} className="flex min-w-0 flex-1">
+          <RightBounce key={option.id} play={state === "correct"} delay={wave ? waveDelay(index) : 0.2} radius={OPTION.radius} className="flex min-w-0 flex-1">
             {plainCard}
           </RightBounce>
+        );
+        const card = wave ? (
+          <WaveBounce key={option.id} play={won && state !== "correct"} delay={waveDelay(index)} className="flex min-w-0 flex-1">
+            {bounce}
+          </WaveBounce>
+        ) : (
+          bounce
         );
         return bounceIn ? (
           <BounceIn key={option.id} index={index} shown={revealed} className="flex min-w-0">

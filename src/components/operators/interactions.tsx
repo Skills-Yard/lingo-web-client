@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
+import { WaveBounce, waveDelay } from "@/components/level-two/WaveBounce";
 import { SeenBadge } from "./FlipCarousel";
 import type { InteractionApi } from "./screen";
 import { EDGE, RAISED, RAISED_SMALL } from "@/components/ui/raised";
@@ -47,10 +48,11 @@ export const sumOfProducts = (a: readonly [string, string], b: readonly [string,
 };
 
 /**
- * Build an expression from blocks: tap a block to put it in the next place,
- * tap one in the expression to take it back out. When every place is filled it
- * is checked: a right one turns green and shows its result (the stage is done),
- * a wrong one shakes red with a hint and counts as a slip, then starts again.
+ * Build an expression from blocks: tap a block and it goes to its own kind of place (a value to the next empty
+ * place for a value, an operator to the next empty place for an operator, so the middle place of `a + b` is
+ * always the operator's, whichever block is tapped first); tap one in the expression to take it back out, and
+ * its place stays where it is. When every place is filled it is checked: a right one turns green and shows its
+ * result (the stage is done), a wrong one shakes red with a hint and counts as a slip, then starts again.
  */
 export function ExpressionStage({
   api,
@@ -77,14 +79,24 @@ export function ExpressionStage({
   const length = accept[0].length;
   const kinds = slotKinds(accept);
   const size = SIZE[length > 5 ? "tight" : "roomy"];
-  const [chosen, setChosen] = useState<readonly number[]>([]);
+  // The block (its place in `tokens`) in each place of the expression, if there is one.
+  const [slots, setSlots] = useState<readonly (number | undefined)[]>(() => Array<number | undefined>(length).fill(undefined));
   const [ok, setOk] = useState(false);
   const [bad, setBad] = useState(false);
-  // The place the next block goes to, picked out while there is one to fill.
-  const nextPlace = ok || bad || finished || chosen.length >= length ? -1 : chosen.length;
+  const filled = slots.filter((entry) => entry !== undefined).length;
+  // The first empty place, picked out while there is one to fill.
+  const nextPlace = ok || bad || finished || filled >= length ? -1 : slots.findIndex((entry) => entry === undefined);
 
-  const check = (next: readonly number[]) => {
-    const written = next.map((index) => tokens[index]);
+  /** The empty place a block goes to: the first of its own kind, else the first that takes either. */
+  const placeFor = (index: number, now: readonly (number | undefined)[]) => {
+    const kind: SlotKind = isOperator(tokens[index]) ? "operator" : "value";
+    const empty = (place: number) => now[place] === undefined;
+    const own = kinds.findIndex((entry, place) => entry === kind && empty(place));
+    return own >= 0 ? own : kinds.findIndex((entry, place) => entry === "any" && empty(place));
+  };
+
+  const check = (next: readonly (number | undefined)[]) => {
+    const written = next.map((index) => (index === undefined ? "" : tokens[index]));
     if (accept.some((way) => way.length === written.length && way.every((token, place) => token === written[place]))) {
       setOk(true);
       window.setTimeout(() => done(), 600);
@@ -94,23 +106,26 @@ export function ExpressionStage({
     setBad(true);
     window.setTimeout(() => {
       setBad(false);
-      setChosen([]);
+      setSlots(Array<number | undefined>(length).fill(undefined));
     }, WRONG_MS);
   };
 
   const pick = (index: number) => {
-    if (ok || bad || finished || chosen.includes(index) || chosen.length >= length) return;
+    if (ok || bad || finished || slots.includes(index)) return;
+    // No empty place of its kind (every place for a value is full, say): the block waits.
+    const place = placeFor(index, slots);
+    if (place < 0) return;
     playClickSound();
     vibrateForTap();
-    const next = [...chosen, index];
-    setChosen(next);
-    if (next.length === length) check(next);
+    const next = slots.map((entry, at) => (at === place ? index : entry));
+    setSlots(next);
+    if (next.every((entry) => entry !== undefined)) check(next);
   };
 
   const takeOut = (index: number) => {
     if (ok || bad || finished) return;
     playClickSound();
-    setChosen((now) => now.filter((entry) => entry !== index));
+    setSlots((now) => now.map((entry) => (entry === index ? undefined : entry)));
   };
 
   return (
@@ -122,7 +137,7 @@ export function ExpressionStage({
         className={`flex min-h-[68px] w-full flex-wrap items-center justify-center gap-1.5 px-3 py-2 ${CARD} ${ok ? LOOKS.correct.card : bad ? LOOKS.wrong.card : WHITE}`}
       >
         {Array.from({ length }, (_, place) => {
-          const index = chosen[place];
+          const index = slots[place];
           return index === undefined ? (
             <span
               key={place}
@@ -135,18 +150,20 @@ export function ExpressionStage({
               }`}
             />
           ) : (
-            <motion.button
-              key={place}
-              type="button"
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 420, damping: 22 }}
-              onClick={() => takeOut(index)}
-              aria-label={`${tokens[index]} (tap to take out)`}
-              className={`cursor-pointer rounded-[10px] px-2 leading-none font-bold ${size.placed} ${isOperator(tokens[index]) ? OPERATOR_BLOCK : VALUE_BLOCK}`}
-            >
-              {tokens[index]}
-            </motion.button>
+            // Once the expression is right, the wave runs through it from the left (a value, the operator, a value), as the answers' does.
+            <WaveBounce key={place} play={ok} delay={waveDelay(place, 0.05)} className="flex shrink-0">
+              <motion.button
+                type="button"
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 420, damping: 22 }}
+                onClick={() => takeOut(index)}
+                aria-label={`${tokens[index]} (tap to take out)`}
+                className={`cursor-pointer rounded-[10px] px-2 leading-none font-bold ${size.placed} ${isOperator(tokens[index]) ? OPERATOR_BLOCK : VALUE_BLOCK}`}
+              >
+                {tokens[index]}
+              </motion.button>
+            </WaveBounce>
           );
         })}
         {result !== undefined && (
@@ -170,7 +187,7 @@ export function ExpressionStage({
       </motion.div>
       <div className="flex flex-wrap justify-center gap-2">
         {tokens.map((token, index) => {
-          const used = chosen.includes(index);
+          const used = slots.includes(index);
           return (
             <motion.button
               key={index}

@@ -244,6 +244,63 @@ export const DATATYPES_SCENES = {
 export type DatatypesSceneName = Exclude<keyof typeof DATATYPES_SCENES, "src" | "width" | "height">;
 
 /**
+ * The Operators module's studio: "OP_Studio" of `sequence.riv` (390x306), played by `Studio_SM` (no inputs) and bound
+ * to the `OpStudioScene` view model, which `operatorsHost` writes. One artboard that `mode` turns into several pictures
+ * (as seen on the file 2026-11-18): 0 four operator keys beside a "What it does" card (the way it starts), 1 the
+ * Calculate and Compare cards, 2 `exprLeft` and `exprRight` with the six comparison keys, 3 every operator key
+ * (Calculate, Compare) beside the card, 4 a "Shopping total" card (`flowTotal`). It also has `highlight`, `step` and
+ * `result` (numbers), `flowCompare` (a string) and the triggers `correct` / `wrong`; only what `mode` 0 does with
+ * them is known (nothing visible for `highlight` and `step`).
+ *
+ * In mode 0: `pick` lifts one key (1 +, 2 −, 3 ×, 4 ÷; 0 none, the keys all at rest), and the card is written by
+ * `infoTitle` (its heading), `infoMeaning` (a line under it), `infoExample` (the pill under that) and `infoSay`
+ * (a small line under the pill). The card has no data for its tab ("What it does").
+ */
+export const OPERATOR_STUDIO = {
+  src: SEQUENCE_ROOM.src,
+  artboard: "OP_Studio",
+  stateMachine: "Studio_SM",
+  width: 390,
+  height: 306,
+  /** Mode 0's `pick`: which key is lifted. */
+  pick: { none: 0, add: 1, subtract: 2, multiply: 3, divide: 4 },
+} as const;
+
+/**
+ * The Operators module's scenes, as `operatorsHost` draws them: artboards of `sequence.riv` (390x306 each). `shop` is
+ * the Variable module's own "VAR_Shop" (see `VARIABLE_SCENES`), used on screen 3 with other words; see `OPERATOR_SHOP`.
+ */
+export const OPERATOR_SCENES = {
+  src: OPERATOR_STUDIO.src,
+  width: OPERATOR_STUDIO.width,
+  height: OPERATOR_STUDIO.height,
+  studio: { artboard: OPERATOR_STUDIO.artboard, stateMachine: OPERATOR_STUDIO.stateMachine },
+  shop: { artboard: VARIABLE_SCENES.shop.artboard, stateMachine: VARIABLE_SCENES.shop.stateMachine },
+} as const;
+
+export type OperatorSceneName = Exclude<keyof typeof OPERATOR_SCENES, "src" | "width" | "height">;
+
+/**
+ * `VAR_Shop` as the Operators module's screen 3 draws it (the counter, a notebook and a pen; see `VARIABLE_SCENES.shop`
+ * for its data: `showNames` puts "Notebook" and "Pen" under the price tags, `showEraser` adds the eraser (₹10, "Eraser", the
+ * three then stand closer together), `showTotal` hangs the board). Its words are
+ * text runs with no names, numbered as the file has them (read off it 2026-11-18, 18 runs): each price is a "₹" run
+ * and an amount run, twice over (the second set is probably the lit look), the board's amount is run 1 and its label
+ * run 2 ("Total", "70"), and the names are runs 15 (Eraser), 16 (Pen) and 17 (Notebook). The file's prices (notebook 50,
+ * pen 20) are changed to the screen's own (see `SceneTexts`).
+ */
+export const OPERATOR_SHOP = {
+  text: {
+    boardAmount: 1,
+    boardLabel: 2,
+    /** The amounts on the pen's and the notebook's tags (both looks of each). The eraser's (runs 4 and 10, ₹10) is left as the file has it. */
+    penAmount: [6, 12],
+    notebookAmount: [8, 14],
+    notebookName: 17,
+  },
+} as const;
+
+/**
  * Some words of `DT_A03_StringDiscovery`'s text examples (mode 1), as the text runs of the artboard are numbered in the file
  * (`textValueRunByIndex`: they have no names, read off the file 2026-11-15, 33 runs; the laptop's list, mode 0, is runs 24 to
  * 32: rows 30/31, 28/29, 26/27 and 24/25 as name / badge letter from the top row, and 32 its heading). They are changed by
