@@ -276,6 +276,26 @@ export const COMPLETE_TEXT = {
   title: 6,
 } as const;
 
+/**
+ * The String values of `DT_A05_BuildWithData` (`DATATYPES_SCENES.build`) as its text runs are numbered in the file (read off it 2026-11-18, 38
+ * runs): written in quotes on the screens that ask for their type, as `"0012"` already is in the file (run 12). Run 6 is the weather
+ * app's City card ("Delhi"), run 20 the profile's Name row ("Aarav"). Runs 10 and 26 (the phone's own display, the shopping list) are
+ * left as they are.
+ */
+export const BUILD_TEXT = {
+  weatherCity: 6,
+  profileName: 20,
+} as const;
+
+/**
+ * The String values of `DT_A06_DebugMastery` (`DATATYPES_SCENES.mastery`) as its text runs are numbered in the file (read off it 2026-11-18,
+ * 80 runs): the student record's Name ("Aarav") and the player profile's Player name ("ShadowX"). The IDs (runs 27 and 38) already have their quotes.
+ */
+export const MASTERY_TEXT = {
+  recordName: 77,
+  playerName: 62,
+} as const;
+
 /** What each artboard's `mode` is (see `DATATYPES_SCENES`): the screens use these in place of the bare numbers. */
 export const SCENE_MODE = {
   info: { form: 0, aaravForm: 1, values: 2, groups: 3 },
