@@ -3,8 +3,8 @@ import { addBatteryUnits } from "@/components/home/batteryStore";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { BATTERY_UNITS, noteRightAnswer, noteWrongAnswer, type StreakBeat } from "@/lib/moduleStreak";
 import { chargeBattery } from "@/lib/rive/batteryHost";
-import { electrifyModuleButton } from "@/lib/rive/moduleButtonHost";
-import { fireProgressTrigger, startStrikeLoop, stopStrikeLoop } from "@/lib/rive/progressBarHost";
+import { electrifyModuleButton, skipModuleButtonElectric } from "@/lib/rive/moduleButtonHost";
+import { fireProgressTrigger, skipStrikes, startStrikeLoop, stopStrikeLoop } from "@/lib/rive/progressBarHost";
 import { PROGRESS_BAR } from "@/lib/rive/runtime";
 
 type StreakStrikesOptions = {
@@ -29,17 +29,33 @@ export const useStreakStrikes = ({ answer, withHint }: StreakStrikesOptions) => 
   }, [withHint]);
 
   const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  /** This screen's answer started a strike, a loop or a charge, which may still be playing. */
+  const played = useRef(false);
 
   /** Cancels a beat still waiting to play and switches the loop off. */
-  const endStrikes = useCallback(() => {
+  const cancelStrikes = useCallback(() => {
     clearTimeout(pending.current);
     stopStrikeLoop();
   }, []);
+
+  /**
+   * Moving on from the screen ends what its answer played, now: a beat still waiting is dropped, the loop is switched off, and a
+   * strike or electric effect already playing is played to its end at once (the bar and the button are shared by every screen, so
+   * what is left to play would carry on over the next one). The button never waits for any of it.
+   */
+  const endStrikes = useCallback(() => {
+    cancelStrikes();
+    if (!played.current) return;
+    played.current = false;
+    skipStrikes();
+    skipModuleButtonElectric();
+  }, [cancelStrikes]);
 
   /** A strike, a loop and a battery charge each come with the button's electric effect. */
   const playBeat = useCallback(({ trigger, loopSeconds, battery }: StreakBeat) => {
     if (battery) addBatteryUnits(BATTERY_UNITS);
     if (!trigger && !loopSeconds && !battery) return;
+    played.current = true;
     pending.current = setTimeout(() => {
       if (trigger) fireProgressTrigger(trigger);
       if (loopSeconds) startStrikeLoop(loopSeconds);
@@ -54,15 +70,15 @@ export const useStreakStrikes = ({ answer, withHint }: StreakStrikesOptions) => 
   useEffect(() => {
     if (answerId === undefined) return;
     if (!answerCorrect) {
-      endStrikes();
+      cancelStrikes();
       noteWrongAnswer();
     } else if (!answerPartial) {
       playBeat(noteRightAnswer(withHintRef.current));
     }
-  }, [answerId, answerCorrect, answerPartial, endStrikes, playBeat]);
+  }, [answerId, answerCorrect, answerPartial, cancelStrikes, playBeat]);
 
   // Leaving the screen ends them too, so the next one never opens on a loop or a late strike.
-  useEffect(() => endStrikes, [endStrikes]);
+  useEffect(() => cancelStrikes, [cancelStrikes]);
 
   return endStrikes;
 };
