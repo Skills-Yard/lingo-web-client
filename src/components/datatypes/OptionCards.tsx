@@ -18,14 +18,14 @@ import type { Option } from "./screen";
 /**
  * The answers of a Data Types question are the Variable module's: words only, the same size, gap, padding, corners
  * and text on every screen (`OPTION`, `IDLE_LOOK`: change them in `variable/quiz.ts` and both modules follow). Three
- * answers of at most `MAX_OPTION_WORDS` words are mini cards in one row, four short ones are cards two by two, and
- * anything else (two answers, longer ones) is a list of 56px rows.
+ * answers of at most `MAX_OPTION_WORDS` words are mini cards in one row, four short ones are cards two by two, six short
+ * ones are cards three across in two rows, and anything else (two answers, longer ones) is a list of 56px rows.
  */
 
 /** The most words an answer may have. Three answers this short stand as mini cards in one row (one card tall, clear of the scene); a longer one would not fit its card. */
 export const MAX_OPTION_WORDS = 2;
-/** Four answers this short (letters) stand as two rows of two cards. */
-const FOUR_ANSWER_CHARS = 18;
+/** Four answers this short (letters) stand as two rows of two cards, and six as two rows of three (a longer one wraps to two lines on its card). */
+const CARD_ANSWER_CHARS = 18;
 
 /** An answer that is only a number (digits and signs, no letters: 15, “123”, 25.5) is set larger than words are: it is short, and a card has the room. A long one (a phone number) gets a smaller size so it still fits a card. */
 const NUMBER_FONT = 24;
@@ -37,17 +37,18 @@ export const optionFont = (text: string) => {
 };
 
 const wordCount = (text: string) => text.trim().split(/\s+/).length;
-const columnsFor = (count: number) => (count === 3 ? 3 : 2);
+const columnsFor = (count: number) => (count === 3 || count === 6 ? 3 : 2);
 /**
  * The side padding (px, border included) of a card. Three across on a phone are (340 - 2 x 14) / 3 = 104px cards, and the widest
  * two-word answer's widest word ("Numerical") is about 87px, so the usual 12px a side (80px inside) does not hold it: the cards
  * take 8px here, so the three stay the same size instead of the one with the long word growing at the others' cost.
  */
-const padXFor = (count: number) => (count === 3 ? 8 : OPTION.padX);
+const padXFor = (count: number) => (count === 3 || count === 6 ? 8 : OPTION.padX);
 
-/** Whether the answers are cards across (three of at most `MAX_OPTION_WORDS` words, or four short ones two by two) rather than rows. */
+/** Whether the answers are cards across (three of at most `MAX_OPTION_WORDS` words, or four short ones two by two, or six short ones three by two) rather than rows. */
 export const acrossCards = (options: readonly Option[]) =>
-  (options.length === 3 && options.every((option) => wordCount(option.text) <= MAX_OPTION_WORDS)) || (options.length === 4 && options.every((option) => option.text.length <= FOUR_ANSWER_CHARS));
+  (options.length === 3 && options.every((option) => wordCount(option.text) <= MAX_OPTION_WORDS)) ||
+  ((options.length === 4 || options.length === 6) && options.every((option) => option.text.length <= CARD_ANSWER_CHARS));
 
 /** The height the answers take (px). */
 export const answersHeight = (options: readonly Option[]) => {

@@ -2,7 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef } from "react";
 import { motion, type Transition } from "framer-motion";
-import { attachScene, detachScene, showScene, type SceneTexts, type SceneValues } from "@/lib/rive/datatypesHost";
+import { attachScene, detachScene, playSceneIntro, showScene, type SceneIntro, type SceneTexts, type SceneValues } from "@/lib/rive/datatypesHost";
 import { DATATYPES_SCENES, type DatatypesSceneName } from "@/lib/rive/runtime";
 
 /** How far Hex's row (him and his bubble) is lifted on a screen with a scene, up into the title's room (px): the Variable module's. */
@@ -76,6 +76,7 @@ export function SceneBackdrop({
   scene,
   values,
   texts,
+  intro,
   titleEnd,
   lifted = false,
   scale = 1,
@@ -85,6 +86,8 @@ export function SceneBackdrop({
   scene: DatatypesSceneName;
   values: SceneValues;
   texts?: SceneTexts;
+  /** What plays as the scene shows (see `SceneIntro`). */
+  intro?: SceneIntro;
   titleEnd: number;
   lifted?: boolean;
   scale?: number;
@@ -102,6 +105,12 @@ export function SceneBackdrop({
   useEffect(() => {
     showScene(scene, JSON.parse(key) as SceneValues, JSON.parse(textsKey) as SceneTexts);
   }, [scene, key, textsKey]);
+  // The intro: plays when the scene shows, not again when its data changes.
+  const introKey = JSON.stringify(intro ?? null);
+  useEffect(() => {
+    const wanted = JSON.parse(introKey) as SceneIntro | null;
+    if (wanted) playSceneIntro(scene, wanted);
+  }, [scene, introKey]);
 
   return (
     <motion.div

@@ -5,11 +5,10 @@ import { Lightbulb, LogIn, UserCheck, Wallet } from "lucide-react";
 import { INK } from "./look";
 import { ChooseTypeStage, TYPES } from "./interactions";
 import { SortStage, type SortBucket } from "./SortStage";
-import { MeasureLine } from "./MeasureLine";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
 import { P } from "./pictures";
-import type { SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
-import { MASTERY, SCENE_MODE, STRINGS_EXAMPLE_TEXT, STRINGS_TWELVE_TEXT, type DatatypesSceneName } from "@/lib/rive/runtime";
+import type { SceneIntro, SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
+import { BUILD_TEXT, MASTERY, MASTERY_TEXT, SCENE_MODE, STRINGS_EXAMPLE_TEXT, STRINGS_TWELVE_TEXT, type DatatypesSceneName } from "@/lib/rive/runtime";
 import type { Option, QuizStage, SceneSpec, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
 import { InfoRows, type InfoRow } from "./visuals";
@@ -57,8 +56,16 @@ const sorting = sceneOf("sorting");
 const MODE = SCENE_MODE;
 /** What the event form lights up for the information that is picked (screen 1): its Name, Age or Height row. */
 const FORM_FIELD = { name: 1, age: 2, height: 3 } as const;
-/** `fill` for the form's first three rows written in (Aarav, 12, 148.5 cm), the Height row among them (screen 8). */
-const HEIGHT_FILLED = 3;
+
+/** How large screen 6's look-only stages draw the number lab (times its own size): its four value tags run edge to edge, so the usual `LARGE_SCENE` cuts "12 students" and "36.7 kg" off at the sides. */
+const NUMBERS_LOOK_SCALE = 1;
+
+/** Screen 6's four values (12 students, 25 tickets, 148.5 cm, 36.7 kg: `sel1`-`sel4`); the answer picked glows the one(s) it names. */
+const NUMBER_PICKS = {
+  height: { sel3: 1 },
+  weight: { sel4: 1 },
+  both: { sel3: 1, sel4: 1 },
+} as const;
 
 /** The student record's rows, by the answer that names them (screen 23): the pick lights its row up. */
 const recordRow = (picked: string | null) => (picked ? (MASTERY.highlight.row[picked as keyof typeof MASTERY.highlight.row] ?? 0) : 0);
@@ -80,6 +87,21 @@ function Key({ children }: { children: ReactNode }) {
   return <p className="w-[320px] text-center text-[17px] leading-6 font-semibold text-[#444444] dark:text-white">{children}</p>;
 }
 
+/**
+ * A String value is shown in quotes wherever the learner is asked for its type, so it can be told from a number or a state at a glance. The
+ * words the scenes draw themselves are written over, by their place in the artboard (see `BUILD_TEXT`, `MASTERY_TEXT`); the file's own IDs
+ * already have their quotes, in straight ones.
+ */
+const quoted = (word: string) => `"${word}"`;
+/** The weather app's City card (screens 21 and 22). */
+const WEATHER_TEXTS: SceneTexts = { [BUILD_TEXT.weatherCity]: quoted("Delhi") };
+/** Aarav's profile (screen 20): his Name row. */
+const PROFILE_TEXTS: SceneTexts = { [BUILD_TEXT.profileName]: quoted("Aarav") };
+/** The student record (screen 23): its Name row. */
+const RECORD_TEXTS: SceneTexts = { [MASTERY_TEXT.recordName]: quoted("Aarav") };
+/** The player profile (screen 24): its Player name row. */
+const PLAYER_TEXTS: SceneTexts = { [MASTERY_TEXT.playerName]: quoted("ShadowX") };
+
 /** What is said when a value is put in the wrong type (the PDF's "Incorrect" line of the sorting screens). */
 const WHY_WRONG = "Look at what each value represents. Is it a quantity, decimal measurement, text or logical state?";
 
@@ -87,7 +109,7 @@ const WHY_WRONG = "Look at what each value represents. Is it a quantity, decimal
  * Screens 3 and 4 use the sorting lab (`DT_SortingLab`): a belt of four values over four bins, left to right. The
  * four values (the scene's `val1` to `val4`, in the order they stand on the belt): a whole number, a decimal, a name, a yes/no.
  */
-const BELT = { val1: "12", val2: "148.5", val3: "Aarav", val4: "True" } as const;
+const BELT = { val1: "12", val2: "148.5", val3: "“Aarav”", val4: "True" } as const;
 
 /** Where each belt value is once it is in a bin: `dropN` is its bin, from the left (1 to 4). Here each value is in a bin of its own. */
 const BELT_SORTED = { drop1: 1, drop2: 2, drop3: 3, drop4: 4 } as const;
@@ -96,7 +118,7 @@ const BELT_SORTED = { drop1: 1, drop2: 2, drop3: 3, drop4: 4 } as const;
 const SIMILAR_VALUES: readonly SceneSortItem[] = [
   { id: "12", label: "12", key: "drop1", bucket: "integer", hint: "12 is a whole number." },
   { id: "148.5", label: "148.5", key: "drop2", bucket: "float", hint: "It has a decimal part." },
-  { id: "aarav", label: "Aarav", key: "drop3", bucket: "string", hint: "A name is text." },
+  { id: "aarav", label: "“Aarav”", key: "drop3", bucket: "string", hint: "A name is text." },
   { id: "true", label: "True", key: "drop4", bucket: "boolean", hint: "It is a yes/no state." },
 ];
 
@@ -129,6 +151,11 @@ const SIMILAR_OPTIONS = options(["Quantities", "People’s names", "Colours", "Y
  * (Integer, Float, String, Boolean). Only the first two bins are used here (a number is whole or has a decimal part).
  */
 const CLASSIFY_BELT = { val1: "15", val2: "25.5", val3: "100", val4: "9.75" } as const;
+/**
+ * Screen 9's intro, started together: the machine's `run` trigger (its `SL_Run` state: the cards run in along the belt, one shot) and
+ * `SL_Belt`, which the machine has looping all the time, for one lap and then held still.
+ */
+const CLASSIFY_INTRO: SceneIntro = { trigger: "run", lap: "SL_Belt" };
 /** Screen 9's four numbers, in the order they stand on the belt (`drop1` is the first); each has its one right bin. */
 const DECIMAL_HINT = "Check whether the value contains a decimal part.";
 const CLASSIFY_ITEMS: readonly SceneSortItem[] = [
@@ -152,16 +179,24 @@ const TEXT_PICKS = [
 ] as const;
 
 /**
- * Screen 12's values, written as text in quotes, each with what is said once it is tapped (`rev1` hangs the tag on the first
- * card). The same artboard as screen 11, so the same greeting. They are told apart by their caption, and none is wrong.
+ * Screen 12's question: five values written as text in quotes (the same artboard as screen 11, so the same greeting), and the
+ * answer that takes them all, which is the right one. A pick glows its card (`sel1`-`sel5`); "All of the above" glows all five.
  */
-const STRING_PICKS = [
-  { id: "a", label: "“Aarav”", key: "rev1", caption: "A name, written as text." },
-  { id: "b", label: "“Class 6A”", key: "rev2", caption: "Words and a number, as text." },
-  { id: "c", label: "“Delhi”", key: "rev3", caption: "A city, written as text." },
-  { id: "d", label: "“SY001”", key: "rev4", caption: "An ID: letters and digits, as text." },
-  { id: "e", label: "“Hello!”", key: "rev5", caption: "A word and a symbol, as text." },
-] as const;
+const STRING_OPTIONS = words([
+  ["a", "“Aarav”"],
+  ["b", "“Class 6A”"],
+  ["c", "“Delhi”"],
+  ["d", "“SY001”"],
+  ["e", "“Hello!”"],
+  ["all", "All of the above"],
+]);
+const STRING_CARDS = { a: "sel1", b: "sel2", c: "sel3", d: "sel4", e: "sel5" } as const;
+const STRING_ALL = { sel1: 1, sel2: 1, sel3: 1, sel4: 1, sel5: 1 } as const;
+/** What the scene glows for the answer picked: its card, all five for "All of the above", nothing before a pick. */
+const stringGlow = (picked: string | null): SceneValues =>
+  picked === "all" ? STRING_ALL : picked && picked in STRING_CARDS ? { [STRING_CARDS[picked as keyof typeof STRING_CARDS]]: 1 } : {};
+/** Once the right answer is checked: all five cards get their tags (`rev1`-`rev5`) and the quote marks (`quotes`). */
+const STRING_REVEALED = { rev1: 1, rev2: 1, rev3: 1, rev4: 1, rev5: 1, quotes: 1 } as const;
 
 /** The artboard's long greeting, "Welcome to Learny!" and its quoted twin, written as "Hello!" on screens 11 and 12, so what is on the buttons is what is on the cards. */
 const EXAMPLE_TEXTS: SceneTexts = {
@@ -186,7 +221,7 @@ const twelveBoxes = (first: string, second: string, tag: string): SceneTexts => 
 
 /** Screen 22's four fields, each with the value the app holds for it (`t1` is City in the scene), and the type it needs. */
 const WEATHER_PLAN: readonly SceneSortItem[] = [
-  { id: "city", label: "City", sub: "Delhi", key: "t1", bucket: "string", hint: "A name is text." },
+  { id: "city", label: "City", sub: "“Delhi”", key: "t1", bucket: "string", hint: "A name is text." },
   { id: "temp", label: "Temperature", sub: "28.5°C", key: "t2", bucket: "float", hint: "It has a decimal part." },
   { id: "rain", label: "Rainy days", sub: "3", key: "t3", bucket: "integer", hint: "A whole number of days." },
   { id: "now", label: "Is raining", sub: "False", key: "t4", bucket: "boolean", hint: "It is a yes/no state." },
@@ -321,36 +356,36 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.wholeDecimal,
     title: "Look at these *numbers!*",
     titleSize: 28,
-    // All three stages stand on the student record of `DT_A06_DebugMastery` (Aarav's Age 12 and Height 148.5 are the two numbers in it).
+    // All three stages stand on the number lab (`DT_A02_NumberLab`, mode 1): four values, 12 students, 25 tickets, 148.5 cm and 36.7 kg.
     stages: [
       {
         kind: "interaction",
-        line: "Here is Aarav’s record. Some values are numbers.",
+        line: "Look at these four values. All of them are numbers.",
         alignTop: true,
-        scene: mastery({ mode: MASTERY.mode.record }, false),
+        scene: { ...numbers({ mode: MODE.numbers.values }, false), lookScale: NUMBERS_LOOK_SCALE },
         ready: true,
       },
-      // The question: the pick outlines its row of the record; the right answer ticks it.
+      // The question: the pick glows the values it names (`sel1`-`sel4`).
       quiz({
-        line: "Which number has a decimal part?",
-        // A glow only on the right answer: "Both" is not a row, and a cross on the whole record would blame all of it.
-        scene: ({ picked }) => mastery({ mode: MASTERY.mode.record, highlight: recordRow(picked) }, false),
+        line: "Which numbers have a decimal part?",
+        scene: ({ picked }) => numbers({ mode: MODE.numbers.values, ...(NUMBER_PICKS[picked as keyof typeof NUMBER_PICKS] ?? {}) }, false),
+        // Three one-word answers: mini cards in one row, all words (a number alone is set larger), so they share one size. Height (148.5 cm) and weight (36.7 kg) both have a decimal part, so "Both" is right.
         options: words([
-          ["age", "Age"],
           ["height", "Height"],
+          ["weight", "Weight"],
           ["both", "Both"],
         ]),
-        correctId: "height",
+        correctId: "both",
         rightTitle: "That’s right!",
-        right: "148.5 has a decimal part. 12 is a whole number.",
-        wrong: "Look at the two numbers: 12 and 148.5. Which has a decimal point?",
+        right: "148.5 cm and 36.7 kg both have a decimal part. 12 and 25 are whole numbers.",
+        wrong: "Check each one: 148.5 cm and 36.7 kg. Does it have a decimal point?",
       }),
-      // The follow-up: the two kinds of number, on the record.
+      // The follow-up: the lab sorts them into whole numbers and numbers with a decimal part (`split`).
       {
         kind: "interaction",
-        line: "Age is a whole number. Height has a decimal part.",
+        line: "Some numbers are whole. Others have a decimal part.",
         alignTop: true,
-        scene: mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height }, false),
+        scene: { ...numbers({ mode: MODE.numbers.values, split: 1 }, false), lookScale: NUMBERS_LOOK_SCALE },
         ready: true,
       },
     ],
@@ -365,8 +400,9 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Integers are whole numbers without decimal parts.",
         bubbleWidth: 190,
-        // No artboard and no picture: a small 4 cm line drawn in code, numbered 1 to 4 at its whole marks.
-        render: ({ hexSpoken }) => <MeasureLine shown={hexSpoken} />,
+        alignTop: true,
+        // The number lab's number line (mode 2), the whole artboard on the screen (`NUMBERS_LOOK_SCALE`).
+        scene: { ...numbers({ mode: MODE.numbers.numberLine }, false), lookScale: NUMBERS_LOOK_SCALE },
         ready: true,
       },
     ],
@@ -376,14 +412,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.floats,
     title: "Can we be more *precise?*",
     titleSize: 28,
-    // Until this screen's own artboard is ready it stands on the event form of `DT_A01_InfoExplorer` (screens 1 and 2), its Height row outlined and filled in with 148.5 cm.
+    // Both stages stand on the number lab's ruler (`DT_A02_NumberLab`, mode 3), the tape run up to the heights (`measure` 1): 148.5 cm is the first.
     stages: [
       {
         kind: "interaction",
         line: "Whole numbers can miss details like a height of 148.5 cm!!",
         bubbleWidth: 190,
         alignTop: true,
-        scene: info({ mode: MODE.info.form, field: FORM_FIELD.height, fill: HEIGHT_FILLED }, false),
+        scene: { ...numbers({ mode: MODE.numbers.ruler, measure: 1 }, false), lookScale: NUMBERS_LOOK_SCALE },
         ready: true,
       },
       quiz({
@@ -391,8 +427,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         titleSize: 28,
         line: "Choose the best value to represent 148.5 cm.",
         bubbleWidth: 176,
-        // The answers are types, not rows of the form: only the right one ticks the Height row (no cross on a wrong pick).
-        scene: () => info({ mode: MODE.info.form, field: FORM_FIELD.height, fill: HEIGHT_FILLED }, false),
+        // The answers are types, not things on the ruler: no cross on a wrong pick, and the right one plays the lab's own right glow.
+        scene: () => numbers({ mode: MODE.numbers.ruler, measure: 1 }, false),
         options: FLOAT_QUIZ_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
@@ -411,7 +447,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Sort each number into Integer or Float.",
         alignTop: true,
-        scene: sorting({ ...CLASSIFY_BELT }, false),
+        scene: { ...sorting({ ...CLASSIFY_BELT }, false), intro: CLASSIFY_INTRO },
         render: (api) => (
           <SceneSortStage
             api={api}
@@ -484,27 +520,27 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     title: "Meet *Strings!*",
     titleSize: 28,
     stages: [
-      {
-        kind: "interaction",
+      // The learner picks, then presses Check (as on every question). The scene glows what is picked; a right answer hangs the tags and puts the quote marks on. `markWrong` is off: each pick is text, so a cross on the whole picture would blame the wrong thing.
+      quiz({
         line: "Text information is called a String.",
         bubbleWidth: 190,
-        alignTop: true,
-        // The same artboard and the same buttons as screen 11 (a pick bounces, drops and goes grey). Three taps are enough: once the scene has put the quote marks on, they are all disabled, and the result panel comes.
-        scene: strings({ mode: MODE.strings.examples }, false, EXAMPLE_TEXTS),
-        render: (api) => (
-          <ScenePickStage
-            api={api}
-            columns={3}
-            need={3}
-            items={STRING_PICKS}
-            correct={STRING_PICKS.map((pick) => pick.id)}
-            hint="Tap each one."
-            // The scene hangs a tag on the card (name, class, city, ...); once enough are read it puts the quote marks on.
-            doneValues={{ quotes: 1 }}
-          />
-        ),
-        finishPanel: { title: "That’s a String!", text: "String (str) represents text information." },
-      },
+        question: "Which of these are Strings?",
+        scene: ({ picked, checked, correct }) =>
+          strings(
+            {
+              mode: MODE.strings.examples,
+              ...stringGlow(picked),
+              ...(checked && correct ? STRING_REVEALED : {}),
+            },
+            false,
+            EXAMPLE_TEXTS,
+          ),
+        options: STRING_OPTIONS,
+        correctId: "all",
+        rightTitle: "That’s a String!",
+        right: "String (str) represents text information.",
+        wrong: "Each one is text. Look at them all again.",
+      }),
     ],
   },
 
@@ -674,6 +710,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
               { id: "present", label: "Is_present: True", key: "m4", value: 1, bucket: "boolean", hint: "Is it a yes/no state?" },
             ]}
             buckets={SCENE_TYPE_BUCKETS}
+            // No result panel here, so when the last card is placed (the main button turns to Next) the four buttons bounce along the row.
+            wave
           />
         ),
       },
@@ -731,13 +769,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Drag each piece of information to its type.",
         alignTop: true,
-        scene: build({ mode: MODE.build.aarav }, false),
+        scene: build({ mode: MODE.build.aarav }, false, PROFILE_TEXTS),
         render: (api) => (
           <SceneSortStage
             api={api}
             prompt="Tap the type it belongs to."
             items={[
-              { id: "name", label: "Name", sub: "Aarav", key: "p1", bucket: "string", hint: WHY_WRONG },
+              { id: "name", label: "Name", sub: "“Aarav”", key: "p1", bucket: "string", hint: WHY_WRONG },
               { id: "age", label: "Age", sub: "12", key: "p2", bucket: "integer", hint: WHY_WRONG },
               { id: "height", label: "Height", sub: "148.5", key: "p3", bucket: "float", hint: WHY_WRONG },
               { id: "present", label: "Is_present", sub: "True", key: "p4", bucket: "boolean", hint: WHY_WRONG },
@@ -760,13 +798,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "What kind of data should each field use?",
         alignTop: true,
-        scene: build({ mode: MODE.build.weather }, false),
+        scene: build({ mode: MODE.build.weather }, false, WEATHER_TEXTS),
         render: (api) => (
           <SceneSortStage
             api={api}
             prompt="Tap the data type it needs."
             items={[
-              { id: "city", label: "City name", sub: "Delhi", key: "t1", bucket: "string", hint: "A name is text." },
+              { id: "city", label: "City name", sub: "“Delhi”", key: "t1", bucket: "string", hint: "A name is text." },
               { id: "temp", label: "Temperature", sub: "28.5°C", key: "t2", bucket: "float", hint: "Temperatures can have decimals." },
               { id: "rain", label: "Number of rainy days", sub: "3", key: "t3", bucket: "integer", hint: "Days are counted in whole numbers." },
               { id: "now", label: "Is it raining?", sub: "False", key: "t4", bucket: "boolean", hint: "It is a yes/no state." },
@@ -789,7 +827,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Choose the type for each field.",
         bubbleWidth: 190,
         alignTop: true,
-        scene: build({ mode: MODE.build.weather, vals: 1 }, false),
+        scene: build({ mode: MODE.build.weather, vals: 1 }, false, WEATHER_TEXTS),
         render: (api) => (
           <SceneSortStage
             api={api}
@@ -812,7 +850,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Which field has been classified incorrectly?",
-        scene: ({ picked }) => mastery({ mode: MASTERY.mode.record, highlight: recordRow(picked) }),
+        scene: ({ picked }) => mastery({ mode: MASTERY.mode.record, highlight: recordRow(picked) }, true, RECORD_TEXTS),
         options: words([
           ["name", "Name"],
           ["age", "Age"],
@@ -827,7 +865,9 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       {
         kind: "interaction",
         line: "Now replace the incorrect type with Float.",
-        scene: ({ checked }) => mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height, fixed: checked ? MASTERY.fixed : 0 }),
+        // The four types stay when the panel comes (they rise above it, the right one has bounced), instead of fading out.
+        keepOptions: true,
+        scene: ({ checked }) => mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height, fixed: checked ? MASTERY.fixed : 0 }, true, RECORD_TEXTS),
         render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" showCard={false} />,
         finishPanel: { title: "Fixed!", text: "Height is now a Float." },
       },
@@ -843,25 +883,27 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Sort the player’s five values by type.",
         alignTop: true,
-        scene: mastery({ mode: MASTERY.mode.profile }, false),
+        scene: mastery({ mode: MASTERY.mode.profile }, false, PLAYER_TEXTS),
         render: (api) => (
           <SceneSortStage
             api={api}
             prompt="Tap the type it belongs to."
             items={[
-              { id: "name", label: "Player name", sub: "ShadowX", key: "g1", bucket: "string", hint: WHY_WRONG },
+              { id: "name", label: "Player name", sub: "“ShadowX”", key: "g1", bucket: "string", hint: WHY_WRONG },
               { id: "score", label: "Current score", sub: "1250", key: "g2", bucket: "integer", hint: WHY_WRONG },
               { id: "percent", label: "Completion %", sub: "87.5", key: "g3", bucket: "float", hint: WHY_WRONG },
               { id: "done", label: "Level completed?", sub: "False", key: "g4", bucket: "boolean", hint: WHY_WRONG },
               { id: "id", label: "Player ID", sub: "“G007”", key: "g5", bucket: "string", hint: WHY_WRONG },
             ]}
             buckets={SCENE_TYPE_BUCKETS}
+            // No result panel here, so when the last value is placed (the main button turns to Next) the four buttons bounce along the row.
+            wave
           />
         ),
       },
       quiz({
         line: "Why is Player ID a String rather than an Integer?",
-        scene: () => mastery({ mode: MASTERY.mode.profile, highlight: MASTERY.highlight.profile.id, ...PLAYER_TYPES }, false),
+        scene: () => mastery({ mode: MASTERY.mode.profile, highlight: MASTERY.highlight.profile.id, ...PLAYER_TYPES }, false, PLAYER_TEXTS),
         options: options(["Identifies players", "A decimal number", "A yes/no value", "A big number"]),
         correctId: at(0),
         rightTitle: "Excellent!",

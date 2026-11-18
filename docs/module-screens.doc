@@ -88,7 +88,7 @@
 <tr><td>Out of energy</td><td>If the battery is empty the stage becomes <code>inert</code> (no taps or keys) and <code>OutOfEnergySheet</code> comes up (see 2.5).</td></tr>
 <tr><td>Voiceover</td><td>An optional list of audio clips played back to back; Hex talks while they play and heading text fills in as it is read (see 4.5).</td></tr>
 <tr><td>Back button</td><td>Level-two: goes to the previous step (step 1 goes to <code>/level</code>). In review mode it leaves to <code>/level</code>.</td></tr>
-<tr><td>Continue handling</td><td>If the screen has a checked <code>answer</code>, leaving ends any strike/loop effects first (<code>endStrikes</code>), then calls the screen's continue.</td></tr>
+<tr><td>Continue handling</td><td>If the screen has a checked <code>answer</code>, leaving ends any strike/loop effects first (<code>endStrikes</code>: a beat still waiting is dropped, the loop is switched off, a strike or electric effect already playing is skipped to its end), then calls the screen's continue.</td></tr>
 </table>
 
 <h3>2.3 Header (<code>OnboardingHeader</code>, 52 px, z-60)</h3>
