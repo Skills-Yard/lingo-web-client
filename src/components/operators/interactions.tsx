@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { WaveBounce, waveDelay } from "@/components/level-two/WaveBounce";
+import { RightBounce, WAVE_S } from "@/components/level-two/RightBounce";
 import { SeenBadge } from "./FlipCarousel";
 import type { InteractionApi } from "./screen";
 import { EDGE, RAISED, RAISED_SMALL } from "@/components/ui/raised";
@@ -150,8 +150,8 @@ export function ExpressionStage({
               }`}
             />
           ) : (
-            // Once the expression is right, the wave runs through it from the left (a value, the operator, a value), as the answers' does.
-            <WaveBounce key={place} play={ok} delay={waveDelay(place, 0.05)} className="flex shrink-0">
+            // Once the expression is right its blocks bounce one after the other from the left (a value, the operator, a value), the wave of the Data Types stages.
+            <RightBounce key={place} play={ok} delay={place * WAVE_S} radius={10} className="flex shrink-0">
               <motion.button
                 type="button"
                 initial={{ scale: 0.6, opacity: 0 }}
@@ -163,7 +163,7 @@ export function ExpressionStage({
               >
                 {tokens[index]}
               </motion.button>
-            </WaveBounce>
+            </RightBounce>
           );
         })}
         {result !== undefined && (

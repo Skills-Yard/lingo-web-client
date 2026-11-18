@@ -4,6 +4,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 
 /**
+ * When several things bounce as one answer is right (the buttons of a finished stage, the blocks of a right expression), each
+ * bounces this many seconds after the one before it (not in step), so the bounce runs along them like a wave: that is the
+ * only wave, `RightBounce` itself with `delay={index * WAVE_S}`.
+ */
+export const WAVE_S = 0.12;
+
+/**
  * The bounce of a right answer. It shrinks a little first, about its middle (the top comes down and the bottom comes up
  * together, and it widens a touch), then springs out of it stretched tall as it leaves the ground, goes up high, comes
  * down and squashes flat on landing, hops up again (about two fifths as high), squashes a little, and hops once more,

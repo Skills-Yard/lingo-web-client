@@ -352,7 +352,6 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
               withHint={hasHint}
               rise={answersRise}
               revealed
-              wave
               onPick={pick}
             />
           ) : (
@@ -373,7 +372,6 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
               gap={OPTION.gap}
               fontSize={Math.min(...choices.map((option) => optionFont(option.text)))}
               bounceRight
-              wave
               onPick={pick}
             />
           )}

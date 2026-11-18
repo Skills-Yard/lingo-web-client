@@ -9,7 +9,6 @@ import { RAISED } from "@/components/ui/raised";
 import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
 import { RightBounce } from "./RightBounce";
-import { WaveBounce, waveDelay } from "./WaveBounce";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { COLUMN_LEFT, type Choice } from "./levelTwo";
@@ -66,8 +65,6 @@ type AnswerCardsProps = {
   revealed?: boolean;
   /** The right row (once it is shown as right) bounces once, as the match boards' right cards do. */
   bounceRight?: boolean;
-  /** With `bounceRight`: a right answer sends a wave through the rows (each hops a little, one after another from the top) and the right one's jump comes as the wave reaches it. */
-  wave?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -95,12 +92,9 @@ export function AnswerCards({
   bounceIn = false,
   revealed = true,
   bounceRight = false,
-  wave = false,
   onPick,
 }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
-  // The wave runs once the right row shows as right.
-  const won = wave && bounceRight && choices.some((choice) => optionState(choice.id, selectedId, checked, correctId) === "correct");
   const folding = onlyPicked !== undefined;
   return (
     <motion.div
@@ -204,11 +198,11 @@ export function AnswerCards({
           </div>
         );
         // A little after the check, so the rows have risen above the result panel by the time it jumps.
-        const bounced = bounceRight ? (
+        const row = bounceRight ? (
           <RightBounce
             key={choice.id}
             play={state === "correct"}
-            delay={wave ? waveDelay(index) : 0.2}
+            delay={0.2}
             radius={tight?.radius ?? 18}
             className="w-full"
           >
@@ -216,13 +210,6 @@ export function AnswerCards({
           </RightBounce>
         ) : (
           plainRow
-        );
-        const row = wave && bounceRight ? (
-          <WaveBounce key={choice.id} play={won && state !== "correct"} delay={waveDelay(index)} className="w-full">
-            {bounced}
-          </WaveBounce>
-        ) : (
-          bounced
         );
         if (folding) {
           const gone = !!onlyPicked && checked && choice.id !== selectedId;

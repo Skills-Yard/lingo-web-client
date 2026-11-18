@@ -7,7 +7,7 @@ import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { HEX_SLOT, SpeechBubble } from "@/components/level-two/HexBubble";
-import { RightBounce } from "@/components/level-two/RightBounce";
+import { RightBounce, WAVE_S } from "@/components/level-two/RightBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
@@ -31,9 +31,8 @@ const PROMPT = "text-[#6B7480] dark:text-white/60";
 
 /**
  * A stage of buttons to tap and find out (no question, so no result panel) is done when the main button turns to Next: its buttons then
- * bounce, one after the other (not in step), each this many seconds after the one before it, so the bounce runs along them like a wave.
+ * bounce, one after the other (not in step), each `WAVE_S` after the one before it, so the bounce runs along them like a wave.
  */
-const WAVE_S = 0.12;
 
 /** Hands `values` to the scene, and takes them back when the stage goes. */
 const useSceneValues = (api: InteractionApi, values: SceneValues) => {
