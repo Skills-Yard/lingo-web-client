@@ -31,8 +31,12 @@ const SCENE_TOP = `max(${ROOM_TOP}, calc(${ROOM_TOP} + (100% - ${ROOM_TOP} - ${R
  * and goes on to the usual pale blue and white under it (where the scene's floor fades out).
  */
 const BACKDROP = `linear-gradient(180deg, #EAF3FF 0, #E5ECFF ${SCENE_TOP}, #F7FAFF calc(${SCENE_TOP} + ${sceneHeight}), #FFFFFF 100%)`;
-/** The scene plays its introduction, and then celebrates this long (ms) after the screen opens. */
-const CELEBRATE_MS = 1800;
+/**
+ * The scene plays its introduction (the four types arriving one by one, about 2.2s from when it is shown), and
+ * then celebrates this long (ms) after the scene is shown: counted from the screen opening, a slow first load
+ * would show the scene already celebrating and a fast one would celebrate before the last type arrives.
+ */
+const CELEBRATE_MS = 2400;
 /** The artboard's central title: the file still has the Variable chapter's ("VARIABLES MASTER"). */
 const SCENE_TEXTS = { [COMPLETE_TEXT.title]: "DATA TYPES MASTER" };
 
@@ -52,10 +56,7 @@ export function RecapScreen() {
   }, [router]);
 
   // Once the scene has put the types around the idea, it celebrates.
-  useEffect(() => {
-    const timer = window.setTimeout(() => fireSceneTrigger("complete", "celebrate"), CELEBRATE_MS);
-    return () => window.clearTimeout(timer);
-  }, []);
+  useEffect(() => fireSceneTrigger("complete", "celebrate", CELEBRATE_MS), []);
 
   return (
     <LevelTwoShell

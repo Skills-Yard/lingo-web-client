@@ -37,6 +37,8 @@ type Host = {
   /** The artboard's words as the file has them (by place, see `SceneTexts`), and the ones the screen last asked for. */
   defaultTexts: string[];
   wantedTexts: SceneTexts;
+  /** Things to do the moment the scene is shown (see `fireSceneTrigger`). */
+  afterSettle: (() => void)[];
   /** Triggers to fire, one at a time. */
   queue: SceneTrigger[];
   firing: boolean;
@@ -129,7 +131,7 @@ const createHost = (scene: DatatypesSceneName): Host => {
   const canvas = document.createElement("canvas");
   canvas.style.cssText = "display:block;width:100%;height:100%";
   element.appendChild(canvas);
-  const host: Host = { element, rive: null, loaded: false, settled: false, defaults: {}, wanted: {}, defaultTexts: [], wantedTexts: {}, queue: [], firing: false, slots: 0, parked: undefined };
+  const host: Host = { element, rive: null, loaded: false, settled: false, defaults: {}, wanted: {}, defaultTexts: [], wantedTexts: {}, afterSettle: [], queue: [], firing: false, slots: 0, parked: undefined };
   // A cached file can finish loading before `new Rive` has returned, so wait for the instance.
   const onLoad = () => {
     const rive = host.rive;
@@ -147,6 +149,9 @@ const createHost = (scene: DatatypesSceneName): Host => {
     window.setTimeout(() => {
       host.settled = true;
       element.style.opacity = "1";
+      const waiting = host.afterSettle;
+      host.afterSettle = [];
+      waiting.forEach((run) => run());
       drain(host);
     }, SETTLE_MS);
   };
@@ -196,9 +201,29 @@ export const showScene = (scene: DatatypesSceneName, values: SceneValues, texts:
   if (host.loaded) apply(host);
 };
 
-/** Fires a trigger on the scene, once its machine has settled. */
-export const fireSceneTrigger = (scene: DatatypesSceneName, trigger: SceneTrigger) => {
+/**
+ * Fires a trigger on the scene, once its machine has settled. With `delayMs` it fires that long after the scene
+ * is shown (not after the caller asked): a scene that loads slowly then still plays what comes before the trigger
+ * in view. Returns a function that cancels a trigger not yet fired.
+ */
+export const fireSceneTrigger = (scene: DatatypesSceneName, trigger: SceneTrigger, delayMs = 0) => {
   const host = getHost(scene);
-  host.queue.push(trigger);
-  drain(host);
+  let cancelled = false;
+  let timer: number | undefined;
+  const fire = () => {
+    if (cancelled) return;
+    host.queue.push(trigger);
+    drain(host);
+  };
+  const start = () => {
+    if (cancelled) return;
+    if (delayMs > 0) timer = window.setTimeout(fire, delayMs);
+    else fire();
+  };
+  if (host.settled) start();
+  else host.afterSettle.push(start);
+  return () => {
+    cancelled = true;
+    window.clearTimeout(timer);
+  };
 };

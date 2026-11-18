@@ -1,6 +1,6 @@
 import { createAdaptiveFlow } from "@/lib/adaptiveFlow";
 import { conditionsHref } from "@/lib/routes";
-import { answeredClean, missedStage, struggled } from "./conditionsScore";
+import { answeredClean, struggled } from "./conditionsScore";
 
 /** The Conditions module's screens, for its progress bar: the PDF's 38 screens, one step each. */
 export const CONDITIONS_STEPS = 38;
@@ -71,56 +71,20 @@ const SKIPS: Readonly<Record<number, readonly number[]>> = {
 
 const cleanRight = (step: number): boolean => answeredClean(step) || (SKIPS[step]?.every(cleanRight) ?? false);
 
-/** The challenge: trouble with the first two (divisibility) goes back to the remainder screen, trouble with the last two (comparisons) to the positive-number condition. */
-const challengeDetour = () => {
-  if ([0, 1].some((stage) => missedStage(STEP.challenge, stage))) return STEP.remainder;
-  if ([2, 3].some((stage) => missedStage(STEP.challenge, stage))) return STEP.positiveCondition;
-  return undefined;
-};
-
 const flow = createAdaptiveFlow({
   steps: CONDITIONS_STEPS,
   hrefOf: conditionsHref,
   home: "/level",
   skips: SKIPS,
-  detours: {
-    [STEP.trueFalse]: STEP.whatIs,
-    [STEP.infoVsCondition]: STEP.whatIs,
-    [STEP.construct]: STEP.infoVsCondition,
-    [STEP.positiveCondition]: STEP.positiveMeaning,
-    [STEP.negative]: STEP.positiveCondition,
-    [STEP.equal]: STEP.positiveCondition,
-    [STEP.notEqual]: STEP.equal,
-    [STEP.atLeast]: STEP.positiveCondition,
-    [STEP.atMost]: STEP.atLeast,
-    [STEP.remainder]: STEP.evenIdea,
-    [STEP.odd]: STEP.remainder,
-    [STEP.challenge]: challengeDetour,
-    [STEP.andTable]: STEP.twoRequirements,
-    [STEP.orClass]: STEP.andTable,
-    [STEP.orTable]: STEP.orClass,
-    [STEP.andVsOr]: STEP.andTable,
-    [STEP.inclusive]: STEP.range,
-    [STEP.firstIncluded]: STEP.inclusive,
-    [STEP.bothExcluded]: STEP.firstIncluded,
-    [STEP.outside]: STEP.orTable,
-    [STEP.notPython]: STEP.reverse,
-    [STEP.notComparison]: STEP.notPython,
-    [STEP.marksAttendance]: STEP.inclusive,
-    [STEP.alternatives]: STEP.orTable,
-    [STEP.groups]: STEP.marksAttendance,
-    [STEP.workshop]: STEP.groups,
-    [STEP.boundaryBug]: STEP.inclusive,
-    [STEP.andOrBug]: STEP.andVsOr,
-    [STEP.designer]: STEP.workshop,
-  },
+  // No detours: a wrong answer only repeats that screen (its "Try again"), never an earlier one.
+  detours: {},
   cleanRight,
   struggled,
   detourKey: "lingo.conditions-detour",
   detouredKey: "lingo.conditions-detoured",
 });
 
-/** Where the main button goes after screen `step`: the next one, a repeat skipped for a strong learner, or back (once) to the screen that taught the idea for one who struggled. */
+/** Where the main button goes after screen `step`: the next one, or the one after it when a repeat is skipped for a strong learner. */
 export const conditionsNext = flow.next;
 
 /** Where the Back arrow goes from screen `step`. */
