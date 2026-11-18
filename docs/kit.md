@@ -5,7 +5,7 @@
 - `/kit` shows every component working, with sample data (light and dark).
 - `/kit/screen` is a whole lesson screen made from kit components alone (`components/kit/gallery/KitDemoScreen.tsx`): a good template for the runtime that will build screens from data.
 
-Import from the barrel: `import { Title, OptionList, ScreenFrame } from "@/components/kit"`.
+Import from the barrel: `import { LessonTitle, Answers, ScreenFrame } from "@/components/kit"`.
 
 ## Conventions
 
@@ -14,76 +14,65 @@ Import from the barrel: `import { Title, OptionList, ScreenFrame } from "@/compo
 | Text is markup | Every text prop takes `*teal words*` and `**bold words**`. `Markup`, `parseMarkup`, `plainText` are exported. |
 | Answers are controlled | A screen holds what is picked (`selectedId`) and tells the component when it has been `checked`. `correctId` marks the right one after checking; `revealCorrect={false}` shows only a wrong pick, so a retry is not given away. |
 | Pictures | `image` is a file in `public/images/level-two/`, or a path starting with `/`. A missing file leaves an empty box, never a broken icon. |
-| Layout | Components are normal flow (no absolute positions), so a screen decides where they stand. The ones laid over the whole screen (`Correct`, `Wrong`, `RewardPopup`) go in the frame's `overlay`. |
+| Layout | Components are normal flow (no absolute positions), so a screen decides where they stand. The ones laid over the whole screen (`ResultSheet`, `RewardPopup`, `Celebration`) go in the frame's `overlay`. |
 | Taps | Pressable components click, buzz (`feelTap`) and set `pointer-events-auto`, so they work inside the frame's non-interactive stage. |
 | Callbacks | What a component reports (a pick, a press) comes back through callback props. Plain data cannot hold functions, so whatever runs a screen supplies them. |
 
 ## Components
 
-### Layout
+The decided list is `kit/index.ts` (`docs/kit-components.md` says why and what each replaced); `kit/internal.ts` also exports the parts they are made of, for the gallery. `KIT` in `kit/registry.ts` maps the data name (`kit:lesson-title`) to each component. **A component's props are its TypeScript type (`<Name>Props`): that is the one place that is always current. This page says what each is for.** Everything below is shown working on `/kit` (it opens on a **New** section).
+
+Older names (the chat history and old commits use them): `Header` → `LessonHeader`, `ActionBar` → `LessonFooter`, `Title` → `LessonTitle`, `HexSays` → `HexGuide`, `Correct` / `Wrong` / `ResultPanel` → `ResultSheet`, `Celebrate` → `Celebration`, `MuteButton` → `SoundButton`, `AudioPlayer` → `AudioClip`, `MultiSelect` → `PickAll`, `OptionChips` → `WordChips`, `Slider` → `LessonSlider`, `TextField` → `LessonTextBox`, `OrderList` → `OrderSteps`, `SortBuckets` → `SortGroups`, `GameScreen` → `HexGame`, `PresetArtboard` / `FlipCard` → `LessonArtboard`, `OptionList` / `OptionGrid` / `OptionObjects` / `TrueFalse` → looks of `Answers`.
+
+### On every screen
 | Component | What it is |
 |---|---|
-| `ScreenFrame` | The frame of every lesson screen: header, main button row (+ hint), backdrop, `overlay`, `voiceover`. Scales a 390 × 844 stage as one piece. Wraps its children in `ScreenBody`. |
-| `ScreenBody` | The column parts stand in, from the title down to just above the buttons. `lift` raises its bottom (use `RESULT_LIFT` while a result sheet is up). |
-| `Backdrop` | `soft` (pale blue wash), `meadow` (Hex's grass), `room`, `none`. |
-| `Stack`, `Row`, `Spacer`, `Card` | Flex primitives. `Spacer` pushes what follows it (the answers) to the bottom. |
+| `LessonHeader` | The one header (the live lesson shell draws exactly this): a raised cross, the progress bar, and the battery on a raised face (a tap opens Energy, a hold the hidden dev panel with Back). `step`/`total`, `onClose`, `onPrevious`, `answer` (bar reaction), `batteryStep` (the screen whose battery share is spent), `persistent`. Parts (internal): `CloseButton`, `ProgressBar`, `BatteryMeter`; `persistent` (default) uses the session's one Rive bar/battery, which keeps its state between screens but can be on a page only once, `persistent={false}` gives each its own (the bar's fill then jumps instead of tweening). |
+| `LessonFooter` | The bottom row: the main button (Continue, Check, Next, Try again) with the hint button beside it. `label`, `onContinue`, `disabled`, `locked`, `light`, `cube`, `hint: { visible, onUse }`, `answer`. Sizes itself from `ScreenFrame`. |
+| `LessonTitle` | The headline; `*teal*` words, `size`, `oneLine`, `width`. |
+| `KeyText` | The big plain sentence that states the idea of a "Meet ..." screen. |
+| `HexGuide` | Hex with his speech bubble: `text`, `hex` (`left` / `right` / `top`), `width`, `leaving`, `onSpoken`, `cue`. Types in step with a `Voiceover`. (Parts, internal: `Hex`, `SpeechBubble`.) |
+| `ResultSheet` | The sheet that slides up after a check: **one component** for right and wrong (`correct`), `open`, `title`, `text`, `centred`, `onPress` (tap to retry). Goes in the frame's `overlay`. |
+| `Celebration` · `RewardPopup` · `SoundButton` | Confetti and "+10 XP"; the gem / XP popup after a chapter; mute / unmute. |
+| `ScreenFrame` · `ScreenBody` | The frame of every lesson screen (header, footer, backdrop, `overlay`, `voiceover`; a 390 × 844 stage scaled as one piece) and the column the parts stand in (`lift` raises its bottom, `RESULT_LIFT` while a sheet is up). `Backdrop` (internal): `soft`, `meadow`, `room`, `none`. |
 
-### Header
+### Answers and inputs
 | Component | What it is |
 |---|---|
-| `LessonHeader` | The one header (the live lesson shell draws exactly this): a raised cross, the progress bar, and the battery on a raised face (a tap opens Energy, a hold the hidden dev panel with Back). `step`/`total`, `onClose`, `onPrevious`, `answer` (bar reaction), `batteryStep` (the screen whose battery share is spent), `persistent`. |
-| `CloseButton`, `ProgressBar`, `BatteryMeter` | The parts. `persistent` (default) uses the session's one Rive bar/battery, which keeps its state between screens but can be on a page only once. `persistent={false}` gives each its own (the bar's fill then jumps instead of tweening). |
+| `Answers` | **One component for every question**; `look`: `rows` (picture, words, radio; `compact`, `control`, `rowGap`, `rowFont`, `pictureRoom`), `tiles` (`tiles`: `pair`, `three`, `grid`, `cards`, or `auto` by count), `objects` (small cards to tap, `spill`), `trueFalse` (`yesNo` words). `question` stands above. Usual way: the screen holds `selectedId` and says when it is `checked` (`correctId`, `revealCorrect`, `hintId`). With **`instant`** each tap is checked at once and it holds the pick itself (`correctId`, `onRight`, `onWrong`, `wrongNote`). Parts (internal): `OptionList`, `OptionGrid`, `OptionObjects`, `TrueFalse`, `OptionRow`, `OptionTile`. |
+| `PickAll` · `WordChips` | Tick all that apply (checkbox rows); short answers as wrapping pills (one, or several). |
+| `LessonSlider` · `LessonTextBox` | A slider; a text field. |
 
-### Text
-`Title` (headline, auto-sized), `Prompt` (the question over its answers), `BodyText`, `Note`, `TipCard` (`tip` / `info` / `success` / `warning`), `Expression` (calculations as blocks), `CodeBlock`.
+### Activities (the things to do inside a screen)
+They tell the screen through `api` (`slip` for a miss, `done` when finished, `finished`) and stand in an interaction stage. One component each, the data picks the `look`:
 
-### Hex
-`Hex` (the character), `SpeechBubble` (a bubble on its own; `typed`), `HexSays` (Hex + bubble; types in step with a `Voiceover`).
+| Component | Looks | State |
+|---|---|---|
+| `SortGroups` | `columns` (drag cards into group boxes), `free` (group with no right answer), `labels` (tap a part, then its label) | built, in the data |
+| `RevealCards` | tapped by the learner: `cards`, `scenes`, `share`, `flip`; introduced by Hex one per stage (`focus`): `situations`, `operators`, `jobs`, `tour` | built, in the data |
+| `OrderSteps` | `drag` (numbered rows dragged up and down, checked by the screen), `tap` (steps tapped in order) | `drag` built; `tap` written, no screen uses it yet |
+| `MatchPairs` | drag each card onto its place (a name onto its price); `places`, `cards`, words and `scene` come from the data | built; used by the code screen Variable 19, **the data file needs a re-export** |
+| `BlockBuilder` | build an expression or condition from blocks | written (`kit/inputs/`), **not yet exported, registered or used** |
+| `SwitchTable` | `combinations` (AND / OR / NOT), `switches` | written, **not yet exported, registered or used** |
+| `PredictRows` | `predict` (row by row), `reveal` (tap a row to show its result columns) | written, **not yet exported, registered or used** |
+| NumberLine | marks, a gate or a range | **not started** |
 
-### Answers (the option types)
-| Component | Shape |
-|---|---|
-| `OptionList` | Rows with a picture, words and radio. `compact`, `control`, `stagger`. |
-| `OptionGrid` | Tiles: `pair`, `three`, `grid` (2 × 2), `cards` (very big); `auto` picks by count. |
-| `TrueFalse` | Two big cards, tick and cross; `labels` makes it Yes / No. |
-| `MultiSelect` | Pick all that apply (checkbox rows). |
-| `OptionChips` | Short answers as wrapping pills; one or `multiple`. |
-| `OptionObjects` | Objects to tap as small cards: an emoji or picture over the name, three or two across; a wrong pick can `spill`. |
-| `OptionRow`, `OptionTile` | The single row / tile the above are made of. |
+The facades (`SortGroups`, `RevealCards`, ...) choose among the older one-screen components in `kit/content/from-<module>/`; folding their shared code together is a later, internal step that does not change the data.
 
-All take `hintId` (the hint's orange fill and float), `checked`, `correctId` / `correctIds`.
-
-### Other inputs
-`Slider`, `TextField`, `OrderList` (drag rows into order), `SortBuckets` (tap an item, then its group).
-
-### Result
-`Correct` (green sheet) and `Wrong` (red sheet) slide up behind the main button with Hex: `open`, `title`, `text`, `centred`, `onPress` (tap to retry). `ResultPanel` picks by `correct`. `AnswerMark` (tick / cross), `Celebrate` (confetti + "+10 XP").
-
-### Buttons
-`ActionBar` (main button + hint, as at the bottom of every screen), `PrimaryButton` (`module` or `onboarding` look), `HintButton`, `PillButton`.
-
-### Artboards
+### Scenes and media
 | Component | What it is |
 |---|---|
-| `Artboard` | Any Rive artboard: `src`, `artboard`, `stateMachine`, `size` / `bleed`, `properties` (view-model values), `darkThemeProperty`, `trigger={{ name, id }}` (a new `id` fires it again), `ref.fire(name)`. |
-| `PresetArtboard` | One of the app's artboards by name (`ARTBOARDS`: battery, progress-bar, button, flip-card, robot-arm, bedroom-room, gem, level-background, lesson-complete, reward-chest, reward-background). Each entry's comment lists its properties and triggers. |
-| `FlipCard` | The tap-to-turn card. |
+| `LessonArtboard` | The screen's Rive artboard, by `name` (a preset in `ARTBOARDS`: `battery`, `progress-bar`, `button`, `flip-card`, `robot-arm`, `bedroom-room`, `gem`, `level-background`, `lesson-complete`, `reward-chest`, `reward-background`; each entry's comment lists its properties and triggers) or `src`. `properties` (view-model values), `trigger={{ name, id }}` (a new `id` fires it again), `tapTrigger`. With **`scene`** (`trek`, `bottle`, `names`, `items`, `shop`, `wallet`) it is the picture *behind* the screen (see "The scene behind a screen"). The plain `Artboard` is internal. |
+| `HexGame` | Guide Hex over the tiles to the battery: `board` (`grid` / `row`), `start`, `goal`, `mode` (`program`: write commands, then Run; `move`: walk step by step), `maxCommands`, `onResult`. Parts (internal): `GameBoard`, `MovePad`, `ProgramBuilder`, `CommandCards`. |
+| `AudioClip` · `VideoPlayer` · `Voiceover` | A voice-clip pill; a video with a play button; plays clips and tells Hex when it speaks (`sounds`: `playClickSound`, `useSound`, `vibrate*`). |
+| `LessonCards` | Cards or tiles of facts and numbers (kept for now). `LessonComplete` (internal): the results artboard (`xp`, `accuracy`, `seconds`). |
+| `Picture` · `Stack` · `Row` · `Spacer` · `Card` | Plain building blocks. `Spacer` pushes what follows it (the answers) to the bottom. |
 
-### Audio
-`AudioPlayer` (the voice-clip pill), `Voiceover` (plays clips and makes `Hex` talk and `HexSays` type in step), `MuteButton`, and `sounds` (`playClickSound`, `useSound`, `vibrate*`).
-
-### Game
-| Component | What it is |
-|---|---|
-| `GameScreen` | A playable level from data: `board` (`grid` / `row`), `start`, `goal`, `mode` (`program`: write commands, then Run; `move`: walk Hex step by step), `maxCommands`, `onResult`. |
-| `GameBoard`, `MovePad`, `ProgramBuilder`, `CommandCards` | The board, the move buttons, the command editor, the read-only command list. |
-
-### Media and rewards
-`Picture`, `VideoPlayer`, `RewardPopup` (XP, gems, message), `LessonComplete` (the results artboard: `xp`, `accuracy`, `seconds`).
+Other internal parts: text (`Prompt`, `Note`, `TipCard`), buttons (`PrimaryButton` with a `module` or `onboarding` look, `HintButton`, `PillButton`), `AnswerMark` (tick / cross).
 
 ## Screens as data
 
-The screens of the **Data Types, Operators, Conditions and Variable** modules (142 screens, 303 stages) are data files: `src/data/modules/datatypes.json`, `operators.json`, `conditions.json`, `variable.json`. `/kit/play/<module>?step=N` plays them (same steps as `/module/<module>?step=N`) with `ModuleRunner` → `ScreenRunner`, one implementation made of kit components that replaces the four screen components (`DataTypesScreen`, `OperatorsScreen`, `ConditionsScreen`, `VariableQuizScreen`).
+The screens of the **Data Types, Operators, Conditions and Variable** modules (142 screens) are data files: `src/data/modules/datatypes.json`, `operators.json`, `conditions.json`, `variable.json`. `/kit/play/<module>?step=N` plays them (same steps as `/module/<module>?step=N`) with `ModuleRunner` → `ScreenRunner`, one implementation made of kit components that replaces the four screen components (`DataTypesScreen`, `OperatorsScreen`, `ConditionsScreen`, `VariableQuizScreen`).
 
 ### What a data file holds
 
@@ -145,7 +134,7 @@ The screens are still written in code too, and the modules' own routes (`/module
 ### How it is played
 
 - `modules.ts` joins a data file to what is code: where the module's score is kept (`lingo.<module>-*` in session storage, shared with the module's own screens) and how `hexSpoken` is told to its interactions. The flow (skips and detours) is built from the data with `createAdaptiveFlow`.
-- `ScreenRunner` holds a screen's state (pick, checked, hint, stage, try) and draws the stage with `ScreenFrame`, `Title`, `HexSays`, `OptionList` / `OptionGrid`, `Prompt`, `Correct` / `Wrong`, `Celebrate`; a screen's `finish: "gem"` opens the gem popup.
+- `ScreenRunner` holds a screen's state (pick, checked, hint, stage, try) and draws the stage with `ScreenFrame`, `LessonTitle`, `HexGuide`, `Answers`, `ResultSheet`, `Celebration` and, behind it, the screen's `scene`; a screen's `finish: "gem"` opens the gem popup.
 - `hydrate.tsx` turns nodes into elements; `registry.ts` is the list of names.
 - A whole-screen component (a recap) plays as itself and leaves through its module's own routes.
 
@@ -153,8 +142,8 @@ The screens are still written in code too, and the modules' own routes (`/module
 
 ## Things to know
 
-- **One module button.** The lesson button (`ActionBar`, `PrimaryButton look="module"`) is a single shared Rive canvas moved from screen to screen, so show one at a time. Same for the persistent progress bar and battery.
+- **One module button.** The lesson button (`LessonFooter`, which uses `PrimaryButton look="module"`) is a single shared Rive canvas moved from screen to screen, so show one at a time. Same for the persistent progress bar and battery.
 - **Every `.riv` is loaded before any page mounts**: `RiveAssetsGate` in the root layout holds the app back until each file is downloaded and parsed once (`src/lib/rive/riveCache.ts`), so kit pages need no gate of their own. Any canvas you add takes its file from `riveSource(src)` (spread it into `useRive` / `new Rive` in place of `src`), and a new `.riv` goes in `RIVE_FILES`.
 - **Not in data yet:** the Sequence module and the Command module (Level 1 and 2, `/module/commands?step=`). Their screens are bespoke (robot and room scenes, drag games, audio) and need a "scene" in the data plus screen-by-screen rebuilds from kit parts. Variable's four whole-screen components (trek, thirsty, plan app, recap) are named in its data and play as themselves.
 - **Reuse, not rewrite.** Hex, the result sheet, the Rive header parts, the audio pill, the hint float and Hex's board logic are the existing implementations (in `level-one`, `level-two`, `onboarding`, `sequence`, `ui`), wrapped in a data-shaped API. The modules' own screens still draw themselves; only `/kit/play` uses the kit and the data.
-- **Not in the kit yet:** matching pairs (draw a line / tap-tap), the Sequence module's drag-to-arrange board, the Variable module's bottle and other one-off pictures, and the onboarding's 3D khaki option cards (`onboarding/optionCard.ts`) and dial.
+- **Not in the kit yet:** the Sequence module's drag-to-arrange board, the Variable module's bottle and other one-off pictures, and the onboarding's 3D khaki option cards (`onboarding/optionCard.ts`) and dial.

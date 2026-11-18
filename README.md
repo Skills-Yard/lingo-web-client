@@ -1,5 +1,7 @@
 # lingo-web-client — Instructions Intro
 
+> **Working on the screen kit and the data-driven screens (branch `feat/data-driven-screens`)? Start at [`AGENTS.md`](AGENTS.md) and [`docs/kit-handoff.md`](docs/kit-handoff.md): section 0 is what is done, half done and broken right now, and what to do next.** The rest of this README describes the original instructions-intro flow.
+
 A standalone Next.js 16 (App Router) app containing only the **instructions-intro** flow:
 a 5-slide lesson that introduces what "instructions" are, with a teacher quiz in the middle.
 

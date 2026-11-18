@@ -37,6 +37,8 @@ Each of these is its own component: **PickAll** (tick all that apply), **WordChi
 | **MatchPairs** | Match items from two columns |
 | **NumberLine** | A line with marks, a gate or a range |
 
+**State of the eight (2026-11-18):** built and in the data: **SortGroups**, **RevealCards**, **OrderSteps** (`drag`), **MatchPairs** (code screen done; Variable's data needs a re-export). Written, not yet used by a screen or the data: **BlockBuilder**, **SwitchTable**, **PredictRows**, **OrderSteps** look `tap`. Not started: **NumberLine**. About 15 one-off stages have no home decided yet (`docs/kit-handoff.md` section 4): ask the owner in popups, one at a time, then record the answer here.
+
 ### Decisions on merging the one-offs into the activities (popups, 2026-11-10)
 
 - **SortGroups: one component, three looks, no screen changes how it looks.** The data picks the look (as **Answers** has four): `columns` (drag cards into group boxes; wrong drop shakes: today's `sort-stage`), `free` (group with no right answer: `group-stage`), `labels` (tap a part, then press its label: `classify-stage`, whose words move out of the code into the data). The old tap-only gallery `SortGroups` goes away.
