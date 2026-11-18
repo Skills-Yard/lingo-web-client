@@ -29,6 +29,12 @@ const STAGE_W = "w-[354px]";
 const NOTE = "min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]";
 const PROMPT = "text-[#6B7480] dark:text-white/60";
 
+/**
+ * A stage of buttons to tap and find out (no question, so no result panel) is done when the main button turns to Next: its buttons then
+ * bounce, one after the other (not in step), each this many seconds after the one before it, so the bounce runs along them like a wave.
+ */
+const WAVE_S = 0.12;
+
 /** Hands `values` to the scene, and takes them back when the stage goes. */
 const useSceneValues = (api: InteractionApi, values: SceneValues) => {
   const { setScene } = api;
@@ -101,6 +107,7 @@ export function SceneSortStage({
   columns,
   plain = false,
   slimCard = false,
+  wave = false,
   base,
   doneValues,
   slipValues,
@@ -110,6 +117,8 @@ export function SceneSortStage({
   items: readonly SceneSortItem[];
   buckets: readonly SceneSortBucket[];
   prompt?: string;
+  /** For a stage that has no result panel (so the main button turns to Next when it is done): the buttons then bounce one after the other, as a stage of tap-to-find-out buttons does (see `WAVE_S`). */
+  wave?: boolean;
   /** How many buttons stand across (default: all of them up to four, in one row). Four buttons in 2 columns are two by two. */
   columns?: 2 | 3 | 4;
   /** The buttons are plain (white, a thin grey line), as the Variable module's options are, instead of each in its own tint. */
@@ -207,20 +216,22 @@ export function SceneSortStage({
       <div className={`grid w-full gap-2.5 ${gridColumns}`}>
         {buckets.map((bucket, index) => (
           <BounceIn key={bucket.id} index={index} shown={hexSpoken} className="flex min-w-0">
-            <motion.button
-              type="button"
-              disabled={finished || all}
-              onClick={() => choose(bucket)}
-              animate={{ x: wrongBucket === bucket.id ? SHAKE : 0 }}
-              transition={{ duration: 0.35 }}
-              whileTap={{ scale: 0.97 }}
-              className={`${RAISED} min-w-0 flex-1 cursor-pointer gap-1.5 px-1 ${stacked ? "h-[68px] flex-col" : rows > 1 ? "h-[50px]" : "h-[58px]"} ${
-                plain ? plainLook(wrongBucket === bucket.id) : `${CARD_BODY_FLAT} ${buttonLook(wrongBucket === bucket.id ? "wrong" : "idle", index)}`
-              }`}
-            >
-              {bucket.icon && <Pic src={bucket.icon} className={stacked ? "h-6 w-6" : "h-7 w-7"} />}
-              <span className={`${plain ? "text-[16px]" : stacked ? "text-[13px]" : "text-[15px]"} leading-[110%] font-semibold text-[#444444] dark:text-white`}>{bucket.label}</span>
-            </motion.button>
+            <RightBounce play={wave && finished} delay={index * WAVE_S} radius={plain ? 16 : 8} className="flex min-w-0 flex-1">
+              <motion.button
+                type="button"
+                disabled={finished || all}
+                onClick={() => choose(bucket)}
+                animate={{ x: wrongBucket === bucket.id ? SHAKE : 0 }}
+                transition={{ duration: 0.35 }}
+                whileTap={{ scale: 0.97 }}
+                className={`${RAISED} min-w-0 flex-1 cursor-pointer gap-1.5 px-1 ${stacked ? "h-[68px] flex-col" : rows > 1 ? "h-[50px]" : "h-[58px]"} ${
+                  plain ? plainLook(wrongBucket === bucket.id) : `${CARD_BODY_FLAT} ${buttonLook(wrongBucket === bucket.id ? "wrong" : "idle", index)}`
+                }`}
+              >
+                {bucket.icon && <Pic src={bucket.icon} className={stacked ? "h-6 w-6" : "h-7 w-7"} />}
+                <span className={`${plain ? "text-[16px]" : stacked ? "text-[13px]" : "text-[15px]"} leading-[110%] font-semibold text-[#444444] dark:text-white`}>{bucket.label}</span>
+              </motion.button>
+            </RightBounce>
           </BounceIn>
         ))}
       </div>
@@ -400,9 +411,9 @@ export function SceneRevealStage({
   const small = columns >= 4;
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
-      {/* What is said stands over the buttons, so the buttons are the lowest thing: on the main button, as every screen's options are. */}
+      {/* What is said stands over the buttons, so the buttons are the lowest thing: on the main button, as every screen's options are. The room under it (`mb-7` and the gap) is as much as the buttons jump when they bounce (see `WAVE_S`), so they never cross its words. */}
       {(hasCaptions || footer) && (
-        <div className="flex min-h-[48px] w-full items-center justify-center">
+        <div className="mb-7 flex min-h-[48px] w-full items-center justify-center">
           <AnimatePresence mode="wait">
             {finished && footer ? (
               <motion.div key="footer" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
@@ -428,24 +439,27 @@ export function SceneRevealStage({
           const tapped = seen.includes(item.id);
           return (
             <BounceIn key={item.id} index={index} shown={hexSpoken} className="flex min-w-0">
-              <motion.button
-                type="button"
-                onClick={() => {
-                  playClickSound();
-                  vibrateForTap();
-                  setCurrent(item.id);
-                  setSeen((now) => (now.includes(item.id) ? now : [...now, item.id]));
-                }}
-                animate={{ scale: current === item.id ? [1, 0.96, 1.03, 1] : 1 }}
-                transition={{ duration: 0.35 }}
-                whileTap={{ scale: 0.97 }}
-                className={`${CARD_BODY_FLAT} ${RAISED} relative min-w-0 flex-1 cursor-pointer flex-col gap-0.5 px-1 ${small ? "min-h-[64px] py-1" : "min-h-[60px] py-1.5"} ${tintAt(index)} ${current === item.id ? `${EDGE_READING} ${EDGE.mint}` : `${EDGE_IDLE} ${EDGE.khaki}`}`}
-              >
-                {tapped && <Check aria-hidden className="absolute top-0.5 right-0.5 size-3.5 text-[#10B48C]" strokeWidth={3} />}
-                {item.icon && <Pic src={item.icon} className={small ? "h-6 w-6" : "h-7 w-7"} />}
-                <span className={small ? "text-[13px] leading-[110%] font-semibold text-[#444444] dark:text-white" : CARD_TEXT}>{item.label}</span>
-                {item.sub && <span className="text-[11px] leading-3 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
-              </motion.button>
+              {/* Done: the buttons bounce along the row, one after the other. */}
+              <RightBounce play={finished} delay={index * WAVE_S} radius={8} className="flex min-w-0 flex-1">
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    playClickSound();
+                    vibrateForTap();
+                    setCurrent(item.id);
+                    setSeen((now) => (now.includes(item.id) ? now : [...now, item.id]));
+                  }}
+                  animate={{ scale: current === item.id ? [1, 0.96, 1.03, 1] : 1 }}
+                  transition={{ duration: 0.35 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`${CARD_BODY_FLAT} ${RAISED} relative min-w-0 flex-1 cursor-pointer flex-col gap-0.5 px-1 ${small ? "min-h-[64px] py-1" : "min-h-[60px] py-1.5"} ${tintAt(index)} ${current === item.id ? `${EDGE_READING} ${EDGE.mint}` : `${EDGE_IDLE} ${EDGE.khaki}`}`}
+                >
+                  {tapped && <Check aria-hidden className="absolute top-0.5 right-0.5 size-3.5 text-[#10B48C]" strokeWidth={3} />}
+                  {item.icon && <Pic src={item.icon} className={small ? "h-6 w-6" : "h-7 w-7"} />}
+                  <span className={small ? "text-[13px] leading-[110%] font-semibold text-[#444444] dark:text-white" : CARD_TEXT}>{item.label}</span>
+                  {item.sub && <span className="text-[11px] leading-3 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
+                </motion.button>
+              </RightBounce>
             </BounceIn>
           );
         })}
@@ -467,7 +481,7 @@ export type SceneToggleItem = {
 
 /** Tap each one to switch it between its two states (the scene switches with it); it is done once each has been switched. */
 export function SceneToggleStage({ api, items }: { api: InteractionApi; items: readonly SceneToggleItem[] }) {
-  const { done, hexSpoken } = api;
+  const { done, finished, hexSpoken } = api;
   const [on, setOn] = useState<Record<string, boolean>>({});
   const [flipped, setFlipped] = useState<readonly string[]>([]);
 
@@ -482,37 +496,40 @@ export function SceneToggleStage({ api, items }: { api: InteractionApi; items: r
         const Icon = item.icon;
         return (
           <BounceIn key={item.id} index={index} shown={hexSpoken} className="flex min-w-0">
-            <motion.button
-              type="button"
-              aria-pressed={state}
-              onClick={() => {
-                playClickSound();
-                vibrateForTap();
-                setOn((now) => ({ ...now, [item.id]: !now[item.id] }));
-                setFlipped((now) => (now.includes(item.id) ? now : [...now, item.id]));
-              }}
-              whileTap={{ scale: 0.96 }}
-              className={`${CARD_BODY_FLAT} ${RAISED} h-[66px] min-w-0 flex-1 cursor-pointer justify-start gap-2 px-2.5 text-left ${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`}
-            >
-              {/* The same tile on every card; it turns green with the card, as the scene's pill does. */}
-              <span
-                aria-hidden
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-300 ${state ? "bg-[#01A17F]/15 text-[#01A17F]" : "bg-white/70 text-[#6B7480] dark:bg-white/10 dark:text-white/70"}`}
+            {/* Done: the buttons bounce one after the other, in the order they stand. */}
+            <RightBounce play={finished} delay={index * WAVE_S} radius={8} className="flex min-w-0 flex-1">
+              <motion.button
+                type="button"
+                aria-pressed={state}
+                onClick={() => {
+                  playClickSound();
+                  vibrateForTap();
+                  setOn((now) => ({ ...now, [item.id]: !now[item.id] }));
+                  setFlipped((now) => (now.includes(item.id) ? now : [...now, item.id]));
+                }}
+                whileTap={{ scale: 0.96 }}
+                className={`${CARD_BODY_FLAT} ${RAISED} h-[66px] min-w-0 flex-1 cursor-pointer justify-start gap-2 px-2.5 text-left ${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`}
               >
-                <Icon className="size-5" strokeWidth={2.25} />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-                <span className="text-[12px] leading-3.5 font-semibold text-[#444444] dark:text-white/80">{item.title}</span>
-                <motion.span
-                  key={String(state)}
-                  initial={{ scale: 0.7, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className={`rounded-full px-2.5 py-0.5 text-[12px] leading-4 font-bold whitespace-nowrap text-white ${state ? "bg-[#01A17F]" : "bg-[#8A94A0]"}`}
+                {/* The same tile on every card; it turns green with the card, as the scene's pill does. */}
+                <span
+                  aria-hidden
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-300 ${state ? "bg-[#01A17F]/15 text-[#01A17F]" : "bg-white/70 text-[#6B7480] dark:bg-white/10 dark:text-white/70"}`}
                 >
-                  {state ? item.on : item.off}
-                </motion.span>
-              </span>
-            </motion.button>
+                  <Icon className="size-5" strokeWidth={2.25} />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                  <span className="text-[12px] leading-3.5 font-semibold text-[#444444] dark:text-white/80">{item.title}</span>
+                  <motion.span
+                    key={String(state)}
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className={`rounded-full px-2.5 py-0.5 text-[12px] leading-4 font-bold whitespace-nowrap text-white ${state ? "bg-[#01A17F]" : "bg-[#8A94A0]"}`}
+                  >
+                    {state ? item.on : item.off}
+                  </motion.span>
+                </span>
+              </motion.button>
+            </RightBounce>
           </BounceIn>
         );
       })}

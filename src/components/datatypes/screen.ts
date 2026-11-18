@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Choice } from "@/components/level-two/levelTwo";
-import type { SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
+import type { SceneIntro, SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
 import type { DatatypesSceneName } from "@/lib/rive/runtime";
 
 /** An answer: its words and its picture (`icon` is a file, see `pictures.ts`). */
@@ -23,6 +23,8 @@ export type SceneSpec = {
   values: SceneValues;
   /** The words the artboard has in place of the file's own, by their place in it (see `SceneTexts`); every other word is the file's. */
   texts?: SceneTexts;
+  /** What plays as the stage opens: its intro (see `SceneIntro`). */
+  intro?: SceneIntro;
   /** How large (times its own size) a look-only stage draws this scene, in place of the usual `LARGE_SCENE` (a scene whose sides the usual size cuts off). */
   lookScale?: number;
   /** A wrong answer fires the scene's `wrong` (default). Left off where the answers are reasons, so a cross on the picture would blame the wrong thing. */
@@ -114,6 +116,11 @@ export type InteractionStage = StageTitle & {
   bubbleWidth?: number;
   /** The picture stands at the top of the room under Hex's line, instead of in the middle of it (a design with fixed places). */
   alignTop?: boolean;
+  /**
+   * With a `finishPanel` and a docked stage: the stage stays when the panel comes, instead of fading out. It rises above the panel as a
+   * question's answers do (and the scene is cut to the room it leaves), so what the learner picked is still there to see.
+   */
+  keepOptions?: boolean;
   /** Nothing to do, only to look at (screens 5 and 6): Continue waits only for Hex to finish his line, and his line stays. */
   ready?: boolean;
   /**

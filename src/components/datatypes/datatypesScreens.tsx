@@ -7,7 +7,7 @@ import { ChooseTypeStage, TYPES } from "./interactions";
 import { SortStage, type SortBucket } from "./SortStage";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
 import { P } from "./pictures";
-import type { SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
+import type { SceneIntro, SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
 import { MASTERY, SCENE_MODE, STRINGS_EXAMPLE_TEXT, STRINGS_TWELVE_TEXT, type DatatypesSceneName } from "@/lib/rive/runtime";
 import type { Option, QuizStage, SceneSpec, ScreenDef } from "./screen";
 import { STEP } from "./datatypes";
@@ -136,6 +136,11 @@ const SIMILAR_OPTIONS = options(["Quantities", "People’s names", "Colours", "Y
  * (Integer, Float, String, Boolean). Only the first two bins are used here (a number is whole or has a decimal part).
  */
 const CLASSIFY_BELT = { val1: "15", val2: "25.5", val3: "100", val4: "9.75" } as const;
+/**
+ * Screen 9's intro, started together: the machine's `run` trigger (its `SL_Run` state: the cards run in along the belt, one shot) and
+ * `SL_Belt`, which the machine has looping all the time, for one lap and then held still.
+ */
+const CLASSIFY_INTRO: SceneIntro = { trigger: "run", lap: "SL_Belt" };
 /** Screen 9's four numbers, in the order they stand on the belt (`drop1` is the first); each has its one right bin. */
 const DECIMAL_HINT = "Check whether the value contains a decimal part.";
 const CLASSIFY_ITEMS: readonly SceneSortItem[] = [
@@ -159,16 +164,24 @@ const TEXT_PICKS = [
 ] as const;
 
 /**
- * Screen 12's values, written as text in quotes, each with what is said once it is tapped (`rev1` hangs the tag on the first
- * card). The same artboard as screen 11, so the same greeting. They are told apart by their caption, and none is wrong.
+ * Screen 12's question: five values written as text in quotes (the same artboard as screen 11, so the same greeting), and the
+ * answer that takes them all, which is the right one. A pick glows its card (`sel1`-`sel5`); "All of the above" glows all five.
  */
-const STRING_PICKS = [
-  { id: "a", label: "“Aarav”", key: "rev1", caption: "A name, written as text." },
-  { id: "b", label: "“Class 6A”", key: "rev2", caption: "Words and a number, as text." },
-  { id: "c", label: "“Delhi”", key: "rev3", caption: "A city, written as text." },
-  { id: "d", label: "“SY001”", key: "rev4", caption: "An ID: letters and digits, as text." },
-  { id: "e", label: "“Hello!”", key: "rev5", caption: "A word and a symbol, as text." },
-] as const;
+const STRING_OPTIONS = words([
+  ["a", "“Aarav”"],
+  ["b", "“Class 6A”"],
+  ["c", "“Delhi”"],
+  ["d", "“SY001”"],
+  ["e", "“Hello!”"],
+  ["all", "All of the above"],
+]);
+const STRING_CARDS = { a: "sel1", b: "sel2", c: "sel3", d: "sel4", e: "sel5" } as const;
+const STRING_ALL = { sel1: 1, sel2: 1, sel3: 1, sel4: 1, sel5: 1 } as const;
+/** What the scene glows for the answer picked: its card, all five for "All of the above", nothing before a pick. */
+const stringGlow = (picked: string | null): SceneValues =>
+  picked === "all" ? STRING_ALL : picked && picked in STRING_CARDS ? { [STRING_CARDS[picked as keyof typeof STRING_CARDS]]: 1 } : {};
+/** Once the right answer is checked: all five cards get their tags (`rev1`-`rev5`) and the quote marks (`quotes`). */
+const STRING_REVEALED = { rev1: 1, rev2: 1, rev3: 1, rev4: 1, rev5: 1, quotes: 1 } as const;
 
 /** The artboard's long greeting, "Welcome to Learny!" and its quoted twin, written as "Hello!" on screens 11 and 12, so what is on the buttons is what is on the cards. */
 const EXAMPLE_TEXTS: SceneTexts = {
@@ -419,7 +432,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         kind: "interaction",
         line: "Sort each number into Integer or Float.",
         alignTop: true,
-        scene: sorting({ ...CLASSIFY_BELT }, false),
+        scene: { ...sorting({ ...CLASSIFY_BELT }, false), intro: CLASSIFY_INTRO },
         render: (api) => (
           <SceneSortStage
             api={api}
@@ -492,27 +505,27 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     title: "Meet *Strings!*",
     titleSize: 28,
     stages: [
-      {
-        kind: "interaction",
+      // The learner picks, then presses Check (as on every question). The scene glows what is picked; a right answer hangs the tags and puts the quote marks on. `markWrong` is off: each pick is text, so a cross on the whole picture would blame the wrong thing.
+      quiz({
         line: "Text information is called a String.",
         bubbleWidth: 190,
-        alignTop: true,
-        // The same artboard and the same buttons as screen 11 (a pick bounces, drops and goes grey). Three taps are enough: once the scene has put the quote marks on, they are all disabled, and the result panel comes.
-        scene: strings({ mode: MODE.strings.examples }, false, EXAMPLE_TEXTS),
-        render: (api) => (
-          <ScenePickStage
-            api={api}
-            columns={3}
-            need={3}
-            items={STRING_PICKS}
-            correct={STRING_PICKS.map((pick) => pick.id)}
-            hint="Tap each one."
-            // The scene hangs a tag on the card (name, class, city, ...); once enough are read it puts the quote marks on.
-            doneValues={{ quotes: 1 }}
-          />
-        ),
-        finishPanel: { title: "That’s a String!", text: "String (str) represents text information." },
-      },
+        question: "Which of these are Strings?",
+        scene: ({ picked, checked, correct }) =>
+          strings(
+            {
+              mode: MODE.strings.examples,
+              ...stringGlow(picked),
+              ...(checked && correct ? STRING_REVEALED : {}),
+            },
+            false,
+            EXAMPLE_TEXTS,
+          ),
+        options: STRING_OPTIONS,
+        correctId: "all",
+        rightTitle: "That’s a String!",
+        right: "String (str) represents text information.",
+        wrong: "Each one is text. Look at them all again.",
+      }),
     ],
   },
 
@@ -682,6 +695,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
               { id: "present", label: "Is_present: True", key: "m4", value: 1, bucket: "boolean", hint: "Is it a yes/no state?" },
             ]}
             buckets={SCENE_TYPE_BUCKETS}
+            // No result panel here, so when the last card is placed (the main button turns to Next) the four buttons bounce along the row.
+            wave
           />
         ),
       },
@@ -835,6 +850,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       {
         kind: "interaction",
         line: "Now replace the incorrect type with Float.",
+        // The four types stay when the panel comes (they rise above it, the right one has bounced), instead of fading out.
+        keepOptions: true,
         scene: ({ checked }) => mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height, fixed: checked ? MASTERY.fixed : 0 }),
         render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" showCard={false} />,
         finishPanel: { title: "Fixed!", text: "Height is now a Float." },
@@ -864,6 +881,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
               { id: "id", label: "Player ID", sub: "“G007”", key: "g5", bucket: "string", hint: WHY_WRONG },
             ]}
             buckets={SCENE_TYPE_BUCKETS}
+            // No result panel here, so when the last value is placed (the main button turns to Next) the four buttons bounce along the row.
+            wave
           />
         ),
       },
