@@ -8,6 +8,37 @@ headless Chrome on 2026-11-13; "not verified" says what wasn't.
 Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/drei 10
 (`OrbitControls` only), lucide-react, Tailwind v4 with the project's theme tokens.
 
+> **Two characters now: `girl.glb` and `Male.glb`** (2026-11-18), not `Character_Final.glb` (still in
+> `public/animations`, unused). Everything below that says "Character_Final" / Levitate / Sitting / Gesture / lip-sync
+> describes the old model. What changed, and why:
+> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "3D character" Girl / Male. The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
+>   pull three in). `sharedCharacter.ts` loads the picked one (default girl); a switch loads the other in the
+>   background (the button says "Male…" meanwhile), the screens then switch and the old one is freed after 1 s.
+>   `useCharacter` (the `/character` page) follows the pick too. `Male.glb` is spelt with a capital M.
+> - `MODELS` in `character.ts` gives each file, its size and which clip plays for `idle-b` and `talking`:
+>   girl → `mixamo.com` for both; male → `Breathing.001` and `Talking` (the file also has `Head Nod`, `Talking.001`
+>   and others, unused). `ANIMATIONS` is two entries, "Idle" and "Talking" (Talking plays its voice). `TOUR` in `show.ts`
+>   is Idle then Talking; the Gesture pictures in `SCENES` are unused.
+> - Neither file has **morph targets**, so there is no lip-sync. Both are Tripo meshes on the Mixamo rig.
+> - **Girl: old clips and `Idle.glb` do not retarget onto her.** Her bones' local axes are turned 90° about the vertical
+>   relative to the other rigs (hips rest `[-0.5, 0.5, -0.5, 0.5]` vs `[-0.707, 0, 0, 0.707]`), so the copy-the-rotations
+>   `retarget` in `character.ts` made her vanish (tried with Idle B). More animations for her should be exported from
+>   Mixamo for this same girl (then they are her own clips). `Male.glb` has the usual frames (like `Character_Final`),
+>   so `Idle.glb` and the old clips probably retarget onto him; not tried.
+> - `girl.glb` has a **floor slab** (`Cube`, a plain mesh); `removeProps` drops any non-skinned mesh.
+> - Her clip carries her 0.5 m up from her bind pose (it stands her on the ground), so `stand()` measures the size and
+>   footing from the first animation's **first frame**, not the bind pose (`boundsIn`). Measured in the bind pose she floated.
+> - **Lighting is the original** (`SceneLights` in `CharacterScene.tsx`: a hemisphere light 1.3, a key lamp 2.8, a rim lamp 1.6; no
+>   environment map). The girl can look duller here than in Blender: her glTF material is plain (base-color texture only,
+>   no emission or factor), so Blender's HDRI / view transform, or a node the exporter drops (Brightness/Contrast, HSV,
+>   Emission), would explain it. A brighter version (three's `RoomEnvironment` as fill, lamps turned down, and a
+>   brightness slider in the battery menu) was built and then removed on request; the hands came out pale in it.
+> - **`girl.glb`'s texture is 8192×8192** (about 350 MB of GPU memory, over many phones' 4096 limit); resizing it to
+>   2048–4096 in Blender would also shrink the 15 MB file. Not done. `Male.glb` is 7.5 MB.
+> - Checked in headless Chrome (390×844): `/character` and `/module/sequence-3d?step=1` and `?step=3` for the girl; the
+>   battery hold menu and switching to the male on `step=1`. Not checked: a real
+>   phone, load times on a slow connection, a touch (not mouse) hold on the battery, the male on `step=3`/`7`.
+
 ## What the page does
 
 - A Mixamo-rigged character (`Character_Final.glb`) on a stage, with a backdrop (`bg.webp`).

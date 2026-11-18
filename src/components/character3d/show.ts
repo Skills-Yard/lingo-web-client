@@ -45,10 +45,7 @@ type TourStep = {
 
 /** "Play all": the animations one after another, each blending into the next. */
 export const TOUR: readonly TourStep[] = [
-  { id: "levitate", loops: 2 },
   { id: "idle-b", loops: 1 },
-  // One round per picture: the bottle, the mountain, the variable, then the backdrop alone.
-  { id: "gesture", loops: 4 },
   { id: "talking" },
 ];
 

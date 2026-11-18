@@ -1,5 +1,6 @@
 import {
   AnimationClip,
+  AnimationMixer,
   Box3,
   Group,
   Mesh,
@@ -14,11 +15,7 @@ import {
   type Object3D,
 } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-
-/** The character: a Mixamo-rigged avatar with its textures, and several animations in the same file. */
-const MODEL_SRC = "/animations/Character_Final.glb";
-/** Its size on disk: the progress bar's total until (or unless) the server reports a usable `Content-Length`. */
-const MODEL_BYTES = 3_954_748;
+import type { CharacterId } from "./characterLook";
 
 type AnimationBase = {
   id: string;
@@ -36,21 +33,49 @@ type AnimationSpec =
   | (AnimationBase & { src: string });
 
 /**
- * Every animation the page offers; each one loops until another is picked. The
- * first plays when the page opens. To add one, either name another clip of the
- * model, or export it from Mixamo (same skeleton, "without skin"), put the .glb in
- * `public/animations` and add its path: it is retargeted onto the character when it
- * loads. What goes with an animation on the stage (a backdrop, pictures, a voice)
- * is in `show.ts`.
+ * Every animation the page offers, the same for every character; each one loops until
+ * another is picked, and the first plays when the page opens. What goes with an
+ * animation on the stage (a backdrop, pictures, a voice) is in `show.ts`. Each
+ * character names the clip of its own file that plays for it, in `MODELS`.
  */
-export const ANIMATIONS: readonly AnimationSpec[] = [
-  { id: "idle-a", label: "Idle A", clip: "Idle_A" },
-  { id: "idle-b", label: "Idle B", src: "/animations/Idle.glb" },
-  { id: "talking", label: "Talking", clip: "Idle_Talking", lipSync: "LS_line_12" },
-  { id: "levitate", label: "Levitate", clip: "Levitate_Idle" },
-  { id: "sitting", label: "Sitting", clip: "Sitting_Idle" },
-  { id: "gesture", label: "Gesture", clip: "mixamo.com" },
-];
+export const ANIMATIONS = [
+  { id: "idle-b", label: "Idle" },
+  { id: "talking", label: "Talking" },
+] as const;
+
+type AnimationId = (typeof ANIMATIONS)[number]["id"];
+
+/** The clips of a character's own file that play for each of `ANIMATIONS`. */
+const clipsOf = (clips: Readonly<Record<AnimationId, string>>): AnimationSpec[] =>
+  ANIMATIONS.map(({ id, label }) => ({ id, label, clip: clips[id] }));
+
+type Model = {
+  /** The file: a Mixamo-rigged avatar with its textures and its clips. */
+  src: string;
+  /** Its size on disk: the progress bar's total until (or unless) the server reports a usable `Content-Length`. */
+  bytes: number;
+  animations: readonly AnimationSpec[];
+};
+
+/**
+ * The characters the learner can pick (see `characterLook.ts`). Neither file has morph
+ * targets, so neither has a lip-sync clip. The girl's file has one clip, used for both
+ * (her bones' axes differ from other Mixamo rigs', so clips of another file don't play on
+ * her: more of hers must be exported from Mixamo for her). `Male.glb` is spelt with a
+ * capital: a host that cares about case needs it exactly.
+ */
+const MODELS: Readonly<Record<CharacterId, Model>> = {
+  girl: {
+    src: "/animations/girl.glb",
+    bytes: 15_253_060,
+    animations: clipsOf({ "idle-b": "mixamo.com", talking: "mixamo.com" }),
+  },
+  male: {
+    src: "/animations/Male.glb",
+    bytes: 7_526_420,
+    animations: clipsOf({ "idle-b": "Breathing.001", talking: "Talking" }),
+  },
+};
 
 /** The character is scaled to this height, in scene units (metres), whatever units the file is in. */
 export const CHARACTER_HEIGHT = 1.8;
@@ -79,6 +104,7 @@ export type LoadProgress = {
 };
 
 type LoadOptions = {
+  id: CharacterId;
   signal: AbortSignal;
   onProgress: (progress: LoadProgress) => void;
 };
@@ -225,16 +251,16 @@ const retarget = (clip: AnimationClip, source: Object3D, target: Object3D, id: s
   return new AnimationClip(id, clip.duration, tracks);
 };
 
-const loadAnimations = async (model: Group, files: Map<string, ArrayBuffer>, own: AnimationClip[]) =>
+const loadAnimations = async (specs: readonly AnimationSpec[], source: string, model: Group, files: Map<string, ArrayBuffer>, own: AnimationClip[]) =>
   Promise.all(
-    ANIMATIONS.map(async (spec): Promise<CharacterAnimation> => {
+    specs.map(async (spec): Promise<CharacterAnimation> => {
       const { id, label } = spec;
       if ("clip" in spec) {
         const named = (clipName: string) => {
           const found = own.find(({ name }) => name === clipName);
           if (!found) {
             const available = own.map(({ name }) => `"${name}"`).join(", ");
-            throw new Error(`${MODEL_SRC} has no "${clipName}" animation (it has ${available || "none"}).`);
+            throw new Error(`${source} has no "${clipName}" animation (it has ${available || "none"}).`);
           }
           return found;
         };
@@ -248,10 +274,46 @@ const loadAnimations = async (model: Group, files: Map<string, ArrayBuffer>, own
     }),
   );
 
-/** Scales the model to `CHARACTER_HEIGHT`, centres it on the origin and stands it on y = 0. */
-const stand = (model: Group) => {
+/**
+ * Takes out what isn't part of the skinned character. The file also has a floor slab
+ * (a plain box); it would show on the stage and its bounds would skew `stand`.
+ */
+const removeProps = (model: Group) => {
+  const props: Mesh[] = [];
+  model.traverse((object) => {
+    if (object instanceof Mesh && !(object instanceof SkinnedMesh)) props.push(object);
+  });
+  for (const prop of props) {
+    prop.removeFromParent();
+    prop.geometry.dispose();
+  }
+};
+
+/**
+ * The model's bounds in `pose`, the first frame of a clip. Measured there, not in the
+ * bind pose: a clip can carry the character a long way from it (girl.glb's lifts it
+ * 0.5 m, so that it stands on the ground), and that is where it is seen.
+ */
+const boundsIn = (model: Group, pose: AnimationClip | undefined) => {
+  const mixer = new AnimationMixer(model);
+  if (pose) {
+    mixer.clipAction(pose).play();
+    mixer.update(0);
+  }
   model.updateMatrixWorld(true);
+  // A skinned mesh keeps the bounds it was first measured with; measure again in this pose.
+  model.traverse((object) => {
+    if (object instanceof SkinnedMesh) object.computeBoundingBox();
+  });
   const box = new Box3().setFromObject(model);
+  mixer.uncacheRoot(model);
+  model.updateMatrixWorld(true);
+  return box;
+};
+
+/** Scales the model to `CHARACTER_HEIGHT`, centres it on the origin and stands it on y = 0, as it is in `pose`. */
+const stand = (model: Group, pose: AnimationClip | undefined) => {
+  const box = boundsIn(model, pose);
   const size = box.getSize(new Vector3());
   const center = box.getCenter(new Vector3());
   const scale = Number.isFinite(size.y) && size.y > 0 ? CHARACTER_HEIGHT / size.y : 1;
@@ -272,18 +334,19 @@ const stand = (model: Group) => {
   return scene;
 };
 
-export const loadCharacter = async ({ signal, onProgress }: LoadOptions): Promise<Character> => {
+export const loadCharacter = async ({ id, signal, onProgress }: LoadOptions): Promise<Character> => {
+  const { src, bytes, animations: specs } = MODELS[id];
   // The small animation files first: one that's missing fails now, not after the big model.
   const files = new Map<string, ArrayBuffer>();
-  for (const spec of ANIMATIONS) {
+  for (const spec of specs) {
     if ("src" in spec) files.set(spec.src, await download({ src: spec.src, signal }));
   }
 
   const modelBuffer = await download({
-    src: MODEL_SRC,
+    src,
     signal,
     progress: {
-      bytes: MODEL_BYTES,
+      bytes,
       onProgress: (fraction) => onProgress({ phase: "download", fraction }),
     },
   });
@@ -294,8 +357,9 @@ export const loadCharacter = async ({ signal, onProgress }: LoadOptions): Promis
   signal.throwIfAborted();
 
   const gltf = await parseGlb(modelBuffer);
-  const animations = await loadAnimations(gltf.scene, files, gltf.animations);
-  return { scene: stand(gltf.scene), model: gltf.scene, animations };
+  removeProps(gltf.scene);
+  const animations = await loadAnimations(specs, src, gltf.scene, files, gltf.animations);
+  return { scene: stand(gltf.scene, animations[0]?.clip), model: gltf.scene, animations };
 };
 
 const materialsOf = (mesh: Mesh): Material[] =>
