@@ -27,6 +27,14 @@ const SITUATION_CARDS = {
 } as const satisfies Record<string, StudioCard>;
 
 /**
+ * Screen 4's last question, "Which mathematical actions did we use?": the studio stands over the answers, its card with the money
+ * from the start to the end. Picking an answer lifts the key of its first action (Addition and subtraction: +, Multiplication
+ * and division: ×; Only comparing has none), as the studio lifts one key at a time.
+ */
+const ACTIONS_CARD: StudioCard = { title: "Money left ₹300", meaning: "Which actions did we use?", example: "₹500 to ₹300" };
+const ACTIONS_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.multiply, OPERATOR_STUDIO.pick.none] as const;
+
+/**
  * A question of "Explore the situations!": the Operators studio stands over the four answers (Adding, Subtracting,
  * Dividing, Comparing). Picking an answer lifts its key, and checking it plays the studio's right or wrong.
  */
@@ -264,6 +272,16 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which mathematical actions did we use?",
         keepLine: true,
+        visual: ({ attempt, picked, checked, correct }) => (
+          <StudioVisual
+            card={ACTIONS_CARD}
+            pick={(picked !== null ? ACTIONS_KEY[Number(picked)] : undefined) ?? OPERATOR_STUDIO.pick.none}
+            verdict={checked ? (correct ? "correct" : "wrong") : null}
+            attempt={attempt}
+            // Hex's line stays up after the check here, so the room for the picture is short: it is drawn smaller, not cut by his bubble.
+            width="290px"
+          />
+        ),
         options: neutral(["Addition and subtraction.", "Multiplication and division.", "Only comparing."]),
         correctId: at(0),
         rightTitle: "Exactly!",

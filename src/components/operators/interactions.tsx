@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { RightBounce, WAVE_S } from "@/components/level-two/RightBounce";
+import { RightBounce, WAVE_ROLL_S } from "@/components/level-two/RightBounce";
 import { SeenBadge } from "./FlipCarousel";
 import type { InteractionApi } from "./screen";
 import { EDGE, RAISED, RAISED_SMALL } from "@/components/ui/raised";
@@ -150,8 +150,8 @@ export function ExpressionStage({
               }`}
             />
           ) : (
-            // Once the expression is right its blocks bounce one after the other from the left (a value, the operator, a value), the wave of the Data Types stages.
-            <RightBounce key={place} play={ok} delay={place * WAVE_S} radius={10} className="flex shrink-0">
+            // Once the expression is right its blocks bounce as a wave from the left (a value, the operator, a value): each starts as the one before it reaches the top of its jump.
+            <RightBounce key={place} play={ok} delay={place * WAVE_ROLL_S} radius={10} className="flex shrink-0">
               <motion.button
                 type="button"
                 initial={{ scale: 0.6, opacity: 0 }}

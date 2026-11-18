@@ -240,7 +240,11 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   const questionHeight = questionLines ? questionLines * 22 + 14 : 0;
   const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(choices) + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
-  const risen = quiz ? answersRise : interaction?.finishPanel ? PANEL_ROOM : 0;
+  // Answers that stand line by line (more than one) disappear once the answer is checked, right or wrong: they fade where they stand and do
+  // not rise over the popup (cards, three or four across, rise and stay). The picture then keeps the room they had.
+  const rowsAway = !!quiz && choices.length > 1 && !acrossCards(choices);
+  const answersGone = rowsAway && checked;
+  const risen = quiz ? (rowsAway ? 0 : answersRise) : interaction?.finishPanel ? PANEL_ROOM : 0;
 
   return (
     <LevelTwoShell
@@ -332,7 +336,7 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
             <motion.p
               key={`q-${stageIndex}`}
               initial={{ opacity: 0, y: 90 }}
-              animate={{ opacity: 1, y: checked ? -answersRise : 0 }}
+              animate={{ opacity: answersGone ? 0 : 1, y: checked && !answersGone ? -answersRise : 0 }}
               transition={checked ? PANEL_SPRING : ANSWERS_IN}
               className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
               style={{ bottom: `calc(${answersBottom} + ${answersHeight(choices) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
@@ -361,17 +365,16 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={false}
+              fadeOut={answersGone}
               pointedId={answerHint.pointedId}
               withHint={hasHint}
-              rise={answersRise}
+              rise={rowsAway ? 0 : answersRise}
               bottomGap={OPTION.aboveButtons}
               compact
               tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
               idleLook={IDLE_LOOK}
               gap={OPTION.gap}
               fontSize={Math.min(...choices.map((option) => optionFont(option.text)))}
-              bounceRight
               onPick={pick}
             />
           )}
