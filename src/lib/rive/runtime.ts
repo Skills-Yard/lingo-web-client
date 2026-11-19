@@ -42,6 +42,24 @@ export const LIVE_PLATFORM = {
 } as const;
 
 /**
+ * One piece of the road on the level screen (`/level`): "Artboard" of `progressBar.riv` (72x58, `State Machine 1`), the
+ * isometric slab that runs from one level's tile to the next. It replaces `grid-road.svg`. The number `pathState` on its view
+ * model (`StreakTickUnused`, which also has `day1`-`day7`, `streak` and `start`, none of them used here) turns it: 0 runs
+ * down to the right (the picture `grid-road.svg` has mirrored), 1 runs down to the left (as the svg is). The slab is drawn
+ * past the artboard's own edges (about 3-4 artboard px each side) and the file draws an opaque dark rectangle over the
+ * artboard (see `RoadArt`). Both measured on 2026-11-19 in headless Chrome.
+ */
+export const LEVEL_ROAD = {
+  src: "/animations/progressBar.riv",
+  artboard: "Artboard",
+  stateMachine: "State Machine 1",
+  property: "pathState",
+  width: 72,
+  height: 58,
+  state: { downRight: 0, downLeft: 1 },
+} as const;
+
+/**
  * The `.riv` for every Robu instance in the module 1 instructions-intro
  * flows — both the current branch's own (`src/components/instructions-intro`)
  * and its `-himanshu` counterpart (used by `/module1/review` and

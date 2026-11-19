@@ -20,7 +20,15 @@ export interface PlatformConfig {
 
 type TileSide = "left" | "right";
 
-const COLUMN_X: Record<TileSide, number> = { left: 117, right: 273 };
+/**
+ * How far the whole path (tiles, roads, buildings, gate) is moved right so it sits in the middle of the 390px stage. As the
+ * Figma frame has it the tiles and roads cover x 65 to 317 (measured 2026-11-19 on the page), a middle of 191 against the
+ * stage's 195, which left the first building touching the stage's left edge (cut 1.3px) and a gap at the right. The stage itself
+ * is centred on the screen at every width (`HomeScreen`), so this is the only thing off centre. The scenery behind is not moved.
+ */
+export const PATH_SHIFT_X = 4;
+
+const COLUMN_X: Record<TileSide, number> = { left: 117 + PATH_SHIFT_X, right: 273 + PATH_SHIFT_X };
 const FIRST_TILE_CENTER_Y = 250;
 const TILE_STEP_Y = 122.45;
 /** A tile's bottom edge sits this far below its centre. */
@@ -110,10 +118,10 @@ export interface RoadSettings {
 export const ROAD_SETTINGS: RoadSettings = {
   width: 184,
   offsetY: 2,
-  mirroredLeft: 98,
-  unmirroredLeft: 98,
+  mirroredLeft: 98 + PATH_SHIFT_X,
+  unmirroredLeft: 98 + PATH_SHIFT_X,
   gateTop: 133,
-  gateLeft: 101,
+  gateLeft: 101 + PATH_SHIFT_X,
   rightCubeDx: 18,
   rightCubeDy: 0,
   leftCubeDx: -6,
@@ -191,7 +199,7 @@ const roofIcon = (file: string, alt: string, width: number, height: number, dx: 
 export const GATE = {
   src: `${ART}/Gate/Entry_Gate.svg`,
   alt: "Entry gate",
-  left: 226,
+  left: 226 + PATH_SHIFT_X,
   top: 48,
   width: 124,
   height: 125,

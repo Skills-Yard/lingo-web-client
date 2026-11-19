@@ -40,7 +40,7 @@ export const RIVE_FILES = [
   // `bytes`: the decoded size, used for the progress bar until (or unless) the
   // server reports a usable `Content-Length` (it doesn't for compressed responses).
   { src: HEX_RIVE_SRC, bytes: 6_160_285 },
-  { src: PROGRESS_BAR.src, bytes: 13_198_164 },
+  { src: PROGRESS_BAR.src, bytes: 11_988_597 },
   { src: BATTERY.src, bytes: 6_830_856 },
   { src: SEQUENCE_ROOM.src, bytes: 4_399_379 },
   { src: COMMAND_ROBOT.src, bytes: 264_119 },
