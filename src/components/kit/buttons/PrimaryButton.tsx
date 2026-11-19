@@ -1,6 +1,6 @@
 "use client";
 
-import { playClickSound } from "@/components/onboarding/clickSound";
+import { playClickSound } from "@/utils/clickSound";
 import { Button3D } from "@/components/ui/Button3D";
 import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
 import type { AnswerResult } from "../types";

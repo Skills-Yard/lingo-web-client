@@ -1,8 +1,8 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
-import { SlotImage } from "@/components/level-two/SlotImage";
+import { FILL_S, HintFloat } from "@/components/level-one/components/HintFloat";
+import { SlotImage } from "@/components/level-two/components/SlotImage";
 import { AnswerMark } from "../feedback/AnswerMark";
 import { feelTap } from "../feel";
 import { RAISED } from "@/components/ui/raised";

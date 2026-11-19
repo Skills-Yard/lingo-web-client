@@ -1,6 +1,6 @@
 "use client";
 
-import { AudioPlayer as VoiceClipPill } from "@/components/level-two/AudioPlayer";
+import { AudioPlayer as VoiceClipPill } from "@/components/level-two/components/AudioPlayer";
 
 export type AudioClipProps = {
   /** The clip: a path under `public/` (`/audios/...`). */

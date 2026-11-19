@@ -1,8 +1,8 @@
 "use client";
 
 import { Play, RotateCcw } from "lucide-react";
-import { ChipList, chipListSize, moveItem, type PlanItem } from "@/components/sequence/ChipList";
-import type { Command } from "@/components/sequence/hexGrid";
+import { ChipList, chipListSize, moveItem, type PlanItem } from "@/components/python/sequence/ChipList";
+import type { Command } from "@/components/python/sequence/hexGrid";
 import { PillButton } from "../buttons/PillButton";
 import { feelTap } from "../feel";
 import { COMMAND_LOOK } from "./commands";

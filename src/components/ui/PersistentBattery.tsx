@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef } from "react";
-import { chargeBatteryScreen, useBattery } from "@/components/home/batteryStore";
+import { chargeBatteryScreen, useBattery } from "@/services/batteryStore";
 import { useTheme } from "@/context/ThemeContext";
 import { getBatteryHost, resizeBattery, spendBattery, writeBattery, writeBatteryTheme } from "@/lib/rive/batteryHost";
 import { BATTERY } from "@/lib/rive/runtime";

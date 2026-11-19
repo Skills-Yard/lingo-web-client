@@ -1,0 +1,396 @@
+"use client";
+
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type RefObject,
+} from "react";
+import { animate, motion, useMotionValue, useReducedMotion, useSpring } from "framer-motion";
+import type { HexOnboardingBeat } from "@/features/onboarding/constants/onboarding";
+import { OnboardingFox } from "@/features/onboarding/robu/OnboardingFox";
+import { HexEntryStyleContext, HexExitContext, type HexExitRequest } from "@/features/onboarding/robu/HexExit";
+
+/**
+ * One fox for the whole onboarding flow. Screens don't render their own fox;
+ * they place an invisible `<FoxSlot>` where it should stand, and a single
+ * persistent fox (see `PersistentFox`, rendered once by OnboardingFlow,
+ * outside the screen crossfades) follows whichever slot is current. So when
+ * two screens put the fox in the same spot it simply stays there — no
+ * second canvas fading in with a flash — and when they don't, the same fox
+ * glides (and scales) from one spot to the other.
+ */
+
+interface SlotInfo {
+  /** Stable per slot — tells a remount (a beat to fire again) apart from a
+   * prop change on the same slot. */
+  id: string;
+  ref: RefObject<HTMLDivElement | null>;
+  talking: boolean;
+  greet: boolean;
+  excited: boolean;
+  laptop: boolean;
+  typing: number;
+  hidden: boolean;
+  tappable: boolean;
+  beat: HexOnboardingBeat | null;
+  beatDue: boolean;
+  speaking: boolean;
+  fullWidth: boolean;
+}
+
+interface FoxStage {
+  register: (id: string, slot: SlotInfo) => void;
+  unregister: (id: string) => void;
+}
+
+const FoxStageContext = createContext<FoxStage | null>(null);
+
+/**
+ * The flow's slot registry. The most recently mounted slot is the current
+ * one — during a screen crossfade that's the incoming screen's.
+ */
+export function useFoxStage() {
+  const slots = useRef(new Map<string, SlotInfo>());
+  const [active, setActive] = useState<SlotInfo | null>(null);
+  const stage = useMemo<FoxStage>(() => {
+    const refresh = () => setActive([...slots.current.values()].pop() ?? null);
+    return {
+      register: (id, slot) => {
+        slots.current.set(id, slot);
+        refresh();
+      },
+      unregister: (id) => {
+        slots.current.delete(id);
+        refresh();
+      },
+    };
+  }, []);
+  return { stage, active };
+}
+
+export function FoxStageProvider({
+  stage,
+  exitRequest = null,
+  entryStyle = null,
+  children,
+}: {
+  stage: FoxStage;
+  exitRequest?: HexExitRequest | null;
+  entryStyle?: number | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <FoxStageContext.Provider value={stage}>
+      <HexExitContext.Provider value={exitRequest}>
+        <HexEntryStyleContext.Provider value={entryStyle}>{children}</HexEntryStyleContext.Provider>
+      </HexExitContext.Provider>
+    </FoxStageContext.Provider>
+  );
+}
+
+interface FoxSlotProps {
+  className?: string;
+  style?: CSSProperties;
+  /** Moves the fox's mouth while true. */
+  talking?: boolean;
+  /** Waves hello once when this slot becomes current. */
+  greet?: boolean;
+  /** Plays the "excitement" state machine while true (standing only). */
+  excited?: boolean;
+  /** Seats the fox at its laptop instead of standing. */
+  laptop?: boolean;
+  /** With `laptop`: set to a new unique value (e.g. `Date.now()`) to have the
+   * fox type one pass on its laptop. 0 on every (re)mounted screen, so
+   * arriving — forward or back — never replays a pass from before. */
+  typing?: number;
+  /** The fox glides here and then fades out, handing over to a fox the
+   * screen draws itself (the notification screen's peeking fox). Leaving
+   * for a visible slot, it waits for that screen's fox to go first, then
+   * reappears here and glides on. */
+  hidden?: boolean;
+  /** Tapping the fox here plays its giggle — cut-scene screens only. */
+  tappable?: boolean;
+  /** Plays Hex's `Onboarding` state machine here, firing this trigger once
+   * `beatDue` turns on — once per time the slot mounts. */
+  beat?: HexOnboardingBeat;
+  beatDue?: boolean;
+  /** With `beat`: the screen's voiceover is playing, so Hex fires `talk`
+   * first — the beat follows once `beatDue`. */
+  speaking?: boolean;
+  /** Widens the fox's canvas to the full screen width (same height), so the
+   * artboard isn't clipped to the fox's own box. */
+  fullWidth?: boolean;
+}
+
+/** Where the fox should stand on this screen — sized like the fox itself. */
+export function FoxSlot({
+  className,
+  style,
+  talking = false,
+  greet = false,
+  excited = false,
+  laptop = false,
+  typing = 0,
+  hidden = false,
+  tappable = false,
+  beat,
+  beatDue = false,
+  speaking = false,
+  fullWidth = false,
+}: FoxSlotProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const id = useId();
+  const stage = useContext(FoxStageContext);
+
+  useEffect(() => {
+    stage?.register(id, {
+      id,
+      ref,
+      talking,
+      greet,
+      excited,
+      laptop,
+      typing,
+      hidden,
+      tappable,
+      beat: beat ?? null,
+      beatDue,
+      speaking,
+      fullWidth,
+    });
+  }, [
+    stage,
+    id,
+    talking,
+    greet,
+    excited,
+    laptop,
+    typing,
+    hidden,
+    tappable,
+    beat,
+    beatDue,
+    speaking,
+    fullWidth,
+  ]);
+  useEffect(() => () => stage?.unregister(id), [stage, id]);
+
+  // Outside the flow (no stage), just draw a fox in place.
+  if (!stage) {
+    if (hidden) return null;
+    return (
+      <OnboardingFox
+        className={className}
+        style={style}
+        talking={talking}
+        greet={greet}
+        excited={excited}
+        laptop={laptop}
+        typing={typing}
+        beat={beat ?? null}
+        beatKey={beatDue ? id : null}
+        screenKey={id}
+      />
+    );
+  }
+  return <div ref={ref} aria-hidden className={className} style={style} />;
+}
+
+/** The fox is drawn at this size and scaled to each slot — scaling (a
+ * transform) keeps the Rive canvas from being re-sized every frame while it
+ * glides between slots of different sizes. As big as the biggest slot. */
+const BASE_SIZE = 320;
+/** On a `bleedBottom` screen the canvas reaches this far (in base units) below
+ * the fox's box, which is more than the screen has room for, so Hex's entrance
+ * from the bottom and his exit through it are never cut off. */
+const BLEED_BOTTOM = 800;
+const GLIDE = { stiffness: 210, damping: 30, mass: 1 } as const;
+/** Arriving at a hidden slot: fade out as the glide lands. */
+const HIDE_FADE = { duration: 0.25, delay: 0.3 } as const;
+/** Leaving a hidden slot: how long the screen's own fox gets to leave
+ * before this one reappears and glides on. */
+const UNHIDE_DELAY_MS = 350;
+/** How long after an exit request Hex stays visible — his exit plays within
+ * this, then he is hidden until the next screen's slot (see HEX_EXIT_MS). */
+const HEX_EXIT_VISIBLE_MS = 550;
+
+/**
+ * The flow's one fox. Every frame it reads the current slot's on-screen box
+ * and springs toward it — which tracks a slot that's itself moving (the
+ * talking screens' lift) and glides across when the slot changes. It fades
+ * out on screens with no slot and reappears in place (no glide) at the next
+ * one. A hidden slot (see FoxSlot's `hidden`) is glided to and then faded
+ * out at — the fox stays "parked" there, so the next slot is glided to from
+ * that spot rather than just appearing.
+ */
+export function PersistentFox({
+  containerRef,
+  slot,
+  questionKey = null,
+  pickCount = 0,
+  bleedBottom = false,
+}: {
+  containerRef: RefObject<HTMLElement | null>;
+  slot: SlotInfo | null;
+  /** See OnboardingFox's `questionKey` / `pickCount`. */
+  questionKey?: string | null;
+  pickCount?: number;
+  /** Lets the canvas run on below the fox's box (see `BLEED_BOTTOM`), for a
+   * screen whose Hex enters from / exits through the bottom. */
+  bleedBottom?: boolean;
+}) {
+  const reduceMotion = useReducedMotion();
+  const x = useSpring(0, GLIDE);
+  const y = useSpring(0, GLIDE);
+  const scale = useSpring(1, GLIDE);
+  const opacity = useMotionValue(0);
+  // The canvas width in base units: BASE_SIZE, or wider on a `fullWidth` slot.
+  const width = useMotionValue(BASE_SIZE);
+  const shown = useRef(false);
+  /** Invisible, but resting at a hidden slot's spot (see above). */
+  const parked = useRef(false);
+  /** When a parked fox may reappear and glide on. */
+  const unhideAt = useRef<number | null>(null);
+  const [tapCount, setTapCount] = useState(0);
+
+  // The fox itself is pointer-events-none (it must never block the screen's
+  // buttons), so a tap is a page-wide pointerdown that lands inside the
+  // current tappable slot's box.
+  useEffect(() => {
+    if (!slot?.tappable) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const box = slot.ref.current?.getBoundingClientRect();
+      if (!box) return;
+      const inside =
+        event.clientX >= box.left &&
+        event.clientX <= box.right &&
+        event.clientY >= box.top &&
+        event.clientY <= box.bottom;
+      if (inside) setTapCount((count) => count + 1);
+    };
+    window.addEventListener("pointerdown", onPointerDown);
+    return () => window.removeEventListener("pointerdown", onPointerDown);
+  }, [slot]);
+
+  // Once Hex has played his exit he must not show up again on the screen
+  // being left (the machine falls back to idle before the flow moves on): he
+  // is faded out after the exit, and stays gone until the next slot arrives.
+  const exitRequest = useContext(HexExitContext);
+  const exited = useRef(false);
+  useEffect(() => {
+    exited.current = false;
+  }, [slot?.id]);
+  useEffect(() => {
+    if (!exitRequest) return;
+    const timer = window.setTimeout(() => {
+      exited.current = true;
+      animate(opacity, 0, { duration: 0.15 });
+    }, HEX_EXIT_VISIBLE_MS);
+    return () => window.clearTimeout(timer);
+  }, [exitRequest, opacity]);
+
+  useEffect(() => {
+    let frame = 0;
+    const tick = () => {
+      const container = containerRef.current;
+      const el = slot?.ref.current;
+      if (exited.current) {
+        // Parked out of sight until a new slot resets `exited`.
+        shown.current = false;
+        parked.current = false;
+        unhideAt.current = null;
+      } else if (container && slot && el) {
+        const c = container.getBoundingClientRect();
+        const r = el.getBoundingClientRect();
+        const tx = r.left - c.left;
+        const ty = r.top - c.top;
+        const ts = r.width / BASE_SIZE;
+        // A full-width slot: the canvas spans the container's width (same
+        // height), so its left edge sits at the container's.
+        const fullWidth = slot.fullWidth;
+        const canvasWidth = fullWidth ? c.width / ts : BASE_SIZE;
+        if (Math.abs(width.get() - canvasWidth) > 1) width.jump(canvasWidth);
+        const left = fullWidth ? 0 : tx;
+        const move = (glide: boolean) => {
+          if (glide && !reduceMotion) {
+            x.set(left);
+            y.set(ty);
+            scale.set(ts);
+          } else {
+            x.jump(left);
+            y.jump(ty);
+            scale.jump(ts);
+          }
+        };
+        if (slot.hidden) {
+          unhideAt.current = null;
+          if (shown.current) {
+            shown.current = false;
+            parked.current = true;
+            animate(opacity, 0, reduceMotion ? { duration: 0.25 } : HIDE_FADE);
+          }
+          move(parked.current);
+        } else if (shown.current) {
+          move(true);
+        } else if (parked.current && !reduceMotion) {
+          unhideAt.current ??= performance.now() + UNHIDE_DELAY_MS;
+          if (performance.now() >= unhideAt.current) {
+            unhideAt.current = null;
+            parked.current = false;
+            shown.current = true;
+            animate(opacity, 1, { duration: 0.25 });
+            move(true);
+          }
+        } else {
+          parked.current = false;
+          shown.current = true;
+          move(false);
+          animate(opacity, 1, { duration: 0.35 });
+        }
+      } else {
+        parked.current = false;
+        unhideAt.current = null;
+        // Gone at once: the new screen has no fox of this kind, and lingering
+        // over it while the old screen fades looks dirty.
+        if (shown.current) {
+          shown.current = false;
+          opacity.jump(0);
+        }
+      }
+      frame = window.requestAnimationFrame(tick);
+    };
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [containerRef, slot, reduceMotion, x, y, scale, opacity, width]);
+
+  return (
+    <motion.div
+      aria-hidden
+      className="pointer-events-none absolute top-0 left-0 z-[5] origin-top-left"
+      style={{ x, y, scale, opacity, width, height: BASE_SIZE }}
+    >
+      <OnboardingFox
+        className="h-full w-full"
+        talking={slot?.talking ?? false}
+        greet={slot?.greet ?? false}
+        excited={slot?.excited ?? false}
+        laptop={slot?.laptop ?? false}
+        typing={slot?.typing ?? 0}
+        beat={slot?.beat ?? null}
+        beatKey={slot?.beatDue ? slot.id : null}
+        talkKey={slot?.speaking ? slot.id : null}
+        questionKey={questionKey}
+        pickCount={pickCount}
+        screenKey={questionKey ?? slot?.id ?? null}
+        tapCount={tapCount}
+        bleedBottom={bleedBottom ? BLEED_BOTTOM : 0}
+      />
+    </motion.div>
+  );
+}

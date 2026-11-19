@@ -2,8 +2,8 @@
 
 import { useCallback, useMemo, useRef, useState } from "react";
 import { RotateCcw } from "lucide-react";
-import { endOf, GRID, GRID_START, ROW, ROW_START, sameTile, step, type Command, type HexState } from "@/components/sequence/hexGrid";
-import { useHexRun } from "@/components/sequence/useHexRun";
+import { endOf, GRID, GRID_START, ROW, ROW_START, sameTile, step, type Command, type HexState } from "@/components/python/sequence/hexGrid";
+import { useHexRun } from "@/components/python/sequence/useHexRun";
 import { PillButton } from "../buttons/PillButton";
 import { TipCard } from "../text/TipCard";
 import { COMMANDS } from "./commands";

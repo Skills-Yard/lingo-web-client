@@ -1,0 +1,306 @@
+"use client";
+
+import { HexBleed, HEX_BLEED } from "@/features/onboarding/robu/HexBleed";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { motion, type Transition } from "framer-motion";
+import { Alignment, Fit, Layout } from "@rive-app/canvas";
+import {
+  HEX_ARTBOARD,
+  HEX_ONBOARDING_TRIGGER,
+  HEX_STATE,
+  HEX_STOP_TALK_TRIGGER,
+  HEX_VIEW_MODEL,
+  randomHexTalkTrigger,
+  type HexTalkTrigger,
+} from "@/lib/rive/runtime";
+import { useHexRive } from "@/features/onboarding/robu/useHexRive";
+import { useLevelVoice } from "../utils/LevelVoice";
+
+const HEX_LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+
+/** The `entryStyle` (0-7) Hex enters with; any of them works. */
+const ENTRY_STYLE = 7;
+/** How often Hex's ambient idle is fired again. */
+const IDLE_REPEAT_MS = 4000;
+/** About how long Hex's entrance takes, so a cue can follow it. */
+const ENTER_SETTLE_MS = 900;
+/** The panel's Hex starts entering this long after he is asked to. */
+const ENTER_DELAY_MS = 250;
+/** About how long a cue (his thumbs-up) plays, before his ambient idle takes over again. */
+const CUE_PLAY_MS = 2800;
+
+/**
+ * Hex, played the onboarding way: the `Onboarding` machine, entering with
+ * `entryStyle` set and the `enter` trigger fired, and leaving through the
+ * `exitRight` trigger when `leaving` turns on. With a `null` `entryKey` the
+ * canvas loads but waits: the entrance plays when a key arrives.
+ */
+export function OnboardingHex({
+  entryKey,
+  leaving = false,
+  exit = "exitRight",
+  enter = HEX_ONBOARDING_TRIGGER.enter,
+  entryStyle = ENTRY_STYLE,
+  cue = null,
+  cueDelayMs = 0,
+}: {
+  entryKey: string | null;
+  leaving?: boolean;
+  /** Which way he leaves when `leaving` turns on. */
+  exit?: "exitLeft" | "exitRight";
+  /** The trigger that plays his entrance. */
+  enter?: string;
+  /** The `entryStyle` (0-7) set before the entrance plays. */
+  entryStyle?: number;
+  /** A trigger to play once, as soon as it is set; it ends the ambient idle. */
+  cue?: string | null;
+  /** Waits this long first — for a cue that follows the entrance. */
+  cueDelayMs?: number;
+}) {
+  const { RiveComponent, ready, fireNow, fireTrigger } = useHexRive(
+    HEX_LAYOUT,
+    HEX_STATE.onboarding,
+    HEX_ARTBOARD,
+    HEX_VIEW_MODEL,
+    entryKey,
+    entryStyle,
+    enter,
+    HEX_BLEED,
+  );
+  // While the screen's voiceover plays he talks — a random `talk`/`talk2`/
+  // `talk3` per clip — and `stopTalk` follows once it ends.
+  const { speaking, clip } = useLevelVoice();
+  const talking = useRef(false);
+  const talkedClip = useRef(-1);
+  const lastTalk = useRef<HexTalkTrigger | null>(null);
+  useEffect(() => {
+    if (!ready || leaving || entryKey === null) {
+      talking.current = false;
+      talkedClip.current = -1;
+      return;
+    }
+    if (speaking) {
+      if (talkedClip.current === clip) return;
+      talkedClip.current = clip;
+      talking.current = true;
+      lastTalk.current = randomHexTalkTrigger(lastTalk.current);
+      fireTrigger(lastTalk.current);
+    } else if (talking.current) {
+      talking.current = false;
+      talkedClip.current = -1;
+      fireTrigger(HEX_STOP_TALK_TRIGGER);
+    }
+  }, [ready, leaving, entryKey, speaking, clip, fireTrigger]);
+  useEffect(() => {
+    if (ready && leaving) fireNow(HEX_ONBOARDING_TRIGGER[exit]);
+  }, [ready, leaving, exit, fireNow]);
+  // The cue that has finished playing, so the ambient idle can pick up again.
+  const [playedCue, setPlayedCue] = useState<string | null>(null);
+  // With nothing else to play, Hex keeps running his ambient idle. The first
+  // one queues behind `enter`; it stops once he starts leaving.
+  useEffect(() => {
+    if (!ready || leaving || entryKey === null || (cue !== null && cue !== playedCue) || speaking) return;
+    fireTrigger(HEX_ONBOARDING_TRIGGER.idleAmbient);
+    const timer = window.setInterval(
+      () => fireTrigger(HEX_ONBOARDING_TRIGGER.idleAmbient),
+      IDLE_REPEAT_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, [ready, leaving, entryKey, cue, playedCue, speaking, fireTrigger]);
+  useEffect(() => {
+    if (!ready || !cue) return;
+    const fire = window.setTimeout(() => fireNow(cue), cueDelayMs);
+    const played = window.setTimeout(() => setPlayedCue(cue), cueDelayMs + CUE_PLAY_MS);
+    return () => {
+      window.clearTimeout(fire);
+      window.clearTimeout(played);
+    };
+  }, [ready, cue, cueDelayMs, fireNow]);
+  return <HexBleed Canvas={RiveComponent} />;
+}
+
+
+// Every result sheet (right and wrong here, and the "Yayyy!" panel on the Pick
+// Up screen) follows Figma "Frame 201": a 22px / 28px title over a 14px body,
+// 6px apart, beside Hex, drawn 2x his 109.65 x 79.95 box (219.3 x 159.9). The
+// Rive box is mostly empty margin around him (he is drawn ~62% of it, ~136px
+// wide), so the slot in the row is only as wide as he is drawn and as high as
+// Figma's box; the box is centred on it and spills out unseen, which keeps the
+// text clear of him and the sheet's height unchanged.
+export const SHEET_TITLE_SIZE = "text-[22px] leading-7";
+export const SHEET_HEX_SLOT = "relative h-[79.95px] w-[110px] shrink-0";
+export const SHEET_HEX_BOX =
+  "absolute top-1/2 left-1/2 h-[159.9px] w-[219.3px] -translate-x-1/2 -translate-y-1/2";
+// The same room on both sides, lined up with the Continue button's drawn edges:
+// the text starts 17px in from the sheet's edge and Hex (his slot is as wide as
+// he is drawn) ends 17px in from the other. Less the sheet's border, so one for
+// each border width.
+export const SHEET_INSET = "px-[15.5px]";
+const SHEET_INSET_THICK_BORDER = "px-[14px]";
+const SHEET_TEXT_GAP = "gap-5";
+/**
+ * Figma "Frame 273", the Sequence module's sheet (390 x 236 at the frame's bottom,
+ * 32px top radius): the text (149px wide) and Hex (drawn 109.65 x 79.95) are one
+ * centred group, 34px apart, its row 94px tall and 18px from the sheet's top.
+ * The padding is less the 3px border; the Rive box spills out of the slot unseen.
+ */
+const CENTRED_SHEET = "rounded-t-[32px] border-[3px] pt-[15px] pb-[124px]";
+// The text column is wider than Figma's 149px, so a long sentence wraps over fewer lines and the sheet stays low.
+const CENTRED_ROW = "mx-auto flex min-h-[94px] w-[324px] items-center justify-center gap-[24px]";
+const CENTRED_TEXT = "flex w-[190px] shrink-0 flex-col gap-1.5";
+export const CENTRED_HEX_SLOT = "relative h-[79.95px] w-[109.65px] shrink-0";
+export const CENTRED_HEX_BOX = "absolute top-1/2 left-[calc(50%+1.44px)] h-[143.7px] w-[197.1px] -translate-x-1/2 -translate-y-1/2";
+/**
+ * Figma "Frame 273" (wrong) and "Frame 348" (right), the Command module's sheets
+ * (390 x 236 at the frame's bottom): a row 18px from the sheet's top (less the 3px
+ * border), centred, of the text (always at the row's top), 34px, and Hex
+ * (109.65 x 79.95, centred on the row, which is 94px tall for right, 114px for
+ * wrong). The text column is a fixed width (156px for wrong, 170px for right, so
+ * the text starts 48.5px / 45px in from the edge) and its sentence stops at 4 / 3
+ * lines, ending in "…", so a long one never runs into Hex. Hex's slot and box are
+ * the Sequence sheet's, drawn from the same Figma box.
+ */
+const GROUPED_SHEET = "min-h-[236px] border-[3px] pt-[15px] pb-[96px]";
+export const GROUPED_ROW = "mx-auto flex items-center gap-[34px]";
+export const GROUPED_TEXT = "flex shrink-0 flex-col gap-1.5 self-start";
+
+const FEEDBACK = {
+  correct: {
+    title: "Correct!",
+    titleColor: "text-[#01A17F]",
+    text: "font-medium leading-[1.4]",
+    frame: "rounded-t-[28px] border-[3px]",
+    panel: "border-[#7FD8CC] bg-[#E3F6F3] dark:border-[#1E5F59] dark:bg-[#0F2B28]",
+    bold: "[&_b]:text-[#04ACAB]",
+    // Frame 348: a 299.65 x 94px row, the text 170px wide and at most 3 lines (60px).
+    row: "min-h-[94px] w-[299.65px]",
+    column: "w-[170px]",
+    clamp: "line-clamp-3",
+  },
+  // Figma: a 3px red border (not on the bottom edge) and a 32px top radius.
+  wrong: {
+    title: "Not quite",
+    titleColor: "text-[#D42421]",
+    text: "font-medium leading-5",
+    frame: "rounded-t-[32px] border-[3px]",
+    panel: "border-[#D42421] bg-[#FDECEC] dark:border-[#6B2A2E] dark:bg-[#2E1517]",
+    bold: "[&_b]:text-[#E5484D]",
+    // Frame 273: a 292.65 x 114px row (its children are 7px wider, and spill to the right), the text 156px wide and at most 4 lines (80px).
+    row: "min-h-[114px] w-[292.65px]",
+    column: "w-[156px]",
+    clamp: "line-clamp-4",
+  },
+} as const;
+
+/** How far "+10 XP" stays see-through at its strongest. */
+const XP_OPACITY = 0.7;
+/** It rises to the centre, holds, then leaves upward (a share of the whole run at each key). */
+const XP_RISE: Transition = { duration: 1.6, delay: 0.15, times: [0, 0.2, 0.65, 1], ease: "easeOut" };
+const XP_BOUNCE = { type: "spring", stiffness: 300, damping: 9, delay: 0.15 } as const;
+
+/** A big "+10 XP" in the middle of the screen for a right answer: comes up to
+ * the centre with a bounce, fading in, then fades out moving upward. */
+export function XpBurst({ show }: { show: boolean }) {
+  // Once it starts it plays to the end, even if `show` turns off meanwhile (the learner pressed Next).
+  const [playing, setPlaying] = useState(show);
+  const [wasShown, setWasShown] = useState(show);
+  if (show !== wasShown) {
+    setWasShown(show);
+    if (show) setPlaying(true);
+  }
+  if (!playing) return null;
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center">
+      <motion.span
+        initial={{ opacity: 0, y: 60, scale: 0.4 }}
+        animate={{ opacity: [0, XP_OPACITY, XP_OPACITY, 0], y: [60, 0, 0, -110], scale: 1 }}
+        transition={{ opacity: XP_RISE, y: XP_RISE, scale: XP_BOUNCE }}
+        onAnimationComplete={() => setPlaying(false)}
+        className="text-[56px] leading-none font-bold whitespace-nowrap text-[#F5A623]"
+      >
+        +10 XP
+      </motion.span>
+    </div>
+  );
+}
+
+/**
+ * The result sheet: slides up from the bottom behind Continue, with the check
+ * (or cross), what the answer is, and Hex entering once the first Hex has left.
+ */
+export function FeedbackPanel({
+  correct,
+  open,
+  hexIn,
+  hexSlot,
+  hexCue = null,
+  centred = false,
+  grouped = false,
+  title,
+  children,
+}: {
+  correct: boolean;
+  /** In place of the usual "Correct! +10 XP" / "Not quite". */
+  title?: string;
+  /** Slides up. The panel stays mounted while closed, so Hex's canvas is
+   * already loaded when his entrance is asked for, but hidden: being below the
+   * screen isn't enough, as Hex's canvas (and some displays) reach past its edge. */
+  open: boolean;
+  /** Plays Hex's entrance — independent of whether the sheet has arrived. */
+  hexIn: boolean;
+  /** Leaves the Hex spot empty and hands it over: a Hex already on screen
+   * glides in here instead of a new one entering. */
+  hexSlot?: (el: HTMLDivElement | null) => void;
+  /** Played by the panel's own Hex once his entrance is over. */
+  hexCue?: string | null;
+  /** The Sequence module's sheet: the text and Hex as one centred group (see `CENTRED_SHEET`). */
+  centred?: boolean;
+  /** The Command module's sheet: the text and Hex as one centred group, the sentence cut short with "…" (see `GROUPED_SHEET`). */
+  grouped?: boolean;
+  /** The sentence under the title. */
+  children: ReactNode;
+}) {
+  // The panel's own Hex enters a touch after the sheet starts up.
+  const [enterNow, setEnterNow] = useState(false);
+  useEffect(() => {
+    if (!hexIn) return;
+    const timer = window.setTimeout(() => setEnterNow(true), ENTER_DELAY_MS);
+    return () => {
+      window.clearTimeout(timer);
+      setEnterNow(false);
+    };
+  }, [hexIn]);
+  const look = FEEDBACK[correct ? "correct" : "wrong"];
+  return (
+    <motion.div
+      initial={{ y: "100%", visibility: "hidden" }}
+      animate={open ? { y: 0, visibility: "visible" } : { y: "100%", transitionEnd: { visibility: "hidden" } }}
+      transition={{ type: "spring", stiffness: 360, damping: 32 }}
+      // 5xl on screen, like the header; the stage is scaled, so divide.
+      style={{ maxWidth: "calc(1024px / var(--stage-scale, 1))" }}
+      className={`absolute inset-x-0 bottom-0 z-0 mx-auto border-b-0 ${open ? "" : "pointer-events-none"} ${centred ? CENTRED_SHEET : grouped ? `${GROUPED_SHEET} ${look.frame}` : `pt-5 pb-[140px] ${SHEET_INSET_THICK_BORDER} ${look.frame}`} ${look.panel}`}
+    >
+      <div className={centred ? CENTRED_ROW : grouped ? `${GROUPED_ROW} ${look.row}` : `flex w-full items-center justify-between ${SHEET_TEXT_GAP}`}>
+        <div className={centred ? CENTRED_TEXT : grouped ? `${GROUPED_TEXT} ${look.column}` : "flex min-w-0 flex-1 flex-col gap-1.5"}>
+          <h2 className={`font-semibold tracking-[-0.1px] ${SHEET_TITLE_SIZE} ${look.titleColor} ${grouped ? "truncate" : centred ? "whitespace-nowrap" : ""}`}>{title ?? look.title}</h2>
+          <p className={`text-[14px] text-[#444444] dark:text-white/80 [&_b]:font-semibold ${centred ? "font-medium leading-5" : look.text} ${grouped ? `${look.clamp} break-words` : ""} ${look.bold}`}>
+            {children}
+          </p>
+        </div>
+        <div aria-hidden className={`pointer-events-none ${centred || grouped ? CENTRED_HEX_SLOT : SHEET_HEX_SLOT}`}>
+          <div ref={hexSlot} className={centred || grouped ? CENTRED_HEX_BOX : SHEET_HEX_BOX}>
+            {!hexSlot && <OnboardingHex
+                entryKey={enterNow ? "feedback" : null}
+                cue={enterNow ? hexCue : null}
+                cueDelayMs={ENTER_SETTLE_MS}
+              />}
+          </div>
+        </div>
+      </div>
+      {/* Carries the sheet on past the stage's bottom, which stops above the home
+          bar, and under the spring's overshoot: the screen's edge clips it, so the
+          sheet always meets the bottom of the device. */}
+      <div aria-hidden className={`absolute inset-x-[-3px] top-full h-[100px] border-x-[3px] ${look.panel}`} />
+    </motion.div>
+  );
+}

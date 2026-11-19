@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { GemPopup } from "@/components/level-one/GemPopup";
+import { GemPopup } from "@/components/level-one/components/GemPopup";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { LessonArtboard } from "../artboard/LessonArtboard";

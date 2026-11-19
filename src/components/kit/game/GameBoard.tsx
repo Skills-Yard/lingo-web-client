@@ -1,9 +1,9 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { HexBoard } from "@/components/sequence/HexBoard";
+import { HexBoard } from "@/components/python/sequence/HexBoard";
 
-export type { Command, Dir, HexState } from "@/components/sequence/hexGrid";
+export type { Command, Dir, HexState } from "@/components/python/sequence/hexGrid";
 
 export type GameBoardProps = Omit<ComponentProps<typeof HexBoard>, "entryKey" | "width"> & {
   /** The width (px) the board is drawn at; its height follows. */

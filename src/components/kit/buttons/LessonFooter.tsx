@@ -1,6 +1,6 @@
 "use client";
 
-import { ActionRow } from "@/components/level-one/ActionRow";
+import { ActionRow } from "@/components/level-one/components/ActionRow";
 import type { AnswerResult } from "../types";
 
 export type LessonFooterProps = {

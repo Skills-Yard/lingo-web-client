@@ -2,8 +2,8 @@
 
 import { useState, type ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { LOOKS } from "@/components/level-one/TeacherFlow";
-import { playClickSound } from "@/components/onboarding/clickSound";
+import { LOOKS } from "@/components/level-one/screens/TeacherFlow";
+import { playClickSound } from "@/utils/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { PillButton } from "@/components/kit/buttons/PillButton";
 import { Note } from "@/components/kit/text/Prompt";

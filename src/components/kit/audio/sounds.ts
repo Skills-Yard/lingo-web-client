@@ -4,6 +4,6 @@
  *   `useSound(on)`       a hook giving `play("tap" | "step" | "pickup" | "win" | "lose" | "hint")` — small synthesised blips, no files
  *   `vibrate*()`         buzzes for a tap, a right or wrong answer, a lesson finished, a reward claimed
  */
-export { playClickSound } from "@/components/onboarding/clickSound";
+export { playClickSound } from "@/utils/clickSound";
 export { useSound } from "@/hooks/useSound";
 export { vibrateForAnswer, vibrateForClaim, vibrateForLessonComplete, vibrateForTap } from "@/lib/haptics";

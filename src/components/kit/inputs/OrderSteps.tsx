@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import { GripVertical } from "lucide-react";
-import { SlotImage } from "@/components/level-two/SlotImage";
+import { SlotImage } from "@/components/level-two/components/SlotImage";
 import { OrderStage } from "../content/from-operators/interactions";
 import { AnswerMark } from "../feedback/AnswerMark";
 import { STATE_CARD } from "../tokens";

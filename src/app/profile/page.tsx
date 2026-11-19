@@ -1,4 +1,4 @@
-import { ProfileRoute } from "@/components/home/HomeRoutes";
+import { ProfileRoute } from "@/features/home";
 
 export default function ProfilePage() {
   return <ProfileRoute />;

@@ -3,12 +3,12 @@
 import { Fragment, type ComponentProps, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { BUTTON_BOTTOM_GAP, CTA_HEIGHT_WITH_HINT } from "@/components/level-one/ActionRow";
+import { BUTTON_BOTTOM_GAP, CTA_HEIGHT_WITH_HINT } from "@/components/level-one/components/ActionRow";
 import { LevelOneShell } from "@/components/level-one/LevelOneShell";
 import { MODULE_STEPS } from "@/lib/moduleFlow";
 import { BUTTON } from "@/lib/rive/runtime";
 import { COLUMN_W } from "@/lib/questionColumn";
-import { FRAME_TOP_SHIFT, levelTwoHref, type TitleLines } from "./levelTwo";
+import { FRAME_TOP_SHIFT, levelTwoHref, type TitleLines } from "./utils/levelTwo";
 
 type LevelTwoShellProps = Omit<ComponentProps<typeof LevelOneShell>, "step" | "children"> & {
   step: number;

@@ -1,6 +1,6 @@
 "use client";
 
-import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
+import { OnboardingHex } from "@/components/level-one/components/FeedbackPanel";
 
 export type HexProps = {
   /** The box he stands in (px, square). His art has room around him, so he is drawn inside it. */

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { isVariableStep } from "@/components/variable/variable";
-import { VariableScreen } from "@/components/variable/VariableScreen";
+import { isVariableStep } from "@/components/python/variable/variable";
+import { VariableScreen } from "@/components/python/variable/VariableScreen";
 
 /** The Variable module's screens: `/module/variable?step=1` … `step=34` (default 1), plus `step=complete`. */
 export default async function VariablePage({

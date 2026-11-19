@@ -1,24 +1,26 @@
 import { notFound } from "next/navigation";
-import { ExamplesScreen } from "@/components/level-one/ExamplesScreen";
-import { InstructionQuizScreen } from "@/components/level-one/InstructionQuizScreen";
-import { LessonCompleteScreen } from "@/components/level-one/LessonCompleteScreen";
-import { MoveHexScreen } from "@/components/level-one/MoveHexScreen";
-import { ReviewIntroScreen } from "@/components/level-one/ReviewIntroScreen";
-import { TeacherFlow } from "@/components/level-one/TeacherFlow";
-import { VideoScreen } from "@/components/level-one/VideoScreen";
-import { FlipCardScreen } from "@/components/level-two/FlipCardScreen";
-import { GiveCommandScreen } from "@/components/level-two/GiveCommandScreen";
-import { MatchScreen } from "@/components/level-two/MatchScreen";
-import { MeetCommandScreen } from "@/components/level-two/MeetCommandScreen";
-import { MeetRobotScreen } from "@/components/level-two/MeetRobotScreen";
-import { QuizScreen } from "@/components/level-two/QuizScreen";
-import { TargetScreen } from "@/components/level-two/TargetScreen";
+import {
+  ExamplesScreen,
+  InstructionQuizScreen,
+  LessonCompleteScreen,
+  MoveHexScreen,
+  ReviewIntroScreen,
+  TeacherFlow,
+  VideoScreen,
+} from "@/components/level-one/screens";
+import { FlipCardScreen } from "@/components/level-two/screens/FlipCardScreen";
+import { GiveCommandScreen } from "@/components/level-two/screens/GiveCommandScreen";
+import { MatchScreen } from "@/components/level-two/screens/MatchScreen";
+import { MeetCommandScreen } from "@/components/level-two/screens/MeetCommandScreen";
+import { MeetRobotScreen } from "@/components/level-two/screens/MeetRobotScreen";
+import { QuizScreen } from "@/components/level-two/screens/QuizScreen";
+import { TargetScreen } from "@/components/level-two/screens/TargetScreen";
 import {
   ROBOT_PICKED_UP,
   WHAT_JUST_HAPPENED,
   WHAT_NEXT,
   WHERE_SHOULD_GO,
-} from "@/components/level-two/levelTwo";
+} from "@/components/level-two/utils/levelTwo";
 
 /** The Command module's screen for `?step=`: Level 2's meeting the robot and the
  * command, then Level 1's instructions, then "Lesson complete!". (Screens 12

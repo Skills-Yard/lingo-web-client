@@ -1,6 +1,6 @@
 "use client";
 
-import { SlotImage } from "@/components/level-two/SlotImage";
+import { SlotImage } from "@/components/level-two/components/SlotImage";
 import { tintClass } from "../tokens";
 import type { Tint } from "../types";
 

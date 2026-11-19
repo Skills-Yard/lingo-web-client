@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import { Volume2, VolumeX } from "lucide-react";
-import { setClickSoundMuted } from "@/components/onboarding/clickSound";
-import { useLevelMuted } from "@/components/level-one/levelMuted";
+import { setClickSoundMuted } from "@/utils/clickSound";
+import { useLevelMuted } from "@/components/level-one/utils/levelMuted";
 
 /** The sound toggle: mutes the voiceover, the audio player and the click sounds together. */
 export function SoundButton({ className = "" }: { className?: string }) {

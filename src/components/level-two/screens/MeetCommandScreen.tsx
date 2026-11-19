@@ -1,0 +1,35 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { MODULE_AUDIO } from "@/lib/moduleAudio";
+import { AudioPlayer } from "../components/AudioPlayer";
+import { aboveButtons, LevelTwoShell, ScreenTitle, stageTop, Teal } from "../LevelTwoShell";
+import { RobotBackdrop, robotAboveTop } from "../components/RobotBackdrop";
+import { levelTwoHref } from "../utils/levelTwo";
+
+/** Figma: the voice clip's top edge is 514px down the frame. */
+const PLAYER_TOP = 514;
+
+/**
+ * `/module/commands?step=9` — "Meet the Command.": the robot, a voice clip to play
+ * under it, and what instructions are known as.
+ */
+export function MeetCommandScreen() {
+  const router = useRouter();
+  return (
+    <LevelTwoShell step={9} scene={<RobotBackdrop bottom={robotAboveTop(stageTop(PLAYER_TOP))} pose="idle" />} ctaLabel="Next" onContinue={() => router.push(levelTwoHref(10))}>
+      <ScreenTitle>
+        Meet the <Teal>Command.</Teal>
+      </ScreenTitle>
+      <div className="absolute inset-x-0 flex justify-center" style={{ top: stageTop(PLAYER_TOP) }}>
+        <AudioPlayer src={MODULE_AUDIO.meetCommand[0]} />
+      </div>
+      <p
+        className="absolute text-center text-[20px] leading-[28px] font-semibold text-[#444444] dark:text-white"
+        style={{ bottom: aboveButtons(32), width: 340, left: "calc(50% - 170px)" }}
+      >
+        In Programming Languages, instructions are known as <Teal>command.</Teal>
+      </p>
+    </LevelTwoShell>
+  );
+}

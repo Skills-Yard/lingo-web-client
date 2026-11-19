@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { CareerRoute } from "@/components/home/HomeRoutes";
-import { CAREERS, careerById } from "@/components/home/careersData";
+import { CareerRoute } from "@/features/home";
+import { CAREERS, careerById } from "@/features/careers";
 
 export const generateStaticParams = () => CAREERS.map(({ id }) => ({ id }));
 

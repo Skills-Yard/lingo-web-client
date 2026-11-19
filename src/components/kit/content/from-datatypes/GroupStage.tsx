@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { playClickSound } from "@/components/onboarding/clickSound";
+import { playClickSound } from "@/utils/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { DragCard } from "./interactions";
 import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";

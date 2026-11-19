@@ -1,6 +1,6 @@
 "use client";
 
-import { BounceIn } from "@/components/level-two/BounceIn";
+import { BounceIn } from "@/components/level-two/components/BounceIn";
 import type { OptionData } from "../types";
 import { OptionTile, type TileSize } from "./OptionTile";
 import { optionState } from "./state";

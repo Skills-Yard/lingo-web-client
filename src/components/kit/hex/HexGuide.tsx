@@ -1,6 +1,6 @@
 "use client";
 
-import { HexBubble } from "@/components/level-two/HexBubble";
+import { HexBubble } from "@/components/level-two/components/HexBubble";
 import { plainText, toSpans } from "../markup";
 
 export type HexGuideProps = {

@@ -3,9 +3,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { motion } from "framer-motion";
 import { ArrowDown, Calculator, Check, ClipboardCheck, CloudSun, FileText, Link2, Plus, ToggleRight, TriangleAlert, User, X } from "lucide-react";
-import { BounceIn } from "@/components/level-two/BounceIn";
+import { BounceIn } from "@/components/level-two/components/BounceIn";
 import { stageTop } from "@/components/level-two/LevelTwoShell";
-import { SlotImage } from "@/components/level-two/SlotImage";
+import { SlotImage } from "@/components/level-two/components/SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { INK, TINTS } from "./look";
 import { P } from "./pictures";

@@ -1,8 +1,8 @@
 import { createAdaptiveFlow } from "@/lib/adaptiveFlow";
-import { answeredClean as conditionsClean, conditionsAccuracy, noteAnswer as conditionsNote, noteStruggle as conditionsStruggle, struggled as conditionsStruggled } from "@/components/conditions/conditionsScore";
-import { cleanRight as datatypesClean, datatypesAccuracy, noteAnswer as datatypesNote, noteStruggle as datatypesStruggle, struggled as datatypesStruggled } from "@/components/datatypes/datatypesScore";
-import { answeredClean as operatorsClean, noteAnswer as operatorsNote, noteStruggle as operatorsStruggle, operatorsAccuracy, struggled as operatorsStruggled } from "@/components/operators/operatorsScore";
-import { cleanRight as variableClean, noteAnswer as variableNote, noteStruggle as variableStruggle, struggled as variableStruggled, variableAccuracy } from "@/components/variable/variableScore";
+import { answeredClean as conditionsClean, conditionsAccuracy, noteAnswer as conditionsNote, noteStruggle as conditionsStruggle, struggled as conditionsStruggled } from "@/components/python/conditions/conditionsScore";
+import { cleanRight as datatypesClean, datatypesAccuracy, noteAnswer as datatypesNote, noteStruggle as datatypesStruggle, struggled as datatypesStruggled } from "@/components/python/datatypes/datatypesScore";
+import { answeredClean as operatorsClean, noteAnswer as operatorsNote, noteStruggle as operatorsStruggle, operatorsAccuracy, struggled as operatorsStruggled } from "@/components/python/operators/operatorsScore";
+import { cleanRight as variableClean, noteAnswer as variableNote, noteStruggle as variableStruggle, struggled as variableStruggled, variableAccuracy } from "@/components/python/variable/variableScore";
 import conditionsData from "@/data/modules/conditions.json";
 import datatypesData from "@/data/modules/datatypes.json";
 import operatorsData from "@/data/modules/operators.json";

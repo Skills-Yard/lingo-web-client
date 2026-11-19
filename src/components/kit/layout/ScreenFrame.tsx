@@ -1,9 +1,9 @@
 "use client";
 
 import type { ComponentProps, ReactNode } from "react";
-import { GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { GAP_ABOVE_BUTTONS } from "@/components/level-two/components/AnswerCards";
 import { aboveButtons, LevelTwoShell, stageTop } from "@/components/level-two/LevelTwoShell";
-import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
+import { COLUMN_LEFT } from "@/components/level-two/utils/levelTwo";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { Backdrop, type BackdropKind } from "./Backdrop";
 

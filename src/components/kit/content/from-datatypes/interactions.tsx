@@ -3,9 +3,9 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, AnimatePresence, motion, useMotionValue } from "framer-motion";
 import { Check } from "lucide-react";
-import { LOOKS } from "@/components/level-one/TeacherFlow";
-import { BounceIn } from "@/components/level-two/BounceIn";
-import { playClickSound } from "@/components/onboarding/clickSound";
+import { LOOKS } from "@/components/level-one/screens/TeacherFlow";
+import { BounceIn } from "@/components/level-two/components/BounceIn";
+import { playClickSound } from "@/utils/clickSound";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForTap } from "@/lib/haptics";
 import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";

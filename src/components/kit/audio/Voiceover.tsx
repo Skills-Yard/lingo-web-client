@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useRef, type ReactNode } from "react";
-import { LevelVoiceContext } from "@/components/level-one/LevelVoice";
-import { useLevelMuted } from "@/components/level-one/levelMuted";
-import { questionSpoken } from "@/components/onboarding/QuestionHeading";
-import { isVoiceoverSettled, useVoiceover } from "@/components/onboarding/useVoiceover";
+import { LevelVoiceContext } from "@/components/level-one/utils/LevelVoice";
+import { useLevelMuted } from "@/components/level-one/utils/levelMuted";
+import { questionSpoken } from "@/features/onboarding/components/QuestionHeading";
+import { isVoiceoverSettled, useVoiceover } from "@/features/onboarding/hooks/useVoiceover";
 
 export type VoiceoverProps = {
   /**

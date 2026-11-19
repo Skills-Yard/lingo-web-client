@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { DataTypesRoute } from "@/components/datatypes/DataTypesRoute";
-import { isDatatypesStep } from "@/components/datatypes/datatypes";
+import { DataTypesRoute } from "@/components/python/datatypes/DataTypesRoute";
+import { isDatatypesStep } from "@/components/python/datatypes/datatypes";
 
 /** The Data Types module's screens: `/module/datatypes?step=1` … `step=30` (default 1), plus `step=complete`. */
 export default async function DataTypesPage({

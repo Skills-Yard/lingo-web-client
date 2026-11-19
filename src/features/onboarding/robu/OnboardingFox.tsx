@@ -1,0 +1,229 @@
+"use client";
+
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { Layout, Fit, Alignment } from "@rive-app/canvas";
+import {
+  HEX_STATE,
+  HEX_HELLO_MS,
+  HEX_TAP_MS,
+  HEX_ONBOARDING_TRIGGER,
+  randomHexTalkTrigger,
+  type HexState,
+} from "@/lib/rive/runtime";
+import type { HexOnboardingBeat } from "../constants/onboarding";
+import { useHexRive } from "@/features/onboarding/robu/useHexRive";
+import { useHexExit } from "@/features/onboarding/robu/HexExit";
+
+const LAYOUT = new Layout({ fit: Fit.Contain, alignment: Alignment.Center });
+
+const GREETING_DELAY_MS = 400;
+
+/**
+ * Plays "HEX-Happy_Jump" for `HEX_TAP_MS` every time `tapCount` goes up — the
+ * stage bumps it on each tap on Hex. Taps while `blocked` (the hello wave) are
+ * dropped. Not on mount.
+ */
+function useTapping(tapCount: number, blocked: boolean) {
+  const [tapping, setTapping] = useState(false);
+  const lastCount = useRef(tapCount);
+  useEffect(() => {
+    if (tapCount === lastCount.current) return;
+    lastCount.current = tapCount;
+    if (blocked) return;
+    setTapping(true);
+    const timer = window.setTimeout(() => setTapping(false), HEX_TAP_MS);
+    return () => window.clearTimeout(timer);
+  }, [tapCount, blocked]);
+  return tapping;
+}
+
+/** True for the hello wave: starts shortly after `greet` turns on, once per greeting. */
+function useHello(greet: boolean) {
+  const [waving, setWaving] = useState(false);
+  useEffect(() => {
+    if (!greet) {
+      setWaving(false);
+      return;
+    }
+    const start = window.setTimeout(() => setWaving(true), GREETING_DELAY_MS);
+    const end = window.setTimeout(() => setWaving(false), GREETING_DELAY_MS + HEX_HELLO_MS);
+    return () => {
+      window.clearTimeout(start);
+      window.clearTimeout(end);
+    };
+  }, [greet]);
+  return waving;
+}
+
+interface OnboardingFoxProps {
+  className?: string;
+  style?: CSSProperties;
+  /** Waves hello shortly after mounting — only the "Hey! I am Zox" greeting
+   * screen; every other screen's fox just idles. */
+  greet?: boolean;
+  /** Bumped on every tap on Hex (cut-scene screens only) — each increase plays
+   * the tap jump. */
+  tapCount?: number;
+  /** The "Are you ready?" excitement. */
+  excited?: boolean;
+  /** Accepted for callers (FoxSlot), but with no pose for them there's nothing
+   * to drive. */
+  talking?: boolean;
+  laptop?: boolean;
+  typing?: number;
+  /** Plays the `Onboarding` state machine instead of the poses above, and
+   * fires this trigger on it (see `beatKey`). Taps then fire its `tap`. */
+  beat?: HexOnboardingBeat | null;
+  /** Fires `beat` each time this changes to a new non-null value. */
+  beatKey?: string | null;
+  /** Fires `talk` — Hex speaking — each time this changes to a new non-null
+   * value (the screen's voiceover is playing); the `beat` follows it. */
+  talkKey?: string | null;
+  /** On an "onboarding" question (Hex hidden): keeps the `Onboarding` state
+   * machine running, fires `showQuestion` for each new key and
+   * `selectOption` whenever `pickCount` goes up. */
+  questionKey?: string | null;
+  pickCount?: number;
+  /** Changes with every screen; on the `Onboarding` state machine each new
+   * one fires `showQuestion` at once, before that screen's own triggers. */
+  screenKey?: string | null;
+  /** How far (px, before the stage's scale) the canvas reaches below the fox's
+   * box, so Hex can enter from / leave through the bottom without being cut
+   * off at it. The artboard is still fitted into the box itself. `0` keeps the
+   * canvas on the box but ready to be bled; leave it out for a plain canvas. */
+  bleedBottom?: number;
+}
+
+/** Restarts the `Onboarding` machine from idle whenever it lands on a new screen. */
+function useResetOnNewScreen(
+  reset: () => void,
+  ready: boolean,
+  onboarding: boolean,
+  screenKey: string | null,
+) {
+  useEffect(() => {
+    if (ready && onboarding) reset();
+  }, [reset, ready, onboarding, screenKey]);
+}
+
+/** `showQuestion` once per new `questionKey`, `selectOption` on each pick. */
+function useOnboardingQuestion(
+  fireTrigger: (name: string) => void,
+  ready: boolean,
+  questionKey: string | null,
+  pickCount: number,
+) {
+  const shownKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!questionKey) shownKey.current = null;
+    if (!ready || !questionKey || shownKey.current === questionKey) return;
+    shownKey.current = questionKey;
+    fireTrigger(HEX_ONBOARDING_TRIGGER.showQuestion);
+  }, [fireTrigger, ready, questionKey]);
+
+  const lastPickCount = useRef(pickCount);
+  useEffect(() => {
+    if (pickCount === lastPickCount.current) return;
+    lastPickCount.current = pickCount;
+    if (ready && questionKey) fireTrigger(HEX_ONBOARDING_TRIGGER.selectOption);
+  }, [fireTrigger, ready, questionKey, pickCount]);
+}
+
+/** Fires a random talk trigger once per new `talkKey`, `beat` once per new `beatKey`, and the
+ * `tap` trigger on every tap. */
+function useOnboardingBeat(
+  fireTrigger: (name: string) => void,
+  ready: boolean,
+  beat: HexOnboardingBeat | null,
+  beatKey: string | null,
+  talkKey: string | null,
+  tapCount: number,
+) {
+  const talkedKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || !beat || !talkKey || talkedKey.current === talkKey) return;
+    talkedKey.current = talkKey;
+    fireTrigger(randomHexTalkTrigger());
+  }, [fireTrigger, ready, beat, talkKey]);
+
+  const firedKey = useRef<string | null>(null);
+  useEffect(() => {
+    if (!ready || !beat || !beatKey || firedKey.current === beatKey) return;
+    firedKey.current = beatKey;
+    fireTrigger(HEX_ONBOARDING_TRIGGER[beat]);
+  }, [fireTrigger, ready, beat, beatKey]);
+
+  const lastTapCount = useRef(tapCount);
+  useEffect(() => {
+    if (tapCount === lastTapCount.current) return;
+    lastTapCount.current = tapCount;
+    if (beat) fireTrigger(HEX_ONBOARDING_TRIGGER.tap);
+  }, [fireTrigger, beat, tapCount]);
+}
+
+/**
+ * The onboarding flow's fox: Hex, resting in "HEX-Floating" and switching to
+ * the hello wave, the excitement or the tap jump for a moment each. No boot-up
+ * of his own — PreLoginScreen and every cut-scene screen just drop him in
+ * already idle (the splash plays "HEX-Entry" separately). Screens with a
+ * `beat` play the `Onboarding` state machine instead.
+ */
+export function OnboardingFox({
+  className,
+  style,
+  greet = false,
+  excited = false,
+  tapCount = 0,
+  beat = null,
+  beatKey = null,
+  talkKey = null,
+  questionKey = null,
+  pickCount = 0,
+  screenKey = null,
+  bleedBottom,
+}: OnboardingFoxProps) {
+  const waving = useHello(greet);
+  const tapping = useTapping(tapCount, greet || !!beat);
+
+  let state: HexState = HEX_STATE.idle;
+  if (beat || questionKey) state = HEX_STATE.onboarding;
+  else if (tapping) state = HEX_STATE.tap;
+  else if (waving) state = HEX_STATE.hello;
+  else if (excited) state = HEX_STATE.excited;
+
+  const bleed = useMemo(
+    () => (bleedBottom === undefined ? undefined : { x: 0, y: 0, bottom: bleedBottom }),
+    [bleedBottom],
+  );
+  const { RiveComponent, ready, fireTrigger, reset } = useHexRive(
+    LAYOUT,
+    state,
+    undefined,
+    undefined,
+    screenKey ?? questionKey ?? "fox",
+    undefined,
+    undefined,
+    bleed,
+  );
+  // Before the hooks below, so the machine is back at idle ahead of the
+  // screen's triggers.
+  useResetOnNewScreen(
+    reset,
+    ready,
+    state === HEX_STATE.onboarding,
+    screenKey,
+  );
+  useOnboardingBeat(fireTrigger, ready, beat, beatKey, talkKey, tapCount);
+  useOnboardingQuestion(fireTrigger, ready, questionKey, pickCount);
+  useHexExit(fireTrigger, ready);
+
+  return (
+    // `data-hex-box`: the box Hex stands in (not the bled canvas), which the
+    // hidden dev panel (see DevPanel) uses as his tap target.
+    <div data-hex-box className={`relative ${className ?? ""}`} style={style}>
+      <div className="absolute inset-x-0 top-0" style={{ bottom: -(bleedBottom ?? 0) }}>
+        <RiveComponent className="h-full w-full" />
+      </div>
+    </div>
+  );
+}

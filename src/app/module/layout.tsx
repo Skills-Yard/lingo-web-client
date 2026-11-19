@@ -1,4 +1,4 @@
-import { CelebrationProvider } from "@/components/level-one/Celebration";
+import { CelebrationProvider } from "@/components/level-one/components/Celebration";
 import { ModuleButtonWarmup } from "@/components/rive/ModuleButtonWarmup";
 import { RobotWarmup } from "@/components/rive/RobotWarmup";
 

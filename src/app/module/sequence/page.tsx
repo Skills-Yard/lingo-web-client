@@ -1,20 +1,20 @@
 import { notFound } from "next/navigation";
-import { ArrangeScreen } from "@/components/sequence/ArrangeScreen";
-import { DressArrangeScreen } from "@/components/sequence/DressArrangeScreen";
-import { FixScreen } from "@/components/sequence/FixScreen";
-import { HexIntroScreen } from "@/components/sequence/HexIntroScreen";
-import { HexOrderScreen } from "@/components/sequence/HexOrderScreen";
-import { MeetSequenceScreen } from "@/components/sequence/MeetSequenceScreen";
-import { OneCommandScreen } from "@/components/sequence/OneCommandScreen";
-import { PlanScreen } from "@/components/sequence/PlanScreen";
-import { PredictFollowUpScreen } from "@/components/sequence/PredictFollowUpScreen";
-import { PredictScreen } from "@/components/sequence/PredictScreen";
-import { PutOnScreen } from "@/components/sequence/PutOnScreen";
-import { RecapScreen } from "@/components/sequence/RecapScreen";
-import { RevealCardScreen } from "@/components/sequence/RevealCardScreen";
-import { SequenceCompleteScreen } from "@/components/sequence/SequenceCompleteScreen";
-import { SequenceQuizScreen } from "@/components/sequence/SequenceQuizScreen";
-import { TeaScreen } from "@/components/sequence/TeaScreen";
+import { ArrangeScreen } from "@/components/python/sequence/ArrangeScreen";
+import { DressArrangeScreen } from "@/components/python/sequence/DressArrangeScreen";
+import { FixScreen } from "@/components/python/sequence/FixScreen";
+import { HexIntroScreen } from "@/components/python/sequence/HexIntroScreen";
+import { HexOrderScreen } from "@/components/python/sequence/HexOrderScreen";
+import { MeetSequenceScreen } from "@/components/python/sequence/MeetSequenceScreen";
+import { OneCommandScreen } from "@/components/python/sequence/OneCommandScreen";
+import { PlanScreen } from "@/components/python/sequence/PlanScreen";
+import { PredictFollowUpScreen } from "@/components/python/sequence/PredictFollowUpScreen";
+import { PredictScreen } from "@/components/python/sequence/PredictScreen";
+import { PutOnScreen } from "@/components/python/sequence/PutOnScreen";
+import { RecapScreen } from "@/components/python/sequence/RecapScreen";
+import { RevealCardScreen } from "@/components/python/sequence/RevealCardScreen";
+import { SequenceCompleteScreen } from "@/components/python/sequence/SequenceCompleteScreen";
+import { SequenceQuizScreen } from "@/components/python/sequence/SequenceQuizScreen";
+import { TeaScreen } from "@/components/python/sequence/TeaScreen";
 import {
   COMPARE_ATTEMPTS,
   FIRST_COMMAND,
@@ -23,7 +23,7 @@ import {
   REFLECT_ORDER,
   SOCKS_FIRST,
   WHAT_DID_YOU_DO,
-} from "@/components/sequence/sequence";
+} from "@/components/python/sequence/sequence";
 
 /** The Sequence module's screen for `?step=` (see `STEP` for what each number is). */
 function sequenceScreen(step: string) {

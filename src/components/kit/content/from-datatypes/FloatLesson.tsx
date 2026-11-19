@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { AudioPlayer } from "@/components/level-two/AudioPlayer";
-import { BounceIn } from "@/components/level-two/BounceIn";
-import { SlotImage } from "@/components/level-two/SlotImage";
+import { AudioPlayer } from "@/components/level-two/components/AudioPlayer";
+import { BounceIn } from "@/components/level-two/components/BounceIn";
+import { SlotImage } from "@/components/level-two/components/SlotImage";
 import { DATATYPES_AUDIO } from "@/lib/moduleAudio";
 import { P } from "./pictures";
 

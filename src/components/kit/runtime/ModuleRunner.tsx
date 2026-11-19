@@ -1,7 +1,7 @@
 "use client";
 
 import { createElement } from "react";
-import { LessonCompleteScreen } from "@/components/level-one/LessonCompleteScreen";
+import { LessonCompleteScreen } from "@/components/level-one/screens/LessonCompleteScreen";
 import { playable } from "./modules";
 import { resolveName } from "./registry";
 import { ScreenRunner } from "./ScreenRunner";

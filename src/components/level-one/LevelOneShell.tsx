@@ -6,16 +6,16 @@ import { useRouter } from "next/navigation";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { LessonFooter } from "@/components/kit/buttons/LessonFooter";
 import { LessonHeader } from "@/components/kit/header/LessonHeader";
-import { setClickSoundMuted } from "@/components/onboarding/clickSound";
-import { isVoiceoverSettled, useVoiceover } from "@/components/onboarding/useVoiceover";
-import { questionSpoken } from "@/components/onboarding/QuestionHeading";
+import { setClickSoundMuted } from "@/utils/clickSound";
+import { isVoiceoverSettled, useVoiceover } from "@/features/onboarding/hooks/useVoiceover";
+import { questionSpoken } from "@/features/onboarding/components/QuestionHeading";
 import { LEVEL_ONE_STEP, MODULE_STEPS, type LevelOneStepKey } from "@/lib/moduleFlow";
 import { useReviewProgress } from "@/lib/moduleReview";
 import { commandsHref } from "@/lib/routes";
-import { LevelVoiceContext } from "./LevelVoice";
-import { useLevelMuted } from "./levelMuted";
-import { OutOfEnergySheet, useOutOfEnergy } from "./OutOfEnergySheet";
-import { useStreakStrikes } from "./useStreakStrikes";
+import { LevelVoiceContext } from "./utils/LevelVoice";
+import { useLevelMuted } from "./utils/levelMuted";
+import { OutOfEnergySheet, useOutOfEnergy } from "./components/OutOfEnergySheet";
+import { useStreakStrikes } from "./hooks/useStreakStrikes";
 
 /** The Figma frame every Level 1 screen is laid out in. */
 const FRAME_W = 390;

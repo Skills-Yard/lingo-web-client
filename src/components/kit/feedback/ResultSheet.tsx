@@ -1,6 +1,6 @@
 "use client";
 
-import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
+import { FeedbackPanel } from "@/components/level-one/components/FeedbackPanel";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { Markup } from "../markup";
 

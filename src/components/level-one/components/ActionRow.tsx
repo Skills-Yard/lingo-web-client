@@ -1,0 +1,157 @@
+"use client";
+
+import { useSyncExternalStore } from "react";
+import { Button3D } from "@/components/ui/Button3D";
+import { RIVE_BUTTON_H, RIVE_BUTTON_W } from "@/components/ui/RiveButtonFace";
+import type { AnswerResult } from "@/components/ui/RiveProgressBar";
+import { playClickSound } from "@/utils/clickSound";
+import { moduleButtonHeld, subscribeModuleButtonHold } from "@/lib/rive/moduleButtonHost";
+import { BUTTON } from "@/lib/rive/runtime";
+import { HintButton, type HintSize } from "./HintButton";
+
+/** The badge count — fixed at 1 for now. */
+const HINTS_LEFT = 1;
+/**
+ * With the hint showing, the main button is drawn at this share of its full
+ * width and `CTA_HEIGHT_WITH_HINT` of its full height (a little stretched: taller
+ * than its width share, so it is not squashed beside the hint), and the hint is
+ * drawn as tall as that: the two are always the same height, standing on the
+ * same bottom edge, so they share one centre line, and the pair is centred in
+ * the row. Under 1 they are smaller than the button on a screen with no hint.
+ */
+const CTA_WIDTH_WITH_HINT = 0.72;
+export const CTA_HEIGHT_WITH_HINT = 0.9;
+/**
+ * With no hint, the main button is drawn to the header's drawn width: from the
+ * cross (21.35px in) to the battery's count (19.5px in), centred on the screen, so
+ * this far (frame px) from each edge.
+ */
+const CTA_SOLO_GAP = 20.4;
+/**
+ * The share of its box's width the artwork draws, measured: fitted to the box (a
+ * screen with no hint) or stretched to it (one with a hint, where changing the fit
+ * would jump). The box is sized by these so both draw the same size.
+ */
+const ART_WIDTH_FITTED = 327.7 / 358;
+const ART_WIDTH_STRETCHED = 355.7 / 358;
+/** How much narrower the drawn button is than the row, which is 6px in from each edge. */
+const CTA_SOLO_TRIM = 2 * CTA_SOLO_GAP - 12;
+const CTA_SOLO_WIDTH = `calc((100% - ${CTA_SOLO_TRIM}px) / ${ART_WIDTH_FITTED})`;
+const CTA_SOLO_WIDTH_STRETCHED = `calc((100% - ${CTA_SOLO_TRIM}px) / ${ART_WIDTH_STRETCHED})`;
+const CTA_SOLO_HEIGHT = `calc((100% - ${CTA_SOLO_TRIM * (RIVE_BUTTON_H / RIVE_BUTTON_W)}px) / ${ART_WIDTH_FITTED})`;
+/** The same fitted button's width on a screen outside the scaled stage, `screenW` (a CSS length) wide. */
+export const soloButtonWidth = (screenW: string) => `calc(${screenW} * ${(1 - (2 * CTA_SOLO_GAP) / 390) / ART_WIDTH_FITTED})`;
+
+/**
+ * The hint button is as tall as the main button beside it looks. With the hint
+ * showing the button's artwork is stretched into its box, and what is seen of it
+ * (the face and its dark edge under it) is `FACE_HEIGHT` of the box's height and
+ * stands `FACE_BOTTOM` of it above the box's bottom, measured on screen. The hint
+ * takes that height (its own shadow edge included) and stands on the same line.
+ * It is a square, so its width is that same length as a share of the row's width
+ * (the row's shape is the button's own, so a share of the height is `height / width`
+ * of one).
+ */
+const FACE_HEIGHT = 0.831;
+const FACE_BOTTOM = 0.092;
+const HINT_HEIGHT = FACE_HEIGHT * CTA_HEIGHT_WITH_HINT;
+const HINT_SIZE: HintSize = {
+  height: `${HINT_HEIGHT * 100}%`,
+  width: `${HINT_HEIGHT * (RIVE_BUTTON_H / RIVE_BUTTON_W) * 100}%`,
+  lift: `${FACE_BOTTOM * CTA_HEIGHT_WITH_HINT * 100}%`,
+};
+
+/** The gap (px) from a module button's drawn bottom edge to the bottom of the screen. */
+export const BUTTON_BOTTOM_GAP = 20;
+
+/**
+ * How far (px, in the 390px frame) the button's top moved down when its bottom
+ * gap became `BUTTON_BOTTOM_GAP` (it was 36px of padding under the empty band of
+ * its art). A layout that flows from the top adds this above the options it
+ * wants to keep the same distance from the button.
+ */
+export const BUTTON_DROP = 37;
+
+/**
+ * The CSS `margin-bottom` that leaves `BUTTON_BOTTOM_GAP` under a button's drawn
+ * edge, for a button box `width` (a CSS length) wide, drawn `scale` of its full
+ * height. The box has an empty band under its art that is taller than the gap, so
+ * this is negative: the box hangs a little below the edge.
+ */
+export const buttonBottomMargin = (width: string, scale = 1) =>
+  `calc(${BUTTON_BOTTOM_GAP}px - ${width} * ${(RIVE_BUTTON_H / RIVE_BUTTON_W) * scale * (1 - BUTTON.face.bottom)})`;
+
+type ActionRowProps = {
+  /** The row's widest width (px) — it keeps its phone size on a desktop. */
+  maxWidth: number;
+  /** Shows the hint button at the left end of the row; `visible` slides it in / out. */
+  hint?: { visible: boolean; onUse: () => void };
+  answer?: AnswerResult | null;
+  /** Label of the main button. */
+  ctaLabel: string;
+  ctaDisabled?: boolean;
+  /** The main button takes no clicks, but is drawn enabled. */
+  ctaLocked?: boolean;
+  /** The main button is white instead of green. */
+  ctaLight?: boolean;
+  /** The `cube` property of the main button's artboard is on. */
+  ctaCube?: boolean;
+  onContinue?: () => void;
+};
+
+/**
+ * The bottom row of every Level 1 screen: the hint button (where there is one)
+ * and Continue as one component. The row is the same height with or without
+ * the hint (the height follows its width, at the full-width button's own
+ * ratio), so no screen's layout changes when it has one; alone, the button is
+ * drawn `CTA_SOLO_GAP` from the screen's edges; with the hint, it shrinks to `CTA_WIDTH_WITH_HINT` of its width and `CTA_HEIGHT_WITH_HINT`
+ * of its height, standing on the row's bottom edge like the hint does, and the
+ * two sit centred in the row together.
+ */
+export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, ctaLight, ctaCube, onContinue }: ActionRowProps) {
+  const withHint = !!hint?.visible;
+  // A strike is playing for the answer just checked: the button takes no clicks, but is drawn as it was.
+  const held = useSyncExternalStore(subscribeModuleButtonHold, moduleButtonHeld, () => false);
+  // The row is the stage's width (capped at `maxWidth`) less the padding at each
+  // side. With the hint the button is shorter, so its art ends higher in the row.
+  const rowWidth = `(min(var(--stage-w, 390px), ${maxWidth}px) - 12px)`;
+  return (
+    <div
+      className="relative z-10 mx-auto w-full shrink-0 px-1.5 transition-[margin] duration-500 ease-out"
+      style={{ maxWidth, marginBottom: buttonBottomMargin(rowWidth, withHint ? CTA_HEIGHT_WITH_HINT : 1) }}
+    >
+      <div className="flex w-full items-end justify-center" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
+        {hint && (
+          <HintButton
+            visible={hint.visible}
+            count={HINTS_LEFT}
+            size={HINT_SIZE}
+            onPress={() => {
+              playClickSound();
+              hint.onUse();
+            }}
+          />
+        )}
+        <Button3D
+          riveVariant="module"
+          stretch={!!hint}
+          answer={answer}
+          light={ctaLight}
+          cube={ctaCube}
+          onClick={() => onContinue?.()}
+          onPress={playClickSound}
+          disabled={ctaDisabled}
+          locked={ctaLocked || held}
+          className={hint ? "z-2 min-w-0 shrink-0 transition-[width,height] duration-500 ease-out" : "min-w-0 shrink-0"}
+          style={{
+            aspectRatio: "auto",
+            width: withHint ? `${CTA_WIDTH_WITH_HINT * 100}%` : hint ? CTA_SOLO_WIDTH_STRETCHED : CTA_SOLO_WIDTH,
+            height: withHint ? `${CTA_HEIGHT_WITH_HINT * 100}%` : CTA_SOLO_HEIGHT,
+          }}
+        >
+          {ctaLabel}
+        </Button3D>
+      </div>
+    </div>
+  );
+}

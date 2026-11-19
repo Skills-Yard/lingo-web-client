@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { BatteryMenu } from "@/components/onboarding/BatteryMenu";
+import { BatteryMenu } from "@/components/ui/BatteryMenu";
 import { EDGE, RAISED_SMALL } from "@/components/ui/raised";
 import { BatteryMeter } from "./BatteryMeter";
 import { CloseButton } from "./CloseButton";

@@ -1,5 +1,5 @@
 import { ArrowUp, RotateCw, type LucideIcon } from "lucide-react";
-import { COMMAND_LABEL, type Command } from "@/components/sequence/hexGrid";
+import { COMMAND_LABEL, type Command } from "@/components/python/sequence/hexGrid";
 
 /** How each command looks on a card: its icon, its colour, its words. */
 export const COMMAND_LOOK: Record<Command, { Icon: LucideIcon; tint: string; icon: string; label: string }> = {

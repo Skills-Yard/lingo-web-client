@@ -28,7 +28,7 @@ Four modules play from data (142 screens). Done: one header and footer, `Answers
 | Screen data (JSON) | `src/data/modules/{datatypes,operators,conditions,variable}.json` — generated, see below |
 | Data runner | `src/components/kit/runtime/` (`ScreenRunner`, `ModuleRunner`, `hydrate`, `extract`, `registry`, `modules`) |
 | Gallery, compare, export pages | `src/app/kit/**` and `src/components/kit/gallery/**` |
-| Legacy screens (still live at `/module/*`) | `src/components/{datatypes,operators,conditions,variable,sequence,level-one,level-two}/` |
+| Legacy screens (still live at `/module/*`) | `src/components/python/{datatypes,operators,conditions,variable,sequence}/` and `src/components/{level-one,level-two}/` |
 
 ## Run and check
 

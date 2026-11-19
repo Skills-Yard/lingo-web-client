@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, type ComponentType } from "react";
-import { BottleBackdrop, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, WalletBackdrop } from "@/components/variable/scenes";
+import { BottleBackdrop, ItemsBackdrop, NamesBackdrop, ShopBackdrop, TrekBackdrop, WalletBackdrop } from "@/components/python/variable/scenes";
 import { fireSceneTrigger, setSceneValues, type SceneName as HostSceneName } from "@/lib/rive/variableHost";
 import type { TriggerRequest } from "../types";
 

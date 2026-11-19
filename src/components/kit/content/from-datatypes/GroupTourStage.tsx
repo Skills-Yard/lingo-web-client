@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { HexBubble } from "@/components/level-two/HexBubble";
-import { playClickSound } from "@/components/onboarding/clickSound";
+import { HexBubble } from "@/components/level-two/components/HexBubble";
+import { playClickSound } from "@/utils/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { CARD_LOOK, EDGE_READING, TINTS, type GroupTint } from "@/components/kit/content/from-datatypes/look";
 import type { InteractionApi } from "@/components/kit/content/from-datatypes/screen";

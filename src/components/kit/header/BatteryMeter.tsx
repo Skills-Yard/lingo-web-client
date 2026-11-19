@@ -1,6 +1,6 @@
 "use client";
 
-import { batteryCount, useBattery } from "@/components/home/batteryStore";
+import { batteryCount, useBattery } from "@/services/batteryStore";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { Artboard } from "../artboard/Artboard";
 import { ARTBOARDS } from "../artboard/presets";

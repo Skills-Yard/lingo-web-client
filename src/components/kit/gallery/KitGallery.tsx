@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ARTBOARDS, KeyText, LessonCards, LessonTitle, VideoPlayer } from "../internal";
 import {
   ActionBarDemo,

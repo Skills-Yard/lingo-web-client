@@ -1,0 +1,158 @@
+"use client";
+
+import { useEffect, useRef } from "react";
+import { CircleX, Smartphone, BarChart3, Trophy, type LucideIcon } from "lucide-react";
+import type { OnboardingGridOption } from "../constants/onboarding";
+import { motion } from "framer-motion";
+import { optionCardClass, optionDropIn, squeezedSpace } from "@/features/onboarding/utils/optionCard";
+
+// Grid options without their own `image` get an icon in the picture panel
+// instead — no matching artwork exists for those yet ("No", and the later
+// grid questions' options).
+const ILLUSTRATIONS: Record<OnboardingGridOption["illustration"], { icon: LucideIcon; fg: string }> = {
+  books: { icon: CircleX, fg: "text-[#2F6FE4]" },
+  mobile: { icon: Smartphone, fg: "text-[#7C5CE0]" },
+  chart: { icon: BarChart3, fg: "text-[#3B82C4]" },
+  trophy: { icon: Trophy, fg: "text-[#D69A1F]" },
+};
+
+// The Figma label type: Poppins 500, 16px / 140%.
+
+/** The fixed space between the question row and the first row of options. */
+const TOP_GAP_PX = 15;
+
+interface QuestionGridOptionsProps {
+  options: OnboardingGridOption[];
+  selectedId: string | null;
+  /** Index of the option the voice is reading right now, or -1. */
+  spokenOption: number;
+  onPick: (id: string) => void;
+  /** The day/night question's shorter 139x109 cards (Figma "Frame 211"). */
+  compact?: boolean;
+  /** The screen is being left: options float back down and out. */
+  leaving?: boolean;
+  /** Seconds to hold the options before they leave. */
+  leaveDelay?: number;
+}
+
+/**
+ * The options of a single-select question laid out as a 2x2 grid of
+ * illustrated cards (experience level, Python level) — see QuestionListOptions
+ * for the other shape (career/motivation, a vertical list). The question row
+ * above them (Zox + heading) belongs to QuestionScreen.
+ */
+// The day/night cards (design "Group 94"): pastel panel over a white label
+// strip with a khaki bottom edge — the edge turns green when picked.
+const compactCardClass = (selected: boolean, spotlight: boolean) =>
+  `rounded-[5.8px] transition-[scale,translate,outline-color] duration-200 ease-out active:translate-y-[2px] ${
+    selected || spotlight ? "[&>span:last-child]:border-b-primary" : ""
+  } ${spotlight ? "scale-[1.04]" : ""} ${selected ? "outline-2 outline-primary dark:outline-0" : ""}`;
+
+export function QuestionGridOptions({
+  options,
+  selectedId,
+  spokenOption,
+  onPick,
+  compact = false,
+  leaving = false,
+  leaveDelay = 0,
+}: QuestionGridOptionsProps) {
+  // If the options scroll (short phones), keep the one being read in view.
+  const optionsRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (spokenOption < 0) return;
+    optionsRef.current?.children[spokenOption]?.scrollIntoView({
+      block: "nearest",
+      behavior: "smooth",
+    });
+  }, [spokenOption]);
+
+  // More than four options: three cards per row (narrower, same design).
+  // Columns are fluid with a fixed gap and aspect ratio, so on narrow screens
+  // the cards shrink together instead of colliding.
+  const three = options.length > 4;
+
+  // The tiles' own size, the row gap and the padding the grid has when there
+  // is room; on a short phone the gap and padding shrink to `min` (never the
+  // tiles) before the grid scrolls.
+  const tile = compact ? { height: 109, gap: 16, min: 8 } : three ? { height: 130, gap: 24, min: 10 } : { height: 150, gap: 29, min: 12 };
+  const rows = Math.ceil(options.length / (three ? 3 : 2));
+  const space = squeezedSpace(rows * tile.height, {
+    top: { max: compact ? 24 : TOP_GAP_PX, min: compact ? 6 : TOP_GAP_PX },
+    gap: { max: tile.gap, min: tile.min, count: rows - 1 },
+    bottom: { max: 8, min: 3 },
+  });
+
+  // The grid's width sets the tiles' size (they keep their aspect ratio), so
+  // cap it by the room the box leaves: every row of tiles then fits in the
+  // height and the grid never needs to scroll. Spacing here is the roomy
+  // maximum — it only ever shrinks, so this is a safe underestimate.
+  const cols = compact ? 2 : three ? 3 : 2;
+  const colGap = compact ? 19 : three ? 17 : 30;
+  const rowGap = compact ? 16 : tile.gap;
+  const aspect = compact ? 139 / 109 : three ? 108 / 130 : 138 / 150;
+  const padY = (compact ? 6 : TOP_GAP_PX) + 8;
+  const tileH = `((100cqh - ${padY + rowGap * (rows - 1)}px) / ${rows})`;
+  const fitWidth = `calc(${tileH} * ${aspect} * ${cols} + ${colGap * (cols - 1) + 16}px)`;
+  const maxWidth = `min(${compact ? 313 : three ? 374 : 322}px, ${fitWidth})`;
+
+  return (
+    // The outer box takes the room the screen leaves and measures it, so the
+    // grid's spacing can follow it (see `squeezedSpace`).
+    <div className={`${compact ? "-mt-1.5" : "mt-0"} flex min-h-0 flex-1 flex-col [container-type:size]`}>
+    {/* `auto-rows-max` keeps each row the full tile height: on short screens
+        auto rows shrank below the (aspect-ratio'd) tiles, which then spilled
+        over the gap into the next row. The gap now only shrinks while the
+        screen is too short, and the grid scrolls once it can't shrink more. */}
+    <div ref={optionsRef} style={{ ...space, maxWidth } as React.CSSProperties} className={`scrollbar-none mx-auto grid h-full w-full ${compact ? "grid-cols-2 gap-x-[19px] gap-y-4" : three ? "grid-cols-3 gap-x-[17px] gap-y-6" : "grid-cols-2 gap-x-[30px] gap-y-[29px]"} min-h-0 auto-rows-max content-start overflow-y-auto px-2 ${compact ? "pt-6" : "pt-[15px]"} pb-2 max-sm:gap-y-(--sq-gap) max-sm:pt-(--sq-top) max-sm:pb-(--sq-bottom)`}>
+      {options.map((option, i) => {
+        const selected = option.id === selectedId;
+        const spotlight = !selected && i === spokenOption;
+        const lit = selected || spotlight;
+        const { icon: Icon, fg } = ILLUSTRATIONS[option.illustration];
+        return (
+          <motion.button
+            key={option.id}
+            type="button"
+            onClick={() => onPick(option.id)}
+            {...optionDropIn(selected, leaving, leaveDelay)}
+            // Figma "Group 94" (138x150): the picture over a 43.65px label
+            // strip, straight on the card (no tinted panel). Light: the
+            // card's own khaki bottom edge from optionCardClass. Dark: each
+            // segment draws its own stroke (#818185 idle, #00B8A9 selected),
+            // the picture with no fill and the label on 20% white.
+            style={option.tint ? ({ "--tint": option.tint } as React.CSSProperties) : undefined}
+            className={`flex flex-col overflow-hidden w-full min-w-0 ${compact ? "aspect-139/109" : three ? "aspect-108/130" : "aspect-138/150"} text-center ${compact ? compactCardClass(selected, spotlight) : optionCardClass(selected, spotlight, true)}`}
+          >
+            <span
+              className={`flex min-h-0 w-full items-center justify-center dark:rounded-t-[8px] dark:border-[3px] dark:border-b-0 ${compact ? "h-[60.55%] flex-none rounded-t-[5.8px] bg-(--tint) p-[7.25px] dark:rounded-t-[8px] dark:bg-[#0F1F26] dark:p-[7px]" : "flex-1 dark:p-2.5"} ${
+                lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
+              }`}
+            >
+              {option.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={option.image}
+                  alt=""
+                  draggable={false}
+                  style={compact && option.imageSize ? { width: option.imageSize[0], height: option.imageSize[1] } : undefined}
+                  className={`${compact ? "max-h-full max-w-full" : "h-[calc(100%-1.25rem)] w-[calc(100%-1.25rem)]"} object-contain ${compact ? "dark:h-[43px] dark:w-[42px]" : "dark:h-[74px] dark:w-[80px]"}`}
+                />
+              ) : (
+                <Icon className={`h-14 w-14 ${fg}`} strokeWidth={1.75} />
+              )}
+            </span>
+            <span
+              className={`flex w-full shrink-0 items-center justify-center px-2 text-balance ${three ? "h-[40px] text-[12px]" : compact ? "min-h-0 flex-1 text-[14px]" : "h-[43.65px] text-[14px]"} font-medium ${compact ? "leading-[1.4]" : "leading-[1.3]"} ${compact ? "text-[#444444] bg-white rounded-b-[5.8px] border-b-[4.35px] border-b-[#BDBA99] dark:rounded-b-[8px]" : "text-[#2C2C2C]"} dark:text-white dark:rounded-b-[8px] dark:border-x-[3px] dark:border-b-[6px] ${compact ? "dark:bg-[#3F4C51]" : "dark:bg-white/20"} ${
+                lit ? "dark:border-[#00B8A9]" : "dark:border-[#818185]"
+              }`}
+            >
+              {option.label}
+            </span>
+          </motion.button>
+        );
+      })}
+    </div>
+    </div>
+  );
+}

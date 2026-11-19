@@ -1,4 +1,4 @@
-import { EventsScreen } from "@/components/home/EventsScreen";
+import { EventsScreen } from "@/features/events";
 
 /** `/events` — the events tab of the home. */
 export default function EventsPage() {

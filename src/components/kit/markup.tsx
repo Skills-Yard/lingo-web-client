@@ -1,5 +1,5 @@
 import { Fragment, type ReactNode } from "react";
-import type { Span } from "@/components/level-two/levelTwo";
+import type { Span } from "@/components/level-two/utils/levelTwo";
 
 /**
  * The little markup the kit's texts understand, so a screen's words stay a plain string:

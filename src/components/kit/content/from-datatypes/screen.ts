@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { Choice } from "@/components/level-two/levelTwo";
+import type { Choice } from "@/components/level-two/utils/levelTwo";
 
 /** An answer: its words and its picture (`icon` is a file, see `pictures.ts`). */
 export type Option = Choice;

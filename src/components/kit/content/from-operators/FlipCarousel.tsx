@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { playClickSound } from "@/components/onboarding/clickSound";
+import { playClickSound } from "@/utils/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import type { InteractionApi } from "@/components/kit/content/from-operators/screen";
 

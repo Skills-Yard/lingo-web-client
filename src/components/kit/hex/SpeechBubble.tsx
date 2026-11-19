@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { TYPE_DELAY_MS, useTyped } from "@/components/level-one/useTyped";
+import { TYPE_DELAY_MS, useTyped } from "@/components/level-one/hooks/useTyped";
 import { Markup, plainText } from "../markup";
 
 export type SpeechBubbleProps = {

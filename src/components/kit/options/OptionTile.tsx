@@ -2,8 +2,8 @@
 
 import type { ReactNode } from "react";
 import { motion } from "framer-motion";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
-import { SlotImage } from "@/components/level-two/SlotImage";
+import { FILL_S, HintFloat } from "@/components/level-one/components/HintFloat";
+import { SlotImage } from "@/components/level-two/components/SlotImage";
 import { feelTap } from "../feel";
 import { RAISED } from "@/components/ui/raised";
 import { HINT_FILL, STATE_CARD, STATE_EDGE, tintClass, WRONG_SHAKE } from "../tokens";

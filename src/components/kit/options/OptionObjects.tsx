@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
+import { FILL_S, HintFloat } from "@/components/level-one/components/HintFloat";
 import { feelTap } from "../feel";
 import { RAISED } from "@/components/ui/raised";
 import { HINT_FILL, STATE_CARD, STATE_EDGE } from "../tokens";

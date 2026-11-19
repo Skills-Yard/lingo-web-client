@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { EventType, Fit, Alignment, Layout } from "@rive-app/canvas";
 import { X } from "lucide-react";
-import { subscribeBatteryCharge, type BatteryCharge } from "@/components/home/batteryStore";
-import { useHexRive } from "@/components/onboarding/robu/useHexRive";
+import { subscribeBatteryCharge, type BatteryCharge } from "@/services/batteryStore";
+import { useHexRive } from "@/features/onboarding/robu/useHexRive";
 
 const ARTBOARD = "BTRY-005_HEX_Battery_Doctor";
 const STATE_MACHINE = "BatteryDoctor_SM";

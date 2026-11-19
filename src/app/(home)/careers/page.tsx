@@ -1,4 +1,4 @@
-import { CareersRoute } from "@/components/home/HomeRoutes";
+import { CareersRoute } from "@/features/home";
 
 /** `/careers` — the careers tab of the home. */
 export default function CareersPage() {

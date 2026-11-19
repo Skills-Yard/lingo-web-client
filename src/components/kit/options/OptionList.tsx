@@ -1,6 +1,6 @@
 "use client";
 
-import { BounceIn } from "@/components/level-two/BounceIn";
+import { BounceIn } from "@/components/level-two/components/BounceIn";
 import type { OptionData } from "../types";
 import { OptionRow, type RowControl } from "./OptionRow";
 import { optionState } from "./state";

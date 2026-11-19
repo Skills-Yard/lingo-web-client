@@ -1,4 +1,4 @@
-import { AppFlow } from "@/components/AppFlow";
+import { AppFlow } from "@/features/onboarding";
 
 /**
  * PreLoginScreen, then the career/Python onboarding questionnaire (see

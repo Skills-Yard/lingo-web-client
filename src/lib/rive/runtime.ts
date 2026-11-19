@@ -35,10 +35,7 @@ export const LIVE_PLATFORM = {
 
 /**
  * The `.riv` for every Robu instance in the module 1 instructions-intro
- * flows — both the current branch's own (`src/components/instructions-intro`)
- * and its `-himanshu` counterpart (used by `/module1/review` and
- * `/module1/combined` to compare designs — both render the same Orbi rig, so
- * that comparison is of the layout/copy differences only) — RobuMascot (the
+ * flow (`src/components/instructions`) — RobuMascot (the
  * single persistent mascot that glides between every screen's anchor: its
  * boot-up intro sequence plays once, then settles into Robu's ambient idle
  * loop) and every standalone `<RobuEyeBlink>` / `<RobuReaction>` alike.

@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
-import { ConditionsRoute } from "@/components/conditions/ConditionsRoute";
-import { isConditionsStep } from "@/components/conditions/conditions";
+import { ConditionsRoute } from "@/components/python/conditions/ConditionsRoute";
+import { isConditionsStep } from "@/components/python/conditions/conditions";
 
 /** The Conditions module's screens: `/module/conditions?step=1` … `step=38` (default 1), plus `step=complete`. */
 export default async function ConditionsPage({

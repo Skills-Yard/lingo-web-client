@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { SEQUENCE_STEPS } from "@/components/sequence/sequence";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { SEQUENCE_STEPS } from "@/components/python/sequence/sequence";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { playable, playableIds } from "../runtime/modules";
 import { Tool, Tools } from "./parts";
 
