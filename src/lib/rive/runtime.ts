@@ -267,6 +267,31 @@ export const OPERATOR_STUDIO = {
 } as const;
 
 /**
+ * The Operators module's intro scenes: "OP_A01_Intro" of `sequence.riv` (390x306), played by `Intro_SM` and bound to the
+ * `OpIntroScene` view model (read off the file and tried in headless Chrome 2026-11-19). Data: `mode`, `situation`,
+ * `scene`, `action`, `pick`, `highlight`, `step` (numbers), `infoTitle`, `infoMeaning`, `infoExample`, `infoSay` (strings),
+ * and the triggers `correct` / `wrong`.
+ *
+ * Mode 0 is four little rooms (money, children, a wallet, two children side by side) in one picture, and mode 1 is ONE of
+ * the four situations drawn full size, picked by `situation` (1 ₹50 and ₹30 apart, 2 20 chocolates for 4 students, 3 the two
+ * heights 150 cm and 140 cm, 4 a wallet with ₹500; 0 and 5 an empty room). Mode 1 is static: `action`, `step`, `pick`,
+ * `highlight`, `scene` and the `correct` / `wrong` triggers change nothing there (screenshots byte-identical to the base
+ * one). `action` and `step` do something in mode 3.
+ *
+ * Its words are text runs with no names (45 in the file; the numbers are the place of the run in the artboard, see
+ * `SceneTexts`): the situations' amounts are fixed art, so a screen with other numbers writes its own. In situation 4,
+ * `text.walletTag` is the tag over the wallet (32) and `text.walletNote` the note sticking out of it (33), both "₹500" in the
+ * file (the other "₹500" runs are not seen in mode 1).
+ */
+export const OPERATOR_INTRO = {
+  artboard: "OP_A01_Intro",
+  stateMachine: "Intro_SM",
+  /** Mode 1's `situation`. */
+  situation: { money: 1, chocolates: 2, heights: 3, wallet: 4 },
+  text: { walletTag: 32, walletNote: 33 },
+} as const;
+
+/**
  * The Operators module's scenes, as `operatorsHost` draws them: artboards of `sequence.riv` (390x306 each). `shop` is
  * the Variable module's own "VAR_Shop" (see `VARIABLE_SCENES`), used on screen 3 with other words; see `OPERATOR_SHOP`.
  */
@@ -275,6 +300,7 @@ export const OPERATOR_SCENES = {
   width: OPERATOR_STUDIO.width,
   height: OPERATOR_STUDIO.height,
   studio: { artboard: OPERATOR_STUDIO.artboard, stateMachine: OPERATOR_STUDIO.stateMachine },
+  intro: { artboard: OPERATOR_INTRO.artboard, stateMachine: OPERATOR_INTRO.stateMachine },
   shop: { artboard: VARIABLE_SCENES.shop.artboard, stateMachine: VARIABLE_SCENES.shop.stateMachine },
 } as const;
 

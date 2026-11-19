@@ -6,13 +6,13 @@ import { FlipCarouselStage } from "./FlipCarousel";
 import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "./interactions";
 import { OperatorTurnStage, type OperatorItem } from "./OperatorCardsStage";
 import { fireScene, type SceneTexts } from "@/lib/rive/operatorsHost";
-import { OPERATOR_SHOP, OPERATOR_STUDIO } from "@/lib/rive/runtime";
+import { OPERATOR_INTRO, OPERATOR_SHOP, OPERATOR_STUDIO } from "@/lib/rive/runtime";
 import { OperatorScene } from "./OperatorScene";
 import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { InteractionStage, ScreenDef } from "./screen";
 import { StudioJobs, StudioJobsTurn, StudioTurnStage, StudioVisual, type StudioCard } from "./StudioStage";
-import { ExprBig, GroupsPicture, PlantGrid, ShareScene, ValueCards, WalletScene } from "./visuals";
+import { ExprBig, GroupsPicture, PlantGrid, ShareScene, ValueCards } from "./visuals";
 
 /** Which key of the studio each answer of "Explore the situations!" lifts, by the answer's place (Adding, Subtracting, Dividing, Comparing). Comparing has no key: the studio's keys are the four that calculate. */
 const ANSWER_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.divide, OPERATOR_STUDIO.pick.none] as const;
@@ -33,6 +33,17 @@ const SITUATION_CARDS = {
  */
 const ACTIONS_CARD: StudioCard = { title: "Money left ₹300", meaning: "Which actions did we use?", example: "₹500 to ₹300" };
 const ACTIONS_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.multiply, OPERATOR_STUDIO.pick.none] as const;
+
+/**
+ * Screen 7's stickers question ("Which operation finds the total?"): the studio stands over the answers (Add, Subtract, Divide),
+ * its card with the two numbers and no operation named. Picking an answer lifts its key.
+ */
+const STICKERS_CARD: StudioCard = { title: "Collecting stickers", meaning: "Which operation is this?", example: "12 and 5 more" };
+const STICKERS_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.divide] as const;
+
+/** Screen 7's sweets question ("Which operation finds how many are left?"), the same way: the answers are Multiply, Subtract, Add. */
+const SWEETS_CARD: StudioCard = { title: "Eating sweets", meaning: "Which operation is this?", example: "9 sweets, eat 4" };
+const SWEETS_KEY = [OPERATOR_STUDIO.pick.multiply, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.add] as const;
 
 /**
  * A question of "Explore the situations!": the Operators studio stands over the four answers (Adding, Subtracting,
@@ -69,6 +80,9 @@ const shopTexts = (board: { label: string; amount: string }): SceneTexts => ({
 /** Screen 3's picture: the eraser too (its own ₹10), and the board asking for the money left. */
 const SHOP_FACTS = { showEraser: true, showNames: true, showTotal: true };
 const SHOP_TEXTS = shopTexts({ label: "Money left", amount: "?" });
+
+/** Screen 7's second picture: the intro's wallet (its file has ₹500 on the tag and on the note) with the ₹20 spent on the tag, and the ₹80 the question starts from on the note (the money in the wallet). */
+const WALLET_SPEND: SceneTexts = { [OPERATOR_INTRO.text.walletTag]: "₹20", [OPERATOR_INTRO.text.walletNote]: "₹80" };
 
 /**
  * Screen 4's picture (the book and the pen only), drawn smaller than screen 3's since the blocks stand under it. `together`
@@ -342,7 +356,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "You have ₹50. Your friend gives you ₹30. How much now?",
-        visual: ({ attempt, checked, correct }) => <WalletScene replay={attempt} amount={50} change={{ sign: "+", value: 30 }} showTotal={checked && correct} />,
+        visual: () => <OperatorScene scene="intro" values={{ mode: 1, situation: OPERATOR_INTRO.situation.money }} />,
         options: options([
           ["₹70", P.money],
           ["₹80", P.money],
@@ -355,7 +369,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "Now you spend ₹20. How much is left?",
-        visual: ({ attempt, checked, correct }) => <WalletScene replay={attempt} amount={80} change={{ sign: "-", value: 20 }} showTotal={checked && correct} />,
+        visual: () => <OperatorScene scene="intro" values={{ mode: 1, situation: OPERATOR_INTRO.situation.wallet }} texts={WALLET_SPEND} />,
         options: options([
           ["₹100", P.money],
           ["₹60", P.money],
@@ -368,6 +382,14 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "You have 12 stickers and get 5 more. Which operation finds the total?",
+        visual: ({ attempt, picked, checked, correct }) => (
+          <StudioVisual
+            card={STICKERS_CARD}
+            pick={(picked !== null ? STICKERS_KEY[Number(picked)] : undefined) ?? OPERATOR_STUDIO.pick.none}
+            verdict={checked ? (correct ? "correct" : "wrong") : null}
+            attempt={attempt}
+          />
+        ),
         options: neutral(["Add (+)", "Subtract (-)", "Divide (/)"]),
         correctId: at(0),
         rightTitle: "Right!",
@@ -376,6 +398,14 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "You have 9 sweets and eat 4. Which operation finds how many are left?",
+        visual: ({ attempt, picked, checked, correct }) => (
+          <StudioVisual
+            card={SWEETS_CARD}
+            pick={(picked !== null ? SWEETS_KEY[Number(picked)] : undefined) ?? OPERATOR_STUDIO.pick.none}
+            verdict={checked ? (correct ? "correct" : "wrong") : null}
+            attempt={attempt}
+          />
+        ),
         options: neutral(["Multiply (*)", "Subtract (-)", "Add (+)"]),
         correctId: at(1),
         rightTitle: "Right!",
