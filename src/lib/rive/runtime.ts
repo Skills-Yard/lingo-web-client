@@ -1,4 +1,5 @@
 import { RuntimeLoader } from "@rive-app/canvas";
+import riveCanvas from "@rive-app/canvas/package.json";
 
 /**
  * Point the Rive runtime at a same-origin copy of its WebAssembly binary.
@@ -11,10 +12,17 @@ import { RuntimeLoader } from "@rive-app/canvas";
  * cross-origin hop.
  *
  * Keep `public/rive/*.wasm` in sync with the installed `@rive-app/canvas`
- * version (currently 2.42.0) — re-copy from `node_modules` on upgrade.
+ * version (currently 2.50.0) — re-copy from `node_modules` on upgrade.
+ *
+ * The URLs carry that version (`?v=`) because `next.config.ts` lets the browser
+ * keep everything under `/rive/` for a year without asking again: with the same
+ * URL after an upgrade, a browser that had the old binary kept it, and the new
+ * runtime refused it ("WebAssembly.instantiate(): Import #0 "a": module is not
+ * an object or function"). A new version is a new URL, so the binary and the
+ * runtime that loads it are always a pair. Use `RIVE_WASM_URL` for any preload.
  */
-const WASM_URL = "/rive/rive.wasm";
-const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
+export const RIVE_WASM_URL = `/rive/rive.wasm?v=${riveCanvas.version}`;
+const WASM_FALLBACK_URL = `/rive/rive_fallback.wasm?v=${riveCanvas.version}`;
 
 /**
  * Source for the reward-screen animation. Kept here so the component that
@@ -108,7 +116,7 @@ export function configureRiveRuntime(): void {
   if (configured) return;
   configured = true;
 
-  RuntimeLoader.setWasmUrl(WASM_URL);
+  RuntimeLoader.setWasmUrl(RIVE_WASM_URL);
   RuntimeLoader.setWasmFallbackUrl(WASM_FALLBACK_URL);
 }
 
