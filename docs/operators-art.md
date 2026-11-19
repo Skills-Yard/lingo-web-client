@@ -1,6 +1,6 @@
 # Operators module: pictures
 
-Every picture on an option or a card is a **stand-in** from the Sequence and Command modules until the module has art of its own. They are all listed in one place, `src/components/operators/pictures.ts` (`P`).
+Every picture on an option or a card is a **stand-in** from the Sequence and Command modules until the module has art of its own. They are all listed in one place, `src/components/python/operators/pictures.ts` (`P`).
 
 To use a real picture, put the file in `public/images/operators/` and change that one line (for example `chocolate: "/images/operators/chocolate.webp"`). An idea has the same picture wherever it appears (money is always the coins), so changing one line changes every screen that shows it.
 
@@ -19,4 +19,4 @@ To use a real picture, put the file in `public/images/operators/` and change tha
 | `think`, `order`, `actions`, `goal`, `short`, `random`, `repeat`, `unsure`, `letters` | answers that must not hint at the right one | the Sequence icons |
 | `idea`, `question`, `star`, `stop` | ideas and prompts | the existing icons |
 
-The scenes (wallet, value cards, chocolate heaps and trays, groups, plant garden, number line with a gate, comparison demo, trip facts, shopping bill) and the interactions (expression builder, sharing, rows of chairs, symbol tapping, step-by-step working, ordering) are drawn in code in `src/components/operators/visuals.tsx` and `interactions.tsx`. A few generic ones (tap-to-find-all, pick the right cards) are shared from the Data Types module (`components/datatypes/interactions.tsx`).
+The scenes (wallet, value cards, chocolate heaps and trays, groups, plant garden, number line with a gate, comparison demo, trip facts, shopping bill) and the interactions (expression builder, sharing, rows of chairs, symbol tapping, step-by-step working, ordering) are drawn in code in `src/components/python/operators/visuals.tsx` and `interactions.tsx`. A few generic ones (tap-to-find-all, pick the right cards) are shared from the Data Types module (`src/components/python/datatypes/interactions.tsx`).

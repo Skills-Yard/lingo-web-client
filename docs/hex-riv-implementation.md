@@ -31,8 +31,8 @@ Two ways of driving it, and you need both:
 ```
 src/lib/rive/runtime.ts                     constants: file path, artboard / state machine / view model / trigger names, timings
                                             + configureRiveRuntime() (self-hosted WASM)
-src/components/onboarding/robu/useHexRive.ts   the one hook every Hex canvas goes through
-src/components/onboarding/robu/
+src/features/onboarding/robu/useHexRive.ts   the one hook every Hex canvas goes through
+src/features/onboarding/robu/
   OnboardingFox.tsx          the flow's single Hex: idle / hello / excited / tap / Onboarding beats
   ZoxTabFox.tsx              question row: tablet, typing, fidget
   OnboardingQuestionHex.tsx  question screens driven by the Onboarding machine
@@ -41,8 +41,8 @@ src/components/onboarding/robu/
   HexScene.tsx               full-screen "09" scene
   HexBackground.tsx          "BG_Grid"
   OnboardingSplash.tsx       "Splash Screen" (uses useRive directly, not useHexRive)
-src/components/onboarding/foxStage.tsx      positions one persistent Hex over per-screen "slots", tap detection
-src/lib/constants/onboarding.ts             ONBOARDING_STEPS: which screen uses which beat / scene / hexMode
+src/features/onboarding/components/FoxStage.tsx positions one persistent Hex over per-screen "slots", tap detection
+src/features/onboarding/constants/onboarding.ts ONBOARDING_STEPS: which screen uses which beat / scene / hexMode
 src/app/hex/page.tsx                        debug player for the file
 ```
 

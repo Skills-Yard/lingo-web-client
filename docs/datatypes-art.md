@@ -1,6 +1,6 @@
 # Data Types module: pictures
 
-Every picture on an option or a card is a **stand-in** from the Sequence and Command modules until the module has art of its own. They are all listed in one place, `src/components/datatypes/pictures.ts` (`P`).
+Every picture on an option or a card is a **stand-in** from the Sequence and Command modules until the module has art of its own. They are all listed in one place, `src/components/python/datatypes/pictures.ts` (`P`).
 
 To use a real picture, put the file in `public/images/datatypes/` and change that one line (for example `integer: "/images/datatypes/integer.webp"`). The four data types have the same picture wherever they appear, so changing one line changes every screen that shows it.
 
@@ -30,10 +30,10 @@ Screens 1 ("Let's organise our event!") and 2 ("Meet Aarav!") use real illustrat
 | (none: drawn in code) | `SIMILAR_TILES` in `datatypesScreens.tsx`; `NumberBadge` in `visuals.tsx` | screen 5.2 (the second stage of screen 5): the number badge on each of its three tiles, **30 Students, 45 Tickets, 12 Prizes** (the PDF's numbers). They keep the colours of the earlier `datatypeModule-5.2.1.svg` to `5.2.3.svg` badges (40 x 40, radius 12), but the number is set in the module's font, because the 5.2.2 file said 43. Those three SVGs are no longer used. Its four answers use the neutral stand-in pictures (no art yet). Screen 5's three question rows (under its tiles) reuse `planStudents`, `planTickets`, `planPrizes` |
 | `valueStudents`, `valueTickets`, `valueHeight`, `valueWeight` | `datatypeModule-6.1.svg` to `6.4.svg` | screen 6's four cards: 12 students, 25 tickets, 148.5 cm height, 36.7 kg weight |
 
-On screens 1 and 2 the answers stay hidden until Hex has finished his line, then bounce in one by one (`optionsAfterHex` on the question, `BounceIn` in `level-two/`). Screens 5 and 6 do the same with their cards (`InfoTiles`, shown once the interaction's `hexSpoken` is true); they are looked at, not picked, so their stage is `ready` (Continue is on from the start).
+On screens 1 and 2 the answers stay hidden until Hex has finished his line, then bounce in one by one (`optionsAfterHex` on the question, `BounceIn` in `src/components/level-two/components/BounceIn.tsx`). Screens 5 and 6 do the same with their cards (`InfoTiles`, shown once the interaction's `hexSpoken` is true); they are looked at, not picked, so their stage is `ready` (Continue is on from the start).
 
 Screen 6's design pairs the tickets picture with the "148.5 cm height" label and the height picture with "25 tickets". Here each label has its own picture, so the cards keep the design's pictures and colours in place and the two labels are swapped.
 
 To replace either, overwrite the file (keep the same shape: the scene's size is set from its 1560 x 2180 proportions) or point the line in `pictures.ts` at a new one. The faint semi-transparent specks around the card's edge in the original PNG were removed when it was converted.
 
-The other scenes (ruler, names list, the two whole/decimal groups of screen 6, the 12 and "12" cards of screen 13, attendance board, weather card) are drawn in code in `src/components/datatypes/visuals.tsx`.
+The other scenes (ruler, names list, the two whole/decimal groups of screen 6, the 12 and "12" cards of screen 13, attendance board, weather card) are drawn in code in `src/components/python/datatypes/visuals.tsx`.

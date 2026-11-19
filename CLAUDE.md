@@ -28,7 +28,12 @@ Four modules play from data (142 screens). Done: one header and footer, `Answers
 | Screen data (JSON) | `src/data/modules/{datatypes,operators,conditions,variable}.json` — generated, see below |
 | Data runner | `src/components/kit/runtime/` (`ScreenRunner`, `ModuleRunner`, `hydrate`, `extract`, `registry`, `modules`) |
 | Gallery, compare, export pages | `src/app/kit/**` and `src/components/kit/gallery/**` |
-| Legacy screens (still live at `/module/*`) | `src/components/python/{datatypes,operators,conditions,variable,sequence}/` and `src/components/{level-one,level-two}/` |
+| Domain features | `src/features/{home,onboarding,level,careers,dashboard,energy,events,feed,league,profile}/` |
+| Instructions module | `src/components/instructions/` (`components/`, `game/`, `robu/`, `screens/`, `InstructionsFlow.tsx`) |
+| Level 1 screens & components | `src/components/level-one/` (`components/`, `screens/`, `hooks/`, `utils/`, `LevelOneShell.tsx`) |
+| Level 2 screens & components | `src/components/level-two/` (`components/`, `screens/`, `utils/`, `LevelTwoShell.tsx`) |
+| Python modules (still live at `/module/*`) | `src/components/python/{datatypes,operators,conditions,variable,sequence}/` |
+| Shared services & utils | `src/services/batteryStore.ts`, `src/utils/clickSound.ts`, `src/lib/constants/learnerStats.ts` |
 
 ## Run and check
 

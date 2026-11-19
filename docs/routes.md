@@ -38,7 +38,7 @@
 
 ## Sequence module
 
-Built from the "2. Sequence - Scenario 1" spec (its screen number is in brackets). `step` numbers are the module's own order (`STEP` in `components/sequence/sequence.ts`).
+Built from the "2. Sequence - Scenario 1" spec (its screen number is in brackets). `step` numbers are the module's own order (`STEP` in `src/components/python/sequence/sequence.ts`).
 
 | Route | Screen |
 |---|---|
@@ -70,7 +70,7 @@ Built from the "2. Sequence - Scenario 1" spec (its screen number is in brackets
 
 ## Variable module
 
-Built from the "3. Variable" spec (its screen number is in brackets; screens with an interaction and a question have two stages on the one step). `step` numbers are the module's own order (`STEP` in `components/variable/variable.ts`).
+Built from the "3. Variable" spec (its screen number is in brackets; screens with an interaction and a question have two stages on the one step). `step` numbers are the module's own order (`STEP` in `src/components/python/variable/variable.ts`).
 
 | Route | Screen |
 |---|---|
@@ -112,7 +112,7 @@ Built from the "3. Variable" spec (its screen number is in brackets; screens wit
 
 ## Data Types module
 
-Built from the "4. DataTypes" spec (its screen number is in brackets; screens with an interaction and a question have two stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, sorting groups, and the Hex result panel. `step` numbers are the module's own order (`STEP` in `components/datatypes/datatypes.ts`).
+Built from the "4. DataTypes" spec (its screen number is in brackets; screens with an interaction and a question have two stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, sorting groups, and the Hex result panel. `step` numbers are the module's own order (`STEP` in `src/components/python/datatypes/datatypes.ts`).
 
 | Route | Screen |
 |---|---|
@@ -150,7 +150,7 @@ Built from the "4. DataTypes" spec (its screen number is in brackets; screens wi
 
 ## Operators module
 
-Built from the "5. Operators" spec: one step for each of its 40 screens (the step number is the PDF's screen number; a screen with several parts has several stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, and the Hex result panel. The wording is shortened from the PDF. `step` numbers are `STEP` in `components/operators/operators.ts`.
+Built from the "5. Operators" spec: one step for each of its 40 screens (the step number is the PDF's screen number; a screen with several parts has several stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, and the Hex result panel. The wording is shortened from the PDF. `step` numbers are `STEP` in `src/components/python/operators/operators.ts`.
 
 | Route | Screen |
 |---|---|
@@ -198,7 +198,7 @@ Built from the "5. Operators" spec: one step for each of its 40 screens (the ste
 
 ## Conditions module
 
-Built from the "6. Conditions" spec: one step for each of its 38 screens (the step number is the PDF's screen number; a screen with several parts has several stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, and the Hex result panel. The wording is shortened from the PDF, and no `if`/`else` is taught. `step` numbers are `STEP` in `components/conditions/conditions.ts`.
+Built from the "6. Conditions" spec: one step for each of its 38 screens (the step number is the PDF's screen number; a screen with several parts has several stages on the one step). The design is the Sequence and Command modules': Hex's short line, option rows or tiles with a picture, and the Hex result panel. The wording is shortened from the PDF, and no `if`/`else` is taught. `step` numbers are `STEP` in `src/components/python/conditions/conditions.ts`.
 
 | Route | Screen |
 |---|---|
@@ -268,14 +268,14 @@ Built from the "6. Conditions" spec: one step for each of its 38 screens (the st
 | Sequence module: score and branches | Kept in session storage (`lingo.sequence-*`), cleared when the module is opened from the path |
 | Variable module: skips | Screens 11, 21 and 24 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint |
 | Variable module: detours | A learner who misses (or uses the hint on) 8, 10, 14, 16, 20, 21, 23, 24, 27 or 28 is sent once to the screen that taught the idea (7, 13, 19, 8, 10, 26, 20), then on from the screen after the one they missed |
-| Data Types module: skips | Screens 15, 20 and the five reflection screens (25-29) are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `components/datatypes/datatypes.ts`) |
+| Data Types module: skips | Screens 15, 20 and the five reflection screens (25-29) are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `src/components/python/datatypes/datatypes.ts`) |
 | Data Types module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`) |
 | Data Types module: score and branches | Kept in session storage (`lingo.datatypes-*`), cleared when the module is opened from the path |
 | Variable module: score and branches | Kept in session storage (`lingo.variable-*`), cleared when the module is opened from the path |
-| Operators module: skips | Screens 20, 23, 24, 30 and 31 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `components/operators/operators.ts`; a skipped screen counts as answered for the skips after it) |
+| Operators module: skips | Screens 20, 23, 24, 30 and 31 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `src/components/python/operators/operators.ts`; a skipped screen counts as answered for the skips after it) |
 | Operators module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`). Screen 13 goes back to 12 (as the spec says); screen 38 goes to 12 for trouble with the remainder questions and to 26 for trouble with the comparison ones |
 | Operators module: score and branches | Kept in session storage (`lingo.operators-*`), cleared when the module is opened from the path |
-| Conditions module: skips | Screens 8, 10, 12, 15, 21, 25, 29 and 35 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `components/conditions/conditions.ts`; a skipped screen counts as answered for the skips after it) |
+| Conditions module: skips | Screens 8, 10, 12, 15, 21, 25, 29 and 35 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `src/components/python/conditions/conditions.ts`; a skipped screen counts as answered for the skips after it) |
 | Conditions module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`). Screen 16 goes to 14 for trouble with the divisibility challenges and to 7 for the comparison ones |
 | Conditions module: ending | "Complete Chapter" on 37 opens the gem popup; closing it opens screen 38, whose Continue ends on "Lesson complete!" |
 | Conditions module: score and branches | Kept in session storage (`lingo.conditions-*`), cleared when the module is opened from the path |

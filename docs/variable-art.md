@@ -1,6 +1,6 @@
 # Variable module: pictures
 
-Most of the Variable module is drawn in code (the classroom, name/value cards, calculator, expense tracker), and screen 2's icons are in `public/animations/svg/variable-module/screen-2/`. The scenes behind the screens are Rive artboards in `public/animations/sequence.riv` (the same file as the Sequence module's bedroom), all 390x306. They are kept for the whole module by `src/lib/rive/variableHost.ts` and drawn by `src/components/variable/scenes.tsx`; the constants are `VARIABLE_SCENES` in `src/lib/rive/runtime.ts`, and `sceneOf` in `variable.ts` says which scene each screen has. The quiz screens drive them from `variableScreens.tsx` (components that draw nothing and set data / fire triggers).
+Most of the Variable module is drawn in code (the classroom, name/value cards, calculator, expense tracker), and screen 2's icons are in `public/animations/svg/variable-module/screen-2/`. The scenes behind the screens are Rive artboards in `public/animations/sequence.riv` (the same file as the Sequence module's bedroom), all 390x306. They are kept for the whole module by `src/lib/rive/variableHost.ts` and drawn by `src/components/python/variable/scenes.tsx`; the constants are `VARIABLE_SCENES` in `src/lib/rive/runtime.ts`, and `sceneOf` in `variable.ts` says which scene each screen has. The quiz screens drive them from `variableScreens.tsx` (components that draw nothing and set data / fire triggers).
 
 | Scene | Artboard / state machine | Screens | Data |
 | --- | --- | --- | --- |
