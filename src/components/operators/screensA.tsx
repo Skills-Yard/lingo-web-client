@@ -4,14 +4,14 @@ import { useEffect } from "react";
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
 import { FlipCarouselStage } from "./FlipCarousel";
 import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "./interactions";
-import { JobTurnStage, OperatorTurnStage, type JobItem, type OperatorItem } from "./OperatorCardsStage";
+import { OperatorTurnStage, type OperatorItem } from "./OperatorCardsStage";
 import { fireScene, type SceneTexts } from "@/lib/rive/operatorsHost";
 import { OPERATOR_SHOP, OPERATOR_STUDIO } from "@/lib/rive/runtime";
 import { OperatorScene } from "./OperatorScene";
 import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { InteractionStage, ScreenDef } from "./screen";
-import { StudioVisual, type StudioCard } from "./StudioStage";
+import { StudioJobs, StudioJobsTurn, StudioTurnStage, StudioVisual, type StudioCard } from "./StudioStage";
 import { ExprBig, GroupsPicture, PlantGrid, ShareScene, ValueCards, WalletScene } from "./visuals";
 
 /** Which key of the studio each answer of "Explore the situations!" lifts, by the answer's place (Adding, Subtracting, Dividing, Comparing). Comparing has no key: the studio's keys are the four that calculate. */
@@ -97,18 +97,28 @@ const OPERATOR_LINES: readonly string[] = [
   "Last, /: it divides one value by another.",
 ];
 
-/** The turn of one operator: its card is picked out while Hex introduces it, and Continue goes on to the next one. */
+/** The studio key of each of the four operators, in the same order (+, -, *, /). */
+const OPERATOR_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.multiply, OPERATOR_STUDIO.pick.divide] as const;
+
+/**
+ * The turn of one operator: the Operators studio's key for it is lifted while Hex introduces it, its card saying the name,
+ * what it does and an example, and Continue goes on to the next one.
+ */
 const operatorTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: OPERATOR_LINES[focus],
-  render: (api) => <OperatorTurnStage api={api} operators={OPERATORS} focus={focus} />,
+  render: (api) => {
+    const operator = OPERATORS[focus];
+    return (
+      <StudioTurnStage
+        api={api}
+        card={{ title: operator.name, meaning: operator.title, example: operator.example }}
+        pick={OPERATOR_KEY[focus]}
+        before={focus > 0 ? OPERATOR_KEY[focus - 1] : OPERATOR_STUDIO.pick.none}
+      />
+    );
+  },
 });
-
-/** The two big jobs of "Calculate or Compare?", in the order they are introduced. */
-const JOBS: readonly JobItem[] = [
-  { id: "calculate", pic: P.computer, name: "Calculate", title: "How much? How many? What remains?", example: "20 + 5 = 25", tint: "mint" },
-  { id: "compare", pic: P.light, name: "Compare", title: "Which is greater? Are they equal?", example: "20 > 5", tint: "lavender" },
-];
 
 /** What Hex says as each job's turn comes. */
 const JOB_LINES: readonly string[] = [
@@ -116,11 +126,11 @@ const JOB_LINES: readonly string[] = [
   "The second big thing is to compare values, with comparison operators.",
 ];
 
-/** The turn of one job: its card is picked out while Hex introduces it, and Continue goes on to the next. */
+/** The turn of one job: the Operators studio's two cards (Calculate, Compare) as they are, while Hex introduces the job, and Continue goes on to the next. */
 const jobTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: JOB_LINES[focus],
-  render: (api) => <JobTurnStage api={api} jobs={JOBS} focus={focus} />,
+  render: (api) => <StudioJobsTurn api={api} />,
 });
 
 /** The three answers of "Same Numbers, Three Answers!" (23 chocolates in groups of 4), in the order they are introduced. */
@@ -312,6 +322,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       jobTurn(1),
       quiz({
         line: "Which job answers the question “Which is greater?”",
+        visual: () => <StudioJobs />,
         options: options([
           ["Calculate", P.order],
           ["Compare", P.actions],
