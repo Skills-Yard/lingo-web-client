@@ -48,6 +48,12 @@ export const LIVE_PLATFORM = {
  * down to the right (the picture `grid-road.svg` has mirrored), 1 runs down to the left (as the svg is). The slab is drawn
  * past the artboard's own edges (about 3-4 artboard px each side) and the file draws an opaque dark rectangle over the
  * artboard (see `RoadArt`). Both measured on 2026-11-19 in headless Chrome.
+ *
+ * `caps`, per `pathState`: the middle of the slab's two ends (the short edges of its top face), in artboard px, `start` the
+ * upper one. The slab is a parallelogram on the isometric axes (its long edges run at slope 0.6, like the tiles' edges), about
+ * 82 long and 14.8 across, with a side face 4.6 thick under its lower long edge. Read off the extreme points of the top face
+ * (the corners) when drawn at 8x: pathState 0 has the corners (10.13, 1.25), (-2.63, 8.75), (80.38, 43.5), (67.5, 50.75),
+ * pathState 1 (66.63, 1.25), (79.5, 8.75), (-3.63, 43.63), (8.63, 51.13).
  */
 export const LEVEL_ROAD = {
   src: "/animations/progressBar.riv",
@@ -57,6 +63,10 @@ export const LEVEL_ROAD = {
   width: 72,
   height: 58,
   state: { downRight: 0, downLeft: 1 },
+  caps: [
+    { start: { x: 3.75, y: 5 }, end: { x: 73.94, y: 47.125 } },
+    { start: { x: 73.07, y: 5 }, end: { x: 2.5, y: 47.38 } },
+  ],
 } as const;
 
 /**

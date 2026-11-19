@@ -155,13 +155,7 @@ export function LevelWorld({
             }}
           />
         ) : (
-          <RoadArt
-            key={road.id}
-            className="z-5"
-            width={road.width ?? roadWidth}
-            mirrored={road.mirrored}
-            style={{ top: road.top, left: road.left }}
-          />
+          <RoadArt key={road.id} className="z-5" from={road.from} to={road.to} />
         ),
       )}
 
@@ -205,8 +199,8 @@ export function LevelWorld({
         className="pointer-events-none absolute z-5 overflow-hidden select-none"
         style={{
           top: `${finalRoad.top}px`,
-          left: `${finalRoad.left}px`,
-          width: `${finalRoad.width ?? roadWidth}px`,
+          left: isDark ? `${finalRoad.left}px` : 0,
+          width: isDark ? `${finalRoad.width ?? roadWidth}px` : "390px",
           height: `${finalRoad.height}px`,
         }}
       >
@@ -222,7 +216,7 @@ export function LevelWorld({
             }}
           />
         ) : (
-          <RoadArt width={finalRoad.width ?? roadWidth} mirrored={finalRoad.mirrored} style={{ top: 0, left: 0 }} />
+          <RoadArt from={finalRoad.from} to={finalRoad.to} origin={{ x: 0, y: finalRoad.top }} />
         )}
       </div>
 

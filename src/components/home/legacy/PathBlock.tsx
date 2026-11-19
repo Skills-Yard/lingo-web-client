@@ -42,14 +42,14 @@ export const canvasBox = (cx: number, cy: number, fullScreen: boolean) => {
   };
 };
 
-export const useArtboardFrame = (rive: Rive | null, canvas: HTMLCanvasElement | null, frame: ArtboardFrame, fit: Fit = Fit.Contain) => {
+export const useArtboardFrame = (rive: Rive | null, canvas: HTMLCanvasElement | null, frame: ArtboardFrame) => {
   useEffect(() => {
     if (!rive || !canvas) return;
     const resizeToCanvas = rive.resizeToCanvas.bind(rive);
     const applyFrame = () => {
       const { width, height } = canvas;
       const layout = new Layout({
-        fit,
+        fit: Fit.Contain,
         alignment: Alignment.Center,
         minX: frame.x0 * width,
         minY: frame.y0 * height,
@@ -68,7 +68,7 @@ export const useArtboardFrame = (rive: Rive | null, canvas: HTMLCanvasElement | 
     return () => {
       Object.assign(rive, { resizeToCanvas });
     };
-  }, [rive, canvas, frame, fit]);
+  }, [rive, canvas, frame]);
 };
 
 export function useNearViewport(ref: RefObject<HTMLElement | null>): boolean {

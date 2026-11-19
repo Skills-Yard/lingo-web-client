@@ -1,35 +1,68 @@
 "use client";
 
-import { useEffect, useMemo, useRef, type CSSProperties } from "react";
-import { Alignment, Fit, Layout } from "@rive-app/canvas";
-import { useRive } from "@rive-app/react-canvas";
+import { useEffect, useMemo, useRef, useState, type RefObject } from "react";
+import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
+import { configureRiveRuntime, LEVEL_ROAD } from "@/lib/rive/runtime";
 import { riveSource } from "@/lib/rive/riveCache";
-import { LEVEL_ROAD } from "@/lib/rive/runtime";
-import { useArtboardFrame, useNearViewport } from "../legacy/PathBlock";
 import type { ArtboardFrame } from "../legacy/types";
-
-/** The old image of the road (`grid-road.svg`): 184 x 117 px, the box every road is still placed by. */
-export const ROAD_IMAGE = { width: 184, height: 117 } as const;
+import type { Point } from "./levelConfig";
 
 /**
- * Where the artboard sits in the old image's box, so that its slab covers the image's slab end to end (measured 2026-11-19 by
- * drawing both and comparing the pixels they cover: the slab is 84.25 x 54.75 artboard px, the image's 183.25 x 116.75 px; then
- * trimmed by measuring all 21 roads on the page at 8 screen sizes, which left every edge within 0.3px at stage scale 1). The
- * artboard is stretched a little unevenly to get both ends exactly (the file's slab is about 2% longer for its height than the
- * svg's). Sizes are for an image box 184px wide, and scaled with it. The two slabs are not drawn to the same spot of the
- * artboard, hence one fit for each `pathState`.
+ * A road's canvas is made when it comes within `MOUNT_MARGIN` px of the scroller's visible area, which is a screen or two
+ * ahead of the learner, and kept until it is `RELEASE_MARGIN` px away. It is drawn only while within `DRAW_MARGIN` px. So on
+ * the way down the path a road is already made and showing the right way before it comes into view, and scrolling back finds
+ * it as it was: nothing is made again, so nothing starts over with the file's own default (`pathState` 0).
  */
-const FIT = {
-  scaleY: 2.1324,
-  /** Per `pathState`: how far the artboard is stretched across (the two slabs are not exactly as long), and its top left corner. */
-  byState: [
-    { scaleX: 2.1731, x: 7.422, y: -1.669 },
-    { scaleX: 2.1692, x: 9.328, y: -1.669 },
-  ],
-} as const;
+const MOUNT_MARGIN = 1600;
+const RELEASE_MARGIN = 5000;
+const DRAW_MARGIN = 200;
 
-/** Room around the artboard (px, at 184 wide) for the slab it draws past its own edges. */
-const BLEED = 24;
+/** The nearest ancestor that scrolls. (An observer with no root is clipped by it, and its margin does nothing past the clip.) */
+function scrollParent(element: HTMLElement): HTMLElement | null {
+  for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+    const overflow = getComputedStyle(parent).overflowY;
+    if (overflow === "auto" || overflow === "scroll") return parent;
+  }
+  return null;
+}
+
+/** True while `ref` is within `margin` px (above or below) of its scroller's visible area. */
+function useWithin(ref: RefObject<HTMLElement | null>, margin: number): boolean {
+  const [within, setWithin] = useState(false);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(([entry]) => setWithin(entry.isIntersecting), { root: scrollParent(element), rootMargin: `${margin}px 0px` });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [ref, margin]);
+  return within;
+}
+
+/** True from when `ref` first comes within `mountMargin` px of its scroller until it is further than `releaseMargin` px from it. */
+function useKept(ref: RefObject<HTMLElement | null>, mountMargin: number, releaseMargin: number): boolean {
+  const [kept, setKept] = useState(false);
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    const root = scrollParent(element);
+    const mount = new IntersectionObserver(([entry]) => entry.isIntersecting && setKept(true), { root, rootMargin: `${mountMargin}px 0px` });
+    const release = new IntersectionObserver(([entry]) => entry.isIntersecting || setKept(false), { root, rootMargin: `${releaseMargin}px 0px` });
+    mount.observe(element);
+    release.observe(element);
+    return () => {
+      mount.disconnect();
+      release.disconnect();
+    };
+  }, [ref, mountMargin, releaseMargin]);
+  return kept;
+}
+
+/**
+ * Room around the artboard (stage px) for the slab it draws past its own edges (up to about 9 artboard px, 21 stage px, at
+ * the right of the artboard for `pathState` 0, at its left for 1).
+ */
+const BLEED = 32;
 
 /**
  * The file draws an opaque dark rectangle (about #292929) over the whole artboard, behind the slab. This takes it out: the
@@ -53,62 +86,149 @@ export function RoadArtFilter() {
   );
 }
 
-function RoadCanvas({ state, frame }: { state: number; frame: ArtboardFrame }) {
-  const { rive, canvas, RiveComponent } = useRive({
-    ...riveSource(LEVEL_ROAD.src),
-    artboard: LEVEL_ROAD.artboard,
-    stateMachine: LEVEL_ROAD.stateMachine,
-    autoplay: true,
-    autoBind: true,
-    layout: new Layout({ fit: Fit.Fill, alignment: Alignment.Center }),
-  });
-  useArtboardFrame(rive, canvas, frame, Fit.Fill);
+/**
+ * The artboard in a canvas, drawn into `frame` (fractions of the canvas, see `RoadArt`). `state` is written to `pathState` the
+ * moment the file has loaded and the canvas stays clear until the machine has drawn it: a canvas shows the artboard's default
+ * (0) until told otherwise, and a road that goes the other way (1) used to flash the wrong way for a moment each time it was made.
+ * `state` is not written again. `drawing` stops and starts the drawing, the picture stays on the canvas when it stops.
+ */
+function RoadCanvas({ state, frame, drawing }: { state: number; frame: ArtboardFrame; drawing: boolean }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const riveRef = useRef<Rive | null>(null);
+  const frameRef = useRef(frame);
+  const stateRef = useRef(state);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const property = rive?.viewModelInstance?.number(LEVEL_ROAD.property);
-    if (property) property.value = state;
-  }, [rive, state]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    configureRiveRuntime();
+    let disposed = false;
+    let raf = 0;
+    let rive: Rive | null = null;
+
+    /** Fits the artboard into its frame on the canvas, as the canvas is now (its size changes with the screen and its pixel ratio). */
+    const fit = () => {
+      if (!rive) return;
+      const { width, height } = canvas;
+      const { x0, y0, x1, y1 } = frameRef.current;
+      Object.assign(rive, { layout: new Layout({ fit: Fit.Fill, alignment: Alignment.Center, minX: x0 * width, minY: y0 * height, maxX: x1 * width, maxY: y1 * height }) });
+    };
+    const resize = () => {
+      rive?.resizeDrawingSurfaceToCanvas();
+      fit();
+    };
+
+    const onLoad = () => {
+      // A cached file can finish loading before `new Rive` has returned.
+      if (!rive) {
+        queueMicrotask(onLoad);
+        return;
+      }
+      const property = rive.viewModelInstance?.number(LEVEL_ROAD.property);
+      if (property) property.value = stateRef.current;
+      resize();
+      // Two frames: the machine takes the value on one and draws it on the next. Only then is the canvas shown.
+      raf = requestAnimationFrame(() => {
+        raf = requestAnimationFrame(() => {
+          if (!disposed) setReady(true);
+        });
+      });
+    };
+
+    rive = new Rive({
+      ...riveSource(LEVEL_ROAD.src),
+      canvas,
+      artboard: LEVEL_ROAD.artboard,
+      stateMachine: LEVEL_ROAD.stateMachine,
+      autoplay: true,
+      autoBind: true,
+      layout: new Layout({ fit: Fit.Fill, alignment: Alignment.Center }),
+      onLoad,
+    });
+    riveRef.current = rive;
+    const observer = new ResizeObserver(resize);
+    observer.observe(canvas);
+    return () => {
+      disposed = true;
+      cancelAnimationFrame(raf);
+      observer.disconnect();
+      rive?.cleanup();
+      riveRef.current = null;
+    };
+  }, []);
+
+  // A road's ends move only if the layout does (the tuner); its direction (`state`) never changes for a road.
+  useEffect(() => {
+    frameRef.current = frame;
+    stateRef.current = state;
+    const rive = riveRef.current;
+    const canvas = canvasRef.current;
+    if (!rive?.viewModelInstance || !canvas) return;
+    const property = rive.viewModelInstance.number(LEVEL_ROAD.property);
+    if (property && property.value !== state) property.value = state;
+    const { x0, y0, x1, y1 } = frame;
+    Object.assign(rive, { layout: new Layout({ fit: Fit.Fill, alignment: Alignment.Center, minX: x0 * canvas.width, minY: y0 * canvas.height, maxX: x1 * canvas.width, maxY: y1 * canvas.height }) });
+  }, [frame, state]);
+
+  useEffect(() => {
+    if (!ready) return;
+    if (drawing) riveRef.current?.startRendering();
+    else riveRef.current?.stopRendering();
+  }, [drawing, ready]);
 
   return (
-    <div className="h-full w-full" style={KEY_DARK_FILL ? { filter: `url(#${KEY_ID})` } : undefined}>
-      <RiveComponent className="h-full w-full" />
+    <div className="h-full w-full" style={{ opacity: ready ? 1 : 0, ...(KEY_DARK_FILL ? { filter: `url(#${KEY_ID})` } : {}) }}>
+      <canvas ref={canvasRef} className="block h-full w-full" />
     </div>
   );
 }
 
 /**
- * One piece of the road between two levels, drawn by the road artboard (`LEVEL_ROAD`) in the box the old `grid-road.svg` was
- * placed in: `style` places that box (left, top) and `width` sizes it (its height follows). `mirrored` is how the old image
- * was turned: false runs down to the left, true down to the right.
+ * One piece of the road between two levels, drawn by the road artboard (`LEVEL_ROAD`). `from` and `to` are where the middle of
+ * the slab's upper and lower end go, in stage px (see `RoadConfig`): the artboard is stretched and moved so that its slab's two
+ * ends land exactly there. Which way it turns (`pathState` 0, 1) follows from where it goes. `origin` is the stage position of the
+ * element this sits in, if it is not the stage itself.
+ *
+ * Both ends are put under the tiles, in the middle of their top faces, so no end of the slab shows. The distance between two
+ * tiles is not on the slab's own slope (0.683 against its 0.6), so it is stretched a little more downwards than across to run
+ * through both middles; going through just one and leaving the other end off to the side showed its corner outside the tile.
  */
-export function RoadArt({ width, mirrored, style, className }: { width: number; mirrored: boolean; style?: CSSProperties; className?: string }) {
+export function RoadArt({ from, to, origin = { x: 0, y: 0 }, className }: { from: Point; to: Point; origin?: Point; className?: string }) {
   const sentinel = useRef<HTMLDivElement>(null);
-  const near = useNearViewport(sentinel);
-  const state = mirrored ? LEVEL_ROAD.state.downRight : LEVEL_ROAD.state.downLeft;
+  const made = useKept(sentinel, MOUNT_MARGIN, RELEASE_MARGIN);
+  const drawing = useWithin(sentinel, DRAW_MARGIN);
+  const state = to.x > from.x ? LEVEL_ROAD.state.downRight : LEVEL_ROAD.state.downLeft;
 
-  const { box, frame } = useMemo(() => {
-    const f = width / ROAD_IMAGE.width;
-    const fit = FIT.byState[state];
-    const art = { x: fit.x * f, y: fit.y * f, w: LEVEL_ROAD.width * fit.scaleX * f, h: LEVEL_ROAD.height * FIT.scaleY * f };
-    const bleed = BLEED * f;
-    const w = art.w + 2 * bleed;
-    const h = art.h + 2 * bleed;
-    return {
-      box: { left: art.x - bleed, top: art.y - bleed, width: w, height: h },
-      frame: { x0: bleed / w, y0: bleed / h, x1: 1 - bleed / w, y1: 1 - bleed / h } satisfies ArtboardFrame,
+  const { art, box, frame } = useMemo(() => {
+    const caps = LEVEL_ROAD.caps[state];
+    const scaleX = (to.x - from.x) / (caps.end.x - caps.start.x);
+    const scaleY = (to.y - from.y) / (caps.end.y - caps.start.y);
+    const art = {
+      x: from.x - scaleX * caps.start.x - origin.x,
+      y: from.y - scaleY * caps.start.y - origin.y,
+      width: LEVEL_ROAD.width * scaleX,
+      height: LEVEL_ROAD.height * scaleY,
     };
-  }, [width, state]);
+    const width = art.width + 2 * BLEED;
+    const height = art.height + 2 * BLEED;
+    return {
+      art,
+      box: { left: -BLEED, top: -BLEED, width, height },
+      frame: { x0: BLEED / width, y0: BLEED / height, x1: 1 - BLEED / width, y1: 1 - BLEED / height } satisfies ArtboardFrame,
+    };
+  }, [from.x, from.y, to.x, to.y, origin.x, origin.y, state]);
 
   return (
     <div
       ref={sentinel}
       aria-hidden
       className={`pointer-events-none absolute select-none ${className ?? ""}`}
-      style={{ ...style, width, height: (width * ROAD_IMAGE.height) / ROAD_IMAGE.width }}
+      style={{ left: art.x, top: art.y, width: art.width, height: art.height }}
     >
-      {near && (
+      {made && (
         <div className="absolute" style={box}>
-          <RoadCanvas state={state} frame={frame} />
+          <RoadCanvas state={state} frame={frame} drawing={drawing} />
         </div>
       )}
     </div>
