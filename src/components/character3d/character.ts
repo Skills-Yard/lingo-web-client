@@ -45,9 +45,14 @@ export const ANIMATIONS = [
 
 type AnimationId = (typeof ANIMATIONS)[number]["id"];
 
-/** The clips of a character's own file that play for each of `ANIMATIONS`. */
-const clipsOf = (clips: Readonly<Record<AnimationId, string>>): AnimationSpec[] =>
-  ANIMATIONS.map(({ id, label }) => ({ id, label, clip: clips[id] }));
+/**
+ * The clips of a character's own file that play for each of `ANIMATIONS`, and (for the
+ * ones that have it) the clip that moves the mouth with them.
+ */
+const clipsOf = (
+  clips: Readonly<Record<AnimationId, string>>,
+  lipSync: Readonly<Partial<Record<AnimationId, string>>> = {},
+): AnimationSpec[] => ANIMATIONS.map(({ id, label }) => ({ id, label, clip: clips[id], lipSync: lipSync[id] }));
 
 type Model = {
   /** The file: a Mixamo-rigged avatar with its textures and its clips. */
@@ -58,11 +63,15 @@ type Model = {
 };
 
 /**
- * The characters the learner can pick (see `characterLook.ts`). Neither file has morph
- * targets, so neither has a lip-sync clip. The girl's file has one clip, used for both
- * (her bones' axes differ from other Mixamo rigs', so clips of another file don't play on
- * her: more of hers must be exported from Mixamo for her). `Male.glb` is spelt with a
- * capital: a host that cares about case needs it exactly.
+ * The characters the learner can pick (see `characterLook.ts`). The girl's file has no
+ * morph targets, so no lip-sync clip. It has one clip, used for both (her bones' axes
+ * differ from other Mixamo rigs', so clips of another file don't play on her: more of
+ * hers must be exported from Mixamo for her). The male is an anime (VRoid-style) model,
+ * not a Mixamo one: its bones are `J_Bip_…`, so `retarget` can't be used for him, only
+ * the clips of his own file. That file also has 57 face morph targets and a
+ * `Face-LipSyncAction` clip (39.5 s, mouth shapes only, made for some line we don't
+ * have, so a stand-in) that plays with his Talking. `Male_anime.glb` is spelt exactly
+ * so: a host that cares about case needs it.
  */
 const MODELS: Readonly<Record<CharacterId, Model>> = {
   girl: {
@@ -71,9 +80,9 @@ const MODELS: Readonly<Record<CharacterId, Model>> = {
     animations: clipsOf({ "idle-b": "mixamo.com", talking: "mixamo.com" }),
   },
   male: {
-    src: "/animations/Male.glb",
-    bytes: 7_526_420,
-    animations: clipsOf({ "idle-b": "Breathing.001", talking: "Talking" }),
+    src: "/animations/Male_anime.glb",
+    bytes: 11_394_316,
+    animations: clipsOf({ "idle-b": "Breathing", talking: "Talking" }, { talking: "Face-LipSyncAction" }),
   },
 };
 

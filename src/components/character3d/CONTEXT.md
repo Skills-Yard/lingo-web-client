@@ -8,23 +8,33 @@ headless Chrome on 2026-11-13; "not verified" says what wasn't.
 Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/drei 10
 (`OrbitControls` only), lucide-react, Tailwind v4 with the project's theme tokens.
 
-> **Two characters now: `girl.glb` and `Male.glb`** (2026-11-18), not `Character_Final.glb` (still in
-> `public/animations`, unused). Everything below that says "Character_Final" / Levitate / Sitting / Gesture / lip-sync
+> **Two characters now: `girl.glb` and `Male_anime.glb`** (the male was `Male.glb` until 2026-11-19; that file is still
+> in `public/animations`, unused, like `Character_Final.glb`). Everything below that says "Character_Final" / Levitate / Sitting / Gesture / lip-sync
 > describes the old model. What changed, and why:
 > - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "3D character" Girl / Male. The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
 >   pull three in). `sharedCharacter.ts` loads the picked one (default girl); a switch loads the other in the
 >   background (the button says "Male…" meanwhile), the screens then switch and the old one is freed after 1 s.
->   `useCharacter` (the `/character` page) follows the pick too. `Male.glb` is spelt with a capital M.
+>   `useCharacter` (the `/character` page) follows the pick too. `Male_anime.glb` is spelt exactly so (capital M).
 > - `MODELS` in `character.ts` gives each file, its size and which clip plays for `idle-b` and `talking`:
->   girl → `mixamo.com` for both; male → `Breathing.001` and `Talking` (the file also has `Head Nod`, `Talking.001`
->   and others, unused). `ANIMATIONS` is two entries, "Idle" and "Talking" (Talking plays its voice). `TOUR` in `show.ts`
+>   girl → `mixamo.com` for both; male → `Breathing` and `Talking` (the file also has `Gesture`, `Head_nod`,
+>   `Talking_both_hand` and `T-Pose`, unused). `ANIMATIONS` is two entries, "Idle" and "Talking" (Talking plays its voice). `TOUR` in `show.ts`
 >   is Idle then Talking; the Gesture pictures in `SCENES` are unused.
-> - Neither file has **morph targets**, so there is no lip-sync. Both are Tripo meshes on the Mixamo rig.
+> - **Lip-sync:** the girl (a Tripo mesh on the Mixamo rig) has no morph targets, so none. `Male_anime.glb` is an anime
+>   (VRoid-style) model: 3 skinned meshes (Body, Face, Hair), 15 materials, bones named `J_Bip_…` (not Mixamo), and 57 face morph
+>   targets (`Fcl_MTH_A/I/U/E/O`, …) with a clip `Face-LipSyncAction` (39.5 s, mouth shapes only, made for a line we don't have, so
+>   a stand-in like the old one). It is wired as the `lipSync` of his `talking` in `MODELS.male` (`clipsOf`'s second argument):
+>   the mouth moves while he talks, on `/character` and on the sequence screens; it doesn't follow the words. The clip's first
+>   0.9 s is a closed mouth.
+> - **Male's dark patch on the jaw.** His materials have no metallic/roughness factor, so glTF's default applies
+>   (metal 1, rough 1): a fully metal surface ignores the hemisphere light and only the key lamp lights it, so the side of the
+>   jaw facing away from it is black (it looks like a beard). Reproduced in a bare three.js page, so it is the file, not the app.
+>   `material.metalness = 0` removes it, but then skin and shirt come out pale (the user disliked a pale look before).
+>   Not applied; decide on the look (or re-export the materials with metallic 0 from Blender).
 > - **Girl: old clips and `Idle.glb` do not retarget onto her.** Her bones' local axes are turned 90° about the vertical
 >   relative to the other rigs (hips rest `[-0.5, 0.5, -0.5, 0.5]` vs `[-0.707, 0, 0, 0.707]`), so the copy-the-rotations
 >   `retarget` in `character.ts` made her vanish (tried with Idle B). More animations for her should be exported from
->   Mixamo for this same girl (then they are her own clips). `Male.glb` has the usual frames (like `Character_Final`),
->   so `Idle.glb` and the old clips probably retarget onto him; not tried.
+>   Mixamo for this same girl (then they are her own clips). `Male_anime.glb` has a different rig
+>   (`J_Bip_…`), so `retarget` (Mixamo bone names only) can't be used for him: only the clips of his own file.
 > - `girl.glb` has a **floor slab** (`Cube`, a plain mesh); `removeProps` drops any non-skinned mesh.
 > - Her clip carries her 0.5 m up from her bind pose (it stands her on the ground), so `stand()` measures the size and
 >   footing from the first animation's **first frame**, not the bind pose (`boundsIn`). Measured in the bind pose she floated.
@@ -34,10 +44,13 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 >   Emission), would explain it. A brighter version (three's `RoomEnvironment` as fill, lamps turned down, and a
 >   brightness slider in the battery menu) was built and then removed on request; the hands came out pale in it.
 > - **`girl.glb`'s texture is 8192×8192** (about 350 MB of GPU memory, over many phones' 4096 limit); resizing it to
->   2048–4096 in Blender would also shrink the 15 MB file. Not done. `Male.glb` is 7.5 MB.
+>   2048–4096 in Blender would also shrink the 15 MB file. Not done. `Male_anime.glb` is 11.4 MB (22 PNG images).
 > - Checked in headless Chrome (390×844): `/character` and `/module/sequence-3d?step=1` and `?step=3` for the girl; the
->   battery hold menu and switching to the male on `step=1`. Not checked: a real
->   phone, load times on a slow connection, a touch (not mouse) hold on the battery, the male on `step=3`/`7`.
+>   battery hold menu and switching to the male on `step=1`. With `Male_anime.glb` (2026-11-19): `/character` (Idle and Talking
+>   both play, the mouth opens in Talking) and `step=1` (arm gesture and mouth during the voice, then Idle) / `step=3`;
+>   it loads, faces the camera, stands on the ground. Not checked: a real
+>   phone, load times on a slow connection, a touch (not mouse) hold on the battery, the male on `step=7`, the battery menu
+>   switch with the new file.
 
 ## What the page does
 
