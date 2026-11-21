@@ -9,6 +9,7 @@ import { PointedLook, useAnswerHint } from "@/components/level-one/answerHint";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
+import { RightBounce } from "@/components/level-two/RightBounce";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
 import { BELOW_TITLE, BottleBackdrop, BottleWalletBackdrop, ClassroomBackdrop, GAP_BELOW_SCENE, HEX_LIFT, ItemsBackdrop, MiniAppBackdrop, NamesBackdrop, SCENE_BOTTOM_LIFTED_PHONE, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
 import { COLUMN_LEFT, type Choice } from "@/components/level-two/levelTwo";
@@ -118,7 +119,6 @@ function ObjectGrid({
   correctId,
   selectedId,
   checked,
-  fadeOut,
   pointedId,
   withHint,
   spill,
@@ -128,8 +128,6 @@ function ObjectGrid({
   correctId: string;
   selectedId: string | null;
   checked: boolean;
-  /** The cards fade out (a right answer clears the screen). */
-  fadeOut: boolean;
   /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
   pointedId: string | null;
   withHint: boolean;
@@ -138,10 +136,11 @@ function ObjectGrid({
 }) {
   const pictures = hasPictures(options);
   return (
+    // The cards stay after a check, right or wrong: they only rise clear of the result panel (the right one then bounces, see `RightBounce` below).
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: fadeOut ? 0 : 1, y: checked ? -OPTION.rise : 0 }}
-      transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : ANSWERS_IN}
+      animate={{ opacity: 1, y: checked ? -OPTION.rise : 0 }}
+      transition={checked ? { y: PANEL_SPRING } : ANSWERS_IN}
       className="pointer-events-auto absolute z-[1] grid"
       // Equal columns, except that a card of words is never narrower than its words (`water_level` is wider than a third of the column at this size), so the text stays inside it.
       style={{ bottom: aboveButtons(OPTION.aboveButtons, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(${pictures ? "0px" : "min-content"}, 1fr))` }}
@@ -151,7 +150,8 @@ function ObjectGrid({
         const pointed = pointedId === option.id && state === "idle";
         const spilling = spill && checked && state === "wrong";
         return (
-          <div key={option.id} className="relative flex min-w-0">
+          // The right card bounces a little after the check (`state` is only "correct" once a right answer is checked), once the cards have risen above the result panel. `flex-1`: the wrapper fills its grid cell.
+          <RightBounce key={option.id} play={state === "correct"} delay={0.2} radius={OPTION.radius} className="flex min-w-0 flex-1">
             <motion.button
               type="button"
               data-hint={option.id}
@@ -198,7 +198,7 @@ function ObjectGrid({
               </AnimatePresence>
               <PointedLook pointed={pointed} />
             </motion.button>
-          </div>
+          </RightBounce>
         );
       })}
     </motion.div>
@@ -267,9 +267,9 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   // What Hex says, and the bubble that holds it in two lines.
   const sayLine = quiz ? quiz.line : "";
   const bubble = useBubbleSize(sayLine);
-  // A right answer clears the screen: the answers fade out and, as Hex and his bubble run off, the scene rises into their room. (A wrong one keeps the answers, for another try.)
+  // A right answer sends the picture (a card on the screen) up and away. The answers stay, right or wrong: the right one bounces.
   const cleared = !!quiz && checked && right;
-  // Hex and his bubble leave after any check, right or wrong, and the scene rises into their room at the head, clear of the answers that rise from below (a wrong answer's stay for another try).
+  // Hex and his bubble leave after any check, right or wrong, and the scene rises into their room at the head, clear of the answers that rise from below (they stay, for another try or to go on).
   const sceneLifted = !!quiz && checked;
 
   const record = (clean: boolean) => {
@@ -475,7 +475,6 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               correctId={shownCorrectId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={cleared}
               pointedId={answerHint.pointedId}
               withHint={hasHint}
               spill={!!quiz.spill}
@@ -487,13 +486,14 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               correctId={shownCorrectId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={cleared}
+              fadeOut={false}
+              bounceRight
               pointedId={answerHint.pointedId}
               withHint={hasHint}
               rise={OPTION.rise}
               bottomGap={OPTION.aboveButtons}
-              // Answers too tall for the room under the risen scene (three rows) fold away after a wrong check but for the picked one; a right answer clears them all anyway.
-              onlyPicked={answersHeight(quiz) > ROOM_AFTER_CHECK && !cleared}
+              // Answers too tall for the room under the risen scene (three rows) fold away after a check but for the picked one (they would cover the scene).
+              onlyPicked={answersHeight(quiz) > ROOM_AFTER_CHECK}
               compact
               tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
               idleLook={IDLE_LOOK}

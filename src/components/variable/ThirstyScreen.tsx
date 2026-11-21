@@ -8,6 +8,7 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { HexBubble } from "@/components/level-two/HexBubble";
+import { RightBounce } from "@/components/level-two/RightBounce";
 import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, Teal } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
@@ -130,9 +131,9 @@ export function ThirstyScreen() {
 
       <motion.div
         initial={{ opacity: 0, y: 90 }}
-        // A right answer clears the screen: the cards fade out (and the trail rises into the room Hex and his bubble leave).
-        animate={{ opacity: celebrate ? 0 : 1, y: checked ? -OPTION.rise : 0 }}
-        transition={checked ? { y: PANEL_SPRING, opacity: { duration: 0.4, ease: "easeOut" } } : CARDS_IN}
+        // The cards stay after a check, right or wrong (they do not reach the trail, even when it rises into the room Hex and his bubble leave): they only rise clear of the result panel.
+        animate={{ opacity: 1, y: checked ? -OPTION.rise : 0 }}
+        transition={checked ? { y: PANEL_SPRING } : CARDS_IN}
         className="pointer-events-auto absolute z-[1] grid grid-cols-3"
         style={{ bottom: aboveButtons(OPTION.aboveButtons, true), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
       >
@@ -141,31 +142,33 @@ export function ThirstyScreen() {
           // At rest a thin grey line and a faint shade (as every option); picked, right or wrong a 4px ring. The padding makes up the border's width, so a card is as wide either way.
           const ring = state === "selected" ? SELECTED_RING : state === "correct" ? RIGHT_RING : state === "wrong" ? WRONG_RING : "border-[#DCE2E9] drop-shadow-[0_1px_2px_rgba(31,42,68,0.07)] dark:border-white/10";
           return (
-            <motion.button
-              key={choice.id}
-              type="button"
-              data-hint={choice.id}
-              disabled={checked}
-              onClick={() => {
-                playClickSound();
-                vibrateForTap();
-                answerHint.stop();
-                setSelectedId(choice.id);
-              }}
-              aria-pressed={state === "selected"}
-              animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
-              whileTap={{ scale: 0.96 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
-              style={{ height: OPTION.pictureHeight, borderRadius: OPTION.radius, paddingInline: state === "idle" ? OPTION.padX - 1 : OPTION.padX - 4 }}
-              className={`relative isolate flex min-w-0 cursor-pointer flex-col items-center justify-center gap-2 ${state === "idle" ? "border" : "border-4"} ${RAISED} ${LOOKS[state].edge} ${choice.tint} ${ring}`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={choice.icon} alt="" {...ICON} draggable={false} className="select-none" />
-              <span className="leading-6 font-semibold text-[#444444] dark:text-white" style={{ fontSize: OPTION.font }}>
-                {choice.text}
-              </span>
-              <PointedLook pointed={answerHint.pointedId === choice.id && state === "idle"} />
-            </motion.button>
+            // The right card plays the bounce (`RightBounce`, the same as every quiz answer) a little after the check, once the cards have risen above the panel. Only on a right pick: a wrong one never bounces the right card. `flex-1`: the wrapper must fill its grid cell.
+            <RightBounce key={choice.id} play={right && state === "correct"} delay={0.2} radius={OPTION.radius} className="flex min-w-0 flex-1">
+              <motion.button
+                type="button"
+                data-hint={choice.id}
+                disabled={checked}
+                onClick={() => {
+                  playClickSound();
+                  vibrateForTap();
+                  answerHint.stop();
+                  setSelectedId(choice.id);
+                }}
+                aria-pressed={state === "selected"}
+                animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1 }}
+                whileTap={{ scale: 0.96 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                style={{ height: OPTION.pictureHeight, borderRadius: OPTION.radius, paddingInline: state === "idle" ? OPTION.padX - 1 : OPTION.padX - 4 }}
+                className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-2 ${state === "idle" ? "border" : "border-4"} ${RAISED} ${LOOKS[state].edge} ${choice.tint} ${ring}`}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={choice.icon} alt="" {...ICON} draggable={false} className="select-none" />
+                <span className="leading-6 font-semibold text-[#444444] dark:text-white" style={{ fontSize: OPTION.font }}>
+                  {choice.text}
+                </span>
+                <PointedLook pointed={answerHint.pointedId === choice.id && state === "idle"} />
+              </motion.button>
+            </RightBounce>
           );
         })}
       </motion.div>
