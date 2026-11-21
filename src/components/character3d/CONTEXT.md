@@ -166,7 +166,13 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   guessed from the image, with dark variants). The pictures are **renders of our three models** (`public/images/mentors/{boy,girl,anime}.webp`,
   transparent, head to thigh, taken in headless Chrome from the avatar canvas of `?step=2`), so the arrows answer at once; "Choose"
   calls `setCharacter`, the button says "Loading…" while the character loads and the card closes when it is on show. A tap outside or
-  Escape closes it with the character unchanged. If the character is re-modelled the renders are stale: redo them.
+  Escape closes it with the character unchanged. If the character is re-modelled the renders are stale: redo them (how they were made: headless
+  Chrome over CDP, `?step=2` with `lingo.character-look` set, the canvas host pinned to the page corner at 380 × 680 with CSS, everything else
+  `visibility:hidden`, a transparent background override, a WebP screenshot of its top 63 %, then cut to the alpha bounding box in a page canvas).
+  Checked in headless Chrome 390×844, dark and light: tap on the battery opens it on Veena (the current one), the arrows go Veena → Zane → Rio
+  with the colours, names and pictures changing, "Choose Rio" stored `{"character":"boy"}`, closed the card and the screen's face became the boy.
+  Not checked: a real phone or touch, the card on a short screen, the "Loading…" state with a slow connection (Rio loaded in about a second here),
+  Escape and the outside tap. The "Choose" button is the app's Rive `Button3D`, not the design's striped one.
 - **Audio on the 3D route:** place 9 (shoes first) plays Hex's clips of the original screen (`SEQUENCE_AUDIO.socksFirst`: the title, then the
   line the bubble used to show). Hex has no clip for the other screens without one (1, 2, 4-7, 14-27 beyond 11-13): they need recording.
 - **Step 7 is the Figma `sequence_7` frame (a screenshot from the user), `look="tray"` with a list** (2026-11-21): the same screen as step 3,
