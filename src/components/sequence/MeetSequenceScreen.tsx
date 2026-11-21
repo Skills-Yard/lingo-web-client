@@ -7,7 +7,8 @@ import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
 import { SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 import { PictureCards } from "./PictureCards";
-import { PICK_UP_ICON, PLACE_IN_TARGET_ICON, SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious, type PictureCard } from "./sequence";
+import { PICK_UP_ICON, PLACE_IN_TARGET_ICON, STEP, type PictureCard } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 
 const CARDS: readonly [PictureCard, PictureCard] = [
   { text: "Pick Up", icon: PICK_UP_ICON, tint: "bg-[#F6F4FE] dark:bg-[#0F1F26]" },
@@ -42,17 +43,18 @@ const WORDS: readonly { text: string; teal?: boolean }[] = [
  */
 export function MeetSequenceScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   // How much of the clip has played (0-1): the words up to there are dark.
   const [progress, setProgress] = useState(0);
   const heard = Math.round(progress * WORDS.length);
   return (
     <LevelTwoShell
-      step={STEP.meet}
-      total={SEQUENCE_STEPS}
+      step={flow.position(STEP.meet)}
+      total={flow.total}
       voiceover={SEQUENCE_AUDIO.meetSequence}
-      onBack={() => router.push(sequencePrevious(STEP.meet))}
+      onBack={() => router.push(flow.previous(STEP.meet))}
       scene={<SoftBackdrop />}
-      onContinue={() => router.push(sequenceNext(STEP.meet))}
+      onContinue={() => router.push(flow.next(STEP.meet))}
     >
       <ScreenTitle oneLine>
         Meet the <Teal>Sequence.</Teal>

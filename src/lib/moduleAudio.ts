@@ -74,8 +74,6 @@ export const SEQUENCE_3D_AUDIO = {
     right: [sequence3dAudio("Screen 1 Correct.m4a")],
     wrong: [sequence3dAudio("Screen 1 Wrong.m4a")],
   },
-  /** `done`: once the shoes are on, before Continue unlocks. */
-  screen3: { question: [sequence3dAudio("Screen 3.m4a")], done: [sequence3dAudio("Screen 3 Continue.m4a")] },
   screen7: { question: [sequence3dAudio("Screen 7.m4a")] },
 } as const;
 

@@ -12,7 +12,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { COMMAND_LABEL, type Command } from "./hexGrid";
-import { SEQUENCE_STEPS, sequencePrevious } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 
 /** What Hex's board screens say in place of a speech bubble (Hex himself is on the board). */
 export function TipCard({ children }: { children: string }) {
@@ -117,11 +117,12 @@ type HexScreenProps = {
  */
 export function HexScreen({ step, title, titleSize, wrapTitle = false, board, boardTop, tip, tipTop = 0, panel, overlay, celebrate = false, children, onBack, ...shell }: HexScreenProps) {
   const router = useRouter();
+  const flow = useSequenceFlow();
   return (
     <LevelTwoShell
-      step={step}
-      total={SEQUENCE_STEPS}
-      onBack={onBack ?? (() => router.push(sequencePrevious(step)))}
+      step={flow.position(step)}
+      total={flow.total}
+      onBack={onBack ?? (() => router.push(flow.previous(step)))}
       scene={<MeadowBackdrop />}
       overlay={
         <>

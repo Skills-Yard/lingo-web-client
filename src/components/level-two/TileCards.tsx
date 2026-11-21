@@ -26,10 +26,12 @@ const LAYOUT = {
   big: { card: "h-[184px]", picture: "h-[62px] w-[62px]", text: "text-[16px] leading-5", box: "grid grid-cols-2 gap-x-[29px] gap-y-[31px]", inner: "gap-3" },
   /** Three 112 x 119 cards, each a coloured badge over its word. */
   badges: { card: "h-[119px]", picture: "h-10 w-10", text: "text-[14px] leading-[120%]", box: "flex items-stretch gap-[11px]", inner: "gap-1.5" },
+  /** Two 166 x 187 cards, 19 apart, their art (at most 83 x 56) in a 90 x 90 box: the 3D questions' tray look. */
+  tray: { card: "h-[187px]", picture: "h-[90px] w-[90px]", text: "text-[16px] leading-none", box: "flex items-stretch gap-[19px]", inner: "gap-3.5", art: "h-[56px] w-[83px] object-contain" },
 } as const;
 
 /** The layouts that are wider than the usual column (px): they stand centred. */
-const WIDTH: Partial<Record<keyof typeof LAYOUT, number>> = { big: 355, badges: 358 };
+const WIDTH: Partial<Record<keyof typeof LAYOUT, number>> = { big: 355, badges: 358, tray: 351 };
 
 type TileCardsProps = {
   layout: keyof typeof LAYOUT;
@@ -115,7 +117,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 <span className={`flex shrink-0 items-center justify-center rounded-[12px] text-[20px] leading-[120%] font-semibold whitespace-nowrap ${look.picture} ${choice.tag.look}`}>{choice.tag.text}</span>
               ) : (
                 <span className={`flex shrink-0 items-center justify-center ${look.picture}`} style={{ width: pictureWidth, height: pictureHeight }}>
-                  <SlotImage file={choice.icon} className={pictureHeight ? "h-full w-full object-contain" : "max-h-full max-w-full object-contain"} />
+                  <SlotImage file={choice.icon} className={"art" in look ? look.art : pictureHeight ? "h-full w-full object-contain" : "max-h-full max-w-full object-contain"} />
                 </span>
               )}
               <span

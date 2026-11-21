@@ -16,6 +16,7 @@ import {
 } from "@/components/character3d/characterLook";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { energyHref } from "@/lib/routes";
+import { useBatteryTap } from "./batteryTap";
 
 /** The fills of Level 1's answer cards (see InstructionQuizScreen), at rest. */
 const TINTS = {
@@ -77,7 +78,7 @@ function CharacterOptions() {
 const HOLD_MS = 600;
 
 type BatteryMenuProps = {
-  /** The battery itself — tapping it opens `/energy`, holding it the dev panel. */
+  /** The battery itself — tapping it opens `/energy` (or what the route gives it, see `batteryTap.tsx`), holding it the dev panel. */
   children: ReactNode;
   /** Sizes and places the wrapper, which must be positioned (`absolute` or
    * `relative`): the panel opens under it, right-aligned. */
@@ -107,6 +108,7 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
   // Where the panel opens: under the battery, right-aligned (fixed, in viewport px).
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null);
   const router = useRouter();
+  const onTap = useBatteryTap();
   const holdTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const held = useRef(false);
 
@@ -146,6 +148,7 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
             return;
           }
           if (open) return setOpen(false);
+          if (onTap) return onTap();
           router.push(energyHref(window.location.pathname + window.location.search));
         }}
         // A hold must open the panel, not the browser's long-press menu.

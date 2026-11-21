@@ -5,7 +5,18 @@ import { usePortraitDrawn } from "@/components/character3d/portraitHost";
 import { preloadCharacter, useSharedCharacter } from "@/components/character3d/sharedCharacter";
 import { SEQUENCE_3D_AUDIO } from "@/lib/moduleAudio";
 import { getRoomHost } from "@/lib/rive/roomHost";
-import { PUT_ON_FIRST, SOCKS_FIRST } from "./sequence";
+import {
+  COMPARE_ATTEMPTS,
+  FIRST_COMMAND,
+  PICK_UP_ICON,
+  PLACE_IN_TARGET_ICON,
+  PUT_ON_FIRST,
+  REFLECT_DECIDE,
+  REFLECT_ORDER,
+  SOCKS_FIRST,
+  WHAT_DID_YOU_DO,
+  type SequenceQuiz,
+} from "./sequence";
 
 /*
  * Everything the 3D copies of the Sequence screens use, loaded up front (see
@@ -23,12 +34,20 @@ const clipsOf = (voice: Voice) => Object.values(voice).flat();
 /** Every clip a screen can play, and the sound a tap makes. */
 const SOUNDS: readonly string[] = [...Object.values(SEQUENCE_3D_AUDIO).flatMap(clipsOf), CLICK_SOUND];
 
-/** Every picture on the screens: the answers' (screens 1 and 7) and the picture after a wrong answer (7). */
+/** The pictures a question shows: its answers', the ones to compare, the close-up, and the one after a wrong answer. */
+const picturesOf = (quiz: SequenceQuiz) => [
+  ...quiz.choices.map(({ icon }) => icon),
+  ...(quiz.pictures?.map(({ icon }) => icon) ?? []),
+  ...(quiz.closeUp ? [quiz.closeUp.src] : []),
+  ...(quiz.wrongPicture ? [quiz.wrongPicture.src] : []),
+];
+
+/** The questions' pictures (the arrange screen's two cards are not a question's, so they are named below). The Hex board screens draw theirs in code or load them themselves. */
 const PICTURES: readonly string[] = [
   ...new Set([
-    ...PUT_ON_FIRST.choices.map(({ icon }) => icon),
-    ...SOCKS_FIRST.choices.map(({ icon }) => icon),
-    ...(SOCKS_FIRST.wrongPicture ? [SOCKS_FIRST.wrongPicture.src] : []),
+    ...[PUT_ON_FIRST, WHAT_DID_YOU_DO, COMPARE_ATTEMPTS, SOCKS_FIRST, FIRST_COMMAND, REFLECT_ORDER, REFLECT_DECIDE].flatMap(picturesOf),
+    PICK_UP_ICON,
+    PLACE_IN_TARGET_ICON,
   ]),
 ];
 

@@ -11,7 +11,8 @@ import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, typ
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, type Command } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
@@ -45,6 +46,7 @@ type Phase = "edit" | "running" | "checked";
  */
 export function HexOrderScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const { slots, placeIn, tapCard, reset, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const { hex, running, play, reset: resetHex } = useHexRun(GRID_START, GRID);
   const [phase, setPhase] = useState<Phase>("edit");
@@ -101,7 +103,7 @@ export function HexOrderScreen() {
 
   const onContinue = () => {
     if (phase === "edit") check();
-    else if (correct) router.push(sequenceNext(STEP.hexOrder));
+    else if (correct) router.push(flow.next(STEP.hexOrder));
     else tryAgain();
   };
 

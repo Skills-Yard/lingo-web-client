@@ -12,7 +12,8 @@ import { ChipList, chipListSize, moveItem, type PlanItem } from "./ChipList";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
@@ -76,6 +77,7 @@ type Phase = "edit" | "running" | "checked";
  */
 export function PlanScreen({ route }: { route: PlanRoute }) {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const config = ROUTES[route];
   const { hex, running, play, reset } = useHexRun(GRID_START, GRID);
   const [items, setItems] = useState<PlanItem[]>([]);
@@ -125,7 +127,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
 
   const onContinue = () => {
     if (editing) run();
-    else if (correct) router.push(sequenceNext(config.step));
+    else if (correct) router.push(flow.next(config.step));
     else tryAgain();
   };
 

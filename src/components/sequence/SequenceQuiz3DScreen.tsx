@@ -12,11 +12,13 @@ import { TileCards } from "@/components/level-two/TileCards";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { AnswerTray, TRAY_CARD_GAP, TRAY_LIST, TRAY_LIST_WIDTH, TRAY_PAIR, trayRise, TrayHint, type TrayStand } from "./AnswerTray";
 import { CharacterOnStage, Column, SPEECH_STAGE, type SpeechStage } from "./CharacterStage";
+import { PatternBackdrop } from "./PatternBackdrop";
 import { BOARD, RoomBoard } from "./RoomBoard";
 import type { RoomDress } from "./SequenceRoom";
-import { SEQUENCE_STEPS, type SequenceQuiz } from "./sequence";
-import { sequence3dNext, sequence3dPrevious } from "./sequence3d";
+import type { SequenceQuiz } from "./sequence";
+import { SEQUENCE_3D_STEPS, sequence3dNext, sequence3dPrevious } from "./sequence3d";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 /*
@@ -38,6 +40,18 @@ const CARDS_CLEAR_MS = 700;
 const LIST_RISE = 150;
 /** With nothing above them, the answers rise further, well clear of the panel. */
 const LIST_RISE_OPEN = 210;
+/**
+ * The tray look's character: head and chest close up (see `PortraitFraming`), its box from
+ * Figma `top` 60 for this tall, which puts the head's top at about 198 (the title ends at 154);
+ * it fades out (percent of its height) over the tray's top, where the design's picture ends.
+ */
+const TRAY_CHARACTER = { top: 60, height: 690, fade: [74, 84] } as const;
+
+/** The character's fade for what stands on the tray: the numbers above are for the pair of cards, and a taller stand puts the tray's top higher by the difference. */
+const trayFade = (stand: TrayStand) => {
+  const higher = ((trayRise(stand) - trayRise(TRAY_PAIR)) / TRAY_CHARACTER.height) * 100;
+  return [TRAY_CHARACTER.fade[0] - higher, TRAY_CHARACTER.fade[1] - higher] as const;
+};
 
 type RoomScene = Extract<SequenceQuiz["scene"], { room: unknown }>["room"];
 
@@ -60,9 +74,15 @@ export type SequenceQuiz3DAudio = {
  * the question aloud), the boy's room on its board, and the answers. The main button
  * checks the pick and the result panel slides up. A right answer moves on; a wrong
  * one is tried again on the spot (unless the question is `noRetry`). The voice is
- * `audio`, not the quiz's own clips.
+ * `audio`, not the quiz's own clips. `position` is its place in the 3D flow (`sequence3d.ts`).
+ *
+ * `look` "tray" is the Figma `sequence_3` frame, for a pair of answers: the character stays
+ * in the middle, close up, with no room beside it; the two cards stand on a grey tray at the
+ * bottom with the hint as a bulb above it, over a pattern background (see `PatternBackdrop`).
  */
-export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audio: SequenceQuiz3DAudio }) {
+export function SequenceQuiz3DScreen({ quiz, audio, position, look = "board" }: { quiz: SequenceQuiz; audio: SequenceQuiz3DAudio; position: number; look?: "board" | "tray" }) {
+  const tray = look === "tray";
+  const stand = quiz.layout === "list" ? TRAY_LIST : TRAY_PAIR;
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
@@ -82,12 +102,12 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
   // A right answer in a `clearOnRight` room: the boy waits until the cards have gone, then moves.
   const [cardsGone, setCardsGone] = useState(false);
   const correct = selectedId === quiz.correctId;
-  const room = "room" in quiz.scene ? quiz.scene.room : null;
+  const room = !tray && "room" in quiz.scene ? quiz.scene.room : null;
   // The room stays put and the cards clear, so the boy is in view while he moves.
   const clearedRoom = !!room && (!!room.fixed || (!!room.clearOnRight && correct));
   const fadeCards = checked && clearedRoom;
   // The picture of the wrong try is shown where the board is, so the board gives way to it.
-  const showsWrongPicture = !!quiz.wrongPicture && checked && !correct;
+  const showsWrongPicture = !tray && !!quiz.wrongPicture && checked && !correct;
 
   useEffect(() => {
     if (!checked || !correct) return;
@@ -112,7 +132,7 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
 
   const onContinue = () => {
     if (!checked) check();
-    else if (correct || quiz.noRetry) router.push(sequence3dNext(quiz.step));
+    else if (correct || quiz.noRetry) router.push(sequence3dNext(position));
     else tryAgain();
   };
 
@@ -134,15 +154,16 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
 
   return (
     <LevelTwoShell
-      step={quiz.step}
-      total={SEQUENCE_STEPS}
+      step={position}
+      total={SEQUENCE_3D_STEPS}
       voiceover={voiceover}
-      onBack={() => router.push(sequence3dPrevious(quiz.step))}
-      scene={room ? <RoomBoard dress={roomDress(room, checked, correct, cardsGone)} hidden={showsWrongPicture} shown={boardIn} /> : <SoftBackdrop />}
+      onBack={() => router.push(sequence3dPrevious(position))}
+      scene={room ? <RoomBoard dress={roomDress(room, checked, correct, cardsGone)} hidden={showsWrongPicture} shown={boardIn} /> : tray ? <PatternBackdrop /> : <SoftBackdrop />}
       answer={answer}
       ctaDisabled={selectedId === null || !spoken}
       ctaLabel={!checked ? (quiz.ctaLabel ?? "Continue") : quiz.noRetry ? "Continue" : correct ? "Next" : "Try again"}
-      hint={withHint ? { visible: !checked, onUse: useHint, disabled: !spoken } : undefined}
+      // The tray look has its own bulb; the shell's stays shut (it still has a hint, which the streak counts).
+      hint={withHint ? { visible: !tray && !checked, onUse: useHint, disabled: !spoken } : undefined}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -161,7 +182,16 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
     >
       <Column>
         {/* Silent when there is nothing to say: once checked with no result voice of its own (screen 1 has one for right and wrong), or on a retry. */}
-        <CharacterOnStage line={quiz.line} silenced={!voiceover} onStage={setStage} centered={!boardIn} withHint={withHint} />
+        <CharacterOnStage
+          line={quiz.line}
+          silenced={!voiceover}
+          onStage={setStage}
+          centered={tray || !boardIn}
+          // The tray look opens with the character down by the main button; it rises as the answers come in.
+          lowered={tray && !optionsShown}
+          withHint={withHint}
+          {...(tray ? { framing: "bust", top: stageTop(TRAY_CHARACTER.top), height: TRAY_CHARACTER.height, fade: trayFade(stand) } : {})}
+        />
         <AnimatePresence>
           {quiz.wrongPicture && showsWrongPicture && (
             <motion.div
@@ -190,6 +220,9 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
         </span>
       </ScreenTitle>
 
+      {tray && <AnswerTray shown={optionsShown} gone={checked} stand={stand} />}
+      {tray && withHint && <TrayHint visible={optionsShown && !checked} disabled={!spoken} onPress={useHint} stand={stand} />}
+
       {/* The answers aren't there until the character has said most of the question; then they slide up (their own entrance). */}
       {optionsShown && (quiz.layout === "list" ? (
         <AnswerCards
@@ -199,23 +232,27 @@ export function SequenceQuiz3DScreen({ quiz, audio }: { quiz: SequenceQuiz; audi
           checked={checked}
           fadeOut={fadeCards}
           hinted={hinted}
-          withHint={withHint}
+          // The tray look's main button is the same size with the hint or without: the bulb is not on its row.
+          withHint={withHint && !tray}
           rise={listRise}
+          {...(tray ? { bottomGap: TRAY_CARD_GAP, width: TRAY_LIST_WIDTH, endGap: 0 } : {})}
           onPick={setSelectedId}
         />
       ) : (
         <TileCards
-          layout="pair"
+          layout={tray ? "tray" : "pair"}
           choices={quiz.choices}
           correctId={shownCorrectId}
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
           hinted={hinted}
-          withHint={withHint}
-          pictureWidth={quiz.pictureWidth}
-          pictureHeight={quiz.pictureHeight}
-          cardHeight={quiz.cardHeight}
+          // The tray look's main button is the same size with the hint or without: the bulb is not on its row.
+          withHint={withHint && !tray}
+          pictureWidth={tray ? undefined : quiz.pictureWidth}
+          pictureHeight={tray ? undefined : quiz.pictureHeight}
+          cardHeight={tray ? undefined : quiz.cardHeight}
+          {...(tray ? { bottomGap: TRAY_CARD_GAP } : {})}
           onPick={setSelectedId}
         />
       ))}

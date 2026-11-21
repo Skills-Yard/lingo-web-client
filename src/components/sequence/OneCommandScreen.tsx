@@ -8,7 +8,8 @@ import { Teal } from "@/components/level-two/LevelTwoShell";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { ROW_START, type HexState } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 
 /** The battery is this many tiles from Hex: that many commands reach it. */
 const DISTANCE = 3;
@@ -31,6 +32,7 @@ const TIPS = [
  */
 export function OneCommandScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const [moves, setMoves] = useState(0);
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
@@ -76,7 +78,7 @@ export function OneCommandScreen() {
       celebrate={done}
       overlay={popup}
       ctaDisabled={!done}
-      onContinue={() => router.push(sequenceNext(STEP.oneCommand))}
+      onContinue={() => router.push(flow.next(STEP.oneCommand))}
     >
       <div className="absolute left-1/2 -translate-x-1/2" style={{ top: 440 }}>
         <MoveButton label="Move Forward" look="bg-[#EDFAFE] shadow-[0_4px_0_#BFE6F2]" disabled={busy || moves >= DISTANCE} onPress={moveForward}>

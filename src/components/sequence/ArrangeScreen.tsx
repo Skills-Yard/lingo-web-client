@@ -15,7 +15,8 @@ import { vibrateForAnswer } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
 import { COMMAND_ROBOT, HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
-import { PICK_UP_ICON, PLACE_IN_TARGET_ICON, SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { PICK_UP_ICON, PLACE_IN_TARGET_ICON, STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 const LINE: readonly Span[] = [{ text: "Drag to help robot place the cube in target area" }];
@@ -46,6 +47,7 @@ const WRONG_MOVE_MS = COMMAND_ROBOT.moveSeconds.wrongClaw * 1000;
  */
 export function ArrangeScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const { slots, placeIn, tapCard, reset, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const [checked, setChecked] = useState(false);
   const [resultShown, setResultShown] = useState(false);
@@ -86,16 +88,16 @@ export function ArrangeScreen() {
 
   const onContinue = () => {
     if (!checked) check();
-    else if (correct) router.push(sequenceNext(STEP.arrange));
+    else if (correct) router.push(flow.next(STEP.arrange));
     else tryAgain();
   };
 
   return (
     <LevelTwoShell
-      step={STEP.arrange}
-      total={SEQUENCE_STEPS}
+      step={flow.position(STEP.arrange)}
+      total={flow.total}
       voiceover={checked ? undefined : SEQUENCE_AUDIO.arrange}
-      onBack={() => router.push(sequencePrevious(STEP.arrange))}
+      onBack={() => router.push(flow.previous(STEP.arrange))}
       scene={<RobotBackdrop below={robotBelowDialogue(BUBBLE_TOP, BUBBLE)} pose="idle" />}
       answer={answer}
       ctaDisabled={!full || (checked && !resultShown)}

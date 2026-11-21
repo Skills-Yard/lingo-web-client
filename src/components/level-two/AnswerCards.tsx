@@ -51,6 +51,10 @@ type AnswerCardsProps = {
   fontSize?: number;
   /** How far (px) above the button the rows end, where it should differ from `GAP_ABOVE_BUTTONS`. */
   bottomGap?: number;
+  /** The rows' width (px, standing centred), where it should differ from the column's. */
+  width?: number;
+  /** The space (px) between a row's text and the empty spot at its end, where it should differ from the usual 34. */
+  endGap?: number;
   /**
    * For rows that cannot all stand in the room a check leaves them (a scene above, the result panel below). Pass it
    * (true or false) and each row goes in a box that can fold away; with `true`, once `checked`, every row but the
@@ -70,7 +74,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, onlyPicked, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
   const folding = onlyPicked !== undefined;
   return (
@@ -84,7 +88,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
       }
       className="pointer-events-auto absolute z-[1] flex flex-col"
       // Rows that can fold away carry their own gap (a top margin), so a folded row leaves none behind.
-      style={{ bottom: aboveButtons(bottomGap, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: folding ? 0 : gap }}
+      style={{ bottom: aboveButtons(bottomGap, withHint), left: width ? `calc(50% - ${width / 2}px)` : COLUMN_LEFT, width: width ?? COLUMN_W, gap: folding ? 0 : gap }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -104,7 +108,10 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              style={tight ? { height: tight.height, paddingBlock: 6, paddingInline: tight.padX - 1, borderRadius: tight.radius } : undefined}
+              style={{
+                ...(tight && { height: tight.height, paddingBlock: 6, paddingInline: tight.padX - 1, borderRadius: tight.radius }),
+                ...(endGap !== undefined && { columnGap: endGap }),
+              }}
               className={`relative isolate flex ${compact ? "h-[56px] gap-3 py-1.5" : "h-[76px] gap-[34px] py-2.5"} w-full cursor-pointer items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left ${RAISED} ${look.edge} ${
                 state === "idle" ? (idleLook ?? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]") : look.card
               }`}

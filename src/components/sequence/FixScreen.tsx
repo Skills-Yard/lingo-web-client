@@ -12,7 +12,8 @@ import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, typ
 import { HexBoard } from "./HexBoard";
 import { HexScreen, ReplayButton } from "./HexScreen";
 import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
@@ -56,6 +57,7 @@ const kindsOf = (slots: Slots): Command[] =>
  */
 export function FixScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const { slots, placeIn, tapCard, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const { hex, running, play, reset } = useHexRun(GRID_START, GRID);
   const [phase, setPhase] = useState<Phase>("edit");
@@ -110,7 +112,7 @@ export function FixScreen() {
 
   const onContinue = () => {
     if (phase === "edit") run();
-    else if (correct) router.push(sequenceNext(STEP.fix));
+    else if (correct) router.push(flow.next(STEP.fix));
     else tryAgain();
   };
 

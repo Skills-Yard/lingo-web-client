@@ -14,7 +14,8 @@ import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboard
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { DressScene, HOP_SECONDS, type DressStage } from "./DressScene";
-import { IMAGES, SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { IMAGES, STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 const BUBBLE: BubbleSize = { width: 190 };
@@ -46,10 +47,12 @@ type Phase = "edit" | "socks" | "shoes";
  * "Arrange the instructions!" for getting ready: drag PUT SOCKS and PUT SHOES
  * into their slots. The right order plays out on the scene (socks, then
  * shoes); on the wrong one the board clears and he tries the socks over
- * his shoes, then the result comes up.
+ * his shoes, then the result comes up. It asks `useSequenceFlow` for its place, next and
+ * back, so it works in the 3D route too (where the character's face is beside the bubble).
  */
 export function DressArrangeScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const json = useSyncExternalStore(subscribeNever, readOnboardingAnswersJson, () => "");
   const name = useMemo(() => parseOnboardingAnswers(json).name?.trim(), [json]);
   const { slots, placeIn, tapCard, reset, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
@@ -98,7 +101,7 @@ export function DressArrangeScreen() {
 
   const onContinue = () => {
     if (!checked) check();
-    else if (correct) router.push(sequenceNext(STEP.dress));
+    else if (correct) router.push(flow.next(STEP.dress));
     else tryAgain();
   };
 
@@ -108,9 +111,9 @@ export function DressArrangeScreen() {
 
   return (
     <LevelTwoShell
-      step={STEP.dress}
-      total={SEQUENCE_STEPS}
-      onBack={() => router.push(sequencePrevious(STEP.dress))}
+      step={flow.position(STEP.dress)}
+      total={flow.total}
+      onBack={() => router.push(flow.previous(STEP.dress))}
       scene={
         <DressScene
           socks={correct ? socks : "rug"}

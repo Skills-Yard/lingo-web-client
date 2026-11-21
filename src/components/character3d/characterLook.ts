@@ -16,6 +16,13 @@ export const CHARACTER_CHOICES = [
 
 export type CharacterId = (typeof CHARACTER_CHOICES)[number]["id"];
 
+/** The mentors the picker (battery tap on the 3D screens) offers, in the order its arrows go. */
+export const MENTORS = [
+  { id: "boy", name: "Rio" },
+  { id: "girl", name: "Veena" },
+  { id: "anime", name: "Zane" },
+] as const satisfies readonly { id: CharacterId; name: string }[];
+
 type Look = { character: CharacterId };
 
 const DEFAULT_LOOK: Look = { character: "girl" };

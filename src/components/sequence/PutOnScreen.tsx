@@ -8,7 +8,8 @@ import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
 import type { BubbleSize, Span, TitleLines } from "@/components/level-two/levelTwo";
 import { DressScene, type DressStage } from "./DressScene";
-import { SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 
 export type PutOnStage = "socks" | "shoes" | "ready";
 
@@ -53,6 +54,7 @@ type Phase = "wait" | "playing" | "done";
  */
 export function PutOnScreen({ stage }: { stage: PutOnStage }) {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const config = CONFIG[stage];
   const [phase, setPhase] = useState<Phase>(stage === "ready" ? "playing" : stage === "socks" ? "done" : "wait");
   const pending = useRef<number[]>([]);
@@ -76,16 +78,16 @@ export function PutOnScreen({ stage }: { stage: PutOnStage }) {
 
   const onContinue = () => {
     if (stage === "shoes" && phase === "wait") putOnShoes();
-    else router.push(sequenceNext(config.step));
+    else router.push(flow.next(config.step));
   };
 
   const shoes: DressStage = stage === "ready" ? "worn" : stage === "socks" || phase === "wait" ? "rug" : phase === "playing" ? "hop" : "worn";
 
   return (
     <LevelTwoShell
-      step={config.step}
-      total={SEQUENCE_STEPS}
-      onBack={() => router.push(sequencePrevious(config.step))}
+      step={flow.position(config.step)}
+      total={flow.total}
+      onBack={() => router.push(flow.previous(config.step))}
       scene={<DressScene socks="worn" shoes={shoes} happy={stage === "ready"} />}
       ctaLabel={stage === "shoes" && phase === "wait" ? "Put On Shoes" : "Continue"}
       ctaDisabled={stage === "shoes" ? phase === "playing" : phase !== "done"}

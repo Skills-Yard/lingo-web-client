@@ -7,8 +7,8 @@ import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED } from "@/components/ui/raised";
-import { sequenceHref } from "@/lib/routes";
-import { SEQUENCE_STEPS, STEP, sequencePrevious } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { SequenceRoom } from "./SequenceRoom";
 
 const LEARNED = [
@@ -29,17 +29,18 @@ const LEARNED_TOP = 350;
  */
 export function RecapScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const [gemOpen, setGemOpen] = useState(false);
   const closeGem = useCallback(() => {
     setGemOpen(false);
-    router.push(sequenceHref("complete"));
-  }, [router]);
+    router.push(flow.next(STEP.recap));
+  }, [router, flow]);
 
   return (
     <LevelTwoShell
-      step={STEP.recap}
-      total={SEQUENCE_STEPS}
-      onBack={() => router.push(sequencePrevious(STEP.recap))}
+      step={flow.position(STEP.recap)}
+      total={flow.total}
+      onBack={() => router.push(flow.previous(STEP.recap))}
       scene={<SoftBackdrop />}
       onContinue={() => setGemOpen(true)}
       overlay={<GemPopup open={gemOpen} onClose={closeGem} />}

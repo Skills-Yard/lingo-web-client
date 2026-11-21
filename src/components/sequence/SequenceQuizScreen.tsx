@@ -18,7 +18,8 @@ import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { PictureCards } from "./PictureCards";
 import { SceneBackdrop } from "./SceneBackdrop";
 import type { RoomDress } from "./SequenceRoom";
-import { SEQUENCE_STEPS, sequenceNext, sequencePrevious, type SequenceQuiz } from "./sequence";
+import type { SequenceQuiz } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 /** A list of answers only has to clear the result panel; there is a picture to keep in view above it. */
@@ -53,6 +54,7 @@ const roomDress = (room: RoomScene, checked: boolean, correct: boolean, cardsGon
  */
 export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
@@ -92,7 +94,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
 
   const onContinue = () => {
     if (!checked) check();
-    else if (correct || quiz.noRetry) router.push(sequenceNext(quiz.step));
+    else if (correct || quiz.noRetry) router.push(flow.next(quiz.step));
     else tryAgain();
   };
 
@@ -113,10 +115,10 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
 
   return (
     <LevelTwoShell
-      step={quiz.step}
-      total={SEQUENCE_STEPS}
+      step={flow.position(quiz.step)}
+      total={flow.total}
       voiceover={checked ? quiz.resultVoiceover : quiz.voiceover}
-      onBack={() => router.push(sequencePrevious(quiz.step))}
+      onBack={() => router.push(flow.previous(quiz.step))}
       scene={
         room ? (
           <SceneBackdrop dress={roomDress(room, checked, correct, cardsGone)} lifted={checked && !clearedRoom} />

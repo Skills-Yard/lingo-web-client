@@ -84,6 +84,137 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 | `StageDecor.tsx` | Backdrop and picture overlay (both load with the page so nothing pops in late). |
 | `CharacterViewer.tsx` | The page UI: chips, buttons, stage, loading and error messages. |
 
+### The 3D Sequence flow (`/module/sequence-3d?step=N`), 2026-11-21
+
+From the Figma overview image (15 frames, 1047×167 px: only the titles of 1-8 could be read). **`?step=` is the place in the flow**
+(`FLOW_3D` in `components/sequence/sequence3d.ts`), not the original module's step.
+
+> **All of the original module's screens are in it now (2026-11-21): 27 frames, then `?step=complete`** (the user asked for every
+> remaining screen in 3D, and chose: Hex stays on his board, and the original put-on screens 2-4 come back). The progress bar is
+> `SEQUENCE_3D_STEPS` = `FLOW_3D.length` (27). **The numbers in the older notes below are from when the flow had 12 frames**; positions
+> after 3 moved when the three put-on frames went in. Use this table (place = `?step=` in `/module/sequence-3d`, "orig" = `?step=` in
+> `/module/sequence`):
+>
+> | place | frame | orig | place | frame | orig |
+> |---|---|---|---|---|---|
+> | 1 | intro (`Intro3DScreen`) | – | 15 | dress (`DressArrangeScreen`) | 12 |
+> | 2 | aarav (`Story3DScreen`) | – | 16 | hexIntro | 13 |
+> | 3 | putOnFirst (tray) | 1 | 17 | oneCommand | 14 |
+> | 4 / 5 / 6 | socks / shoes / ready (`PutOnScreen`) | 2 / 3 / 4 | 18 | hexOrder | 15 |
+> | 7 | whatDid | 5 | 19 | predict | 16 |
+> | 8 | compare | 6 | 20 | predictNext | 17 |
+> | 9 | shoesFirst (`Story3DScreen`) | – | 21 | fix | 18 |
+> | 10 | whatWillHappen (tray list) | 7 | 22 / 23 | plan / planNext | 19 / 20 |
+> | 11 | firstCommand | 8 | 24 | tea | 21 |
+> | 12 | arrange | 9 | 25 / 26 | reflectOrder / reflectDecide | 22 / 23 |
+> | 13 / 14 | meet / reveal | 10 / 11 | 27 | recap | 24 |
+>
+> - **How the added screens work:** they are the original screens as they are. Each asks `useSequenceFlow` for its place, next and
+>   back (`PutOnScreen`, `HexScreen` (so `HexIntro`, `OneCommand`, `HexOrder`, `Predict`, `Fix`, `Plan`), `TeaScreen`, `RecapScreen`),
+>   so they work in both routes. Where Hex speaks in a bubble (put-on 4-6, tea, 25, 26) the character's face stands there alone, with no
+>   bubble (`HexStandIn`). **On the Hex-board screens (16-23) Hex himself stays: he is the game piece on the grid** (and in the result panel);
+>   the tip card is unchanged. Nothing was added there for the 3D character (the user chose this).
+> - `sequence3dNext/Previous` keep the original's rule: a learner who struggled on `plan` (22) skips `planNext` (23) both ways.
+>   After 27 (the recap, via its gem popup) Next opens `/module/sequence-3d?step=complete` (the original's "Lesson complete!").
+> - **The battery** charges one unit per *position* (the shell's `step`), 27 of them against 20 units; jumping to a later `?step=` with the
+>   URL charges all screens skipped in one go (testing: set `sessionStorage` `lingo.battery` to
+>   `{"level":100,"unlimited":true,"charged":0}`).
+> - Checked in headless Chrome 390×844, light, Girl, battery unlimited (2026-11-21): 4, 16, 17, 18, 19, 21, 24, 25, 26, 27 and `complete`
+>   render (face in the bubble on 4, 24, 26; Hex on the board on 16-21); no console errors; 16 → "Let's Try" → 17; 27 → Continue → gem → `complete`;
+>   22 with a struggle noted: a wrong run is "Not yet", the right one (forward, right, forward, forward) → Next → **24** (23 skipped);
+>   Back (the battery hold menu's Back, the X goes to `/level`) from 24 → 23, and → 22 with a struggle noted; from 17 → 16; 4 → 3; 1 → `/level`.
+>   **Not checked:** playing through 4-6 (the socks and shoes animations), 13-15 on the new numbers, 20, 23 and 18-21 beyond opening them
+>   (the right and wrong paths), the Tea and 25/26 answers, dark mode, Boy/Anime, voices (headless has no sound), a real phone,
+>   `next build`. The 2D route `/module/sequence` still works after the change (its screens now go through `useSequenceFlow`, whose default is the original's
+>   own): `?step=2` shows Hex in the bubble and Continue → 3; `?step=13` "Let's Try" → 14; `?step=24` Continue → gem → `?step=complete`; no console errors.
+
+Older notes, with the 12-frame numbers: 1 Let's Learn Sequences
+(`Intro3DScreen`), 2 Aarav is going out today! (`Story3DScreen`), 3 What to put on first? (`SequenceQuiz3DScreen` with `look="tray"`, see below), 4 What did you do?, 5 Compare both attempts, 8 What's the first command? (the original 2D
+`SequenceQuizScreen`), 6 What if shoes go first? (`Story3DScreen`), 7 What will happen? (`SequenceQuiz3DScreen`, the original screen
+7 retitled), 9 Arrange the instructions! (the original `ArrangeScreen` as it is, 2026-11-21: it asks `useSequenceFlow` for its place,
+next and back, so it works in both routes; the character's face is in its bubble; its result panel still has Hex), 10-12 (see "Steps 10-12" below).
+(Figma's frames 13-15, from the overview titles: One last challenge!, Why sequence matters, How to decide the order?; its 10-12: Meet the Sequence,
+Why does order matter?, Let's guess first. The Figma flow has no Hex-board frames; they are here because the user asked for every screen.)
+`/module/sequence?step=9` (the 2D route) is unchanged and still shows Hex; the 3D one's arrange is `/module/sequence-3d?step=12`.
+- On the 2D screens reused here, **the character's face replaces Hex beside his bubble**: `HexBubble` shows what `HexStandIn`
+  (a context in `level-two`) holds; `Sequence3dFlow` (in the route's layout) puts `CharacterAvatar` there (the shared canvas, cropped
+  to the head by a 412 px slot at top -34 inside a 100 px box). The same provider gives those screens the 3D flow's next/previous/progress
+  (`useSequenceFlow` in `sequenceFlow.tsx`; outside the route it is the original module's). The result panel still has Hex.
+- **Step 3 is the Figma `sequence_3` frame (CSS pasted by the user), `look="tray"`:** the character stays in the middle, close up,
+  with no room board; pattern background (`PatternBackdrop`: wash, spotlight, five "?" in the app font (the design says Fredoka, not loaded), dot
+  grid; light mode only); the two cards (166×187, `TileCards` layout `tray`) stand on a grey `AnswerTray` and the hint is its own bulb
+  (`TrayHint`) above the tray's right end. The shell's hint is passed `visible: false` (a hint still exists, so the streak counts it).
+  The bulb icon is drawn by hand, not the Fluent emoji. The tray goes when the answer is checked and the cards rise as before.
+- **The tray look's character opens low and rises when the answers come in (2026-11-21, asked for by the user).** Until the answers (the
+  question's 75 %) the character stands lower, with the foot of its fade (`fade`'s end) 6 px over the main button's top, so there is no empty
+  band between it and the button; when `lowered` (`CharacterOnStage`, passed `tray && !optionsShown`) goes off it slides up to its place
+  in 0.8 s (`SHIFT`, a `y` motion value) as the tray and cards come in. The drop is measured, not a constant: a mark at `aboveButtons(6)`
+  gives the button line in px and the drop is that minus where the fade ends (138 px on 390×844 and 126 on 390×667 for the pair of cards;
+  229 for the list on step 10, whose tray is taller), re-measured when the stage resizes. Two traps found: the stage has no size while the
+  screen is behind its loading bar (so `offsetParent` is null and the first measures read 92 px: measure on `parentElement` and skip a
+  zero height), and the slide the first render starts (towards a drop not measured yet) wrote 0 over the measured value 0.8 s later
+  (`rise.stop()` before `rise.set()`). Checked in headless Chrome (Girl, dark): the start frame on 390×844 and 390×667, and the rise (138 → 24 → 0
+  px in about half a second) with the answers forced on, since headless had no audio progress that run to bring them in. Not checked: the
+  rise with the real voice, light mode, Boy / Anime (the box is the same), a real phone. (An idle-sway "stabiliser" that followed the neck was tried
+  first on a misreading and taken out again: `FramingCamera` still follows only the hips across.)
+- **"Select your Mentor" (2026-11-21, asked for with a design image):** on the 3D route a **tap on the battery opens the mentor picker**
+  instead of the Energy screen (`BatteryMenu` asks `useBatteryTap`, `onboarding/batteryTap.tsx`; `Sequence3dFlow` provides the opener and
+  renders `MentorPicker`; elsewhere the tap still opens `/energy`, and the hold still opens the dev panel with Girl / Boy / Anime).
+  One card at a time over a dimmed screen: title, the name in a pill, the character, round arrows at its sides (they go round the three:
+  Rio = `boy`, Veena = `girl`, Zane = `anime`, `MENTORS` in `characterLook.ts`; the names are guesses from the design image, whose
+  characters are not ours) and a "Choose …" `Button3D`. The card's colour and arrows follow the mentor (`THEMES` in `MentorPicker.tsx`,
+  guessed from the image, with dark variants). The pictures are **renders of our three models** (`public/images/mentors/{boy,girl,anime}.webp`,
+  transparent, head to thigh, taken in headless Chrome from the avatar canvas of `?step=2`), so the arrows answer at once; "Choose"
+  calls `setCharacter`, the button says "Loading…" while the character loads and the card closes when it is on show. A tap outside or
+  Escape closes it with the character unchanged. If the character is re-modelled the renders are stale: redo them.
+- **Audio on the 3D route:** place 9 (shoes first) plays Hex's clips of the original screen (`SEQUENCE_AUDIO.socksFirst`: the title, then the
+  line the bubble used to show). Hex has no clip for the other screens without one (1, 2, 4-7, 14-27 beyond 11-13): they need recording.
+- **Step 7 is the Figma `sequence_7` frame (a screenshot from the user), `look="tray"` with a list** (2026-11-21): the same screen as step 3,
+  but three rows instead of two cards. Numbers measured from the screenshot (390 px frame): rows 358 × 76, 16 in from each side, 6 apart
+  (`TRAY_LIST*` in `AnswerTray.tsx`, passed to `AnswerCards` as `width`), the tray's top 40 above the first row (`TrayStand`: `TRAY_PAIR` is
+  step 3's 187 + 2, `TRAY_LIST` is 240 + 40), the bulb 16 above the tray, 16 from the right. The character's fade (`trayFade`) moves up by how
+  much taller the stand is than step 3's. The rows' text has no 34 px gap before the radio's empty spot (`AnswerCards` `endGap={0}`), which
+  is what makes "Socks will be harder to put on" one line and "Shoes will come off automatically" two, as in the design. Texts are from the
+  design (`WHAT_WILL_HAPPEN` in `sequence3d.ts`); the third icon is a new `icon-same-order.svg` (teal + violet arrows, colours sampled from the screenshot).
+  **Differs from the design:** the screenshot shows no main button, we keep it (as on step 3), so our tray's top is ~65 px higher than the
+  design's (461 against 526 in frame px) and the character is cut a little earlier. The right and wrong feedback texts are the original screen 7's, not from the design.
+  Checked in headless Chrome 390×844, girl: light (open, pick, Continue → "Good thinking!" panel, wrong pick → "Not quite" → Try again → reset) and
+  dark (open); step 3 still looks as before. Not checked: Boy/Anime on step 7, the bulb's hint effect on a row, a real phone, voices.
+- **Steps 10-12 (2026-11-21)** are the original screens `MeetSequenceScreen` (10), `RevealCardScreen` (11) and `DressArrangeScreen` (12), each
+  asking `useSequenceFlow` for its place/next/back like `ArrangeScreen`; 10 and 11 are otherwise as they are (the face in the bubble on 10).
+  **12 is a guess:** it is the only story screen between 11 and the Hex ones, but the Figma title for frame 12 is "Let's guess first" and the
+  screen keeps the original "Arrange the instructions!" (no design was seen). **12 is the original screen as it is**: the room art board with the
+  sitting boy, the character's face beside the bubble (as on 9 and 10), the slots and cards. **Tried and taken out on request:** the big 3D character
+  standing in the room over the boy (and, for the face too, a second view drawn from the shared canvas with `addAfterEffect` + `drawImage`, since the
+  canvas can be in one box at a time). The boy is part of the Rive room and cannot be hidden, so slivers of his hoodie and hair showed behind the
+  character; and with the character kept after the answer, the room's dressing animation (2D boy) played behind it. If a 3D character is wanted in the
+  room again, the room needs a boy-less state (a Rive input) first.
+  Checked in headless Chrome 390×844, light, Boy: 12 opens, then socks → shoes → Check → "Perfect!" with the room's dressing animation; 10 renders;
+  the 2D `?step=12` is unchanged. Not checked: the wrong path, Try again, dark, Girl/Anime on 12, step 11, the Next from 9 into 10 and from 11 into 12, a real phone.
+- **`PortraitFraming` ("full" | "bust")** in `portraitHost.tsx`: the pose also carries the camera. `bust` is the same level camera, closer
+  (`[x, 1.369, 2.507]`, 1.44 m of height) and **follows the hips' x** each frame (the idle clip shifts weight sideways, which is ~60 px
+  when close). Done in the camera, not by scaling the canvas up, so it stays sharp (the canvas is a fixed 380×680 on purpose).
+  `CharacterOnStage` got `framing`, `height` and `fade` (a mask over its lower part, so the legs don't show through the tray).
+- **No speech bubbles anywhere on the 3D route (removed on request, 2026-11-21); the face stays** where it was. `HexBubble` draws no
+  `SpeechBubble` when `HexStandIn` is set (only the face, in a row as wide as face + bubble, so it does not move); the 2D route is unchanged.
+  `Story3DScreen` has no `line` prop any more (place 9 lost its "Let's get ready again…" line, which had no voice). Every place that had a
+  bubble (4-9, 11-13, 15, 24-26) now shows the face alone; where a screen had no voice (4-6, 9) it now has the title only. The Hex-board tip card
+  is not a bubble and stays. **While the voice plays (`speaking`), the face box shows a small pill at its bottom left with three dots
+  (light, lime, green) that swell one after the other** (`TalkingDots` in `CharacterAvatar.tsx`; colours and size guessed from a small
+  screenshot of the design). Seen with `speaking` forced on (headless has no sound), dark mode only; not seen with a real voice. **Checked** (headless Chrome 390×844, dark, Girl, battery unlimited): 4, 9, 12, 24 show the face and no bubble;
+  tsc has only an old `.next/types` error for a `probe-studio` page that is not in `src`; eslint clean. Not checked: the other places, light mode, Boy/Anime, the 2D route after this change.
+- **Guessed, not read from the design:** the line the character says on 6 (now place 9), the Aarav title's teal word, which frames use the big
+  character and which the small face (3, 7 big as before; 1 big; 2, 4, 5, 6, 8 small, from the thumbnails). Voices: 3 and 7 keep the
+  3D clips (`SEQUENCE_3D_AUDIO`); 1, 2, 6 have none; 4, 5, 8 play the original module's Hex clips.
+- Removed: `PutOnShoes3DScreen` and its audio entry `screen3` (the design has no such frame; the m4a files are still in `public/audios/3D-Screens`). The original `PutOnScreen`s (2-4) are in the flow instead (places 4-6, face in the bubble, no 3D voices).
+- Checked in headless Chrome 390×844 light, girl: all of 1-8 render; Continue/Next go 1→2→3, 6→7, 4→5 (right answer, Check, Continue)
+  and 8→`/module/sequence?step=9`. Boy: steps 1 and 2 look right (the face crop and the standing one); Anime: step 2's face crop shows the
+  face a little low in the box. Step 3 tray look (Boy, 390×844, light and dark): open state, bulb, pick, wrong → "Oops!" → Try again → right → "Nice!" → Next → step 4.
+  Step 9 (Girl, 390×844, light, headless Chrome): the face in the bubble, Pick Up + Place in Target + Check → "Perfect!" → Next → `/module/sequence?step=10`;
+  the wrong order, the voice, Boy/Anime and dark mode on it were not checked.
+  Not checked: step 3 with Girl/Anime in the close-up (only Boy was looked at), a real phone, the bulb's hint effect (only that it is there), the 4, 5, 8 wrong-answer paths, voices
+  (headless has no sound), the Boy/Anime on steps 3-8.
+
 The character is also used as a **picture on other screens** (the 3D copies of the Sequence screens, `/module/sequence-3d`):
 
 | File | Job |
