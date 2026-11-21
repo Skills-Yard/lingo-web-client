@@ -8,6 +8,56 @@ headless Chrome on 2026-11-13; "not verified" says what wasn't.
 Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/drei 10
 (`OrbitControls` only), lucide-react, Tailwind v4 with the project's theme tokens.
 
+> **Three characters now: `girl.glb`, `Male.glb` (Boy) and `Male_anime.glb` (Anime)** (2026-11-20; between 11-19 and 11-20 the
+> "male" was the anime file and `Male.glb` was unused; `Character_Final.glb` is still unused). Everything below that says
+> "Character_Final" / Levitate / Sitting / Gesture / lip-sync describes the old model. What changed, and why:
+> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "3D character" Girl / Boy / Anime (ids `girl`, `boy`,
+>   `anime`). The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
+>   pull three in; a saved `"male"` from the two-choice days is read as `anime`). `sharedCharacter.ts` loads the picked one
+>   (default girl); a switch loads the other in the background (the button says "Boy…" meanwhile), the screens then switch
+>   and the old one is freed after 1 s. `useCharacter` (the `/character` page) follows the pick too. `Male.glb` and
+>   `Male_anime.glb` are spelt exactly so (capital M).
+> - `MODELS` in `character.ts` gives each file, its size and which clip plays for `idle-b` and `talking`:
+>   girl → `mixamo.com` for both; boy → `Breathing.001` and `Talking` (Mixamo rig `mixamorig:`, one mesh, no morph targets so no
+>   lip-sync; the file also has `Head Nod` and four `mixamo.com…` clips, unused); anime → `Breathing` and `Talking` (the file also has `Gesture`, `Head_nod`,
+>   `Talking_both_hand` and `T-Pose`, unused). `ANIMATIONS` is two entries, "Idle" and "Talking" (Talking plays its voice). `TOUR` in `show.ts`
+>   is Idle then Talking; the Gesture pictures in `SCENES` are unused.
+> - **Lip-sync:** the girl (a Tripo mesh on the Mixamo rig) and the boy have no morph targets, so none. `Male_anime.glb` is an anime
+>   (VRoid-style) model: 3 skinned meshes (Body, Face, Hair), 15 materials, bones named `J_Bip_…` (not Mixamo), and 57 face morph
+>   targets (`Fcl_MTH_A/I/U/E/O`, …) with a clip `Face-LipSyncAction` (39.5 s, mouth shapes only, made for a line we don't have, so
+>   a stand-in like the old one). It is wired as the `lipSync` of his `talking` in `MODELS.male` (`clipsOf`'s second argument):
+>   the mouth moves while he talks, on `/character` and on the sequence screens; it doesn't follow the words. The clip's first
+>   0.9 s is a closed mouth.
+> - **Anime's dark patch on the jaw.** His materials have no metallic/roughness factor, so glTF's default applies
+>   (metal 1, rough 1): a fully metal surface ignores the hemisphere light and only the key lamp lights it, so the side of the
+>   jaw facing away from it is black (it looks like a beard). Reproduced in a bare three.js page, so it is the file, not the app.
+>   `material.metalness = 0` removes it, but then skin and shirt come out pale (the user disliked a pale look before).
+>   Not applied; decide on the look (or re-export the materials with metallic 0 from Blender).
+> - **Girl: old clips and `Idle.glb` do not retarget onto her.** Her bones' local axes are turned 90° about the vertical
+>   relative to the other rigs (hips rest `[-0.5, 0.5, -0.5, 0.5]` vs `[-0.707, 0, 0, 0.707]`), so the copy-the-rotations
+>   `retarget` in `character.ts` made her vanish (tried with Idle B). More animations for her should be exported from
+>   Mixamo for this same girl (then they are her own clips). `Male_anime.glb` has a different rig
+>   (`J_Bip_…`), so `retarget` (Mixamo bone names only) can't be used for him: only the clips of his own file.
+> - `girl.glb` has a **floor slab** (`Cube`, a plain mesh); `removeProps` drops any non-skinned mesh.
+> - Her clip carries her 0.5 m up from her bind pose (it stands her on the ground), so `stand()` measures the size and
+>   footing from the first animation's **first frame**, not the bind pose (`boundsIn`). Measured in the bind pose she floated.
+> - **Lighting is the original** (`SceneLights` in `CharacterScene.tsx`: a hemisphere light 1.3, a key lamp 2.8, a rim lamp 1.6; no
+>   environment map). The girl can look duller here than in Blender: her glTF material is plain (base-color texture only,
+>   no emission or factor), so Blender's HDRI / view transform, or a node the exporter drops (Brightness/Contrast, HSV,
+>   Emission), would explain it. A brighter version (three's `RoomEnvironment` as fill, lamps turned down, and a
+>   brightness slider in the battery menu) was built and then removed on request; the hands came out pale in it.
+> - **`girl.glb`'s texture is 8192×8192** (about 350 MB of GPU memory, over many phones' 4096 limit); resizing it to
+>   2048–4096 in Blender would also shrink the 15 MB file. Not done. `Male_anime.glb` is 11.4 MB (22 PNG images).
+> - Checked in headless Chrome (390×844): `/character` and `/module/sequence-3d?step=1` and `?step=3` for the girl; the
+>   battery hold menu and switching to the male on `step=1`. With `Male_anime.glb` (2026-11-19): `/character` (Idle and Talking
+>   both play, the mouth opens in Talking) and `step=1` (arm gesture and mouth during the voice, then Idle) / `step=3`;
+>   it loads, faces the camera, stands on the ground. With the three-way menu (2026-11-20, headless Chrome 390×844, mouse): the
+>   menu shows Girl / Boy / Anime; on `step=1` picking Boy while the girl was on show marks it, stores `boy` and the screen
+>   switched to the boy; `/character` loads Boy and Anime (Idle, Talking screenshots look right: standing on the ground,
+>   facing the camera) and a stored `"male"` opens Anime. Not checked: a real phone, load times on a slow connection, a touch
+>   (not mouse) hold on the battery, the boy or anime on `step=7`, the boy's Talking clip beyond one screenshot (nothing of
+>   `/character` Talking for him was watched in motion), the button's "Boy…" loading state.
+
 ## What the page does
 
 - A Mixamo-rigged character (`Character_Final.glb`) on a stage, with a backdrop (`bg.webp`).

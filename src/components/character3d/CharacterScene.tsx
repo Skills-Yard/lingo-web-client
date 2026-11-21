@@ -60,6 +60,11 @@ export const AnimatedCharacter = ({ character, animationId, runToken, playing, o
     const next = playbacks.get(animationId);
     if (!next) return;
     const previous = current.current;
+    // Two animations that are the same clip (a model with one) don't restart each other.
+    if (previous && previous !== next && previous.body === next.body) {
+      current.current = next;
+      return;
+    }
     next.body.reset().play();
     if (previous && previous !== next) {
       previous.body.crossFadeTo(next.body, FADE_SECONDS, false);

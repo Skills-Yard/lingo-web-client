@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { disposeCharacter, loadCharacter, type Character, type LoadProgress } from "./character";
+import { useCharacterLook } from "./characterLook";
 
 export type CharacterState =
   | ({ status: "loading" } & LoadProgress)
@@ -11,19 +12,28 @@ export type CharacterState =
 const LOADING: CharacterState = { status: "loading", phase: "download", fraction: 0 };
 
 /**
- * Downloads and prepares the character. The GPU memory it holds (its geometry,
- * skeleton and any textures) is freed when the page unmounts, and a load still in
- * flight is aborted.
+ * Downloads and prepares the character the learner picked (see `characterLook.ts`;
+ * another pick loads that one instead). The GPU memory it holds (its geometry,
+ * skeleton and any textures) is freed when the page unmounts or the pick changes,
+ * and a load still in flight is aborted.
  */
 export const useCharacter = () => {
+  const { character: id } = useCharacterLook();
   const [state, setState] = useState<CharacterState>(LOADING);
   const [attempt, setAttempt] = useState(0);
+  // A different pick starts from loading again (state set while rendering, as React allows for state that follows a prop).
+  const [loadedFor, setLoadedFor] = useState(id);
+  if (loadedFor !== id) {
+    setLoadedFor(id);
+    setState(LOADING);
+  }
 
   useEffect(() => {
     const controller = new AbortController();
     let loaded: Character | null = null;
 
     loadCharacter({
+      id,
       signal: controller.signal,
       onProgress: (progress) => setState({ status: "loading", ...progress }),
     }).then(
@@ -48,7 +58,7 @@ export const useCharacter = () => {
       controller.abort();
       if (loaded) disposeCharacter(loaded.scene);
     };
-  }, [attempt]);
+  }, [attempt, id]);
 
   const retry = useCallback(() => {
     setState(LOADING);

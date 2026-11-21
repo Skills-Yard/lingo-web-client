@@ -8,6 +8,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { HTMLMotionProps } from "framer-motion";
 import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize } from "lucide-react";
 import { setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
+import {
+  CHARACTER_CHOICES,
+  setCharacter,
+  useCharacterLoading,
+  useCharacterLook,
+} from "@/components/character3d/characterLook";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { energyHref } from "@/lib/routes";
 
@@ -42,6 +48,28 @@ export function PanelButton({ tint = "lavender", selected = false, className = "
       className={`mt-2.5 flex h-12 w-full cursor-pointer items-center gap-2.5 rounded-[12px] border-b-4 px-3 text-[16px] font-medium text-[#2C2C2C] shadow-[0_3px_0_rgba(0,0,0,0.06)] transition-[color,background-color,border-color,box-shadow] active:border-b-0 active:shadow-none disabled:cursor-default disabled:opacity-35 disabled:active:border-b-4 disabled:active:shadow-[0_3px_0_rgba(0,0,0,0.06)] dark:bg-[#15181E] dark:text-white ${TINTS[tint]} ${selected ? SELECTED : "border-[#BDBA99]"} ${className}`}
       {...props}
     />
+  );
+}
+
+/**
+ * Which 3D character the screens that have one show (girl, boy or anime). The choice
+ * is kept (see `characterLook.ts`); the other character loads in the background, and the
+ * button says so until it is on screen.
+ */
+function CharacterOptions() {
+  const { character } = useCharacterLook();
+  const loading = useCharacterLoading();
+  return (
+    <div className="mt-3 border-t border-black/10 pt-3 dark:border-white/12">
+      <p className="text-[13px] leading-[18px] text-[#818185] dark:text-[#9FA19F]">3D character</p>
+      <div className="grid grid-cols-3 gap-2 [&>button]:mt-0 [&>button]:justify-center [&>button]:px-2">
+        {CHARACTER_CHOICES.map(({ id, label }) => (
+          <PanelButton key={id} selected={character === id} aria-pressed={character === id} onClick={() => setCharacter(id)}>
+            {loading === id ? `${label}…` : label}
+          </PanelButton>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -171,6 +199,7 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
               <InfinityIcon className="h-5 w-5" />
               {unlimited ? "Back to normal battery" : "Infinite battery"}
             </PanelButton>
+            <CharacterOptions />
             {extraOptions?.(() => setOpen(false))}
           </motion.div>
         )}
