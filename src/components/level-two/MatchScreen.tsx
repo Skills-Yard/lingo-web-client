@@ -12,6 +12,7 @@ import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { useTheme } from "@/context/ThemeContext";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "./LevelTwoShell";
+import { RightBounce } from "./RightBounce";
 import { SlotImage } from "./SlotImage";
 import { levelTwoHref } from "./levelTwo";
 
@@ -27,40 +28,34 @@ const ACTIONS: readonly Card[] = [
   { id: "lift", text: "Lift the cube", icon: "step-11.4.svg", pair: "pickup" },
 ];
 
-/** The title ends near 154 in the frame; the column headers sit this much padding under it (27px was Figma's gap, now 4x that). The cards follow right under the headers. */
-const TITLE_BOTTOM = 154;
-const CHIP_PADDING_TOP = 27 * 4;
-const CHIP_TOP = TITLE_BOTTOM + CHIP_PADDING_TOP;
-const CARD_W = 172;
-/** Each theme's heights (frame px): the column headers, the gap under them, a card, and the gap between rows. Dark's are from the "Command_6" design. */
+/**
+ * Each theme's layout (frame px, the 390 x 844 frame): where the column headers
+ * start (`chipTop`), their height, the gap under them, a card's width and height,
+ * the gap between the two rows and between the two columns. Light's are the
+ * "Command_7" design: headers at 178, cards at 238 and 451, 166 x 187, columns
+ * 25 apart (so 16px in from each side). Dark's are from the "Command_6" design.
+ */
 const METRICS = {
-  light: { chipH: 52, chipGap: 10, cardH: 140, rowGap: 14 },
-  dark: { chipH: 36, chipGap: 18, cardH: 186, rowGap: 30 },
+  light: { chipTop: 178, chipH: 40, chipGap: 20, cardW: 166, cardH: 187, rowGap: 26, columnGap: 25 },
+  dark: { chipTop: 262, chipH: 36, chipGap: 18, cardW: 172, cardH: 186, rowGap: 30, columnGap: 30 },
 } as const;
-/** Between the two columns: they sit out toward the screen's edges, 8px in on the 390px frame. */
-const COLUMN_GAP = 30;
-const COLUMNS_W = CARD_W * 2 + COLUMN_GAP;
-/** The column headers: what each column holds. */
+/** The column headers: what each column holds (light's label is singular in the design). */
 const CHIPS = [
-  { side: "left", icon: "match-instructions.svg", label: "Instructions", sub: "What to do", box: "bg-[#F1EEFF] dark:bg-[#2E2A5C]", title: "text-[#5B3FD0] dark:text-[#A79BFF]" },
-  { side: "right", icon: "match-actions.svg", label: "Actions", sub: "How it looks in the robot", box: "bg-[#FFF4E3] dark:bg-[#4A3418]", title: "text-[#A85B00] dark:text-[#FF9D3D]" },
+  { side: "left", light: "Instruction", dark: "Instructions", box: "bg-[#F6F4FE] dark:bg-[#2E2A5C]", title: "text-[#8E82FF] dark:text-[#A79BFF]" },
+  { side: "right", light: "Actions", dark: "Actions", box: "bg-[#FFF9F0] dark:bg-[#4A3418]", title: "text-[#FF8D42] dark:text-[#FF9D3D]" },
 ] as const;
 /** A wrong pair shakes red for this long (seconds), and both cards let go this long (ms) after it was made. */
 const SHAKE_S = 0.28;
 const WRONG_MS = 300;
 /**
- * A right pair, in 1.2s: both cards lift 16px as they scale up, float there for a
- * moment, then glide slowly back down to their place and size. They turn green as
- * they rise and gray as they come down, and are disabled from the start.
+ * A right pair bounces with the module's own bounce (`RightBounce`, as the Data Types
+ * match does): both cards turn green and bounce at once, with its shine and stars,
+ * and are disabled from the start. Each goes gray the moment it first comes down
+ * from the big jump.
  */
-const LIFT = [null, -16, -12, 0];
-const LIFT_SCALE = [null, 1.06, 1.06, 1];
-const LIFT_TRANSITION: Transition = { duration: 0.9, times: [0, 0.2, 0.45, 1], ease: ["easeOut", "easeInOut", "easeInOut"] };
-/** They go gray this long (ms) after the match: as they start to come down. */
-const GRAY_AFTER_MS = 405;
-/** The shine: a slim slanted band, very light, crossing each matched card from left to right as they lift. */
+/** The shine of a card that is waiting for its match (below), and none at rest. */
 const SHINE_OFF = { x: -60, opacity: 0 };
-const SHINE_ON = { x: [-60, CARD_W + 20], opacity: [0, 1, 1, 0] };
+const shineOn = (cardW: number) => ({ x: [-60, cardW + 20], opacity: [0, 1, 1, 0] });
 const SHINE_TRANSITION: Transition = {
   x: { duration: 0.27, ease: "easeInOut", delay: 0.03 },
   opacity: { duration: 0.27, times: [0, 0.2, 0.8, 1], delay: 0.03 },
@@ -87,33 +82,29 @@ type Side = "left" | "right";
 /**
  * `/module/commands?step=6` — "Can you match them?": tap an instruction, then
  * the action it does. The tapped card bounces and turns blue. A right pair
- * turns green together as it lifts (with a light shine across it), then goes
- * gray and disabled as it comes down; a wrong pair shakes red and lets go. Next
+ * turns green and bounces together (`RightBounce`, with its shine and stars),
+ * disabled from the start, then each card goes gray as it comes down from the
+ * jump; a wrong pair shakes red and lets go. Next
  * unlocks once all are matched. It is not graded: the screen can't be left until
  * every pair is right. The hint lights up a pair: the one with the card already
  * picked, or else the first still open.
  */
 export function MatchScreen() {
   const router = useRouter();
-  const metrics = METRICS[useTheme().theme];
+  const theme = useTheme().theme;
+  const metrics = METRICS[theme];
+  const columnsW = metrics.cardW * 2 + metrics.columnGap;
   /** A card row's top (frame px): right under the column headers, `chipGap` below them. */
-  const rowTop = (row: number) => CHIP_TOP + metrics.chipH + metrics.chipGap + row * (metrics.cardH + metrics.rowGap);
+  const rowTop = (row: number) => metrics.chipTop + metrics.chipH + metrics.chipGap + row * (metrics.cardH + metrics.rowGap);
   const [picked, setPicked] = useState<{ left: string | null; right: string | null }>({ left: null, right: null });
   const [matched, setMatched] = useState<readonly string[]>([]);
-  // The matched cards that have gone gray.
+  // The matched cards that have come down from their bounce and gone gray.
   const [settled, setSettled] = useState<readonly string[]>([]);
   const [wrong, setWrong] = useState(false);
   const [hinted, setHinted] = useState<readonly string[]>([]);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
   const timer = useRef<number | undefined>(undefined);
-  const settleTimers = useRef<number[]>([]);
-  useEffect(
-    () => () => {
-      window.clearTimeout(timer.current);
-      settleTimers.current.forEach((settle) => window.clearTimeout(settle));
-    },
-    [],
-  );
+  useEffect(() => () => window.clearTimeout(timer.current), []);
 
   const done = matched.length === INSTRUCTIONS.length * 2;
 
@@ -140,7 +131,6 @@ export function MatchScreen() {
       const pair = [next.left, next.right];
       setMatched((now) => [...now, ...pair]);
       setPicked({ left: null, right: null });
-      settleTimers.current.push(window.setTimeout(() => setSettled((now) => [...now, ...pair]), GRAY_AFTER_MS));
     } else {
       setWrong(true);
       timer.current = window.setTimeout(() => {
@@ -159,7 +149,7 @@ export function MatchScreen() {
 
   const renderCard = (side: Side, card: Card, row: number, tint: string) => {
       const look = state(side, card);
-      // A right pair: lifting (green), then coming down (gray); it is disabled throughout.
+      // A right pair: bouncing (green), then gray once it has come down; it is disabled throughout.
       const matchedNow = look === "correct" || look === "done";
       // A card is picked in the other column and none yet in this one.
       const waiting = look === "idle" && !picked[side] && !!picked[side === "left" ? "right" : "left"];
@@ -177,6 +167,8 @@ export function MatchScreen() {
       const edge = look === "idle" ? EDGE.khaki : look === "selected" ? EDGE.blue : look === "done" ? EDGE.pale : look === "wrong" ? EDGE.red : EDGE.green;
       return (
         <HintFloat className="relative" spin={false} active={hintHere}>
+        {/* A right match bounces at once (the moment the learner can tell it is right) and goes gray as it first comes down from the jump. */}
+        <RightBounce play={matchedNow} radius={8} onDrop={() => setSettled((now) => (now.includes(card.id) ? now : [...now, card.id]))}>
         <motion.button
           type="button"
           onClick={() => pick(side, card.id)}
@@ -185,19 +177,19 @@ export function MatchScreen() {
           initial={{ opacity: 0, y: 40 }}
           animate={{
             opacity: 1,
-            y: matchedNow ? LIFT : waiting ? WAIT_FLOAT : 0,
+            y: waiting ? WAIT_FLOAT : 0,
             x: look === "wrong" ? [0, -7, 7, -5, 5, 0] : waiting ? WAIT_SHAKE : 0,
-            scale: matchedNow ? LIFT_SCALE : look === "selected" ? [1, 0.96, 1.04, 1] : waiting ? WAIT_SCALE : 1,
+            scale: look === "selected" ? [1, 0.96, 1.04, 1] : waiting ? WAIT_SCALE : 1,
           }}
           whileTap={{ scale: 0.97 }}
           transition={{
             opacity: { duration: 0.3, delay: 0.15 + row * 0.1 },
-            y: matchedNow ? LIFT_TRANSITION : waiting ? WAIT_FLOAT_TRANSITION : { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 },
+            y: waiting ? WAIT_FLOAT_TRANSITION : { type: "spring", stiffness: 110, damping: 13, delay: 0.15 + row * 0.1 },
             x: { duration: waiting ? WAIT_NUDGE_S : SHAKE_S },
-            scale: matchedNow ? LIFT_TRANSITION : { duration: waiting ? WAIT_NUDGE_S : 0.4 },
+            scale: { duration: waiting ? WAIT_NUDGE_S : 0.4 },
           }}
-          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-[8px] border-4 px-2 ${RAISED} ${edge} disabled:cursor-default dark:border-2 ${face}`}
-          style={{ width: CARD_W, height: metrics.cardH }}
+          className={`pointer-events-auto relative isolate flex cursor-pointer flex-col items-center justify-center gap-3.5 overflow-hidden rounded-[8px] border-4 px-2 ${RAISED} ${edge} disabled:cursor-default dark:gap-1 dark:border-2 ${face}`}
+          style={{ width: metrics.cardW, height: metrics.cardH }}
         >
           {/* The hint's orange fill, wiped in from the left behind the content. */}
           <motion.span
@@ -207,16 +199,19 @@ export function MatchScreen() {
             transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
             className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
           />
-          <span className={`flex h-[92px] w-full items-center justify-center transition-opacity duration-150 dark:h-[112px] ${look === "done" ? "opacity-50" : ""}`}>
+          {/* Light: Figma's 90 x 90 icon box (the action pictures are 80 x 80 with 10px under them). */}
+          <span
+            className={`flex h-22.5 w-22.5 shrink-0 items-center justify-center transition-opacity duration-150 dark:h-28 dark:w-full ${side === "right" ? "pb-2.5 dark:pb-0" : ""} ${look === "done" ? "opacity-50" : ""}`}
+          >
             <SlotImage file={card.icon} className="max-h-full max-w-full object-contain" />
           </span>
-          <span className={`text-center text-[14px] leading-5 font-semibold text-[#444444] transition-opacity duration-150 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
+          <span className={`text-center text-[16px] leading-none font-semibold text-[#444444] transition-opacity duration-150 dark:text-[14px] dark:leading-5 dark:text-white ${look === "done" ? "opacity-50" : ""}`}>
             {card.text}
           </span>
           <motion.span
             aria-hidden
             initial={false}
-            animate={waiting ? SHINE_ON : SHINE_OFF}
+            animate={waiting ? shineOn(metrics.cardW) : SHINE_OFF}
             transition={waiting ? WAIT_SHINE_TRANSITION : SHINE_TRANSITION}
             style={{ skewX: -20 }}
             className={`pointer-events-none absolute inset-y-0 left-0 w-14 ${
@@ -226,6 +221,7 @@ export function MatchScreen() {
             }`}
           />
         </motion.button>
+        </RightBounce>
         </HintFloat>
       );
   };
@@ -248,16 +244,13 @@ export function MatchScreen() {
       {/* The column headers, just under the title. */}
       <div
         className="absolute flex justify-between"
-        style={{ top: stageTop(CHIP_TOP), left: `calc(50% - ${COLUMNS_W / 2}px)`, width: COLUMNS_W, height: metrics.chipH }}
+        style={{ top: stageTop(metrics.chipTop), left: `calc(50% - ${columnsW / 2}px)`, width: columnsW, height: metrics.chipH }}
       >
         {CHIPS.map((chip) => (
-          <div key={chip.side} className="flex justify-center" style={{ width: CARD_W }}>
-            <div className={`flex w-full items-center gap-1.5 rounded-[10px] px-2 dark:w-fit dark:px-3 ${chip.box}`}>
-              <SlotImage file={chip.icon} className="h-6 w-6 shrink-0 object-contain dark:hidden" />
-              <div className="min-w-0">
-                <p className={`text-[16px] leading-5 font-bold dark:text-[14px] dark:font-semibold ${chip.title}`}>{chip.label}</p>
-                <p className="text-[10.5px] leading-[14px] font-medium whitespace-nowrap text-[#555555] dark:hidden">{chip.sub}</p>
-              </div>
+          <div key={chip.side} className="flex justify-center" style={{ width: metrics.cardW }}>
+            {/* Figma's header: just the word, 12px padding, 16px / 600. */}
+            <div className={`flex h-full w-fit items-center rounded-[8px] px-3 dark:rounded-[10px] ${chip.box}`}>
+              <p className={`text-[16px] leading-none font-semibold dark:text-[14px] dark:leading-5 ${chip.title}`}>{theme === "dark" ? chip.dark : chip.light}</p>
             </div>
           </div>
         ))}
@@ -274,7 +267,7 @@ export function MatchScreen() {
           <div
             key={card.id}
             className="absolute"
-            style={{ top: stageTop(rowTop(row)), left: `calc(50% - ${COLUMNS_W / 2}px + ${columnIndex * (CARD_W + COLUMN_GAP)}px)` }}
+            style={{ top: stageTop(rowTop(row)), left: `calc(50% - ${columnsW / 2}px + ${columnIndex * (metrics.cardW + metrics.columnGap)}px)` }}
           >
             {renderCard(side, card, row, tint)}
           </div>

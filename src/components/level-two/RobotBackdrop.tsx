@@ -66,6 +66,14 @@ export const robotBelowDialogue = (bubbleTop: number, bubble: BubbleSize) => {
   return stageTop(bubbleTop) + (HEX_SLOT + height) / 2 + BUBBLE_EDGE + ROBOT_BELOW_GAP;
 };
 
+/**
+ * Where answers hang from under a robot that hangs from Hex's bubble (`robotBelowDialogue`): a CSS length from the stage's
+ * top. The artboard ends `COMMAND_ROBOT.height - COMMAND_ROBOT.armTop` under where the arm starts; the floor drawn under it
+ * fades out over the next `floor` px (at the 390px frame), which the answers may cover, as they always did.
+ */
+const ROBOT_FLOOR_COVERED = 69;
+export const robotUnder = (below: number, floor = ROBOT_FLOOR_COVERED) => `calc(${below}px + ${robotPx(COMMAND_ROBOT.height - COMMAND_ROBOT.armTop + floor)})`;
+
 type RobotBackdropProps = {
   /** Where the cube is when the screen opens; the robot gets there from wherever the last screen left it. */
   pose: RobotPose;

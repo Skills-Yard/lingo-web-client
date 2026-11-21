@@ -52,6 +52,8 @@ type AnswerCardsProps = {
   fontSize?: number;
   /** How far (px) above the button the rows end, where it should differ from `GAP_ABOVE_BUTTONS`. */
   bottomGap?: number;
+  /** A CSS `top` (see `underAbove`): the rows hang from there, right under what is above them, instead of standing on the button row. They still rise by `rise` once the result panel is up. */
+  top?: string;
   /**
    * For rows that cannot all stand in the room a check leaves them (a scene above, the result panel below). Pass it
    * (true or false) and each row goes in a box that can fold away; with `true`, once `checked`, every row but the
@@ -88,6 +90,7 @@ export function AnswerCards({
   gap = 6,
   fontSize,
   bottomGap = GAP_ABOVE_BUTTONS,
+  top,
   onlyPicked,
   bounceIn = false,
   revealed = true,
@@ -111,7 +114,7 @@ export function AnswerCards({
       className="pointer-events-auto absolute z-[1] flex flex-col"
       // Rows that can fold away carry their own gap (a top margin), so a folded row leaves none behind.
       style={{
-        bottom: aboveButtons(bottomGap, withHint),
+        ...(top === undefined ? { bottom: aboveButtons(bottomGap, withHint) } : { top }),
         left: COLUMN_LEFT,
         width: COLUMN_W,
         gap: folding ? 0 : gap,

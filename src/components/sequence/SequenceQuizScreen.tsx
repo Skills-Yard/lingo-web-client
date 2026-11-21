@@ -1,23 +1,23 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { AnswerCards } from "@/components/level-two/AnswerCards";
+import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
-import { RobotBackdrop, robotBelowDialogue } from "@/components/level-two/RobotBackdrop";
+import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText, underAbove } from "@/components/level-two/LevelTwoShell";
+import { RobotBackdrop, robotBelowDialogue, robotUnder } from "@/components/level-two/RobotBackdrop";
 import { SlotImage } from "@/components/level-two/SlotImage";
-import { TileCards } from "@/components/level-two/TileCards";
+import { TILE_HEIGHT, TileCards } from "@/components/level-two/TileCards";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { fireRobot } from "@/lib/rive/robotHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { PictureCards } from "./PictureCards";
-import { SceneBackdrop } from "./SceneBackdrop";
+import { roomUnder, SceneBackdrop } from "./SceneBackdrop";
 import type { RoomDress } from "./SequenceRoom";
 import { SEQUENCE_STEPS, sequenceNext, sequencePrevious, type SequenceQuiz } from "./sequence";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
@@ -35,6 +35,33 @@ const CLOSE_UP_CHECKED_SCALE = 0.9;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** How long the cards take to rise and fade after a right answer, before the boy moves. */
 const CARDS_CLEAR_MS = 700;
+/**
+ * The answers hang right under what is above them (the pictures, the room, the robot, Hex's line), this far (px) below it,
+ * so on a tall screen the spare room is left above the button rather than between them and the picture.
+ */
+const GAP_UNDER = 12;
+/** An answer row's height and the gap between rows (`AnswerCards`' own), for placing the list. */
+const ROW_H = 76;
+const ROW_GAP = 6;
+/** The result panel's top edge on the 844px stage, and the room the answers keep above it, for how far they must rise to clear it. */
+const PANEL_TOP = 583;
+const PANEL_CLEARANCE = 10;
+
+/** The bottom edge (stage px) of a block that hangs from a fixed top, as it is laid out (`null` until it has been); it follows the block as it changes. */
+function useBottomEdge(active: boolean) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [bottom, setBottom] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const element = ref.current;
+    if (!active || !element) return;
+    const measure = () => setBottom(element.offsetTop + element.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [active]);
+  return [ref, bottom] as const;
+}
 
 type RoomScene = Extract<SequenceQuiz["scene"], { room: unknown }>["room"];
 
@@ -63,6 +90,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const [attempt, setAttempt] = useState(0);
   // A right answer in a `clearOnRight` room: the boy waits until the cards have gone, then moves.
   const [cardsGone, setCardsGone] = useState(false);
+  const [picturesRef, picturesBottom] = useBottomEdge(!!quiz.pictures);
+  const [closeUpRef, closeUpBottom] = useBottomEdge(!!quiz.closeUp);
   const correct = selectedId === quiz.correctId;
   const room = "room" in quiz.scene ? quiz.scene.room : null;
   // The room stays put and the cards clear, so the boy is in view while he moves.
@@ -117,8 +146,21 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const shownCorrectId = checked && !correct ? "" : quiz.correctId;
   const wrongNote = !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
   const line = quiz.line;
-  // A picture above the answers (or one shown after a wrong try) needs them to rise less, so they don't reach it.
-  const listRise = quiz.pictures || quiz.closeUp || quiz.wrongPicture ? LIST_RISE : LIST_RISE_OPEN;
+  // The answers hang right under what is above them, not up from the button row: the pictures, the room, the robot, or Hex's line.
+  const picturesAbove = !!quiz.pictures || !!quiz.closeUp;
+  const aboveBottom = quiz.pictures ? picturesBottom : quiz.closeUp ? closeUpBottom : null;
+  const bubbleBottom = robotBelowDialogue(quiz.bubbleTop, quiz.bubble);
+  const optionsHeight = quiz.layout === "list" ? quiz.choices.length * ROW_H + (quiz.choices.length - 1) * ROW_GAP : (quiz.cardHeight ?? TILE_HEIGHT.pair);
+  const under = picturesAbove ? (aboveBottom === null ? null : `${aboveBottom + GAP_UNDER}px`) : room ? roomUnder : "robot" in quiz.scene ? robotUnder(bubbleBottom) : `${bubbleBottom + GAP_UNDER}px`;
+  const optionsTop = under === null ? undefined : underAbove(under, optionsHeight, GAP_ABOVE_BUTTONS, true);
+  // How far they rise once the result panel is up. With pictures above they go up with them (the pictures' own rise, or a little more where that does not clear the panel); under Hex's line alone they only go as far as they must to clear the panel (none, usually); a picture shown after a wrong try needs them to rise less, so they don't reach it.
+  const listRise = picturesAbove
+    ? Math.max(PICTURES_RISE, (aboveBottom ?? 0) + GAP_UNDER + optionsHeight - (PANEL_TOP - PANEL_CLEARANCE))
+    : !room && "plain" in quiz.scene
+      ? Math.max(0, bubbleBottom + GAP_UNDER + optionsHeight - (PANEL_TOP - PANEL_CLEARANCE))
+      : quiz.wrongPicture
+        ? LIST_RISE
+        : LIST_RISE_OPEN;
 
   return (
     <LevelTwoShell
@@ -165,6 +207,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       </CentredRow>
       {quiz.pictures && (
         <motion.div
+          ref={picturesRef}
           initial={false}
           animate={{ y: checked ? -PICTURES_RISE : 0 }}
           transition={PANEL_SPRING}
@@ -176,6 +219,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       )}
       {quiz.closeUp && (
         <motion.div
+          ref={closeUpRef}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: checked ? CLOSE_UP_CHECKED_SCALE : 1, y: checked ? -PICTURES_RISE : 0 }}
           transition={{ ...PANEL_SPRING, opacity: { duration: 0.3, delay: 0.2 } }}
@@ -220,6 +264,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           pointedId={answerHint.pointedId}
           withHint
           rise={listRise}
+          top={optionsTop}
           onPick={pick}
         />
       ) : (
@@ -235,6 +280,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           pictureWidth={quiz.pictureWidth}
           pictureHeight={quiz.pictureHeight}
           cardHeight={quiz.cardHeight}
+          top={optionsTop}
           onPick={pick}
         />
       )}
