@@ -8,24 +8,27 @@ headless Chrome on 2026-11-13; "not verified" says what wasn't.
 Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/drei 10
 (`OrbitControls` only), lucide-react, Tailwind v4 with the project's theme tokens.
 
-> **Two characters now: `girl.glb` and `Male_anime.glb`** (the male was `Male.glb` until 2026-11-19; that file is still
-> in `public/animations`, unused, like `Character_Final.glb`). Everything below that says "Character_Final" / Levitate / Sitting / Gesture / lip-sync
-> describes the old model. What changed, and why:
-> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "3D character" Girl / Male. The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
->   pull three in). `sharedCharacter.ts` loads the picked one (default girl); a switch loads the other in the
->   background (the button says "Male…" meanwhile), the screens then switch and the old one is freed after 1 s.
->   `useCharacter` (the `/character` page) follows the pick too. `Male_anime.glb` is spelt exactly so (capital M).
+> **Three characters now: `girl.glb`, `Male.glb` (Boy) and `Male_anime.glb` (Anime)** (2026-11-20; between 11-19 and 11-20 the
+> "male" was the anime file and `Male.glb` was unused; `Character_Final.glb` is still unused). Everything below that says
+> "Character_Final" / Levitate / Sitting / Gesture / lip-sync describes the old model. What changed, and why:
+> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "3D character" Girl / Boy / Anime (ids `girl`, `boy`,
+>   `anime`). The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
+>   pull three in; a saved `"male"` from the two-choice days is read as `anime`). `sharedCharacter.ts` loads the picked one
+>   (default girl); a switch loads the other in the background (the button says "Boy…" meanwhile), the screens then switch
+>   and the old one is freed after 1 s. `useCharacter` (the `/character` page) follows the pick too. `Male.glb` and
+>   `Male_anime.glb` are spelt exactly so (capital M).
 > - `MODELS` in `character.ts` gives each file, its size and which clip plays for `idle-b` and `talking`:
->   girl → `mixamo.com` for both; male → `Breathing` and `Talking` (the file also has `Gesture`, `Head_nod`,
+>   girl → `mixamo.com` for both; boy → `Breathing.001` and `Talking` (Mixamo rig `mixamorig:`, one mesh, no morph targets so no
+>   lip-sync; the file also has `Head Nod` and four `mixamo.com…` clips, unused); anime → `Breathing` and `Talking` (the file also has `Gesture`, `Head_nod`,
 >   `Talking_both_hand` and `T-Pose`, unused). `ANIMATIONS` is two entries, "Idle" and "Talking" (Talking plays its voice). `TOUR` in `show.ts`
 >   is Idle then Talking; the Gesture pictures in `SCENES` are unused.
-> - **Lip-sync:** the girl (a Tripo mesh on the Mixamo rig) has no morph targets, so none. `Male_anime.glb` is an anime
+> - **Lip-sync:** the girl (a Tripo mesh on the Mixamo rig) and the boy have no morph targets, so none. `Male_anime.glb` is an anime
 >   (VRoid-style) model: 3 skinned meshes (Body, Face, Hair), 15 materials, bones named `J_Bip_…` (not Mixamo), and 57 face morph
 >   targets (`Fcl_MTH_A/I/U/E/O`, …) with a clip `Face-LipSyncAction` (39.5 s, mouth shapes only, made for a line we don't have, so
 >   a stand-in like the old one). It is wired as the `lipSync` of his `talking` in `MODELS.male` (`clipsOf`'s second argument):
 >   the mouth moves while he talks, on `/character` and on the sequence screens; it doesn't follow the words. The clip's first
 >   0.9 s is a closed mouth.
-> - **Male's dark patch on the jaw.** His materials have no metallic/roughness factor, so glTF's default applies
+> - **Anime's dark patch on the jaw.** His materials have no metallic/roughness factor, so glTF's default applies
 >   (metal 1, rough 1): a fully metal surface ignores the hemisphere light and only the key lamp lights it, so the side of the
 >   jaw facing away from it is black (it looks like a beard). Reproduced in a bare three.js page, so it is the file, not the app.
 >   `material.metalness = 0` removes it, but then skin and shirt come out pale (the user disliked a pale look before).
@@ -48,9 +51,12 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 > - Checked in headless Chrome (390×844): `/character` and `/module/sequence-3d?step=1` and `?step=3` for the girl; the
 >   battery hold menu and switching to the male on `step=1`. With `Male_anime.glb` (2026-11-19): `/character` (Idle and Talking
 >   both play, the mouth opens in Talking) and `step=1` (arm gesture and mouth during the voice, then Idle) / `step=3`;
->   it loads, faces the camera, stands on the ground. Not checked: a real
->   phone, load times on a slow connection, a touch (not mouse) hold on the battery, the male on `step=7`, the battery menu
->   switch with the new file.
+>   it loads, faces the camera, stands on the ground. With the three-way menu (2026-11-20, headless Chrome 390×844, mouse): the
+>   menu shows Girl / Boy / Anime; on `step=1` picking Boy while the girl was on show marks it, stores `boy` and the screen
+>   switched to the boy; `/character` loads Boy and Anime (Idle, Talking screenshots look right: standing on the ground,
+>   facing the camera) and a stored `"male"` opens Anime. Not checked: a real phone, load times on a slow connection, a touch
+>   (not mouse) hold on the battery, the boy or anime on `step=7`, the boy's Talking clip beyond one screenshot (nothing of
+>   `/character` Talking for him was watched in motion), the button's "Boy…" loading state.
 
 ## What the page does
 

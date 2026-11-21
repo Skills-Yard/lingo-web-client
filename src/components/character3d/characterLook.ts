@@ -10,7 +10,8 @@ import { useSyncExternalStore } from "react";
 
 export const CHARACTER_CHOICES = [
   { id: "girl", label: "Girl" },
-  { id: "male", label: "Male" },
+  { id: "boy", label: "Boy" },
+  { id: "anime", label: "Anime" },
 ] as const;
 
 export type CharacterId = (typeof CHARACTER_CHOICES)[number]["id"];
@@ -27,6 +28,8 @@ const read = (): Look => {
     const saved: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
     if (typeof saved !== "object" || saved === null) return DEFAULT_LOOK;
     const { character } = saved as Record<string, unknown>;
+    // "male" was the anime model's id before there were three choices.
+    if (character === "male") return { character: "anime" };
     return { character: isCharacterId(character) ? character : DEFAULT_LOOK.character };
   } catch {
     return DEFAULT_LOOK;

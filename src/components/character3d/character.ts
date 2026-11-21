@@ -66,12 +66,14 @@ type Model = {
  * The characters the learner can pick (see `characterLook.ts`). The girl's file has no
  * morph targets, so no lip-sync clip. It has one clip, used for both (her bones' axes
  * differ from other Mixamo rigs', so clips of another file don't play on her: more of
- * hers must be exported from Mixamo for her). The male is an anime (VRoid-style) model,
- * not a Mixamo one: its bones are `J_Bip_…`, so `retarget` can't be used for him, only
- * the clips of his own file. That file also has 57 face morph targets and a
- * `Face-LipSyncAction` clip (39.5 s, mouth shapes only, made for some line we don't
- * have, so a stand-in) that plays with his Talking. `Male_anime.glb` is spelt exactly
- * so: a host that cares about case needs it.
+ * hers must be exported from Mixamo for her). The boy (`Male.glb`) is a Mixamo rig too,
+ * with no morph targets (no lip-sync) and his own clips: `Breathing.001` and `Talking`
+ * (the file also has `Head Nod` and a few `mixamo.com` clips, unused). The anime
+ * character is a VRoid-style model, not a Mixamo one: its bones are `J_Bip_…`, so
+ * `retarget` can't be used for him, only the clips of his own file. That file also has
+ * 57 face morph targets and a `Face-LipSyncAction` clip (39.5 s, mouth shapes only, made
+ * for some line we don't have, so a stand-in) that plays with his Talking. `Male.glb` and
+ * `Male_anime.glb` are spelt exactly so: a host that cares about case needs it.
  */
 const MODELS: Readonly<Record<CharacterId, Model>> = {
   girl: {
@@ -79,7 +81,12 @@ const MODELS: Readonly<Record<CharacterId, Model>> = {
     bytes: 15_253_060,
     animations: clipsOf({ "idle-b": "mixamo.com", talking: "mixamo.com" }),
   },
-  male: {
+  boy: {
+    src: "/animations/Male.glb",
+    bytes: 7_526_420,
+    animations: clipsOf({ "idle-b": "Breathing.001", talking: "Talking" }),
+  },
+  anime: {
     src: "/animations/Male_anime.glb",
     bytes: 11_394_316,
     animations: clipsOf({ "idle-b": "Breathing", talking: "Talking" }, { talking: "Face-LipSyncAction" }),

@@ -52,7 +52,7 @@ export function PanelButton({ tint = "lavender", selected = false, className = "
 }
 
 /**
- * Which 3D character the screens that have one show (the girl or the male). The choice
+ * Which 3D character the screens that have one show (girl, boy or anime). The choice
  * is kept (see `characterLook.ts`); the other character loads in the background, and the
  * button says so until it is on screen.
  */
@@ -62,7 +62,7 @@ function CharacterOptions() {
   return (
     <div className="mt-3 border-t border-black/10 pt-3 dark:border-white/12">
       <p className="text-[13px] leading-[18px] text-[#818185] dark:text-[#9FA19F]">3D character</p>
-      <div className="grid grid-cols-2 gap-2 [&>button]:mt-0 [&>button]:justify-center [&>button]:px-2">
+      <div className="grid grid-cols-3 gap-2 [&>button]:mt-0 [&>button]:justify-center [&>button]:px-2">
         {CHARACTER_CHOICES.map(({ id, label }) => (
           <PanelButton key={id} selected={character === id} aria-pressed={character === id} onClick={() => setCharacter(id)}>
             {loading === id ? `${label}…` : label}
