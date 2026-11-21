@@ -21,6 +21,7 @@ import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger } from "@/lib/rive/variableHost";
 import { TipCard } from "@/components/sequence/HexScreen";
+import { answersMove, answersTop, standingOn } from "./answersPlace";
 import { useBubbleSize } from "./bubbleWidth";
 import { IDLE_LOOK, MAX_OPTION_WORDS, OPTION, parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
 import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIABLE_STEPS, type SceneKind } from "./variable";
@@ -35,7 +36,6 @@ import { noteAnswer, noteStruggle } from "./variableScore";
 
 /** The least a picture is shrunk to fit its room. */
 const MIN_FIT = 0.6;
-const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
 /** A right answer sends the picture (a card on the screen) up this far (px) as it fades, like Hex and his bubble; a try again brings it back. */
@@ -119,8 +119,8 @@ function ObjectGrid({
   correctId,
   selectedId,
   checked,
+  top,
   pointedId,
-  withHint,
   spill,
   onPick,
 }: {
@@ -128,22 +128,23 @@ function ObjectGrid({
   correctId: string;
   selectedId: string | null;
   checked: boolean;
+  /** Where the cards stand (a CSS `top`, see `answersTop`): right under the scene, and rising with it once it has risen. */
+  top: string;
   /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
   pointedId: string | null;
-  withHint: boolean;
   spill: boolean;
   onPick: (id: string) => void;
 }) {
   const pictures = hasPictures(options);
   return (
-    // The cards stay after a check, right or wrong: they only rise clear of the result panel (the right one then bounces, see `RightBounce` below).
+    // The cards stay after a check, right or wrong (the right one then bounces, see `RightBounce` below); they rise with the scene, so they stay right under it.
     <motion.div
       initial={{ opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -OPTION.rise : 0 }}
-      transition={checked ? { y: PANEL_SPRING } : ANSWERS_IN}
+      animate={{ opacity: 1, y: 0 }}
+      transition={ANSWERS_IN}
       className="pointer-events-auto absolute z-[1] grid"
       // Equal columns, except that a card of words is never narrower than its words (`water_level` is wider than a third of the column at this size), so the text stays inside it.
-      style={{ bottom: aboveButtons(OPTION.aboveButtons, withHint), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(${pictures ? "0px" : "min-content"}, 1fr))` }}
+      style={{ top, transition: answersMove(checked), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap, gridTemplateColumns: `repeat(${columnsFor(options.length)}, minmax(${pictures ? "0px" : "min-content"}, 1fr))` }}
     >
       {options.map((option) => {
         const state = optionState(option.id, selectedId, checked, correctId);
@@ -365,9 +366,12 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       ? { right: true, title: interaction.finishPanel.title, text: interaction.finishPanel.text }
       : null;
 
-  // What stands under the line: the picture and the answers (question stage), or the interaction.
+  // What stands under the line: the picture and the answers (question stage), or the interaction. Cards hang right under the scene (and the picture, if the screen has one); rows of long answers still stand on the button row.
+  const hanging = !!quiz && acrossCards(quiz);
+  // A picture is "there" only while it is on screen: a right answer sends it away, and the cards then go right under the scene.
+  const cardsTop = quiz && hanging ? answersTop(answersHeight(quiz), { withHint: hasHint, lifted: checked, pictureHeight: cleared ? 0 : pictureHeight }) : null;
   const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
-  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 18}px)` : aboveButtons(24);
+  const bodyBottom = cardsTop ? standingOn(cardsTop) : quiz ? `calc(${answersBottom} + ${answersHeight(quiz!) + 18}px)` : aboveButtons(24);
 
   const choices: readonly Choice[] = quiz ? quiz.options.map((option, index) => ({ id: option.id, text: option.text, icon: option.icon ?? "", badge: LETTERS[index] })) : [];
   const longLine = !!quiz && quiz.line.length > BUBBLE_MAX_CHARS;
@@ -428,7 +432,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
         <>
           <div
             className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding] duration-500 ease-out"
-            style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: checked ? OPTION.rise : 0 }}
+            // What stands on the cards moves with them (`bottom`); standing on the button row it rises by padding instead.
+            style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: !hanging && checked ? OPTION.rise : 0, ...(hanging ? { transition: answersMove(checked).replace(/^top/, "bottom") } : {}) }}
           >
             <motion.div
               initial={false}
@@ -469,14 +474,14 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
             </div>
           </div>
 
-          {acrossCards(quiz) ? (
+          {cardsTop ? (
             <ObjectGrid
               options={quiz.options}
               correctId={shownCorrectId}
               selectedId={selectedId}
               checked={checked}
+              top={cardsTop}
               pointedId={answerHint.pointedId}
-              withHint={hasHint}
               spill={!!quiz.spill}
               onPick={pick}
             />

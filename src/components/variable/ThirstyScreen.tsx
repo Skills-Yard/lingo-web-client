@@ -9,7 +9,7 @@ import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { RightBounce } from "@/components/level-two/RightBounce";
-import { aboveButtons, CentredRow, LevelTwoShell, ScreenTitle, Teal } from "@/components/level-two/LevelTwoShell";
+import { CentredRow, LevelTwoShell, ScreenTitle, Teal } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
@@ -18,6 +18,7 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger } from "@/lib/rive/variableHost";
+import { answersMove, answersTop } from "./answersPlace";
 import { useBubbleSize } from "./bubbleWidth";
 import { HEX_ROW_TOP, TrekBackdrop } from "./scenes";
 import { OPTION } from "./quiz";
@@ -26,9 +27,7 @@ import { noteAnswer, noteStruggle } from "./variableScore";
 
 /** The cards' size, gap, padding, corners, text and rise are `OPTION` (see `quiz.ts`), the same as every other option of the module. */
 const ICON = { width: 58, height: 54 };
-/** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives, not after it. */
-const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
-/** The cards' own way in (and back down for another try). */
+/** The cards' own way in. */
 const CARDS_IN = { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } as const;
 const CORRECT_ID = "water";
 
@@ -100,7 +99,8 @@ export function ThirstyScreen() {
       step={STEP.thirsty}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(STEP.thirsty))}
-      scene={<TrekBackdrop thirsty lifted={celebrate} />}
+      // After any check Hex and his bubble are gone and the scene rises into their room (as on every question of the module), and the cards rise with it.
+      scene={<TrekBackdrop thirsty lifted={checked} />}
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={!checked ? "Check" : right ? "Next" : "Try again"}
@@ -131,11 +131,11 @@ export function ThirstyScreen() {
 
       <motion.div
         initial={{ opacity: 0, y: 90 }}
-        // The cards stay after a check, right or wrong (they do not reach the trail, even when it rises into the room Hex and his bubble leave): they only rise clear of the result panel.
-        animate={{ opacity: 1, y: checked ? -OPTION.rise : 0 }}
-        transition={checked ? { y: PANEL_SPRING } : CARDS_IN}
+        // The cards stay after a check, right or wrong. They hang right under the trail (as the answers of every question of the module do, see `answersTop`) and rise with it.
+        animate={{ opacity: 1, y: 0 }}
+        transition={CARDS_IN}
         className="pointer-events-auto absolute z-[1] grid grid-cols-3"
-        style={{ bottom: aboveButtons(OPTION.aboveButtons, true), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
+        style={{ top: answersTop(OPTION.pictureHeight, { withHint: true, lifted: checked }), transition: answersMove(checked), left: COLUMN_LEFT, width: COLUMN_W, gap: OPTION.gap }}
       >
         {CHOICES.map((choice) => {
           const state = optionState(choice.id, selectedId, checked, CORRECT_ID);

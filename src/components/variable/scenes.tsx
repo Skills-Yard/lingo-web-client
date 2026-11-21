@@ -29,11 +29,21 @@ const BUBBLE_EDGE = 3;
  */
 const SCENE_TOP = HEX_ROW_TOP + (HEX_SLOT - BUBBLE_HEIGHT) / 2 + BUBBLE_HEIGHT + BUBBLE_EDGE;
 /** How far a scene rises once a right answer has sent Hex and his bubble away (px): it takes the room they leave, until it starts where the bubble started, under the title. */
-const SCENE_LIFT = SCENE_TOP - BELOW_TITLE;
+export const SCENE_LIFT = SCENE_TOP - BELOW_TITLE;
+const LIFT_EASE = [0.22, 1, 0.36, 1] as const;
+const LIFT_UP_S = 0.55;
+const LIFT_UP_DELAY_S = 0.12;
+const LIFT_DOWN_S = 0.4;
 /** Its way up: it sets off as they do (the bubble and Hex are gone in about 0.3s) and settles after them. */
-const LIFT_UP: Transition = { duration: 0.55, delay: 0.12, ease: [0.22, 1, 0.36, 1] };
+const LIFT_UP: Transition = { duration: LIFT_UP_S, delay: LIFT_UP_DELAY_S, ease: [...LIFT_EASE] };
 /** And back down, for a stage that starts over. */
-const LIFT_DOWN: Transition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] };
+const LIFT_DOWN: Transition = { duration: LIFT_DOWN_S, ease: [...LIFT_EASE] };
+/**
+ * The same way up (or down) as a CSS transition of `property`, for what moves with the scene by its own `top` (the
+ * answers, which hang under the scene's bottom edge): they set off and settle with it.
+ */
+export const liftTransition = (property: string, lifted: boolean) =>
+  `${property} ${lifted ? LIFT_UP_S : LIFT_DOWN_S}s cubic-bezier(${LIFT_EASE.join(", ")}) ${lifted ? LIFT_UP_DELAY_S : 0}s`;
 /** The widest a scene is drawn on screen (px), as for the Sequence room (see `SceneBackdrop`): a phone's width fills the screen, a wider one gets the plain background at its sides. */
 const MAX_SCREEN_W = 560;
 /** The scene's width on the stage (a CSS length): the stage's full width, up to `MAX_SCREEN_W` on screen (the stage is scaled, so what is capped in screen px is divided by its scale). */
