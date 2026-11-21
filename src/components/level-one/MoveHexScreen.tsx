@@ -98,31 +98,31 @@ export function MeadowBackdrop() {
   );
 }
 
-/** The arrow of a move button, pointing up (Figma's 29 x 46 vector). */
-export function MoveArrow({ id, from, to, stroke, flipped = false }: { id: string; from: string; to: string; stroke: string; flipped?: boolean }) {
-  return (
-    <svg aria-hidden width={29} height={46} viewBox="0 0 29 46" className={flipped ? "-scale-y-100" : undefined}>
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stopColor={from} />
-          <stop offset="1" stopColor={to} />
-        </linearGradient>
-      </defs>
-      <path d="M14.5 1 28 20h-8v25H9V20H1z" fill={`url(#${id})`} stroke={stroke} strokeLinejoin="round" />
-    </svg>
-  );
-}
+/** The four moves on the game screen, two across (Figma "Frame 82"): the box's tint and the arrow's picture (`public/animations/svg/game-path`). */
+export const MOVES = [
+  { id: "straight", label: "Go Straight", icon: "arrow-up.svg", look: "bg-[#EDFAFE] dark:bg-[#15233A]" },
+  { id: "back", label: "Go Back", icon: "arrow-down.svg", look: "bg-[#FEF8EC] dark:bg-[#2A2218]" },
+  { id: "left", label: "Turn Left", icon: "arrow-left.svg", look: "bg-[#F6F4FE] dark:bg-[#1E1A3A]" },
+  { id: "right", label: "Turn Right", icon: "arrow-right.svg", look: "bg-[#FFF4F6] dark:bg-[#33202A]" },
+] as const;
+export type MoveId = (typeof MOVES)[number]["id"];
 
-/** A 3D move button: its face stands 4px up on a darker edge, and sinks onto it when pressed. */
-export function MoveButton({ label, look, disabled, onPress, children }: { label: string; look: string; disabled: boolean; onPress: () => void; children: React.ReactNode }) {
+/** What a turn says: Hex only turns on his tile, so the battery is still ahead. */
+const WRONG_TURN = "A turn only spins Hex on his tile. The battery is straight ahead!";
+
+/**
+ * A move button on the game screens: a flat 150.5 x 99 box (12px padding, 2px gap), the 52px arrow over its label (500, 14px / 140%); it presses in a little when tapped.
+ * With `dim` it fades while it is disabled (a list that is full, a run in progress); without, it keeps its look.
+ */
+export function MoveTile({ label, icon, look, disabled, dim = false, onPress }: { label: string; icon: string; look: string; disabled: boolean; dim?: boolean; onPress: () => void }) {
   return (
     <button
       type="button"
       onClick={onPress}
       disabled={disabled}
-      className={`pointer-events-auto flex h-[99px] w-[150.5px] flex-col items-center justify-center gap-0.5 rounded-lg p-3 text-[14px] leading-[140%] font-medium text-[#444444] transition-[translate,box-shadow] duration-100 enabled:cursor-pointer enabled:active:translate-y-1 enabled:active:shadow-none ${look}`}
+      className={`pointer-events-auto flex h-[99px] w-[150.5px] flex-col items-center justify-center gap-0.5 rounded-lg p-3 text-[14px] leading-[140%] font-medium text-[#444444] transition-[transform,opacity] duration-100 enabled:cursor-pointer enabled:active:scale-[0.97] dark:text-white ${dim ? "disabled:opacity-50" : ""} ${look}`}
     >
-      <span className="flex h-12 w-12 items-center justify-center">{children}</span>
+      <Image src={`/animations/svg/game-path/${icon}`} alt="" width={52} height={52} unoptimized className="size-[52px] shrink-0" />
       {label}
     </button>
   );
@@ -130,9 +130,10 @@ export function MoveButton({ label, look, disabled, onPress, children }: { label
 
 /**
  * `/module/commands?step=16` — "Let's guide Hex": Hex stands on the middle of a 3 x 3
- * platform with the battery one tile ahead, and each button walks him a tile at
- * once. Go Straight reaches the battery, which opens the gem popup and unlocks
- * Continue; Go Back misses it, which offers Try again.
+ * platform with the battery one tile ahead, and each button acts at once. Go
+ * Straight reaches the battery, which opens the gem popup and unlocks Continue;
+ * Go Back walks him away from it, and a turn only spins him on his tile: both
+ * miss, which offers Try again.
  */
 export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
   const router = useRouter();
@@ -141,6 +142,8 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
   // With a flow it opens on its tip; "Let's Try" starts the game.
   const [intro, setIntro] = useState(!!flow);
   const [tile, setTile] = useState<Tile>(flow ? "top" : "centre");
+  // A turn was pressed: Hex stays on his tile, and it is a miss.
+  const [turned, setTurned] = useState(false);
   const [result, setResult] = useState<"solved" | "failed" | null>(null);
   // Outside a flow the right result waits for the gem popup, the claim and the
   // Battery Doctor to finish, then its panel comes up by itself.
@@ -167,7 +170,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
   const missed = useRef(false);
 
   useEffect(() => {
-    if (tile === "centre" || intro) return;
+    if ((tile === "centre" && !turned) || intro) return;
     const timer = window.setTimeout(() => {
       if (tile === "top") {
         triggerSound("win");
@@ -185,15 +188,18 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
       if (!flow) noteAnswer(STEP, false);
     }, STEP_MS);
     return () => window.clearTimeout(timer);
-  }, [tile, intro, flow, triggerSound, win, report]);
+  }, [tile, turned, intro, flow, triggerSound, win, report]);
 
-  const walk = (to: Tile) => {
+  const press = (move: MoveId) => {
     triggerSound("step");
-    setTile(to);
+    if (move === "straight") setTile("top");
+    else if (move === "back") setTile("bottom");
+    else setTurned(true);
   };
   const tryAgain = () => {
     setResult(null);
     setTile("centre");
+    setTurned(false);
   };
 
   const solved = result === "solved";
@@ -218,7 +224,7 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
         <>
           <div className="absolute inset-0 z-[9]" style={{ pointerEvents: failed ? "auto" : "none" }} onClick={tryAgain}>
             <FeedbackPanel correct={false} title={flow?.wrongTitle} open={failed} hexIn={failed} centred={!!flow} grouped={!flow}>
-              {flow?.wrong ?? WRONG_WAY}
+              {flow?.wrong ?? (turned ? WRONG_TURN : WRONG_WAY)}
             </FeedbackPanel>
           </div>
           <div className="pointer-events-none absolute inset-0">
@@ -293,13 +299,10 @@ export function MoveHexScreen({ flow }: { flow?: MoveHexFlow } = {}) {
           {flow?.tip}
         </div>
       ) : (
-      <div className="absolute left-1/2 flex w-[319px] -translate-x-1/2 gap-[18px]" style={{ top: stageTop(BUTTONS_TOP) }}>
-        <MoveButton label="Go Straight" look="bg-[#EDFAFE] shadow-[0_4px_0_#BFE6F2]" disabled={tile !== "centre"} onPress={() => walk("top")}>
-          <MoveArrow id="guide-hex-straight" from="#74EBF7" to="#0F88E5" stroke="#1F4899" />
-        </MoveButton>
-        <MoveButton label="Go Back" look="bg-[#FEF8EC] shadow-[0_4px_0_#F2DFB8]" disabled={tile !== "centre"} onPress={() => walk("bottom")}>
-          <MoveArrow id="guide-hex-back" from="#FA8728" to="#FEEAA2" stroke="#CD5B25" flipped />
-        </MoveButton>
+      <div className="absolute left-1/2 grid w-[319px] -translate-x-1/2 grid-cols-2 gap-[18px]" style={{ top: stageTop(BUTTONS_TOP) }}>
+        {MOVES.map((move) => (
+          <MoveTile key={move.id} label={move.label} icon={move.icon} look={move.look} disabled={tile !== "centre" || turned} onPress={() => press(move.id)} />
+        ))}
       </div>
       )}
     </LevelTwoShell>

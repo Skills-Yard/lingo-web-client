@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MoveArrow, MoveButton } from "@/components/level-one/MoveHexScreen";
+import { MOVES, MoveTile } from "@/components/level-one/MoveHexScreen";
 import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { Teal } from "@/components/level-two/LevelTwoShell";
 import { HexBoard } from "./HexBoard";
@@ -15,6 +15,9 @@ const DISTANCE = 3;
 /** How long a step takes before the next can be given (ms), and before the battery is taken. */
 const STEP_MS = 720;
 const BATTERY_TILE = { col: DISTANCE, row: 0 };
+
+/** Move Forward is Go Straight's box and arrow (see `MoveTile`). */
+const FORWARD = MOVES[0];
 
 const TIPS = [
   "The battery is three tiles away. One move won’t be enough!",
@@ -79,9 +82,7 @@ export function OneCommandScreen() {
       onContinue={() => router.push(sequenceNext(STEP.oneCommand))}
     >
       <div className="absolute left-1/2 -translate-x-1/2" style={{ top: 440 }}>
-        <MoveButton label="Move Forward" look="bg-[#EDFAFE] shadow-[0_4px_0_#BFE6F2]" disabled={busy || moves >= DISTANCE} onPress={moveForward}>
-          <MoveArrow id="sequence-forward" from="#74EBF7" to="#0F88E5" stroke="#1F4899" />
-        </MoveButton>
+        <MoveTile label="Move Forward" icon={FORWARD.icon} look={FORWARD.look} disabled={busy || moves >= DISTANCE} onPress={moveForward} />
       </div>
     </HexScreen>
   );
