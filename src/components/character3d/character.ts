@@ -71,7 +71,7 @@ type Model = {
  * (the file also has `Head Nod` and a few `mixamo.com` clips, unused). The anime
  * character is a VRoid-style model, not a Mixamo one: its bones are `J_Bip_…`, so
  * `retarget` can't be used for him, only the clips of his own file. That file also has
- * 57 face morph targets and a `Face-LipSyncAction` clip (39.5 s, mouth shapes only, made
+ * 57 face morph targets and a `Face.001-LipSyncAction` clip (spelt `Face-LipSyncAction` before the file was replaced on 2026-11-21; 39.5 s, mouth shapes only, made
  * for some line we don't have, so a stand-in) that plays with his Talking. `Male.glb` and
  * `Male_anime.glb` are spelt exactly so: a host that cares about case needs it.
  */
@@ -89,7 +89,7 @@ const MODELS: Readonly<Record<CharacterId, Model>> = {
   anime: {
     src: "/animations/Male_anime.glb",
     bytes: 11_394_316,
-    animations: clipsOf({ "idle-b": "Breathing", talking: "Talking" }, { talking: "Face-LipSyncAction" }),
+    animations: clipsOf({ "idle-b": "Breathing", talking: "Talking" }, { talking: "Face.001-LipSyncAction" }),
   },
 };
 

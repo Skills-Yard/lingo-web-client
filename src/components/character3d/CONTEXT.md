@@ -24,7 +24,7 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 >   is Idle then Talking; the Gesture pictures in `SCENES` are unused.
 > - **Lip-sync:** the girl (a Tripo mesh on the Mixamo rig) and the boy have no morph targets, so none. `Male_anime.glb` is an anime
 >   (VRoid-style) model: 3 skinned meshes (Body, Face, Hair), 15 materials, bones named `J_Bip_…` (not Mixamo), and 57 face morph
->   targets (`Fcl_MTH_A/I/U/E/O`, …) with a clip `Face-LipSyncAction` (39.5 s, mouth shapes only, made for a line we don't have, so
+>   targets (`Fcl_MTH_A/I/U/E/O`, …) with a clip `Face.001-LipSyncAction` (named `Face-LipSyncAction` until the user replaced the file on 2026-11-21; the new one also has `Idle`, `Head Nod`, `T-Pose.001`; 39.5 s, mouth shapes only, made for a line we don't have, so
 >   a stand-in like the old one). It is wired as the `lipSync` of his `talking` in `MODELS.male` (`clipsOf`'s second argument):
 >   the mouth moves while he talks, on `/character` and on the sequence screens; it doesn't follow the words. The clip's first
 >   0.9 s is a closed mouth.
