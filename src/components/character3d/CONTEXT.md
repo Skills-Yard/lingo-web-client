@@ -362,6 +362,14 @@ empty drag slots, and the rest exactly as it was. Done **in the original route**
 - Every `HexBubble` of the module (quiz, Thirsty, Trek, PlanApp, narration) picks the face up through the provider; none was edited. The
   result panel's Hex robot and the "Lesson complete" robot stay (as in the Sequence 3D route).
 
+**Title screen "Let's Learn Variables" (`?step=0`, added the same day):** `VariableIntroScreen` = the Sequence 3D intro's layout
+(`CharacterIntro`, extracted from `Intro3DScreen.tsx`, which now uses it with the same look) + the design's tilted "age = 20" code tag (`AgeTag`,
+upper right over the hair). It is **step 0 on purpose**: every PDF screen keeps its number (the old notes say "screen 19, 27"), the progress
+total stays 34 (the bar starts empty), and the battery still restarts and spends at screen 1 (`chargeBatteryScreen`, `FIRST_SCREEN` = 1; step 0
+spends nothing, checked: 100 → 95 on Continue). `/module/variable` with no `?step` and the home path open it (`HomeRoutes`). The character
+only stands (Idle B): there is no thumbs-up clip (`ANIMATIONS` has only idle and talking), so the design's thumbs-up pose is not there.
+Checked at 390×844, 360×640, 412×915 and 820×1180, Continue → step 1; the X still goes to `/level` (Back is the dev panel's `variablePrevious`).
+
 **What was found, not changed:** no Variable quiz uses column rows. All answers are `acrossCards` (3 across or 2 x 2, words <= 2 or four
 short ones), screen 16 is an info list, 27 is wide step cards with circle slots, 34 is a recap with no Hex. So there were no "rows
 screens" to give the 76px 3D rows, and no scene-less screen with room for a big character (27 is full). The module's own option sizes

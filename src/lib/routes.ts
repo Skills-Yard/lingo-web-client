@@ -9,7 +9,7 @@ export const commandsHref = (step: number | string) => `/module/commands?step=${
 /** `/module/sequence?step=` — one screen of the Sequence module (1-based, or `complete`). */
 export const sequenceHref = (step: number | "complete") => `/module/sequence?step=${step}`;
 
-/** `/module/variable?step=` — one screen of the Variable module (1-based, or `complete`). */
+/** `/module/variable?step=` — one screen of the Variable module (0 is its title screen, 1-34 the rest, or `complete`). */
 export const variableHref = (step: number | "complete") => `/module/variable?step=${step}`;
 
 /** `/module/datatypes?step=` — one screen of the Data Types module (1-based, or `complete`). */
