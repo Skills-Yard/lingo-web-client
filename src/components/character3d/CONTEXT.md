@@ -255,6 +255,8 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   "It sorts things alphabetically", "Steps happen in order" (new, a plausible wrong answer with its own message in `wrongBy`), "It helps reach the goal" (right). **The title is the crop's, "Why sequence
   matter?" (no "does", which the original and probably the intended one has: a design typo to confirm).** The hint is the regular button (the quiz's `noHint` is off here; every tray screen uses the
   shell's hint). `noRetry` stays (a pick moves on), and there is no voice (`audio.question` is empty: the answers come in at once). Checked in headless Chrome 390×844 (see the reply of that day).
+- **Place 26, "How to decide the order?" (2026-11-22, `REFLECT_DECIDE_3D` in `sequence3d.ts`, from a Figma crop; icons `3d-26-1..3.svg`: arrow, command window, cycle):** the same as place 25: `SequenceQuiz3DScreen look="tray"`
+  with the three rows of the original (what must happen first = right), the title as drawn (the original's was "Which command goes first?"), the regular hint, no voice, `noRetry`.
 - **Steps 10-12 (2026-11-21)** are the original screens `MeetSequenceScreen` (10), `RevealCardScreen` (11) and `DressArrangeScreen` (12), each
   asking `useSequenceFlow` for its place/next/back like `ArrangeScreen`; 10 and 11 are otherwise as they are (the face in the bubble on 10).
   **12 is a guess:** it is the only story screen between 11 and the Hex ones, but the Figma title for frame 12 is "Let's guess first" and the

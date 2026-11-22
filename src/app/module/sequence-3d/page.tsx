@@ -22,10 +22,9 @@ import { Tea3DScreen } from "@/components/sequence/Tea3DScreen";
 import {
   FIRST_COMMAND,
   PUT_ON_FIRST,
-  REFLECT_DECIDE,
   WHAT_DID_YOU_DO,
 } from "@/components/sequence/sequence";
-import { COMPARE_3D, FLOW_3D, positionOf, REFLECT_ORDER_3D, WHAT_WILL_HAPPEN } from "@/components/sequence/sequence3d";
+import { COMPARE_3D, FLOW_3D, positionOf, REFLECT_DECIDE_3D, REFLECT_ORDER_3D, WHAT_WILL_HAPPEN } from "@/components/sequence/sequence3d";
 import { SEQUENCE_3D_AUDIO, SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 
 /** The frame at place `step` of the 3D flow (see `FLOW_3D`), or "Lesson complete!" for `step=complete`. */
@@ -102,7 +101,7 @@ function sequence3dScreen(step: string) {
       // No voice for this question on any route: the character just stands there, and the answers come in at once.
       return <SequenceQuiz3DScreen key="reflect-order" quiz={REFLECT_ORDER_3D} audio={{ question: [] }} position={positionOf("reflectOrder")} look="tray" />;
     case "reflectDecide":
-      return <SequenceQuizScreen key="reflect-decide" quiz={REFLECT_DECIDE} />;
+      return <SequenceQuiz3DScreen key="reflect-decide" quiz={REFLECT_DECIDE_3D} audio={{ question: [] }} position={positionOf("reflectDecide")} look="tray" />;
     case "recap":
       return <RecapScreen key="recap" />;
     default:
