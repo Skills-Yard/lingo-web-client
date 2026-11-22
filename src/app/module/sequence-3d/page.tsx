@@ -6,7 +6,7 @@ import { FixScreen } from "@/components/sequence/FixScreen";
 import { HexIntroScreen } from "@/components/sequence/HexIntroScreen";
 import { HexOrderScreen } from "@/components/sequence/HexOrderScreen";
 import { Intro3DScreen } from "@/components/sequence/Intro3DScreen";
-import { MeetSequenceScreen } from "@/components/sequence/MeetSequenceScreen";
+import { Meet3DScreen } from "@/components/sequence/Meet3DScreen";
 import { OneCommandScreen } from "@/components/sequence/OneCommandScreen";
 import { PlanScreen } from "@/components/sequence/PlanScreen";
 import { PredictFollowUpScreen } from "@/components/sequence/PredictFollowUpScreen";
@@ -76,7 +76,7 @@ function sequence3dScreen(step: string) {
     case "arrange":
       return <ArrangeScreen key="arrange" />;
     case "meet":
-      return <MeetSequenceScreen key="meet" />;
+      return <Meet3DScreen key="meet" position={positionOf("meet")} />;
     case "reveal":
       return <RevealCardScreen key="reveal" />;
     case "dress":

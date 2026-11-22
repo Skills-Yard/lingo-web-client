@@ -213,6 +213,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           hinted={hinted}
           withHint={withHint}
           rise={listRise}
+          bounceRight={flow.bounceRight}
           onPick={setSelectedId}
         />
       ) : (
@@ -228,6 +229,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           pictureWidth={quiz.pictureWidth}
           pictureHeight={quiz.pictureHeight}
           cardHeight={quiz.cardHeight}
+          bounceRight={flow.bounceRight}
           onPick={setSelectedId}
         />
       )}

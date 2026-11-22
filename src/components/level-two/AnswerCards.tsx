@@ -8,6 +8,7 @@ import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { RAISED } from "@/components/ui/raised";
 import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
+import { RightBounce } from "./RightBounce";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { COLUMN_LEFT, type Choice } from "./levelTwo";
@@ -70,6 +71,8 @@ type AnswerCardsProps = {
   top?: number;
   /** The space (px) between a row's picture and its text, where it should differ from the usual 22. */
   iconGap?: number;
+  /** The right row (once it is shown as right) bounces once, with its shine and stars (`RightBounce`), as the match boards' right cards do. */
+  bounceRight?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -78,7 +81,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, bounceRight = false, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
   const folding = onlyPicked !== undefined;
   return (
@@ -98,7 +101,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
         const state = optionState(choice.id, selectedId, checked, correctId);
         const look = LOOKS[state];
         const hintHere = hinted && selectedId === null && choice.id === correctId;
-        const row = (
+        const plainRow = (
           <HintFloat key={choice.id} className="relative w-full" spin={false} active={hintHere}>
             <motion.button
               type="button"
@@ -146,6 +149,14 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               {!compact && <span aria-hidden className="size-[34px] shrink-0 rounded-full" />}
             </motion.button>
           </HintFloat>
+        );
+        // A little after the check, so the rows have risen above the result panel by the time it jumps. Rows that fade away (`fadeOut`) don't bounce: nobody would see it.
+        const row = bounceRight ? (
+          <RightBounce key={choice.id} play={state === "correct" && !fadeOut} delay={0.2} radius={tight?.radius ?? 18} className="w-full">
+            {plainRow}
+          </RightBounce>
+        ) : (
+          plainRow
         );
         if (folding) {
           const gone = !!onlyPicked && checked && choice.id !== selectedId;

@@ -187,6 +187,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
         rise={OPTIONS_RISE}
         cardHeight={OPTION_HEIGHT}
         pictureHeight={OPTION_PICTURE_HEIGHT}
+        bounceRight={flow.bounceRight}
         onPick={pick}
       />
     </HexScreen>

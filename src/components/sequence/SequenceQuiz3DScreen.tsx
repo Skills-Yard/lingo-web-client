@@ -230,6 +230,7 @@ export function SequenceQuiz3DScreen({ quiz, audio, position, look = "board" }: 
           withHint={withHint}
           rise={listRise}
           {...(tray ? { bottomGap: TRAY_CARD_GAP, width: TRAY_LIST_WIDTH, endGap: 0 } : {})}
+          bounceRight
           onPick={setSelectedId}
         />
       ) : (
@@ -246,6 +247,7 @@ export function SequenceQuiz3DScreen({ quiz, audio, position, look = "board" }: 
           pictureHeight={tray ? undefined : quiz.pictureHeight}
           cardHeight={tray ? undefined : quiz.cardHeight}
           {...(tray ? { bottomGap: TRAY_CARD_GAP } : {})}
+          bounceRight
           onPick={setSelectedId}
         />
       ))}

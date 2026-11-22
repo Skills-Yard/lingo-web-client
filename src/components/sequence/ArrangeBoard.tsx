@@ -7,6 +7,7 @@ import { aboveButtons } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED_DRAG } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
+import { useSequenceFlow } from "./sequenceFlow";
 
 /** A card to drag: `kind` is what it is (two cards can be the same kind), `id` which one it is. */
 export type ArrangeCardDef = { id: string; kind: string; text: string; art?: ReactNode; tint: string };
@@ -20,8 +21,10 @@ type ArrangeLayout = {
   /** `columns`: the cards in a column with the slots in a column beside it; `rows`: the cards in a row with the slots in a row under it. */
   mode: "columns" | "rows";
   card: { width: number; height: number };
-  /** How many cards, and so slots. */
+  /** How many slots (and, unless `cardCount` says otherwise, cards). */
   count: number;
+  /** In `rows`, more cards than slots: the row of cards is this long, and the slots stand centred over it. */
+  cardCount?: number;
   /** The gap (px) between one card and the next. */
   gap?: number;
   /** The gap (px) between the cards and the slots. */
@@ -32,31 +35,43 @@ type ArrangeLayout = {
   slotsOnTop?: boolean;
   /** The slots are solid wells, not dashed outlines. */
   solidSlots?: boolean;
+  /** The slots as the 3D flow's design draws them (Figma `sequence_12`): a pale fill with a 2px dashed grey-blue outline and a 40px numbered badge. */
+  designSlots?: boolean;
   /** The cards' text is a sentence: set in plain case, not the small capitals of a command's name. */
   sentence?: boolean;
 };
 
 /** Where everything stands on the board, and how big the board is. */
-export const arrangeGeometry = ({ mode, card, count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, sentence = false }: ArrangeLayout) => {
+export const arrangeGeometry = ({ mode, card, count, cardCount = count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, designSlots = false, sentence = false }: ArrangeLayout) => {
   const columns = mode === "columns";
+  // With more cards than slots the slots stand centred over the row of cards.
+  const slotsInset = columns ? 0 : ((cardCount - count) * (card.width + gap)) / 2;
   const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: tray && slotsOnTop ? card.height + lane : 0 });
   const slot = (index: number): Point =>
     columns
       ? { x: tray ? card.width + lane : 0, y: index * (card.height + gap) }
-      : { x: index * (card.width + gap), y: tray && !slotsOnTop ? card.height + lane : 0 };
+      : { x: slotsInset + index * (card.width + gap), y: tray && !slotsOnTop ? card.height + lane : 0 };
   const board = columns
     ? { width: tray ? card.width * 2 + lane : card.width, height: count * card.height + (count - 1) * gap }
-    : { width: count * card.width + (count - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
+    : { width: cardCount * card.width + (cardCount - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
   /** A card dropped within this far (px) of a slot's corner goes in it. */
   const reach = card.height * 0.87;
-  return { count, card, tray, solidSlots, home, slot, board, reach, sentence };
+  return { count, card, tray, solidSlots, designSlots, home, slot, board, reach, sentence };
 };
 export type ArrangeGeometry = ReturnType<typeof arrangeGeometry>;
+
+/** The 3D design's empty slot (Figma `sequence_12`): a pale fill and a 2px dashed grey-blue outline (add the radius and `border-2`)... */
+export const DESIGN_SLOT = "border-dashed border-[#BFC7D5] bg-[#EEF0F7] dark:border-white/25 dark:bg-white/8";
+/** ...and its number: Figma "Frame 351", a 40px #BFC7D5 circle, the number in it Poppins 500 16px white. */
+export const DESIGN_BADGE = "flex size-10 items-center justify-center rounded-full bg-[#BFC7D5] text-[16px] leading-[124%] font-medium text-white dark:bg-white/15 dark:text-white/80";
 
 /** Below this far (px) a press and release is a tap, not a drag. */
 const TAP_SLOP = 6;
 const CARD_SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
+/** A card that is not in a slot when the answer is checked (`dropUnused`) falls this far (px) and fades, in this long (s), speeding up as it goes. */
+const DROP_PX = 110;
+const DROP_S = 0.45;
 
 /** The slot a card dropped with its corner at `at` lands in, if any. */
 const slotAt = (at: Point, geo: ArrangeGeometry) => {
@@ -126,6 +141,8 @@ function ArrangeCard({
   card,
   size,
   sentence,
+  design,
+  dropped,
   at,
   disabled,
   hinted,
@@ -135,6 +152,10 @@ function ArrangeCard({
   card: ArrangeCardDef;
   size: { width: number; height: number };
   sentence: boolean;
+  /** The 3D design's card: a 52px picture box over the name, 16px (Figma `sequence_12`). */
+  design: boolean;
+  /** The card falls away and fades (it was left over when the answer was checked); back to its place when this turns off. */
+  dropped: boolean;
   at: Point;
   disabled: boolean;
   hinted: boolean;
@@ -149,9 +170,9 @@ function ArrangeCard({
 
   useEffect(() => {
     if (drag.current) return;
-    const animations = [animate(x, at.x, CARD_SPRING), animate(y, at.y, CARD_SPRING)];
+    const animations = [animate(x, at.x, CARD_SPRING), dropped ? animate(y, at.y + DROP_PX, { duration: DROP_S, ease: "easeIn" }) : animate(y, at.y, CARD_SPRING)];
     return () => animations.forEach((animation) => animation.stop());
-  }, [at.x, at.y, x, y]);
+  }, [at.x, at.y, dropped, x, y]);
 
   return (
     <HintFloat className={dragging ? "relative z-20" : undefined} spin={false} active={hinted}>
@@ -198,7 +219,8 @@ function ArrangeCard({
         animate(x, at.x, CARD_SPRING);
         animate(y, at.y, CARD_SPRING);
       }}
-      animate={{ scale: dragging ? 1.05 : 1 }}
+      animate={{ scale: dragging ? 1.05 : 1, opacity: dropped ? 0 : 1 }}
+      transition={{ opacity: dropped ? { duration: DROP_S, ease: "easeIn" } : { duration: 0.2 } }}
       style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1 }}
       className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center rounded-[8px] border-4 border-white px-1.5 ${RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
@@ -210,12 +232,21 @@ function ArrangeCard({
         transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
         className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
       />
-      {card.art && (
-        <span className={`flex w-full items-center justify-center ${compact ? "min-h-[30px]" : "min-h-[46px]"}`}>{card.art}</span>
-      )}
+      {card.art &&
+        (design ? (
+          <span className="flex size-[52px] shrink-0 items-center justify-center">{card.art}</span>
+        ) : (
+          <span className={`flex w-full items-center justify-center ${compact ? "min-h-[30px]" : "min-h-[46px]"}`}>{card.art}</span>
+        ))}
       <span
         className={`text-center font-semibold text-[#444444] dark:text-white ${
-          compact ? (sentence ? "text-[12px] leading-4" : "text-[11px] leading-[14px] tracking-[0.2px] uppercase") : "text-[14px] leading-[18px]"
+          design
+            ? "text-[16px] leading-none"
+            : compact
+              ? sentence
+                ? "text-[12px] leading-4"
+                : "text-[11px] leading-[14px] tracking-[0.2px] uppercase"
+              : "text-[14px] leading-[18px]"
         }`}
       >
         {card.text}
@@ -232,6 +263,7 @@ export function ArrangeBoard({
   geo,
   disabled,
   hintedId = null,
+  dropUnused = false,
   onPlace,
   onTap,
   slotContent,
@@ -242,12 +274,17 @@ export function ArrangeBoard({
   disabled: boolean;
   /** The card the hint points at: filled in orange and floating. */
   hintedId?: string | null;
+  /** Cards that are in no slot fall away and fade (the extra cards, once the answer is checked). */
+  dropUnused?: boolean;
   onPlace: (id: string, slot: number | null) => void;
   /** Tapping a card; without it a tap does nothing (cards that can only be swapped). */
   onTap?: (id: string) => void;
   /** What an empty slot shows in place of its number (its card, when it holds one, is drawn over it). */
   slotContent?: (index: number) => ReactNode;
 }) {
+  // On the 3D route every empty slot has the design's look, whatever the board's own size.
+  const flow = useSequenceFlow();
+  const designed = geo.designSlots || flow.designSlots;
   return (
     <>
       {Array.from({ length: geo.count }, (_, index) => (
@@ -255,14 +292,18 @@ export function ArrangeBoard({
           key={index}
           aria-hidden
           className={`absolute flex items-center justify-center rounded-[8px] border-2 ${
-            geo.solidSlots
-              ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
-              : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
+            designed
+              ? DESIGN_SLOT
+              : geo.solidSlots
+                ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+                : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
           }`}
           style={{ left: geo.slot(index).x, top: geo.slot(index).y, width: geo.card.width, height: geo.card.height }}
         >
           {slotContent ? (
             slotContent(index)
+          ) : designed ? (
+            <span className={DESIGN_BADGE}>{index + 1}</span>
           ) : (
             <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
               {index + 1}
@@ -270,6 +311,17 @@ export function ArrangeBoard({
           )}
         </div>
       ))}
+      {/* The 3D design's cards each leave a plain shadow (their shape, nothing in it) in their place in the tray. It is there from the start, behind the card, which covers it, so the card shows it the moment it is dragged off. */}
+      {geo.designSlots &&
+        geo.tray &&
+        cards.map((card, index) => (
+          <div
+            key={`shadow-${card.id}`}
+            aria-hidden
+            className="pointer-events-none absolute rounded-[8px] bg-[rgba(0,0,0,0.09)] dark:bg-white/10"
+            style={{ left: geo.home(index).x, top: geo.home(index).y, width: geo.card.width, height: geo.card.height, zIndex: 0 }}
+          />
+        ))}
       {cards.map((card, index) => {
         const placed = slots.indexOf(card.id);
         return (
@@ -278,6 +330,8 @@ export function ArrangeBoard({
             card={card}
             size={geo.card}
             sentence={geo.sentence}
+            design={geo.designSlots}
+            dropped={dropUnused && placed < 0}
             at={placed >= 0 ? geo.slot(placed) : geo.home(index)}
             disabled={disabled}
             hinted={card.id === hintedId}
@@ -300,6 +354,7 @@ export function ArrangeDock({
   withHint = false,
   rise = 0,
   fade = false,
+  fadeDelay = 0,
   children,
 }: {
   geo: ArrangeGeometry;
@@ -307,13 +362,16 @@ export function ArrangeDock({
   withHint?: boolean;
   rise?: number;
   fade?: boolean;
+  /** Seconds the board waits before it rises and fades (`fade` turning on; it comes back at once), e.g. for a card that falls first. */
+  fadeDelay?: number;
   children: ReactNode;
 }) {
+  const wait = fade ? fadeDelay : 0;
   return (
     <motion.div
       initial={false}
       animate={{ y: -rise, opacity: fade ? 0 : 1 }}
-      transition={PANEL_SPRING}
+      transition={{ y: { ...PANEL_SPRING, delay: wait }, opacity: { ...PANEL_SPRING, delay: wait } }}
       className="absolute left-1/2 z-[1]"
       style={{ ...(top === undefined ? { bottom: aboveButtons(28, withHint) } : { top }), width: geo.board.width, height: geo.board.height, marginLeft: -geo.board.width / 2 }}
     >

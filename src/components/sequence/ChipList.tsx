@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import { RAISED_DRAG } from "@/components/ui/raised";
 import { ArrowUp, RotateCw, X } from "lucide-react";
+import { DESIGN_BADGE, DESIGN_SLOT } from "./ArrangeBoard";
 import { COMMAND_LABEL, type Command } from "./hexGrid";
+import { useSequenceFlow } from "./sequenceFlow";
 
 /** A command in the learner's list; `id` keeps a chip itself as the order changes. */
 export type PlanItem = { id: number; command: Command };
@@ -180,6 +182,8 @@ export function ChipList({
   onMove: (from: number, to: number) => void;
   onRemove: (index: number) => void;
 }) {
+  // On the 3D route the empty places have the design's look (see `DESIGN_SLOT`), as on every board.
+  const designed = useSequenceFlow().designSlots;
   return (
     <>
       {/* The empty places, as on "Something went wrong!": numbered wells. */}
@@ -187,12 +191,18 @@ export function ChipList({
         <div
           key={`place-${index}`}
           aria-hidden
-          className="absolute flex items-center justify-center rounded-[10px] border-2 border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+          className={`absolute flex items-center justify-center rounded-[10px] border-2 ${
+            designed ? DESIGN_SLOT : "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+          }`}
           style={{ left: placeOf(index, max).x, top: placeOf(index, max).y, width: CHIP.width, height: CHIP.height }}
         >
-          <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
-            {index + 1}
-          </span>
+          {designed ? (
+            <span className={DESIGN_BADGE}>{index + 1}</span>
+          ) : (
+            <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
+              {index + 1}
+            </span>
+          )}
         </div>
       ))}
       {items.map((item, index) => (

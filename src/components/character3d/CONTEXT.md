@@ -212,6 +212,32 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   `sequence3dAssets.ts` preloads in place of the old webp pictures). After a check the cards pull in (scale .8, from their top) and the rows rise 55 so
   the result panel never covers them. Checked in headless Chrome (Girl, light) 390×844 open, right ("Exactly!") and wrong ("Not quite"), 360×640 open.
   Not checked: 412×915 beyond the numbers, dark, Try again, the voice, a real phone.
+- **The right answer bounces on the 3D route (2026-11-22, "the OG bounce" = `RightBounce`, copied from `dev`, `level-two/RightBounce.tsx`):** the
+  right card/row squeezes, jumps with a shine and two stars, 0.2 s after Check, only on a right pick. `AnswerCards` and `TileCards` got
+  `bounceRight`; `SequenceQuiz3DScreen` (3, 10) and `Compare3DScreen` (8) pass it, and the shared screens (`SequenceQuizScreen`: 7, 11, 25, 26; `PredictScreen`:
+  19, 20) take it from `useSequenceFlow().bounceRight`, which is true only on the 3D route (the 2D route has no bounce, as before). Checked in headless
+  Chrome 390×844 by sampling the card's box after Check: step 3 Socks (height 187 → 150 → 200 → 162 → 185 → 187, settles risen by the panel), step 8 "The order of actions."
+  (76 → 61 → 66 → 76); a wrong pick (step 3 Shoes) stays 166×187 and does not bounce. **Options that fade away on a right answer do not bounce** (`play` is
+  `state === "correct" && !fadeOut`): on the 3D route that is step 11 (Pick Up moves the robot, so the cards clear; checked: its card stays 163×184). Not looked at as a picture mid-jump, nor on 7, 10, 11, 19, 20, 25, 26, dark mode, a real phone.
+- **Place 12 ("Arrange the instructions!", `ArrangeScreen`) has the design's empty slots (2026-11-22, Figma crop + CSS):** on the 3D route only
+  (`useSequenceFlow().designSlots`, true there; the 2D route keeps its solid wells). Slots are 112×119, `#EEF0F7`, 2 px dashed `#BFC7D5`, radius 8, 14 apart, with a
+  40 px `#BFC7D5` badge and the number in Poppins 500 16 px white (`designSlots` in `arrangeGeometry` / `ArrangeBoard`, board `GEO_3D`). **The cards are the
+  same 112×119 and there are three** (second crop + CSS, same day): Place in target (blue, lower case "target"), Pick Up (pink `#FFF4F6`), and a third in lavender `#F6F4FE`: the crop shows "Pick Up" twice, but the user
+  didn't want two Pick Ups and chose "a different name" for the extra; they gave none, so it is **"Put Down"** (the commands module's third command, icon `step-13.2.svg`; a name to confirm),
+  for the two slots, which stand centred over the row of cards (`cardCount` in `arrangeGeometry`; `CARDS_3D`, board `GEO_3D`). Card = 4 px white border, 52 px picture box (image 52×36),
+  16 px / 600 name with line height 100 %, 6 px gap (`design` on `ArrangeCard`). Put Down is never right (kind `putdown`). They share the geometry
+  with the slots, so a card fills the slot it lands in. The 14 px gap is read off the crops (3 × 112 + 2 × 14 = 364 of the 390 frame). **Every other empty drag slot on the 3D route has the same look** (asked for: "everywhere the empty drag card should be of same design"): dashed `#BFC7D5` on `#EEF0F7` with the 40 px badge
+  (`DESIGN_SLOT` / `DESIGN_BADGE` exported from `ArrangeBoard`) on the boards of 15, 18, 21, 24 and the places of `ChipList` (22, 23), each keeping its own size (108×84/100/124, 166×116, 80×80);
+  only screen 12's slots and cards were resized to 112×119. The 2D route keeps the old wells. The cards of those screens, and screen 12's shadow behind a card, are as before. **Each card leaves a plain shadow in its tray place** (asked for: "cards don't have any shadow left behind"; the standing "drag shadow always there" rule of the user's other branches, which `ArrangeBoard` here did not have): a `rgba(0,0,0,0.09)` 112×119 shape behind each card from the start, shown when the card is dragged or tapped into a slot; on the 3D design board only (`designSlots`), the other arrange screens (15, 18, 21, 24) still have none. **The extra card drops down on Check** (asked for: "one extra option should drop down"; chosen from three readings): the card in no slot falls
+  110 px and fades in 0.45 s (`dropUnused` on `ArrangeBoard`, `dropped` on `ArrangeCard`), right or wrong, then the board clears 0.4 s later (`fadeDelay` on `ArrangeDock`, which also
+  delays the right-order rise). On "Try again" it comes back to its place. 3D route only. Checked in headless Chrome 390×844: open, three cards, cards tapped into the slots, the fall sampled (see the
+  checked list in the reply of that day; not looked at: dark mode, the wrong-order path end to end, Try again, 360×640 with three cards, a real phone).
+- **Place 13, "Meet the Sequence" (2026-11-22, `Meet3DScreen`, from a Figma crop):** not the original `MeetSequenceScreen` any more (that stays on the 2D route). Title without the
+  full stop, two flat 166×187 cards ("Pick up", "Place in target", `PictureCards flat`, top Figma 165), and the character big underneath, close up (`framing="bust"`, box 690 tall from Figma top 228,
+  head about 14 px under the cards, faded low down and running past the screen's bottom). **Gone: the small face with Hex's bubble row at the top, and the play button with the word-by-word
+  definition.** The character says both clips instead (`meetSequence`, then `sequenceClip`, so the definition is heard, not read; the typed-reading fallback uses the definition's words).
+  Not in the design crop and so not added: the thumbs-up pose (the crop is a render; we only have Idle and Talking). Checked in headless Chrome 390×844 (open). Not checked: other sizes, dark mode,
+  Boy/Anime, the voice (headless has none), a real phone.
 - **Steps 10-12 (2026-11-21)** are the original screens `MeetSequenceScreen` (10), `RevealCardScreen` (11) and `DressArrangeScreen` (12), each
   asking `useSequenceFlow` for its place/next/back like `ArrangeScreen`; 10 and 11 are otherwise as they are (the face in the bubble on 10).
   **12 is a guess:** it is the only story screen between 11 and the Hex ones, but the Figma title for frame 12 is "Let's guess first" and the

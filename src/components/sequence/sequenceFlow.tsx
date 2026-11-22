@@ -18,11 +18,17 @@ type SequenceFlow = {
   position: (step: number) => number;
   next: (step: number) => string;
   previous: (step: number) => string;
+  /** The right answer of a quiz bounces (`RightBounce`, with its shine and stars): on the 3D route only. */
+  bounceRight: boolean;
+  /** Every empty drag slot (`ArrangeBoard`, `ChipList`) has the 3D design's look, and screen 12's board its 112 x 119 cards (`ArrangeScreen`): on the 3D route only. */
+  designSlots: boolean;
 };
 
-const ORIGINAL: SequenceFlow = { total: SEQUENCE_STEPS, position: (step) => step, next: sequenceNext, previous: sequencePrevious };
+const ORIGINAL: SequenceFlow = { total: SEQUENCE_STEPS, position: (step) => step, next: sequenceNext, previous: sequencePrevious, bounceRight: false, designSlots: false };
 
 const THREE_D: SequenceFlow = {
+  bounceRight: true,
+  designSlots: true,
   total: SEQUENCE_3D_STEPS,
   position: (step) => positionOfStep(step) || step,
   next: (step) => sequence3dNext(positionOfStep(step)),

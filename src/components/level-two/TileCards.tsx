@@ -9,6 +9,7 @@ import { RAISED } from "@/components/ui/raised";
 import { CARDS_RISE, GAP_ABOVE_BUTTONS } from "./AnswerCards";
 import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
+import { RightBounce } from "./RightBounce";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { COLUMN_LEFT, type Choice } from "./levelTwo";
@@ -61,6 +62,8 @@ type TileCardsProps = {
   bottomGap?: number;
   /** How far they rise once the result panel is up (default `CARDS_RISE`). */
   rise?: number;
+  /** The right card (once it is shown as right) bounces once, with its shine and stars (`RightBounce`), as the match boards' right cards do. */
+  bounceRight?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -69,7 +72,7 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, bounceRight = false, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -128,12 +131,20 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
             </motion.button>
           </HintFloat>
         );
-        return bounceIn ? (
-          <BounceIn key={choice.id} index={index} shown={revealed} className="flex min-w-0 flex-1">
+        // A little after the check, so the cards have risen above the result panel by the time it jumps. Cards that fade away (`fadeOut`) don't bounce: nobody would see it.
+        const tile = bounceRight ? (
+          <RightBounce key={choice.id} play={state === "correct" && !fadeOut} delay={0.2} radius={8} className="flex min-w-0 flex-1">
             {card}
-          </BounceIn>
+          </RightBounce>
         ) : (
           card
+        );
+        return bounceIn ? (
+          <BounceIn key={choice.id} index={index} shown={revealed} className="flex min-w-0 flex-1">
+            {tile}
+          </BounceIn>
+        ) : (
+          tile
         );
       })}
     </motion.div>

@@ -131,6 +131,7 @@ export function Compare3DScreen({ quiz, position }: { quiz: SequenceQuiz; positi
         iconGap={12}
         endGap={0}
         fontSize={15}
+        bounceRight
         onPick={setSelectedId}
       />
       <Confetti active={checked && correct} />
