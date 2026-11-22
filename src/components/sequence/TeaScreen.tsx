@@ -12,7 +12,8 @@ import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
-import { SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 const LINE: readonly Span[] = [{ text: "Time for tea! Arrange the steps in order." }];
@@ -43,6 +44,7 @@ const GAP_UNDER_HEX = 12;
  */
 export function TeaScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const { slots, placeIn, tapCard, reset, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
@@ -68,15 +70,15 @@ export function TeaScreen() {
 
   const onContinue = () => {
     if (!checked) check();
-    else if (correct) router.push(sequenceNext(STEP.tea));
+    else if (correct) router.push(flow.next(STEP.tea));
     else tryAgain();
   };
 
   return (
     <LevelTwoShell
-      step={STEP.tea}
-      total={SEQUENCE_STEPS}
-      onBack={() => router.push(sequencePrevious(STEP.tea))}
+      step={flow.position(STEP.tea)}
+      total={flow.total}
+      onBack={() => router.push(flow.previous(STEP.tea))}
       scene={<SoftBackdrop />}
       answer={answer}
       ctaDisabled={!full}
@@ -103,9 +105,8 @@ export function TeaScreen() {
       <CentredRow top={stageTop(BUBBLE_TOP)}>
         <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} />
       </CentredRow>
-      {/* The slots hang right under Hex's line; the cards stand on the button row. */}
-      <ArrangeDock geo={GEO} slotsTop={`${robotBelowDialogue(BUBBLE_TOP, BUBBLE) + GAP_UNDER_HEX}px`}>
-        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
+      <ArrangeDock geo={GEO} rise={checked ? BOARD_RISE : 0}>
+        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} hideShadows={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />

@@ -2,17 +2,18 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { MOVES, MoveTile, type MoveId } from "@/components/level-one/MoveHexScreen";
 import { Teal } from "@/components/level-two/LevelTwoShell";
 import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { ChipList, chipListSize, moveItem, type PlanItem } from "./ChipList";
+import { MoveTile } from "./MoveTile";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
-import { GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { COMMAND_PICTURE, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
@@ -47,17 +48,16 @@ const ROUTES = {
 const BOARD_TOP = 130;
 const LIST_TOP = 424;
 
-/** The game screen's move buttons (see `MoveTile`): Move Forward is Go Straight's box and arrow, Turn Right keeps its own. */
-const PALETTE: Record<Command, { move: MoveId; label: string }> = {
-  forward: { move: "straight", label: "Move Forward" },
-  right: { move: "right", label: "Turn Right" },
+/** The game screen's move buttons (see `MoveTile`): Move Forward is Go Straight's box and arrow, Turn Right keeps its own pink box. */
+const PALETTE: Record<Command, { label: string; look: string }> = {
+  forward: { label: "Move Forward", look: "bg-[#EDFAFE] dark:bg-[#15233A]" },
+  right: { label: "Turn Right", look: "bg-[#FFF4F6] dark:bg-[#33202A]" },
 };
 
 /** A command to add to the list. */
 function PaletteButton({ command, disabled, onPress }: { command: Command; disabled: boolean; onPress: () => void }) {
-  const { move, label } = PALETTE[command];
-  const look = MOVES.find((candidate) => candidate.id === move)!;
-  return <MoveTile label={label} icon={look.icon} look={look.look} disabled={disabled} dim onPress={onPress} />;
+  const { label, look } = PALETTE[command];
+  return <MoveTile label={label} picture={COMMAND_PICTURE[command]} look={look} disabled={disabled} dim onPress={onPress} />;
 }
 
 type Phase = "edit" | "running" | "checked";
@@ -71,6 +71,7 @@ type Phase = "edit" | "running" | "checked";
  */
 export function PlanScreen({ route }: { route: PlanRoute }) {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const config = ROUTES[route];
   const { hex, running, play, reset } = useHexRun(GRID_START, GRID);
   const [items, setItems] = useState<PlanItem[]>([]);
@@ -120,7 +121,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
 
   const onContinue = () => {
     if (editing) run();
-    else if (correct) router.push(sequenceNext(config.step));
+    else if (correct) router.push(flow.next(config.step));
     else tryAgain();
   };
 
@@ -151,6 +152,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
           items={items}
           max={maxCommands}
           disabled={!editing}
+          hideShadows={phase === "checked"}
           onMove={(from, to) => setItems((now) => moveItem(now, from, to))}
           onRemove={(index) => {
             playClickSound();

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, type ComponentRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { AnimationMixer, CanvasTexture, LoopRepeat, type AnimationAction } from "three";
-import type { Character } from "./character";
+import type { Character, LightRig } from "./character";
 
 type Vec3 = [number, number, number];
 
@@ -60,6 +60,11 @@ export const AnimatedCharacter = ({ character, animationId, runToken, playing, o
     const next = playbacks.get(animationId);
     if (!next) return;
     const previous = current.current;
+    // Two animations that are the same clip (a model with one) don't restart each other.
+    if (previous && previous !== next && previous.body === next.body) {
+      current.current = next;
+      return;
+    }
     next.body.reset().play();
     if (previous && previous !== next) {
       previous.body.crossFadeTo(next.body, FADE_SECONDS, false);
@@ -88,7 +93,6 @@ export const AnimatedCharacter = ({ character, animationId, runToken, playing, o
   useEffect(
     () => () => {
       mixer.stopAllAction();
-      mixer.uncacheRoot(character.model);
       current.current = null;
     },
     [mixer, character],
@@ -100,12 +104,12 @@ export const AnimatedCharacter = ({ character, animationId, runToken, playing, o
   return <primitive object={character.scene} />;
 };
 
-/** The light the character is seen in, wherever it is shown. */
-export const SceneLights = () => (
+/** The light the character is seen in, wherever it is shown: its own rig (`Character.lights`). */
+export const SceneLights = ({ lights }: { lights: LightRig }) => (
   <>
-    <hemisphereLight args={["#ffffff", "#8a94a6", 1.3]} />
-    <directionalLight position={[3, 5, 4]} intensity={2.8} />
-    <directionalLight position={[-4, 3, -3]} intensity={1.6} color="#7fe0c8" />
+    <hemisphereLight args={["#ffffff", lights.ground, lights.ambient]} />
+    <directionalLight position={[3, 5, 4]} intensity={lights.key} />
+    <directionalLight position={[-4, 3, -3]} intensity={lights.rim} color="#7fe0c8" />
   </>
 );
 
@@ -211,7 +215,7 @@ export const CharacterScene = ({
     // Nothing moves while paused: stop drawing frames until the user does something.
     frameloop={playing || autoRotate ? "always" : "demand"}
   >
-    <SceneLights />
+    <SceneLights lights={character.lights} />
 
     <AnimatedCharacter
       character={character}

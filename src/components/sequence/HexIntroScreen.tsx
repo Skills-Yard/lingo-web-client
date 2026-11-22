@@ -5,11 +5,13 @@ import { Teal } from "@/components/level-two/LevelTwoShell";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
 import { ROW_START } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 
 /** "Let's help HEX reach the energy!": Hex at the left of a straight row, the battery three tiles on; "Let's Try" starts it. */
 export function HexIntroScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   return (
     <HexScreen
       step={STEP.hexIntro}
@@ -24,7 +26,7 @@ export function HexIntroScreen() {
       tip="HEX needs energy! Give it instructions to reach the battery."
       tipTop={340}
       ctaLabel="Let’s Try"
-      onContinue={() => router.push(sequenceNext(STEP.hexIntro))}
+      onContinue={() => router.push(flow.next(STEP.hexIntro))}
     />
   );
 }

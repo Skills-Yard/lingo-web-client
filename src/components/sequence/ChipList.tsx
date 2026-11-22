@@ -3,8 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import { RAISED_DRAG } from "@/components/ui/raised";
-import { ArrowUp, RotateCw, X } from "lucide-react";
-import { COMMAND_LABEL, type Command } from "./hexGrid";
+import { X } from "lucide-react";
+import { SlotImage } from "@/components/level-two/SlotImage";
+import { DESIGN_BADGE, DESIGN_SLOT } from "./ArrangeBoard";
+import { COMMAND_LABEL, COMMAND_PICTURE, type Command } from "./hexGrid";
+import { useSequenceFlow } from "./sequenceFlow";
 
 /** A command in the learner's list; `id` keeps a chip itself as the order changes. */
 export type PlanItem = { id: number; command: Command };
@@ -31,17 +34,27 @@ const placeOf = (index: number, max: number) => {
   const row = Math.floor(index / perRow);
   const inRow = Math.min(perRow, max - row * perRow);
   const offset = ((perRow - inRow) * (CHIP.width + GAP)) / 2;
-  return { x: offset + (index % perRow) * (CHIP.width + GAP), y: row * (CHIP.height + GAP) };
+  return {
+    x: offset + (index % perRow) * (CHIP.width + GAP),
+    y: row * (CHIP.height + GAP),
+  };
 };
 
 /** How big the list is when it holds up to `max` chips. */
 export const chipListSize = (max: number) => {
   const { rows, perRow } = rowsFor(max);
-  return { width: perRow * CHIP.width + (perRow - 1) * GAP, height: rows * CHIP.height + (rows - 1) * GAP };
+  return {
+    width: perRow * CHIP.width + (perRow - 1) * GAP,
+    height: rows * CHIP.height + (rows - 1) * GAP,
+  };
 };
 
 /** `items` with the one at `from` taken out and put back at `to`. */
-export const moveItem = <T,>(items: readonly T[], from: number, to: number): T[] => {
+export const moveItem = <T,>(
+  items: readonly T[],
+  from: number,
+  to: number,
+): T[] => {
   const next = [...items];
   const [moved] = next.splice(from, 1);
   next.splice(to, 0, moved);
@@ -69,7 +82,14 @@ function Chip({
   const at = placeOf(index, max);
   const x = useMotionValue(at.x);
   const y = useMotionValue(at.y);
-  const drag = useRef<{ startX: number; startY: number; fromX: number; fromY: number; scale: number; moved: boolean } | null>(null);
+  const drag = useRef<{
+    startX: number;
+    startY: number;
+    fromX: number;
+    fromY: number;
+    scale: number;
+    moved: boolean;
+  } | null>(null);
   const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
@@ -83,99 +103,95 @@ function Chip({
     animate(y, at.y, SPRING);
   };
 
-  // What is on the chip (its arrow and its word).
-  const glyph = (
-    <>
-      {item.command === "forward" ? (
-        <ArrowUp aria-hidden className="size-7 shrink-0 text-[#0F88E5]" strokeWidth={3} />
-      ) : (
-        <RotateCw aria-hidden className="size-7 shrink-0 text-[#E07B1F]" strokeWidth={3} />
-      )}
-      <span className="text-center text-[10px] leading-3 font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">{COMMAND_LABEL[item.command]}</span>
-    </>
-  );
-
+  // (The chip's shadow in its place is drawn by `ChipList`, behind the chips, so it can fade out with the result popup.)
   return (
     <>
-    {/* The chip's shadow in its place: a plain shape the size of the chip, with nothing in it, there from the start behind the chip (which covers it, and which it appears with), so it is already showing when the chip is dragged away and stays in its place while the chip is away. It follows the chip's place when the list reorders. */}
-    <motion.span
-      aria-hidden
-      initial={{ opacity: 0, left: at.x, top: at.y }}
-      animate={{ opacity: 1, left: at.x, top: at.y }}
-      transition={{ opacity: { duration: 0.2 }, left: SPRING, top: SPRING }}
-      className="pointer-events-none absolute rounded-[10px]"
-      style={{ width: CHIP.width, height: CHIP.height, zIndex: 0, backgroundColor: "rgba(0,0,0,0.09)" }}
-    />
-    <motion.button
-      type="button"
-      layout={false}
-      disabled={disabled}
-      aria-label={`${index + 1}. ${COMMAND_LABEL[item.command]} (tap to remove)`}
-      initial={{ scale: 0.6, opacity: 0 }}
-      animate={{ scale: dragging ? 1.06 : 1, opacity: 1 }}
-      onPointerDown={(event) => {
-        const box = event.currentTarget;
-        box.setPointerCapture(event.pointerId);
-        drag.current = {
-          startX: event.clientX,
-          startY: event.clientY,
-          fromX: x.get(),
-          fromY: y.get(),
-          scale: box.getBoundingClientRect().width / box.offsetWidth || 1,
-          moved: false,
-        };
-        setDragging(true);
-      }}
-      onPointerMove={(event) => {
-        const now = drag.current;
-        if (!now) return;
-        const dx = event.clientX - now.startX;
-        const dy = event.clientY - now.startY;
-        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
-        x.set(now.fromX + dx / now.scale);
-        y.set(now.fromY + dy / now.scale);
-      }}
-      onPointerUp={() => {
-        const now = drag.current;
-        drag.current = null;
-        setDragging(false);
-        if (!now) return;
-        if (!now.moved) return onRemove(index);
-        let nearest = index;
-        let nearestDistance = Infinity;
-        for (let place = 0; place < count; place += 1) {
-          const target = placeOf(place, max);
-          const distance = Math.hypot(x.get() - target.x, y.get() - target.y);
-          if (distance < nearestDistance) {
-            nearest = place;
-            nearestDistance = distance;
+      <motion.button
+        type="button"
+        layout={false}
+        disabled={disabled}
+        aria-label={`${index + 1}. ${COMMAND_LABEL[item.command]} (tap to remove)`}
+        initial={{ scale: 0.6, opacity: 0 }}
+        animate={{ scale: dragging ? 1.06 : 1, opacity: 1 }}
+        onPointerDown={(event) => {
+          const box = event.currentTarget;
+          box.setPointerCapture(event.pointerId);
+          drag.current = {
+            startX: event.clientX,
+            startY: event.clientY,
+            fromX: x.get(),
+            fromY: y.get(),
+            scale: box.getBoundingClientRect().width / box.offsetWidth || 1,
+            moved: false,
+          };
+          setDragging(true);
+        }}
+        onPointerMove={(event) => {
+          const now = drag.current;
+          if (!now) return;
+          const dx = event.clientX - now.startX;
+          const dy = event.clientY - now.startY;
+          if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
+          x.set(now.fromX + dx / now.scale);
+          y.set(now.fromY + dy / now.scale);
+        }}
+        onPointerUp={() => {
+          const now = drag.current;
+          drag.current = null;
+          setDragging(false);
+          if (!now) return;
+          if (!now.moved) return onRemove(index);
+          let nearest = index;
+          let nearestDistance = Infinity;
+          for (let place = 0; place < count; place += 1) {
+            const target = placeOf(place, max);
+            const distance = Math.hypot(x.get() - target.x, y.get() - target.y);
+            if (distance < nearestDistance) {
+              nearest = place;
+              nearestDistance = distance;
+            }
           }
-        }
-        if (nearestDistance <= REACH && nearest !== index) onMove(index, nearest);
-        else home();
-      }}
-      onPointerCancel={() => {
-        drag.current = null;
-        setDragging(false);
-        home();
-      }}
-      style={{ x, y, width: CHIP.width, height: CHIP.height, zIndex: dragging ? 2 : 1 }}
-      className={`group pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center gap-1 rounded-[10px] border-[3px] border-white px-1 ${RAISED_DRAG} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${
-        item.command === "forward" ? "bg-[#EDFAFE] [--edge:#BFE6F2] dark:bg-[#15233A]" : "bg-[#FEF8EC] [--edge:#F2DFB8] dark:bg-[#2A2218]"
-      }`}
-    >
-      {/* Its place in the order, on the corner, as on the command cards. */}
-      <span className="absolute -top-2 -left-2 flex size-5 items-center justify-center rounded-full border-2 border-white bg-[#D9DEE3] text-[10px] leading-none font-semibold text-[#5C6670] dark:border-[#818185] dark:bg-[#3A3F47] dark:text-white">
-        {index + 1}
-      </span>
-      {/* Says a tap takes it out. */}
-      {!disabled && (
-        <span className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-[#9AA3AE] text-white dark:bg-white/40">
-          <X aria-hidden className="size-2.5" strokeWidth={3.5} />
+          if (nearestDistance <= REACH && nearest !== index)
+            onMove(index, nearest);
+          else home();
+        }}
+        onPointerCancel={() => {
+          drag.current = null;
+          setDragging(false);
+          home();
+        }}
+        style={{
+          x,
+          y,
+          width: CHIP.width,
+          height: CHIP.height,
+          zIndex: dragging ? 2 : 1,
+        }}
+        className={`group pointer-events-auto absolute top-0 left-0 flex touch-none flex-col items-center justify-center gap-1 rounded-[10px] border-[3px] border-white px-1 ${RAISED_DRAG} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${
+          item.command === "forward"
+            ? "bg-[#EDFAFE] [--edge:#BFE6F2] dark:bg-[#15233A]"
+            : "bg-[#FEF8EC] [--edge:#F2DFB8] dark:bg-[#2A2218]"
+        }`}
+      >
+        {/* Its place in the order, on the corner, as on the command cards. */}
+        <span className="absolute -top-2 -left-2 flex size-5 items-center justify-center rounded-full border-2 border-white bg-[#D9DEE3] text-[10px] leading-none font-semibold text-[#5C6670] dark:border-[#818185] dark:bg-[#3A3F47] dark:text-white">
+          {index + 1}
         </span>
-      )}
-      {glyph}
-    </motion.button>
+        {/* Says a tap takes it out. */}
+        {!disabled && (
+          <span className="absolute -top-1.5 -right-1.5 flex size-4 items-center justify-center rounded-full bg-[#9AA3AE] text-white dark:bg-white/40">
+            <X aria-hidden className="size-2.5" strokeWidth={3.5} />
+          </span>
+        )}
+        {/* 40 px: the chip is 80 tall, so the picture, the gap and two lines of the name fit inside its border. */}
+        <SlotImage
+          file={COMMAND_PICTURE[item.command]}
+          className="size-10 max-h-none max-w-none shrink-0"
+        />
+        <span className="text-center text-[10px] leading-3 font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">
+          {COMMAND_LABEL[item.command]}
+        </span>
+      </motion.button>
     </>
   );
 }
@@ -189,15 +205,20 @@ export function ChipList({
   items,
   max,
   disabled,
+  hideShadows = false,
   onMove,
   onRemove,
 }: {
   items: readonly PlanItem[];
   max: number;
   disabled: boolean;
+  /** The chips' shadows fade out (the result popup is up, right or wrong) and come back when this turns off. */
+  hideShadows?: boolean;
   onMove: (from: number, to: number) => void;
   onRemove: (index: number) => void;
 }) {
+  // On the 3D route the empty places have the design's look (see `DESIGN_SLOT`), as on every board.
+  const designed = useSequenceFlow().designSlots;
   return (
     <>
       {/* The empty places, as on "Something went wrong!": numbered wells. */}
@@ -205,16 +226,58 @@ export function ChipList({
         <div
           key={`place-${index}`}
           aria-hidden
-          className="absolute flex items-center justify-center rounded-[10px] border-2 border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
-          style={{ left: placeOf(index, max).x, top: placeOf(index, max).y, width: CHIP.width, height: CHIP.height }}
+          className={`absolute flex items-center justify-center rounded-[10px] border-2 ${
+            designed
+              ? DESIGN_SLOT
+              : "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+          }`}
+          style={{
+            left: placeOf(index, max).x,
+            top: placeOf(index, max).y,
+            width: CHIP.width,
+            height: CHIP.height,
+          }}
         >
-          <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
-            {index + 1}
-          </span>
+          {designed ? (
+            <span className={DESIGN_BADGE}>{index + 1}</span>
+          ) : (
+            <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
+              {index + 1}
+            </span>
+          )}
         </div>
       ))}
+      {/* Each chip leaves a plain shadow (its shape, nothing in it) in its place, behind it: shown the moment the chip is dragged off. It comes in with the chip (they are added mid-screen) and follows its place when the order changes. */}
       {items.map((item, index) => (
-        <Chip key={item.id} item={item} index={index} count={items.length} max={max} disabled={disabled} onMove={onMove} onRemove={onRemove} />
+        <motion.span
+          key={`shadow-${item.id}`}
+          aria-hidden
+          initial={{
+            opacity: 0,
+            left: placeOf(index, max).x,
+            top: placeOf(index, max).y,
+          }}
+          animate={{
+            opacity: hideShadows ? 0 : 1,
+            left: placeOf(index, max).x,
+            top: placeOf(index, max).y,
+          }}
+          transition={{ ...SPRING, opacity: { duration: 0.2 } }}
+          className="pointer-events-none absolute rounded-[10px] bg-[rgba(0,0,0,0.09)] dark:bg-white/10"
+          style={{ width: CHIP.width, height: CHIP.height, zIndex: 0 }}
+        />
+      ))}
+      {items.map((item, index) => (
+        <Chip
+          key={item.id}
+          item={item}
+          index={index}
+          count={items.length}
+          max={max}
+          disabled={disabled}
+          onMove={onMove}
+          onRemove={onRemove}
+        />
       ))}
     </>
   );

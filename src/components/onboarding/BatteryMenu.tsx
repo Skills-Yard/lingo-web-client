@@ -6,10 +6,10 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import type { HTMLMotionProps } from "framer-motion";
-import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize } from "lucide-react";
+import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize, UserRound } from "lucide-react";
 import { setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
 import { useFullscreen } from "@/hooks/useFullscreen";
-import { energyHref } from "@/lib/routes";
+import { chooseCharacterHref, energyHref } from "@/lib/routes";
 
 /** The fills of Level 1's answer cards (see InstructionQuizScreen), at rest. */
 const TINTS = {
@@ -65,8 +65,9 @@ type BatteryMenuProps = {
 
 /**
  * A tap on the battery opens the Energy screen. TEMPORARY — FOR DEVS ONLY: a
- * hold opens a hidden testing panel (theme, full screen, infinite battery);
- * nothing about it looks pressable (no pointer, hover or focus ring).
+ * hold opens a hidden testing panel (full screen, infinite battery, and "Change
+ * character", which opens `/choose-character`); nothing about it looks pressable
+ * (no pointer, hover or focus ring).
  */
 export function BatteryMenu({ children, className = "", buttonClassName = "", onBack, extraOptions }: BatteryMenuProps) {
   const fullscreen = useFullscreen();
@@ -170,6 +171,15 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
             <PanelButton onClick={() => setBatteryUnlimited(!unlimited)}>
               <InfinityIcon className="h-5 w-5" />
               {unlimited ? "Back to normal battery" : "Infinite battery"}
+            </PanelButton>
+            <PanelButton
+              onClick={() => {
+                setOpen(false);
+                router.push(chooseCharacterHref(window.location.pathname + window.location.search));
+              }}
+            >
+              <UserRound className="h-5 w-5" />
+              Change character
             </PanelButton>
             {extraOptions?.(() => setOpen(false))}
           </motion.div>

@@ -2,16 +2,17 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUp, RotateCw } from "lucide-react";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { Teal } from "@/components/level-two/LevelTwoShell";
+import { SlotImage } from "@/components/level-two/SlotImage";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
-import { COMMAND_LABEL, GRID, GRID_START, sameTile, type Command } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { COMMAND_LABEL, COMMAND_PICTURE, GRID, GRID_START, sameTile, type Command } from "./hexGrid";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
@@ -21,11 +22,14 @@ const BATTERY = { col: 1, row: 1 };
 const ANSWER: readonly Command[] = ["forward", "right", "forward"];
 const FORWARD_TINT = "bg-[#EDFAFE] dark:bg-[#15233A]";
 const RIGHT_TINT = "bg-[#FEF8EC] dark:bg-[#2A2218]";
+/** The game buttons' pictures, from `public/animations/svg/game-path/` (52 x 52): the straight arrow and the turn-right arrow. */
+const GO_STRAIGHT = <SlotImage file={COMMAND_PICTURE.forward} className="size-[52px] max-h-none max-w-none" />;
+const TURN_RIGHT = <SlotImage file={COMMAND_PICTURE.right} className="size-[52px] max-h-none max-w-none" />;
 /** MOVE FORWARD can be used twice and TURN RIGHT once. */
 const CARDS: readonly ArrangeCardDef[] = [
-  { id: "forward-1", kind: "forward", text: COMMAND_LABEL.forward, art: <ArrowUp aria-hidden className="size-9 text-[#0F88E5]" strokeWidth={3} />, tint: FORWARD_TINT },
-  { id: "right-1", kind: "right", text: COMMAND_LABEL.right, art: <RotateCw aria-hidden className="size-9 text-[#E07B1F]" strokeWidth={3} />, tint: RIGHT_TINT },
-  { id: "forward-2", kind: "forward", text: COMMAND_LABEL.forward, art: <ArrowUp aria-hidden className="size-9 text-[#0F88E5]" strokeWidth={3} />, tint: FORWARD_TINT },
+  { id: "forward-1", kind: "forward", text: COMMAND_LABEL.forward, art: GO_STRAIGHT, tint: FORWARD_TINT },
+  { id: "right-1", kind: "right", text: COMMAND_LABEL.right, art: TURN_RIGHT, tint: RIGHT_TINT },
+  { id: "forward-2", kind: "forward", text: COMMAND_LABEL.forward, art: GO_STRAIGHT, tint: FORWARD_TINT },
 ];
 const GEO = arrangeGeometry({ mode: "rows", card: { width: 108, height: 100 }, count: 3, gap: 8, lane: 12, slotsOnTop: true, solidSlots: true });
 /** The picture's place (stage px) and how far down the arrange board's slots hang: just under the picture, clear of it, and the result panel stays below them (the cards stand on the button row). */
@@ -45,6 +49,7 @@ type Phase = "edit" | "running" | "checked";
  */
 export function HexOrderScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const { slots, placeIn, tapCard, reset, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const { hex, running, play, reset: resetHex } = useHexRun(GRID_START, GRID);
   const [phase, setPhase] = useState<Phase>("edit");
@@ -101,7 +106,7 @@ export function HexOrderScreen() {
 
   const onContinue = () => {
     if (phase === "edit") check();
-    else if (correct) router.push(sequenceNext(STEP.hexOrder));
+    else if (correct) router.push(flow.next(STEP.hexOrder));
     else tryAgain();
   };
 
@@ -135,9 +140,14 @@ export function HexOrderScreen() {
       ctaDisabled={phase === "edit" ? !full || running : phase === "running"}
       onContinue={onContinue}
     >
+<<<<<<< HEAD
       {/* The slots hang under the picture; the cards stand on the button row. */}
       <ArrangeDock geo={GEO} slotsTop={`${BOARD_TOP}px`} withHint>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={hintedId} onPlace={placeIn} onTap={tapCard} />
+=======
+      <ArrangeDock geo={GEO} top={BOARD_TOP}>
+        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={hintedId} hideShadows={phase === "checked"} onPlace={placeIn} onTap={tapCard} />
+>>>>>>> 82c3790f1bdd86121d01f5e221db178fe94a871d
       </ArrangeDock>
     </HexScreen>
   );
