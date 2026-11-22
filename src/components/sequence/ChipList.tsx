@@ -173,12 +173,15 @@ export function ChipList({
   items,
   max,
   disabled,
+  hideShadows = false,
   onMove,
   onRemove,
 }: {
   items: readonly PlanItem[];
   max: number;
   disabled: boolean;
+  /** The chips' shadows fade out (the result popup is up, right or wrong) and come back when this turns off. */
+  hideShadows?: boolean;
   onMove: (from: number, to: number) => void;
   onRemove: (index: number) => void;
 }) {
@@ -204,6 +207,18 @@ export function ChipList({
             </span>
           )}
         </div>
+      ))}
+      {/* Each chip leaves a plain shadow (its shape, nothing in it) in its place, behind it: shown the moment the chip is dragged off. It comes in with the chip (they are added mid-screen) and follows its place when the order changes. */}
+      {items.map((item, index) => (
+        <motion.span
+          key={`shadow-${item.id}`}
+          aria-hidden
+          initial={{ opacity: 0, left: placeOf(index, max).x, top: placeOf(index, max).y }}
+          animate={{ opacity: hideShadows ? 0 : 1, left: placeOf(index, max).x, top: placeOf(index, max).y }}
+          transition={{ ...SPRING, opacity: { duration: 0.2 } }}
+          className="pointer-events-none absolute rounded-[10px] bg-[rgba(0,0,0,0.09)] dark:bg-white/10"
+          style={{ width: CHIP.width, height: CHIP.height, zIndex: 0 }}
+        />
       ))}
       {items.map((item, index) => (
         <Chip key={item.id} item={item} index={index} count={items.length} max={max} disabled={disabled} onMove={onMove} onRemove={onRemove} />

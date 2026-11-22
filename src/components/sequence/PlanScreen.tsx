@@ -158,6 +158,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
           items={items}
           max={maxCommands}
           disabled={!editing}
+          hideShadows={phase === "checked"}
           onMove={(from, to) => setItems((now) => moveItem(now, from, to))}
           onRemove={(index) => {
             playClickSound();

@@ -148,7 +148,7 @@ export function DressArrangeScreen() {
       </CentredRow>
       {/* Once checked the board fades, so what he does can be seen; a right order also sends it up as it goes. */}
       <ArrangeDock geo={GEO} rise={checked && correct ? BOARD_RISE : 0} fade={checked}>
-        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
+        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} hideShadows={resultShown} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />

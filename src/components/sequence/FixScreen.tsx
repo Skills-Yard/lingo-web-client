@@ -156,7 +156,7 @@ export function FixScreen() {
         <ReplayButton onPress={() => play(commands)} disabled={phase !== "edit" || running || commands.length === 0} />
       </motion.div>
       <ArrangeDock geo={GEO} withHint rise={LIFT + (phase === "checked" ? BOARD_RISE : 0)}>
-        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={phase === "edit" && nextHintId(CARDS, slots, ANSWER) === hintCard ? hintCard : null} onPlace={placeIn} onTap={tapCard} />
+        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={phase === "edit" && nextHintId(CARDS, slots, ANSWER) === hintCard ? hintCard : null} hideShadows={phase === "checked"} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
     </HexScreen>
   );

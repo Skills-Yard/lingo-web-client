@@ -264,6 +264,7 @@ export function ArrangeBoard({
   disabled,
   hintedId = null,
   dropUnused = false,
+  hideShadows = false,
   onPlace,
   onTap,
   slotContent,
@@ -276,6 +277,8 @@ export function ArrangeBoard({
   hintedId?: string | null;
   /** Cards that are in no slot fall away and fade (the extra cards, once the answer is checked). */
   dropUnused?: boolean;
+  /** The cards' shadows in the tray fade out (the result popup is up, right or wrong) and come back when this turns off (trying again). */
+  hideShadows?: boolean;
   onPlace: (id: string, slot: number | null) => void;
   /** Tapping a card; without it a tap does nothing (cards that can only be swapped). */
   onTap?: (id: string) => void;
@@ -311,13 +314,15 @@ export function ArrangeBoard({
           )}
         </div>
       ))}
-      {/* The 3D design's cards each leave a plain shadow (their shape, nothing in it) in their place in the tray. It is there from the start, behind the card, which covers it, so the card shows it the moment it is dragged off. */}
-      {geo.designSlots &&
-        geo.tray &&
+      {/* Every card leaves a plain shadow (its shape, nothing in it) in its place in the tray, on every board. It is there from the start, behind the card, which covers it, so the card shows it the moment it is dragged off. */}
+      {geo.tray &&
         cards.map((card, index) => (
-          <div
+          <motion.div
             key={`shadow-${card.id}`}
             aria-hidden
+            initial={false}
+            animate={{ opacity: hideShadows ? 0 : 1 }}
+            transition={{ duration: 0.25 }}
             className="pointer-events-none absolute rounded-[8px] bg-[rgba(0,0,0,0.09)] dark:bg-white/10"
             style={{ left: geo.home(index).x, top: geo.home(index).y, width: geo.card.width, height: geo.card.height, zIndex: 0 }}
           />
