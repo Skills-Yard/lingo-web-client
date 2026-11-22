@@ -5,15 +5,15 @@ import { disposeCharacter, loadCharacter, type Character, type LoadProgress } fr
 import type { CharacterId } from "./characterLook";
 
 /*
- * The characters of the screens that own their canvas: the `/character` viewer and the mentor
- * picker's card. Each used to free its character the moment it closed, so opening either again
+ * The characters of the screens that own their canvas: the `/character` viewer and the
+ * `/choose-character` page. Each used to free its character the moment it closed, so opening either again
  * downloaded, parsed and decoded the same 7-15 MB file again, with its loading bar each time.
  * Here a character is kept for `KEEP_MS` after the last screen that showed it lets go, and
  * taken up again at once if one asks inside that time.
  *
  * Not for the shared character the 3D module's screens draw (`sharedCharacter.ts`): that one
- * is a canvas of its own and can be on screen together with the picker's, and a character's
- * scene graph can only be in one canvas at a time. The viewer and the picker are never open
+ * is a canvas of its own, and a character's scene graph can only be in one canvas at a time,
+ * so it stays a separate copy. The viewer and the `/choose-character` page are never open
  * together (the viewer has no battery), so they can share these.
  */
 

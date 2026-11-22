@@ -11,7 +11,7 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 > **Three characters now: `girl.glb`, `Male.glb` (Boy) and `Male_anime.glb` (Anime)** (2026-11-20; between 11-19 and 11-20 the
 > "male" was the anime file and `Male.glb` was unused; `Character_Final.glb` is still unused). Everything below that says
 > "Character_Final" / Levitate / Sitting / Gesture / lip-sync describes the old model. What changed, and why:
-> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "Change character" opens the mentor picker (see "Select your
+> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "Change character" opens the page `/choose-character` (see "Select your
 >   Mentor" below; it replaced the Girl / Boy / Anime row, 2026-11-22). Ids `girl`, `boy`, `anime`. The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
 >   pull three in; a saved `"male"` from the two-choice days is read as `anime`). `sharedCharacter.ts` loads the picked one
 >   (default girl); a switch loads the other in the background (the button says "Boy…" meanwhile), the screens then switch
@@ -173,20 +173,23 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   first on a misreading and taken out again: `FramingCamera` still follows only the hips across.)
 - **The battery and "Select your Mentor" (2026-11-21 design image; reworked 2026-11-22 on request).** **A tap on the battery opens the
   Energy screen everywhere, the 3D route included** (the 11-21 override, `batteryTap.tsx`, is gone). **Holding it opens the dev panel, which
-  has a "Change character" button** (`BatteryMenu`) that opens `MentorPicker` (`character3d/MentorPicker.tsx`, moved from `sequence/`). The
-  picker works on every screen that has the battery, not only the 3D route; `BatteryMenu` loads it with `next/dynamic` (`ssr: false`) the
-  first time it is opened, so three.js stays out of the other screens' bundles.
-  One card at a time over a dimmed screen: title, the name in a pill, the character, round arrows at its sides (they go round the three:
+  has a "Change character" button** (`BatteryMenu`) that goes to **`/choose-character?from=<where the battery is>`** (`chooseCharacterHref` in
+  `lib/routes.ts`). **It was a popup (`MentorPicker`) until 2026-11-22, when it became a page on request; `MentorPicker.tsx` is deleted.**
+  The page works from every screen that has the battery, not only the 3D route. Files: `app/choose-character/page.tsx` →
+  `ChooseCharacterRoute.tsx` (reads `from`, `router.replace`s to it on Choose / Back / Escape, `/home` when opened by URL with no `from`;
+  `replace`, so the browser's Back does not open the page again) → `ChooseCharacterScreen.tsx` (the UI).
+  One mentor at a time, full screen: Back button and title "Select your Mentor", the name in a pill, the character, round arrows at its sides (they go round the three:
   Rio = `boy`, Veena = `girl`, Zane = `anime`, `MENTORS` in `characterLook.ts`; the names are guesses from the design image, whose
-  characters are not ours) and a "Choose …" `Button3D`. The card's colour and arrows follow the mentor (`THEMES` in `MentorPicker.tsx`,
-  guessed from the image, with dark variants). **The character on the card is the real model, idling** (`girl.glb`, `Male.glb`,
+  characters are not ours) and a "Choose …" `Button3D`. The page's colour and arrows follow the mentor (`THEMES` in `ChooseCharacterScreen.tsx`,
+  guessed from the image, with dark variants; the 430 px column is centred, the colour fills the viewport). The canvas's straight bottom edge (head to thigh) fades out with a mask over its
+  lowest 18 %. **The character is the real model, idling** (`girl.glb`, `Male.glb`,
   `Male_anime.glb`), not a picture: `MentorStage.tsx` is one R3F canvas (camera level at `[0, 1.25, 2.4]`, head to thigh) whose character is
-  swapped as the arrows move. `mentorPreviews.ts` loads each model when its card first comes up (a ring and a percentage until then, "Try again" if
-  it fails), keeps them while the picker is open, and frees them all 1 s after it closes. They are **separate copies from the shared
-  character** (`sharedCharacter.ts`), so on the 3D route the current one is loaded twice (two canvases cannot share one scene graph); the
-  GPU memory (the girl's 8192² texture) is the cost, worth watching on phones. "Choose" calls `setCharacter`; the button says "Loading…"
-  while the shared character loads and the card closes when it is on show (at once on a screen with no shared character). A tap outside or Escape
-  closes it with the character unchanged. `public/images/mentors/{boy,girl,anime}.webp` (the old renders) are **no longer used**.
+  swapped as the arrows move. `characterCache.ts` loads each model when its mentor first comes up (a ring and a percentage until then, "Try again" if
+  it fails), keeps them while the page is open, and frees them 2 minutes after it closes. They are **separate copies from the shared
+  character** (`sharedCharacter.ts`); the page has no shared canvas, so nothing is loaded twice any more, but the GPU memory (the girl's 8192² texture) is the cost, worth watching on phones.
+  "Choose" calls `setCharacter` and returns at once: the screen it returns to loads the stored pick itself (no "Loading…" wait on the page any more).
+  The mentor shown is the stored one until an arrow is used (derived from the store each render, so a server-rendered load shows the stored one once known).
+  `public/images/mentors/{boy,girl,anime}.webp` (the old renders) are **no longer used**.
   **`AnimatedCharacter`'s cleanup no longer calls `mixer.uncacheRoot`** (`CharacterScene.tsx`): in dev R3F wraps its tree in StrictMode when
   Next does, so a newly mounted `AnimatedCharacter` ran its effects, the cleanup and its effects again on the same mixer, and `play()` after
   `uncacheRoot` threw `Cannot set properties of undefined (setting '_cacheIndex')` (the picker's canvas showed it every time). `stopAllAction()`
@@ -198,6 +201,15 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   "Choose Zane" stored `{"character":"anime"}`, closed the card and the screen's face became the anime. No console errors beyond the `THREE.Clock`
   and Rive deprecation warnings. **Not checked:** the model's idle motion by eye (only stills), light mode, Escape and the outside tap, the failed-load
   state, a slow connection, a real phone or touch, the picker on the Home/Level screens, the `/energy` return button back to a 3D step.
+  **The popup's checks above are for the old `MentorPicker`; the page that replaced it (2026-11-22) was checked on its own:** headless Chrome
+  driven over CDP (device metrics 390×844 ×2, mobile, mouse events; the script is not kept), dark and light, battery unlimited, on
+  `/module/sequence-3d?step=2`: the hold stays on the screen and the panel lists Back / Full screen / battery / Change character / theme; "Change character" →
+  `/choose-character?from=%2Fmodule%2Fsequence-3d%3Fstep%3D2` (title, Back, both arrows, "Choose Veena"); Veena → Zane → Rio on the arrows (names, colours and
+  models change); "Choose Rio" → `/module/sequence-3d?step=2` again, local storage `{"character":"boy"}`, and the screen's face is Rio's. `tsc` passes. No console
+  errors beyond the `THREE.Clock` and Rive `stateMachines` deprecation warnings. **Not checked:** Back and Escape, a URL with no `from` (→ `/home`), a `from` that
+  is not a path on this site, the page from Home / Level, a direct load of `/choose-character` (the server render and the first paint of a stored non-default pick),
+  Girl/Zane as the pick returning to the 3D screen, a slow connection, a real phone. Plain `--window-size=390` headless Chrome lays out at 500 px (its minimum), which
+  cuts the page: use device-metrics emulation.
   The dev server died during the checks (Turbopack panic, "memory allocation failed": the machine had ~100 MB of 7.5 GB free); if
   `npm run dev` then answers 500 "Unexpected end of JSON input", delete `.next` and start again.
 - **Audio on the 3D route:** place 9 (shoes first) plays Hex's clips of the original screen (`SEQUENCE_AUDIO.socksFirst`: the title, then the
@@ -270,7 +282,7 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   `ArrangeBoard` (rebuilt on **dev's** version, which has the Variable module's `circles`, `lockedIds`, `tapOnly`, `pointedId` …, and my 3D parts re-applied on it: `cardCount`, `designSlots`, `DESIGN_SLOT` / `DESIGN_BADGE`, the `design` card, `dropUnused`,
   `hideShadows` (on dev's own home shadow), `ArrangeDock` `fadeDelay` / `behindPanel`), `ChipList` (one shadow per chip, from the list, so it can fade), `SequenceQuiz3DScreen` and `Compare3DScreen` (the new `useAnswerHint` hand and `pointedId` instead of
   `hinted`; `noHint` is gone from the quiz type, every quiz has the hint), `SequenceQuizScreen` (`onPick={pick}` so the hand goes), and the `noHint: false` lines of `REFLECT_*_3D`. `npx tsc --noEmit`, eslint and `npx next build` pass.
-  **Left for the user (needs an install):** `package.json` / the lockfile now want `@rive-app/canvas` 2.50.0 but `node_modules` still has 2.42.0, so the page loads `public/rive/rive.wasm` (the 2.50.0 one) with the old runtime and the Rive parts (progress bar, button, robot) do not draw (console: "Import #0 env"). `npm install` fixes it.
+  **Needed an install (done by the user later on 2026-11-22; `node_modules` now has `@rive-app/canvas` 2.50.0 and `react-canvas` 4.39.0):** with `node_modules` still on 2.42.0 the page loaded `public/rive/rive.wasm` (the 2.50.0 one) with the old runtime and the Rive parts (progress bar, button, battery, robot) did not draw (console: "Import #0 env"). On a new machine or after pulling a bump of these, `npm install` first.
 - **Steps 10-12 (2026-11-21)** are the original screens `MeetSequenceScreen` (10), `RevealCardScreen` (11) and `DressArrangeScreen` (12), each
   asking `useSequenceFlow` for its place/next/back like `ArrangeScreen`; 10 and 11 are otherwise as they are (the face in the bubble on 10).
   **12 is a guess:** it is the only story screen between 11 and the Hex ones, but the Figma title for frame 12 is "Let's guess first" and the

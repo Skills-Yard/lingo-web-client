@@ -24,8 +24,17 @@ export const conditionsHref = (step: number | "complete") => `/module/conditions
 /** `/energy?from=` — the battery's screen; `from` is where its cross returns to. */
 export const energyHref = (from: string) => `/energy?from=${encodeURIComponent(from)}`;
 
-/** The `from` of an `/energy` URL's query, if it is a path on this site. */
-export const energyReturnPath = (search: string) => {
+/** The `from` of a URL's query, if it is a path on this site. */
+const fromPath = (search: string) => {
   const from = new URLSearchParams(search).get("from");
   return from?.startsWith("/") && !from.startsWith("//") ? from : null;
 };
+
+/** The `from` of an `/energy` URL's query, if it is a path on this site. */
+export const energyReturnPath = fromPath;
+
+/** `/choose-character?from=` — where the learner picks their mentor; `from` is where Back and Choose return to. */
+export const chooseCharacterHref = (from: string) => `/choose-character?from=${encodeURIComponent(from)}`;
+
+/** The `from` of a `/choose-character` URL's query, if it is a path on this site. */
+export const chooseCharacterReturnPath = fromPath;

@@ -6,10 +6,10 @@ import { retryCachedCharacter, useCachedCharacter } from "./characterCache";
 import type { CharacterId } from "./characterLook";
 
 /**
- * The 3D character on the mentor picker's card: the real model (`Male.glb`, `girl.glb`,
+ * The 3D character on the `/choose-character` page: the real model (`Male.glb`, `girl.glb`,
  * `Male_anime.glb`), idling, framed from the head to the thighs. One canvas for the whole
- * picker, with the model swapped as the arrows move (a canvas made per card would make a
- * WebGL context each time). While a model loads the card shows its progress.
+ * page, with the model swapped as the arrows move (a canvas made per mentor would make a
+ * WebGL context each time). While a model loads it shows its progress.
  *
  * The camera is level and straight on, like the shared canvas's (`portraitHost.tsx`); every
  * model is 1.8 tall standing on y = 0, so this shows 1.38 of height: 0.56 to 1.94.
