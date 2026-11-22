@@ -10,7 +10,7 @@ import { vibrateForAnswer } from "@/lib/haptics";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
-import { COMMAND_LABEL, GRID, GRID_START, sameTile, type Command } from "./hexGrid";
+import { COMMAND_LABEL, COMMAND_PICTURE, GRID, GRID_START, sameTile, type Command } from "./hexGrid";
 import { STEP } from "./sequence";
 import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
@@ -23,8 +23,8 @@ const ANSWER: readonly Command[] = ["forward", "right", "forward"];
 const FORWARD_TINT = "bg-[#EDFAFE] dark:bg-[#15233A]";
 const RIGHT_TINT = "bg-[#FEF8EC] dark:bg-[#2A2218]";
 /** The game buttons' pictures, from `public/animations/svg/game-path/` (52 x 52): the straight arrow and the turn-right arrow. */
-const GO_STRAIGHT = <SlotImage file="/animations/svg/game-path/arrow-up.svg" className="size-[52px] max-h-none max-w-none" />;
-const TURN_RIGHT = <SlotImage file="/animations/svg/game-path/arrow-right.svg" className="size-[52px] max-h-none max-w-none" />;
+const GO_STRAIGHT = <SlotImage file={COMMAND_PICTURE.forward} className="size-[52px] max-h-none max-w-none" />;
+const TURN_RIGHT = <SlotImage file={COMMAND_PICTURE.right} className="size-[52px] max-h-none max-w-none" />;
 /** MOVE FORWARD can be used twice and TURN RIGHT once. */
 const CARDS: readonly ArrangeCardDef[] = [
   { id: "forward-1", kind: "forward", text: COMMAND_LABEL.forward, art: GO_STRAIGHT, tint: FORWARD_TINT },

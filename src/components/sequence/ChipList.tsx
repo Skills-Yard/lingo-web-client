@@ -3,9 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import { RAISED_DRAG } from "@/components/ui/raised";
-import { ArrowUp, RotateCw, X } from "lucide-react";
+import { X } from "lucide-react";
+import { SlotImage } from "@/components/level-two/SlotImage";
 import { DESIGN_BADGE, DESIGN_SLOT } from "./ArrangeBoard";
-import { COMMAND_LABEL, type Command } from "./hexGrid";
+import { COMMAND_LABEL, COMMAND_PICTURE, type Command } from "./hexGrid";
 import { useSequenceFlow } from "./sequenceFlow";
 
 /** A command in the learner's list; `id` keeps a chip itself as the order changes. */
@@ -154,11 +155,8 @@ function Chip({
           <X aria-hidden className="size-2.5" strokeWidth={3.5} />
         </span>
       )}
-      {item.command === "forward" ? (
-        <ArrowUp aria-hidden className="size-7 shrink-0 text-[#0F88E5]" strokeWidth={3} />
-      ) : (
-        <RotateCw aria-hidden className="size-7 shrink-0 text-[#E07B1F]" strokeWidth={3} />
-      )}
+      {/* 40 px: the chip is 80 tall, so the picture, the gap and two lines of the name fit inside its border. */}
+      <SlotImage file={COMMAND_PICTURE[item.command]} className="size-10 max-h-none max-w-none shrink-0" />
       <span className="text-center text-[10px] leading-3 font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">{COMMAND_LABEL[item.command]}</span>
     </motion.button>
   );

@@ -2,16 +2,16 @@
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUp, RotateCw } from "lucide-react";
 import { Teal } from "@/components/level-two/LevelTwoShell";
 import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { ChipList, chipListSize, moveItem, type PlanItem } from "./ChipList";
+import { MoveTile } from "./MoveTile";
 import { HexBoard } from "./HexBoard";
 import { HexScreen } from "./HexScreen";
-import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
+import { COMMAND_PICTURE, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
 import { STEP } from "./sequence";
 import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
@@ -48,22 +48,16 @@ const ROUTES = {
 const BOARD_TOP = 130;
 const LIST_TOP = 424;
 
-/** A command to add to the list: pressed, it sinks onto its edge. */
+/** The game screen's move buttons (see `MoveTile`): Move Forward is Go Straight's box and arrow, Turn Right keeps its own pink box. */
+const PALETTE: Record<Command, { label: string; look: string }> = {
+  forward: { label: "Move Forward", look: "bg-[#EDFAFE] dark:bg-[#15233A]" },
+  right: { label: "Turn Right", look: "bg-[#FFF4F6] dark:bg-[#33202A]" },
+};
+
+/** A command to add to the list. */
 function PaletteButton({ command, disabled, onPress }: { command: Command; disabled: boolean; onPress: () => void }) {
-  const forward = command === "forward";
-  return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={onPress}
-      className={`pointer-events-auto flex h-[76px] w-[164px] items-center justify-center gap-2 rounded-lg px-2 text-[14px] leading-4 font-semibold text-[#444444] transition-[translate,box-shadow] duration-100 enabled:cursor-pointer enabled:active:translate-y-1 enabled:active:shadow-none disabled:opacity-50 ${
-        forward ? "bg-[#EDFAFE] shadow-[0_4px_0_#BFE6F2]" : "bg-[#FEF8EC] shadow-[0_4px_0_#F2DFB8]"
-      }`}
-    >
-      {forward ? <ArrowUp aria-hidden className="size-5 text-[#0F88E5]" strokeWidth={3} /> : <RotateCw aria-hidden className="size-5 text-[#E07B1F]" strokeWidth={3} />}
-      {COMMAND_LABEL[command]}
-    </button>
-  );
+  const { label, look } = PALETTE[command];
+  return <MoveTile label={label} picture={COMMAND_PICTURE[command]} look={look} disabled={disabled} dim onPress={onPress} />;
 }
 
 type Phase = "edit" | "running" | "checked";
@@ -167,7 +161,7 @@ export function PlanScreen({ route }: { route: PlanRoute }) {
           }}
         />
       </div>
-      <div className="absolute inset-x-0 flex justify-center gap-4" style={{ top: paletteTop }}>
+      <div className="absolute inset-x-0 flex justify-center gap-[18px]" style={{ top: paletteTop }}>
         <PaletteButton command="forward" disabled={!editing || items.length >= maxCommands} onPress={() => add("forward")} />
         <PaletteButton command="right" disabled={!editing || items.length >= maxCommands} onPress={() => add("right")} />
       </div>

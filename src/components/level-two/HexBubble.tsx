@@ -25,6 +25,8 @@ type HexBubbleProps = {
   onSpoken?: () => void;
   /** The same as `onSpoken`. */
   onTyped?: () => void;
+  /** Draws the bubble even where something stands in Hex's place (`HexStandIn`: the 3D route's face), for a screen whose design has one. */
+  withBubble?: boolean;
 };
 
 /** Hex starts his own exit this long after the bubble sets off. */
@@ -42,7 +44,7 @@ const HEX_EXIT: Transition = { duration: 0.2, ease: "easeIn" };
  * 1's teacher line is. Where a route puts something in Hex's place (`HexStandIn`: the 3D
  * route's character), there is no bubble: it stands alone, at the same place in a row as
  * wide as the two would be (the line is the voiceover there). */
-export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onSpoken, onTyped }: HexBubbleProps) {
+export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onSpoken, onTyped, withBubble = false }: HexBubbleProps) {
   const hexAtLeft = hex === "left";
   const hexOnTop = hex === "top";
   const standIn = useHexStandIn();
@@ -69,7 +71,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
       >
         {standIn ?? <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />}
       </motion.div>
-      {!standIn && (
+      {(!standIn || withBubble) && (
         <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tail={hex} leaving={leaving} onSpoken={onSpoken ?? onTyped} />
       )}
     </div>

@@ -1,4 +1,4 @@
-import { COMPARE_ATTEMPTS, IMAGES, SOCKS_FIRST, STEP, type SequenceQuiz } from "./sequence";
+import { COMPARE_ATTEMPTS, IMAGES, REFLECT_ORDER, SOCKS_FIRST, STEP, type SequenceQuiz } from "./sequence";
 import { struggled } from "./sequenceScore";
 
 /**
@@ -94,6 +94,24 @@ export const COMPARE_3D: SequenceQuiz = {
     { id: "order", text: "The order of actions.", icon: `${SVG_3D}/3d-8-4.svg` },
     { id: "goal", text: "The goal", icon: `${SVG_3D}/3d-8-5.svg` },
   ],
+};
+
+/**
+ * "Why does sequence matter?" (place 25) in the 3D design (Figma `sequence_25`): the tray look with a list of three, the title as drawn
+ * ("Why sequence matter?"), the design's icons and wording, and the regular hint button. The middle answer is a plausible wrong one.
+ */
+export const REFLECT_ORDER_3D: SequenceQuiz = {
+  ...REFLECT_ORDER,
+  title: [[{ text: "Why " }, { text: "sequence", teal: true }, { text: " matter?" }]],
+  titleSize: undefined,
+  choices: [
+    { id: "alphabetical", text: "It sorts things alphabetically", icon: `${SVG_3D}/3d-25-1.svg` },
+    { id: "order", text: "Steps happen in order", icon: `${SVG_3D}/3d-25-2.svg` },
+    { id: "goal", text: "It helps reach the goal", icon: `${SVG_3D}/3d-25-3.svg` },
+  ],
+  correctId: "goal",
+  wrongBy: { order: { title: "Not quite", text: "Steps do happen in order, but the point is: it helps reach the goal." } },
+  noHint: false,
 };
 
 /** "What if shoes go first?" is followed by this question: the original screen 7's, with the title and the three answers of the design (Figma `sequence_7`). */

@@ -3,15 +3,16 @@
 import type { ComponentProps, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowUp, Lightbulb, RotateCcw, RotateCw, type LucideIcon } from "lucide-react";
+import { Lightbulb, RotateCcw } from "lucide-react";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { MeadowBackdrop } from "@/components/level-one/MoveHexScreen";
 import { LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
+import { SlotImage } from "@/components/level-two/SlotImage";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
-import { COMMAND_LABEL, type Command } from "./hexGrid";
+import { COMMAND_LABEL, COMMAND_PICTURE, type Command } from "./hexGrid";
 import { useSequenceFlow } from "./sequenceFlow";
 
 /** What Hex's board screens say in place of a speech bubble (Hex himself is on the board). */
@@ -30,10 +31,10 @@ export function TipCard({ children }: { children: string }) {
   );
 }
 
-/** Each command as it looks on the Hex Order cards. */
-const COMMAND_LOOK: Record<Command, { Icon: LucideIcon; tint: string; icon: string }> = {
-  forward: { Icon: ArrowUp, tint: "bg-[#EDFAFE] dark:bg-[#15233A]", icon: "text-[#0F88E5]" },
-  right: { Icon: RotateCw, tint: "bg-[#FEF8EC] dark:bg-[#2A2218]", icon: "text-[#E07B1F]" },
+/** Each command's tint on the Hex Order cards (its picture is `COMMAND_PICTURE`). */
+const COMMAND_LOOK: Record<Command, { tint: string }> = {
+  forward: { tint: "bg-[#EDFAFE] dark:bg-[#15233A]" },
+  right: { tint: "bg-[#FEF8EC] dark:bg-[#2A2218]" },
 };
 
 /** The height (px) of each card in `CommandChips`. */
@@ -49,7 +50,7 @@ export function CommandChips({ commands, active = -1 }: { commands: readonly Com
   return (
     <ol className="flex justify-center gap-1.5">
       {commands.map((command, index) => {
-        const { Icon, tint, icon } = COMMAND_LOOK[command];
+        const { tint } = COMMAND_LOOK[command];
         return (
           <li
             key={index}
@@ -61,7 +62,8 @@ export function CommandChips({ commands, active = -1 }: { commands: readonly Com
             <span className="absolute -top-2 -left-2 flex size-5 items-center justify-center rounded-full border-2 border-white bg-[#D9DEE3] text-[10px] font-semibold text-[#5C6670] dark:border-[#818185] dark:bg-[#3A3F47] dark:text-white">
               {index + 1}
             </span>
-            <Icon aria-hidden className={`size-7 shrink-0 ${icon}`} strokeWidth={3} />
+            {/* 44 px: the card is 84 tall, so the picture, the gap and two lines of the name (on the narrow cards) just fit inside its border. */}
+            <SlotImage file={COMMAND_PICTURE[command]} className="size-11 max-h-none max-w-none shrink-0" />
             <span className="text-center text-[11px] leading-[14px] font-semibold tracking-[0.2px] text-[#444444] uppercase dark:text-white">{COMMAND_LABEL[command]}</span>
           </li>
         );

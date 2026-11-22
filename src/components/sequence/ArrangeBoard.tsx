@@ -222,7 +222,7 @@ function ArrangeCard({
       animate={{ scale: dragging ? 1.05 : 1, opacity: dropped ? 0 : 1 }}
       transition={{ opacity: dropped ? { duration: DROP_S, ease: "easeIn" } : { duration: 0.2 } }}
       style={{ x, y, width: size.width, height: size.height, zIndex: dragging ? 2 : 1 }}
-      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center rounded-[8px] border-4 border-white px-1.5 ${RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center rounded-[8px] border-4 border-white ${design ? "px-0" : "px-1.5"} ${RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
     >
       {/* The hint's orange fill, wiped in from the left behind the content. */}
       <motion.span
@@ -360,6 +360,7 @@ export function ArrangeDock({
   rise = 0,
   fade = false,
   fadeDelay = 0,
+  behindPanel = false,
   children,
 }: {
   geo: ArrangeGeometry;
@@ -369,6 +370,8 @@ export function ArrangeDock({
   fade?: boolean;
   /** Seconds the board waits before it rises and fades (`fade` turning on; it comes back at once), e.g. for a card that falls first. */
   fadeDelay?: number;
+  /** The board stands behind the result panel (which then covers it) instead of over it. */
+  behindPanel?: boolean;
   children: ReactNode;
 }) {
   const wait = fade ? fadeDelay : 0;
@@ -377,7 +380,7 @@ export function ArrangeDock({
       initial={false}
       animate={{ y: -rise, opacity: fade ? 0 : 1 }}
       transition={{ y: { ...PANEL_SPRING, delay: wait }, opacity: { ...PANEL_SPRING, delay: wait } }}
-      className="absolute left-1/2 z-[1]"
+      className={`absolute left-1/2 ${behindPanel ? "z-0" : "z-[1]"}`}
       style={{ ...(top === undefined ? { bottom: aboveButtons(28, withHint) } : { top }), width: geo.board.width, height: geo.board.height, marginLeft: -geo.board.width / 2 }}
     >
       {children}
