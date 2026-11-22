@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
@@ -35,6 +36,8 @@ type AnswerCardsProps = {
   withHint: boolean;
   /** How far they rise once the result panel is up (default `CARDS_RISE`). */
   rise?: number;
+  /** Instead of a fixed `rise`: once the result panel is up the rows rise until their top is this many stage px from the top (measured from where they stand, so it holds on every screen height). */
+  riseTo?: number;
   /** Shorter rows (56px) for answers that are only words, so four fit above the button. */
   compact?: boolean;
   /**
@@ -81,13 +84,28 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, bounceRight = false, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, rise = CARDS_RISE, riseTo, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, bounceRight = false, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
   const folding = onlyPicked !== undefined;
+  // With `riseTo`: where the rows stand now (stage px from the top), measured, so the rise is whatever takes them up to `riseTo`.
+  const box = useRef<HTMLDivElement>(null);
+  const [standingAt, setStandingAt] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const element = box.current;
+    if (!element || riseTo === undefined) return;
+    const measure = () => setStandingAt(element.offsetTop);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    if (element.offsetParent) observer.observe(element.offsetParent);
+    return () => observer.disconnect();
+  }, [riseTo]);
+  const lift = riseTo !== undefined && standingAt !== null ? Math.max(0, standingAt - riseTo) : rise;
   return (
     <motion.div
+      ref={box}
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -rise : 0 }}
+      animate={{ opacity: 1, y: checked ? -lift : 0 }}
       transition={
         checked
           ? PANEL_SPRING

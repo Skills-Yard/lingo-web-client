@@ -2,6 +2,7 @@
 
 import { createContext, useContext, type ReactNode } from "react";
 import { HexStandInProvider } from "@/components/level-two/HexStandIn";
+import { OPTION_GAP } from "./AnswerTray";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { SEQUENCE_STEPS, sequenceNext, sequencePrevious } from "./sequence";
 import { positionOfStep, SEQUENCE_3D_STEPS, sequence3dNext, sequence3dPrevious } from "./sequence3d";
@@ -22,13 +23,19 @@ type SequenceFlow = {
   bounceRight: boolean;
   /** Every empty drag slot (`ArrangeBoard`, `ChipList`) has the 3D design's look, and screen 12's board its 112 x 119 cards (`ArrangeScreen`): on the 3D route only. */
   designSlots: boolean;
+  /** The space (px) between the rows of a list of answers: roomier on the 3D route (the design's 6 looked too close). */
+  optionGap: number;
+  /** A picture above a list of answers leaves (fades and slides out) when the result popup comes, so the rows that rise to clear the popup never overlap it: on the 3D route only (the 2D one pulls the picture in and keeps it). */
+  clearsPictures: boolean;
 };
 
-const ORIGINAL: SequenceFlow = { total: SEQUENCE_STEPS, position: (step) => step, next: sequenceNext, previous: sequencePrevious, bounceRight: false, designSlots: false };
+const ORIGINAL: SequenceFlow = { total: SEQUENCE_STEPS, position: (step) => step, next: sequenceNext, previous: sequencePrevious, bounceRight: false, designSlots: false, optionGap: 6, clearsPictures: false };
 
 const THREE_D: SequenceFlow = {
   bounceRight: true,
   designSlots: true,
+  optionGap: OPTION_GAP,
+  clearsPictures: true,
   total: SEQUENCE_3D_STEPS,
   position: (step) => positionOfStep(step) || step,
   next: (step) => sequence3dNext(positionOfStep(step)),
