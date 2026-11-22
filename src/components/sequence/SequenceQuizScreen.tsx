@@ -41,6 +41,8 @@ const LIST_RISE_OPEN = 210;
 const PICTURES_TOP = 248;
 const PICTURES_HEIGHT = 200;
 const PICTURES_RISE = 90;
+/** Where (Figma `top`) a list of answers stands once the result is up and the picture above it has left: the title ends at 154, so 24 under it. */
+const ATTACH_TO_HEADER = 178;
 /** A single picture also shrinks (from its top) as it rises, so the raised answers don't reach it. */
 const CLOSE_UP_CHECKED_SCALE = 0.9;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
@@ -68,7 +70,7 @@ const roomDress = (
  * where every pick moves on), so unlike the first lesson's quizzes the right
  * card isn't shown and nothing goes to a review.
  */
-export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
+export function SequenceQuizScreen({ quiz, withBubble = false }: { quiz: SequenceQuiz; withBubble?: boolean }) {
   const router = useRouter();
   const flow = useSequenceFlow();
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -142,8 +144,9 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
     !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
   const line = quiz.line;
   // A picture above the answers (or one shown after a wrong try) needs them to rise less, so they don't reach it.
+  // Where the picture leaves with the result (`clearsPictures`) the rows have nothing to keep clear of, so they rise the whole way.
   const listRise =
-    quiz.pictures || quiz.closeUp || quiz.wrongPicture
+    !flow.clearsPictures && (quiz.pictures || quiz.closeUp || quiz.wrongPicture)
       ? LIST_RISE
       : LIST_RISE_OPEN;
 
@@ -214,12 +217,13 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           line={line}
           size={quiz.bubble}
           leaving={checked && !quiz.hexStays}
+          withBubble={withBubble}
         />
       </CentredRow>
       {quiz.pictures && (
         <motion.div
           initial={false}
-          animate={{ y: checked ? -PICTURES_RISE : 0 }}
+          animate={{ y: checked ? -PICTURES_RISE : 0, opacity: checked && flow.clearsPictures ? 0 : 1 }}
           transition={PANEL_SPRING}
           className="absolute inset-x-0 flex justify-center"
           style={{ top: stageTop(PICTURES_TOP) }}
@@ -231,7 +235,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{
-            opacity: 1,
+            opacity: checked && flow.clearsPictures ? 0 : 1,
             scale: checked ? CLOSE_UP_CHECKED_SCALE : 1,
             y: checked ? -PICTURES_RISE : 0,
           }}
@@ -283,6 +287,9 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           pointedId={answerHint.pointedId}
           withHint
           rise={listRise}
+          // Where the picture leaves with the result, the rows go up and attach to the header, a little under the title.
+          riseTo={flow.clearsPictures && (quiz.pictures || quiz.closeUp) ? stageTop(ATTACH_TO_HEADER) : undefined}
+          gap={flow.optionGap}
           bounceRight={flow.bounceRight}
           onPick={pick}
         />

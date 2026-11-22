@@ -11,6 +11,7 @@ import { LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { OPTION_GAP } from "./AnswerTray";
 import { FLAT_CARDS, PictureCards } from "./PictureCards";
 import type { SequenceQuiz } from "./sequence";
 import { SEQUENCE_3D_STEPS, sequence3dNext, sequence3dPrevious } from "./sequence3d";
@@ -27,9 +28,13 @@ import { noteFirstTry, noteStruggle } from "./sequenceScore";
 /** Where the two cards start (Figma `top`), and the gap kept under them before the answers. */
 const PICTURES_TOP = 175;
 const ANSWERS_GAP = 18;
-/** Once the answer is checked the result panel comes up: the cards pull in (from their top) and the answers rise to stay clear of it. */
-const CHECKED_PICTURES = { y: -12, scale: 0.8 } as const;
-const CHECKED_ANSWERS_RISE = 55;
+/**
+ * Once the answer is checked the result panel comes up: the two cards leave (fade and slide up, shrinking a little), so the
+ * answers never run over them, and the answers go up to the header: their top ends at Figma 178, 24 under the title (which ends at 154).
+ */
+const CHECKED_PICTURES = { y: -40, scale: 0.9, opacity: 0 } as const;
+const ANSWERS_ATTACH_TOP = 178;
+const CHECKED_ANSWERS_RISE = PICTURES_TOP + FLAT_CARDS.height + ANSWERS_GAP - ANSWERS_ATTACH_TOP;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
 /**
@@ -116,7 +121,7 @@ export function Compare3DScreen({ quiz, position }: { quiz: SequenceQuiz; positi
       {quiz.pictures && (
         <motion.div
           initial={false}
-          animate={checked ? CHECKED_PICTURES : { y: 0, scale: 1 }}
+          animate={checked ? CHECKED_PICTURES : { y: 0, scale: 1, opacity: 1 }}
           transition={PANEL_SPRING}
           className="absolute inset-x-0 flex justify-center"
           style={{ top: stageTop(PICTURES_TOP), transformOrigin: "50% 0" }}
@@ -134,6 +139,7 @@ export function Compare3DScreen({ quiz, position }: { quiz: SequenceQuiz; positi
         withHint
         top={stageTop(PICTURES_TOP + FLAT_CARDS.height + ANSWERS_GAP)}
         rise={CHECKED_ANSWERS_RISE}
+        gap={OPTION_GAP}
         // The design's rows: 358 x 76, a 52 picture then the words (15 px) with no empty spot after them. They are buttons, so they keep the app's 3D edge (the two cards above are only pictures: flat).
         width={358}
         tight={{ height: 76, padX: 15, radius: 18, iconSize: 52 }}
