@@ -5,8 +5,8 @@ import { usePortraitDrawn } from "@/components/character3d/portraitHost";
 import { preloadCharacter, useSharedCharacter } from "@/components/character3d/sharedCharacter";
 import { SEQUENCE_3D_AUDIO } from "@/lib/moduleAudio";
 import { getRoomHost } from "@/lib/rive/roomHost";
+import { COMPARE_3D } from "./sequence3d";
 import {
-  COMPARE_ATTEMPTS,
   FIRST_COMMAND,
   PICK_UP_ICON,
   PLACE_IN_TARGET_ICON,
@@ -45,7 +45,7 @@ const picturesOf = (quiz: SequenceQuiz) => [
 /** The questions' pictures (the arrange screen's two cards are not a question's, so they are named below). The Hex board screens draw theirs in code or load them themselves. */
 const PICTURES: readonly string[] = [
   ...new Set([
-    ...[PUT_ON_FIRST, WHAT_DID_YOU_DO, COMPARE_ATTEMPTS, SOCKS_FIRST, FIRST_COMMAND, REFLECT_ORDER, REFLECT_DECIDE].flatMap(picturesOf),
+    ...[PUT_ON_FIRST, WHAT_DID_YOU_DO, COMPARE_3D, SOCKS_FIRST, FIRST_COMMAND, REFLECT_ORDER, REFLECT_DECIDE].flatMap(picturesOf),
     PICK_UP_ICON,
     PLACE_IN_TARGET_ICON,
   ]),

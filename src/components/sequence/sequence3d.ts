@@ -1,4 +1,4 @@
-import { IMAGES, SOCKS_FIRST, STEP, type SequenceQuiz } from "./sequence";
+import { COMPARE_ATTEMPTS, IMAGES, SOCKS_FIRST, STEP, type SequenceQuiz } from "./sequence";
 import { struggled } from "./sequenceScore";
 
 /**
@@ -72,6 +72,28 @@ export const sequence3dPrevious = (position: number) => {
   if (position <= 1) return "/level";
   if (isCopyOf(position, STEP.tea) && struggled(STEP.plan)) return sequence3dHref(positionOfStep(STEP.plan));
   return sequence3dHref(position - 1);
+};
+
+/** The 3D flow's own pictures (the Figma frames' icons), in `public/animations/svg/sequence-3d/`. */
+const SVG_3D = "/animations/svg/sequence-3d";
+const [SOCKS_THEN_SHOES, SHOES_THEN_SOCKS] = COMPARE_ATTEMPTS.pictures!;
+
+/**
+ * "Compare both attempts" (place 8) in the 3D design: the original screen 6's question with the
+ * icons, and the answers' wording, of the design (Figma `sequence_8`). No Hex line: there is no
+ * bubble or face on this screen (see `Compare3DScreen`).
+ */
+export const COMPARE_3D: SequenceQuiz = {
+  ...COMPARE_ATTEMPTS,
+  pictures: [
+    { ...SOCKS_THEN_SHOES, icon: `${SVG_3D}/3d-8-1.svg` },
+    { ...SHOES_THEN_SOCKS, icon: `${SVG_3D}/3d-8-2.svg` },
+  ],
+  choices: [
+    { id: "actions", text: "The actions themselves", icon: `${SVG_3D}/3d-8-3.svg` },
+    { id: "order", text: "The order of actions.", icon: `${SVG_3D}/3d-8-4.svg` },
+    { id: "goal", text: "The goal", icon: `${SVG_3D}/3d-8-5.svg` },
+  ],
 };
 
 /** "What if shoes go first?" is followed by this question: the original screen 7's, with the title and the three answers of the design (Figma `sequence_7`). */

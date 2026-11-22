@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { ArrangeScreen } from "@/components/sequence/ArrangeScreen";
+import { Compare3DScreen } from "@/components/sequence/Compare3DScreen";
 import { DressArrangeScreen } from "@/components/sequence/DressArrangeScreen";
 import { FixScreen } from "@/components/sequence/FixScreen";
 import { HexIntroScreen } from "@/components/sequence/HexIntroScreen";
@@ -19,14 +20,13 @@ import { SequenceQuizScreen } from "@/components/sequence/SequenceQuizScreen";
 import { Story3DScreen } from "@/components/sequence/Story3DScreen";
 import { TeaScreen } from "@/components/sequence/TeaScreen";
 import {
-  COMPARE_ATTEMPTS,
   FIRST_COMMAND,
   PUT_ON_FIRST,
   REFLECT_DECIDE,
   REFLECT_ORDER,
   WHAT_DID_YOU_DO,
 } from "@/components/sequence/sequence";
-import { FLOW_3D, positionOf, WHAT_WILL_HAPPEN } from "@/components/sequence/sequence3d";
+import { COMPARE_3D, FLOW_3D, positionOf, WHAT_WILL_HAPPEN } from "@/components/sequence/sequence3d";
 import { SEQUENCE_3D_AUDIO, SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 
 /** The frame at place `step` of the 3D flow (see `FLOW_3D`), or "Lesson complete!" for `step=complete`. */
@@ -56,7 +56,7 @@ function sequence3dScreen(step: string) {
     case "whatDid":
       return <SequenceQuizScreen key="what-did" quiz={WHAT_DID_YOU_DO} />;
     case "compare":
-      return <SequenceQuizScreen key="compare" quiz={COMPARE_ATTEMPTS} />;
+      return <Compare3DScreen key="compare" quiz={COMPARE_3D} position={positionOf("compare")} />;
     case "shoesFirst":
       return (
         <Story3DScreen

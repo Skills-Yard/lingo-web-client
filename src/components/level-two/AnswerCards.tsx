@@ -66,6 +66,10 @@ type AnswerCardsProps = {
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
   revealed?: boolean;
+  /** Stage px from the top, where the rows should hang there (under a picture) instead of standing on the button row; they still rise by `rise` once the result panel is up. */
+  top?: number;
+  /** The space (px) between a row's picture and its text, where it should differ from the usual 22. */
+  iconGap?: number;
   onPick: (id: string) => void;
 };
 
@@ -74,7 +78,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
   const folding = onlyPicked !== undefined;
   return (
@@ -88,7 +92,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
       }
       className="pointer-events-auto absolute z-[1] flex flex-col"
       // Rows that can fold away carry their own gap (a top margin), so a folded row leaves none behind.
-      style={{ bottom: aboveButtons(bottomGap, withHint), left: width ? `calc(50% - ${width / 2}px)` : COLUMN_LEFT, width: width ?? COLUMN_W, gap: folding ? 0 : gap }}
+      style={{ ...(top === undefined ? { bottom: aboveButtons(bottomGap, withHint) } : { top }), left: width ? `calc(50% - ${width / 2}px)` : COLUMN_LEFT, width: width ?? COLUMN_W, gap: folding ? 0 : gap }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -124,7 +128,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
                 className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
               />
-              <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`}>
+              <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`} style={iconGap !== undefined ? { columnGap: iconGap } : undefined}>
                 {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
                 {(!tight || anyPicture) && (
                   <span className={`flex shrink-0 items-center justify-center ${tight ? "" : "h-[47.31px] w-[46.68px]"}`} style={tight ? { height: tight.iconSize, width: tight.iconSize } : undefined}>

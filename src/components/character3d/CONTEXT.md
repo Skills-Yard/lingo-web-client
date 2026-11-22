@@ -142,9 +142,14 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   (`useSequenceFlow` in `sequenceFlow.tsx`; outside the route it is the original module's). The result panel still has Hex.
 - **Step 3 is the Figma `sequence_3` frame (CSS pasted by the user), `look="tray"`:** the character stays in the middle, close up,
   with no room board; pattern background (`PatternBackdrop`: wash, spotlight, five "?" in the app font (the design says Fredoka, not loaded), dot
-  grid; light mode only); the two cards (166×187, `TileCards` layout `tray`) stand on a grey `AnswerTray` and the hint is its own bulb
-  (`TrayHint`) above the tray's right end. The shell's hint is passed `visible: false` (a hint still exists, so the streak counts it).
-  The bulb icon is drawn by hand, not the Fluent emoji. The tray goes when the answer is checked and the cards rise as before.
+  grid; light mode only); the two cards (166×187, `TileCards` layout `tray`) stand on a grey `AnswerTray`. **2026-11-22 (asked for with design crops):**
+  the yellow bulb (`TrayHint`) is gone: the hint is the regular one beside Continue (the shell's, `withHint` passed on to the tray and cards so
+  they stand on the shorter button); the tray has 37 px above the cards (`TRAY_PAIR.lip`, measured from the design frame; the pasted CSS's 2 puts the
+  cards against its edge); the cards keep the app's 3D edge (they were made flat the same day and put back on request: they are buttons);
+  and the tray is see-through at its top (it always was, 50 % to solid), now that the character no longer fades out above it: its fade is
+  `TRAY_CHARACTER.fade` = 84-96 % of its box, low down, whatever the tray's height (`trayFade` is removed). The tray goes when the answer is checked and the cards rise as before.
+  Checked in headless Chrome (Girl, light, DPR 1) 390×844, 360×640, 412×915: open, and a Socks pick (green card, Continue on); step 10 opens with the same tray and hint.
+  Not checked: dark mode, Boy/Anime, a real phone, the right/wrong panel after this change, the hint effect on the flat cards, the character's rise with the real voice (its drop changed with the new fade end and was not measured; it was 138 px).
 - **The tray look's character opens low and rises when the answers come in (2026-11-21, asked for by the user).** Until the answers (the
   question's 75 %) the character stands lower, with the foot of its fade (`fade`'s end) 6 px over the main button's top, so there is no empty
   band between it and the button; when `lowered` (`CharacterOnStage`, passed `tray && !optionsShown`) goes off it slides up to its place
@@ -186,6 +191,14 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   design's (461 against 526 in frame px) and the character is cut a little earlier. The right and wrong feedback texts are the original screen 7's, not from the design.
   Checked in headless Chrome 390×844, girl: light (open, pick, Continue → "Good thinking!" panel, wrong pick → "Not quite" → Try again → reset) and
   dark (open); step 3 still looks as before. Not checked: Boy/Anime on step 7, the bulb's hint effect on a row, a real phone, voices.
+- **Place 8, "Compare both attempts" (2026-11-22, `Compare3DScreen`, from a Figma crop):** not the original `SequenceQuizScreen` any more (that stays
+  on the 2D route). No Hex line and no face; two flat 166×187 cards (`PictureCards flat`) with the design's small icons, and the three answers hang
+  right under them (`AnswerCards top`, from `PICTURES_TOP` 175 by Figma numbers, so spare room on a tall screen is above Continue), 358×76 rows
+  with 52 px icons. The rows are buttons and keep the app's 3D edge (asked for); only the two picture cards are flat. Icons are `public/animations/svg/sequence-3d/3d-8-1..5.svg` (socks, shoes, actions, order, goal; 1.1-1.5 MB each, raster inside:
+  worth re-exporting smaller). Texts are the design's, incl. the full stop in "The order of actions." (`COMPARE_3D` in `sequence3d.ts`, which
+  `sequence3dAssets.ts` preloads in place of the old webp pictures). After a check the cards pull in (scale .8, from their top) and the rows rise 55 so
+  the result panel never covers them. Checked in headless Chrome (Girl, light) 390×844 open, right ("Exactly!") and wrong ("Not quite"), 360×640 open.
+  Not checked: 412×915 beyond the numbers, dark, Try again, the voice, a real phone.
 - **Steps 10-12 (2026-11-21)** are the original screens `MeetSequenceScreen` (10), `RevealCardScreen` (11) and `DressArrangeScreen` (12), each
   asking `useSequenceFlow` for its place/next/back like `ArrangeScreen`; 10 and 11 are otherwise as they are (the face in the bubble on 10).
   **12 is a guess:** it is the only story screen between 11 and the Hex ones, but the Figma title for frame 12 is "Let's guess first" and the
