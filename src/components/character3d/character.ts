@@ -4,6 +4,7 @@ import {
   Box3,
   Group,
   Mesh,
+  MeshStandardMaterial,
   Quaternion,
   QuaternionKeyframeTrack,
   SkinnedMesh,
@@ -14,7 +15,7 @@ import {
   type Material,
   type Object3D,
 } from "three";
-import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+import { GLTFLoader, type GLTF } from "three/addons/loaders/GLTFLoader.js";
 import type { CharacterId } from "./characterLook";
 
 type AnimationBase = {
@@ -54,12 +55,38 @@ const clipsOf = (
   lipSync: Readonly<Partial<Record<AnimationId, string>>> = {},
 ): AnimationSpec[] => ANIMATIONS.map(({ id, label }) => ({ id, label, clip: clips[id], lipSync: lipSync[id] }));
 
+/**
+ * The light a character is seen in: a hemisphere light (`ambient`, from above in white, from
+ * below in `ground`), a key lamp from the front right and a teal rim lamp from behind. The
+ * numbers are three's light intensities.
+ */
+export type LightRig = {
+  ambient: number;
+  ground: string;
+  key: number;
+  rim: number;
+};
+
+/** The original rig, tuned on the girl and the boy: their textures have the shading painted in. */
+const DEFAULT_LIGHTS: LightRig = { ambient: 1.3, ground: "#8a94a6", key: 2.8, rim: 1.6 };
+
+/**
+ * The anime model's textures are flat "lit" colours (VRoid): a skin of #FADFCB is meant to be
+ * seen at full strength, and the shade is the viewer's job. Under the default rig the key
+ * lamp turns the lit side near white and the other side grey, so he looks washed out next to
+ * the colours a glTF viewer shows (an even, all-round light). This rig is mostly ambient,
+ * so the colours come out near the texture's own.
+ */
+const FLAT_LIGHTS: LightRig = { ambient: 2.6, ground: "#f2ece6", key: 1.1, rim: 0.8 };
+
 type Model = {
   /** The file: a Mixamo-rigged avatar with its textures and its clips. */
   src: string;
   /** Its size on disk: the progress bar's total until (or unless) the server reports a usable `Content-Length`. */
   bytes: number;
   animations: readonly AnimationSpec[];
+  /** The light it is seen in; the original rig when left out. */
+  lights?: LightRig;
 };
 
 /**
@@ -90,6 +117,7 @@ const MODELS: Readonly<Record<CharacterId, Model>> = {
     src: "/animations/Male_anime.glb",
     bytes: 11_394_316,
     animations: clipsOf({ "idle-b": "Breathing", talking: "Talking" }, { talking: "Face.001-LipSyncAction" }),
+    lights: FLAT_LIGHTS,
   },
 };
 
@@ -110,6 +138,8 @@ export type Character = {
   /** The rig as loaded; the animation mixer's root. */
   model: Group;
   animations: CharacterAnimation[];
+  /** The light it is seen in (`SceneLights`). */
+  lights: LightRig;
 };
 
 export type LoadProgress = {
@@ -291,6 +321,31 @@ const loadAnimations = async (specs: readonly AnimationSpec[], source: string, m
   );
 
 /**
+ * glTF says a material with no metallic or roughness factor is fully metal and fully
+ * rough, and three follows that. The anime file (a VRoid export) sets neither, so he
+ * rendered as bare metal: skin and cloth took no light from the hemisphere lamp, only a
+ * glint from the key lamp, so he looked flat and the side of his jaw went black. The
+ * girl's and the boy's files set metal 0 and rough 0.9; a material that doesn't say gets
+ * those. One that does say is left alone.
+ */
+const MATTE_METALNESS = 0;
+const MATTE_ROUGHNESS = 0.9;
+
+const applyMatteDefaults = (gltf: GLTF) => {
+  const definitions: { materials?: { pbrMetallicRoughness?: { metallicFactor?: number; roughnessFactor?: number } }[] } = gltf.parser.json;
+  gltf.scene.traverse((object) => {
+    if (!(object instanceof Mesh)) return;
+    for (const material of materialsOf(object)) {
+      if (!(material instanceof MeshStandardMaterial)) continue;
+      const index = gltf.parser.associations.get(material)?.materials;
+      const pbr = index === undefined ? undefined : definitions.materials?.[index]?.pbrMetallicRoughness;
+      if (pbr?.metallicFactor === undefined) material.metalness = MATTE_METALNESS;
+      if (pbr?.roughnessFactor === undefined) material.roughness = MATTE_ROUGHNESS;
+    }
+  });
+};
+
+/**
  * Takes out what isn't part of the skinned character. The file also has a floor slab
  * (a plain box); it would show on the stage and its bounds would skew `stand`.
  */
@@ -351,7 +406,7 @@ const stand = (model: Group, pose: AnimationClip | undefined) => {
 };
 
 export const loadCharacter = async ({ id, signal, onProgress }: LoadOptions): Promise<Character> => {
-  const { src, bytes, animations: specs } = MODELS[id];
+  const { src, bytes, animations: specs, lights = DEFAULT_LIGHTS } = MODELS[id];
   // The small animation files first: one that's missing fails now, not after the big model.
   const files = new Map<string, ArrayBuffer>();
   for (const spec of specs) {
@@ -374,8 +429,9 @@ export const loadCharacter = async ({ id, signal, onProgress }: LoadOptions): Pr
 
   const gltf = await parseGlb(modelBuffer);
   removeProps(gltf.scene);
+  applyMatteDefaults(gltf);
   const animations = await loadAnimations(specs, src, gltf.scene, files, gltf.animations);
-  return { scene: stand(gltf.scene, animations[0]?.clip), model: gltf.scene, animations };
+  return { scene: stand(gltf.scene, animations[0]?.clip), model: gltf.scene, animations, lights };
 };
 
 const materialsOf = (mesh: Mesh): Material[] =>
