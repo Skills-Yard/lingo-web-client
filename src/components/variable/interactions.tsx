@@ -11,10 +11,14 @@ import { vibrateForTap } from "@/lib/haptics";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
 import { OPTION, type InteractionApi } from "./quiz";
 import { artboardRect, BELOW_TITLE, GAP_BELOW_SCENE, HEX_LIFT, NAME_VALUE_CARDS, SCENE_BOTTOM, SCENE_BOTTOM_PHONE, SceneOverlay, type ArtboardRect } from "./scenes";
+import { ArcMeter } from "./ArcMeter";
+import { useBubbleSize } from "./bubbleWidth";
+import { TapHint, type TapTarget } from "./TapHint";
 import { CARD } from "./visuals";
 
-/** A line of narration: Hex says a short one, a long one goes on a card. */
+/** A line of narration: Hex says a short one (in a bubble wide enough to hold it in two lines), a long one goes on a card. */
 export function Narration({ text, entry }: { text: string; entry: string }) {
+  const bubble = useBubbleSize(text);
   if (text.length > 120) {
     return (
       <div className="w-[340px] shrink-0">
@@ -22,11 +26,10 @@ export function Narration({ text, entry }: { text: string; entry: string }) {
       </div>
     );
   }
-  const width = text.length <= 44 ? 190 : 240;
   return (
     // Lifted like the quiz screens' bubble (see `HEX_LIFT`); what is under it stays where it was.
     <div className="relative shrink-0" style={{ top: -HEX_LIFT }}>
-      <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={{ width }} />
+      <HexBubble entryKey={entry} hex="left" line={[{ text }]} size={bubble} />
     </div>
   );
 }
@@ -124,14 +127,15 @@ export function BridgeStage({ done, finished }: InteractionApi) {
   );
 }
 
-const SLIDER_STEP = 50;
-const SLIDER_THUMB =
-  "[&::-webkit-slider-thumb]:size-8 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-white [&::-webkit-slider-thumb]:bg-[#08A4AD] [&::-webkit-slider-thumb]:shadow-[0_2px_6px_rgba(0,0,0,0.3)] [&::-moz-range-thumb]:size-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-white [&::-moz-range-thumb]:bg-[#08A4AD]";
+/** The bottle's meter: 0 to 1,000 ml in steps of 50, with the quarters written along the dial (see `ArcMeter`). */
+const BOTTLE_METER = { min: 0, max: 1000, step: 50, labels: [0, 250, 500, 750, 1000], unit: "ml" } as const;
+/** The meter's width (px): the module's column, as the answers. */
+const METER_WIDTH = 340;
 
-/** How long the stream stays on after the slider last moved up (ms). */
+/** How long the stream stays on after the meter last moved up (ms). */
 const POUR_HOLD_MS = 600;
 
-/** Screen 7: drag a slider to fill the bottle (the bottle scene behind it) to 500 ml; letting go there finishes it. */
+/** Screen 7: drag the meter to fill the bottle (the bottle scene behind it) to 500 ml; letting go there finishes it. */
 export function FillSliderStage({ done, finished }: InteractionApi) {
   const [ml, setMl] = useState(0);
   const [tried, setTried] = useState(false);
@@ -149,7 +153,7 @@ export function FillSliderStage({ done, finished }: InteractionApi) {
   }, []);
 
   const slide = (next: number) => {
-    // The water follows the slider, and the stream is on while it goes up.
+    // The water follows the meter, and the stream is on while it goes up.
     rampBottleLevel(next, 250);
     if (next > ml) {
       setSceneValues("bottle", { pouring: true });
@@ -158,33 +162,23 @@ export function FillSliderStage({ done, finished }: InteractionApi) {
     }
     setMl(next);
   };
-  const letGo = () => {
+  const letGo = (amount: number) => {
     window.clearTimeout(pourTimer.current);
     setSceneValues("bottle", { pouring: false });
     if (finished) return;
-    if (ml === 500) done();
+    if (amount === 500) done();
     else setTried(true);
   };
   return (
     <div className="flex w-full flex-1 flex-col items-center gap-3">
       <Narration text="The bottle holds 1,000 ml. Fill it with 500 ml." entry="variable-fill" />
-      <div className="pointer-events-auto mt-auto flex w-[300px] flex-col items-center gap-1.5">
-        <input
-          type="range"
-          min={0}
-          max={1000}
-          step={SLIDER_STEP}
-          value={ml}
-          disabled={finished}
-          aria-label="Amount of water"
-          onChange={(event) => slide(Number(event.target.value))}
-          onPointerUp={letGo}
-          onKeyUp={letGo}
-          className={`h-3 w-full cursor-pointer appearance-none rounded-full bg-[#D5DADF] accent-[#08A4AD] dark:bg-white/20 ${SLIDER_THUMB}`}
-        />
-        <span className="text-[13px] leading-5 font-medium text-[#6B7480] dark:text-white/60">
-          {finished ? "That's 500 ml!" : tried && ml !== 500 ? "Not yet. Slide to 500 ml." : "Slide to fill the bottle"}
-        </span>
+      {/* The meter stands at the bottom of the room, on the answers' place; its hint is in the empty room inside the arc. */}
+      <div className="pointer-events-auto mt-auto" style={{ width: METER_WIDTH }}>
+        <ArcMeter {...BOTTLE_METER} value={ml} onChange={slide} onRelease={letGo} disabled={finished} ariaLabel="Amount of water">
+          <span className="text-[13px] leading-5 font-medium text-[#6B7480] dark:text-white/60">
+            {finished ? "That's 500 ml!" : tried && ml !== 500 ? "Not yet. Slide to 500 ml." : "Slide to fill the bottle"}
+          </span>
+        </ArcMeter>
       </div>
     </div>
   );
@@ -301,6 +295,30 @@ const CLASSIFY_PARTS = [
 const SORT_BLOCK_H = OPTION.height + 10 + 20;
 /** The last part has been sorted: this long (ms) for the artboard's right-answer glow to play before the screen is done and its name / value tags show. */
 const SORT_SETTLE_MS = 900;
+/**
+ * What the pointing hand shows as the screen opens (see `TapHint`): tap the `water_level` pill, then "It is a name". Each
+ * is the element marked `data-hint` with that id; the fingertip lands just inside its left end, so the hand stands to
+ * the left and does not cover the words (they start about 36px in on the button, and further in on the pill).
+ */
+const SORT_HINT = [
+  { id: "n1", fromLeft: 20 },
+  { id: "name", fromLeft: 24 },
+] as const satisfies readonly TapTarget[];
+/** How long (ms) the hand waits to come in when the hint button asked for it: the screen opening waits longer, but a press should be answered at once. */
+const HINT_PRESS_DELAY_MS = 200;
+
+/**
+ * What the hint button shows (the same hand, see `SORT_HINT`): the right way to sort a part that is not sorted yet. It
+ * is the part the learner has tapped and not answered, if there is one (the hand only goes to its right button, as its
+ * pill is already lit), else the first part still to be sorted (the hand taps its pill, then its right button). A part
+ * already sorted is skipped: with `water_level` done, the hand goes on to `550 ml` and "It is a value".
+ */
+function hintTargets(selected: string | null, placed: Record<string, PartKind>): readonly TapTarget[] {
+  const part = CLASSIFY_PARTS.find((candidate) => candidate.id === selected) ?? CLASSIFY_PARTS.find((candidate) => !placed[candidate.id]);
+  if (!part) return [];
+  const answer: TapTarget = { id: part.kind, fromLeft: 24 };
+  return part.id === selected ? [answer] : [{ id: part.id, fromLeft: 20 }, answer];
+}
 
 /**
  * Screen 14: tap each part of the two cards and say whether it is a name or a value. The cards are the artboard
@@ -309,11 +327,18 @@ const SORT_SETTLE_MS = 900;
  * `correct` and `wrong` triggers). Each part sorted keeps a tick, and once all four are the artboard shows its
  * "name" and "value" tags (`showParts`).
  */
-export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi) {
+export function ClassifyStage({ slip: slipped, done, finished, hint }: InteractionApi) {
   const [selected, setSelected] = useState<string | null>(null);
   const [placed, setPlaced] = useState<Record<string, PartKind>>({});
   const [slip, setSlip] = useState(false);
   const sorted = Object.keys(placed).length === CLASSIFY_PARTS.length;
+  // Each press of the hint button shows the hand again, on the part that is still to be sorted (until the learner taps something).
+  const [handledHint, setHandledHint] = useState(0);
+  const [demo, setDemo] = useState<{ press: number; targets: readonly TapTarget[] } | null>(null);
+  if (hint !== handledHint) {
+    setHandledHint(hint);
+    setDemo(hint > 0 ? { press: hint, targets: hintTargets(selected, placed) } : null);
+  }
 
   // The cards say their names and values, with nothing lit and no tags yet.
   useEffect(() => {
@@ -339,6 +364,7 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
     if (!part) return;
     playClickSound();
     vibrateForTap();
+    setDemo(null);
     if (part.kind !== kind) {
       slipped();
       setSlip(true);
@@ -353,6 +379,13 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Is each one a name or a value?" entry="variable-classify" />
+      {/* Once, as the screen opens, a hand shows the learner what to tap; it goes as soon as they tap anything. The hint button brings it back, on the right answer still to be given. */}
+      <TapHint
+        targets={demo ? demo.targets : SORT_HINT}
+        runKey={demo?.press}
+        startAfterMs={demo ? HINT_PRESS_DELAY_MS : undefined}
+        active={!finished && (demo !== null || (selected === null && Object.keys(placed).length === 0))}
+      />
       {/* A target over each pill of the artboard to tap it, and a tick on each one that has been sorted. */}
       <SceneOverlay>
         {CLASSIFY_PARTS.map((part) => {
@@ -362,9 +395,11 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
               <button
                 type="button"
                 aria-label={`Sort ${part.label}`}
+                data-hint={part.id}
                 disabled={!!known || finished}
                 onClick={() => {
                   playClickSound();
+                  setDemo(null);
                   setSelected(part.id);
                   setSlip(false);
                 }}
@@ -394,6 +429,7 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
             <button
               key={kind}
               type="button"
+              data-hint={kind}
               disabled={!selected}
               onClick={() => choose(kind)}
               // The same size, gap, corners and text as every other option of the module (their colour is the button's own).
@@ -413,22 +449,94 @@ export function ClassifyStage({ slip: slipped, done, finished }: InteractionApi)
   );
 }
 
+/** The two spots, first spot first: each shows only its price (the product's name is on the shop counter behind). */
 const MATCH_ITEMS = [
-  { id: "notebook_price", emoji: "📓", name: "Notebook", price: 50 },
-  { id: "pen_price", emoji: "🖊️", name: "Pen", price: 20 },
+  { id: "notebook_price", price: 50 },
+  { id: "pen_price", price: 20 },
 ] as const;
+// The ids are the variables' names; what the buttons say is the same words without the underscore.
 const MATCH_CARDS: readonly ArrangeCardDef[] = [
-  { id: "pen_price", kind: "pen_price", text: "pen_price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
-  { id: "notebook_price", kind: "notebook_price", text: "notebook_price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
+  { id: "pen_price", kind: "pen_price", text: "Pen price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
+  { id: "notebook_price", kind: "notebook_price", text: "Notebook price", tint: "bg-[#E3F6F3] dark:bg-[#0F2B28]" },
 ];
-const MATCH_GEO = arrangeGeometry({ mode: "columns", card: { width: 140, height: 72 }, count: 2, gap: 14, lane: 40, sentence: true });
+/** Where the hint's fingertip lands (px from the left edge) on a name and on a price spot: left of their words. */
+const MATCH_HINT_NAME_X = 14;
+const MATCH_HINT_SPOT_X = 28;
+/**
+ * The spots (a product and its price) stand in a row on top and the names to drag in a row under them: what is dragged
+ * is always at the bottom, and goes up to its spot. Two across fill the module's 340px column.
+ */
+const MATCH_GEO = arrangeGeometry({
+  mode: "rows",
+  card: { width: 163, height: 72 },
+  count: 2,
+  gap: 14,
+  lane: 14,
+  slotsOnTop: true,
+  sentence: true,
+  // Built like the module's answer buttons at rest: one thin plain-grey line (2px) hugging the face on all four sides, with the raised edge directly under it and on the same corner curve, so the line and the 3D edge read as one piece. (A white frame, or a ring outside it, put a gap between the face and its raised edge.)
+  line: "border-2 border-[#D2D8DE] dark:border-white/20",
+  // The answer buttons' corner (`OPTION.radius`), so the edge's curve is theirs.
+  radius: OPTION.radius,
+  // Held, a name is pressed like their buttons are: its face sinks onto the raised edge.
+  sink: true,
+  // The empty spots are light grey wells.
+  solidSlots: true,
+  // The names read at the size of the module's answer buttons.
+  fontSize: OPTION.font,
+});
+/** The note under the board: one line (the longer "check" line fits it too). */
+const MATCH_NOTE_H = 20;
 
-/** Screen 19: drag each product's name onto the card of its price. */
-export function MatchPricesStage({ slip: slipped, done, finished }: InteractionApi) {
+/**
+ * Screen 19: drag each product's name up onto the spot of its price, or tap a name to pick it (it is framed in green
+ * and the spots light up) and then tap the price it belongs to. Tapping the picked name again lets it go; with a name
+ * picked, tapping a name that is already on a spot puts the picked one there instead (the two swap places). The empty
+ * spots are picked out (`highlightEmpty`), and the hint button sends a hand to the name for the first spot still wrong,
+ * then to that spot.
+ */
+export function MatchPricesStage({ slip: slipped, done, finished, hint }: InteractionApi) {
   const { slots, placeIn, reset } = useArrange(MATCH_CARDS.map((card) => card.id), MATCH_GEO.count);
   const [slip, setSlip] = useState(false);
+  // The name picked by a tap, waiting for a price.
+  const [picked, setPicked] = useState<string | null>(null);
+  // The names that are on their own price: each bounced the moment it was put there, and it and its price are done with.
+  const [matched, setMatched] = useState<readonly string[]>([]);
   const full = slots.every((slot) => slot !== null);
   const right = full && slots.every((id, index) => id === MATCH_ITEMS[index].id);
+  // Each press of the hint button shows the hand: it taps the name that belongs on the first spot still wrong, then that spot (until the learner touches the board).
+  const [handledHint, setHandledHint] = useState(0);
+  const [demo, setDemo] = useState<{ press: number; targets: readonly TapTarget[] } | null>(null);
+  if (hint !== handledHint) {
+    setHandledHint(hint);
+    const open = MATCH_ITEMS.findIndex((item, index) => slots[index] !== item.id);
+    setDemo(hint > 0 && open >= 0 ? { press: hint, targets: [{ id: MATCH_ITEMS[open].id, fromLeft: MATCH_HINT_NAME_X }, { id: `slot-${open}`, fromLeft: MATCH_HINT_SPOT_X }] } : null);
+  }
+
+  /** Puts a name on a spot (dragged or tapped there); the product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2). A right one bounces now and stays: it and its price are disabled. */
+  const place = (id: string, slot: number | null) => {
+    setDemo(null);
+    // A name that is on its price for good cannot be moved, and nothing can be put on its price.
+    if (matched.includes(id) || (slot !== null && matched.includes(slots[slot] ?? ""))) return;
+    setSlip(false);
+    setPicked(null);
+    placeIn(id, slot);
+    const rightSpot = slot !== null && id === MATCH_ITEMS[slot].id ? slot : null;
+    setSceneValues("shop", { highlight: rightSpot !== null ? rightSpot + 1 : 0 });
+    if (rightSpot !== null) setMatched((now) => [...now, id]);
+  };
+  const tapName = (id: string) => {
+    setDemo(null);
+    const spot = slots.indexOf(id);
+    // A name that is on a spot stands for that spot: with another name picked, that one goes there.
+    if (picked && picked !== id && spot >= 0) return place(picked, spot);
+    playClickSound();
+    vibrateForTap();
+    setPicked(picked === id ? null : id);
+  };
+  const tapSpot = (index: number) => {
+    if (picked) place(picked, index);
+  };
   // The shop counter behind (see `ShopBackdrop`) starts with the names shown and nothing lit.
   useEffect(() => {
     setSceneValues("shop", { showEraser: false, showNames: true, showTotal: false, highlight: 0 });
@@ -444,40 +552,41 @@ export function MatchPricesStage({ slip: slipped, done, finished }: InteractionA
     const timer = window.setTimeout(() => {
       slipped();
       setSlip(true);
+      setPicked(null);
       setSceneValues("shop", { highlight: 0 });
       reset();
+      setMatched([]);
     }, 900);
     return () => window.clearTimeout(timer);
   }, [full, right, done, slipped, reset]);
   return (
     <div className="flex w-full flex-col items-center gap-3">
       <Narration text="Drag each name to the price it belongs to." entry="variable-prices" />
+      {/* The hint button's hand; it goes as soon as the learner touches a name or drops one. */}
+      <TapHint targets={demo ? demo.targets : []} runKey={demo?.press} startAfterMs={HINT_PRESS_DELAY_MS} active={!finished && demo !== null} />
       {/* The board and its note stand under the picture, on the white below it, so no character is covered. */}
-      <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: belowScene(MATCH_GEO.board.height + 12 + 40) }}>
-        <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }}>
+      <div className="absolute inset-x-0 flex flex-col items-center gap-3" style={{ top: belowScene(MATCH_GEO.board.height + 12 + MATCH_NOTE_H) }}>
+        <div className="pointer-events-auto relative" style={{ width: MATCH_GEO.board.width, height: MATCH_GEO.board.height }} onPointerDownCapture={() => setDemo(null)}>
           <ArrangeBoard
             cards={MATCH_CARDS}
             slots={slots}
             geo={MATCH_GEO}
             disabled={finished || (full && !right)}
-            onPlace={(id, slot) => {
-              setSlip(false);
-              placeIn(id, slot);
-              // The product a name is put on is lit in the scene when it is the right one (notebook 1, pen 2).
-              setSceneValues("shop", { highlight: slot !== null && id === MATCH_ITEMS[slot].id ? slot + 1 : 0 });
-            }}
-            slotContent={(index) => (
-              <span className="flex items-center gap-2 text-[14px] leading-5 font-semibold text-[#6B7480] dark:text-white/70">
-                <span aria-hidden className="text-[26px] leading-none">
-                  {MATCH_ITEMS[index].emoji}
-                </span>
-                {MATCH_ITEMS[index].name} <span className="rounded-full bg-[#FFB300] px-2 py-0.5 text-[12px] font-bold text-white">₹{MATCH_ITEMS[index].price}</span>
-              </span>
-            )}
+            selectedId={picked}
+            highlightEmpty
+            // A name on its right price bounces at once (one big bounce and one small, its shadow staying on the ground), and it and its price are disabled. Nothing bounces together at the end.
+            bouncedIds={matched}
+            lockedIds={matched}
+            onPlace={place}
+            onTap={tapName}
+            onSlotTap={tapSpot}
+            slotLabel={(index) => `Price ₹${MATCH_ITEMS[index].price}`}
+            // An empty spot shows only its amount: which name belongs on it is for the learner to work out from the shop counter.
+            slotContent={(index) => <span className="rounded-full bg-[#FFB300] px-3.5 py-1 text-[18px] leading-6 font-bold text-white">₹{MATCH_ITEMS[index].price}</span>}
           />
         </div>
-        <p className="h-10 w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]">
-          {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : "Drag a name onto a price."}</span>}
+        <p className="w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]" style={{ height: MATCH_NOTE_H }}>
+          {slip ? "Check the product and its price tag." : <span className="text-[#6B7480] dark:text-white/60">{finished ? "Each price has its own name." : picked ? "Now tap the price it belongs to." : "Drag or tap a name, then a price."}</span>}
         </p>
       </div>
     </div>

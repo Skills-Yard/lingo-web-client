@@ -1,4 +1,4 @@
-import { IMAGES, SOCKS_FIRST, STEP, type SequenceQuiz } from "./sequence";
+import { COMPARE_ATTEMPTS, IMAGES, REFLECT_DECIDE, REFLECT_ORDER, SOCKS_FIRST, STEP, type SequenceQuiz } from "./sequence";
 import { struggled } from "./sequenceScore";
 
 /**
@@ -72,6 +72,57 @@ export const sequence3dPrevious = (position: number) => {
   if (position <= 1) return "/level";
   if (isCopyOf(position, STEP.tea) && struggled(STEP.plan)) return sequence3dHref(positionOfStep(STEP.plan));
   return sequence3dHref(position - 1);
+};
+
+/** The 3D flow's own pictures (the Figma frames' icons), in `public/animations/svg/sequence-3d/`. */
+const SVG_3D = "/animations/svg/sequence-3d";
+const [SOCKS_THEN_SHOES, SHOES_THEN_SOCKS] = COMPARE_ATTEMPTS.pictures!;
+
+/**
+ * "Compare both attempts" (place 8) in the 3D design: the original screen 6's question with the
+ * icons, and the answers' wording, of the design (Figma `sequence_8`). No Hex line: there is no
+ * bubble or face on this screen (see `Compare3DScreen`).
+ */
+export const COMPARE_3D: SequenceQuiz = {
+  ...COMPARE_ATTEMPTS,
+  pictures: [
+    { ...SOCKS_THEN_SHOES, icon: `${SVG_3D}/3d-8-1.svg` },
+    { ...SHOES_THEN_SOCKS, icon: `${SVG_3D}/3d-8-2.svg` },
+  ],
+  choices: [
+    { id: "actions", text: "The actions themselves", icon: `${SVG_3D}/3d-8-3.svg` },
+    { id: "order", text: "The order of actions.", icon: `${SVG_3D}/3d-8-4.svg` },
+    { id: "goal", text: "The goal", icon: `${SVG_3D}/3d-8-5.svg` },
+  ],
+};
+
+/**
+ * "Why does sequence matter?" (place 25) in the 3D design (Figma `sequence_25`): the tray look with a list of three, the title as drawn
+ * ("Why sequence matter?"), the design's icons and wording, and the regular hint button. The middle answer is a plausible wrong one.
+ */
+export const REFLECT_ORDER_3D: SequenceQuiz = {
+  ...REFLECT_ORDER,
+  title: [[{ text: "Why " }, { text: "sequence", teal: true }, { text: " matter?" }]],
+  titleSize: undefined,
+  choices: [
+    { id: "alphabetical", text: "It sorts things alphabetically", icon: `${SVG_3D}/3d-25-1.svg` },
+    { id: "order", text: "Steps happen in order", icon: `${SVG_3D}/3d-25-2.svg` },
+    { id: "goal", text: "It helps reach the goal", icon: `${SVG_3D}/3d-25-3.svg` },
+  ],
+  correctId: "goal",
+  wrongBy: { order: { title: "Not quite", text: "Steps do happen in order, but the point is: it helps reach the goal." } },
+};
+
+/** "How to decide the order?" (place 26) in the 3D design (Figma `sequence_26`): the same tray list as place 25, with the title, icons and the regular hint of the design. */
+export const REFLECT_DECIDE_3D: SequenceQuiz = {
+  ...REFLECT_DECIDE,
+  title: [[{ text: "How to decide " }, { text: "the order?", teal: true }]],
+  titleSize: undefined,
+  choices: [
+    { id: "before", text: "What must happen first", icon: `${SVG_3D}/3d-26-1.svg` },
+    { id: "shortest", text: "The shortest command", icon: `${SVG_3D}/3d-26-2.svg` },
+    { id: "random", text: "Randomly", icon: `${SVG_3D}/3d-26-3.svg` },
+  ],
 };
 
 /** "What if shoes go first?" is followed by this question: the original screen 7's, with the title and the three answers of the design (Figma `sequence_7`). */

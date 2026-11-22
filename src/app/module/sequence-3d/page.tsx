@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { ArrangeScreen } from "@/components/sequence/ArrangeScreen";
+import { Compare3DScreen } from "@/components/sequence/Compare3DScreen";
 import { DressArrangeScreen } from "@/components/sequence/DressArrangeScreen";
 import { FixScreen } from "@/components/sequence/FixScreen";
 import { HexIntroScreen } from "@/components/sequence/HexIntroScreen";
 import { HexOrderScreen } from "@/components/sequence/HexOrderScreen";
 import { Intro3DScreen } from "@/components/sequence/Intro3DScreen";
-import { MeetSequenceScreen } from "@/components/sequence/MeetSequenceScreen";
+import { Meet3DScreen } from "@/components/sequence/Meet3DScreen";
 import { OneCommandScreen } from "@/components/sequence/OneCommandScreen";
 import { PlanScreen } from "@/components/sequence/PlanScreen";
 import { PredictFollowUpScreen } from "@/components/sequence/PredictFollowUpScreen";
@@ -17,16 +18,13 @@ import { SequenceCompleteScreen } from "@/components/sequence/SequenceCompleteSc
 import { SequenceQuiz3DScreen } from "@/components/sequence/SequenceQuiz3DScreen";
 import { SequenceQuizScreen } from "@/components/sequence/SequenceQuizScreen";
 import { Story3DScreen } from "@/components/sequence/Story3DScreen";
-import { TeaScreen } from "@/components/sequence/TeaScreen";
+import { Tea3DScreen } from "@/components/sequence/Tea3DScreen";
 import {
-  COMPARE_ATTEMPTS,
   FIRST_COMMAND,
   PUT_ON_FIRST,
-  REFLECT_DECIDE,
-  REFLECT_ORDER,
   WHAT_DID_YOU_DO,
 } from "@/components/sequence/sequence";
-import { FLOW_3D, positionOf, WHAT_WILL_HAPPEN } from "@/components/sequence/sequence3d";
+import { COMPARE_3D, FLOW_3D, positionOf, REFLECT_DECIDE_3D, REFLECT_ORDER_3D, WHAT_WILL_HAPPEN } from "@/components/sequence/sequence3d";
 import { SEQUENCE_3D_AUDIO, SEQUENCE_AUDIO } from "@/lib/moduleAudio";
 
 /** The frame at place `step` of the 3D flow (see `FLOW_3D`), or "Lesson complete!" for `step=complete`. */
@@ -56,7 +54,7 @@ function sequence3dScreen(step: string) {
     case "whatDid":
       return <SequenceQuizScreen key="what-did" quiz={WHAT_DID_YOU_DO} />;
     case "compare":
-      return <SequenceQuizScreen key="compare" quiz={COMPARE_ATTEMPTS} />;
+      return <Compare3DScreen key="compare" quiz={COMPARE_3D} position={positionOf("compare")} />;
     case "shoesFirst":
       return (
         <Story3DScreen
@@ -76,7 +74,7 @@ function sequence3dScreen(step: string) {
     case "arrange":
       return <ArrangeScreen key="arrange" />;
     case "meet":
-      return <MeetSequenceScreen key="meet" />;
+      return <Meet3DScreen key="meet" position={positionOf("meet")} />;
     case "reveal":
       return <RevealCardScreen key="reveal" />;
     case "dress":
@@ -98,11 +96,12 @@ function sequence3dScreen(step: string) {
     case "planNext":
       return <PlanScreen key="plan-complex" route="complex" />;
     case "tea":
-      return <TeaScreen key="tea" />;
+      return <Tea3DScreen key="tea" position={positionOf("tea")} />;
     case "reflectOrder":
-      return <SequenceQuizScreen key="reflect-order" quiz={REFLECT_ORDER} />;
+      // No voice for this question on any route: the character just stands there, and the answers come in at once.
+      return <SequenceQuiz3DScreen key="reflect-order" quiz={REFLECT_ORDER_3D} audio={{ question: [] }} position={positionOf("reflectOrder")} look="tray" />;
     case "reflectDecide":
-      return <SequenceQuizScreen key="reflect-decide" quiz={REFLECT_DECIDE} />;
+      return <SequenceQuiz3DScreen key="reflect-decide" quiz={REFLECT_DECIDE_3D} audio={{ question: [] }} position={positionOf("reflectDecide")} look="tray" />;
     case "recap":
       return <RecapScreen key="recap" />;
     default:

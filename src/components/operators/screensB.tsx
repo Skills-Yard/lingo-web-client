@@ -61,7 +61,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Do both expressions give the same result?",
         visual: () => <SideBySide left={["2", "+", "3", "*", "4"]} right={["(", "2", "+", "3", ")", "*", "4"]} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(1),
         rightTitle: "No!",
@@ -221,7 +220,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Is your teacher older than you?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.teacher, label: "Teacher", value: "35 years" }} right={{ pic: P.student, label: "Student", value: "13 years" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(0),
         rightTitle: "Yes!",
@@ -231,7 +229,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "“My age is greater than my teacher's age.” Is that correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.teacher, label: "Teacher", value: "35 years" }} right={{ pic: P.student, label: "Student", value: "13 years" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(1),
         rightTitle: "No!",
@@ -250,7 +247,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "My teacher is older than me.",
         question: "Is this statement correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.teacher, label: "Teacher", value: "35 years" }} right={{ pic: P.student, label: "Me", value: "13 years" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(0),
         rightTitle: "True!",
@@ -261,7 +257,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "A bicycle is faster than a walking person.",
         question: "Is this statement correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.person, label: "Bicycle" }} right={{ pic: P.student, label: "Walking person" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(0),
         rightTitle: "True!",
@@ -272,7 +267,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "A school bag is heavier than a pencil.",
         question: "Is this statement correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.bag, label: "School bag" }} right={{ pic: P.pen, label: "Pencil" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(0),
         rightTitle: "True!",
@@ -283,7 +277,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "A 5-metre rope is shorter than a 2-metre rope.",
         question: "Is this statement correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.gift, label: "Rope", value: "5 m" }} right={{ pic: P.gift, label: "Rope", value: "2 m" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(1),
         rightTitle: "False!",
@@ -579,7 +572,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "Place the right symbol between 4 and 6.",
         visual: () => <LineScale marks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} picked={[4]} second={[6]} small />,
         question: "4 ? 6",
-        layout: "grid",
         options: options([
           [">", P.order],
           ["<", P.actions],

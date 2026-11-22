@@ -54,7 +54,7 @@ const OP = {
 
 /** A "which operator?" question: the situation, four operators and the right one's place. */
 const whichOperator = (line: string, choices: readonly string[], correct: number, right: string, wrong: string): QuizStage =>
-  quiz({ line, layout: "grid", options: neutral(choices), correctId: at(correct), rightTitle: "Exactly!", right, wrong });
+  quiz({ line, options: neutral(choices), correctId: at(correct), rightTitle: "Exactly!", right, wrong });
 
 /** Screens 29-39 (comparison and Boolean, practice, debugging, transfer, reflection). */
 export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {

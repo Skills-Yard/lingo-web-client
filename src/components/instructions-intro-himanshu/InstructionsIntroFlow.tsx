@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { preload } from "react-dom";
 import {
   configureRiveRuntime,
+  RIVE_WASM_URL,
   REWARD_RIVE_SRC,
   ORBI_RIVE_SRC,
 } from "@/lib/rive/runtime";
@@ -318,7 +319,7 @@ export function InstructionsIntroFlow({
   // mounts — this is what removes the long "blank canvas" delay.
   useEffect(() => {
     configureRiveRuntime();
-    preload("/rive/rive.wasm", { as: "fetch" });
+    preload(RIVE_WASM_URL, { as: "fetch" });
     preload(REWARD_RIVE_SRC, { as: "fetch" });
     preload(ORBI_RIVE_SRC, { as: "fetch" });
   }, []);

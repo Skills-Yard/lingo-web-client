@@ -18,6 +18,7 @@ import {
   WORLD_STAGE_HEIGHT,
 } from "./levelConfig";
 import { LevelStartPopup } from "../LevelStartPopup";
+import { RoadArt, RoadArtFilter } from "./RoadArt";
 
 interface LevelWorldProps {
   modulesCompleted: number;
@@ -102,6 +103,8 @@ export function LevelWorld({
         height: `${stageHeight}px`,
       }}
     >
+      <RoadArtFilter />
+
       {/* Background Decorative SVGs */}
       {DECORATION_CONFIGS.map((dec) => (
         <img
@@ -136,21 +139,25 @@ export function LevelWorld({
       </div>
 
       {/* Roads: the gate to level 1, then each level to the next */}
-      {roads.map((road) => (
-        <img
-          key={road.id}
-          src={isDark ? "/images/level-platfrom/dark-theme-road.svg" : "/images/level-platfrom/grid-road.svg"}
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute z-5 select-none"
-          style={{
-            top: `${road.top}px`,
-            left: `${road.left}px`,
-            width: `${road.width ?? roadWidth}px`,
-            ...(road.mirrored ? { transform: "scaleX(-1)" } : {}),
-          }}
-        />
-      ))}
+      {roads.map((road) =>
+        isDark ? (
+          <img
+            key={road.id}
+            src="/images/level-platfrom/dark-theme-road.svg"
+            alt=""
+            aria-hidden
+            className="pointer-events-none absolute z-5 select-none"
+            style={{
+              top: `${road.top}px`,
+              left: `${road.left}px`,
+              width: `${road.width ?? roadWidth}px`,
+              ...(road.mirrored ? { transform: "scaleX(-1)" } : {}),
+            }}
+          />
+        ) : (
+          <RoadArt key={road.id} className="z-5" from={road.from} to={road.to} />
+        ),
+      )}
 
       {/* Buildings beside the first levels' tiles, each with its icon on the roof; tapping one is tapping its level.
           They sit a layer behind the roads (z-5) and the tiles (z-20+), above only the scenery (z-2). */}
@@ -192,21 +199,25 @@ export function LevelWorld({
         className="pointer-events-none absolute z-5 overflow-hidden select-none"
         style={{
           top: `${finalRoad.top}px`,
-          left: `${finalRoad.left}px`,
-          width: `${finalRoad.width ?? roadWidth}px`,
+          left: isDark ? `${finalRoad.left}px` : 0,
+          width: isDark ? `${finalRoad.width ?? roadWidth}px` : "390px",
           height: `${finalRoad.height}px`,
         }}
       >
-        <img
-          src={isDark ? "/images/level-platfrom/dark-theme-road.svg" : "/images/level-platfrom/grid-road.svg"}
-          alt=""
-          aria-hidden
-          className="select-none"
-          style={{
-            width: `${finalRoad.width ?? roadWidth}px`,
-            ...(finalRoad.mirrored ? { transform: "scaleX(-1)" } : {}),
-          }}
-        />
+        {isDark ? (
+          <img
+            src="/images/level-platfrom/dark-theme-road.svg"
+            alt=""
+            aria-hidden
+            className="select-none"
+            style={{
+              width: `${finalRoad.width ?? roadWidth}px`,
+              ...(finalRoad.mirrored ? { transform: "scaleX(-1)" } : {}),
+            }}
+          />
+        ) : (
+          <RoadArt from={finalRoad.from} to={finalRoad.to} origin={{ x: 0, y: finalRoad.top }} />
+        )}
       </div>
 
       {/* Level Start Popup anchored exactly to the clicked platform */}

@@ -5,13 +5,13 @@ import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
+import { PointedLook, useAnswerHint } from "@/components/level-one/answerHint";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
 import { BELOW_TITLE, BottleBackdrop, BottleWalletBackdrop, ClassroomBackdrop, GAP_BELOW_SCENE, HEX_LIFT, ItemsBackdrop, MiniAppBackdrop, NamesBackdrop, SCENE_BOTTOM_LIFTED_PHONE, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
-import { COLUMN_LEFT, type BubbleSize, type Choice } from "@/components/level-two/levelTwo";
+import { COLUMN_LEFT, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { RAISED } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -20,7 +20,8 @@ import { COLUMN_W } from "@/lib/questionColumn";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { fireSceneTrigger } from "@/lib/rive/variableHost";
 import { TipCard } from "@/components/sequence/HexScreen";
-import { IDLE_LOOK, OPTION, parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
+import { useBubbleSize } from "./bubbleWidth";
+import { IDLE_LOOK, MAX_OPTION_WORDS, OPTION, parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
 import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIABLE_STEPS, type SceneKind } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
@@ -71,24 +72,28 @@ const backdropFor = (scene: SceneKind, step: number, lifted: boolean) => {
   }
 };
 
-/** Hex's line is two lines at most: a short one fits the narrow bubble. */
-const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 44 ? 190 : 240 });
-
-/** Answers this short (and without a picture) stand as cards side by side; longer ones are rows. */
-const SHORT_ANSWER_CHARS = 12;
 /** Four answers this short stand as two rows of two cards. */
 const FOUR_ANSWER_CHARS = 18;
+/**
+ * A name longer than this (a variable such as `present_students`) may break after its underscores, so three of them
+ * fit three cards across; a shorter one (`water_level`) stays whole and widens its card instead.
+ */
+const LONG_NAME_CHARS = 12;
+
+const wordCount = (text: string) => text.trim().split(/\s+/).length;
+/** `text` as set in a card: a long name gets a place to break after each underscore (a zero-width space). */
+const cardText = (text: string) => (text.length > LONG_NAME_CHARS ? text.replace(/_/g, "_​") : text);
 
 /**
- * Whether the answers are cards across (objects to tap, three short answers, or four short ones two by two) rather
- * than rows.
+ * Whether the answers are cards across rather than rows: objects to tap, three answers of at most `MAX_OPTION_WORDS`
+ * words (mini cards in one row, with a picture above the words if they have one), or four short ones two by two.
  */
 const acrossCards = (stage: QuizStage) =>
   stage.layout === "grid" ||
-  (stage.options.length === 3 && stage.options.every((option) => !option.icon && option.text.length <= SHORT_ANSWER_CHARS)) ||
+  (stage.options.length === 3 && stage.options.every((option) => wordCount(option.text) <= MAX_OPTION_WORDS)) ||
   (stage.options.length === 4 && stage.options.every((option) => !option.icon && !option.node && !option.emoji && option.text.length <= FOUR_ANSWER_CHARS));
 
-const hasPictures = (options: readonly Option[]) => options.some((option) => option.node || option.emoji);
+const hasPictures = (options: readonly Option[]) => options.some((option) => option.node || option.emoji || option.icon);
 const columnsFor = (count: number) => (count === 3 ? 3 : 2);
 
 /** Rows of answers in words, or cards to tap: the height they take. */
@@ -114,7 +119,7 @@ function ObjectGrid({
   selectedId,
   checked,
   fadeOut,
-  hinted,
+  pointedId,
   withHint,
   spill,
   onPick,
@@ -125,7 +130,8 @@ function ObjectGrid({
   checked: boolean;
   /** The cards fade out (a right answer clears the screen). */
   fadeOut: boolean;
-  hinted: boolean;
+  /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
+  pointedId: string | null;
   withHint: boolean;
   spill: boolean;
   onPick: (id: string) => void;
@@ -142,12 +148,13 @@ function ObjectGrid({
     >
       {options.map((option) => {
         const state = optionState(option.id, selectedId, checked, correctId);
-        const hintHere = hinted && selectedId === null && option.id === correctId;
+        const pointed = pointedId === option.id && state === "idle";
         const spilling = spill && checked && state === "wrong";
         return (
-          <HintFloat key={option.id} className="relative flex min-w-0" spin={false} active={hintHere}>
+          <div key={option.id} className="relative flex min-w-0">
             <motion.button
               type="button"
+              data-hint={option.id}
               disabled={checked}
               onClick={() => {
                 playClickSound();
@@ -164,16 +171,14 @@ function ObjectGrid({
                 state === "idle" ? `border ${IDLE_LOOK}` : `border-4 ${LOOKS[state].card}`
               }`}
             >
-              <motion.span
-                aria-hidden
-                initial={false}
-                animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                className="pointer-events-none absolute inset-0 -z-10 rounded-[12px] bg-[#FFE7D1] dark:bg-[#33220F]"
-              />
-              {pictures && <span className="flex h-[54px] items-center justify-center text-[44px] leading-none">{option.node ?? option.emoji}</span>}
-              <span className={`text-center leading-6 font-semibold text-[#444444] dark:text-white ${pictures ? "" : "whitespace-nowrap"}`} style={{ fontSize: OPTION.font }}>
-                {option.text}
+              {pictures && (
+                <span className="flex h-[54px] items-center justify-center text-[44px] leading-none">
+                  {option.icon ? <img src={option.icon} alt="" width={58} height={54} draggable={false} className="h-[54px] w-auto select-none object-contain" /> : (option.node ?? option.emoji)}
+                </span>
+              )}
+              {/* Two words stand on two lines when they do not fit on one (the card is 56px tall, two lines are 40). */}
+              <span className="text-center leading-5 font-semibold text-[#444444] dark:text-white" style={{ fontSize: OPTION.font }}>
+                {cardText(option.text)}
               </span>
               <AnimatePresence>
                 {spilling &&
@@ -191,8 +196,9 @@ function ObjectGrid({
                     </motion.span>
                   ))}
               </AnimatePresence>
+              <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
         );
       })}
     </motion.div>
@@ -200,8 +206,8 @@ function ObjectGrid({
 }
 
 /** An interaction stage's own picture and controls. */
-function InteractionHost({ stage, slip, done, finished }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean }) {
-  return <>{stage.render({ slip, done, finished })}</>;
+function InteractionHost({ stage, slip, done, finished, hint }: { stage: InteractionStage; slip: () => void; done: () => void; finished: boolean; hint: number }) {
+  return <>{stage.render({ slip, done, finished, hint })}</>;
 }
 
 /**
@@ -211,7 +217,7 @@ function InteractionHost({ stage, slip, done, finished }: { stage: InteractionSt
  * result panel (with Hex) slides up. A right answer goes on; a wrong one is
  * tried again, with the right one never shown. An interaction stage is
  * something to do (tap, drag, slide) that unlocks Continue when it is done.
- * Going on from the last stage follows the module's flow (skips and detours).
+ * Going on from the last stage goes to the next screen (`variableNext`).
  */
 export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const router = useRouter();
@@ -219,7 +225,10 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // A question's hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
+  // How many times the hint button has been pressed on this stage: an interaction shows its own help for each press.
+  const [hintPresses, setHintPresses] = useState(0);
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // An interaction stage's outcome.
@@ -253,8 +262,11 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const right = correct || alsoOk;
   // A pick that is fine too is shown as right (the other right answer isn't lit up beside it).
   const shownCorrectId = checked && !right ? "" : alsoOk ? (selectedId ?? "") : (quiz?.correctId ?? "");
-  const hasHint = !!quiz && (!!quiz.hintText || !!quiz.hintVisual);
-  const hintShown = hinted || (!!quiz?.hintOnMiss && attempt > 0);
+  // Every question has the hint button; an interaction has it only if it says so.
+  const hasHint = !!quiz || !!interaction?.hint;
+  // What Hex says, and the bubble that holds it in two lines.
+  const sayLine = quiz ? quiz.line : "";
+  const bubble = useBubbleSize(sayLine);
   // A right answer clears the screen: the answers fade out and, as Hex and his bubble run off, the scene rises into their room. (A wrong one keeps the answers, for another try.)
   const cleared = !!quiz && checked && right;
   // Hex and his bubble leave after any check, right or wrong, and the scene rises into their room at the head, clear of the answers that rise from below (a wrong answer's stay for another try).
@@ -292,6 +304,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const done = useCallback(() => finishNow.current(), []);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     record(right);
   };
@@ -303,6 +316,12 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
     setAttempt((previous) => previous + 1);
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
   const advance = () => {
     if (lastStage) {
       router.push(variableNext(screen.step));
@@ -312,7 +331,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
     setSelectedId(null);
     setChecked(false);
     setAnswer(null);
-    setHinted(false);
+    answerHint.stop();
+    setHintPresses(0);
     setAttempt(0);
     setFinished(false);
   };
@@ -324,8 +344,10 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
     else tryAgain();
   };
 
+  // A question's hint points at the right answer (it is not picked for the learner); an interaction shows its own help for each press.
   const useHint = () => {
-    setHinted(true);
+    if (quiz) answerHint.press(quiz.correctId);
+    else setHintPresses((previous) => previous + 1);
     noteStruggle(screen.step, "hint");
   };
 
@@ -362,7 +384,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       ctaLabel={
         quiz
           ? !checked
-            ? (quiz.ctaLabel ?? "Continue")
+            ? (quiz.ctaLabel ?? "Check")
             : right
               ? (quiz.nextLabel ?? "Next")
               : "Try again"
@@ -370,7 +392,8 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
             ? (interaction?.nextLabel ?? "Next")
             : (interaction?.ctaLabel ?? "Continue")
       }
-      hint={hasHint ? { visible: !checked, onUse: useHint } : undefined}
+      // A question's hint goes once it is checked; an interaction's goes once it is done.
+      hint={hasHint ? { visible: quiz ? !checked : !finished, onUse: useHint } : undefined}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -413,19 +436,20 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               transition={{ duration: 0.35 }}
               // Hex's bubble is lifted (see `HEX_LIFT`), clear of the picture's top; only it moves, what is under it stays where it was.
               style={{ overflow: checked ? "hidden" : "visible", top: longLine ? 0 : -HEX_LIFT }}
-              className="relative flex w-full shrink-0 justify-center px-4"
+              // Only 4px in from the edges: Hex and a wide bubble (up to 272px, see `bubbleWidth`) need the room.
+              className="relative flex w-full shrink-0 justify-center px-1"
             >
               {longLine ? (
                 <div className="w-[340px]">
-                  <TipCard>{hintShown && quiz.hintText ? quiz.hintText : quiz.line}</TipCard>
+                  <TipCard>{quiz.line}</TipCard>
                 </div>
               ) : (
                 <HexBubble
                   key={`${stageIndex}-${attempt}`}
                   entryKey={`variable-${screen.step}-${stageIndex}-${attempt}`}
                   hex="left"
-                  line={[{ text: hintShown && quiz.hintText ? quiz.hintText : quiz.line }]}
-                  size={bubbleSize(hintShown && quiz.hintText ? quiz.hintText : quiz.line)}
+                  line={[{ text: quiz.line }]}
+                  size={bubble}
                   leaving={checked}
                 />
               )}
@@ -441,13 +465,6 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
                 style={{ scale: fit, originY: 1, pointerEvents: cleared ? "none" : undefined }}
               >
                 {quiz.visual?.({ attempt, picked: selectedId, checked, correct })}
-                <AnimatePresence>
-                  {hintShown && quiz.hintVisual && (
-                    <motion.div key="hint-visual" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
-                      {quiz.hintVisual}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
               </motion.div>
             </div>
           </div>
@@ -459,10 +476,10 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={cleared}
-              hinted={hintShown}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
               spill={!!quiz.spill}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           ) : (
             <AnswerCards
@@ -471,7 +488,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               selectedId={selectedId}
               checked={checked}
               fadeOut={cleared}
-              hinted={hintShown}
+              pointedId={answerHint.pointedId}
               withHint={hasHint}
               rise={OPTION.rise}
               bottomGap={OPTION.aboveButtons}
@@ -482,13 +499,15 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
               idleLook={IDLE_LOOK}
               gap={OPTION.gap}
               fontSize={OPTION.font}
-              onPick={setSelectedId}
+              onPick={pick}
             />
           )}
+          {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+          {answerHint.hand}
         </>
       ) : (
         <div className="pointer-events-none absolute inset-x-0 flex flex-col items-center" style={{ top: titleEnd, bottom: bodyBottom }}>
-          {interaction && <InteractionHost stage={interaction} slip={slip} done={done} finished={finished} />}
+          {interaction && <InteractionHost stage={interaction} slip={slip} done={done} finished={finished} hint={hintPresses} />}
         </div>
       )}
 

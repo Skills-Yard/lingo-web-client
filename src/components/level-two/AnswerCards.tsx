@@ -3,11 +3,12 @@
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
+import { PointedLook } from "@/components/level-one/answerHint";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { RAISED } from "@/components/ui/raised";
 import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
+import { RightBounce } from "./RightBounce";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { COLUMN_LEFT, type Choice } from "./levelTwo";
@@ -28,8 +29,8 @@ type AnswerCardsProps = {
   checked: boolean;
   /** The cards fade out completely, so the robot's move behind them can be seen. */
   fadeOut: boolean;
-  /** The hint was used: the right card is filled in orange until something is picked. */
-  hinted: boolean;
+  /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
+  pointedId: string | null;
   /** The screen has the hint button beside its main button. */
   withHint: boolean;
   /** How far they rise once the result panel is up (default `CARDS_RISE`). */
@@ -66,6 +67,12 @@ type AnswerCardsProps = {
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
   revealed?: boolean;
+  /** Stage px from the top, where the rows should hang there (under a picture) instead of standing on the button row; they still rise by `rise` once the result panel is up. */
+  top?: number;
+  /** The space (px) between a row's picture and its text, where it should differ from the usual 22. */
+  iconGap?: number;
+  /** The right row (once it is shown as right) bounces once, with its shine and stars (`RightBounce`), as the match boards' right cards do. */
+  bounceRight?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -74,7 +81,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, bounceRight = false, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
   const folding = onlyPicked !== undefined;
   return (
@@ -84,20 +91,24 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
       transition={
         checked
           ? PANEL_SPRING
-          : { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } }
+          : {
+              opacity: { duration: 0.3, delay: 0.3 },
+              y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 },
+            }
       }
       className="pointer-events-auto absolute z-[1] flex flex-col"
       // Rows that can fold away carry their own gap (a top margin), so a folded row leaves none behind.
-      style={{ bottom: aboveButtons(bottomGap, withHint), left: width ? `calc(50% - ${width / 2}px)` : COLUMN_LEFT, width: width ?? COLUMN_W, gap: folding ? 0 : gap }}
+      style={{ ...(top === undefined ? { bottom: aboveButtons(bottomGap, withHint) } : { top }), left: width ? `calc(50% - ${width / 2}px)` : COLUMN_LEFT, width: width ?? COLUMN_W, gap: folding ? 0 : gap }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
         const look = LOOKS[state];
-        const hintHere = hinted && selectedId === null && choice.id === correctId;
-        const row = (
-          <HintFloat key={choice.id} className="relative w-full" spin={false} active={hintHere}>
+        const pointed = pointedId === choice.id && state === "idle";
+        const plainRow = (
+          <div key={choice.id} className="relative w-full">
             <motion.button
               type="button"
+              data-hint={choice.id}
               disabled={checked}
               onClick={() => {
                 playClickSound();
@@ -105,7 +116,10 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 onPick(choice.id);
               }}
               aria-pressed={state === "selected"}
-              animate={{ scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1, opacity: fadeOut ? 0 : 1 }}
+              animate={{
+                scale: state === "selected" ? [1, 0.95, 1.05, 1] : 1,
+                opacity: fadeOut ? 0 : 1,
+              }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
               style={{
@@ -116,32 +130,52 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 state === "idle" ? (idleLook ?? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]") : look.card
               }`}
             >
-              {/* The hint's orange fill, wiped in from the left behind the content. */}
-              <motion.span
-                aria-hidden
-                initial={false}
-                animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
-              />
-              <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`}>
+              <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`} style={iconGap !== undefined ? { columnGap: iconGap } : undefined}>
                 {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
                 {(!tight || anyPicture) && (
-                  <span className={`flex shrink-0 items-center justify-center ${tight ? "" : "h-[47.31px] w-[46.68px]"}`} style={tight ? { height: tight.iconSize, width: tight.iconSize } : undefined}>
-                    <SlotImage file={choice.icon} className="max-h-full max-w-full object-contain" />
+                  <span
+                    className={`flex shrink-0 items-center justify-center ${tight ? "" : "h-[47.31px] w-[46.68px]"}`}
+                    style={
+                      tight
+                        ? { height: tight.iconSize, width: tight.iconSize }
+                        : undefined
+                    }
+                  >
+                    <SlotImage
+                      file={choice.icon}
+                      className="max-h-full max-w-full object-contain"
+                    />
                   </span>
                 )}
                 <span
                   className="min-w-0 flex-1 text-[14px] leading-[22px] font-medium text-[#444444] dark:text-white"
-                  style={fontSize ? { fontSize, lineHeight: `${fontSize + 8}px` } : undefined}
+                  style={
+                    fontSize
+                      ? { fontSize, lineHeight: `${fontSize + 8}px` }
+                      : undefined
+                  }
                 >
                   {choice.text}
                 </span>
               </span>
               {/* Figma "Ellipse 3" (34 x 34), at the row's end. */}
-              {!compact && <span aria-hidden className="size-[34px] shrink-0 rounded-full" />}
+              {!compact && (
+                <span
+                  aria-hidden
+                  className="size-[34px] shrink-0 rounded-full"
+                />
+              )}
+              <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
+        );
+        // A little after the check, so the rows have risen above the result panel by the time it jumps. Rows that fade away (`fadeOut`) don't bounce: nobody would see it.
+        const row = bounceRight ? (
+          <RightBounce key={choice.id} play={state === "correct" && !fadeOut} delay={0.2} radius={tight?.radius ?? 18} className="w-full">
+            {plainRow}
+          </RightBounce>
+        ) : (
+          plainRow
         );
         if (folding) {
           const gone = !!onlyPicked && checked && choice.id !== selectedId;
@@ -153,7 +187,12 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               animate={
                 gone
                   ? { height: 0, opacity: 0, marginTop: 0, overflow: "hidden" }
-                  : { height: "auto", opacity: 1, marginTop: index === 0 ? 0 : gap, transitionEnd: { overflow: "visible" } }
+                  : {
+                      height: "auto",
+                      opacity: 1,
+                      marginTop: index === 0 ? 0 : gap,
+                      transitionEnd: { overflow: "visible" },
+                    }
               }
               transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
               className="w-full"
@@ -163,7 +202,12 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
           );
         }
         return bounceIn ? (
-          <BounceIn key={choice.id} index={index} shown={revealed} className="w-full">
+          <BounceIn
+            key={choice.id}
+            index={index}
+            shown={revealed}
+            className="w-full"
+          >
             {row}
           </BounceIn>
         ) : (

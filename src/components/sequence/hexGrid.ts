@@ -9,6 +9,9 @@ export type HexState = { col: number; row: number; dir: Dir };
 
 export const COMMAND_LABEL: Record<Command, string> = { forward: "MOVE FORWARD", right: "TURN RIGHT" };
 
+/** The game buttons' pictures (52 x 52 SVGs, `public/animations/svg/game-path/`): the straight arrow and the turn-right arrow. */
+export const COMMAND_PICTURE: Record<Command, string> = { forward: "/animations/svg/game-path/arrow-up.svg", right: "/animations/svg/game-path/arrow-right.svg" };
+
 const DELTA: Record<Dir, { col: number; row: number }> = {
   0: { col: 0, row: -1 },
   1: { col: 1, row: 0 },

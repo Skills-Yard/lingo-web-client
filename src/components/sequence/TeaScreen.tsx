@@ -108,7 +108,7 @@ export function TeaScreen() {
         <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} />
       </CentredRow>
       <ArrangeDock geo={GEO} rise={checked ? BOARD_RISE : 0}>
-        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
+        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} hideShadows={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />

@@ -92,7 +92,7 @@ Built from the "3. Variable" spec (its screen number is in brackets; screens wit
 | `/module/variable?step=8` | "We Need More Water!" [8] |
 | `/module/variable?step=9` | "Same Bottle, Different Amount!" [9] |
 | `/module/variable?step=10` | "Let's Drink 200 ml!" [10] |
-| `/module/variable?step=11` | "The Bottle Is Empty!" (skipped after clean 8 and 10) [11] |
+| `/module/variable?step=11` | "The Bottle Is Empty!" [11] |
 | `/module/variable?step=12` | "Imagine Everyone Has the Same Bottle!" [12] |
 | `/module/variable?step=13` | "Variables Have Names and Values!" (tap Name and Value) [13] |
 | `/module/variable?step=14` | "A Name and a Value!" (sort name / value, then a question) [14] |
@@ -102,10 +102,10 @@ Built from the "3. Variable" spec (its screen number is in brackets; screens wit
 | `/module/variable?step=18` | "Time to Buy Some School Supplies!" [18] |
 | `/module/variable?step=19` | "Let's Organise the Prices!" (drag names onto prices, then a question) [19] |
 | `/module/variable?step=20` | "How Much Do We Need to Pay?" [20] |
-| `/module/variable?step=21` | "We Also Need an Eraser!" (skipped after clean 18 and 20) [21] |
+| `/module/variable?step=21` | "We Also Need an Eraser!" [21] |
 | `/module/variable?step=22` | "Let's Manage Your Pocket Money!" [22] |
 | `/module/variable?step=23` | "You Received Another ₹50!" [23] |
-| `/module/variable?step=24` | "You Bought a Toy for ₹30!" (skipped after clean 22 and 23) [24] |
+| `/module/variable?step=24` | "You Bought a Toy for ₹30!" [24] |
 | `/module/variable?step=25` | "Can You Track Your Balance?" (three balance questions) [25] |
 | `/module/variable?step=26` | "Can We Build a Simple Addition App?" [26] |
 | `/module/variable?step=27` | "What Steps Does Our App Need?" (drag six steps into order) [27] |
@@ -270,8 +270,7 @@ Built from the "6. Conditions" spec: one step for each of its 38 screens (the st
 | Voiced screen opened directly | Plays no voiceover: the browser blocks audio until the user taps something |
 | Sequence module: Back / Continue around step 20 | Step 20 is skipped (and Back skips it) when the learner struggled on step 19 |
 | Sequence module: score and branches | Kept in session storage (`lingo.sequence-*`), cleared when the module is opened from the path |
-| Variable module: skips | Screens 11, 21 and 24 are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint |
-| Variable module: detours | A learner who misses (or uses the hint on) 8, 10, 14, 16, 20, 21, 23, 24, 27 or 28 is sent once to the screen that taught the idea (7, 13, 19, 8, 10, 26, 20), then on from the screen after the one they missed |
+| Variable module: order | Strictly 1 to 34, then "Lesson complete!"; Back goes to the screen before. No screen is skipped and nobody is sent back to an earlier one, whatever they answered (`variableNext` / `variablePrevious` in `components/variable/variable.ts`) |
 | Data Types module: skips | Screens 15, 20 and the five reflection screens (25-29) are skipped (and Back skips them) when the screens they repeat were answered right the first time with no hint (see `SKIPS` in `components/datatypes/datatypes.ts`) |
 | Data Types module: detours | A learner who misses (or uses the hint on) a screen is sent once to the earlier screen that taught the idea, then on from the screen after the one they missed (see `DETOURS`) |
 | Data Types module: score and branches | Kept in session storage (`lingo.datatypes-*`), cleared when the module is opened from the path |

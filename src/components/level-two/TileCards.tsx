@@ -3,12 +3,13 @@
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
+import { PointedLook } from "@/components/level-one/answerHint";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { RAISED } from "@/components/ui/raised";
 import { CARDS_RISE, GAP_ABOVE_BUTTONS } from "./AnswerCards";
 import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
+import { RightBounce } from "./RightBounce";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { COLUMN_LEFT, type Choice } from "./levelTwo";
@@ -41,7 +42,8 @@ type TileCardsProps = {
   checked: boolean;
   /** The cards fade out completely, so the robot's move behind them can be seen. */
   fadeOut: boolean;
-  hinted: boolean;
+  /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
+  pointedId: string | null;
   withHint: boolean;
   /** The text is a sentence: set smaller and left to wrap. */
   longText?: boolean;
@@ -61,6 +63,8 @@ type TileCardsProps = {
   bottomGap?: number;
   /** How far they rise once the result panel is up (default `CARDS_RISE`). */
   rise?: number;
+  /** The right card (once it is shown as right) bounces once, with its shine and stars (`RightBounce`), as the match boards' right cards do. */
+  bounceRight?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -69,7 +73,7 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, bounceRight = false, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -85,11 +89,12 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
-        const hintHere = hinted && selectedId === null && choice.id === correctId;
+        const pointed = pointedId === choice.id && state === "idle";
         const card = (
-          <HintFloat key={choice.id} className="relative flex min-w-0 flex-1" spin={false} active={hintHere}>
+          <div key={choice.id} className="relative flex min-w-0 flex-1">
             <motion.button
               type="button"
+              data-hint={choice.id}
               disabled={checked}
               onClick={() => {
                 playClickSound();
@@ -105,14 +110,6 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 state === "idle" ? `border-white dark:border-transparent ${choice.tint ?? "bg-white"}` : LOOKS[state].card
               }`}
             >
-              {/* The hint's orange fill, wiped in from the left behind the content. */}
-              <motion.span
-                aria-hidden
-                initial={false}
-                animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
-              />
               {choice.tag ? (
                 <span className={`flex shrink-0 items-center justify-center rounded-[12px] text-[20px] leading-[120%] font-semibold whitespace-nowrap ${look.picture} ${choice.tag.look}`}>{choice.tag.text}</span>
               ) : (
@@ -125,15 +122,24 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
               >
                 {choice.text}
               </span>
+              <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
+        );
+        // A little after the check, so the cards have risen above the result panel by the time it jumps. Cards that fade away (`fadeOut`) don't bounce: nobody would see it.
+        const tile = bounceRight ? (
+          <RightBounce key={choice.id} play={state === "correct" && !fadeOut} delay={0.2} radius={8} className="flex min-w-0 flex-1">
+            {card}
+          </RightBounce>
+        ) : (
+          card
         );
         return bounceIn ? (
           <BounceIn key={choice.id} index={index} shown={revealed} className="flex min-w-0 flex-1">
-            {card}
+            {tile}
           </BounceIn>
         ) : (
-          card
+          tile
         );
       })}
     </motion.div>

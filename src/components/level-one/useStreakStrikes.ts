@@ -3,9 +3,9 @@ import { addBatteryUnits } from "@/components/home/batteryStore";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { BATTERY_UNITS, noteRightAnswer, noteWrongAnswer, type StreakBeat } from "@/lib/moduleStreak";
 import { chargeBattery } from "@/lib/rive/batteryHost";
-import { electrifyModuleButton, holdModuleButton, releaseModuleButton } from "@/lib/rive/moduleButtonHost";
-import { fireProgressTrigger, startStrikeLoop, stopStrikeLoop } from "@/lib/rive/progressBarHost";
-import { BUTTON, PROGRESS_BAR } from "@/lib/rive/runtime";
+import { electrifyModuleButton, skipModuleButtonElectric } from "@/lib/rive/moduleButtonHost";
+import { fireProgressTrigger, skipStrikes, startStrikeLoop, stopStrikeLoop } from "@/lib/rive/progressBarHost";
+import { PROGRESS_BAR } from "@/lib/rive/runtime";
 
 type StreakStrikesOptions = {
   /** The latest checked answer. */
@@ -17,9 +17,9 @@ type StreakStrikesOptions = {
 /**
  * Keeps the module's run (see `moduleStreak`) and plays what it earns on the
  * progress bar and the battery. Only a checked answer moves it: opening a
- * screen plays nothing, and what it played belongs to its screen: the module
- * button takes no clicks until it is over (it is not drawn disabled), so the
- * learner moves on only after, and the returned function ends it early.
+ * screen plays nothing, and what it played belongs to its screen. The module
+ * button stays clickable while it plays, so the learner can skip it by moving
+ * on; the returned function ends it early (the shell calls it on Continue).
  */
 export const useStreakStrikes = ({ answer, withHint }: StreakStrikesOptions) => {
   // Read by the effect below without re-running it when only the hint changes.
@@ -29,20 +29,33 @@ export const useStreakStrikes = ({ answer, withHint }: StreakStrikesOptions) => 
   }, [withHint]);
 
   const pending = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  /** This screen's answer started a strike, a loop or a charge, which may still be playing. */
+  const played = useRef(false);
 
-  /** Cancels a beat still waiting to play, switches the loop off and lets the button go. */
-  const endStrikes = useCallback(() => {
+  /** Cancels a beat still waiting to play and switches the loop off. */
+  const cancelStrikes = useCallback(() => {
     clearTimeout(pending.current);
     stopStrikeLoop();
-    releaseModuleButton();
   }, []);
 
+  /**
+   * Moving on from the screen ends what its answer played, now: a beat still waiting is dropped, the loop is switched off, and a
+   * strike or electric effect already playing is played to its end at once (the bar and the button are shared by every screen, so
+   * what is left to play would carry on over the next one). The button never waits for any of it.
+   */
+  const endStrikes = useCallback(() => {
+    cancelStrikes();
+    if (!played.current) return;
+    played.current = false;
+    skipStrikes();
+    skipModuleButtonElectric();
+  }, [cancelStrikes]);
+
   /** A strike, a loop and a battery charge each come with the button's electric effect. */
-  const playBeat = useCallback(({ trigger, loopSeconds, battery, playSeconds }: StreakBeat) => {
+  const playBeat = useCallback(({ trigger, loopSeconds, battery }: StreakBeat) => {
     if (battery) addBatteryUnits(BATTERY_UNITS);
     if (!trigger && !loopSeconds && !battery) return;
-    // Held from the check, not from the (delayed) start, so there is no click to catch in between.
-    holdModuleButton(PROGRESS_BAR.strikeDelayMs + Math.max(playSeconds, BUTTON.electricSeconds) * 1000);
+    played.current = true;
     pending.current = setTimeout(() => {
       if (trigger) fireProgressTrigger(trigger);
       if (loopSeconds) startStrikeLoop(loopSeconds);
@@ -57,15 +70,15 @@ export const useStreakStrikes = ({ answer, withHint }: StreakStrikesOptions) => 
   useEffect(() => {
     if (answerId === undefined) return;
     if (!answerCorrect) {
-      endStrikes();
+      cancelStrikes();
       noteWrongAnswer();
     } else if (!answerPartial) {
       playBeat(noteRightAnswer(withHintRef.current));
     }
-  }, [answerId, answerCorrect, answerPartial, endStrikes, playBeat]);
+  }, [answerId, answerCorrect, answerPartial, cancelStrikes, playBeat]);
 
   // Leaving the screen ends them too, so the next one never opens on a loop or a late strike.
-  useEffect(() => endStrikes, [endStrikes]);
+  useEffect(() => cancelStrikes, [cancelStrikes]);
 
   return endStrikes;
 };

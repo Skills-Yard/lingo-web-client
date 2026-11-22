@@ -152,7 +152,7 @@ export const CharacterOnStage = ({ line, silenced, onStage, framing, withHint, c
 
   return (
     <>
-      <div ref={buttonLine} aria-hidden className="pointer-events-none absolute left-0 h-0 w-0" style={{ bottom: aboveButtons(LOWERED_GAP) }} />
+      <div ref={buttonLine} aria-hidden className="pointer-events-none absolute left-0 h-0 w-0" style={{ bottom: aboveButtons(LOWERED_GAP, withHint) }} />
       <motion.div
         aria-hidden
         initial={false}

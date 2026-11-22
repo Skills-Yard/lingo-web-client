@@ -106,12 +106,15 @@ export function GroupStage({
         <div className={`${COLUMNS} pb-3`}>
           {items.map((item) => (
             // Each card keeps its own place in the grid: one taken away leaves a gap, the others don't move.
-            <div key={item.id} className="h-[52px] w-[104px]">
+            <div key={item.id} className="relative h-[52px] w-[104px]">
+              {/* The card's shadow in its place: a plain shape with nothing in it, there from the start behind the card (which covers it), so it is already showing when the card is dragged off, and left there once the card is in a column (until the empty grid folds away). It is the card's only shadow here (the card brings none of its own). */}
+              <div aria-hidden className={`${CARD_LOOK_FLAT} pointer-events-none absolute inset-0`} style={{ backgroundColor: "rgba(0,0,0,0.09)", borderColor: "transparent" }} />
               <AnimatePresence>
                 {!(item.id in placed) && (
                   <motion.div key={item.id} initial={false} exit={{ opacity: 0, scale: 0.6 }} transition={{ duration: 0.2 }}>
                     <DragCard
                       label={item.label}
+                      shadow={false}
                       disabled={finished}
                       onTap={() => {
                         playClickSound();
