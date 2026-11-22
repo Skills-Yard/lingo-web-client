@@ -93,7 +93,6 @@ export const AnimatedCharacter = ({ character, animationId, runToken, playing, o
   useEffect(
     () => () => {
       mixer.stopAllAction();
-      mixer.uncacheRoot(character.model);
       current.current = null;
     },
     [mixer, character],

@@ -3,20 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import type { HTMLMotionProps } from "framer-motion";
-import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize } from "lucide-react";
+import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize, UserRound } from "lucide-react";
 import { setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
-import {
-  CHARACTER_CHOICES,
-  setCharacter,
-  useCharacterLoading,
-  useCharacterLook,
-} from "@/components/character3d/characterLook";
 import { useFullscreen } from "@/hooks/useFullscreen";
 import { energyHref } from "@/lib/routes";
-import { useBatteryTap } from "./batteryTap";
+
+/** The mentor picker draws 3D characters, so its code (three.js) is fetched when it is first opened, not with every screen. */
+const MentorPicker = dynamic(() => import("@/components/character3d/MentorPicker").then((module) => module.MentorPicker), { ssr: false });
 
 /** The fills of Level 1's answer cards (see InstructionQuizScreen), at rest. */
 const TINTS = {
@@ -52,33 +49,11 @@ export function PanelButton({ tint = "lavender", selected = false, className = "
   );
 }
 
-/**
- * Which 3D character the screens that have one show (girl, boy or anime). The choice
- * is kept (see `characterLook.ts`); the other character loads in the background, and the
- * button says so until it is on screen.
- */
-function CharacterOptions() {
-  const { character } = useCharacterLook();
-  const loading = useCharacterLoading();
-  return (
-    <div className="mt-3 border-t border-black/10 pt-3 dark:border-white/12">
-      <p className="text-[13px] leading-[18px] text-[#818185] dark:text-[#9FA19F]">3D character</p>
-      <div className="grid grid-cols-3 gap-2 [&>button]:mt-0 [&>button]:justify-center [&>button]:px-2">
-        {CHARACTER_CHOICES.map(({ id, label }) => (
-          <PanelButton key={id} selected={character === id} aria-pressed={character === id} onClick={() => setCharacter(id)}>
-            {loading === id ? `${label}…` : label}
-          </PanelButton>
-        ))}
-      </div>
-    </div>
-  );
-}
-
 /** How long the battery is held before the dev panel opens. */
 const HOLD_MS = 600;
 
 type BatteryMenuProps = {
-  /** The battery itself — tapping it opens `/energy` (or what the route gives it, see `batteryTap.tsx`), holding it the dev panel. */
+  /** The battery itself — tapping it opens `/energy`, holding it the dev panel. */
   children: ReactNode;
   /** Sizes and places the wrapper, which must be positioned (`absolute` or
    * `relative`): the panel opens under it, right-aligned. */
@@ -94,13 +69,17 @@ type BatteryMenuProps = {
 
 /**
  * A tap on the battery opens the Energy screen. TEMPORARY — FOR DEVS ONLY: a
- * hold opens a hidden testing panel (theme, full screen, infinite battery);
- * nothing about it looks pressable (no pointer, hover or focus ring).
+ * hold opens a hidden testing panel (full screen, infinite battery, and "Change
+ * character", which opens the mentor picker); nothing about it looks pressable
+ * (no pointer, hover or focus ring).
  */
 export function BatteryMenu({ children, className = "", buttonClassName = "", onBack, extraOptions }: BatteryMenuProps) {
   const fullscreen = useFullscreen();
   const { unlimited } = useBattery();
   const [open, setOpen] = useState(false);
+  // The mentor picker: not made until it is first opened, then kept so it can animate out.
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerUsed, setPickerUsed] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -108,7 +87,6 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
   // Where the panel opens: under the battery, right-aligned (fixed, in viewport px).
   const [anchor, setAnchor] = useState<{ top: number; right: number } | null>(null);
   const router = useRouter();
-  const onTap = useBatteryTap();
   const holdTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const held = useRef(false);
 
@@ -148,7 +126,6 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
             return;
           }
           if (open) return setOpen(false);
-          if (onTap) return onTap();
           router.push(energyHref(window.location.pathname + window.location.search));
         }}
         // A hold must open the panel, not the browser's long-press menu.
@@ -202,13 +179,23 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
               <InfinityIcon className="h-5 w-5" />
               {unlimited ? "Back to normal battery" : "Infinite battery"}
             </PanelButton>
-            <CharacterOptions />
+            <PanelButton
+              onClick={() => {
+                setOpen(false);
+                setPickerUsed(true);
+                setPickerOpen(true);
+              }}
+            >
+              <UserRound className="h-5 w-5" />
+              Change character
+            </PanelButton>
             {extraOptions?.(() => setOpen(false))}
           </motion.div>
         )}
       </AnimatePresence>,
       document.body,
       )}
+      {pickerUsed && <MentorPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />}
     </div>
   );
 }
