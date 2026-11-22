@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { aboveButtons } from "@/components/level-two/LevelTwoShell";
-import { Column } from "./CharacterStage";
 
 /*
  * The "tray" look of a 3D question (Figma `sequence_3` and `sequence_7`): the answers stand on a
@@ -21,10 +20,12 @@ export type TrayStand = { height: number; lip: number };
 /** Two 166 x 187 cards side by side (Figma `sequence_3`), with about 37 of tray above them (measured from the design's frame; the CSS's own 2 puts them against the tray's edge). */
 export const TRAY_PAIR: TrayStand = { height: 187, lip: 37 };
 
-/** Three rows 76 tall, 6 apart (Figma `sequence_7`: 358 wide, 16 in from each side), the tray 40 over the first. */
+/** Three rows 76 tall (Figma `sequence_7`: 358 wide, 16 in from each side), the tray 40 over the first. They are `OPTION_GAP` apart: the design's 6 looked too close (asked for 2026-11-22). */
 export const TRAY_LIST_ROW = 76;
 export const TRAY_LIST_WIDTH = 358;
-export const TRAY_LIST: TrayStand = { height: 3 * TRAY_LIST_ROW + 2 * 6, lip: 40 };
+/** The space (px) between the rows of a list of answers on the 3D route. */
+export const OPTION_GAP = 12;
+export const TRAY_LIST: TrayStand = { height: 3 * TRAY_LIST_ROW + 2 * OPTION_GAP, lip: 40 };
 
 /** How far the tray's top edge is over the main button's top (px, added to `aboveButtons(TRAY_CARD_GAP)`). */
 export const trayRise = ({ height, lip }: TrayStand) => height + lip;
@@ -34,16 +35,15 @@ const trayEdge = (stand: TrayStand, withHint: boolean) => `${aboveButtons(TRAY_C
 
 /** The grey tray: a sheet with rounded top corners, lighter at its top edge. It goes once the answer is checked (the result panel takes its place). */
 export function AnswerTray({ shown, gone, stand = TRAY_PAIR, withHint = false }: { shown: boolean; gone: boolean; stand?: TrayStand; withHint?: boolean }) {
+  // Not in the 390 px `Column`: the stage is as wide as the device, so the tray runs from one edge of the screen to the other.
   return (
-    <Column>
-      <motion.div
-        aria-hidden
-        initial={false}
-        animate={{ opacity: shown && !gone ? 1 : 0, y: shown ? 0 : 120 }}
-        transition={{ type: "spring", stiffness: 110, damping: 16 }}
-        className="absolute inset-x-0 bottom-0 rounded-t-[38px] bg-[linear-gradient(180deg,rgba(216,216,216,0.5)_0%,#D8D8D8_84.64%)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.1)_84.64%)]"
-        style={{ height: `calc(${trayEdge(stand, withHint)})` }}
-      />
-    </Column>
+    <motion.div
+      aria-hidden
+      initial={false}
+      animate={{ opacity: shown && !gone ? 1 : 0, y: shown ? 0 : 120 }}
+      transition={{ type: "spring", stiffness: 110, damping: 16 }}
+      className="absolute inset-x-0 bottom-0 rounded-t-[38px] bg-[linear-gradient(180deg,rgba(216,216,216,0.5)_0%,#D8D8D8_84.64%)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.04)_0%,rgba(255,255,255,0.1)_84.64%)]"
+      style={{ height: `calc(${trayEdge(stand, withHint)})` }}
+    />
   );
 }

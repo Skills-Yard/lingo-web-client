@@ -14,6 +14,7 @@ import { parseOnboardingAnswers, readOnboardingAnswersJson } from "@/lib/onboard
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
 import { DressScene, HOP_SECONDS, type DressStage } from "./DressScene";
+import { roomUnder } from "./SceneBackdrop";
 import { IMAGES, STEP } from "./sequence";
 import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
@@ -147,7 +148,8 @@ export function DressArrangeScreen() {
         <HexBubble key={attempt} entryKey={`dress-${attempt}`} hex="left" line={line} size={BUBBLE} leaving={checked} />
       </CentredRow>
       {/* Once checked the board fades, so what he does can be seen; a right order also sends it up as it goes. */}
-      <ArrangeDock geo={GEO} rise={checked && correct ? BOARD_RISE : 0} fade={checked}>
+      {/* The slots hang right under the room; the cards stand on the button row (where the room reaches too low for that, they overlap it, as ever). */}
+      <ArrangeDock geo={GEO} slotsTop={roomUnder} rise={checked && correct ? BOARD_RISE : 0} fade={checked}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} hideShadows={resultShown} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />

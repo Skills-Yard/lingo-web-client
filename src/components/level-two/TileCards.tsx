@@ -17,6 +17,9 @@ import { COLUMN_LEFT, type Choice } from "./levelTwo";
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 
+/** A row of cards' own height (px), for placing it (see `underAbove`): `cardHeight` where given, else the layout's. */
+export const TILE_HEIGHT: Record<"pair" | "tiles" | "badges", number> = { pair: 184, tiles: 110, badges: 119 };
+
 /** Each layout's card height, the picture's box and the text's size. */
 const LAYOUT = {
   pair: { card: "h-[184px]", picture: "h-[83px] w-[95px]", text: "text-[16px] leading-none", box: "flex items-stretch gap-3.5", inner: "gap-3.5" },
@@ -53,8 +56,8 @@ type TileCardsProps = {
   pictureHeight?: number;
   /** The card's height (px), where it should differ from the layout's. */
   cardHeight?: number;
-  /** Stage px from the top, where the cards should stand there instead of on the button row; they still rise by `rise` once the result panel is up. */
-  top?: number;
+  /** Stage px (or a CSS length, see `underAbove`) from the top, where the cards should stand there instead of on the button row; they still rise by `rise` once the result panel is up. */
+  top?: number | string;
   /** The cards bounce in one by one instead of the whole row rising together. */
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */

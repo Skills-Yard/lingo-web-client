@@ -7,6 +7,7 @@ import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
 import type { BubbleSize, Span } from "@/components/level-two/levelTwo";
+import { robotBelowDialogue } from "@/components/level-two/RobotBackdrop";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
@@ -33,11 +34,8 @@ const CARDS: readonly ArrangeCardDef[] = [
 
 /** In a row, as on "Arrange the instructions!": the slots across the top, the cards in a tray under them. */
 const GEO = arrangeGeometry({ mode: "rows", card: { width: 108, height: 124 }, count: 3, gap: 8, lane: 14, slotsOnTop: true, solidSlots: true });
-/**
- * Once checked the board rises this far (px): the filled slots (the tray is empty by then)
- * stand between Hex's line, which stays, and the result panel, so the learner's order stays in view.
- */
-const BOARD_RISE = 180;
+/** The slots start this far (px) under Hex's bubble. Up there they stay put once checked: the filled slots are clear of the result panel, so the learner's order stays in view. */
+const GAP_UNDER_HEX = 12;
 
 /**
  * "One last challenge.": the same idea away from the robot. Three tea-making
@@ -107,7 +105,8 @@ export function TeaScreen() {
       <CentredRow top={stageTop(BUBBLE_TOP)}>
         <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} />
       </CentredRow>
-      <ArrangeDock geo={GEO} rise={checked ? BOARD_RISE : 0}>
+      {/* The slots hang right under Hex's line; the cards stand on the button row. */}
+      <ArrangeDock geo={GEO} slotsTop={`${robotBelowDialogue(BUBBLE_TOP, BUBBLE) + GAP_UNDER_HEX}px`}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} hideShadows={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />

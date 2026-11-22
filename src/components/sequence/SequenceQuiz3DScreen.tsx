@@ -21,6 +21,7 @@ import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import {
   AnswerTray,
+  OPTION_GAP,
   TRAY_CARD_GAP,
   TRAY_LIST,
   TRAY_LIST_WIDTH,
@@ -322,12 +323,14 @@ export function SequenceQuiz3DScreen({
             correctId={shownCorrectId}
             selectedId={selectedId}
             checked={checked}
-            fadeOut={fadeCards}
+            // On the tray look the character is the picture behind the rows: when the result comes they disappear where they stand
+            // (no rise, so they never run up over it) and so do not bounce.
+            fadeOut={fadeCards || (tray && checked)}
             pointedId={answerHint.pointedId}
             withHint
-            rise={listRise}
+            rise={tray ? 0 : listRise}
             {...(tray
-              ? { bottomGap: TRAY_CARD_GAP, width: TRAY_LIST_WIDTH, endGap: 0 }
+              ? { bottomGap: TRAY_CARD_GAP, width: TRAY_LIST_WIDTH, endGap: 0, gap: OPTION_GAP }
               : {})}
             bounceRight
             onPick={pick}

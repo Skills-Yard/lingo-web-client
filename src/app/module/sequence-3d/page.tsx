@@ -52,7 +52,8 @@ function sequence3dScreen(step: string) {
     case "ready":
       return <PutOnScreen key="put-on-ready" stage="ready" />;
     case "whatDid":
-      return <SequenceQuizScreen key="what-did" quiz={WHAT_DID_YOU_DO} />;
+      // Place 7 keeps its bubble (the line of the original screen) beside the character's face.
+      return <SequenceQuizScreen key="what-did" quiz={WHAT_DID_YOU_DO} withBubble />;
     case "compare":
       return <Compare3DScreen key="compare" quiz={COMPARE_3D} position={positionOf("compare")} />;
     case "shoesFirst":

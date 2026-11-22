@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { CharacterPortrait } from "@/components/character3d/CharacterPortrait";
 import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
@@ -11,7 +12,8 @@ import { positionOf, SEQUENCE_3D_STEPS, sequence3dNext, sequence3dPrevious } fro
  * two-line title with a sparkle, a big pale circle, the character from the head to
  * the hips filling the width in front of it (cropped by the main button). (The design's
  * tilted "[1, 2, 3, ...]" code window at the upper right was taken out on request.)
- * Numbers are stage px.
+ * Numbers are stage px. The layout is `CharacterIntro`, which the Variable module's
+ * "Let's Learn Variables" uses too (with its own tilted code tag as `children`).
  */
 
 const POSITION = positionOf("intro");
@@ -49,34 +51,58 @@ const IntroBackdrop = () => (
 );
 
 /**
- * The first frame, "Let's Learn Sequences": nothing to say yet, so the character just
- * stands (Idle B) and Continue moves on.
+ * A module's first frame: "Let's Learn <word>" with a sparkle, the pale circle, the character standing (Idle B) in front of it
+ * and Continue. `children` are laid out in the 390px column, over the character (stage px).
  */
-export function Intro3DScreen() {
-  const router = useRouter();
+export function CharacterIntro({
+  step,
+  total,
+  onBack,
+  onContinue,
+  word,
+  children,
+}: {
+  step: number;
+  total: number;
+  onBack: () => void;
+  onContinue: () => void;
+  word: string;
+  children?: ReactNode;
+}) {
   return (
-    <LevelTwoShell
-      step={POSITION}
-      total={SEQUENCE_3D_STEPS}
-      onBack={() => router.push(sequence3dPrevious(POSITION))}
-      scene={<IntroBackdrop />}
-      ctaLabel="Continue"
-      onContinue={() => router.push(sequence3dNext(POSITION))}
-    >
+    <LevelTwoShell step={step} total={total} onBack={onBack} scene={<IntroBackdrop />} ctaLabel="Continue" onContinue={onContinue}>
       <Column>
         <div aria-hidden className="absolute inset-x-0 overflow-hidden" style={{ top: CHARACTER.top, bottom: aboveButtons(2) }}>
           <div className="absolute inset-x-0 top-0" style={{ height: CHARACTER.height }}>
             <CharacterPortrait animationId="idle-b" framing="bust" />
           </div>
         </div>
+        {children}
       </Column>
       <ScreenTitle at={TITLE_AT}>
         <span className="block text-[34px] leading-[1.08] font-semibold text-[#0D186E] dark:text-white">Let’s Learn</span>
         <span className="relative inline-block text-[48px] leading-[1.08] font-bold">
-          <span className="text-[#00A8B8]">Sequences</span>
+          <span className="text-[#00A8B8]">{word}</span>
           <Sparkle className="absolute -top-[6px] -right-[30px] size-[26px]" />
         </span>
       </ScreenTitle>
     </LevelTwoShell>
+  );
+}
+
+/**
+ * The first frame, "Let's Learn Sequences": nothing to say yet, so the character just
+ * stands (Idle B) and Continue moves on.
+ */
+export function Intro3DScreen() {
+  const router = useRouter();
+  return (
+    <CharacterIntro
+      step={POSITION}
+      total={SEQUENCE_3D_STEPS}
+      onBack={() => router.push(sequence3dPrevious(POSITION))}
+      onContinue={() => router.push(sequence3dNext(POSITION))}
+      word="Sequences"
+    />
   );
 }

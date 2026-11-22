@@ -3,17 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
-import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import type { HTMLMotionProps } from "framer-motion";
 import { ChevronLeft, Infinity as InfinityIcon, Maximize, Minimize, UserRound } from "lucide-react";
 import { setBatteryUnlimited, useBattery } from "@/components/home/batteryStore";
 import { useFullscreen } from "@/hooks/useFullscreen";
-import { energyHref } from "@/lib/routes";
-
-/** The mentor picker draws 3D characters, so its code (three.js) is fetched when it is first opened, not with every screen. */
-const MentorPicker = dynamic(() => import("@/components/character3d/MentorPicker").then((module) => module.MentorPicker), { ssr: false });
+import { chooseCharacterHref, energyHref } from "@/lib/routes";
 
 /** The fills of Level 1's answer cards (see InstructionQuizScreen), at rest. */
 const TINTS = {
@@ -70,16 +66,13 @@ type BatteryMenuProps = {
 /**
  * A tap on the battery opens the Energy screen. TEMPORARY — FOR DEVS ONLY: a
  * hold opens a hidden testing panel (full screen, infinite battery, and "Change
- * character", which opens the mentor picker); nothing about it looks pressable
+ * character", which opens `/choose-character`); nothing about it looks pressable
  * (no pointer, hover or focus ring).
  */
 export function BatteryMenu({ children, className = "", buttonClassName = "", onBack, extraOptions }: BatteryMenuProps) {
   const fullscreen = useFullscreen();
   const { unlimited } = useBattery();
   const [open, setOpen] = useState(false);
-  // The mentor picker: not made until it is first opened, then kept so it can animate out.
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const [pickerUsed, setPickerUsed] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -182,8 +175,7 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
             <PanelButton
               onClick={() => {
                 setOpen(false);
-                setPickerUsed(true);
-                setPickerOpen(true);
+                router.push(chooseCharacterHref(window.location.pathname + window.location.search));
               }}
             >
               <UserRound className="h-5 w-5" />
@@ -195,7 +187,6 @@ export function BatteryMenu({ children, className = "", buttonClassName = "", on
       </AnimatePresence>,
       document.body,
       )}
-      {pickerUsed && <MentorPicker open={pickerOpen} onClose={() => setPickerOpen(false)} />}
     </div>
   );
 }

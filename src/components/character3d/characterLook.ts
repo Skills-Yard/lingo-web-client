@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 
 /*
  * Which 3D character is shown: the learner's choice, kept in local storage and changed
- * from the battery's hold menu (see `BatteryMenu`). Kept apart from the character's code
+ * on `/choose-character`, which the battery's hold menu opens (see `BatteryMenu`). Kept apart from the character's code
  * (which pulls in three.js) so that menu, which is on nearly every screen, doesn't.
  */
 
@@ -16,7 +16,7 @@ export const CHARACTER_CHOICES = [
 
 export type CharacterId = (typeof CHARACTER_CHOICES)[number]["id"];
 
-/** The mentors the picker (battery tap on the 3D screens) offers, in the order its arrows go. */
+/** The mentors `/choose-character` (the battery's hold menu, "Change character") offers, in the order its arrows go. */
 export const MENTORS = [
   { id: "boy", name: "Rio" },
   { id: "girl", name: "Veena" },

@@ -13,6 +13,12 @@ const ROOM_H = 420;
 const MAX_SCREEN_W = 560;
 /** The room's width on the stage (a CSS length): the stage's full width, up to `MAX_SCREEN_W` on screen (the stage is scaled, so what is capped in screen px is divided by its scale). */
 const ROOM_WIDTH = `min(var(--stage-w, ${ROOM_W}px), calc(${MAX_SCREEN_W}px / var(--stage-scale, 1)))`;
+/**
+ * Where answers hang from under the room (a CSS length from the stage's top): its bottom edge, less the faded floor they may cover
+ * (`ROOM_OVERLAP` px, at the 390px frame: where the cards have always started). The room keeps its shape at any width, so it follows it.
+ */
+const ROOM_OVERLAP = 26;
+export const roomUnder = `calc(${stageTop(FIGMA_TOP)}px + ${ROOM_WIDTH} * ${ROOM_H} / ${ROOM_W} - ${ROOM_OVERLAP}px)`;
 /** The boy's feet, as a share of the room's height: it shrinks around them, so they stay above the cards. */
 const FEET_Y = "74%";
 /** As the answer cards rise, it slides up and shrinks, which leaves the boy whole between the title and them. */

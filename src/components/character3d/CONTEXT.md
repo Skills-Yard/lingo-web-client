@@ -11,7 +11,7 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 > **Three characters now: `girl.glb`, `Male.glb` (Boy) and `Male_anime.glb` (Anime)** (2026-11-20; between 11-19 and 11-20 the
 > "male" was the anime file and `Male.glb` was unused; `Character_Final.glb` is still unused). Everything below that says
 > "Character_Final" / Levitate / Sitting / Gesture / lip-sync describes the old model. What changed, and why:
-> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "Change character" opens the mentor picker (see "Select your
+> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "Change character" opens the page `/choose-character` (see "Select your
 >   Mentor" below; it replaced the Girl / Boy / Anime row, 2026-11-22). Ids `girl`, `boy`, `anime`. The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
 >   pull three in; a saved `"male"` from the two-choice days is read as `anime`). `sharedCharacter.ts` loads the picked one
 >   (default girl); a switch loads the other in the background (the button says "Boy…" meanwhile), the screens then switch
@@ -28,11 +28,20 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 >   a stand-in like the old one). It is wired as the `lipSync` of his `talking` in `MODELS.male` (`clipsOf`'s second argument):
 >   the mouth moves while he talks, on `/character` and on the sequence screens; it doesn't follow the words. The clip's first
 >   0.9 s is a closed mouth.
-> - **Anime's dark patch on the jaw.** His materials have no metallic/roughness factor, so glTF's default applies
->   (metal 1, rough 1): a fully metal surface ignores the hemisphere light and only the key lamp lights it, so the side of the
->   jaw facing away from it is black (it looks like a beard). Reproduced in a bare three.js page, so it is the file, not the app.
->   `material.metalness = 0` removes it, but then skin and shirt come out pale (the user disliked a pale look before).
->   Not applied; decide on the look (or re-export the materials with metallic 0 from Blender).
+> - **Anime's dark patch on the jaw / "no texture" look (fixed 2026-11-22).** His materials have no metallic/roughness factor, so glTF's
+>   default applies (metal 1, rough 1): a fully metal surface ignores the hemisphere light and only the key lamp lights it, so the
+>   side of the jaw facing away from it was black (it looked like a beard) and everything looked flat next to the girl and boy, whose
+>   files say metal 0, rough 0.9. `applyMatteDefaults` in `character.ts` now gives any material that has no metallic / roughness
+>   factor in the file 0 / 0.9 (one that has them is untouched, so girl and boy are as before). Result in headless Chrome 390×844
+>   dark: jaw clean. **Then it looked white/washed out next to a glTF viewer (same day):** the VRoid textures are flat "lit" colours
+>   (skin `#FADFCB`-ish, shirt cream `242,232,222`), the default rig's key lamp 2.8 pushed the lit side near white and the other
+>   side grey (cheek `207,191,178`). So each character now carries its own **light rig** (`LightRig` in `character.ts`, `Character.lights`,
+>   `SceneLights lights=…` in the three canvases: `CharacterScene`, `portraitHost`, `MentorStage`). Girl and boy keep the original
+>   (hemisphere 1.3, key 2.8, rim 1.6); anime has `FLAT_LIGHTS` (ambient 2.6, ground `#f2ece6`, key 1.1, rim 0.8). Measured on the
+>   `/character` screenshot (390×844 dpr 2, dark): cheek `248,225,204` against the face texture `250,222,204`, shirt `236,223,210` against
+>   its texture `242,232,222`. Checked: `/character` anime and girl (girl as before). **Not checked:** the portrait canvas on the
+>   3D sequence screens and the mentor picker with the new rig (only type-checked), light mode, Talking, a real phone. The numbers
+>   were tuned by pixel values, not by eye against the user's viewer (unknown which one).
 > - **Girl: old clips and `Idle.glb` do not retarget onto her.** Her bones' local axes are turned 90° about the vertical
 >   relative to the other rigs (hips rest `[-0.5, 0.5, -0.5, 0.5]` vs `[-0.707, 0, 0, 0.707]`), so the copy-the-rotations
 >   `retarget` in `character.ts` made her vanish (tried with Idle B). More animations for her should be exported from
@@ -164,20 +173,23 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   first on a misreading and taken out again: `FramingCamera` still follows only the hips across.)
 - **The battery and "Select your Mentor" (2026-11-21 design image; reworked 2026-11-22 on request).** **A tap on the battery opens the
   Energy screen everywhere, the 3D route included** (the 11-21 override, `batteryTap.tsx`, is gone). **Holding it opens the dev panel, which
-  has a "Change character" button** (`BatteryMenu`) that opens `MentorPicker` (`character3d/MentorPicker.tsx`, moved from `sequence/`). The
-  picker works on every screen that has the battery, not only the 3D route; `BatteryMenu` loads it with `next/dynamic` (`ssr: false`) the
-  first time it is opened, so three.js stays out of the other screens' bundles.
-  One card at a time over a dimmed screen: title, the name in a pill, the character, round arrows at its sides (they go round the three:
+  has a "Change character" button** (`BatteryMenu`) that goes to **`/choose-character?from=<where the battery is>`** (`chooseCharacterHref` in
+  `lib/routes.ts`). **It was a popup (`MentorPicker`) until 2026-11-22, when it became a page on request; `MentorPicker.tsx` is deleted.**
+  The page works from every screen that has the battery, not only the 3D route. Files: `app/choose-character/page.tsx` →
+  `ChooseCharacterRoute.tsx` (reads `from`, `router.replace`s to it on Choose / Back / Escape, `/home` when opened by URL with no `from`;
+  `replace`, so the browser's Back does not open the page again) → `ChooseCharacterScreen.tsx` (the UI).
+  One mentor at a time, full screen: Back button and title "Select your Mentor", the name in a pill, the character, round arrows at its sides (they go round the three:
   Rio = `boy`, Veena = `girl`, Zane = `anime`, `MENTORS` in `characterLook.ts`; the names are guesses from the design image, whose
-  characters are not ours) and a "Choose …" `Button3D`. The card's colour and arrows follow the mentor (`THEMES` in `MentorPicker.tsx`,
-  guessed from the image, with dark variants). **The character on the card is the real model, idling** (`girl.glb`, `Male.glb`,
+  characters are not ours) and a "Choose …" `Button3D`. The page's colour and arrows follow the mentor (`THEMES` in `ChooseCharacterScreen.tsx`,
+  guessed from the image, with dark variants; the 430 px column is centred, the colour fills the viewport). The canvas's straight bottom edge (head to thigh) fades out with a mask over its
+  lowest 18 %. **The character is the real model, idling** (`girl.glb`, `Male.glb`,
   `Male_anime.glb`), not a picture: `MentorStage.tsx` is one R3F canvas (camera level at `[0, 1.25, 2.4]`, head to thigh) whose character is
-  swapped as the arrows move. `mentorPreviews.ts` loads each model when its card first comes up (a ring and a percentage until then, "Try again" if
-  it fails), keeps them while the picker is open, and frees them all 1 s after it closes. They are **separate copies from the shared
-  character** (`sharedCharacter.ts`), so on the 3D route the current one is loaded twice (two canvases cannot share one scene graph); the
-  GPU memory (the girl's 8192² texture) is the cost, worth watching on phones. "Choose" calls `setCharacter`; the button says "Loading…"
-  while the shared character loads and the card closes when it is on show (at once on a screen with no shared character). A tap outside or Escape
-  closes it with the character unchanged. `public/images/mentors/{boy,girl,anime}.webp` (the old renders) are **no longer used**.
+  swapped as the arrows move. `characterCache.ts` loads each model when its mentor first comes up (a ring and a percentage until then, "Try again" if
+  it fails), keeps them while the page is open, and frees them 2 minutes after it closes. They are **separate copies from the shared
+  character** (`sharedCharacter.ts`); the page has no shared canvas, so nothing is loaded twice any more, but the GPU memory (the girl's 8192² texture) is the cost, worth watching on phones.
+  "Choose" calls `setCharacter` and returns at once: the screen it returns to loads the stored pick itself (no "Loading…" wait on the page any more).
+  The mentor shown is the stored one until an arrow is used (derived from the store each render, so a server-rendered load shows the stored one once known).
+  `public/images/mentors/{boy,girl,anime}.webp` (the old renders) are **no longer used**.
   **`AnimatedCharacter`'s cleanup no longer calls `mixer.uncacheRoot`** (`CharacterScene.tsx`): in dev R3F wraps its tree in StrictMode when
   Next does, so a newly mounted `AnimatedCharacter` ran its effects, the cleanup and its effects again on the same mixer, and `play()` after
   `uncacheRoot` threw `Cannot set properties of undefined (setting '_cacheIndex')` (the picker's canvas showed it every time). `stopAllAction()`
@@ -189,6 +201,15 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   "Choose Zane" stored `{"character":"anime"}`, closed the card and the screen's face became the anime. No console errors beyond the `THREE.Clock`
   and Rive deprecation warnings. **Not checked:** the model's idle motion by eye (only stills), light mode, Escape and the outside tap, the failed-load
   state, a slow connection, a real phone or touch, the picker on the Home/Level screens, the `/energy` return button back to a 3D step.
+  **The popup's checks above are for the old `MentorPicker`; the page that replaced it (2026-11-22) was checked on its own:** headless Chrome
+  driven over CDP (device metrics 390×844 ×2, mobile, mouse events; the script is not kept), dark and light, battery unlimited, on
+  `/module/sequence-3d?step=2`: the hold stays on the screen and the panel lists Back / Full screen / battery / Change character / theme; "Change character" →
+  `/choose-character?from=%2Fmodule%2Fsequence-3d%3Fstep%3D2` (title, Back, both arrows, "Choose Veena"); Veena → Zane → Rio on the arrows (names, colours and
+  models change); "Choose Rio" → `/module/sequence-3d?step=2` again, local storage `{"character":"boy"}`, and the screen's face is Rio's. `tsc` passes. No console
+  errors beyond the `THREE.Clock` and Rive `stateMachines` deprecation warnings. **Not checked:** Back and Escape, a URL with no `from` (→ `/home`), a `from` that
+  is not a path on this site, the page from Home / Level, a direct load of `/choose-character` (the server render and the first paint of a stored non-default pick),
+  Girl/Zane as the pick returning to the 3D screen, a slow connection, a real phone. Plain `--window-size=390` headless Chrome lays out at 500 px (its minimum), which
+  cuts the page: use device-metrics emulation.
   The dev server died during the checks (Turbopack panic, "memory allocation failed": the machine had ~100 MB of 7.5 GB free); if
   `npm run dev` then answers 500 "Unexpected end of JSON input", delete `.next` and start again.
 - **Audio on the 3D route:** place 9 (shoes first) plays Hex's clips of the original screen (`SEQUENCE_AUDIO.socksFirst`: the title, then the
@@ -261,7 +282,23 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   `ArrangeBoard` (rebuilt on **dev's** version, which has the Variable module's `circles`, `lockedIds`, `tapOnly`, `pointedId` …, and my 3D parts re-applied on it: `cardCount`, `designSlots`, `DESIGN_SLOT` / `DESIGN_BADGE`, the `design` card, `dropUnused`,
   `hideShadows` (on dev's own home shadow), `ArrangeDock` `fadeDelay` / `behindPanel`), `ChipList` (one shadow per chip, from the list, so it can fade), `SequenceQuiz3DScreen` and `Compare3DScreen` (the new `useAnswerHint` hand and `pointedId` instead of
   `hinted`; `noHint` is gone from the quiz type, every quiz has the hint), `SequenceQuizScreen` (`onPick={pick}` so the hand goes), and the `noHint: false` lines of `REFLECT_*_3D`. `npx tsc --noEmit`, eslint and `npx next build` pass.
-  **Left for the user (needs an install):** `package.json` / the lockfile now want `@rive-app/canvas` 2.50.0 but `node_modules` still has 2.42.0, so the page loads `public/rive/rive.wasm` (the 2.50.0 one) with the old runtime and the Rive parts (progress bar, button, robot) do not draw (console: "Import #0 env"). `npm install` fixes it.
+  **After the merge `node_modules` was behind:** `package.json` / the lockfile want `@rive-app/canvas` 2.50.0 but 2.42.0 was installed, so `public/rive/rive.wasm` (the 2.50.0 one) failed with the old runtime and the Rive parts (progress bar, button, robot) did not draw (console: "Import #0 env"). `npm install` (asked for and approved, 2026-11-22) brought it to 2.50.0; `package.json` and the lockfile did not change. Checked after that in headless Chrome 390×844: 12 (design slots, shadow left behind), 24 (all three placed, Check, "Nice!"), 3 (Socks, Check, "Nice!"), 8 (right row, "Exactly!"), and the hint's hand pointing at the right row on 8. Not rechecked since the merge: 10, 15, 18, 19, 21, 22, 25, 26, dark mode, a real phone.
+- **Roomier lists and a full-width tray on the whole 3D route (2026-11-22, "put some gap between col options … make the option bg panel full width of the device"):** the rows of every list of answers are
+  `OPTION_GAP` = 12 px apart instead of the design's 6 (`AnswerTray.tsx`; used by the tray lists 10, 25, 26 through `TRAY_LIST`'s height and `gap`, by `Compare3DScreen` (8), and by `SequenceQuizScreen`'s list (7) through the flow's `optionGap`:
+  12 on the 3D route, 6 on the 2D one). The grey tray (`AnswerTray`) is no longer inside the 390 px `Column`: it runs edge to edge of the device (the stage is as wide as the screen), so on a short or wide screen it
+  no longer stops short of the sides (checked on 360×640: it reaches both edges). The pair of cards (3) was not changed. Checked in headless Chrome: 25 and 8 and 7 at 390×844 (rows 88 apart = 76 + 12), 10 at 360×640.
+- **Place 7 ("What did you do?") shows its bubble again (2026-11-22, "show the screen 7 bubble too on screen 7"):** `SequenceQuizScreen` got `withBubble` (passed to `HexBubble`), and the 3D page passes it for place 7 only: the original screen's line ("You wore socks first, then shoes, before heading out.") is typed in a bubble beside the character's face (it also leaves with the face on Check, as the original's does). Places 11 and the others still show the face alone. Checked in headless Chrome 390×844 (open only; not the Check).
+- **What happens to the answers when the result popup comes, on the 3D route (2026-11-22; "if there is an image above the options … make the image exit, in artboard case the options disappear" and "if removing the image attach the options to the header with some space"):**
+  (a) **A picture above a list leaves** (fades, slides up, shrinks a little) and the rows **go up to the header**, their top 24 px under the title (Figma 178; the title ends at 154): place 7 (`SequenceQuizScreen`, its close-up; flow flag `clearsPictures`, the rows
+  use the new `AnswerCards riseTo`, which measures where they stand and rises by the difference, so it holds on any screen height) and place 8 (`Compare3DScreen`, `CHECKED_ANSWERS_RISE` computed from the same 178). The 2D route is unchanged (the picture is pulled in
+  and kept). (b) **Where the picture is the 3D character (the tray lists 10, 25, 26) the rows disappear** where they stand (`fadeOut`, no rise), so they do not run up over it and, as the user asked before for options that disappear, they do not bounce. The tray pair (3) is
+  unchanged. Checked in headless Chrome 390×844: 7 (right pick: rows at y 141), 8 (wrong pick: rows at y 141) and 25 (right pick: rows gone, character clear). Not checked: 10 and 26 (same code as 25), dark mode, a phone, how the rows look when the result text is long.
+  **Needed an install (done by the user later on 2026-11-22; `node_modules` now has `@rive-app/canvas` 2.50.0 and `react-canvas` 4.39.0):** with `node_modules` still on 2.42.0 the page loaded `public/rive/rive.wasm` (the 2.50.0 one) with the old runtime and the Rive parts (progress bar, button, battery, robot) did not draw (console: "Import #0 env"). On a new machine or after pulling a bump of these, `npm install` first.
+- **`feat/3d` merged into `variable-module` (commit `e3f797c`, 2026-11-22) was committed with conflict markers and a mangled `ArrangeBoard`; repaired on `variable-module` (uncommitted):** the real three-way merge (base `b9e30dc`) was recomputed for every file both sides changed and
+  resolved keeping both: `SequenceQuizScreen` (variable-module's `optionsTop` / `underAbove` / `useBottomEdge` and `listRise`, plus `riseTo`, `gap`, `bounceRight`, `withBubble`, `clearsPictures`), `HexOrderScreen` / `ArrangeScreen` / `DressArrangeScreen` / `TeaScreen`
+  (`ArrangeDock slotsTop` from variable-module with `hideShadows`, `fadeDelay`, `dropUnused`), `ArrangeBoard` (variable-module's `DockGeometry` / `slotsTop` split dock with the 3D `designSlots`, `cardCount`, `dropUnused`, `hideShadows`, `behindPanel`, `fadeDelay`),
+  `AnswerCards` (`top` is `number | string`), and `PlanScreen` (the real `MoveTile` from `level-one/MoveHexScreen`, so `sequence/MoveTile.tsx`, which was a stand-in for `feat/3d`, is deleted here). `tsc`, eslint and `next build` pass. Looked at in headless Chrome 390×844: 12, 22 (chips and the real `MoveTile`s), 7 (the rows now hang under the picture, 12 apart,
+  with the bubble), 24 (open). Not rechecked: 15, 18, 19, 21, 23, 25, 26, the popup states, the 2D route, dark mode. `next.config.ts`'s `allowedDevOrigins` is the user's own resolution and was left alone.
 - **Steps 10-12 (2026-11-21)** are the original screens `MeetSequenceScreen` (10), `RevealCardScreen` (11) and `DressArrangeScreen` (12), each
   asking `useSequenceFlow` for its place/next/back like `ArrangeScreen`; 10 and 11 are otherwise as they are (the face in the bubble on 10).
   **12 is a guess:** it is the only story screen between 11 and the Hex ones, but the Figma title for frame 12 is "Let's guess first" and the
@@ -309,6 +346,41 @@ The character is also used as a **picture on other screens** (the 3D copies of t
 
 Add an animation: name another clip of the model, or export it from Mixamo ("without skin", same
 skeleton), put the `.glb` in `public/animations`, add a line to `ANIMATIONS`.
+
+### The Variable module with the 3D character (`/module/variable`, in place), 2026-11-22
+
+The user asked for the Variable module "in the same format as sequence-3d": the chosen character instead of Hex, with the bubble, the design's
+empty drag slots, and the rest exactly as it was. Done **in the original route** (no new one), with three small pieces:
+
+- `src/app/module/variable/layout.tsx` wraps the route in `VariableCharacterGate` (a loading bar until the shared character and its canvas
+  have drawn; `PortraitHost` mounted here) and `CharacterLook` (`sequenceFlow.tsx`: the 3D flow flags + `HexStandInProvider` with
+  `CharacterAvatar` + `HexStandInKeepsBubble`).
+- `HexStandInKeepsBubble` (`level-two/HexStandIn.tsx`) is a context that makes `HexBubble` draw its bubble **beside** the stand-in (the
+  Sequence 3D route has the face alone, so there the bubble stays suppressed). Without the provider nothing changes.
+- `ArrangeBoard`: with `designed` (the 3D flag or `geo.designSlots`) an empty slot has the design look even when the board asks for
+  `highlightEmpty` (the breathing ring is still added), so Variable 19 (prices) and 27 (steps) get the grey dashed slot, green dashed for the open one.
+- Every `HexBubble` of the module (quiz, Thirsty, Trek, PlanApp, narration) picks the face up through the provider; none was edited. The
+  result panel's Hex robot and the "Lesson complete" robot stay (as in the Sequence 3D route).
+
+**Title screen "Let's Learn Variables" (`?step=0`, added the same day):** `VariableIntroScreen` = the Sequence 3D intro's layout
+(`CharacterIntro`, extracted from `Intro3DScreen.tsx`, which now uses it with the same look) + the design's tilted "age = 20" code tag (`AgeTag`,
+upper right over the hair). It is **step 0 on purpose**: every PDF screen keeps its number (the old notes say "screen 19, 27"), the progress
+total stays 34 (the bar starts empty), and the battery still restarts and spends at screen 1 (`chargeBatteryScreen`, `FIRST_SCREEN` = 1; step 0
+spends nothing, checked: 100 → 95 on Continue). `/module/variable` with no `?step` and the home path open it (`HomeRoutes`). The character
+only stands (Idle B): there is no thumbs-up clip (`ANIMATIONS` has only idle and talking), so the design's thumbs-up pose is not there.
+Checked at 390×844, 360×640, 412×915 and 820×1180, Continue → step 1; the X still goes to `/level` (Back is the dev panel's `variablePrevious`).
+
+**What was found, not changed:** no Variable quiz uses column rows. All answers are `acrossCards` (3 across or 2 x 2, words <= 2 or four
+short ones), screen 16 is an info list, 27 is wide step cards with circle slots, 34 is a recap with no Hex. So there were no "rows
+screens" to give the 76px 3D rows, and no scene-less screen with room for a big character (27 is full). The module's own option sizes
+(`OPTION`), the bubble sizes and the scenes are as before.
+
+Checked (headless Chrome, SwiftShader, 390×844 light; `tsc`, `eslint` on the touched files): all 34 screens at rest (face + bubble where Hex stood;
+screens 1-15 pixel-compared with the old build: only the face box, animated scenes and the button sheen differ); step 3 wrong → Try again →
+right (panel, confetti, face and bubble leave on a check); 15 wrong → right; 5 → Next; 19 by tap and by drag (match bounce, Next);
+27 wrong tap; 14; `?step=complete`; 1, 19 and 27 again at 360×640 and 412×915. **Not checked:** dark mode, a real phone, voices (play was blocked),
+the 27 full run to the end, the Variable interactions' later stages (6, 7, 13, 16 second stage) by hand, `next build`, and the other characters
+(only the default one was in the browser).
 
 ## Assets (`public/`)
 

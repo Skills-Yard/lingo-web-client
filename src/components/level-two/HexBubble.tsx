@@ -5,7 +5,7 @@ import { motion, type Transition } from "framer-motion";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { useLevelVoice } from "@/components/level-one/LevelVoice";
 import { TYPE_DELAY_MS, useTyped } from "@/components/level-one/useTyped";
-import { useHexStandIn } from "./HexStandIn";
+import { useHexStandIn, useStandInKeepsBubble } from "./HexStandIn";
 import type { BubbleSize, Span } from "./levelTwo";
 
 /** Hex's slot, the one Module 2's old screens gave him. */
@@ -48,6 +48,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
   const hexAtLeft = hex === "left";
   const hexOnTop = hex === "top";
   const standIn = useHexStandIn();
+  const standInKeepsBubble = useStandInKeepsBubble();
   const [hexLeaving, setHexLeaving] = useState(false);
   useEffect(() => {
     if (!leaving) return;
@@ -71,7 +72,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
       >
         {standIn ?? <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />}
       </motion.div>
-      {(!standIn || withBubble) && (
+      {(!standIn || withBubble || standInKeepsBubble) && (
         <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tail={hex} leaving={leaving} onSpoken={onSpoken ?? onTyped} />
       )}
     </div>

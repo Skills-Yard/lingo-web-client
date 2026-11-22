@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import { PointedLook } from "@/components/level-one/answerHint";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
-import { aboveButtons } from "@/components/level-two/LevelTwoShell";
+import { aboveButtons, underAbove } from "@/components/level-two/LevelTwoShell";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED_DRAG } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
@@ -566,7 +566,7 @@ function ArrangeCard({
 export function ArrangeBoard({
   cards,
   slots,
-  geo,
+  geo: boardGeo,
   disabled,
   hintedId = null,
   selectedId = null,
@@ -629,7 +629,9 @@ export function ArrangeBoard({
   /** What an empty slot shows in place of its number (its card, when it holds one, is drawn over it). */
   slotContent?: (index: number) => ReactNode;
 }) {
-  // On the 3D route every empty slot has the design\'s look, whatever the board\'s own size.
+  // In a dock whose slots and tray stand apart, the dock's geometry (the tray lower down) is the one to use.
+  const geo = useContext(DockGeometry) ?? boardGeo;
+  // On the 3D route every empty slot has the design's look, whatever the board's own size.
   const flow = useSequenceFlow();
   const designed = geo.designSlots || flow.designSlots;
   return (
@@ -650,11 +652,14 @@ export function ArrangeBoard({
             ? slotWrong
               ? "border-[#E5484D] bg-[#E5484D] text-white"
               : "border-[#01A17F] bg-[#01A17F] text-white"
-            : glow
+            : designed
+              ? // The design's empty slot, also where the board picks its empty slots out (`glow`, which then only adds its breathing ring) or lights the open one (`lit`: green, so it still shows which is next).
+                lit
+                ? "border-dashed border-[#01A17F] bg-[#F2FBF8] dark:border-[#4DBDA5] dark:bg-white/5"
+                : DESIGN_SLOT
+              : glow
               ? // A solid well that stands off the page in both themes: a clear step darker than white, and a slate lighter than the dark page.
                 "border-dashed border-[#01A17F] bg-[#DFE6EC] shadow-[inset_0_2px_6px_rgba(0,0,0,0.16)] dark:border-[#3FD9B4] dark:bg-[#2C3B49] dark:shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]"
-              : designed
-              ? DESIGN_SLOT
               : geo.solidSlots
               ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
               : lit
@@ -748,13 +753,30 @@ export function ArrangeBoard({
   );
 }
 
+/** The board's geometry when the slots and the tray stand apart (see `ArrangeDock`'s `slotsTop`): the dock's own, which `ArrangeBoard` uses in place of its `geo`. */
+const DockGeometry = createContext<ArrangeGeometry | null>(null);
+
+/**
+ * The same board with its tray (the cards' starting places) at the bottom of a dock `height` px tall, the slots still at its top.
+ * A board with no tray (the cards start in their slots) has nothing to move.
+ */
+const splitGeometry = (geo: ArrangeGeometry, height: number): ArrangeGeometry =>
+  geo.tray ? { ...geo, home: (index) => ({ ...geo.home(index), y: Math.max(geo.home(index).y, height - geo.card.height) }), board: { ...geo.board, height: Math.max(geo.board.height, height) } } : geo;
+
 /**
  * Stands the board on the button row, or hangs it `top` stage px down. `rise` lifts it clear of the result panel;
  * `fade` clears it so what is behind can be seen.
+ *
+ * With `slotsTop` (a CSS length from the stage's top, see `underAbove`) the slots hang from there, right under what is
+ * above them (the artboard, Hex's line), while the tray of cards still stands on the button row: the dock reaches from the
+ * slots' top down to the row, and the cards start at its bottom. So on a tall screen the spare room is between the slots
+ * and the cards, not between the artboard and the slots. The slots are never lower than they would be with the tray
+ * directly under them on the row.
  */
 export function ArrangeDock({
   geo,
   top,
+  slotsTop,
   withHint = false,
   rise = 0,
   fade = false,
@@ -764,6 +786,7 @@ export function ArrangeDock({
 }: {
   geo: ArrangeGeometry;
   top?: number;
+  slotsTop?: string;
   withHint?: boolean;
   rise?: number;
   fade?: boolean;
@@ -773,16 +796,37 @@ export function ArrangeDock({
   behindPanel?: boolean;
   children: ReactNode;
 }) {
+  const split = slotsTop !== undefined && geo.tray;
+  const dock = useRef<HTMLDivElement>(null);
+  // The dock's height (stage px), measured: it follows the stage's.
+  const [height, setHeight] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const element = dock.current;
+    if (!split || !element) return;
+    const measure = () => setHeight(element.offsetHeight);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [split]);
+  const placed = useMemo(() => (split && height !== null ? splitGeometry(geo, height) : null), [geo, split, height]);
+  const edge = split
+    ? { top: underAbove(slotsTop, geo.board.height, 28, withHint), bottom: aboveButtons(28, withHint) }
+    : top === undefined
+      ? { bottom: aboveButtons(28, withHint), height: geo.board.height }
+      : { top, height: geo.board.height };
   const wait = fade ? fadeDelay : 0;
   return (
     <motion.div
+      ref={dock}
       initial={false}
       animate={{ y: -rise, opacity: fade ? 0 : 1 }}
       transition={{ y: { ...PANEL_SPRING, delay: wait }, opacity: { ...PANEL_SPRING, delay: wait } }}
       className={`absolute left-1/2 ${behindPanel ? "z-0" : "z-[1]"}`}
-      style={{ ...(top === undefined ? { bottom: aboveButtons(28, withHint) } : { top }), width: geo.board.width, height: geo.board.height, marginLeft: -geo.board.width / 2 }}
+      style={{ ...edge, width: geo.board.width, marginLeft: -geo.board.width / 2 }}
     >
-      {children}
+      {/* Its children wait for the measure, so the cards start in their places and do not glide into them. */}
+      {split ? placed && <DockGeometry.Provider value={placed}>{children}</DockGeometry.Provider> : children}
     </motion.div>
   );
 }

@@ -32,7 +32,7 @@ const CARDS: readonly ArrangeCardDef[] = [
   { id: "forward-2", kind: "forward", text: COMMAND_LABEL.forward, art: GO_STRAIGHT, tint: FORWARD_TINT },
 ];
 const GEO = arrangeGeometry({ mode: "rows", card: { width: 108, height: 100 }, count: 3, gap: 8, lane: 12, slotsOnTop: true, solidSlots: true });
-/** The picture's place (stage px) and how far down the arrange board hangs: its slots start just under the picture, clear of it, and the result panel stays below them. */
+/** The picture's place (stage px) and how far down the arrange board's slots hang: just under the picture, clear of it, and the result panel stays below them (the cards stand on the button row). */
 const PICTURE_TOP = 160;
 const BOARD_TOP = 429;
 /** How long Hex's first command is left to be seen (ms) before he goes back, on a second go. */
@@ -140,7 +140,8 @@ export function HexOrderScreen() {
       ctaDisabled={phase === "edit" ? !full || running : phase === "running"}
       onContinue={onContinue}
     >
-      <ArrangeDock geo={GEO} top={BOARD_TOP}>
+      {/* The slots hang under the picture; the cards stand on the button row. */}
+      <ArrangeDock geo={GEO} slotsTop={`${BOARD_TOP}px`} withHint>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={hintedId} hideShadows={phase === "checked"} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
     </HexScreen>
