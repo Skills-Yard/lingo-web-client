@@ -15,9 +15,9 @@ import { vibrateForAnswer, vibrateForTap } from "@/lib/haptics";
 import { noteAnswer, nextAfter } from "@/lib/moduleReview";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { BUTTON_DROP } from "./ActionRow";
+import { PointedLook, useAnswerHint } from "./answerHint";
 import { FeedbackPanel, XpBurst } from "./FeedbackPanel";
 import { HexGlide } from "./HexStage";
-import { FILL_S, HintFloat } from "./HintFloat";
 import { LevelOneShell, levelOneHref, TITLE_HEIGHT, TITLE_MARGIN_TOP } from "./LevelOneShell";
 import { optionState } from "./TeacherFlow";
 
@@ -54,10 +54,8 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
-  // Once the hinted card has finished flipping, Hex floats over to it.
-  const [flipped, setFlipped] = useState(false);
-  const [hintSlot, setHintSlot] = useState<HTMLDivElement | null>(null);
+  // The hint: the hand that points at the right card (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // Hex sits in the question's slot and stays through the pick; on Check the
   // slot closes: he stays put and the options slide up over him (they are
   // drawn above him), while the result panel brings its own Hex, entering
@@ -75,10 +73,11 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
       ctaDisabled={selectedId === null}
       ctaLabel={checked ? "Continue" : "Check"}
       // Once the answer is checked the hint folds away and Continue takes its room.
-      hint={{ visible: !checked, onUse: () => setHinted(true) }}
+      hint={{ visible: !checked, onUse: () => answerHint.press(CORRECT_ID) }}
       onBack={() => router.push(commandsHref(QUIZ_STEP - 1))}
       onContinue={() => {
         if (!checked) {
+          answerHint.stop();
           setChecked(true);
           noteAnswer(QUIZ_STEP, selectedId === CORRECT_ID);
           vibrateForAnswer(selectedId === CORRECT_ID);
@@ -98,7 +97,7 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
             {selectedId === CORRECT_ID ? "Yes! " : "Remember: "}Instructions in a program{" "}
             {selectedId === CORRECT_ID ? "is" : "are"} called <b>commands.</b>
           </FeedbackPanel>
-          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} toEl={hintSlot} moved={hinted && flipped} rising={checked} rideDown={BUTTON_DROP} fromScale={HEX_SCALE}
+          <HexGlide entryStyle={HEX_ENTRY_STYLE} fromEl={questionSlot} rising={checked} rideDown={BUTTON_DROP} fromScale={HEX_SCALE}
             containerRef={glideRef} />
         </div>
       }
@@ -154,13 +153,10 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
               transition: { ...base.transition, scale: { duration: 0.55, ease: "easeOut" as const }, rotateX: { duration: 0.55, ease: "easeOut" as const } },
             };
             return (
-              <HintFloat key={option.id} className="relative w-full" spin={false} active={hinted && selectedId === null && option.id === CORRECT_ID} onFlipEnd={() => setFlipped(true)}>
-              {/* Where Hex lands: small, standing on the card's top edge. */}
-              {option.id === CORRECT_ID && (
-                <div ref={setHintSlot} aria-hidden className="pointer-events-none absolute -top-[58px] right-3 h-[72px] w-[72px]" />
-              )}
+              <div key={option.id} className="relative w-full">
               <motion.button
                 {...dropIn}
+                data-hint={option.id}
                 // Pressed, the card sinks onto its 4px edge (see `active:border-b-0`);
                 // once picked it bounces and tips forward in 3D.
                 whileTap={{ scale: 0.97, y: 4 }}
@@ -170,19 +166,12 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                 onClick={() => {
                   playClickSound();
                   vibrateForTap();
+                  answerHint.stop();
                   setSelectedId(option.id);
                 }}
                 aria-pressed={state === "selected"}
                 className={`relative isolate flex h-[89px] w-full cursor-pointer flex-row items-center justify-start gap-3 rounded-[12px] border-b-4 px-[34px] shadow-[0_3px_0_rgba(0,0,0,0.06)] active:border-b-0 active:shadow-none transition-[color,background-color,border-color,box-shadow] dark:bg-[#15181E] ${option.tint} ${LOOK[state]}`}
               >
-                {/* The hint's orange fill, wiped in from the left behind the content. */}
-                <motion.span
-                  aria-hidden
-                  initial={false}
-                  animate={{ clipPath: hinted && state === "idle" && option.id === CORRECT_ID ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                  transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                  className="pointer-events-none absolute inset-0 -z-10 rounded-[inherit] bg-[#FFE7D1] dark:bg-[#33220F]"
-                />
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={option.icon} alt="" draggable={false} className={`shrink-0 object-contain ${option.iconSize}`} />
                 <span className="text-[20px] leading-none font-medium text-[#2C2C2C] dark:text-white">{option.title}</span>
@@ -194,12 +183,15 @@ export function InstructionQuizScreen({ onContinue }: { onContinue?: () => void 
                 >
                   <X className="h-4 w-4 text-white" strokeWidth={3} />
                 </span>
+                <PointedLook pointed={answerHint.pointedId === option.id && state === "idle"} />
               </motion.button>
-              </HintFloat>
+              </div>
             );
           })}
         </div>
       </div>
+      {/* The hint's hand: taps the right card; it goes as soon as the learner does something. */}
+      {answerHint.hand}
       <Confetti active={checked && selectedId === CORRECT_ID} />
       <XpBurst show={checked && selectedId === CORRECT_ID} />
     </LevelOneShell>

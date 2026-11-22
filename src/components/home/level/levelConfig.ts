@@ -20,7 +20,15 @@ export interface PlatformConfig {
 
 type TileSide = "left" | "right";
 
-const COLUMN_X: Record<TileSide, number> = { left: 117, right: 273 };
+/**
+ * How far the whole path (tiles, roads, buildings, gate) is moved right so it sits in the middle of the 390px stage. As the
+ * Figma frame has it the tiles and roads cover x 65 to 317 (measured 2026-11-19 on the page), a middle of 191 against the
+ * stage's 195, which left the first building touching the stage's left edge (cut 1.3px) and a gap at the right. The stage itself
+ * is centred on the screen at every width (`HomeScreen`), so this is the only thing off centre. The scenery behind is not moved.
+ */
+export const PATH_SHIFT_X = 4;
+
+const COLUMN_X: Record<TileSide, number> = { left: 117 + PATH_SHIFT_X, right: 273 + PATH_SHIFT_X };
 const FIRST_TILE_CENTER_Y = 250;
 const TILE_STEP_Y = 122.45;
 /** A tile's bottom edge sits this far below its centre. */
@@ -71,12 +79,21 @@ export const PLATFORM_CONFIGS: PlatformConfig[] = LEVELS.map(({ title, placement
 /** The last tile's road runs on past it, cut off by the bottom of the stage. */
 const FINAL_ROAD_VISIBLE_HEIGHT = 54;
 
+export interface Point {
+  x: number;
+  y: number;
+}
+
 export interface RoadConfig {
   id: number;
+  /** The old image's box (`grid-road.svg`, still the dark theme's road) and how it is turned. */
   top: number;
   left: number;
   mirrored: boolean;
   width?: number;
+  /** Where the middle of the road's two ends go (upper, lower), for the road artboard (see `RoadArt`). */
+  from: Point;
+  to: Point;
 }
 
 export interface RoadSettings {
@@ -110,15 +127,41 @@ export interface RoadSettings {
 export const ROAD_SETTINGS: RoadSettings = {
   width: 184,
   offsetY: 2,
-  mirroredLeft: 98,
-  unmirroredLeft: 98,
+  mirroredLeft: 98 + PATH_SHIFT_X,
+  unmirroredLeft: 98 + PATH_SHIFT_X,
   gateTop: 133,
-  gateLeft: 101,
+  gateLeft: 101 + PATH_SHIFT_X,
   rightCubeDx: 18,
   rightCubeDy: 0,
   leftCubeDx: -6,
   leftCubeDy: -1,
 };
+
+/**
+ * Where the middle of a tile's top face is, from the tile's box (72x60, `getPlatformDisplay`): the cube art is 72x54 and sits
+ * centred in it, its top face a diamond 72 wide and 43.26 tall (half a side is 21px along the road).
+ */
+const TILE_FACE = { x: 36, y: 3 + 21.63 };
+/** How far in from a tile's middle (px, along the road) the road's end goes: far enough under the tile that its end never shows, with the top face being 21px to its edge. */
+const ROAD_END_INSET = 14;
+
+/** The middle of the top face of level `id`'s tile; also for the level after the last, where the final road is headed. */
+function tileTopCenter(id: number, settings: RoadSettings): Point {
+  const side = sideOfLevel(id);
+  const box = getPlatformDisplay("completed", COLUMN_X[side], Math.round(tileCenterY(id) + TILE_HALF_HEIGHT), side, settings);
+  return { x: box.left + TILE_FACE.x, y: box.top + TILE_FACE.y };
+}
+
+/** The points the road's two ends go to, `ROAD_END_INSET` in from `a` and `b` (each end of the road is hidden under its tile). */
+function roadEnds(a: Point, b: Point): { from: Point; to: Point } {
+  const length = Math.hypot(b.x - a.x, b.y - a.y);
+  const ux = (b.x - a.x) / length;
+  const uy = (b.y - a.y) / length;
+  return {
+    from: { x: a.x + ux * ROAD_END_INSET, y: a.y + uy * ROAD_END_INSET },
+    to: { x: b.x - ux * ROAD_END_INSET, y: b.y - uy * ROAD_END_INSET },
+  };
+}
 
 export const roadLeavingLevel = (id: number, settings: RoadSettings = ROAD_SETTINGS): RoadConfig => {
   const mirrored = sideOfLevel(id) === "left";
@@ -128,16 +171,21 @@ export const roadLeavingLevel = (id: number, settings: RoadSettings = ROAD_SETTI
     left: mirrored ? settings.mirroredLeft : settings.unmirroredLeft,
     mirrored,
     width: settings.width,
+    ...roadEnds(tileTopCenter(id, settings), tileTopCenter(id + 1, settings)),
   };
 };
 
 export const computeRoadConfigs = (settings: RoadSettings = ROAD_SETTINGS): RoadConfig[] => {
+  // The upper end is where the old image had it (its slab's upper end is centred at 169.56, 8.5), under the gate; the lower end is in the first tile.
+  const gateEnd = { x: settings.gateLeft + 169.56, y: settings.gateTop + 8.5 };
   const gateRoad: RoadConfig = {
     id: 0,
     top: settings.gateTop,
     left: settings.gateLeft,
     mirrored: false,
     width: settings.width,
+    from: gateEnd,
+    to: roadEnds(gateEnd, tileTopCenter(1, settings)).to,
   };
   return [
     gateRoad,
@@ -153,6 +201,8 @@ export const computeFinalRoad = (settings: RoadSettings = ROAD_SETTINGS) => {
     mirrored: final.mirrored,
     height: FINAL_ROAD_VISIBLE_HEIGHT,
     width: settings.width,
+    from: final.from,
+    to: final.to,
   };
 };
 
@@ -191,7 +241,7 @@ const roofIcon = (file: string, alt: string, width: number, height: number, dx: 
 export const GATE = {
   src: `${ART}/Gate/Entry_Gate.svg`,
   alt: "Entry gate",
-  left: 226,
+  left: 226 + PATH_SHIFT_X,
   top: 48,
   width: 124,
   height: 125,

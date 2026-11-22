@@ -85,7 +85,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
  * well as the box (Tailwind's `drop-shadow-*` takes only one, hence the
  * arbitrary `filter`). The green one comes first, so the top one is cast from
  * both and stays behind them. */
-function SpeechBubble({ line, size, tail, leaving, onSpoken }: { line: readonly Span[]; size: BubbleSize; tail: "left" | "right" | "top"; leaving: boolean; onSpoken?: () => void }) {
+export function SpeechBubble({ line, size, tail, leaving, onSpoken }: { line: readonly Span[]; size: BubbleSize; tail: "left" | "right" | "top"; leaving: boolean; onSpoken?: () => void }) {
   const tailAtLeft = tail === "left";
   const tailOnTop = tail === "top";
   // Where the bubble pops in from: beside Hex, or (Hex above it) from just under him.

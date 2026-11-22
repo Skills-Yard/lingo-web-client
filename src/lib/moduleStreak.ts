@@ -18,12 +18,6 @@ const STRIKE_AT: Readonly<Partial<Record<number, StrikeTrigger>>> = {
   4: "strikeMix",
 };
 
-/** How long each strike's clip plays, in seconds (`S_Duo2` and `S_Mix` in `progressBar.riv`; the `Check` twins are as long). */
-const STRIKE_SECONDS: Readonly<Record<StrikeTrigger, number>> = {
-  strikeDuo2: 0.9,
-  strikeMix: 1.6,
-};
-
 /** The run length where `strikeLoop` switches on, and for how long each time it does (the last holds for every later one). */
 const LOOP_AT = 5;
 const LOOP_SECONDS = [1, 4, 7] as const;
@@ -34,14 +28,12 @@ export const BATTERY_UNITS = 1;
 
 /**
  * What the run just reached: the trigger to play (if any), how long to loop (if
- * at all) and whether the battery charges. `playSeconds` is how long the bar's
- * part of it takes, the strike's clip or the loop, whichever is longer.
+ * at all) and whether the battery charges.
  */
 export type StreakBeat = {
   trigger: ProgressTrigger | null;
   loopSeconds: number | null;
   battery: boolean;
-  playSeconds: number;
 };
 
 type StreakState = {
@@ -150,7 +142,6 @@ export const noteRightAnswer = (withHint: boolean): StreakBeat => {
     trigger,
     loopSeconds,
     battery: streak % BATTERY_EVERY === 0,
-    playSeconds: Math.max(strike ? STRIKE_SECONDS[strike] : 0, loopSeconds ?? 0),
   };
 };
 

@@ -28,6 +28,11 @@ const ENTER_SETTLE_MS = 900;
 const ENTER_DELAY_MS = 250;
 /** About how long a cue (his thumbs-up) plays, before his ambient idle takes over again. */
 const CUE_PLAY_MS = 2800;
+/**
+ * How long after the result sheet is asked to open its Hex is shown: his entrance has begun by then (it starts from nothing), so
+ * what the canvas still held from the last time, him standing there, is never seen before the entrance plays again.
+ */
+const HEX_REVEAL_MS = ENTER_DELAY_MS + 120;
 
 /**
  * Hex, played the onboarding way: the `Onboarding` machine, entering with
@@ -270,6 +275,20 @@ export function FeedbackPanel({
       setEnterNow(false);
     };
   }, [hexIn]);
+  // The sheet's Hex stays on his canvas after he has entered, so the next opening (a try again) would show him standing there for a moment and
+  // then play his entrance over. Each opening starts with him hidden (set while rendering, so not a frame of him is drawn), and he is shown
+  // once his entrance is under way. He stays shown while the sheet slides away.
+  const [hexShown, setHexShown] = useState(false);
+  const [lastHexIn, setLastHexIn] = useState(hexIn);
+  if (hexIn !== lastHexIn) {
+    setLastHexIn(hexIn);
+    if (hexIn) setHexShown(false);
+  }
+  useEffect(() => {
+    if (!hexIn) return;
+    const timer = window.setTimeout(() => setHexShown(true), HEX_REVEAL_MS);
+    return () => window.clearTimeout(timer);
+  }, [hexIn]);
   const look = FEEDBACK[correct ? "correct" : "wrong"];
   return (
     <motion.div
@@ -289,11 +308,11 @@ export function FeedbackPanel({
         </div>
         <div aria-hidden className={`pointer-events-none ${centred || grouped ? CENTRED_HEX_SLOT : SHEET_HEX_SLOT}`}>
           <div ref={hexSlot} className={centred || grouped ? CENTRED_HEX_BOX : SHEET_HEX_BOX}>
-            {!hexSlot && <OnboardingHex
-                entryKey={enterNow ? "feedback" : null}
-                cue={enterNow ? hexCue : null}
-                cueDelayMs={ENTER_SETTLE_MS}
-              />}
+            {!hexSlot && (
+              <div className="h-full w-full" style={{ opacity: hexShown ? 1 : 0 }}>
+                <OnboardingHex entryKey={enterNow ? "feedback" : null} cue={enterNow ? hexCue : null} cueDelayMs={ENTER_SETTLE_MS} />
+              </div>
+            )}
           </div>
         </div>
       </div>

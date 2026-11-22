@@ -3,12 +3,23 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText } from "@/components/level-two/LevelTwoShell";
-import { RobotBackdrop, robotBelowDialogue } from "@/components/level-two/RobotBackdrop";
+import {
+  CentredRow,
+  LevelTwoShell,
+  ScreenTitle,
+  SoftBackdrop,
+  stageTop,
+  TitleText,
+} from "@/components/level-two/LevelTwoShell";
+import {
+  RobotBackdrop,
+  robotBelowDialogue,
+} from "@/components/level-two/RobotBackdrop";
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { TileCards } from "@/components/level-two/TileCards";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -39,7 +50,12 @@ const CARDS_CLEAR_MS = 700;
 type RoomScene = Extract<SequenceQuiz["scene"], { room: unknown }>["room"];
 
 /** What the boy has on: the start until checked, then the right or wrong result (a cleared room's right result waits for the cards to go). */
-const roomDress = (room: RoomScene, checked: boolean, correct: boolean, cardsGone: boolean): RoomDress => {
+const roomDress = (
+  room: RoomScene,
+  checked: boolean,
+  correct: boolean,
+  cardsGone: boolean,
+): RoomDress => {
   if (!checked) return room.start;
   if (!correct) return room.wrong;
   return room.clearOnRight && !cardsGone ? room.start : room.right;
@@ -58,7 +74,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // The hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   // Each try gets a fresh Hex: he left when the last one was checked.
   const [attempt, setAttempt] = useState(0);
   // A right answer in a `clearOnRight` room: the boy waits until the cards have gone, then moves.
@@ -66,9 +83,13 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const correct = selectedId === quiz.correctId;
   const room = "room" in quiz.scene ? quiz.scene.room : null;
   // The room stays put and the cards clear, so the boy is in view while he moves.
-  const clearedRoom = !!room && (!!room.fixed || (!!room.clearOnRight && correct));
+  const clearedRoom =
+    !!room && (!!room.fixed || (!!room.clearOnRight && correct));
   // Like the first lesson: an answer that plays a robot move (the right one, or the robot's wrong try) clears the cards so the move can be seen, not played behind them.
-  const fadeCards = checked && (clearedRoom || !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length);
+  const fadeCards =
+    checked &&
+    (clearedRoom ||
+      !!quiz.choices.find((choice) => choice.id === selectedId)?.moves?.length);
 
   useEffect(() => {
     if (!checked || !correct) return;
@@ -77,12 +98,15 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   }, [checked, correct]);
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     noteFirstTry(quiz.step, correct);
     if (!correct) noteStruggle(quiz.step, "miss");
     vibrateForAnswer(correct);
     setAnswer((previous) => ({ id: (previous?.id ?? 0) + 1, correct }));
-    quiz.choices.find((choice) => choice.id === selectedId)?.moves?.forEach((move) => fireRobot(move));
+    quiz.choices
+      .find((choice) => choice.id === selectedId)
+      ?.moves?.forEach((move) => fireRobot(move));
   };
 
   const tryAgain = () => {
@@ -98,8 +122,15 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
     else tryAgain();
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    answerHint.press(quiz.correctId);
     noteStruggle(quiz.step, "hint");
   };
 
@@ -107,11 +138,14 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
   const titleSize = quiz.titleSize ?? (quiz.smallTitle ? 26 : undefined);
   // After a wrong answer the right card isn't revealed: the learner gets to try again.
   const shownCorrectId = checked && !correct ? "" : quiz.correctId;
-  const wrongNote = !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
+  const wrongNote =
+    !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
   const line = quiz.line;
-  const withHint = !quiz.noHint;
   // A picture above the answers (or one shown after a wrong try) needs them to rise less, so they don't reach it.
-  const listRise = quiz.pictures || quiz.closeUp || quiz.wrongPicture ? LIST_RISE : LIST_RISE_OPEN;
+  const listRise =
+    quiz.pictures || quiz.closeUp || quiz.wrongPicture
+      ? LIST_RISE
+      : LIST_RISE_OPEN;
 
   return (
     <LevelTwoShell
@@ -121,23 +155,39 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       onBack={() => router.push(flow.previous(quiz.step))}
       scene={
         room ? (
-          <SceneBackdrop dress={roomDress(room, checked, correct, cardsGone)} lifted={checked && !clearedRoom} />
+          <SceneBackdrop
+            dress={roomDress(room, checked, correct, cardsGone)}
+            lifted={checked && !clearedRoom}
+          />
         ) : "robot" in quiz.scene ? (
-          <RobotBackdrop below={robotBelowDialogue(quiz.bubbleTop, quiz.bubble)} pose="idle" />
+          <RobotBackdrop
+            below={robotBelowDialogue(quiz.bubbleTop, quiz.bubble)}
+            pose="idle"
+          />
         ) : (
           <SoftBackdrop />
         )
       }
       answer={answer}
       ctaDisabled={selectedId === null}
-      ctaLabel={!checked ? (quiz.ctaLabel ?? "Continue") : quiz.noRetry ? "Continue" : correct ? "Next" : "Try again"}
-      hint={withHint ? { visible: !checked, onUse: useHint } : undefined}
+      ctaLabel={
+        !checked
+          ? (quiz.ctaLabel ?? "Check")
+          : quiz.noRetry
+            ? "Continue"
+            : correct
+              ? "Next"
+              : "Try again"
+      }
+      hint={{ visible: !checked, onUse: useHint }}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={correct}
-            title={correct ? quiz.rightTitle : (wrongNote?.title ?? quiz.wrongTitle)}
+            title={
+              correct ? quiz.rightTitle : (wrongNote?.title ?? quiz.wrongTitle)
+            }
             open={checked}
             hexIn={checked}
             hexCue={correct ? HEX_ONBOARDING_TRIGGER.continueThumb : null}
@@ -148,13 +198,23 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
         </div>
       }
     >
-      <ScreenTitle key={quiz.resultTitle && checked ? "result" : "ask"} oneLine={!quiz.wrapTitle}>
+      <ScreenTitle
+        key={quiz.resultTitle && checked ? "result" : "ask"}
+        oneLine={!quiz.wrapTitle}
+      >
         <span style={titleSize ? { fontSize: titleSize } : undefined}>
           <TitleText lines={title} />
         </span>
       </ScreenTitle>
       <CentredRow top={stageTop(quiz.bubbleTop)}>
-        <HexBubble key={attempt} entryKey={`sequence-${quiz.step}-${attempt}`} hex="left" line={line} size={quiz.bubble} leaving={checked && !quiz.hexStays} />
+        <HexBubble
+          key={attempt}
+          entryKey={`sequence-${quiz.step}-${attempt}`}
+          hex="left"
+          line={line}
+          size={quiz.bubble}
+          leaving={checked && !quiz.hexStays}
+        />
       </CentredRow>
       {quiz.pictures && (
         <motion.div
@@ -170,8 +230,15 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
       {quiz.closeUp && (
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: checked ? CLOSE_UP_CHECKED_SCALE : 1, y: checked ? -PICTURES_RISE : 0 }}
-          transition={{ ...PANEL_SPRING, opacity: { duration: 0.3, delay: 0.2 } }}
+          animate={{
+            opacity: 1,
+            scale: checked ? CLOSE_UP_CHECKED_SCALE : 1,
+            y: checked ? -PICTURES_RISE : 0,
+          }}
+          transition={{
+            ...PANEL_SPRING,
+            opacity: { duration: 0.3, delay: 0.2 },
+          }}
           className="absolute inset-x-0 flex justify-center"
           style={{ top: stageTop(quiz.closeUp.top), transformOrigin: "50% 0" }}
         >
@@ -198,7 +265,10 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
               className="rounded-[16px] border-4 border-white bg-white p-2 shadow-[1px_1px_6px_1px_rgba(0,0,0,0.15)] dark:border-[#818185] dark:bg-[#15181E]"
               style={{ width: quiz.wrongPicture.width }}
             >
-              <SlotImage file={quiz.wrongPicture.src} className="h-auto w-full" />
+              <SlotImage
+                file={quiz.wrongPicture.src}
+                className="h-auto w-full"
+              />
             </div>
           </motion.div>
         )}
@@ -210,8 +280,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
-          hinted={hinted}
-          withHint={withHint}
+          pointedId={answerHint.pointedId}
+          withHint
           rise={listRise}
           bounceRight={flow.bounceRight}
           onPick={setSelectedId}
@@ -224,8 +294,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           selectedId={selectedId}
           checked={checked}
           fadeOut={fadeCards}
-          hinted={hinted}
-          withHint={withHint}
+          pointedId={answerHint.pointedId}
+          withHint
           pictureWidth={quiz.pictureWidth}
           pictureHeight={quiz.pictureHeight}
           cardHeight={quiz.cardHeight}
@@ -233,6 +303,8 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           onPick={setSelectedId}
         />
       )}
+      {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+      {answerHint.hand}
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />
     </LevelTwoShell>

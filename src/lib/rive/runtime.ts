@@ -1,4 +1,5 @@
 import { RuntimeLoader } from "@rive-app/canvas";
+import riveCanvas from "@rive-app/canvas/package.json";
 
 /**
  * Point the Rive runtime at a same-origin copy of its WebAssembly binary.
@@ -11,10 +12,17 @@ import { RuntimeLoader } from "@rive-app/canvas";
  * cross-origin hop.
  *
  * Keep `public/rive/*.wasm` in sync with the installed `@rive-app/canvas`
- * version (currently 2.42.0) — re-copy from `node_modules` on upgrade.
+ * version (currently 2.50.0) — re-copy from `node_modules` on upgrade.
+ *
+ * The URLs carry that version (`?v=`) because `next.config.ts` lets the browser
+ * keep everything under `/rive/` for a year without asking again: with the same
+ * URL after an upgrade, a browser that had the old binary kept it, and the new
+ * runtime refused it ("WebAssembly.instantiate(): Import #0 "a": module is not
+ * an object or function"). A new version is a new URL, so the binary and the
+ * runtime that loads it are always a pair. Use `RIVE_WASM_URL` for any preload.
  */
-const WASM_URL = "/rive/rive.wasm";
-const WASM_FALLBACK_URL = "/rive/rive_fallback.wasm";
+export const RIVE_WASM_URL = `/rive/rive.wasm?v=${riveCanvas.version}`;
+const WASM_FALLBACK_URL = `/rive/rive_fallback.wasm?v=${riveCanvas.version}`;
 
 /**
  * Source for the reward-screen animation. Kept here so the component that
@@ -31,6 +39,34 @@ export const LIVE_PLATFORM = {
   stateMachine: "PathBuilding_SM",
   width: 88,
   height: 54,
+} as const;
+
+/**
+ * One piece of the road on the level screen (`/level`): "Artboard" of `progressBar.riv` (72x58, `State Machine 1`), the
+ * isometric slab that runs from one level's tile to the next. It replaces `grid-road.svg`. The number `pathState` on its view
+ * model (`StreakTickUnused`, which also has `day1`-`day7`, `streak` and `start`, none of them used here) turns it: 0 runs
+ * down to the right (the picture `grid-road.svg` has mirrored), 1 runs down to the left (as the svg is). The slab is drawn
+ * past the artboard's own edges (about 3-4 artboard px each side) and the file draws an opaque dark rectangle over the
+ * artboard (see `RoadArt`). Both measured on 2026-11-19 in headless Chrome.
+ *
+ * `caps`, per `pathState`: the middle of the slab's two ends (the short edges of its top face), in artboard px, `start` the
+ * upper one. The slab is a parallelogram on the isometric axes (its long edges run at slope 0.6, like the tiles' edges), about
+ * 82 long and 14.8 across, with a side face 4.6 thick under its lower long edge. Read off the extreme points of the top face
+ * (the corners) when drawn at 8x: pathState 0 has the corners (10.13, 1.25), (-2.63, 8.75), (80.38, 43.5), (67.5, 50.75),
+ * pathState 1 (66.63, 1.25), (79.5, 8.75), (-3.63, 43.63), (8.63, 51.13).
+ */
+export const LEVEL_ROAD = {
+  src: "/animations/progressBar.riv",
+  artboard: "Artboard",
+  stateMachine: "State Machine 1",
+  property: "pathState",
+  width: 72,
+  height: 58,
+  state: { downRight: 0, downLeft: 1 },
+  caps: [
+    { start: { x: 3.75, y: 5 }, end: { x: 73.94, y: 47.125 } },
+    { start: { x: 73.07, y: 5 }, end: { x: 2.5, y: 47.38 } },
+  ],
 } as const;
 
 /**
@@ -108,7 +144,7 @@ export function configureRiveRuntime(): void {
   if (configured) return;
   configured = true;
 
-  RuntimeLoader.setWasmUrl(WASM_URL);
+  RuntimeLoader.setWasmUrl(RIVE_WASM_URL);
   RuntimeLoader.setWasmFallbackUrl(WASM_FALLBACK_URL);
 }
 
@@ -181,11 +217,11 @@ export const VARIABLE_SCENES = {
 } as const;
 
 /**
- * The Data Types module's scenes: seven more artboards of `sequence.riv` (390x306 each, the `DT_` ones), each
- * with its own state machine and a view model that `datatypesHost` writes. None of them takes taps: the screens
- * drive them. Each has `highlight` (lights one thing up) and the triggers `correct` / `wrong` (a green / red
- * glow with a tick / cross on the picture), and all but the sorting lab have `mode` (which of its pictures is
- * up, from 0).
+ * The Data Types module's scenes: eight more artboards of `sequence.riv` (390x306 each, the `DT_` ones and the
+ * wrap-up), each with its own state machine and a view model that `datatypesHost` writes. None of them takes taps:
+ * the screens drive them. Each of the seven `DT_` ones has `highlight` (lights one thing up) and the triggers
+ * `correct` / `wrong` (a green / red glow with a tick / cross on the picture), and all but the sorting lab have
+ * `mode` (which of its pictures is up, from 0). The wrap-up (`complete`) has only `focus` and `celebrate`.
  *
  * What `mode` shows (the screens in brackets are the ones that use it):
  * - `info` ("DT_A01_InfoExplorer"): 0 and 1 the event form (screens 1 and 2; `field` 1-4 lights Name / Age /
@@ -211,6 +247,8 @@ export const VARIABLE_SCENES = {
  *   Class 6A, Delhi, SY001, Welcome to Learny!, 9876543210), `rev1`-`rev5` hangs a tag on it, `quotes` 1 puts quote marks on
  *   the text, `ident` 1 tags the two ids. Mode 2: `step` 1 the 12 on the calculator and "12" on the screen, 2 the sum
  *   12 + 3 = 15, 3 the text "12" + "3" = "123".
+ *   The words on the pictures are text runs with no names (so no data field and no `setTextRunValue`): a screen changes
+ *   one by its place in the artboard (`STRINGS_EXAMPLE_TEXT`), see `SceneTexts`.
  * - `boolean`, mode 1: `s1`-`s4` switches a card on (Present, Paid, Logged in, On). Mode 2: `bsel` 1 / 2 outlines TRUE / FALSE.
  *   Mode 3: `open1`-`open4` opens a type card (Integer, Float, String, Boolean). Mode 4: `m1`-`m4` puts a card in its
  *   own bin (Age, Student ID, Height, Is_present).
@@ -218,8 +256,8 @@ export const VARIABLE_SCENES = {
  *   as the file has them). `drop1`-`drop4` is the bin each one has dropped into (1 Integer, 2 Float, 3 String, 4 Boolean, the bins
  *   left to right; 0 on the belt), and a value can be dropped into a wrong bin. `highlight` n (1-4) glows bin n when `correct` plays.
  *   `run` plays the belt again.
- * - `build`, mode 0: `n1` / `n2` send a price into "Calculate a total", `n3` the name into "Display information", `total` 1
- *   adds the "Total 70" tag. Mode 1: `p1`-`p5` is the bin of each card (1 Integer, 2 Float, 3 String, 4 Boolean; 0 on
+ * - `build`, mode 0: `n1` / `n2` 1 sends a price into "Calculate a total"; `n3` 2 sends the name into "Display
+ *   information" (`n3` 1 would put it in the total box, over the prices); `total` 1 adds the "Total 70" tag. Mode 1: `p1`-`p5` is the bin of each card (1 Integer, 2 Float, 3 String, 4 Boolean; 0 on
  *   the shelf), in the order Name, Age, Height, Is_present, Student ID. Mode 2: `t1`-`t4` is the type on each field
  *   (the same numbers; City, Temperature, Rainy days, Is raining?), `vals` 1 fills the phone and the fields with Delhi,
  *   28.5, 3 and False, `boot` 1 puts a tick on the phone.
@@ -235,9 +273,147 @@ export const DATATYPES_SCENES = {
   build: { artboard: "DT_A05_BuildWithData", stateMachine: "A05_SM" },
   mastery: { artboard: "DT_A06_DebugMastery", stateMachine: "A06_SM" },
   sorting: { artboard: "DT_SortingLab", stateMachine: "SortLab_SM" },
+  /** The chapter's wrap-up ("VAR_Complete 2", the Data Types one of the four `VAR_Complete` artboards): the idea in the middle with Integer, Float, String, Boolean and a value around it. `focus` 1-5 puts one of them forward, and `celebrate` is a trigger. */
+  complete: { artboard: "VAR_Complete 2", stateMachine: "Complete_SM" },
 } as const;
 
 export type DatatypesSceneName = Exclude<keyof typeof DATATYPES_SCENES, "src" | "width" | "height">;
+
+/**
+ * The Operators module's studio: "OP_Studio" of `sequence.riv` (390x306), played by `Studio_SM` (no inputs) and bound
+ * to the `OpStudioScene` view model, which `operatorsHost` writes. One artboard that `mode` turns into several pictures
+ * (as seen on the file 2026-11-18): 0 four operator keys beside a "What it does" card (the way it starts), 1 the
+ * Calculate and Compare cards, 2 `exprLeft` and `exprRight` with the six comparison keys, 3 every operator key
+ * (Calculate, Compare) beside the card, 4 a "Shopping total" card (`flowTotal`). It also has `highlight`, `step` and
+ * `result` (numbers), `flowCompare` (a string) and the triggers `correct` / `wrong`; only what `mode` 0 does with
+ * them is known (nothing visible for `highlight` and `step`).
+ *
+ * In mode 0: `pick` lifts one key (1 +, 2 −, 3 ×, 4 ÷; 0 none, the keys all at rest), and the card is written by
+ * `infoTitle` (its heading), `infoMeaning` (a line under it), `infoExample` (the pill under that) and `infoSay`
+ * (a small line under the pill). The card has no data for its tab ("What it does").
+ */
+export const OPERATOR_STUDIO = {
+  src: SEQUENCE_ROOM.src,
+  artboard: "OP_Studio",
+  stateMachine: "Studio_SM",
+  width: 390,
+  height: 306,
+  /** Mode 0's `pick`: which key is lifted. */
+  pick: { none: 0, add: 1, subtract: 2, multiply: 3, divide: 4 },
+} as const;
+
+/**
+ * The Operators module's intro scenes: "OP_A01_Intro" of `sequence.riv` (390x306), played by `Intro_SM` and bound to the
+ * `OpIntroScene` view model (read off the file and tried in headless Chrome 2026-11-19). Data: `mode`, `situation`,
+ * `scene`, `action`, `pick`, `highlight`, `step` (numbers), `infoTitle`, `infoMeaning`, `infoExample`, `infoSay` (strings),
+ * and the triggers `correct` / `wrong`.
+ *
+ * Mode 0 is four little rooms (money, children, a wallet, two children side by side) in one picture, and mode 1 is ONE of
+ * the four situations drawn full size, picked by `situation` (1 ₹50 and ₹30 apart, 2 20 chocolates for 4 students, 3 the two
+ * heights 150 cm and 140 cm, 4 a wallet with ₹500; 0 and 5 an empty room). Mode 1 is static: `action`, `step`, `pick`,
+ * `highlight`, `scene` and the `correct` / `wrong` triggers change nothing there (screenshots byte-identical to the base
+ * one). `action` and `step` do something in mode 3.
+ *
+ * Its words are text runs with no names (45 in the file; the numbers are the place of the run in the artboard, see
+ * `SceneTexts`): the situations' amounts are fixed art, so a screen with other numbers writes its own. In situation 4,
+ * `text.walletTag` is the tag over the wallet (32) and `text.walletNote` the note sticking out of it (33), both "₹500" in the
+ * file (the other "₹500" runs are not seen in mode 1).
+ */
+export const OPERATOR_INTRO = {
+  artboard: "OP_A01_Intro",
+  stateMachine: "Intro_SM",
+  /** Mode 1's `situation`. */
+  situation: { money: 1, chocolates: 2, heights: 3, wallet: 4 },
+  text: { walletTag: 32, walletNote: 33 },
+} as const;
+
+/**
+ * The Operators module's scenes, as `operatorsHost` draws them: artboards of `sequence.riv` (390x306 each). `shop` is
+ * the Variable module's own "VAR_Shop" (see `VARIABLE_SCENES`), used on screen 3 with other words; see `OPERATOR_SHOP`.
+ */
+export const OPERATOR_SCENES = {
+  src: OPERATOR_STUDIO.src,
+  width: OPERATOR_STUDIO.width,
+  height: OPERATOR_STUDIO.height,
+  studio: { artboard: OPERATOR_STUDIO.artboard, stateMachine: OPERATOR_STUDIO.stateMachine },
+  intro: { artboard: OPERATOR_INTRO.artboard, stateMachine: OPERATOR_INTRO.stateMachine },
+  shop: { artboard: VARIABLE_SCENES.shop.artboard, stateMachine: VARIABLE_SCENES.shop.stateMachine },
+} as const;
+
+export type OperatorSceneName = Exclude<keyof typeof OPERATOR_SCENES, "src" | "width" | "height">;
+
+/**
+ * `VAR_Shop` as the Operators module's screen 3 draws it (the counter, a notebook and a pen; see `VARIABLE_SCENES.shop`
+ * for its data: `showNames` puts "Notebook" and "Pen" under the price tags, `showEraser` adds the eraser (₹10, "Eraser", the
+ * three then stand closer together), `showTotal` hangs the board). Its words are
+ * text runs with no names, numbered as the file has them (read off it 2026-11-18, 18 runs): each price is a "₹" run
+ * and an amount run, twice over (the second set is probably the lit look), the board's amount is run 1 and its label
+ * run 2 ("Total", "70"), and the names are runs 15 (Eraser), 16 (Pen) and 17 (Notebook). The file's prices (notebook 50,
+ * pen 20) are changed to the screen's own (see `SceneTexts`).
+ */
+export const OPERATOR_SHOP = {
+  text: {
+    boardAmount: 1,
+    boardLabel: 2,
+    /** The amounts on the pen's and the notebook's tags (both looks of each). The eraser's (runs 4 and 10, ₹10) is left as the file has it. */
+    penAmount: [6, 12],
+    notebookAmount: [8, 14],
+    notebookName: 17,
+  },
+} as const;
+
+/**
+ * Some words of `DT_A03_StringDiscovery`'s text examples (mode 1), as the text runs of the artboard are numbered in the file
+ * (`textValueRunByIndex`: they have no names, read off the file 2026-11-15, 33 runs; the laptop's list, mode 0, is runs 24 to
+ * 32: rows 30/31, 28/29, 26/27 and 24/25 as name / badge letter from the top row, and 32 its heading). They are changed by
+ * `SceneTexts`, and are as the file has them whenever a screen does not say.
+ */
+export const STRINGS_EXAMPLE_TEXT = {
+  /** "Welcome to Learny!", the greeting's card. */
+  greeting: 10,
+  /** `"Hello Learny!"`, the same greeting with its quote marks (the picture puts them on when `quotes` is 1). */
+  greetingQuoted: 9,
+} as const;
+
+/**
+ * The words of `DT_A03_StringDiscovery`'s 12 against "12" (mode 2): the two little boxes that stand over the calculator and the
+ * text display (`step` 0), each with its tag under it. `step` 1 throws the boxes into the devices, so a screen that wants them to
+ * stay where they are keeps `step` at 0 and writes its own values in them (see `SceneTexts`). The sums that come after
+ * (12 + 3 = 15, "12" + "3" = "123") are other runs.
+ */
+export const STRINGS_TWELVE_TEXT = {
+  /** The box over the calculator (12), and its tag ("a number"). */
+  numberBox: 3,
+  numberTag: 1,
+  /** The box over the text display (`"12"`), and its tag ("text: 1 and 2"). */
+  textBox: 2,
+  textTag: 0,
+} as const;
+
+/** The words of `DATATYPES_SCENES.complete` as its text runs are numbered in the file (read off it 2026-11-17, 7 runs: String, Boolean, total_price, Float, Integer, "score = 100", then the central title, which the file copied from the Variable one as "VARIABLES MASTER"). */
+export const COMPLETE_TEXT = {
+  title: 6,
+} as const;
+
+/**
+ * The String values of `DT_A05_BuildWithData` (`DATATYPES_SCENES.build`) as its text runs are numbered in the file (read off it 2026-11-18, 38
+ * runs): written in quotes on the screens that ask for their type, as `"0012"` already is in the file (run 12). Run 6 is the weather
+ * app's City card ("Delhi"), run 20 the profile's Name row ("Aarav"). Runs 10 and 26 (the phone's own display, the shopping list) are
+ * left as they are.
+ */
+export const BUILD_TEXT = {
+  weatherCity: 6,
+  profileName: 20,
+} as const;
+
+/**
+ * The String values of `DT_A06_DebugMastery` (`DATATYPES_SCENES.mastery`) as its text runs are numbered in the file (read off it 2026-11-18,
+ * 80 runs): the student record's Name ("Aarav") and the player profile's Player name ("ShadowX"). The IDs (runs 27 and 38) already have their quotes.
+ */
+export const MASTERY_TEXT = {
+  recordName: 77,
+  playerName: 62,
+} as const;
 
 /** What each artboard's `mode` is (see `DATATYPES_SCENES`): the screens use these in place of the bare numbers. */
 export const SCENE_MODE = {
@@ -694,8 +870,6 @@ export const BUTTON = {
   /** Plays the electric effect, which reaches up to 17 units past the artboard
    * (see `bleed`): fired with every strike and battery charge of the progress bar. */
   electricTrigger: "electric",
-  /** How long the `Electric` clip plays, in seconds. */
-  electricSeconds: 0.67,
   /** Same cadence the old CSS shine used (`animate-button-shine`, 5s). */
   shineEveryMs: 5000,
 } as const;

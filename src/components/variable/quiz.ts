@@ -48,6 +48,12 @@ export const OPTION = {
   rise: 140,
 } as const;
 
+/**
+ * The most words an answer may have. Three answers this short stand as mini cards in one row (see `acrossCards`), so
+ * the row is one card tall and stays clear of the scene; a longer answer would not fit its card.
+ */
+export const MAX_OPTION_WORDS = 2;
+
 /** An answer: words, with a small picture (an emoji, or `node`) where the answer is an object to tap. */
 export type Option = { id: string; text: string; emoji?: string; node?: ReactNode; /** A picture file shown beside an answer in words. */ icon?: string };
 
@@ -77,14 +83,9 @@ export type QuizStage = {
   right: string;
   wrongTitle?: string;
   wrong: string;
-  /** The hint button's help: a sentence in place of Hex's line, and/or a picture. Either makes the button show. */
-  hintText?: string;
-  hintVisual?: ReactNode;
-  /** The hint is shown by itself when the learner tries again. */
-  hintOnMiss?: boolean;
   /** A wrong object spills water as it is picked. */
   spill?: boolean;
-  /** The main button before the answer is checked (default "Continue") and after a right one (default "Next"). */
+  /** The main button before the answer is checked (default "Check") and after a right one (default "Next"). */
   ctaLabel?: string;
   nextLabel?: string;
 };
@@ -96,12 +97,16 @@ export type InteractionApi = {
   /** The learner has done it. */
   done: () => void;
   finished: boolean;
+  /** How many times the learner has pressed the hint button on this stage (0 until they do); only a stage with `hint` set gets any. */
+  hint: number;
 };
 
 /** Something to do instead of a question: tap, drag, slide. The main button waits until it is done. */
 export type InteractionStage = {
   kind: "interaction";
   render: (api: InteractionApi) => ReactNode;
+  /** Shows the hint button; each press is counted in `InteractionApi.hint` and the stage shows its own help. It goes once the stage is done. */
+  hint?: boolean;
   /** Hex's panel on finishing (a right outcome), if the interaction has one. */
   finishPanel?: { title: string; text: string };
   ctaLabel?: string;

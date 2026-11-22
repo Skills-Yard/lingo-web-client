@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Choice } from "@/components/level-two/levelTwo";
-import type { SceneValues } from "@/lib/rive/datatypesHost";
+import type { SceneIntro, SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
 import type { DatatypesSceneName } from "@/lib/rive/runtime";
 
 /** An answer: its words and its picture (`icon` is a file, see `pictures.ts`). */
@@ -21,9 +21,14 @@ export type VisualContext = {
 export type SceneSpec = {
   scene: DatatypesSceneName;
   values: SceneValues;
+  /** The words the artboard has in place of the file's own, by their place in it (see `SceneTexts`); every other word is the file's. */
+  texts?: SceneTexts;
+  /** What plays as the stage opens: its intro (see `SceneIntro`). */
+  intro?: SceneIntro;
+  /** How large (times its own size) a look-only stage draws this scene, in place of the usual `LARGE_SCENE` (a scene whose sides the usual size cuts off). */
+  lookScale?: number;
   /** A wrong answer fires the scene's `wrong` (default). Left off where the answers are reasons, so a cross on the picture would blame the wrong thing. */
-  markWrong?: boolean;
-};
+  markWrong?: boolean;};
 
 /** A stage can have a title of its own, in place of the screen's (a screen's second part, such as 5.2, is headed differently from its first), and a scene. */
 type StageTitle = {
@@ -50,7 +55,11 @@ export type QuizStage = StageTitle & {
   question?: string;
   /** The picture between Hex's line and the answers. */
   visual?: (context: VisualContext) => ReactNode;
-  /** `rows`: a list of answers; `grid`: tiles (two across for four or two answers, three for three). */
+  /**
+   * `rows`: a list of answers; `grid`: tiles (two across for four or two answers, three for three). Only the Operators and
+   * Conditions modules, which share this type, set `layout` and `cards`: the Data Types screens' answers are the Variable
+   * module's, laid out by their words alone (see `OptionCards.tsx`).
+   */
   layout?: "rows" | "grid";
   /** A `grid` of special cards that stand higher above the button than the usual tiles: `big` (four, screen 8), `badges` (three, each a badge over its word, screen 10). */
   cards?: "big" | "badges";
@@ -60,11 +69,9 @@ export type QuizStage = StageTitle & {
   right: string;
   wrongTitle?: string;
   wrong: string;
-  /** The hint button's help: a sentence in place of Hex's line. */
-  hintText?: string;
   /** The answers stay hidden until Hex has finished his line, then bounce in one by one (screens 1 and 2). */
   optionsAfterHex?: boolean;
-  /** The main button before the answer is checked (default "Continue") and after a right one (default "Next"). */
+  /** The main button before the answer is checked (default "Check") and after a right one (default "Next"). */
   ctaLabel?: string;
   nextLabel?: string;
 };
@@ -109,8 +116,19 @@ export type InteractionStage = StageTitle & {
   bubbleWidth?: number;
   /** The picture stands at the top of the room under Hex's line, instead of in the middle of it (a design with fixed places). */
   alignTop?: boolean;
+  /**
+   * With a `finishPanel` and a docked stage: the stage stays when the panel comes, instead of fading out. It rises above the panel as a
+   * question's answers do (and the scene is cut to the room it leaves), so what the learner picked is still there to see.
+   */
+  keepOptions?: boolean;
   /** Nothing to do, only to look at (screens 5 and 6): Continue waits only for Hex to finish his line, and his line stays. */
   ready?: boolean;
+  /**
+   * Under a scene, what the stage draws stands on the main button by default (its lowest buttons the same 20px above it as a
+   * question's answers are, the scene cut short if it needs the room), the same place on every screen. `follow`: it hangs from the
+   * scene instead, as a stage does whose parts grow downward (screen 4's tour, with Hex standing under its groups).
+   */
+  follow?: boolean;
   /** What stands under the line (or under the scene). Left out where the scene is all there is to look at. */
   render?: (api: InteractionApi) => ReactNode;
   /** Hex's panel on finishing, if the interaction has one. */

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
-import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
+import { PointedLook } from "@/components/level-one/answerHint";
 import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { RAISED } from "@/components/ui/raised";
 import { CARDS_RISE, GAP_ABOVE_BUTTONS } from "./AnswerCards";
@@ -42,7 +42,8 @@ type TileCardsProps = {
   checked: boolean;
   /** The cards fade out completely, so the robot's move behind them can be seen. */
   fadeOut: boolean;
-  hinted: boolean;
+  /** The card the hint's hand is on (see `useAnswerHint`): it takes a tint and a shine. */
+  pointedId: string | null;
   withHint: boolean;
   /** The text is a sentence: set smaller and left to wrap. */
   longText?: boolean;
@@ -88,11 +89,12 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
-        const hintHere = hinted && selectedId === null && choice.id === correctId;
+        const pointed = pointedId === choice.id && state === "idle";
         const card = (
-          <HintFloat key={choice.id} className="relative flex min-w-0 flex-1" spin={false} active={hintHere}>
+          <div key={choice.id} className="relative flex min-w-0 flex-1">
             <motion.button
               type="button"
+              data-hint={choice.id}
               disabled={checked}
               onClick={() => {
                 playClickSound();
@@ -108,14 +110,6 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 state === "idle" ? `border-white dark:border-transparent ${choice.tint ?? "bg-white"}` : LOOKS[state].card
               }`}
             >
-              {/* The hint's orange fill, wiped in from the left behind the content. */}
-              <motion.span
-                aria-hidden
-                initial={false}
-                animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
-              />
               {choice.tag ? (
                 <span className={`flex shrink-0 items-center justify-center rounded-[12px] text-[20px] leading-[120%] font-semibold whitespace-nowrap ${look.picture} ${choice.tag.look}`}>{choice.tag.text}</span>
               ) : (
@@ -128,6 +122,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
               >
                 {choice.text}
               </span>
+              <PointedLook pointed={pointed} />
             </motion.button>
           </HintFloat>
         );

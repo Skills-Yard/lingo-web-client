@@ -5,6 +5,7 @@ import { animate, AnimatePresence, motion, useMotionValue } from "framer-motion"
 import { Check, FileText } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
+import { RightBounce } from "@/components/level-two/RightBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForTap } from "@/lib/haptics";
@@ -46,6 +47,8 @@ export function DragCard({
   className,
   style,
   disabled,
+  placed = false,
+  shadow = true,
   onTap,
   onDrop,
   label,
@@ -54,6 +57,10 @@ export function DragCard({
   className: string;
   style?: React.CSSProperties;
   disabled?: boolean;
+  /** The card has been put in its group: it is no longer here (it fades out and cannot be touched) and only its shadow stays, keeping its place in the tray. */
+  placed?: boolean;
+  /** Whether the card brings its own shadow (it does by default); `false` when what holds the card already has one in the card's place (see `GroupStage`). */
+  shadow?: boolean;
   onTap: () => void;
   onDrop: (clientX: number, clientY: number) => void;
   label: string;
@@ -67,10 +74,21 @@ export function DragCard({
     animate(y, 0, SPRING);
   };
   return (
+    <div className="relative flex">
+    {/* The card's shadow in its place: a plain shape the size of the card (its own classes, with nothing in it), there from the start behind the card (which covers it), so it is already showing when the card is dragged away; it stays in place while the card is away, and for good once the card has been placed (`placed`). */}
+    {shadow && (
+      <div
+        aria-hidden
+        className={`${className} pointer-events-none absolute inset-0`}
+        style={{ ...style, boxShadow: "none", backgroundColor: "rgba(0,0,0,0.09)", borderColor: "transparent" }}
+      />
+    )}
     <motion.button
       type="button"
       aria-label={label}
-      disabled={disabled}
+      aria-hidden={placed || undefined}
+      tabIndex={placed ? -1 : undefined}
+      disabled={disabled || placed}
       onPointerDown={(event) => {
         const box = event.currentTarget;
         box.setPointerCapture(event.pointerId);
@@ -82,7 +100,7 @@ export function DragCard({
         if (!now) return;
         const dx = event.clientX - now.startX;
         const dy = event.clientY - now.startY;
-        if (Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
         x.set(dx / now.scale);
         y.set(dy / now.scale);
       }}
@@ -102,10 +120,11 @@ export function DragCard({
       }}
       animate={{ scale: dragging ? 1.06 : 1 }}
       style={{ ...style, x, y, zIndex: dragging ? 5 : 1 }}
-      className={`pointer-events-auto relative touch-none enabled:cursor-grab enabled:active:cursor-grabbing ${className}`}
+      className={`pointer-events-auto relative touch-none transition-opacity duration-150 enabled:cursor-grab enabled:active:cursor-grabbing ${placed ? "pointer-events-none opacity-0" : ""} ${className}`}
     >
       {children}
     </motion.button>
+    </div>
   );
 }
 
@@ -197,7 +216,6 @@ export function SortStage({
     );
   };
 
-  const tray = items.filter((item) => !placed[item.id]);
   const columns = buckets.length === 3 ? "grid-cols-3" : "grid-cols-2";
   const rows = Math.ceil(buckets.length / (buckets.length === 3 ? 3 : 2));
 
@@ -205,11 +223,13 @@ export function SortStage({
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-4`}>
       <div className="flex min-h-[52px] flex-wrap justify-center gap-3.5">
         <AnimatePresence>
-          {tray.map((item) => (
-            <motion.div key={item.id} layout exit={{ opacity: 0, scale: 0.6 }} animate={{ x: wrongId === item.id ? SHAKE : 0 }} transition={{ x: { duration: 0.35 } }}>
+          {/* Every card keeps its place in the tray: one that has been put in its group fades out and leaves its plain shadow there, and the others do not move up. */}
+          {items.map((item) => (
+            <motion.div key={item.id} layout animate={{ x: wrongId === item.id ? SHAKE : 0 }} transition={{ x: { duration: 0.35 } }}>
               {/* The cards all share one tint: here a card's colour must not hint at its group. */}
               <DragCard
                 label={item.label}
+                placed={!!placed[item.id]}
                 disabled={finished}
                 onTap={() => {
                   playClickSound();
@@ -568,7 +588,10 @@ export function ToggleStage({ api, items }: { api: InteractionApi; items: readon
   );
 }
 
-/** A field marked as having the wrong type: tap the type it should have. */
+/** How long (ms) after the right type is tapped the stage is done: its whole bounce (about 1.1 s) is seen before the result panel comes. */
+const CHOOSE_FINISH_MS = 1200;
+
+/** A field marked as having the wrong type: tap the type it should have. The right one turns green and bounces at once, and stays (see `InteractionStage.keepOptions`). */
 export function ChooseTypeStage({
   api,
   field,
@@ -591,12 +614,13 @@ export function ChooseTypeStage({
   const [wrong, setWrong] = useState<string | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
   const choose = (id: string) => {
-    if (finished) return;
+    // Once the right one is tapped nothing else is taken (the bounce is playing).
+    if (finished || chosen) return;
     playClickSound();
     vibrateForTap();
     if (id === correct) {
       setChosen(id);
-      window.setTimeout(() => done(), 500);
+      window.setTimeout(() => done(), CHOOSE_FINISH_MS);
       return;
     }
     slip();
@@ -615,25 +639,28 @@ export function ChooseTypeStage({
           </div>
         </WindowCard>
       )}
+      {/* The hint stands over the types, so they are the lowest thing: on the main button, as every screen's options are. */}
+      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
+      {/* Every box is the same size: the bounce box fills its cell (`flex-1`), or each box would only be as wide as its words. */}
       <div className="grid w-full grid-cols-2 gap-3.5">
         {TYPES.map((type, index) => (
-          <motion.button
-            key={type.id}
-            type="button"
-            onClick={() => choose(type.id)}
-            animate={{ x: wrong === type.id ? SHAKE : 0 }}
-            transition={{ duration: 0.35 }}
-            whileTap={{ scale: 0.97 }}
-            className={`${CARD_BODY_FLAT} ${RAISED} h-[64px] cursor-pointer gap-2 px-2 ${
-              chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
-            }`}
-          >
-            <Pic src={type.icon} className="h-8 w-8" />
-            <span className={CARD_TEXT}>{type.label}</span>
-          </motion.button>
+          <RightBounce key={type.id} play={chosen === type.id} radius={8} className="flex min-w-0 flex-1">
+            <motion.button
+              type="button"
+              onClick={() => choose(type.id)}
+              animate={{ x: wrong === type.id ? SHAKE : 0 }}
+              transition={{ duration: 0.35 }}
+              whileTap={{ scale: 0.97 }}
+              className={`${CARD_BODY_FLAT} ${RAISED} h-[64px] min-w-0 flex-1 cursor-pointer gap-2 px-2 ${
+                chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
+              }`}
+            >
+              <Pic src={type.icon} className="h-8 w-8" />
+              <span className={CARD_TEXT}>{type.label}</span>
+            </motion.button>
+          </RightBounce>
         ))}
       </div>
-      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
     </div>
   );
 }

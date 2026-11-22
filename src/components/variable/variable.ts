@@ -1,6 +1,5 @@
 import { variableHref } from "@/lib/routes";
 import type { SceneName } from "@/lib/rive/variableHost";
-import { cleanRight, DETOURED_KEY, DETOUR_KEY, struggled } from "./variableScore";
 
 /** The Variable module's screens, for its progress bar. */
 export const VARIABLE_STEPS = 34;
@@ -82,88 +81,10 @@ export const sceneOf = (step: number): SceneKind => {
 export const DRINK_HINT_STEPS: readonly number[] = [STEP.thirsty, STEP.noWater];
 
 /**
- * Repeats a learner who has the idea can do without: a screen is skipped when
- * every screen listed for it was answered right the first time, with no hint.
+ * Where the main button goes after screen `step`: always the next one, 1 to 34 and then "Lesson complete!". No screen
+ * is skipped and nobody is sent back to an earlier one, whatever they answered.
  */
-const SKIPS: Readonly<Record<number, readonly number[]>> = {
-  [STEP.empty]: [STEP.addWater, STEP.drink],
-  [STEP.eraser]: [STEP.shopping, STEP.total],
-  [STEP.spent]: [STEP.pocket, STEP.received],
-};
+export const variableNext = (step: number) => variableHref(step >= VARIABLE_STEPS ? "complete" : step + 1);
 
-/**
- * Where a learner who missed a screen (or used its hint) is sent back to, once:
- * the earlier screen that taught the idea. They then go on from the screen after
- * the one they missed.
- */
-const DETOURS: Readonly<Record<number, number>> = {
-  [STEP.addWater]: STEP.fill,
-  [STEP.drink]: STEP.fill,
-  [STEP.classify]: STEP.meet,
-  [STEP.names]: STEP.meet,
-  [STEP.total]: STEP.prices,
-  [STEP.eraser]: STEP.prices,
-  [STEP.received]: STEP.addWater,
-  [STEP.spent]: STEP.drink,
-  [STEP.plan]: STEP.appIntro,
-  [STEP.debug]: STEP.total,
-};
-
-type Detour = { to: number; resume: number };
-
-const read = <T,>(key: string): T | null => {
-  try {
-    return JSON.parse(sessionStorage.getItem(key) ?? "null") as T | null;
-  } catch {
-    return null;
-  }
-};
-
-const write = (key: string, value: unknown) => {
-  try {
-    sessionStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Storage blocked: nobody is sent back, and nothing is skipped.
-  }
-};
-
-const skipped = (step: number) => SKIPS[step]?.every(cleanRight) ?? false;
-
-/** The screen after `step` once the skipped ones are left out (`VARIABLE_STEPS + 1`: the end). */
-const plainNext = (step: number) => {
-  let next = step + 1;
-  while (next <= VARIABLE_STEPS && skipped(next)) next += 1;
-  return next;
-};
-
-const hrefOf = (step: number) => variableHref(step > VARIABLE_STEPS ? "complete" : step);
-
-/**
- * Where the main button goes after screen `step`: the next one, but a screen a
- * strong learner doesn't need is skipped, and a learner who struggled is sent
- * back (once) to the screen that taught the idea, then on from where they were.
- */
-export const variableNext = (step: number) => {
-  const detour = read<Detour>(DETOUR_KEY);
-  if (detour && step === detour.to) {
-    write(DETOUR_KEY, null);
-    return hrefOf(detour.resume);
-  }
-  const next = plainNext(step);
-  const back = DETOURS[step];
-  const visited = read<Record<number, true>>(DETOURED_KEY) ?? {};
-  if (back !== undefined && struggled(step) && !visited[step]) {
-    write(DETOURED_KEY, { ...visited, [step]: true });
-    write(DETOUR_KEY, { to: back, resume: next } satisfies Detour);
-    return variableHref(back);
-  }
-  return hrefOf(next);
-};
-
-/** Where the Back arrow goes from screen `step`. */
-export const variablePrevious = (step: number) => {
-  if (step <= 1) return "/level";
-  let previous = step - 1;
-  while (previous > 1 && skipped(previous)) previous -= 1;
-  return variableHref(previous);
-};
+/** Where the Back arrow goes from screen `step`: the one before it (screen 1 goes to the path). */
+export const variablePrevious = (step: number) => (step <= 1 ? "/level" : variableHref(step - 1));

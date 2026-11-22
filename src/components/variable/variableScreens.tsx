@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSceneValues } from "@/lib/rive/variableHost";
-import { Bottle, CARD } from "./visuals";
+import { CARD } from "./visuals";
 import { BridgeStage, ClassifyStage, FillSliderStage, MatchPricesStage, NameValueStage, NamesStage } from "./interactions";
 import { NAME_VALUE_CARDS, type VarCards } from "./scenes";
 import type { Option, QuizStage, ScreenDef, VisualContext } from "./quiz";
@@ -26,17 +26,19 @@ const mlOf = (text: string) => Number(text.replace(/[^\d]/g, ""));
  * amount the question starts with. It is not moved to the answer: it goes to whichever
  * answer (of `choices`, in order, as "750 ml") the learner taps, so tapping 750 ml fills it
  * to 750 ml (with the stream on while it is poured in, if `pour`), and tapping another moves
- * it again. It is back at `from` when the learner tries again. The amount on the bottle is
- * left for the learner to read until they have it right.
+ * it again. It is back at `from` when the learner tries again. The amount tag on the bottle shows
+ * the amount the question starts with (`from`); while an answer is picked and not yet checked the
+ * tag is off (the water is moving to the pick), and once it is checked, right or wrong, it shows
+ * the amount of the answer that was picked.
  */
 function BottleChange({ from, choices, pour = false, context }: { from: number; choices: readonly string[]; pour?: boolean; context: VisualContext }) {
-  const showAmount = context.checked && context.correct;
+  const pending = context.picked !== null && !context.checked;
   // When the cap is open (a pick before then waits for it), and where the water is heading.
   const readyAt = useRef(0);
   const heading = useRef(from);
   useEffect(() => {
-    setSceneValues("bottle", { showLabel: showAmount });
-  }, [showAmount]);
+    setSceneValues("bottle", { showLabel: !pending });
+  }, [pending]);
   useEffect(() => {
     setSceneValues("bottle", { pouring: false });
     setBottleLevel(from);
@@ -96,8 +98,8 @@ const CALC_RUN_MS = 1600;
 const RIGHT_TOTAL = 70;
 const WRONG_TOTAL = 50;
 
-/** Screen 4's answers, as the object each lights up in the scene (the notebook is 3: it isn't an answer). */
-const ITEM_PICK: Readonly<Record<string, number>> = { bottle: 1, football: 2, lunchbox: 4 };
+/** Screen 4's answers, as the object each lights up in the scene (its four objects, in order). */
+const ITEM_PICK: Readonly<Record<string, number>> = { bottle: 1, football: 2, notebook: 3, lunchbox: 4 };
 
 /**
  * The four objects (see `ItemsBackdrop`) are the picture on screen 4: this draws nothing.
@@ -154,19 +156,25 @@ function PenPriceDrive({ context }: { context: VisualContext }) {
 /**
  * Screens 20 and 21: the shop counter adds up the prices (`calc` for the notebook and pen,
  * `calcAll` once the eraser has slid in) shortly after the screen opens, and again when the
- * learner tries again. The Total board stays hidden until the answer is right, then shows
- * `total`; checking marks the items right or wrong.
+ * learner tries again. The Total board stays hidden (or, with `before`, stands at that earlier
+ * total) until the answer is right, then shows `total`; with `amounts` (the money each answer
+ * stands for, in the answers' order) it shows the answer that was picked once it is checked,
+ * right or wrong. Checking marks the items right or wrong.
  */
-function ShopTotal({ total, eraser = false, context }: { total: number; eraser?: boolean; context: VisualContext }) {
+function ShopTotal({ total, before, amounts, eraser = false, context }: { total: number; before?: number; amounts?: readonly number[]; eraser?: boolean; context: VisualContext }) {
   const settled = context.checked && context.correct;
+  const picked = amounts && context.picked !== null ? amounts[Number(context.picked)] : undefined;
   useEffect(() => {
-    setSceneValues("shop", { showEraser: eraser, showNames: false, showTotal: false, highlight: 0, total });
+    setSceneValues("shop", { showEraser: eraser, showNames: false, showTotal: before !== undefined, highlight: 0, total: before ?? total });
     const timer = window.setTimeout(() => fireSceneTrigger("shop", eraser ? "calcAll" : "calc"), eraser ? ERASER_IN_MS : EVENT_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, [total, eraser, context.attempt]);
+  }, [total, before, eraser, context.attempt]);
   useEffect(() => {
-    if (settled) setSceneValues("shop", { showTotal: true });
-  }, [settled]);
+    if (settled) setSceneValues("shop", { showTotal: true, total });
+  }, [settled, total]);
+  useEffect(() => {
+    if (context.checked && picked !== undefined) setSceneValues("shop", { showTotal: true, total: picked });
+  }, [context.checked, picked]);
   useEffect(() => {
     if (context.checked) fireSceneTrigger("shop", context.correct ? "correct" : "wrong");
   }, [context.checked, context.correct]);
@@ -177,10 +185,31 @@ function ShopTotal({ total, eraser = false, context }: { total: number; eraser?:
  * Screens 22-25: the wallet (see `WalletBackdrop`). Its card shows `from` while the question is
  * open (or is hidden, with `hideCard`) and `to` once the answer is right. `event` flies notes in
  * or out (with `amount` on its tag, and the toy car for a `toy`) shortly after the screen opens,
- * and again when the learner tries again.
+ * and again when the learner tries again. With `amounts` (the money each answer stands for, in the
+ * answers' order) the card shows the answer that was picked once it is checked, right or wrong
+ * (and `from` again on a new try), instead of only the right one.
  */
-function WalletDrive({ from, to, event, amount = 0, toy = false, hideCard = false, context }: { from: number; to: number; event?: "receive" | "spend"; amount?: number; toy?: boolean; hideCard?: boolean; context: VisualContext }) {
+function WalletDrive({
+  from,
+  to,
+  event,
+  amount = 0,
+  toy = false,
+  hideCard = false,
+  amounts,
+  context,
+}: {
+  from: number;
+  to: number;
+  event?: "receive" | "spend";
+  amount?: number;
+  toy?: boolean;
+  hideCard?: boolean;
+  amounts?: readonly number[];
+  context: VisualContext;
+}) {
   const settled = context.checked && context.correct;
+  const picked = amounts && context.picked !== null ? amounts[Number(context.picked)] : undefined;
   useEffect(() => {
     setSceneValues("wallet", { amount, showToy: toy, balance: from, showCard: !hideCard });
     if (!event) return;
@@ -190,6 +219,9 @@ function WalletDrive({ from, to, event, amount = 0, toy = false, hideCard = fals
   useEffect(() => {
     if (settled) setSceneValues("wallet", { balance: to, showCard: true });
   }, [settled, to]);
+  useEffect(() => {
+    if (context.checked && picked !== undefined) setSceneValues("wallet", { balance: picked, showCard: true });
+  }, [context.checked, picked]);
   return null;
 }
 
@@ -402,8 +434,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "No river or shop nearby. What should we do?",
         options: [
-          { id: at(0), text: "Carry water along", icon: "/animations/svg/variable-module/screen-3/variable-3.1.svg" },
-          { id: at(1), text: "Wait for a river", icon: "/animations/svg/variable-module/screen-3/variable-3.2.svg" },
+          { id: at(0), text: "Carry water", icon: "/animations/svg/variable-module/screen-3/variable-3.1.svg" },
+          { id: at(1), text: "Wait here", icon: "/animations/svg/variable-module/screen-3/variable-3.2.svg" },
           { id: at(2), text: "Turn back", icon: "/animations/svg/variable-module/screen-3/variable-3.3.svg" },
         ],
         correctId: at(0),
@@ -422,11 +454,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "We carry water. What should hold it?",
         // The four objects are the screen's scene (see `ItemsBackdrop`); this lights the one picked.
         visual: (context) => <ItemsDrive context={context} />,
-        layout: "grid",
+        // Four short answers in words, no pictures: the module's 2 x 2 cards (see `acrossCards`), in the order of the objects in the scene.
         options: [
-          { id: "bottle", text: "Water bottle", node: <Bottle ml={600} height={54} marks={false} /> },
-          { id: "football", text: "Football", emoji: "⚽" },
-          { id: "lunchbox", text: "Lunchbox", emoji: "🍱" },
+          { id: "bottle", text: "Water bottle" },
+          { id: "football", text: "Football" },
+          { id: "notebook", text: "Notebook" },
+          { id: "lunchbox", text: "Lunchbox" },
         ],
         correctId: "bottle",
         rightTitle: "That's right!",
@@ -445,9 +478,9 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "We fill it and drink from it. What is it for?",
         visual: (context) => <BottleStory context={context} />,
         options: [
-          { id: at(0), text: "To store water", icon: "/animations/svg/variable-module/screen-5/variable-5.1.svg" },
-          { id: at(1), text: "To create water", icon: "/animations/svg/variable-module/screen-5/variable-5.2.svg" },
-          { id: at(2), text: "To change the colour of water", icon: "/animations/svg/variable-module/screen-5/variable-5.3.svg" },
+          { id: at(0), text: "Store water", icon: "/animations/svg/variable-module/screen-5/variable-5.1.svg" },
+          { id: at(1), text: "Create water", icon: "/animations/svg/variable-module/screen-5/variable-5.2.svg" },
+          { id: at(2), text: "Change colour", icon: "/animations/svg/variable-module/screen-5/variable-5.3.svg" },
         ],
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -499,7 +532,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "It held 500 ml, now 750 ml. What changed?",
         // The pair of cards is the screen's scene (see `VarCardBackdrop`).
         visual: (context) => <VarCardDrive cards={WATER_CHANGE_CARDS} context={context} />,
-        options: words(["The bottle", "The amount of water", "Both"]),
+        options: words(["The bottle", "Water amount", "Both"]),
         correctId: at(1),
         rightTitle: "Exactly!",
         right: "The bottle is the same; the amount changed.",
@@ -547,7 +580,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "All our bottles look the same. How can we tell ours?",
         // The bottles with their names are the screen's scene (see `NamesBackdrop`).
-        options: words(["A name label", "Its position", "Nothing is needed"]),
+        options: words(["Name label", "Its position", "Just guess"]),
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "A name or label helps us identify things.",
@@ -566,7 +599,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.classify,
     title: "Name *or Value?*",
     stages: [
-      { kind: "interaction", render: (api) => <ClassifyStage {...api} /> },
+      // The hint button replays the pointing hand on the next part still to be sorted.
+      { kind: "interaction", hint: true, render: (api) => <ClassifyStage {...api} /> },
       quiz({
         line: "Which of these is a variable name?",
         visual: (context) => <VarCardDrive cards={NAME_VALUE_CARDS} lights={NAME_VALUE_LIGHTS} context={context} />,
@@ -622,7 +656,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "2 absent students return. Which values change?",
         // The classroom is the screen's scene (see `ClassroomBackdrop`): the students come in on it.
         visual: (context) => <ClassroomChange context={context} />,
-        options: words(["Only total_students", "Present and absent counts", "All three values"]),
+        options: words(["Total only", "Present, absent", "All three"]),
         correctId: at(1),
         rightTitle: "Exactly!",
         right: "Present goes to 29, absent to 1. Total stays 30.",
@@ -651,7 +685,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     step: STEP.prices,
     title: "Name *the Prices!*",
     stages: [
-      { kind: "interaction", render: (api) => <MatchPricesStage {...api} /> },
+      // The hint button shows the hand: the name for the first wrong spot, then that spot.
+      { kind: "interaction", hint: true, render: (api) => <MatchPricesStage {...api} /> },
       quiz({
         line: "Which value belongs to pen_price?",
         visual: (context) => <PenPriceDrive context={context} />,
@@ -670,7 +705,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Notebook ₹50, pen ₹20. What's the total?",
-        visual: (context) => <ShopTotal total={70} context={context} />,
+        visual: (context) => <ShopTotal total={70} amounts={[50, 70, 80]} context={context} />,
         options: words(["₹50", "₹70", "₹80"]),
         correctId: at(1),
         rightTitle: "Excellent!",
@@ -686,7 +721,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "An eraser costs ₹10. What is the new total?",
-        visual: (context) => <ShopTotal total={80} eraser context={context} />,
+        // The Total board stands at the earlier total (₹70) while the question is open; once it is checked it shows the total that was picked.
+        visual: (context) => <ShopTotal total={80} before={70} amounts={[70, 80, 90]} eraser context={context} />,
         options: words(["₹70", "₹80", "₹90"]),
         correctId: at(1),
         rightTitle: "That's right!",
@@ -718,7 +754,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "You had ₹100 and get ₹50 more. How much now?",
-        visual: (context) => <WalletDrive from={100} to={150} event="receive" amount={50} hideCard context={context} />,
+        // The card stands at the amount before (₹100) while the question is open; once it is checked it shows the amount that was picked.
+        visual: (context) => <WalletDrive from={100} to={150} event="receive" amount={50} amounts={[100, 150, 200]} context={context} />,
         options: words(["₹100", "₹150", "₹200"]),
         correctId: at(1),
         rightTitle: "Great!",
@@ -734,7 +771,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "You had ₹150 and spend ₹30. How much is left?",
-        visual: (context) => <WalletDrive from={150} to={120} event="spend" amount={30} toy hideCard context={context} />,
+        // The card stands at the amount before (₹150) while the question is open; once it is checked it shows the amount that was picked.
+        visual: (context) => <WalletDrive from={150} to={120} event="spend" amount={30} toy amounts={[30, 120, 150]} context={context} />,
         options: words(["₹30", "₹120", "₹150"]),
         correctId: at(1),
         rightTitle: "Correct!",
@@ -750,7 +788,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Start with ₹200, then get ₹50. What's your balance?",
-        visual: (context) => <WalletDrive from={200} to={250} event="receive" amount={50} context={context} />,
+        visual: (context) => <WalletDrive from={200} to={250} event="receive" amount={50} amounts={[150, 250, 300]} context={context} />,
         options: words(["₹150", "₹250", "₹300"]),
         correctId: at(1),
         rightTitle: "Yes!",
@@ -759,7 +797,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "Now you spend ₹30. What's your balance?",
-        visual: (context) => <WalletDrive from={250} to={220} event="spend" amount={30} toy context={context} />,
+        visual: (context) => <WalletDrive from={250} to={220} event="spend" amount={30} toy amounts={[180, 220, 250]} context={context} />,
         options: words(["₹180", "₹220", "₹250"]),
         correctId: at(1),
         rightTitle: "Correct!",
@@ -768,7 +806,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "Then you get ₹20. What's the final balance?",
-        visual: (context) => <WalletDrive from={220} to={240} event="receive" amount={20} context={context} />,
+        visual: (context) => <WalletDrive from={220} to={240} event="receive" amount={20} amounts={[220, 240, 270]} context={context} />,
         options: words(["₹220", "₹240", "₹270"]),
         correctId: at(1),
         rightTitle: "Perfect!",
@@ -786,7 +824,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "The app adds two numbers. What should it do first?",
         // The little app on a phone is the screen's scene (see `MiniAppBackdrop`).
         visual: (context) => <MiniAppDrive context={context} />,
-        options: words(["Show the result", "Ask for the first number", "Close the app"]),
+        options: words(["Show result", "Get numbers", "Close app"]),
         correctId: at(1),
         rightTitle: "Exactly!",
         right: "First, it asks for the first number.",
@@ -804,7 +842,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Notebook ₹50 and pen ₹20, but the app shows ₹50. Why?",
         // The shop counter, with the app's wrong total on its Total board, is the screen's scene (see `ShopBackdrop`).
         visual: (context) => <ShopDebugDrive context={context} />,
-        options: words(["It used only the first price", "It added both prices", "The notebook should cost ₹20"]),
+        options: words(["Only notebook", "Added both", "Notebook ₹20"]),
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "It used only the first price. ₹50 + ₹20 = ₹70.",
@@ -844,7 +882,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Think of the bottle, board and wallet. Why?",
-        options: words(["To store and track information", "To make the screen colourful", "To turn off a computer"]),
+        options: words(["Store data", "Run faster", "Delete data"]),
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "Variables store and track information.",
@@ -877,7 +915,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Remember the labelled bottles. Why name variables?",
         // The labelled bottles are the screen's scene (see `NamesBackdrop`), as on "Which bottle is mine?", standing still.
-        options: words(["To know what they represent", "To make the program longer", "To avoid calculations"]),
+        options: words(["Show meaning", "Save memory", "Avoid maths"]),
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "A good name tells us what a value means.",
@@ -894,7 +932,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "An app must add two numbers. Why keep both?",
         // The addition app, both its numbers kept, is the screen's scene (see `MiniAppBackdrop`); nothing is lit for an answer (no part of the app is about only one of them), and the result shows once the answer is right.
         visual: (context) => <MiniAppDrive filled={2} lights={NO_LIGHTS} reveal context={context} />,
-        options: words(["To use them in the calculation", "To delete them", "To show only one number"]),
+        options: words(["Add them", "Show one", "Hide them"]),
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "The app needs both numbers to add them.",

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { Moon, Sun } from "lucide-react";
 import { batteryCount, useBattery } from "@/components/home/batteryStore";
-import { EDGE, RAISED_SMALL } from "@/components/ui/raised";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { PersistentBattery } from "@/components/ui/PersistentBattery";
 import { PersistentProgressBar } from "@/components/ui/PersistentProgressBar";
@@ -13,11 +12,11 @@ import { WIPE } from "./themeWipe";
 
 export { WIPE };
 
-/** The close button's look: a raised face in its own 30 x 30 box, with the cross inside. */
-const ICON_BUTTON = `flex cursor-pointer items-center justify-center rounded-[8px] bg-white text-[#444444] dark:bg-[#15181E] dark:text-white/70 ${RAISED_SMALL} ${EDGE.khaki}`;
+/** The close button's look: flat, just the cross in its own 30 x 30 box. */
+const ICON_BUTTON = "flex cursor-pointer items-center justify-center text-[#444444] transition-transform active:scale-95 dark:text-white/70";
 
-/** The battery's: the same face, a little wider than the battery and count, which the negative margins take back so the row does not move. */
-const BATTERY_BUTTON = `-mx-1.5 -my-1 block rounded-[10px] bg-white px-1.5 py-1 dark:bg-[#15181E] ${RAISED_SMALL} ${EDGE.khaki}`;
+/** The battery's: flat, just the battery and its count. */
+const BATTERY_BUTTON = "block";
 
 interface OnboardingHeaderProps {
   onBack: () => void;

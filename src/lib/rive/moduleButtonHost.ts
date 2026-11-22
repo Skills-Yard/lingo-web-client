@@ -3,6 +3,7 @@ import { BUTTON, configureRiveRuntime, MODULE_BUTTON } from "./runtime";
 import { riveSource } from "./riveCache";
 import { writeButtonStyle } from "./buttonStyle";
 import { applyArtboardBleed, artboardBleedBox } from "./bleed";
+import { fastForward } from "./fastForward";
 
 // Same as `progressBarHost`: a hot reload would leave a second, unloaded button beside the one on screen.
 import.meta.turbopackHot?.decline();
@@ -32,12 +33,6 @@ let wanted: ModuleButtonData | null = null;
 let stretched = false;
 let shineQueued = false;
 let revealQueued = false;
-
-/** While held, the screens' buttons take no clicks (see `moduleButtonHeld`); the
- * artboard keeps drawing `wanted` as it is. */
-let held = false;
-let holdTimer: ReturnType<typeof setTimeout> | undefined;
-const holdListeners = new Set<() => void>();
 
 const fireTrigger = (rive: Rive, name: string) => rive.viewModelInstance?.trigger(name)?.trigger();
 
@@ -126,33 +121,6 @@ export const writeModuleButton = (next: ModuleButtonData) => {
   if (host?.loaded && host.rive) apply(host, host.rive);
 };
 
-export const subscribeModuleButtonHold = (listener: () => void) => {
-  holdListeners.add(listener);
-  return () => {
-    holdListeners.delete(listener);
-  };
-};
-export const moduleButtonHeld = () => held;
-
-const setHeld = (next: boolean) => {
-  if (held === next) return;
-  held = next;
-  holdListeners.forEach((listener) => listener());
-};
-
-/** Holds the button for `ms`: it takes no clicks, and looks as it did. */
-export const holdModuleButton = (ms: number) => {
-  clearTimeout(holdTimer);
-  setHeld(true);
-  holdTimer = setTimeout(() => setHeld(false), ms);
-};
-
-/** Ends the hold now. */
-export const releaseModuleButton = () => {
-  clearTimeout(holdTimer);
-  setHeld(false);
-};
-
 /** Plays the `shine` trigger — held back until the file has loaded. */
 export const sweepModuleButtonShine = () => {
   if (host?.loaded && host.rive) fireTrigger(host.rive, BUTTON.shineTrigger);
@@ -163,6 +131,14 @@ export const sweepModuleButtonShine = () => {
  * one would play after the strike it goes with is long over. */
 export const electrifyModuleButton = () => {
   if (host?.loaded && host.rive) fireTrigger(host.rive, BUTTON.electricTrigger);
+};
+
+/** More than the electric effect takes to play out (s). */
+const ELECTRIC_PLAY_S = 3;
+
+/** Ends the electric effect at once, if it is playing: the button is shared by every screen, so it would carry on over the next one (see `fastForward`). */
+export const skipModuleButtonElectric = () => {
+  if (host?.loaded) fastForward(host.rive, ELECTRIC_PLAY_S);
 };
 
 /** Plays the `click` trigger (the press). */
