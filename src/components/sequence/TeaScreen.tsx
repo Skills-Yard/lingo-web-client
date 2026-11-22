@@ -105,7 +105,8 @@ export function TeaScreen() {
       <CentredRow top={stageTop(BUBBLE_TOP)}>
         <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} />
       </CentredRow>
-      <ArrangeDock geo={GEO} rise={checked ? BOARD_RISE : 0}>
+      {/* The slots hang right under Hex's line; the cards stand on the button row. */}
+      <ArrangeDock geo={GEO} slotsTop={`${robotBelowDialogue(BUBBLE_TOP, BUBBLE) + GAP_UNDER_HEX}px`}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} hideShadows={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />

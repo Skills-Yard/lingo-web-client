@@ -70,8 +70,8 @@ type AnswerCardsProps = {
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
   revealed?: boolean;
-  /** Stage px from the top, where the rows should hang there (under a picture) instead of standing on the button row; they still rise by `rise` once the result panel is up. */
-  top?: number;
+  /** Stage px (or a CSS length, see `underAbove`) from the top, where the rows should hang (under a picture) instead of standing on the button row; they still rise by `rise` once the result panel is up. */
+  top?: number | string;
   /** The space (px) between a row's picture and its text, where it should differ from the usual 22. */
   iconGap?: number;
   /** The right row (once it is shown as right) bounces once, with its shine and stars (`RightBounce`), as the match boards' right cards do. */

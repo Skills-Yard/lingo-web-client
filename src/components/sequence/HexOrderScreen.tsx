@@ -140,14 +140,9 @@ export function HexOrderScreen() {
       ctaDisabled={phase === "edit" ? !full || running : phase === "running"}
       onContinue={onContinue}
     >
-<<<<<<< HEAD
       {/* The slots hang under the picture; the cards stand on the button row. */}
       <ArrangeDock geo={GEO} slotsTop={`${BOARD_TOP}px`} withHint>
-        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={hintedId} onPlace={placeIn} onTap={tapCard} />
-=======
-      <ArrangeDock geo={GEO} top={BOARD_TOP}>
         <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={hintedId} hideShadows={phase === "checked"} onPlace={placeIn} onTap={tapCard} />
->>>>>>> 82c3790f1bdd86121d01f5e221db178fe94a871d
       </ArrangeDock>
     </HexScreen>
   );

@@ -148,8 +148,8 @@ export function ArrangeScreen() {
         <HexBubble key={attempt} entryKey={`arrange-${attempt}`} hex="left" line={LINE} size={BUBBLE} leaving={checked} />
       </CentredRow>
       {/* Once checked the board fades, so the robot can be seen; a right order also sends it up as it goes. */}
-      {/* On the 3D route the extra card falls away first (it is in no slot), then the board clears. */}
-      <ArrangeDock geo={geo} rise={checked && correct ? BOARD_RISE : 0} fade={checked} fadeDelay={flow.designSlots ? EXTRA_DROP_S : 0}>
+      {/* The slots hang right under the robot's artboard; the cards stand on the button row. On the 3D route the extra card falls away first (it is in no slot), then the board clears. */}
+      <ArrangeDock geo={geo} slotsTop={robotUnder(robotBelowDialogue(BUBBLE_TOP, BUBBLE), 0)} rise={checked && correct ? BOARD_RISE : 0} fade={checked} fadeDelay={flow.designSlots ? EXTRA_DROP_S : 0}>
         <ArrangeBoard cards={cards} slots={slots} geo={geo} disabled={checked} dropUnused={flow.designSlots && checked} hideShadows={resultShown} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />

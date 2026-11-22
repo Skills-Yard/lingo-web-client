@@ -294,6 +294,11 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   and kept). (b) **Where the picture is the 3D character (the tray lists 10, 25, 26) the rows disappear** where they stand (`fadeOut`, no rise), so they do not run up over it and, as the user asked before for options that disappear, they do not bounce. The tray pair (3) is
   unchanged. Checked in headless Chrome 390×844: 7 (right pick: rows at y 141), 8 (wrong pick: rows at y 141) and 25 (right pick: rows gone, character clear). Not checked: 10 and 26 (same code as 25), dark mode, a phone, how the rows look when the result text is long.
   **Needed an install (done by the user later on 2026-11-22; `node_modules` now has `@rive-app/canvas` 2.50.0 and `react-canvas` 4.39.0):** with `node_modules` still on 2.42.0 the page loaded `public/rive/rive.wasm` (the 2.50.0 one) with the old runtime and the Rive parts (progress bar, button, battery, robot) did not draw (console: "Import #0 env"). On a new machine or after pulling a bump of these, `npm install` first.
+- **`feat/3d` merged into `variable-module` (commit `e3f797c`, 2026-11-22) was committed with conflict markers and a mangled `ArrangeBoard`; repaired on `variable-module` (uncommitted):** the real three-way merge (base `b9e30dc`) was recomputed for every file both sides changed and
+  resolved keeping both: `SequenceQuizScreen` (variable-module's `optionsTop` / `underAbove` / `useBottomEdge` and `listRise`, plus `riseTo`, `gap`, `bounceRight`, `withBubble`, `clearsPictures`), `HexOrderScreen` / `ArrangeScreen` / `DressArrangeScreen` / `TeaScreen`
+  (`ArrangeDock slotsTop` from variable-module with `hideShadows`, `fadeDelay`, `dropUnused`), `ArrangeBoard` (variable-module's `DockGeometry` / `slotsTop` split dock with the 3D `designSlots`, `cardCount`, `dropUnused`, `hideShadows`, `behindPanel`, `fadeDelay`),
+  `AnswerCards` (`top` is `number | string`), and `PlanScreen` (the real `MoveTile` from `level-one/MoveHexScreen`, so `sequence/MoveTile.tsx`, which was a stand-in for `feat/3d`, is deleted here). `tsc`, eslint and `next build` pass. Looked at in headless Chrome 390×844: 12, 22 (chips and the real `MoveTile`s), 7 (the rows now hang under the picture, 12 apart,
+  with the bubble), 24 (open). Not rechecked: 15, 18, 19, 21, 23, 25, 26, the popup states, the 2D route, dark mode. `next.config.ts`'s `allowedDevOrigins` is the user's own resolution and was left alone.
 - **Steps 10-12 (2026-11-21)** are the original screens `MeetSequenceScreen` (10), `RevealCardScreen` (11) and `DressArrangeScreen` (12), each
   asking `useSequenceFlow` for its place/next/back like `ArrangeScreen`; 10 and 11 are otherwise as they are (the face in the bubble on 10).
   **12 is a guess:** it is the only story screen between 11 and the Hex ones, but the Figma title for frame 12 is "Let's guess first" and the
@@ -341,6 +346,33 @@ The character is also used as a **picture on other screens** (the 3D copies of t
 
 Add an animation: name another clip of the model, or export it from Mixamo ("without skin", same
 skeleton), put the `.glb` in `public/animations`, add a line to `ANIMATIONS`.
+
+### The Variable module with the 3D character (`/module/variable`, in place), 2026-11-22
+
+The user asked for the Variable module "in the same format as sequence-3d": the chosen character instead of Hex, with the bubble, the design's
+empty drag slots, and the rest exactly as it was. Done **in the original route** (no new one), with three small pieces:
+
+- `src/app/module/variable/layout.tsx` wraps the route in `VariableCharacterGate` (a loading bar until the shared character and its canvas
+  have drawn; `PortraitHost` mounted here) and `CharacterLook` (`sequenceFlow.tsx`: the 3D flow flags + `HexStandInProvider` with
+  `CharacterAvatar` + `HexStandInKeepsBubble`).
+- `HexStandInKeepsBubble` (`level-two/HexStandIn.tsx`) is a context that makes `HexBubble` draw its bubble **beside** the stand-in (the
+  Sequence 3D route has the face alone, so there the bubble stays suppressed). Without the provider nothing changes.
+- `ArrangeBoard`: with `designed` (the 3D flag or `geo.designSlots`) an empty slot has the design look even when the board asks for
+  `highlightEmpty` (the breathing ring is still added), so Variable 19 (prices) and 27 (steps) get the grey dashed slot, green dashed for the open one.
+- Every `HexBubble` of the module (quiz, Thirsty, Trek, PlanApp, narration) picks the face up through the provider; none was edited. The
+  result panel's Hex robot and the "Lesson complete" robot stay (as in the Sequence 3D route).
+
+**What was found, not changed:** no Variable quiz uses column rows. All answers are `acrossCards` (3 across or 2 x 2, words <= 2 or four
+short ones), screen 16 is an info list, 27 is wide step cards with circle slots, 34 is a recap with no Hex. So there were no "rows
+screens" to give the 76px 3D rows, and no scene-less screen with room for a big character (27 is full). The module's own option sizes
+(`OPTION`), the bubble sizes and the scenes are as before.
+
+Checked (headless Chrome, SwiftShader, 390×844 light; `tsc`, `eslint` on the touched files): all 34 screens at rest (face + bubble where Hex stood;
+screens 1-15 pixel-compared with the old build: only the face box, animated scenes and the button sheen differ); step 3 wrong → Try again →
+right (panel, confetti, face and bubble leave on a check); 15 wrong → right; 5 → Next; 19 by tap and by drag (match bounce, Next);
+27 wrong tap; 14; `?step=complete`; 1, 19 and 27 again at 360×640 and 412×915. **Not checked:** dark mode, a real phone, voices (play was blocked),
+the 27 full run to the end, the Variable interactions' later stages (6, 7, 13, 16 second stage) by hand, `next build`, and the other characters
+(only the default one was in the browser).
 
 ## Assets (`public/`)
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, type ReactNode } from "react";
-import { HexStandInProvider } from "@/components/level-two/HexStandIn";
+import { HexStandInKeepsBubble, HexStandInProvider } from "@/components/level-two/HexStandIn";
 import { OPTION_GAP } from "./AnswerTray";
 import { CharacterAvatar } from "./CharacterAvatar";
 import { SEQUENCE_STEPS, sequenceNext, sequencePrevious } from "./sequence";
@@ -51,6 +51,21 @@ export function Sequence3dFlow({ children }: { children: ReactNode }) {
   return (
     <SequenceFlowContext.Provider value={THREE_D}>
       <HexStandInProvider value={<CharacterAvatar />}>{children}</HexStandInProvider>
+    </SequenceFlowContext.Provider>
+  );
+}
+
+/**
+ * The 3D look for a module that is not the Sequence (the Variable module): the character's face where Hex stands, with his speech bubble
+ * beside it, and the 3D design's empty drag slots and bounce for a right answer (the flags of `THREE_D`). The module keeps its own flow: its
+ * screens never ask `useSequenceFlow` where to go next.
+ */
+export function CharacterLook({ children }: { children: ReactNode }) {
+  return (
+    <SequenceFlowContext.Provider value={THREE_D}>
+      <HexStandInProvider value={<CharacterAvatar />}>
+        <HexStandInKeepsBubble value>{children}</HexStandInKeepsBubble>
+      </HexStandInProvider>
     </SequenceFlowContext.Provider>
   );
 }

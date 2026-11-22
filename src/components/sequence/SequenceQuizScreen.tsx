@@ -8,23 +8,8 @@ import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
-<<<<<<< HEAD
 import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, TitleText, underAbove } from "@/components/level-two/LevelTwoShell";
 import { RobotBackdrop, robotBelowDialogue, robotUnder } from "@/components/level-two/RobotBackdrop";
-=======
-import {
-  CentredRow,
-  LevelTwoShell,
-  ScreenTitle,
-  SoftBackdrop,
-  stageTop,
-  TitleText,
-} from "@/components/level-two/LevelTwoShell";
-import {
-  RobotBackdrop,
-  robotBelowDialogue,
-} from "@/components/level-two/RobotBackdrop";
->>>>>>> 82c3790f1bdd86121d01f5e221db178fe94a871d
 import { SlotImage } from "@/components/level-two/SlotImage";
 import { TILE_HEIGHT, TileCards } from "@/components/level-two/TileCards";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
@@ -177,7 +162,6 @@ export function SequenceQuizScreen({ quiz, withBubble = false }: { quiz: Sequenc
   const wrongNote =
     !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
   const line = quiz.line;
-<<<<<<< HEAD
   // The answers hang right under what is above them, not up from the button row: the pictures, the room, the robot, or Hex's line.
   const picturesAbove = !!quiz.pictures || !!quiz.closeUp;
   const aboveBottom = quiz.pictures ? picturesBottom : quiz.closeUp ? closeUpBottom : null;
@@ -193,14 +177,7 @@ export function SequenceQuizScreen({ quiz, withBubble = false }: { quiz: Sequenc
       : quiz.wrongPicture
         ? LIST_RISE
         : LIST_RISE_OPEN;
-=======
-  // A picture above the answers (or one shown after a wrong try) needs them to rise less, so they don't reach it.
-  // Where the picture leaves with the result (`clearsPictures`) the rows have nothing to keep clear of, so they rise the whole way.
-  const listRise =
-    !flow.clearsPictures && (quiz.pictures || quiz.closeUp || quiz.wrongPicture)
-      ? LIST_RISE
-      : LIST_RISE_OPEN;
->>>>>>> 82c3790f1bdd86121d01f5e221db178fe94a871d
+  // (Where the picture leaves with the result, `flow.clearsPictures`, the rows do not use this rise: `riseTo` takes them up to the header.)
 
   return (
     <LevelTwoShell
@@ -341,14 +318,11 @@ export function SequenceQuizScreen({ quiz, withBubble = false }: { quiz: Sequenc
           pointedId={answerHint.pointedId}
           withHint
           rise={listRise}
-<<<<<<< HEAD
           top={optionsTop}
-=======
           // Where the picture leaves with the result, the rows go up and attach to the header, a little under the title.
           riseTo={flow.clearsPictures && (quiz.pictures || quiz.closeUp) ? stageTop(ATTACH_TO_HEADER) : undefined}
           gap={flow.optionGap}
           bounceRight={flow.bounceRight}
->>>>>>> 82c3790f1bdd86121d01f5e221db178fe94a871d
           onPick={pick}
         />
       ) : (
@@ -364,11 +338,8 @@ export function SequenceQuizScreen({ quiz, withBubble = false }: { quiz: Sequenc
           pictureWidth={quiz.pictureWidth}
           pictureHeight={quiz.pictureHeight}
           cardHeight={quiz.cardHeight}
-<<<<<<< HEAD
           top={optionsTop}
-=======
           bounceRight={flow.bounceRight}
->>>>>>> 82c3790f1bdd86121d01f5e221db178fe94a871d
           onPick={pick}
         />
       )}
