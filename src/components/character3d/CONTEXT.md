@@ -28,11 +28,20 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 >   a stand-in like the old one). It is wired as the `lipSync` of his `talking` in `MODELS.male` (`clipsOf`'s second argument):
 >   the mouth moves while he talks, on `/character` and on the sequence screens; it doesn't follow the words. The clip's first
 >   0.9 s is a closed mouth.
-> - **Anime's dark patch on the jaw.** His materials have no metallic/roughness factor, so glTF's default applies
->   (metal 1, rough 1): a fully metal surface ignores the hemisphere light and only the key lamp lights it, so the side of the
->   jaw facing away from it is black (it looks like a beard). Reproduced in a bare three.js page, so it is the file, not the app.
->   `material.metalness = 0` removes it, but then skin and shirt come out pale (the user disliked a pale look before).
->   Not applied; decide on the look (or re-export the materials with metallic 0 from Blender).
+> - **Anime's dark patch on the jaw / "no texture" look (fixed 2026-11-22).** His materials have no metallic/roughness factor, so glTF's
+>   default applies (metal 1, rough 1): a fully metal surface ignores the hemisphere light and only the key lamp lights it, so the
+>   side of the jaw facing away from it was black (it looked like a beard) and everything looked flat next to the girl and boy, whose
+>   files say metal 0, rough 0.9. `applyMatteDefaults` in `character.ts` now gives any material that has no metallic / roughness
+>   factor in the file 0 / 0.9 (one that has them is untouched, so girl and boy are as before). Result in headless Chrome 390×844
+>   dark: jaw clean. **Then it looked white/washed out next to a glTF viewer (same day):** the VRoid textures are flat "lit" colours
+>   (skin `#FADFCB`-ish, shirt cream `242,232,222`), the default rig's key lamp 2.8 pushed the lit side near white and the other
+>   side grey (cheek `207,191,178`). So each character now carries its own **light rig** (`LightRig` in `character.ts`, `Character.lights`,
+>   `SceneLights lights=…` in the three canvases: `CharacterScene`, `portraitHost`, `MentorStage`). Girl and boy keep the original
+>   (hemisphere 1.3, key 2.8, rim 1.6); anime has `FLAT_LIGHTS` (ambient 2.6, ground `#f2ece6`, key 1.1, rim 0.8). Measured on the
+>   `/character` screenshot (390×844 dpr 2, dark): cheek `248,225,204` against the face texture `250,222,204`, shirt `236,223,210` against
+>   its texture `242,232,222`. Checked: `/character` anime and girl (girl as before). **Not checked:** the portrait canvas on the
+>   3D sequence screens and the mentor picker with the new rig (only type-checked), light mode, Talking, a real phone. The numbers
+>   were tuned by pixel values, not by eye against the user's viewer (unknown which one).
 > - **Girl: old clips and `Idle.glb` do not retarget onto her.** Her bones' local axes are turned 90° about the vertical
 >   relative to the other rigs (hips rest `[-0.5, 0.5, -0.5, 0.5]` vs `[-0.707, 0, 0, 0.707]`), so the copy-the-rotations
 >   `retarget` in `character.ts` made her vanish (tried with Idle B). More animations for her should be exported from

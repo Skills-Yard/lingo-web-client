@@ -2,8 +2,8 @@
 
 import { Canvas } from "@react-three/fiber";
 import { AnimatedCharacter, SceneLights } from "./CharacterScene";
+import { retryCachedCharacter, useCachedCharacter } from "./characterCache";
 import type { CharacterId } from "./characterLook";
-import { retryMentorPreview, useMentorPreview } from "./mentorPreviews";
 
 /**
  * The 3D character on the mentor picker's card: the real model (`Male.glb`, `girl.glb`,
@@ -20,6 +20,9 @@ const NO_ROTATION: [number, number, number] = [0, 0, 0];
 /** The card only shows the character idling; it never loops into anything. */
 const ignoreLoop = () => {};
 
+/** Downloading is this much of the percentage; parsing and decoding the textures is the rest. */
+const DOWNLOAD_SHARE = 0.85;
+
 type MentorStageProps = {
   id: CharacterId;
   name: string;
@@ -28,8 +31,9 @@ type MentorStageProps = {
 };
 
 export function MentorStage({ id, name, accent }: MentorStageProps) {
-  const preview = useMentorPreview(id);
+  const preview = useCachedCharacter(id);
   const character = preview.status === "ready" ? preview.character : null;
+  const fraction = preview.status === "loading" ? (preview.phase === "download" ? preview.fraction * DOWNLOAD_SHARE : DOWNLOAD_SHARE) : 0;
 
   return (
     <div className="absolute inset-0">
@@ -40,7 +44,7 @@ export function MentorStage({ id, name, accent }: MentorStageProps) {
         // No tone mapping, as on the other canvases: the textures keep their own colours.
         flat
       >
-        <SceneLights />
+        {character && <SceneLights lights={character.lights} />}
         {character && (
           <AnimatedCharacter key={id} character={character} animationId="idle-b" runToken={0} playing lipSync={false} onLoop={ignoreLoop} />
         )}
@@ -48,12 +52,12 @@ export function MentorStage({ id, name, accent }: MentorStageProps) {
 
       {!character && (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-[14px] leading-5 font-medium text-[#444444] dark:text-white">
-          {preview.status === "failed" ? (
+          {preview.status === "error" ? (
             <>
               <p>{name} didn&apos;t load.</p>
               <button
                 type="button"
-                onClick={() => retryMentorPreview(id)}
+                onClick={() => retryCachedCharacter(id)}
                 className="cursor-pointer rounded-full px-4 py-1 text-white"
                 style={{ backgroundColor: accent }}
               >
@@ -69,7 +73,7 @@ export function MentorStage({ id, name, accent }: MentorStageProps) {
               />
               <p>
                 Loading {name}…
-                {preview.status === "loading" && preview.fraction > 0 ? ` ${Math.round(preview.fraction * 100)}%` : ""}
+                {fraction > 0 ? ` ${Math.round(fraction * 100)}%` : ""}
               </p>
             </>
           )}

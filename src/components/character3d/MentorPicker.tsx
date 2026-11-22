@@ -7,7 +7,6 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button3D } from "@/components/ui/Button3D";
 import { MENTORS, setCharacter, useCharacterLoading, useCharacterLook, type CharacterId } from "./characterLook";
 import { MentorStage } from "./MentorStage";
-import { releaseMentorPreviews } from "./mentorPreviews";
 
 /*
  * "Select your Mentor": what "Change character" in the battery's hold menu opens (see `BatteryMenu`,
@@ -81,9 +80,6 @@ function MentorCard({ onClose }: { onClose: () => void }) {
     setDirection(step);
     setIndex((current) => (current + step + MENTORS.length) % MENTORS.length);
   };
-
-  // The characters on the card are freed when it closes.
-  useEffect(() => releaseMentorPreviews, []);
 
   // The card closes once the chosen character is on the screens (at once if it was loaded already).
   useEffect(() => {

@@ -138,7 +138,7 @@ export function PortraitHost() {
       resize={{ offsetSize: true }}
       flat
     >
-      <SceneLights />
+      <SceneLights lights={character.lights} />
       <AnimatedCharacter character={character} animationId={animationId} runToken={0} playing lipSync={lipSync} onLoop={ignoreLoop} />
       <FramingCamera framing={framing} character={character} />
       <DrawnAfterFrames />
