@@ -111,7 +111,6 @@ export const REFLECT_ORDER_3D: SequenceQuiz = {
   ],
   correctId: "goal",
   wrongBy: { order: { title: "Not quite", text: "Steps do happen in order, but the point is: it helps reach the goal." } },
-  noHint: false,
 };
 
 /** "How to decide the order?" (place 26) in the 3D design (Figma `sequence_26`): the same tray list as place 25, with the title, icons and the regular hint of the design. */
@@ -124,7 +123,6 @@ export const REFLECT_DECIDE_3D: SequenceQuiz = {
     { id: "shortest", text: "The shortest command", icon: `${SVG_3D}/3d-26-2.svg` },
     { id: "random", text: "Randomly", icon: `${SVG_3D}/3d-26-3.svg` },
   ],
-  noHint: false,
 };
 
 /** "What if shoes go first?" is followed by this question: the original screen 7's, with the title and the three answers of the design (Figma `sequence_7`). */

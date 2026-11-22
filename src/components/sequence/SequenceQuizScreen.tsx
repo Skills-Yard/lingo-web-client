@@ -284,7 +284,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           withHint
           rise={listRise}
           bounceRight={flow.bounceRight}
-          onPick={setSelectedId}
+          onPick={pick}
         />
       ) : (
         <TileCards
@@ -300,7 +300,7 @@ export function SequenceQuizScreen({ quiz }: { quiz: SequenceQuiz }) {
           pictureHeight={quiz.pictureHeight}
           cardHeight={quiz.cardHeight}
           bounceRight={flow.bounceRight}
-          onPick={setSelectedId}
+          onPick={pick}
         />
       )}
       {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}

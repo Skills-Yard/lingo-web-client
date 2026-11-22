@@ -230,11 +230,7 @@ export function SequenceQuiz3DScreen({
               : "Try again"
       }
       // The tray look uses the regular hint button, on the main button's row like every other quiz.
-      hint={
-        withHint
-          ? { visible: !checked, onUse: useHint, disabled: !spoken }
-          : undefined
-      }
+      hint={{ visible: !checked, onUse: useHint, disabled: !spoken }}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -262,7 +258,7 @@ export function SequenceQuiz3DScreen({
           centered={tray || !boardIn}
           // The tray look opens with the character down by the main button; it rises as the answers come in.
           lowered={tray && !optionsShown}
-          withHint={withHint}
+          withHint
           {...(tray
             ? {
                 framing: "bust",
@@ -314,7 +310,7 @@ export function SequenceQuiz3DScreen({
           shown={optionsShown}
           gone={checked}
           stand={stand}
-          withHint={withHint}
+          withHint
         />
       )}
 
@@ -334,7 +330,7 @@ export function SequenceQuiz3DScreen({
               ? { bottomGap: TRAY_CARD_GAP, width: TRAY_LIST_WIDTH, endGap: 0 }
               : {})}
             bounceRight
-            onPick={setSelectedId}
+            onPick={pick}
           />
         ) : (
           <TileCards
@@ -344,14 +340,14 @@ export function SequenceQuiz3DScreen({
             selectedId={selectedId}
             checked={checked}
             fadeOut={fadeCards}
-            hinted={hinted}
-            withHint={withHint}
+            pointedId={answerHint.pointedId}
+            withHint
             pictureWidth={tray ? undefined : quiz.pictureWidth}
             pictureHeight={tray ? undefined : quiz.pictureHeight}
             cardHeight={tray ? undefined : quiz.cardHeight}
             {...(tray ? { bottomGap: TRAY_CARD_GAP } : {})}
             bounceRight
-            onPick={setSelectedId}
+            onPick={pick}
           />
         ))}
       {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}

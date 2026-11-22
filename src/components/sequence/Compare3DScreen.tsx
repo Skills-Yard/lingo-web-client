@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { useAnswerHint } from "@/components/level-one/answerHint";
 import { Confetti } from "@/components/level-one/Confetti";
 import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
@@ -41,10 +42,12 @@ export function Compare3DScreen({ quiz, position }: { quiz: SequenceQuiz; positi
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
-  const [hinted, setHinted] = useState(false);
+  // The hint: the hand that points at the right answer (see `useAnswerHint`).
+  const answerHint = useAnswerHint();
   const correct = selectedId === quiz.correctId;
 
   const check = () => {
+    answerHint.stop();
     setChecked(true);
     noteFirstTry(quiz.step, correct);
     if (!correct) noteStruggle(quiz.step, "miss");
@@ -64,15 +67,21 @@ export function Compare3DScreen({ quiz, position }: { quiz: SequenceQuiz; positi
     else tryAgain();
   };
 
+  // The learner picks an answer: the hint's hand goes.
+  const pick = (id: string) => {
+    answerHint.stop();
+    setSelectedId(id);
+  };
+
+  // The hint points at the right answer; it is not picked for the learner.
   const useHint = () => {
-    setHinted(true);
+    answerHint.press(quiz.correctId);
     noteStruggle(quiz.step, "hint");
   };
 
   // After a wrong answer the right card isn't revealed: the learner gets to try again.
   const shownCorrectId = checked && !correct ? "" : quiz.correctId;
   const wrongNote = !correct && selectedId ? quiz.wrongBy?.[selectedId] : undefined;
-  const withHint = !quiz.noHint;
 
   return (
     <LevelTwoShell
@@ -84,7 +93,7 @@ export function Compare3DScreen({ quiz, position }: { quiz: SequenceQuiz; positi
       answer={answer}
       ctaDisabled={selectedId === null}
       ctaLabel={!checked ? (quiz.ctaLabel ?? "Continue") : correct ? "Next" : "Try again"}
-      hint={withHint ? { visible: !checked, onUse: useHint } : undefined}
+      hint={{ visible: !checked, onUse: useHint }}
       onContinue={onContinue}
       overlay={
         <div className="pointer-events-none absolute inset-0">
@@ -121,8 +130,8 @@ export function Compare3DScreen({ quiz, position }: { quiz: SequenceQuiz; positi
         selectedId={selectedId}
         checked={checked}
         fadeOut={false}
-        hinted={hinted}
-        withHint={withHint}
+        pointedId={answerHint.pointedId}
+        withHint
         top={stageTop(PICTURES_TOP + FLAT_CARDS.height + ANSWERS_GAP)}
         rise={CHECKED_ANSWERS_RISE}
         // The design's rows: 358 x 76, a 52 picture then the words (15 px) with no empty spot after them. They are buttons, so they keep the app's 3D edge (the two cards above are only pictures: flat).
@@ -132,8 +141,10 @@ export function Compare3DScreen({ quiz, position }: { quiz: SequenceQuiz; positi
         endGap={0}
         fontSize={15}
         bounceRight
-        onPick={setSelectedId}
+        onPick={pick}
       />
+      {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+      {answerHint.hand}
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />
     </LevelTwoShell>

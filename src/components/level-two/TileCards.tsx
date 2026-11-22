@@ -73,7 +73,7 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, hinted, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, bounceRight = false, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, bounceRight = false, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -124,7 +124,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
               </span>
               <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
         );
         // A little after the check, so the cards have risen above the result panel by the time it jumps. Cards that fade away (`fadeOut`) don't bounce: nobody would see it.
         const tile = bounceRight ? (

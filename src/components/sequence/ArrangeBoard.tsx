@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type ReactNode,
-} from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 import { PointedLook } from "@/components/level-one/answerHint";
 import { FILL_S, HintFloat } from "@/components/level-one/HintFloat";
@@ -17,13 +11,7 @@ import { vibrateForTap } from "@/lib/haptics";
 import { useSequenceFlow } from "./sequenceFlow";
 
 /** A card to drag: `kind` is what it is (two cards can be the same kind), `id` which one it is. */
-export type ArrangeCardDef = {
-  id: string;
-  kind: string;
-  text: string;
-  art?: ReactNode;
-  tint: string;
-};
+export type ArrangeCardDef = { id: string; kind: string; text: string; art?: ReactNode; tint: string };
 
 type Point = { x: number; y: number };
 
@@ -48,7 +36,7 @@ type ArrangeLayout = {
   slotsOnTop?: boolean;
   /** The slots are solid wells, not dashed outlines. */
   solidSlots?: boolean;
-  /** The slots as the 3D flow's design draws them (Figma `sequence_12`): a pale fill with a 2px dashed grey-blue outline and a 40px numbered badge. */
+  /** The slots as the 3D flow's design draws them (Figma `sequence_12`): a pale fill with a 2px dashed grey-blue outline and a 40px numbered badge. The cards are then the design's too (a 52px picture box over a 16px name). */
   designSlots?: boolean;
   /** The cards' text is a sentence: set in plain case, not the small capitals of a command's name. */
   sentence?: boolean;
@@ -79,70 +67,37 @@ type ArrangeLayout = {
 };
 
 /** Where everything stands on the board, and how big the board is. */
-export const arrangeGeometry = ({
-  mode,
-  card,
-  count,
-  cardCount = count,
-  gap = 12,
-  lane = mode === "columns" ? 32 : 16,
-  tray = true,
-  slotsOnTop = false,
-  solidSlots = false,
-  designSlots = false,
-  sentence = false,
-}: ArrangeLayout) => {
+export const arrangeGeometry = ({ mode, card, count, cardCount = count, gap = 12, lane = mode === "columns" ? 32 : 16, tray = true, slotsOnTop = false, solidSlots = false, designSlots = false, sentence = false, line = "border-4 border-white dark:border-[#818185]", radius = 8, sink = false, fontSize, printStays = true, circles }: ArrangeLayout) => {
   const columns = mode === "columns";
   // With more cards than slots the slots stand centred over the row of cards.
-  const slotsInset = columns
-    ? 0
-    : ((cardCount - count) * (card.width + gap)) / 2;
-  const home = (index: number): Point =>
-    columns
-      ? { x: 0, y: index * (card.height + gap) }
-      : {
-          x: index * (card.width + gap),
-          y: tray && slotsOnTop ? card.height + lane : 0,
-        };
+  const slotsInset = columns ? 0 : ((cardCount - count) * (card.width + gap)) / 2;
+  const home = (index: number): Point => (columns ? { x: 0, y: index * (card.height + gap) } : { x: index * (card.width + gap), y: tray && slotsOnTop ? card.height + lane : 0 });
   const slot = (index: number): Point =>
     columns
-      ? { x: tray ? card.width + lane : 0, y: index * (card.height + gap) }
-      : {
-          x: slotsInset + index * (card.width + gap),
-          y: tray && !slotsOnTop ? card.height + lane : 0,
-        };
+      ? { x: circles ? card.width + lane : tray ? card.width + lane : 0, y: index * (card.height + gap) + (circles ? (card.height - circles) / 2 : 0) }
+      : { x: slotsInset + index * (card.width + gap), y: tray && !slotsOnTop ? card.height + lane : 0 };
   const board = columns
-    ? {
-        width: tray ? card.width * 2 + lane : card.width,
-        height: count * card.height + (count - 1) * gap,
-      }
-    : {
-        width: cardCount * card.width + (cardCount - 1) * gap,
-        height: tray ? card.height * 2 + lane : card.height,
-      };
+    ? { width: circles ? card.width + lane + circles : tray ? card.width * 2 + lane : card.width, height: count * card.height + (count - 1) * gap }
+    : { width: cardCount * card.width + (cardCount - 1) * gap, height: tray ? card.height * 2 + lane : card.height };
   /** A card dropped within this far (px) of a slot's corner goes in it. */
   const reach = card.height * 0.87;
-  return {
-    count,
-    card,
-    tray,
-    solidSlots,
-    designSlots,
-    home,
-    slot,
-    board,
-    reach,
-    sentence,
-  };
+  /** What size a slot is: a card's, or a circle's. */
+  const slotSize = circles ? { width: circles, height: circles } : card;
+  return { count, card, tray, solidSlots, designSlots, home, slot, board, reach, sentence, line, radius, sink, fontSize, printStays, circles, slotSize };
 };
 export type ArrangeGeometry = ReturnType<typeof arrangeGeometry>;
 
 /** The 3D design's empty slot (Figma `sequence_12`): a pale fill and a 2px dashed grey-blue outline (add the radius and `border-2`)... */
-export const DESIGN_SLOT =
-  "border-dashed border-[#BFC7D5] bg-[#EEF0F7] dark:border-white/25 dark:bg-white/8";
+export const DESIGN_SLOT = "border-dashed border-[#BFC7D5] bg-[#EEF0F7] dark:border-white/25 dark:bg-white/8";
 /** ...and its number: Figma "Frame 351", a 40px #BFC7D5 circle, the number in it Poppins 500 16px white. */
-export const DESIGN_BADGE =
-  "flex size-10 items-center justify-center rounded-full bg-[#BFC7D5] text-[16px] leading-[124%] font-medium text-white dark:bg-white/15 dark:text-white/80";
+export const DESIGN_BADGE = "flex size-10 items-center justify-center rounded-full bg-[#BFC7D5] text-[16px] leading-[124%] font-medium text-white dark:bg-white/15 dark:text-white/80";
+
+/** The look of a button held down (see `RAISED`): the face has sunk the edge's 4px and the edge is gone. It moves with `translate`, which sits beside the `transform` the drag sets. */
+const PRESSED = "translate-y-1 shadow-[0_0_0_var(--edge)]";
+
+/** A card that is not in a slot when the answer is checked (`dropUnused`) falls this far (px) and fades, in this long (s), speeding up as it goes. */
+const DROP_PX = 110;
+const DROP_S = 0.45;
 
 /** Below this far (px) a press and release is a tap, not a drag. */
 const TAP_SLOP = 6;
@@ -151,25 +106,11 @@ const MIN_PRESS_MS = 160;
 /** The shadow itself: a plain, soft grey shape. */
 const SHADOW = "rgba(0,0,0,0.09)";
 /** A card picked by a tap looks like the module's picked answers: a 4px green border, a pale mint face and the green raised edge. */
-const PICKED_LOOK = {
-  borderWidth: 4,
-  borderColor: "#01A17F",
-  backgroundColor: "#F2FBF8",
-  "--edge": "#008566",
-} as CSSProperties;
+const PICKED_LOOK = { borderWidth: 4, borderColor: "#01A17F", backgroundColor: "#F2FBF8", "--edge": "#008566" } as CSSProperties;
 /** A card that has been given its number (circle slots, see `ArrangeLayout.circles`) is filled with the brand green, like the module's green buttons: a green face and border with the dark green raised edge, its words white. */
-const FILLED_LOOK = {
-  borderColor: "#01A17F",
-  backgroundColor: "#01A17F",
-  "--edge": "#004635",
-} as CSSProperties;
+const FILLED_LOOK = { borderColor: "#01A17F", backgroundColor: "#01A17F", "--edge": "#004635" } as CSSProperties;
 /** A card marked wrong (see `ArrangeBoard`'s `wrongIds`) looks like the module's wrong answers: a 4px red border, a pale pink face and the red raised edge. */
-const WRONG_LOOK = {
-  borderWidth: 4,
-  borderColor: "#E5484D",
-  backgroundColor: "#FFF1F1",
-  "--edge": "#B3261E",
-} as CSSProperties;
+const WRONG_LOOK = { borderWidth: 4, borderColor: "#E5484D", backgroundColor: "#FFF1F1", "--edge": "#B3261E" } as CSSProperties;
 /**
  * The bounce of a card that has just been rightly matched (see `bouncedIds`): it springs up high, comes down, springs
  * up a little (about a third as high, in about 0.6 of the time, as a real ball loses height and hang time) and settles.
@@ -198,8 +139,7 @@ const BOUNCE_TIMES = [0, 0.31, 0.625, 0.815, 1];
  */
 const SHINE_AFTER_S = 0.05;
 const SHINE_S = 0.7;
-const SHINE_BAND =
-  "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)";
+const SHINE_BAND = "linear-gradient(90deg, transparent, rgba(255,255,255,0.95), transparent)";
 const STAR_S = 0.9;
 const STAR_PEAK = 0.5;
 const STAR_COLOUR = "#FFB300";
@@ -212,13 +152,9 @@ const STARS = [
   { corner: "bl", size: 9, after: 0.55 },
 ] as const;
 /** A four-point star, drawn in the colour of the text around it. */
-const STAR_PATH =
-  "M12 0C12.9 7.2 16.8 11.1 24 12C16.8 12.9 12.9 16.8 12 24C11.1 16.8 7.2 12.9 0 12C7.2 11.1 11.1 7.2 12 0Z";
+const STAR_PATH = "M12 0C12.9 7.2 16.8 11.1 24 12C16.8 12.9 12.9 16.8 12 24C11.1 16.8 7.2 12.9 0 12C7.2 11.1 11.1 7.2 12 0Z";
 const CARD_SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
-/** A card that is not in a slot when the answer is checked (`dropUnused`) falls this far (px) and fades, in this long (s), speeding up as it goes. */
-const DROP_PX = 110;
-const DROP_S = 0.45;
 
 /** The slot a card dropped with its corner at `at` lands in, if any. */
 const slotAt = (at: Point, geo: ArrangeGeometry) => {
@@ -243,10 +179,7 @@ const slotNear = (pointer: Point, geo: ArrangeGeometry) => {
   const radius = (geo.circles ?? 0) / 2;
   for (let index = 0; index < geo.count; index += 1) {
     const slot = geo.slot(index);
-    const distance = Math.hypot(
-      pointer.x - (slot.x + radius),
-      pointer.y - (slot.y + radius),
-    );
+    const distance = Math.hypot(pointer.x - (slot.x + radius), pointer.y - (slot.y + radius));
     if (distance < nearestDistance) {
       nearest = index;
       nearestDistance = distance;
@@ -259,34 +192,20 @@ const slotNear = (pointer: Point, geo: ArrangeGeometry) => {
  * The card the hint points at: the one that belongs in the first slot that isn't
  * right yet, given the right `kinds`, first slot first. `null` once all are right.
  */
-export const nextHintId = (
-  cards: readonly ArrangeCardDef[],
-  slots: Slots,
-  kinds: readonly string[],
-) => {
-  const kindOf = (id: string | null) =>
-    cards.find((card) => card.id === id)?.kind;
+export const nextHintId = (cards: readonly ArrangeCardDef[], slots: Slots, kinds: readonly string[]) => {
+  const kindOf = (id: string | null) => cards.find((card) => card.id === id)?.kind;
   const open = kinds.findIndex((kind, index) => kindOf(slots[index]) !== kind);
   if (open < 0) return null;
   const settled = slots.slice(0, open);
-  return (
-    cards.find(
-      (card) => card.kind === kinds[open] && !settled.includes(card.id),
-    )?.id ?? null
-  );
+  return cards.find((card) => card.kind === kinds[open] && !settled.includes(card.id))?.id ?? null;
 };
 
 /**
  * The cards and their slots, the state held by `useArrange`: drag a card into a
  * slot, or tap it to send it to the first open slot (and back out again).
  */
-export function useArrange(
-  ids: readonly string[],
-  count: number,
-  initial?: Slots,
-) {
-  const start = (): Slots =>
-    initial ?? Array.from({ length: count }, () => null);
+export function useArrange(ids: readonly string[], count: number, initial?: Slots) {
+  const start = (): Slots => initial ?? Array.from({ length: count }, () => null);
   const [slots, setSlots] = useState<Slots>(start);
 
   const placeIn = (id: string, slot: number | null) => {
@@ -311,13 +230,7 @@ export function useArrange(
     if (open >= 0 && ids.includes(id)) placeIn(id, open);
   };
 
-  return {
-    slots,
-    placeIn,
-    tapCard,
-    reset: () => setSlots(start()),
-    full: slots.every((slot) => slot !== null),
-  };
+  return { slots, placeIn, tapCard, reset: () => setSlots(start()), full: slots.every((slot) => slot !== null) };
 }
 
 /**
@@ -328,8 +241,17 @@ function ArrangeCard({
   card,
   size,
   sentence,
+  line,
+  radius,
+  sink,
+  fontSize,
+  printStays,
+  tray,
+  home,
+  bounceDelay,
   design,
   dropped,
+  hideShadow,
   at,
   disabled,
   hinted,
@@ -346,10 +268,24 @@ function ArrangeCard({
   card: ArrangeCardDef;
   size: { width: number; height: number };
   sentence: boolean;
-  /** The 3D design's card: a 52px picture box over the name, 16px (Figma `sequence_12`). */
+  /** The 3D design's card: a 52px picture box over the name, 16px (Figma `sequence_12`), with no side padding. */
   design: boolean;
   /** The card falls away and fades (it was left over when the answer was checked); back to its place when this turns off. */
   dropped: boolean;
+  /** The card's shadow in the tray fades out (the result popup is up) and comes back when this turns off. */
+  hideShadow: boolean;
+  line: string;
+  radius: number;
+  sink: boolean;
+  fontSize?: number;
+  /** A plain shadow stays where the card started, once it has left (see `ArrangeLayout.printStays`). */
+  printStays: boolean;
+  /** The cards start in a tray (otherwise they start in their slots, and there is no place to leave a shadow). */
+  tray: boolean;
+  /** Where the card starts: its place in the tray. */
+  home: Point;
+  /** Bounces once, this many seconds from now (see `BOUNCE_S`); `undefined` while it does not. */
+  bounceDelay?: number;
   at: Point;
   disabled: boolean;
   hinted: boolean;
@@ -373,16 +309,7 @@ function ArrangeCard({
 }) {
   const x = useMotionValue(at.x);
   const y = useMotionValue(at.y);
-  const drag = useRef<{
-    startX: number;
-    startY: number;
-    fromX: number;
-    fromY: number;
-    scale: number;
-    offsetX: number;
-    offsetY: number;
-    moved: boolean;
-  } | null>(null);
+  const drag = useRef<{ startX: number; startY: number; fromX: number; fromY: number; scale: number; offsetX: number; offsetY: number; moved: boolean } | null>(null);
   const [dragging, setDragging] = useState(false);
   // The pressed look of a `sink` card: from the press until the release, but for `MIN_PRESS_MS` at least.
   const [held, setHeld] = useState(false);
@@ -390,10 +317,7 @@ function ArrangeCard({
   const letGoTimer = useRef<number | undefined>(undefined);
   const letGo = () => {
     window.clearTimeout(letGoTimer.current);
-    letGoTimer.current = window.setTimeout(
-      () => setHeld(false),
-      Math.max(0, MIN_PRESS_MS - (performance.now() - heldSince.current)),
-    );
+    letGoTimer.current = window.setTimeout(() => setHeld(false), Math.max(0, MIN_PRESS_MS - (performance.now() - heldSince.current)));
   };
   useEffect(() => () => window.clearTimeout(letGoTimer.current), []);
   // The card is in the air on its bounce: the shadow under it shows.
@@ -408,240 +332,232 @@ function ArrangeCard({
 
   useEffect(() => {
     if (drag.current) return;
-    const animations = [
-      animate(x, at.x, CARD_SPRING),
-      dropped
-        ? animate(y, at.y + DROP_PX, { duration: DROP_S, ease: "easeIn" })
-        : animate(y, at.y, CARD_SPRING),
-    ];
+    const animations = [animate(x, at.x, CARD_SPRING), dropped ? animate(y, at.y + DROP_PX, { duration: DROP_S, ease: "easeIn" }) : animate(y, at.y, CARD_SPRING)];
     return () => animations.forEach((animation) => animation.stop());
   }, [at.x, at.y, dropped, x, y]);
 
-  return (
-    <HintFloat
-      className={dragging ? "relative z-20" : undefined}
-      spin={false}
-      active={hinted}
-    >
-      {/* The card's shadow in its place in the tray: a plain shape the size of the card, with nothing in it. It is there from the start, behind the card (which covers it), so the card leaves it showing the moment it is dragged off, and it stays for as long as the card is away, until the card comes back. A card that cannot be dragged (`tapOnly`) has none. */}
-      {printStays && tray && !tapOnly && (
-        <span
-          aria-hidden
-          className="pointer-events-none absolute"
-          style={{
-            left: home.x,
-            top: home.y,
-            width: size.width,
-            height: size.height,
-            zIndex: 0,
-            borderRadius: radius,
-            backgroundColor: SHADOW,
-          }}
-        />
-      )}
-      {/* And the same plain shadow under the card while it bounces, on the ground where it rests. */}
-      {printStays && (
-        <span
-          aria-hidden
-          className={`pointer-events-none absolute transition-opacity duration-150 ${bouncing ? "opacity-100" : "opacity-0"}`}
-          style={{
-            left: at.x,
-            top: at.y,
-            width: size.width,
-            height: size.height,
-            zIndex: 0,
-            borderRadius: radius,
-            backgroundColor: SHADOW,
-          }}
-        />
-      )}
-      <motion.button
-        type="button"
-        disabled={disabled || locked}
-        // Where a pointing hand can find it (see the Variable module's `TapHint`).
-        data-hint={card.id}
-        aria-label={card.text}
-        aria-pressed={selected}
-        onPointerDown={(event) => {
-          // Disabled or given its place for good: it takes no press, no drag and no tap (a disabled button may still get pointer events).
-          if (disabled || locked) return;
-          const box = event.currentTarget;
-          box.setPointerCapture(event.pointerId);
-          const rect = box.getBoundingClientRect();
-          const scale = rect.width / box.offsetWidth || 1;
-          drag.current = {
-            startX: event.clientX,
-            startY: event.clientY,
-            fromX: x.get(),
-            fromY: y.get(),
-            scale,
-            // Where on the card the pointer took hold of it (the board's px): the pointer is then at the card's x, y plus this.
-            offsetX: (event.clientX - rect.left) / scale,
-            offsetY: (event.clientY - rect.top) / scale,
-            moved: false,
-          };
-          if (!tapOnly) setDragging(true);
-          window.clearTimeout(letGoTimer.current);
-          heldSince.current = performance.now();
-          setHeld(true);
-        }}
-        onPointerMove={(event) => {
-          const now = drag.current;
-          // A tap-only card stays where it is, whatever the pointer does.
-          if (!now || tapOnly) return;
-          const dx = event.clientX - now.startX;
-          const dy = event.clientY - now.startY;
-          if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
-          x.set(now.fromX + dx / now.scale);
-          y.set(now.fromY + dy / now.scale);
-        }}
-        onPointerUp={(event) => {
-          const now = drag.current;
-          drag.current = null;
-          setDragging(false);
-          letGo();
-          if (!now) return;
-          if (tapOnly) {
-            // Like a button: it is a tap if the pointer is let go over the card (the pointer is captured, so the card is told wherever it is let go).
-            const rect = event.currentTarget.getBoundingClientRect();
-            if (
-              event.clientX >= rect.left &&
-              event.clientX <= rect.right &&
-              event.clientY >= rect.top &&
-              event.clientY <= rect.bottom
-            )
-              onTap?.();
-            return;
-          }
-          if (now.moved)
-            onDrop(
-              { x: x.get(), y: y.get() },
-              { x: x.get() + now.offsetX, y: y.get() + now.offsetY },
-            );
-          else onTap?.();
-          // Back to its place if nothing changed; a move gets here through `at`.
-          animate(x, at.x, CARD_SPRING);
-          animate(y, at.y, CARD_SPRING);
-        }}
-        onPointerCancel={() => {
-          drag.current = null;
-          setDragging(false);
-          letGo();
-          animate(x, at.x, CARD_SPRING);
-          animate(y, at.y, CARD_SPRING);
-        }}
-        animate={{ scale: dragging ? 1.05 : 1, opacity: dropped ? 0 : 1 }}
-        transition={{
-          opacity: dropped
-            ? { duration: DROP_S, ease: "easeIn" }
-            : { duration: 0.2 },
-        }}
-        style={{
-          x,
-          y,
-          width: size.width,
-          height: size.height,
-          zIndex: dragging ? 2 : 1,
-        }}
-        className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center rounded-[8px] border-4 border-white ${design ? "px-0" : "px-1.5"} ${RAISED_DRAG} ${EDGE.khaki} enabled:cursor-grab enabled:active:cursor-grabbing dark:border-[#818185] ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+  // Marked wrong: the card shakes sideways once, as the module's wrong answers do.
+  useEffect(() => {
+    if (!wrong) return;
+    const shake = animate(x, [at.x, at.x - 7, at.x + 7, at.x - 5, at.x + 5, at.x], { duration: 0.35 });
+    return () => shake.stop();
+  }, [wrong, at.x, x]);
+
+  // The bounce: the card squeezes, then goes up and down about where it rests; its print (see `printStays`) stays on the ground.
+  useEffect(() => {
+    if (bounceDelay === undefined) return;
+    // Started from timers, not with the animations' own delay: a new animation on `y` stops the one running, and the card may still be gliding into its slot.
+    const running: { stop: () => void }[] = [];
+    // The squeeze: the top comes down (the bottom edge stays put) and the card widens a touch.
+    const squeezeTimer = window.setTimeout(() => {
+      setSqueezing(true);
+      running.push(animate(squeezeY, SQUEEZE_Y, { duration: SQUEEZE_S, ease: "easeOut" }), animate(squeezeX, SQUEEZE_X, { duration: SQUEEZE_S, ease: "easeOut" }));
+    }, bounceDelay * 1000);
+    // The jump: it springs back to its actual size as it leaves the ground, goes up, comes down, hops a little and settles.
+    const jumpTimer = window.setTimeout(() => {
+      setBouncing(true);
+      setShining(true);
+      running.push(
+        animate(squeezeY, 1, { duration: SPRING_BACK_S, ease: "easeOut" }),
+        animate(squeezeX, 1, { duration: SPRING_BACK_S, ease: "easeOut" }),
+        animate(y, [at.y, at.y - BOUNCE_BIG, at.y, at.y - BOUNCE_MINI, at.y], {
+          duration: BOUNCE_S,
+          times: BOUNCE_TIMES,
+          ease: ["easeOut", "easeIn", "easeOut", "easeIn"],
+        }),
+      );
+    }, (bounceDelay + SQUEEZE_S) * 1000);
+    // Back at its size, the card no longer pivots on its bottom edge (the pick bounce and the drag scale it about its middle).
+    const pivotTimer = window.setTimeout(() => setSqueezing(false), (bounceDelay + SQUEEZE_S + SPRING_BACK_S) * 1000 + 30);
+    // The shadow under the card goes a moment after it has landed.
+    const endTimer = window.setTimeout(() => setBouncing(false), (bounceDelay + SQUEEZE_S) * 1000 + BOUNCE_S * 1000 + 150);
+    // The shine and the stars play once, and are taken out when they are done.
+    const shineEndTimer = window.setTimeout(() => setShining(false), (bounceDelay + SQUEEZE_S + SHINE_ENDS_S) * 1000);
+    return () => {
+      window.clearTimeout(squeezeTimer);
+      window.clearTimeout(jumpTimer);
+      window.clearTimeout(pivotTimer);
+      window.clearTimeout(endTimer);
+      window.clearTimeout(shineEndTimer);
+      running.forEach((animation) => animation.stop());
+      squeezeY.set(1);
+      squeezeX.set(1);
+    };
+  }, [bounceDelay, at.y, y, squeezeX, squeezeY]);
+
+  // What is on the card (its picture and its words).
+  const content = (
+    <>
+      {card.art &&
+        (design ? (
+          <span className="flex size-[52px] shrink-0 items-center justify-center">{card.art}</span>
+        ) : (
+          <span className={`flex w-full items-center justify-center ${compact ? "min-h-[30px]" : "min-h-[46px]"}`}>{card.art}</span>
+        ))}
+      <span
+        className={`text-center font-semibold ${filled && !wrong && !selected ? "text-white" : "text-[#444444] dark:text-white"} ${
+          design ? "text-[16px] leading-none" : fontSize ? "" : compact ? (sentence ? "text-[12px] leading-4" : "text-[11px] leading-[14px] tracking-[0.2px] uppercase") : "text-[14px] leading-[18px]"
+        }`}
+        style={fontSize ? { fontSize, lineHeight: "20px" } : undefined}
       >
-        {/* The hint's orange fill, wiped in from the left behind the content. */}
+        {card.text}
+      </span>
+    </>
+  );
+
+  return (
+    <HintFloat className={dragging ? "relative z-20" : undefined} spin={false} active={hinted}>
+    {/* The card's shadow in its place in the tray: a plain shape the size of the card, with nothing in it. It is there from the start, behind the card (which covers it), so the card leaves it showing the moment it is dragged off, and it stays for as long as the card is away, until the card comes back. A card that cannot be dragged (`tapOnly`) has none. */}
+    {printStays && tray && !tapOnly && (
+      <motion.span
+        aria-hidden
+        initial={false}
+        animate={{ opacity: hideShadow ? 0 : 1 }}
+        transition={{ duration: 0.25 }}
+        className="pointer-events-none absolute"
+        style={{ left: home.x, top: home.y, width: size.width, height: size.height, zIndex: 0, borderRadius: radius, backgroundColor: SHADOW }}
+      />
+    )}
+    {/* And the same plain shadow under the card while it bounces, on the ground where it rests. */}
+    {printStays && (
+      <span
+        aria-hidden
+        className={`pointer-events-none absolute transition-opacity duration-150 ${bouncing ? "opacity-100" : "opacity-0"}`}
+        style={{ left: at.x, top: at.y, width: size.width, height: size.height, zIndex: 0, borderRadius: radius, backgroundColor: SHADOW }}
+      />
+    )}
+    <motion.button
+      type="button"
+      disabled={disabled || locked}
+      // Where a pointing hand can find it (see the Variable module's `TapHint`).
+      data-hint={card.id}
+      aria-label={card.text}
+      aria-pressed={selected}
+      onPointerDown={(event) => {
+        // Disabled or given its place for good: it takes no press, no drag and no tap (a disabled button may still get pointer events).
+        if (disabled || locked) return;
+        const box = event.currentTarget;
+        box.setPointerCapture(event.pointerId);
+        const rect = box.getBoundingClientRect();
+        const scale = rect.width / box.offsetWidth || 1;
+        drag.current = {
+          startX: event.clientX,
+          startY: event.clientY,
+          fromX: x.get(),
+          fromY: y.get(),
+          scale,
+          // Where on the card the pointer took hold of it (the board's px): the pointer is then at the card's x, y plus this.
+          offsetX: (event.clientX - rect.left) / scale,
+          offsetY: (event.clientY - rect.top) / scale,
+          moved: false,
+        };
+        if (!tapOnly) setDragging(true);
+        window.clearTimeout(letGoTimer.current);
+        heldSince.current = performance.now();
+        setHeld(true);
+      }}
+      onPointerMove={(event) => {
+        const now = drag.current;
+        // A tap-only card stays where it is, whatever the pointer does.
+        if (!now || tapOnly) return;
+        const dx = event.clientX - now.startX;
+        const dy = event.clientY - now.startY;
+        if (!now.moved && Math.hypot(dx, dy) > TAP_SLOP) now.moved = true;
+        x.set(now.fromX + dx / now.scale);
+        y.set(now.fromY + dy / now.scale);
+      }}
+      onPointerUp={(event) => {
+        const now = drag.current;
+        drag.current = null;
+        setDragging(false);
+        letGo();
+        if (!now) return;
+        if (tapOnly) {
+          // Like a button: it is a tap if the pointer is let go over the card (the pointer is captured, so the card is told wherever it is let go).
+          const rect = event.currentTarget.getBoundingClientRect();
+          if (event.clientX >= rect.left && event.clientX <= rect.right && event.clientY >= rect.top && event.clientY <= rect.bottom) onTap?.();
+          return;
+        }
+        if (now.moved) onDrop({ x: x.get(), y: y.get() }, { x: x.get() + now.offsetX, y: y.get() + now.offsetY });
+        else onTap?.();
+        // Back to its place if nothing changed; a move gets here through `at`.
+        animate(x, at.x, CARD_SPRING);
+        animate(y, at.y, CARD_SPRING);
+      }}
+      onPointerCancel={() => {
+        drag.current = null;
+        setDragging(false);
+        letGo();
+        animate(x, at.x, CARD_SPRING);
+        animate(y, at.y, CARD_SPRING);
+      }}
+      // A tap-only card is also pressed with the keyboard (Enter or Space is a click with no pointer: `detail` 0).
+      onClick={tapOnly ? (event) => { if (event.detail === 0) onTap?.(); } : undefined}
+      // A pressed card (`sink`) does not grow: it is pushed down onto its edge, like the buttons.
+      // Picked by a tap (`selected`): it bounces (scale 1, 0.95, 1.05, 1) as the module's picked answers do.
+      animate={{ scale: selected ? [1, 0.95, 1.05, 1] : dragging && !sink ? 1.05 : 1, opacity: dropped ? 0 : 1 }}
+      transition={{ ...(selected !== undefined ? { duration: 0.4, ease: "easeOut" } : {}), opacity: dropped ? { duration: DROP_S, ease: "easeIn" } : { duration: 0.2 } }}
+      // Picked by a tap: the module's picked-answer look (see `PICKED_LOOK`), its edge green and still raised.
+      style={{ x, y, scaleX: squeezeX, scaleY: squeezeY, originX: 0.5, originY: squeezing ? 1 : 0.5, width: size.width, height: size.height, zIndex: dragging ? 2 : 1, borderRadius: radius, ...(wrong ? WRONG_LOOK : selected ? PICKED_LOOK : filled ? FILLED_LOOK : null) }}
+      className={`pointer-events-auto absolute top-0 left-0 isolate flex touch-none flex-col overflow-hidden items-center justify-center ${design ? "px-0" : "px-1.5"} ${line} ${sink ? `${held ? PRESSED : RAISED_DRAG} transition-[translate,box-shadow] duration-100 ease-out` : RAISED_DRAG} ${EDGE.khaki} ${tapOnly ? "enabled:cursor-pointer" : "enabled:cursor-grab enabled:active:cursor-grabbing"} ${compact ? "gap-0.5" : "gap-1.5"} ${card.tint}`}
+    >
+      {/* The hint's orange fill, wiped in from the left behind the content. */}
+      <motion.span
+        aria-hidden
+        initial={false}
+        animate={{ clipPath: hinted ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
+        transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
+        className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
+      />
+      {content}
+      {/* Pointed at (by a hint's hand): the one hint look every question has (see `PointedLook`). No float; it goes with the hand. */}
+      <PointedLook pointed={!!pointed} />
+      {/* The shine: a slim slanted band of light crossing the card once, from left to right, clipped by the card. */}
+      {shining && (
         <motion.span
           aria-hidden
-          initial={false}
-          animate={{
-            clipPath: hinted ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)",
-          }}
-          transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-          className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
+          initial={{ x: -60, opacity: 0 }}
+          animate={{ x: [-60, size.width + 20], opacity: [0, 1, 1, 0] }}
+          transition={{ duration: SHINE_S, delay: SHINE_AFTER_S, ease: "easeInOut", opacity: { duration: SHINE_S, delay: SHINE_AFTER_S, times: [0, 0.2, 0.8, 1] } }}
+          style={{ skewX: -20, backgroundImage: SHINE_BAND }}
+          className="pointer-events-none absolute inset-y-0 left-0 w-14"
         />
-        {card.art &&
-          (design ? (
-            <span className="flex size-[52px] shrink-0 items-center justify-center">
-              {card.art}
-            </span>
-          ) : (
-            <span
-              className={`flex w-full items-center justify-center ${compact ? "min-h-[30px]" : "min-h-[46px]"}`}
-            >
-              {card.art}
-            </span>
-          ))}
-        <span
-          className={`text-center font-semibold text-[#444444] dark:text-white ${
-            design
-              ? "text-[16px] leading-none"
-              : compact
-                ? sentence
-                  ? "text-[12px] leading-4"
-                  : "text-[11px] leading-[14px] tracking-[0.2px] uppercase"
-                : "text-[14px] leading-[18px]"
-          }`}
-        >
-          {card.text}
-        </span>
-      </motion.button>
-      {/* What stands on the card's corners: on a box that goes where the card goes (the same x and y), over the card and not clipped by it, so each thing sits on a corner, half outside. The place number is a round badge on the top left (green, red when the card is marked wrong); the stars are four corner stars that twinkle in turn, once, at low opacity. */}
-      {(shining || number !== undefined) && (
-        <motion.div
-          aria-hidden
-          className="pointer-events-none absolute top-0 left-0"
-          style={{
-            x,
-            y,
-            scaleX: squeezeX,
-            scaleY: squeezeY,
-            originX: 0.5,
-            originY: squeezing ? 1 : 0.5,
-            width: size.width,
-            height: size.height,
-            zIndex: 3,
-          }}
-        >
-          {number !== undefined && (
-            <motion.span
-              initial={{ scale: 0.4, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 400, damping: 18 }}
-              className={`absolute -top-2 -left-2 flex size-6 items-center justify-center rounded-full border-2 border-white text-[13px] leading-none font-bold text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)] ${wrong ? "bg-[#E5484D]" : filled && !selected ? "bg-white text-[#01A17F]! border-[#01A17F]" : "bg-[#01A17F]"}`}
-            >
-              {number}
-            </motion.span>
-          )}
-          {shining &&
-            STARS.map((star) => {
-              const half = -star.size / 2;
-              const place = {
-                [star.corner[0] === "t" ? "top" : "bottom"]: half,
-                [star.corner[1] === "l" ? "left" : "right"]: half,
-              };
-              return (
-                <motion.svg
-                  key={star.corner}
-                  viewBox="0 0 24 24"
-                  width={star.size}
-                  height={star.size}
-                  initial={{ scale: 0, opacity: 0, rotate: -30 }}
-                  animate={{
-                    scale: [0, 1, 0.7, 0],
-                    opacity: [0, STAR_PEAK, STAR_PEAK * 0.7, 0],
-                    rotate: [-30, 0, 15, 30],
-                  }}
-                  transition={{
-                    duration: STAR_S,
-                    delay: SHINE_AFTER_S + star.after,
-                    times: [0, 0.35, 0.7, 1],
-                    ease: "easeInOut",
-                  }}
-                  className="absolute"
-                  style={{ ...place, color: STAR_COLOUR }}
-                >
-                  <path d={STAR_PATH} fill="currentColor" />
-                </motion.svg>
-              );
-            })}
-        </motion.div>
       )}
+    </motion.button>
+    {/* What stands on the card's corners: on a box that goes where the card goes (the same x and y), over the card and not clipped by it, so each thing sits on a corner, half outside. The place number is a round badge on the top left (green, red when the card is marked wrong); the stars are four corner stars that twinkle in turn, once, at low opacity. */}
+    {(shining || number !== undefined) && (
+      <motion.div aria-hidden className="pointer-events-none absolute top-0 left-0" style={{ x, y, scaleX: squeezeX, scaleY: squeezeY, originX: 0.5, originY: squeezing ? 1 : 0.5, width: size.width, height: size.height, zIndex: 3 }}>
+        {number !== undefined && (
+          <motion.span
+            initial={{ scale: 0.4, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 18 }}
+            className={`absolute -top-2 -left-2 flex size-6 items-center justify-center rounded-full border-2 border-white text-[13px] leading-none font-bold text-white shadow-[0_1px_3px_rgba(0,0,0,0.25)] ${wrong ? "bg-[#E5484D]" : filled && !selected ? "bg-white text-[#01A17F]! border-[#01A17F]" : "bg-[#01A17F]"}`}
+          >
+            {number}
+          </motion.span>
+        )}
+        {shining && STARS.map((star) => {
+          const half = -star.size / 2;
+          const place = { [star.corner[0] === "t" ? "top" : "bottom"]: half, [star.corner[1] === "l" ? "left" : "right"]: half };
+          return (
+            <motion.svg
+              key={star.corner}
+              viewBox="0 0 24 24"
+              width={star.size}
+              height={star.size}
+              initial={{ scale: 0, opacity: 0, rotate: -30 }}
+              animate={{ scale: [0, 1, 0.7, 0], opacity: [0, STAR_PEAK, STAR_PEAK * 0.7, 0], rotate: [-30, 0, 15, 30] }}
+              transition={{ duration: STAR_S, delay: SHINE_AFTER_S + star.after, times: [0, 0.35, 0.7, 1], ease: "easeInOut" }}
+              className="absolute"
+              style={{ ...place, color: STAR_COLOUR }}
+            >
+              <path d={STAR_PATH} fill="currentColor" />
+            </motion.svg>
+          );
+        })}
+      </motion.div>
+    )}
     </HintFloat>
   );
 }
@@ -653,8 +569,17 @@ export function ArrangeBoard({
   geo,
   disabled,
   hintedId = null,
+  selectedId = null,
+  bouncedIds = [],
+  wrongIds = [],
+  lockedIds = [],
+  pointedId = null,
   dropUnused = false,
   hideShadows = false,
+  highlightEmpty = false,
+  tapOnly = false,
+  activeSlot,
+  numbered = false,
   onPlace,
   onTap,
   onSlotTap,
@@ -667,11 +592,34 @@ export function ArrangeBoard({
   disabled: boolean;
   /** The card the hint points at: filled in orange and floating. */
   hintedId?: string | null;
+  /** The card picked by a tap, waiting for a slot to be tapped: framed in green (and the slots, if they can be tapped, light up). */
+  selectedId?: string | null;
+  /**
+   * Cards that were rightly matched: each bounces once, the moment it joins this list, with its shine and stars (its
+   * print stays down with `geo.printStays`). For a board where the learner knows each match is right as it is made (so
+   * the bounce is the answer, not a result kept for the end): list a card here as soon as it is right, and never all at once.
+   */
+  bouncedIds?: readonly string[];
+  /** Cards marked wrong: they look like the module's wrong answers (red), badge included. */
+  wrongIds?: readonly string[];
+  /** Cards that can no longer be moved (they were given their place for good): they cannot be touched, and nor can the slot they hold (a slot that is a button is disabled). */
+  lockedIds?: readonly string[];
+  /** The card a hint's hand is pointing at, for as long as it points: it takes a pale orange tint and one shine, and nothing else (it does not float, unlike `hintedId`). */
+  pointedId?: string | null;
   /** Cards that are in no slot fall away and fade (the extra cards, once the answer is checked). */
   dropUnused?: boolean;
   /** The cards' shadows in the tray fade out (the result popup is up, right or wrong) and come back when this turns off (trying again). */
   hideShadows?: boolean;
-  onPlace: (id: string, slot: number | null) => void;
+  /** Every empty slot is picked out (a green dashed line and a soft pulse), so it is plain that something is to be dragged onto it. */
+  highlightEmpty?: boolean;
+  /** The cards cannot be dragged, only tapped (so `onPlace` is not needed): they stay in their places and are given their numbers by `onTap`. */
+  tapOnly?: boolean;
+  /** Only this slot is open (the one that is next, with circle slots): it is outlined in green and pulses, an empty slot after it is dimmed. `undefined`: all slots are alike. */
+  activeSlot?: number;
+  /** A card in a slot shows the slot's number on its corner (a round badge), as the slot's own number is under the card. */
+  numbered?: boolean;
+  /** A card is dropped: `slot` is the slot it was let go on (`null` for none). Not needed with `tapOnly`. */
+  onPlace?: (id: string, slot: number | null) => void;
   /** Tapping a card; without it a tap does nothing (cards that can only be swapped). */
   onTap?: (id: string) => void;
   /** Makes each slot a button; tapping one is how a picked card (see `selectedId`) is put in it. Without it the slots are only drawn. */
@@ -681,59 +629,86 @@ export function ArrangeBoard({
   /** What an empty slot shows in place of its number (its card, when it holds one, is drawn over it). */
   slotContent?: (index: number) => ReactNode;
 }) {
-  // On the 3D route every empty slot has the design's look, whatever the board's own size.
+  // On the 3D route every empty slot has the design\'s look, whatever the board\'s own size.
   const flow = useSequenceFlow();
   const designed = geo.designSlots || flow.designSlots;
   return (
     <>
-      {Array.from({ length: geo.count }, (_, index) => (
-        <div
-          key={index}
-          aria-hidden
-          className={`absolute flex items-center justify-center rounded-[8px] border-2 ${
-            designed
+      {Array.from({ length: geo.count }, (_, index) => {
+        const isActive = activeSlot !== undefined && activeSlot === index;
+        const lit = (onSlotTap && selectedId !== null) || isActive;
+        // An empty slot that is not the open one is dimmed.
+        const dim = activeSlot !== undefined && !isActive && slots[index] === null;
+        // Circle slots (matching): a circle is filled with green once a card has its number (red if that card is marked wrong), and is a dashed outline until then.
+        const holder = slots[index];
+        const taken = geo.circles && holder !== null;
+        const slotWrong = taken && wrongIds.includes(holder);
+        // An open slot, when the board asks for them all to be picked out (`highlightEmpty`).
+        const glow = highlightEmpty && holder === null && !disabled;
+        const className = `absolute flex items-center justify-center ${geo.circles ? "rounded-full" : ""} ${dim ? "opacity-50" : ""} ${isActive ? "animate-pulse" : ""} border-2 ${
+          taken
+            ? slotWrong
+              ? "border-[#E5484D] bg-[#E5484D] text-white"
+              : "border-[#01A17F] bg-[#01A17F] text-white"
+            : glow
+              ? // A solid well that stands off the page in both themes: a clear step darker than white, and a slate lighter than the dark page.
+                "border-dashed border-[#01A17F] bg-[#DFE6EC] shadow-[inset_0_2px_6px_rgba(0,0,0,0.16)] dark:border-[#3FD9B4] dark:bg-[#2C3B49] dark:shadow-[inset_0_2px_6px_rgba(0,0,0,0.4)]"
+              : designed
               ? DESIGN_SLOT
               : geo.solidSlots
-                ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+              ? "border-[#D9DEE3] bg-[#EEF1F4] shadow-[inset_0_2px_6px_rgba(0,0,0,0.12)] dark:border-white/20 dark:bg-white/10"
+              : lit
+                ? "border-dashed border-[#01A17F] bg-[#F2FBF8] dark:border-[#4DBDA5] dark:bg-white/5"
                 : "border-dashed border-[#9AA3AE] bg-white/70 dark:border-white/30 dark:bg-white/5"
-          }`}
-          style={{
-            left: geo.slot(index).x,
-            top: geo.slot(index).y,
-            width: geo.card.width,
-            height: geo.card.height,
-          }}
-        >
-          {slotContent ? (
-            slotContent(index)
-          ) : designed ? (
-            <span className={DESIGN_BADGE}>{index + 1}</span>
-          ) : (
-            <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
-              {index + 1}
-            </span>
-          )}
-        </div>
-      ))}
-      {/* Every card leaves a plain shadow (its shape, nothing in it) in its place in the tray, on every board. It is there from the start, behind the card, which covers it, so the card shows it the moment it is dragged off. */}
-      {geo.tray &&
-        cards.map((card, index) => (
-          <motion.div
-            key={`shadow-${card.id}`}
-            aria-hidden
-            initial={false}
-            animate={{ opacity: hideShadows ? 0 : 1 }}
-            transition={{ duration: 0.25 }}
-            className="pointer-events-none absolute rounded-[8px] bg-[rgba(0,0,0,0.09)] dark:bg-white/10"
-            style={{
-              left: geo.home(index).x,
-              top: geo.home(index).y,
-              width: geo.card.width,
-              height: geo.card.height,
-              zIndex: 0,
-            }}
-          />
-        ))}
+        }`;
+        const style = { left: geo.slot(index).x, top: geo.slot(index).y, width: geo.slotSize.width, height: geo.slotSize.height, borderRadius: geo.circles ? undefined : geo.radius };
+        const inside = slotContent ? (
+          slotContent(index)
+        ) : geo.circles ? (
+          <span className={`text-[16px] leading-none font-bold ${taken ? "text-white" : "text-[#5C6670] dark:text-white/70"}`}>{index + 1}</span>
+        ) : designed ? (
+          <span className={DESIGN_BADGE}>{index + 1}</span>
+        ) : (
+          <span className="flex size-8 items-center justify-center rounded-full bg-[#D9DEE3] text-[15px] font-semibold text-[#5C6670] dark:bg-white/15 dark:text-white/70">
+            {index + 1}
+          </span>
+        );
+        const content = (
+          <>
+            {glow && (
+              // A soft green ring that breathes round the slot, outside its edge.
+              <motion.span
+                aria-hidden
+                initial={{ opacity: 0.25, scale: 1 }}
+                animate={{ opacity: [0.25, 0.9, 0.25], scale: [1, 1.03, 1] }}
+                transition={{ duration: 1.6, ease: "easeInOut", repeat: Infinity }}
+                className="pointer-events-none absolute -inset-1 border-[3px] border-[#01A17F]/60 dark:border-[#3FD9B4]/70"
+                style={{ borderRadius: geo.radius + 4 }}
+              />
+            )}
+            {inside}
+          </>
+        );
+        return onSlotTap ? (
+          <button
+            key={index}
+            type="button"
+            data-hint={`slot-${index}`}
+            aria-label={slotLabel?.(index) ?? `Spot ${index + 1}`}
+            // A spot whose card is rightly matched (locked) is done with, like the card: nothing can be put on it.
+            disabled={disabled || (holder !== null && lockedIds.includes(holder))}
+            onClick={() => onSlotTap(index)}
+            className={`${className} pointer-events-auto enabled:cursor-pointer`}
+            style={style}
+          >
+            {content}
+          </button>
+        ) : (
+          <div key={index} aria-hidden data-hint={`slot-${index}`} className={className} style={style}>
+            {content}
+          </div>
+        );
+      })}
       {cards.map((card, index) => {
         const placed = slots.indexOf(card.id);
         return (
@@ -742,9 +717,19 @@ export function ArrangeBoard({
             card={card}
             size={geo.card}
             sentence={geo.sentence}
+            line={geo.line}
+            radius={geo.radius}
+            sink={geo.sink}
+            fontSize={geo.fontSize}
+            printStays={geo.printStays}
+            tray={geo.tray}
+            home={geo.home(index)}
+            bounceDelay={bouncedIds.includes(card.id) && placed >= 0 ? (geo.circles ? BOUNCE_AT_ONCE_S : BOUNCE_AFTER_GLIDE_S) : undefined}
             design={geo.designSlots}
             dropped={dropUnused && placed < 0}
-            at={placed >= 0 ? geo.slot(placed) : geo.home(index)}
+            hideShadow={hideShadows}
+            // With circle slots a card never leaves its row: it is only given a number.
+            at={placed >= 0 && !geo.circles ? geo.slot(placed) : geo.home(index)}
             disabled={disabled}
             hinted={card.id === hintedId}
             selected={onSlotTap ? card.id === selectedId : undefined}
@@ -753,17 +738,8 @@ export function ArrangeBoard({
             pointed={card.id === pointedId}
             tapOnly={tapOnly}
             filled={!!geo.circles && placed >= 0}
-            number={
-              (numbered || !!geo.circles) && placed >= 0
-                ? placed + 1
-                : undefined
-            }
-            onDrop={(to, pointer) =>
-              onPlace?.(
-                card.id,
-                geo.circles ? slotNear(pointer, geo) : slotAt(to, geo),
-              )
-            }
+            number={(numbered || !!geo.circles) && placed >= 0 ? placed + 1 : undefined}
+            onDrop={(to, pointer) => onPlace?.(card.id, geo.circles ? slotNear(pointer, geo) : slotAt(to, geo))}
             onTap={onTap ? () => onTap(card.id) : undefined}
           />
         );
@@ -802,19 +778,9 @@ export function ArrangeDock({
     <motion.div
       initial={false}
       animate={{ y: -rise, opacity: fade ? 0 : 1 }}
-      transition={{
-        y: { ...PANEL_SPRING, delay: wait },
-        opacity: { ...PANEL_SPRING, delay: wait },
-      }}
+      transition={{ y: { ...PANEL_SPRING, delay: wait }, opacity: { ...PANEL_SPRING, delay: wait } }}
       className={`absolute left-1/2 ${behindPanel ? "z-0" : "z-[1]"}`}
-      style={{
-        ...(top === undefined
-          ? { bottom: aboveButtons(28, withHint) }
-          : { top }),
-        width: geo.board.width,
-        height: geo.board.height,
-        marginLeft: -geo.board.width / 2,
-      }}
+      style={{ ...(top === undefined ? { bottom: aboveButtons(28, withHint) } : { top }), width: geo.board.width, height: geo.board.height, marginLeft: -geo.board.width / 2 }}
     >
       {children}
     </motion.div>

@@ -9,7 +9,6 @@ import { RAISED } from "@/components/ui/raised";
 import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
 import { RightBounce } from "./RightBounce";
-import { RightBounce } from "./RightBounce";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { COLUMN_LEFT, type Choice } from "./levelTwo";
@@ -82,7 +81,7 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, hinted, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, bounceRight = false, onPick }: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, rise = CARDS_RISE, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, bounceRight = false, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
   const folding = onlyPicked !== undefined;
   return (
@@ -104,9 +103,9 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
         const look = LOOKS[state];
-        const hintHere = hinted && selectedId === null && choice.id === correctId;
+        const pointed = pointedId === choice.id && state === "idle";
         const plainRow = (
-          <HintFloat key={choice.id} className="relative w-full" spin={false} active={hintHere}>
+          <div key={choice.id} className="relative w-full">
             <motion.button
               type="button"
               data-hint={choice.id}
@@ -131,14 +130,6 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
                 state === "idle" ? (idleLook ?? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]") : look.card
               }`}
             >
-              {/* The hint's orange fill, wiped in from the left behind the content. */}
-              <motion.span
-                aria-hidden
-                initial={false}
-                animate={{ clipPath: hintHere ? "inset(0 0% 0 0)" : "inset(0 100% 0 0)" }}
-                transition={{ duration: FILL_S, ease: [0.45, 0, 0.25, 1] }}
-                className="pointer-events-none absolute inset-0 -z-10 bg-[#FFE7D1] dark:bg-[#33220F]"
-              />
               <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`} style={iconGap !== undefined ? { columnGap: iconGap } : undefined}>
                 {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
                 {(!tight || anyPicture) && (
@@ -176,7 +167,7 @@ export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, 
               )}
               <PointedLook pointed={pointed} />
             </motion.button>
-          </HintFloat>
+          </div>
         );
         // A little after the check, so the rows have risen above the result panel by the time it jumps. Rows that fade away (`fadeOut`) don't bounce: nobody would see it.
         const row = bounceRight ? (
