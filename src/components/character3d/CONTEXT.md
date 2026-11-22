@@ -11,8 +11,8 @@ Stack: Next 16.2.9, React 19, three 0.187, @react-three/fiber 9, @react-three/dr
 > **Three characters now: `girl.glb`, `Male.glb` (Boy) and `Male_anime.glb` (Anime)** (2026-11-20; between 11-19 and 11-20 the
 > "male" was the anime file and `Male.glb` was unused; `Character_Final.glb` is still unused). Everything below that says
 > "Character_Final" / Levitate / Sitting / Gesture / lip-sync describes the old model. What changed, and why:
-> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "3D character" Girl / Boy / Anime (ids `girl`, `boy`,
->   `anime`). The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
+> - **Picking one.** Hold the battery (the dev panel of `BatteryMenu`): "Change character" opens the mentor picker (see "Select your
+>   Mentor" below; it replaced the Girl / Boy / Anime row, 2026-11-22). Ids `girl`, `boy`, `anime`. The pick is kept in local storage (`characterLook.ts`, a small store with no three.js, so the menu doesn't
 >   pull three in; a saved `"male"` from the two-choice days is read as `anime`). `sharedCharacter.ts` loads the picked one
 >   (default girl); a switch loads the other in the background (the button says "Boy…" meanwhile), the screens then switch
 >   and the old one is freed after 1 s. `useCharacter` (the `/character` page) follows the pick too. `Male.glb` and
@@ -157,22 +157,35 @@ Why does order matter?, Let's guess first. The Figma flow has no Hex-board frame
   px in about half a second) with the answers forced on, since headless had no audio progress that run to bring them in. Not checked: the
   rise with the real voice, light mode, Boy / Anime (the box is the same), a real phone. (An idle-sway "stabiliser" that followed the neck was tried
   first on a misreading and taken out again: `FramingCamera` still follows only the hips across.)
-- **"Select your Mentor" (2026-11-21, asked for with a design image):** on the 3D route a **tap on the battery opens the mentor picker**
-  instead of the Energy screen (`BatteryMenu` asks `useBatteryTap`, `onboarding/batteryTap.tsx`; `Sequence3dFlow` provides the opener and
-  renders `MentorPicker`; elsewhere the tap still opens `/energy`, and the hold still opens the dev panel with Girl / Boy / Anime).
+- **The battery and "Select your Mentor" (2026-11-21 design image; reworked 2026-11-22 on request).** **A tap on the battery opens the
+  Energy screen everywhere, the 3D route included** (the 11-21 override, `batteryTap.tsx`, is gone). **Holding it opens the dev panel, which
+  has a "Change character" button** (`BatteryMenu`) that opens `MentorPicker` (`character3d/MentorPicker.tsx`, moved from `sequence/`). The
+  picker works on every screen that has the battery, not only the 3D route; `BatteryMenu` loads it with `next/dynamic` (`ssr: false`) the
+  first time it is opened, so three.js stays out of the other screens' bundles.
   One card at a time over a dimmed screen: title, the name in a pill, the character, round arrows at its sides (they go round the three:
   Rio = `boy`, Veena = `girl`, Zane = `anime`, `MENTORS` in `characterLook.ts`; the names are guesses from the design image, whose
   characters are not ours) and a "Choose …" `Button3D`. The card's colour and arrows follow the mentor (`THEMES` in `MentorPicker.tsx`,
-  guessed from the image, with dark variants). The pictures are **renders of our three models** (`public/images/mentors/{boy,girl,anime}.webp`,
-  transparent, head to thigh, taken in headless Chrome from the avatar canvas of `?step=2`), so the arrows answer at once; "Choose"
-  calls `setCharacter`, the button says "Loading…" while the character loads and the card closes when it is on show. A tap outside or
-  Escape closes it with the character unchanged. If the character is re-modelled the renders are stale: redo them (how they were made: headless
-  Chrome over CDP, `?step=2` with `lingo.character-look` set, the canvas host pinned to the page corner at 380 × 680 with CSS, everything else
-  `visibility:hidden`, a transparent background override, a WebP screenshot of its top 63 %, then cut to the alpha bounding box in a page canvas).
-  Checked in headless Chrome 390×844, dark and light: tap on the battery opens it on Veena (the current one), the arrows go Veena → Zane → Rio
-  with the colours, names and pictures changing, "Choose Rio" stored `{"character":"boy"}`, closed the card and the screen's face became the boy.
-  Not checked: a real phone or touch, the card on a short screen, the "Loading…" state with a slow connection (Rio loaded in about a second here),
-  Escape and the outside tap. The "Choose" button is the app's Rive `Button3D`, not the design's striped one.
+  guessed from the image, with dark variants). **The character on the card is the real model, idling** (`girl.glb`, `Male.glb`,
+  `Male_anime.glb`), not a picture: `MentorStage.tsx` is one R3F canvas (camera level at `[0, 1.25, 2.4]`, head to thigh) whose character is
+  swapped as the arrows move. `mentorPreviews.ts` loads each model when its card first comes up (a ring and a percentage until then, "Try again" if
+  it fails), keeps them while the picker is open, and frees them all 1 s after it closes. They are **separate copies from the shared
+  character** (`sharedCharacter.ts`), so on the 3D route the current one is loaded twice (two canvases cannot share one scene graph); the
+  GPU memory (the girl's 8192² texture) is the cost, worth watching on phones. "Choose" calls `setCharacter`; the button says "Loading…"
+  while the shared character loads and the card closes when it is on show (at once on a screen with no shared character). A tap outside or Escape
+  closes it with the character unchanged. `public/images/mentors/{boy,girl,anime}.webp` (the old renders) are **no longer used**.
+  **`AnimatedCharacter`'s cleanup no longer calls `mixer.uncacheRoot`** (`CharacterScene.tsx`): in dev R3F wraps its tree in StrictMode when
+  Next does, so a newly mounted `AnimatedCharacter` ran its effects, the cleanup and its effects again on the same mixer, and `play()` after
+  `uncacheRoot` threw `Cannot set properties of undefined (setting '_cacheIndex')` (the picker's canvas showed it every time). `stopAllAction()`
+  alone still puts the bones back in the bind pose, and the mixer is garbage once the component is gone. Not understood: why the shared
+  canvas (`PortraitHost`), which mounts the same component, never hit it.
+  Checked in headless Chrome 390×844, dark, Girl, battery unlimited (2026-11-22): tap on the battery went to `/energy?from=…` on `/module/sequence-3d?step=2`
+  and on `/module/sequence?step=2`; the hold showed "Change character" and no Girl / Boy / Anime row and stayed on the screen; the picker opened
+  on Veena with the ring and a percentage, then the model; the arrows showed Zane (anime) and Rio (boy) as models, and back on Veena at once (kept);
+  "Choose Zane" stored `{"character":"anime"}`, closed the card and the screen's face became the anime. No console errors beyond the `THREE.Clock`
+  and Rive deprecation warnings. **Not checked:** the model's idle motion by eye (only stills), light mode, Escape and the outside tap, the failed-load
+  state, a slow connection, a real phone or touch, the picker on the Home/Level screens, the `/energy` return button back to a 3D step.
+  The dev server died during the checks (Turbopack panic, "memory allocation failed": the machine had ~100 MB of 7.5 GB free); if
+  `npm run dev` then answers 500 "Unexpected end of JSON input", delete `.next` and start again.
 - **Audio on the 3D route:** place 9 (shoes first) plays Hex's clips of the original screen (`SEQUENCE_AUDIO.socksFirst`: the title, then the
   line the bubble used to show). Hex has no clip for the other screens without one (1, 2, 4-7, 14-27 beyond 11-13): they need recording.
 - **Step 7 is the Figma `sequence_7` frame (a screenshot from the user), `look="tray"` with a list** (2026-11-21): the same screen as step 3,

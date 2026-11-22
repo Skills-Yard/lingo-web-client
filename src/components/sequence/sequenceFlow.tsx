@@ -1,10 +1,8 @@
 "use client";
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, type ReactNode } from "react";
 import { HexStandInProvider } from "@/components/level-two/HexStandIn";
-import { BatteryTapProvider } from "@/components/onboarding/batteryTap";
 import { CharacterAvatar } from "./CharacterAvatar";
-import { MentorPicker } from "./MentorPicker";
 import { SEQUENCE_STEPS, sequenceNext, sequencePrevious } from "./sequence";
 import { positionOfStep, SEQUENCE_3D_STEPS, sequence3dNext, sequence3dPrevious } from "./sequence3d";
 
@@ -35,22 +33,11 @@ const SequenceFlowContext = createContext<SequenceFlow>(ORIGINAL);
 
 export const useSequenceFlow = () => useContext(SequenceFlowContext);
 
-/**
- * The 3D route's screens: the 3D flow, the character's face where Hex stands, and the mentor
- * picker that a tap on the battery opens (instead of the Energy screen).
- */
+/** The 3D route's screens: the 3D flow, and the character's face where Hex stands. */
 export function Sequence3dFlow({ children }: { children: ReactNode }) {
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const openPicker = useCallback(() => setPickerOpen(true), []);
-  const closePicker = useCallback(() => setPickerOpen(false), []);
   return (
     <SequenceFlowContext.Provider value={THREE_D}>
-      <HexStandInProvider value={<CharacterAvatar />}>
-        <BatteryTapProvider value={openPicker}>
-          {children}
-          <MentorPicker open={pickerOpen} onClose={closePicker} />
-        </BatteryTapProvider>
-      </HexStandInProvider>
+      <HexStandInProvider value={<CharacterAvatar />}>{children}</HexStandInProvider>
     </SequenceFlowContext.Provider>
   );
 }
