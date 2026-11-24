@@ -23,6 +23,8 @@ import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } fro
 const PANEL_ROOM = 215;
 /** The result panel is this tall (px) for up to three lines of text, and taller for more. */
 const PANEL_H = 236;
+/** The gap (px) kept between a picture and the result panel once the answers under the picture have faded. */
+const PANEL_GAP = 10;
 /** `OPTION.rise` was made for a panel that tall and leaves the answers 13px clear of it on a 390x844 phone; they rise this much less (px), to stand 8px clear: no more than the panel needs. */
 const RISE_TRIM = 5;
 /** The least a picture is shrunk to fit its room. */
@@ -124,12 +126,18 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
     return () => observer.disconnect();
   }, []);
   const answersRise = OPTION.rise - RISE_TRIM + Math.max(0, panelHeight - PANEL_H);
-  const fit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
+  const liveFit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
 
   const stage = screen.stages[stageIndex];
   const lastStage = stageIndex === screen.stages.length - 1;
   const quiz = stage.kind === "quiz" ? stage : null;
   const interaction = stage.kind === "interaction" ? stage : null;
+  // A question's picture keeps the size it had until the check: Hex's line leaves then and the room grows, and a picture that grew with
+  // it jumped bigger the moment Continue was pressed (it looked stretched). It stays that size, and `bodyEnd` centres it.
+  const [heldFit, setHeldFit] = useState(liveFit);
+  const sizeHeld = !!quiz && checked;
+  if (!sizeHeld && heldFit !== liveFit) setHeldFit(liveFit);
+  const fit = sizeHeld ? heldFit : liveFit;
   const correct = !!quiz && selectedId === quiz.correctId;
   // Every question has the hint button.
   const hasHint = !!quiz;
@@ -235,16 +243,20 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
   // The answers are words only, in the shared option system (see `wordsOnly`).
   const choices = quiz ? wordsOnly(quiz.options) : [];
+  const cards = !!quiz?.threeCards;
   const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
   const questionLines = quiz?.question ? Math.ceil(quiz.question.length / QUESTION_CHARS) : 0;
   const questionHeight = questionLines ? questionLines * 22 + 14 : 0;
-  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(choices) + 10 + questionHeight + 8}px)` : aboveButtons(24);
+  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(choices, cards) + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
   // Answers that stand line by line (more than one) disappear once the answer is checked, right or wrong: they fade where they stand and do
   // not rise over the popup (cards, three or four across, rise and stay). The picture then keeps the room they had.
-  const rowsAway = !!quiz && choices.length > 1 && !acrossCards(choices);
+  const rowsAway = !!quiz && choices.length > 1 && !acrossCards(choices, cards);
   const answersGone = rowsAway && checked;
   const risen = quiz ? (rowsAway ? 0 : answersRise) : interaction?.finishPanel ? PANEL_ROOM : 0;
+  // Once those answers have faded nothing stands under the picture, so its room runs down to the result panel (not to where the answers
+  // were) and the picture sits in the middle of it, instead of high over an empty gap.
+  const bodyEnd = answersGone ? `${(panelHeight || PANEL_H) + PANEL_GAP}px` : bodyBottom;
 
   return (
     <LevelTwoShell
@@ -297,8 +309,8 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
       </ScreenTitle>
 
       <div
-        className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding] duration-500 ease-out"
-        style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: gone ? risen : 0 }}
+        className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding,bottom] duration-500 ease-out"
+        style={{ top: titleEnd, bottom: bodyEnd, paddingBottom: gone ? risen : 0 }}
       >
         {line && (
           <motion.div
@@ -339,12 +351,12 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
               animate={{ opacity: answersGone ? 0 : 1, y: checked && !answersGone ? -answersRise : 0 }}
               transition={checked ? PANEL_SPRING : ANSWERS_IN}
               className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
-              style={{ bottom: `calc(${answersBottom} + ${answersHeight(choices) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
+              style={{ bottom: `calc(${answersBottom} + ${answersHeight(choices, cards) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
             >
               {quiz.question}
             </motion.p>
           )}
-          {acrossCards(choices) ? (
+          {acrossCards(choices, cards) ? (
             <OptionGrid
               key={`cards-${stageIndex}`}
               options={choices}

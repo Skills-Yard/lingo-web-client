@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { fireScene } from "@/lib/rive/operatorsHost";
+import { fireScene, type OperatorSceneName, type SceneTexts } from "@/lib/rive/operatorsHost";
 import { OperatorScene } from "./OperatorScene";
 import type { InteractionApi } from "./screen";
 import { useTurn } from "./SituationsStage";
@@ -39,6 +39,24 @@ export function StudioJobs() {
 export function StudioJobsTurn({ api }: { api: InteractionApi }) {
   useTurn(api);
   return <StudioJobs />;
+}
+
+/**
+ * A stage that is only one of the Operators artboards in `mode`, as the file draws it (the modes used here are static, so nothing
+ * is tapped). Continue goes on once Hex has said his line (`useTurn`).
+ */
+export function SceneTurn({ api, scene, mode, texts, bleed }: { api: InteractionApi; scene: OperatorSceneName; mode: number; /** The artboard's words in place of the file's own (by place, see `SceneTexts`). */ texts?: SceneTexts; /** Extra room under the artboard (see `OperatorScene`). */ bleed?: number }) {
+  useTurn(api);
+  return <OperatorScene scene={scene} values={{ mode }} texts={texts} bleed={bleed} />;
+}
+
+/**
+ * A stage that is only the arithmetic artboard (see `OPERATOR_ARITH`) in `mode`: "What If Every Group Has the Same Quantity?"
+ * opens on mode 1 (4 rows of 5 chairs), and "Can Everyone Get the Same Number?" has mode 2 (20 chocolates shared by four children)
+ * between its questions.
+ */
+export function ArithmeticTurn({ api, mode }: { api: InteractionApi; mode: number }) {
+  return <SceneTurn api={api} scene="arithmetic" mode={mode} />;
 }
 
 /**

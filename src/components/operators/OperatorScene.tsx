@@ -36,7 +36,7 @@ function SceneSlot({ scene }: { scene: OperatorSceneName }) {
  * `values` is the data it shows (every other value is as the file has it), `texts` the words it has in place of the
  * file's own (by their place in the artboard).
  */
-export function OperatorScene({ scene, values, texts, width }: { scene: OperatorSceneName; values: SceneValues; texts?: SceneTexts; /** How wide it is drawn (a CSS length), in place of the stage's width: a stage with more under it draws it smaller. */ width?: string }) {
+export function OperatorScene({ scene, values, texts, width, bleed = 0 }: { scene: OperatorSceneName; values: SceneValues; texts?: SceneTexts; /** How wide it is drawn (a CSS length), in place of the stage's width: a stage with more under it draws it smaller. */ width?: string; /** Extra room (px of the artboard's own 390 width) under the artboard, for a scene that draws below its bottom edge. */ bleed?: number }) {
   const key = JSON.stringify(values);
   const textsKey = JSON.stringify(texts ?? {});
 
@@ -50,7 +50,7 @@ export function OperatorScene({ scene, values, texts, width }: { scene: Operator
       className="pointer-events-none relative shrink-0 dark:brightness-[0.75]"
       style={{
         width: width ?? `min(var(--stage-w, ${OPERATOR_SCENES.width}px), ${MAX_WIDTH}px)`,
-        aspectRatio: `${OPERATOR_SCENES.width} / ${OPERATOR_SCENES.height}`,
+        aspectRatio: `${OPERATOR_SCENES.width} / ${OPERATOR_SCENES.height + bleed}`,
         maskImage: FADE,
         WebkitMaskImage: FADE,
         maskComposite: "intersect",
