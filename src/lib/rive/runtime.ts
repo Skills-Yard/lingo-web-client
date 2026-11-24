@@ -328,6 +328,55 @@ export const OPERATOR_INTRO = {
 } as const;
 
 /**
+ * The Operators module's arithmetic scenes: "OP_A02_Arithmetic" of `sequence.riv` (390x306), played by `Arith_SM` and bound
+ * to the `OpArithScene` view model (read off the file 2026-11-24). Data: `mode`, `section`, `step`, `pick`, `highlight`,
+ * `groupSize`, `total`, `wallet` (numbers), `exprPow`, `lineDiv`, `lineFloor`, `lineMod`, `question`, `say` (strings), and the
+ * triggers `correct` / `wrong`. Its 64 text runs are the words of several sections (wallet, equal groups, sharing, the three
+ * division results, remainders, power); the equal groups' are runs 47-56.
+ *
+ * `mode` picks the picture (seen on the file 2026-11-24): 0 "Combining Values ( + - )" (a wallet), 1 "Build Equal Groups ( * )"
+ * (4 rows of 5 chairs), 2 "Sharing Equally ( / )" (20 chocolates, four children, "5 each", "20 / 4 = 5.0", "float"), 3 "Three
+ * Division Results (23 ÷ 4)", 4 "Remainder Challenges ( % )". Modes 1 and 2 are static: no other field, and neither trigger,
+ * changes anything there (probed in headless Chrome).
+ */
+export const OPERATOR_ARITH = {
+  artboard: "OP_A02_Arithmetic",
+  stateMachine: "Arith_SM",
+  mode: { wallet: 0, groups: 1, sharing: 2, results: 3, remainders: 4 },
+} as const;
+
+/**
+ * The Operators module's combining scenes: "OP_A03_Combining" of `sequence.riv` (390x306), played by `Combining_SM` (the artboard
+ * also has an unused "State Machine 1") and bound to the `OpCombiningScene` view model (read off the file 2026-11-24). Data:
+ * `mode`, `step`, `highlight`, `budget`, `total` (numbers), `say` (a string), and the triggers `correct` / `wrong`. 23 text runs,
+ * no names (see `SceneTexts`).
+ *
+ * `mode` picks the picture: 0 "Combine Operations: ( 2 * 150 ) + 50" (a wallet, a shopping bag, two books, "( 2 * 150 ) + 50 = ₹350"),
+ * 1 "Order of Operations: ( ) before *" (a calendar card with `( 2 + 3 ) * 4`, a calculator, and two step cards, "2 + 3 = 5" and
+ * "5 * 4 = 20", that the artboard itself cuts off at its bottom edge), 2 "Budget Check: total <= budget" (wallet ₹500, bag ₹350,
+ * "350 <= 500 -> True"), 3 "Operator Debugging: + vs *" (a store receipt, "BUG: 3 + 50 = 53", "FIX: 3 * 50 = 150"), 4 the empty room.
+ * Mode 1 is static: `step` (0-3), `highlight`, `total`, `budget`, `say` and both triggers change nothing (probed in headless Chrome
+ * 2026-11-24; the other modes were not probed for that).
+ */
+export const OPERATOR_COMBINING = {
+  artboard: "OP_A03_Combining",
+  stateMachine: "Combining_SM",
+  mode: { combine: 0, order: 1, budget: 2, debugging: 3, empty: 4 },
+  /**
+   * The artboard is 306 tall but draws 44 further down (its floor, and the bottom cards of mode 1 stand at 287-315, over its edge),
+   * to 350 (measured on mode 1's canvas, 2026-11-24: the last drawn row is 350). A canvas taller by this much (`OperatorScene`'s
+   * `bleed`) shows them whole; at 306 the artboard cut them in half and the scene's bottom fade washed out the rest.
+   */
+  bleed: 44,
+  /**
+   * Mode 1's words as text runs (see `SceneTexts`; they are `( 2 + 3 ) * 4`'s in the file): `expression` the calendar card, `heading`
+   * the green pill over it ("Order of Operations: ( ) before *"), `first` the left step card ("2 + 3 = 5", badge 1) and `second` the
+   * right one ("5 * 4 = 20", badge 2). A screen about another expression writes its own (checked 2026-11-24 with `2 + 3 * 4`).
+   */
+  text: { order: { expression: 15, heading: 16, first: 13, second: 11 } },
+} as const;
+
+/**
  * The Operators module's scenes, as `operatorsHost` draws them: artboards of `sequence.riv` (390x306 each). `shop` is
  * the Variable module's own "VAR_Shop" (see `VARIABLE_SCENES`), used on screen 3 with other words; see `OPERATOR_SHOP`.
  */
@@ -337,6 +386,8 @@ export const OPERATOR_SCENES = {
   height: OPERATOR_STUDIO.height,
   studio: { artboard: OPERATOR_STUDIO.artboard, stateMachine: OPERATOR_STUDIO.stateMachine },
   intro: { artboard: OPERATOR_INTRO.artboard, stateMachine: OPERATOR_INTRO.stateMachine },
+  arithmetic: { artboard: OPERATOR_ARITH.artboard, stateMachine: OPERATOR_ARITH.stateMachine },
+  combining: { artboard: OPERATOR_COMBINING.artboard, stateMachine: OPERATOR_COMBINING.stateMachine },
   shop: { artboard: VARIABLE_SCENES.shop.artboard, stateMachine: VARIABLE_SCENES.shop.stateMachine },
 } as const;
 

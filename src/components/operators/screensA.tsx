@@ -3,16 +3,16 @@
 import { useEffect } from "react";
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
 import { FlipCarouselStage } from "./FlipCarousel";
-import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "./interactions";
-import { OperatorTurnStage, type OperatorItem } from "./OperatorCardsStage";
+import { ExpressionStage, SymbolStage } from "./interactions";
+import type { OperatorItem } from "./OperatorCardsStage";
 import { fireScene, type SceneTexts } from "@/lib/rive/operatorsHost";
-import { OPERATOR_INTRO, OPERATOR_SHOP, OPERATOR_STUDIO } from "@/lib/rive/runtime";
+import { OPERATOR_ARITH, OPERATOR_INTRO, OPERATOR_SHOP, OPERATOR_STUDIO } from "@/lib/rive/runtime";
 import { OperatorScene } from "./OperatorScene";
 import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { InteractionStage, ScreenDef } from "./screen";
-import { StudioJobs, StudioJobsTurn, StudioTurnStage, StudioVisual, type StudioCard } from "./StudioStage";
-import { ExprBig, GroupsPicture, PlantGrid, ShareScene, ValueCards } from "./visuals";
+import { ArithmeticTurn, StudioJobs, StudioJobsTurn, StudioTurnStage, StudioVisual, type StudioCard } from "./StudioStage";
+import { GroupsPicture, PlantGrid, ShareScene, ValueCards } from "./visuals";
 
 /** Which key of the studio each answer of "Explore the situations!" lifts, by the answer's place (Adding, Subtracting, Dividing, Comparing). Comparing has no key: the studio's keys are the four that calculate. */
 const ANSWER_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.divide, OPERATOR_STUDIO.pick.none] as const;
@@ -147,37 +147,22 @@ const jobTurn = (focus: number): InteractionStage => ({
   render: (api) => <StudioJobsTurn api={api} />,
 });
 
-/** The three answers of "Same Numbers, Three Answers!" (23 chocolates in groups of 4), in the order they are introduced. */
-const DIVISIONS: readonly OperatorItem[] = [
-  { id: "div", symbol: "/", name: "Division", title: "Ordinary division, with decimals", example: "23 / 4 = 5.75", tint: "blue" },
-  { id: "floor", symbol: "//", name: "Floor division", title: "Floor division: complete groups", example: "23 // 4 = 5", tint: "mint" },
-  { id: "mod", symbol: "%", name: "Modulus", title: "Modulus: the remainder", example: "23 % 4 = 3", tint: "cream" },
-];
-
-/** What Hex says as each of them comes. */
+/** What Hex says as each of the three answers of "Same Numbers, Three Answers!" (23 chocolates in groups of 4) comes: /, //, %. */
 const DIVISION_LINES: readonly string[] = [
   "23 chocolates, 4 in each group. First, /: ordinary division, with decimals.",
   "Next, //: floor division. It counts the complete groups.",
   "Last, %: modulus. It gives what is left over.",
 ];
 
-/** The part of the chocolates each one is about: all of them, the complete groups, what is left over. */
-const DIVISION_PART = ["all", "groups", "left"] as const;
-
-/** The turn of one of them: its card is picked out while Hex introduces it (and the chocolates it is about), and Continue goes on to the next. */
+/**
+ * The turn of one of them: the arithmetic artboard in mode 3 ("Three Division Results", all three answers and the rule), the same
+ * picture on every turn and on the question (it is static, nothing in it can be picked out), while Hex introduces the answer.
+ * Continue goes on to the next once he has said his line.
+ */
 const divisionTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: DIVISION_LINES[focus],
-  render: (api) => (
-    <OperatorTurnStage
-      api={api}
-      operators={DIVISIONS}
-      focus={focus}
-      columns={3}
-      // Before its card is picked out the chocolates still show the turn before, so the change reads as a fade.
-      header={(lit) => <GroupsPicture total={23} size={4} emphasis={DIVISION_PART[lit ? focus : Math.max(0, focus - 1)]} still={focus > 0} />}
-    />
-  ),
+  render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.results} />,
 });
 
 /** Screens 1-14 (phases 1 to 3: everyday actions, meeting operators, arithmetic). */
@@ -422,14 +407,13 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "4 rows, 5 chairs in each row. Tap a row to place its chairs.",
-        render: (api) => <FillRowsStage api={api} rows={4} per={5} />,
-        finishPanel: { title: "All set!", text: "Every row has 5 chairs. Now let's count them all." },
+        line: "4 rows, 5 chairs in each row. Now let's count them all.",
+        render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.groups} />,
       },
       quiz({
-        line: "Count the chairs in each row, then all of them.",
+        line: "Count the chairs in each row, then add all of them.",
         question: "How many chairs altogether?",
-        visual: () => <ExprBig tokens={["5", "+", "5", "+", "5", "+", "5"]} size={28} />,
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.groups }} />,
         options: options([
           ["9", P.chair],
           ["20", P.chair],
@@ -443,7 +427,10 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "There is a shortcut for adding equal groups.",
         question: "Which means 4 groups of 5?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.groups }} />,
         options: neutral(["4 * 5", "4 + 5", "4 - 5"]),
+        // One row of mini cards (not three rows), so the picture over them is not shrunk to the least.
+        threeCards: true,
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "4 * 5 = 20. Multiplication is a shortcut for adding equal groups.",
@@ -459,7 +446,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "20 chocolates, 4 students. How many does each one get?",
-        visual: () => <ShareScene pile={20} trays={[0, 0, 0, 0]} />,
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.sharing }} />,
         options: options([
           ["4", P.chocolate],
           ["5", P.chocolate],
@@ -472,12 +459,12 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       {
         kind: "interaction",
-        line: "Share them out, one to each student at a time.",
-        render: (api) => <ShareStage api={api} total={20} students={4} />,
-        finishPanel: { title: "5 each!", text: "20 / 4 = 5.0. Division shares a quantity equally." },
+        line: "Shared equally, each student gets 5. Division shares a quantity equally.",
+        render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.sharing} />,
       },
       quiz({
         line: "In Python, / gives a Float. What does 20 / 4 give?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.sharing }} />,
         options: neutral(["5", "5.0", "4.0"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -494,14 +481,15 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "23 chocolates, 4 students. Share one round at a time.",
-        render: (api) => <ShareStage api={api} total={23} students={4} />,
-        finishPanel: { title: "Each has 5!", text: "3 chocolates are left. They can't make another full round." },
+        line: "23 chocolates, 4 students. Each gets 5, and 3 are left over.",
+        render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.results} />,
       },
       quiz({
         line: "How many does each student get, and how many are left?",
-        visual: () => <ShareScene pile={3} trays={[5, 5, 5, 5]} />,
-        options: neutral(["5 each, 3 left.", "6 each, 0 left.", "5 each, 0 left."]),
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.results }} />,
+        // Non-breaking spaces inside each half, so a card's two lines break after the comma ("5 each," / "3 left.").
+        options: neutral(["5 each, 3 left.", "6 each, 0 left.", "5 each, 0 left."]),
+        threeCards: true,
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "5 each, and 3 are left over.",
@@ -509,7 +497,9 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "Three results: 5.75, 5 and 3. Which expression gives the 3 left over?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.results }} />,
         options: neutral(["23 / 4", "23 // 4", "23 % 4"]),
+        threeCards: true,
         correctId: at(2),
         rightTitle: "Exactly!",
         right: "23 % 4 = 3. 23 / 4 = 5.75 and 23 // 4 = 5 answer other questions.",
@@ -528,6 +518,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       divisionTurn(2),
       quiz({
         line: "What does 23 // 4 = 5 tell us?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.results }} />,
         options: neutral(["5 complete groups of 4.", "5 chocolates are left over.", "The decimal answer, 5.75."]),
         correctId: at(0),
         rightTitle: "Exactly!",

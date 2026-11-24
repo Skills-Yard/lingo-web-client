@@ -44,14 +44,17 @@ const columnsFor = (count: number) => (count === 3 || count === 6 ? 3 : 2);
  */
 const padXFor = (count: number) => (count === 3 || count === 6 ? 8 : OPTION.padX);
 
-/** Whether the answers are cards across (three of at most `MAX_OPTION_WORDS` words, or four short ones two by two, or six short ones three by two) rather than rows. */
-export const acrossCards = (options: readonly Option[]) =>
-  (options.length === 3 && options.every((option) => wordCount(option.text) <= MAX_OPTION_WORDS)) ||
+/**
+ * Whether the answers are cards across (three of at most `MAX_OPTION_WORDS` words, or four short ones two by two, or six short ones three by two) rather than rows.
+ * `three` makes any three answers cards (a screen that has checked they are short enough, as `4 * 5` is: three "words" but about 50px wide).
+ */
+export const acrossCards = (options: readonly Option[], three = false) =>
+  (options.length === 3 && (three || options.every((option) => wordCount(option.text) <= MAX_OPTION_WORDS))) ||
   ((options.length === 4 || options.length === 6) && options.every((option) => option.text.length <= CARD_ANSWER_CHARS));
 
 /** The height the answers take (px). */
-export const answersHeight = (options: readonly Option[]) => {
-  if (!acrossCards(options)) return options.length * OPTION.height + (options.length - 1) * OPTION.gap;
+export const answersHeight = (options: readonly Option[], three = false) => {
+  if (!acrossCards(options, three)) return options.length * OPTION.height + (options.length - 1) * OPTION.gap;
   const rows = Math.ceil(options.length / columnsFor(options.length));
   return rows * OPTION.height + (rows - 1) * OPTION.gap;
 };

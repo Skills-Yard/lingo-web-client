@@ -3,15 +3,42 @@
 import { MultiPickStage } from "@/components/datatypes/interactions";
 import { at, neutral, options, quiz, yesNo } from "./helpers";
 import { ExpressionStage, StepStage, SymbolStage, sumOfProducts } from "./interactions";
+import type { SceneTexts } from "@/lib/rive/operatorsHost";
+import { OPERATOR_COMBINING } from "@/lib/rive/runtime";
 import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { ScreenDef } from "./screen";
-import { CompareDemo, ExprBig, GateCard, LineScale, SideBySide, ValueCards, Versus } from "./visuals";
+import { OperatorScene } from "./OperatorScene";
+import { SceneTurn } from "./StudioStage";
+import { CompareDemo, ExprBig, GateCard, LineScale, ValueCards, Versus } from "./visuals";
 
 /** The three marks 99, 100 and 101 (or 145, 150, 155) with the gate stood at the middle one. */
 const gateLine = (marks: readonly number[], limit: string, picked: number | null) => (
   <LineScale marks={marks} picked={picked === null ? [] : [picked]} gate={marks[1]} gateLabel={limit} />
 );
+
+/**
+ * Screen 16.2's picture: the order artboard (see `OPERATOR_COMBINING`) draws `( 2 + 3 ) * 4`, which is 16.3's expression, so for
+ * 16.2's `2 + 3 * 4` its calendar card, its two step cards and its heading are written over with this expression's own.
+ */
+const MULTIPLY_FIRST: SceneTexts = {
+  [OPERATOR_COMBINING.text.order.expression]: "2 + 3 * 4",
+  [OPERATOR_COMBINING.text.order.heading]: "Order of Operations: * before +",
+  [OPERATOR_COMBINING.text.order.first]: "3 * 4 = 12",
+  [OPERATOR_COMBINING.text.order.second]: "2 + 12 = 14",
+};
+
+/**
+ * Screen 16.1's picture: both expressions of the question side by side (what `SideBySide` drew), written onto the order artboard,
+ * which has room for one: the green pill over it holds the two ("2 + 3 * 4  vs  ( 2 + 3 ) * 4"), the calendar card asks "Same result?",
+ * and the two step cards (badge 1 and 2) carry one expression each, with "= ?" since the result is what is asked.
+ */
+const COMPARE_BOTH: SceneTexts = {
+  [OPERATOR_COMBINING.text.order.heading]: "2 + 3 * 4  vs  ( 2 + 3 ) * 4",
+  [OPERATOR_COMBINING.text.order.expression]: "Same result?",
+  [OPERATOR_COMBINING.text.order.first]: "2 + 3 * 4 = ?",
+  [OPERATOR_COMBINING.text.order.second]: "( 2 + 3 ) * 4 = ?",
+};
 
 /** Screens 15-28 (phases 4 to 6: combining operators, then comparison). */
 export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
@@ -60,7 +87,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Do both expressions give the same result?",
-        visual: () => <SideBySide left={["2", "+", "3", "*", "4"]} right={["(", "2", "+", "3", ")", "*", "4"]} />,
+        visual: () => <OperatorScene scene="combining" values={{ mode: OPERATOR_COMBINING.mode.order }} texts={COMPARE_BOTH} bleed={OPERATOR_COMBINING.bleed} />,
         options: yesNo(),
         correctId: at(1),
         rightTitle: "No!",
@@ -69,34 +96,14 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
       }),
       {
         kind: "interaction",
-        line: "Watch how 2 + 3 * 4 is worked out.",
-        render: (api) => (
-          <StepStage
-            api={api}
-            tokens={["2", "+", "3", "*", "4"]}
-            steps={[
-              { lit: [2, 3, 4], text: "First, 3 * 4 is picked out." },
-              { lit: [2, 3, 4], text: "3 * 4 = 12." },
-              { lit: [0, 1], text: "Then add 2: 2 + 12.", result: "14" },
-            ]}
-          />
-        ),
+        line: "Watch how 2 + 3 * 4 is worked out: 3 * 4 = 12 first, then 2 + 12 = 14.",
+        render: (api) => <SceneTurn api={api} scene="combining" mode={OPERATOR_COMBINING.mode.order} texts={MULTIPLY_FIRST} bleed={OPERATOR_COMBINING.bleed} />,
       },
       {
         kind: "interaction",
-        line: "Now (2 + 3) * 4.",
-        render: (api) => (
-          <StepStage
-            api={api}
-            tokens={["(", "2", "+", "3", ")", "*", "4"]}
-            steps={[
-              { lit: [0, 1, 2, 3, 4], text: "First, the part inside the parentheses." },
-              { lit: [1, 2, 3], text: "2 + 3 = 5." },
-              { lit: [5, 6], text: "Then multiply 5 by 4.", result: "20" },
-            ]}
-          />
-        ),
-        finishPanel: { title: "14 and 20!", text: "Parentheses group values. They can change what is calculated first, and so the result." },
+        line: "Now (2 + 3) * 4. Parentheses go first, so the answer is 20, not 14.",
+        // The order artboard (mode 1) draws exactly this expression and its two steps, so it replaces the stepping.
+        render: (api) => <SceneTurn api={api} scene="combining" mode={OPERATOR_COMBINING.mode.order} bleed={OPERATOR_COMBINING.bleed} />,
       },
     ],
   },
