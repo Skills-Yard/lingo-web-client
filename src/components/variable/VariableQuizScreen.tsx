@@ -10,7 +10,11 @@ import { LOOKS, optionState } from "@/components/level-one/TeacherFlow";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { RightBounce } from "@/components/level-two/RightBounce";
-import { aboveButtons, LevelTwoShell, ScreenTitle } from "@/components/level-two/LevelTwoShell";
+import { aboveButtons, LevelTwoShell, ScreenTitle, stageTop } from "@/components/level-two/LevelTwoShell";
+import { TileCards } from "@/components/level-two/TileCards";
+import { AnswerTray, TRAY_CARD_GAP, TRAY_CHARACTER, TRAY_TRIO } from "@/components/sequence/AnswerTray";
+import { CharacterOnStage, Column } from "@/components/sequence/CharacterStage";
+import { PatternBackdrop } from "@/components/sequence/PatternBackdrop";
 import { BELOW_TITLE, BottleBackdrop, BottleWalletBackdrop, ClassroomBackdrop, GAP_BELOW_SCENE, HEX_LIFT, ItemsBackdrop, MiniAppBackdrop, NamesBackdrop, SCENE_BOTTOM_LIFTED_PHONE, ShopBackdrop, TrekBackdrop, VarCardBackdrop, WalletBackdrop } from "./scenes";
 import { COLUMN_LEFT, type Choice } from "@/components/level-two/levelTwo";
 import { playClickSound } from "@/components/onboarding/clickSound";
@@ -23,7 +27,7 @@ import { fireSceneTrigger } from "@/lib/rive/variableHost";
 import { TipCard } from "@/components/sequence/HexScreen";
 import { answersMove, answersTop, standingOn } from "./answersPlace";
 import { useBubbleSize } from "./bubbleWidth";
-import { IDLE_LOOK, MAX_OPTION_WORDS, OPTION, parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
+import { IDLE_LINE, IDLE_LOOK, MAX_OPTION_WORDS, OPTION, parseTitle, type InteractionStage, type Option, type QuizStage, type ScreenDef } from "./quiz";
 import { DRINK_HINT_STEPS, sceneOf, STEP, variableNext, variablePrevious, VARIABLE_STEPS, type SceneKind } from "./variable";
 import { noteAnswer, noteStruggle } from "./variableScore";
 
@@ -46,6 +50,12 @@ const PICTURE_BACK = { duration: 0.4, ease: [0.22, 1, 0.36, 1] } as const;
 const BUBBLE_MAX_CHARS = 120;
 /** The title block (px): where it ends, one line or two. */
 const TITLE_END = { one: BELOW_TITLE, two: 163 } as const;
+/**
+ * The tray look (`QuizStage.look`): how far the three cards rise once the result panel is up, so they end about 12px over
+ * it (the panel starts at y 600 on a phone), and a stage that never changes for the character (nothing is said aloud).
+ */
+const TRAY_RISE = 154;
+const noStage = () => {};
 
 /** The scene behind a screen (see `sceneOf`); the trail says whether the river is gone. `lifted`: a right answer has sent Hex and his bubble away, and the scene rises into their room. */
 const backdropFor = (scene: SceneKind, step: number, lifted: boolean) => {
@@ -169,7 +179,7 @@ function ObjectGrid({
               // The side padding makes up the border's width (a 1px line + the rest at rest, a 4px border + the rest picked: `OPTION.padX` either way), so a card is as wide picked as at rest and nothing around it moves.
               style={{ height: pictures ? OPTION.pictureHeight : OPTION.height, borderRadius: OPTION.radius, paddingInline: state === "idle" ? OPTION.padX - 1 : OPTION.padX - 4 }}
               className={`relative isolate flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 overflow-visible ${RAISED} ${LOOKS[state].edge} ${
-                state === "idle" ? `border ${IDLE_LOOK}` : `border-4 ${LOOKS[state].card}`
+                state === "idle" ? `border ${option.tint ? `${IDLE_LINE} ${option.tint}` : IDLE_LOOK}` : `border-4 ${LOOKS[state].card}`
               }`}
             >
               {pictures && (
@@ -373,7 +383,9 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
   const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
   const bodyBottom = cardsTop ? standingOn(cardsTop) : quiz ? `calc(${answersBottom} + ${answersHeight(quiz!) + 18}px)` : aboveButtons(24);
 
-  const choices: readonly Choice[] = quiz ? quiz.options.map((option, index) => ({ id: option.id, text: option.text, icon: option.icon ?? "", badge: LETTERS[index] })) : [];
+  const choices: readonly Choice[] = quiz ? quiz.options.map((option, index) => ({ id: option.id, text: option.text, icon: option.icon ?? "", tint: option.tint, badge: LETTERS[index] })) : [];
+  // The 3D design's look: the character close up over a pattern, the three answers on a grey tray; the title is the question.
+  const tray = quiz?.look === "tray";
   const longLine = !!quiz && quiz.line.length > BUBBLE_MAX_CHARS;
   const celebrate = checked && right;
 
@@ -382,7 +394,7 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
       step={screen.step}
       total={VARIABLE_STEPS}
       onBack={() => router.push(variablePrevious(screen.step))}
-      scene={backdropFor(sceneKind, screen.step, sceneLifted)}
+      scene={tray ? <PatternBackdrop /> : backdropFor(sceneKind, screen.step, sceneLifted)}
       answer={answer}
       ctaDisabled={quiz ? selectedId === null : !finished}
       ctaLabel={
@@ -414,6 +426,23 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
         </div>
       }
     >
+      {/* The tray look: the character close up, behind everything (nothing is said aloud on this module, so it only stands). */}
+      {quiz && tray && (
+        <Column>
+          <CharacterOnStage
+            line={[{ text: quiz.line }]}
+            silenced
+            onStage={noStage}
+            centered
+            withHint={hasHint}
+            framing="bust"
+            top={stageTop(TRAY_CHARACTER.top)}
+            height={TRAY_CHARACTER.height}
+            fade={TRAY_CHARACTER.fade}
+          />
+        </Column>
+      )}
+
       <ScreenTitle key={screen.step} oneLine={!title.twoLines}>
         <span style={{ fontSize: title.size }}>
           {title.parts.map((part, index) =>
@@ -428,7 +457,28 @@ export function VariableQuizScreen({ screen }: { screen: ScreenDef }) {
         </span>
       </ScreenTitle>
 
-      {quiz ? (
+      {quiz && tray ? (
+        <>
+          {/* The grey tray runs edge to edge behind the cards and goes once the result panel takes its place; the cards rise clear of the panel and the right one bounces. */}
+          <AnswerTray shown gone={checked} stand={TRAY_TRIO} withHint={hasHint} />
+          <TileCards
+            layout="trio"
+            choices={choices}
+            correctId={shownCorrectId}
+            selectedId={selectedId}
+            checked={checked}
+            fadeOut={false}
+            pointedId={answerHint.pointedId}
+            withHint={hasHint}
+            bottomGap={TRAY_CARD_GAP}
+            rise={TRAY_RISE}
+            bounceRight
+            onPick={pick}
+          />
+          {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}
+          {answerHint.hand}
+        </>
+      ) : quiz ? (
         <>
           <div
             className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding] duration-500 ease-out"

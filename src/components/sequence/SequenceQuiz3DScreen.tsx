@@ -23,6 +23,7 @@ import {
   AnswerTray,
   OPTION_GAP,
   TRAY_CARD_GAP,
+  TRAY_CHARACTER,
   TRAY_LIST,
   TRAY_LIST_WIDTH,
   TRAY_PAIR,
@@ -63,15 +64,6 @@ const CARDS_CLEAR_MS = 700;
 const LIST_RISE = 150;
 /** With nothing above them, the answers rise further, well clear of the panel. */
 const LIST_RISE_OPEN = 210;
-/**
- * The tray look's character: head and chest close up (see `PortraitFraming`), its box from
- * Figma `top` 60 for this tall, which puts the head's top at about 198 (the title ends at 154);
- * it carries on behind the tray, which is see-through at its top edge (as in the design), and
- * only fades out (percent of its height) low down, under the answers, so it does not depend on
- * where the tray's top is on a given screen's height.
- */
-const TRAY_CHARACTER = { top: 60, height: 690, fade: [84, 96] } as const;
-
 type RoomScene = Extract<SequenceQuiz["scene"], { room: unknown }>["room"];
 
 /** What the boy has on: the start until checked, then the right or wrong result (a cleared room's right result waits for the cards to go). */

@@ -6,6 +6,18 @@ import type { ReactNode } from "react";
  * white left only that edge). Picking it swaps this for the 4px green or red look (see `LOOKS`).
  */
 export const IDLE_LOOK = "border-[#DCE2E9] bg-white drop-shadow-[0_1px_2px_rgba(31,42,68,0.07)] dark:border-white/10 dark:bg-[#15181E]";
+/** `IDLE_LOOK` without its white face: the line and the faint shade, for a card that has a light colour of its own (see `CARD_TINTS`). */
+export const IDLE_LINE = "border-[#DCE2E9] drop-shadow-[0_1px_2px_rgba(31,42,68,0.07)] dark:border-white/10";
+/** The light shades a card can have at rest (screen 2's three cards have these): green, orange and blue, light and dark. */
+export const CARD_TINTS = {
+  green: "bg-[#EAF6F1] dark:bg-[#12261F]",
+  orange: "bg-[#FFF1DE] dark:bg-[#2E2314]",
+  blue: "bg-[#E6EEFC] dark:bg-[#161E31]",
+  /** The three cards of the 3D design's tray (Figma "Frame 240": #F6F4FE, #FFF9F0, #FFF4F6). */
+  lavender: "bg-[#F6F4FE] dark:bg-[#2E2A5C]",
+  cream: "bg-[#FFF9F0] dark:bg-[#2E2314]",
+  pink: "bg-[#FFF4F6] dark:bg-[#31161B]",
+} as const;
 
 /**
  * The size and the spacing of every option in the Variable module, the same on every screen: the answers (rows or
@@ -55,7 +67,16 @@ export const OPTION = {
 export const MAX_OPTION_WORDS = 2;
 
 /** An answer: words, with a small picture (an emoji, or `node`) where the answer is an object to tap. */
-export type Option = { id: string; text: string; emoji?: string; node?: ReactNode; /** A picture file shown beside an answer in words. */ icon?: string };
+export type Option = {
+  id: string;
+  text: string;
+  emoji?: string;
+  node?: ReactNode;
+  /** A picture file shown beside an answer in words. */
+  icon?: string;
+  /** A light shade for the card at rest (one of `CARD_TINTS`) in place of white; picked, it takes the module's picked, right or wrong look as every answer does. */
+  tint?: string;
+};
 
 /** What a stage's picture can draw from. */
 export type VisualContext = {
@@ -75,6 +96,12 @@ export type QuizStage = {
   visual?: (context: VisualContext) => ReactNode;
   /** `rows`: answers in words; `grid`: objects to tap (two across). */
   layout?: "rows" | "grid";
+  /**
+   * `tray`: the 3D design's look for three answers (Figma "Frame 416" / "Frame 240"): no scene, no Hex bubble; the character
+   * close up behind, over a pattern background, and the three cards (an icon over a two-line word) on a grey tray at the
+   * bottom. The title is the question; `line` is not shown (the design has no bubble).
+   */
+  look?: "tray";
   options: readonly Option[];
   correctId: string;
   /** Other picks that are fine too: they are acknowledged and the learner goes on, without a retry. */
