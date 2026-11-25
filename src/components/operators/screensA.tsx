@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
 import { FlipCarouselStage } from "./FlipCarousel";
-import { ExpressionStage, SymbolStage } from "./interactions";
+import { ExpressionStage } from "./interactions";
 import type { OperatorItem } from "./OperatorCardsStage";
 import { fireScene, type SceneTexts } from "@/lib/rive/operatorsHost";
 import { OPERATOR_ARITH, OPERATOR_INTRO, OPERATOR_SHOP, OPERATOR_STUDIO } from "@/lib/rive/runtime";
@@ -12,7 +12,7 @@ import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { InteractionStage, ScreenDef } from "./screen";
 import { ArithmeticTurn, StudioJobs, StudioJobsTurn, StudioTurnStage, StudioVisual, type StudioCard } from "./StudioStage";
-import { GroupsPicture, PlantGrid, ShareScene, ValueCards } from "./visuals";
+import { GroupsPicture, ShareScene, ValueCards } from "./visuals";
 
 /** Which key of the studio each answer of "Explore the situations!" lifts, by the answer's place (Adding, Subtracting, Dividing, Comparing). Comparing has no key: the studio's keys are the four that calculate. */
 const ANSWER_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.divide, OPERATOR_STUDIO.pick.none] as const;
@@ -600,8 +600,10 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "12 chocolates. Each group needs 4.",
         question: "12 // 4 = ? and 12 % 4 = ?",
-        visual: ({ attempt }) => <GroupsPicture replay={attempt} total={12} size={4} />,
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.sharing }} />,
         options: neutral(["3 and 4", "2 and 4", "3 and 0"]),
+        // One row of mini cards, so the picture over them keeps its size.
+        threeCards: true,
         correctId: at(2),
         rightTitle: "Exactly!",
         right: "3 groups, nothing left. The remainder is always smaller than the divisor.",
@@ -618,7 +620,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "A square garden: 4 rows and 4 columns of plants.",
         question: "How many plants are there?",
-        visual: ({ attempt }) => <PlantGrid replay={attempt} />,
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.power }} />,
         options: neutral(["8", "16", "12"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -627,27 +629,12 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       {
         kind: "interaction",
-        line: "** raises a number to a power. Tap the examples.",
-        render: (api) => (
-          <SymbolStage
-            api={api}
-            big={false}
-            groups={[
-              {
-                columns: 3,
-                items: [
-                  { id: "a", symbol: "2 ** 3", title: "2 * 2 * 2", example: "2 ** 3 = 8" },
-                  { id: "b", symbol: "3 ** 2", title: "3 * 3", example: "3 ** 2 = 9" },
-                  { id: "c", symbol: "5 ** 2", title: "5 * 5", example: "5 ** 2 = 25" },
-                ],
-              },
-            ]}
-          />
-        ),
-        finishPanel: { title: "Exponentiation!", text: "** is a compact way to multiply a number by itself." },
+        line: "** raises a number to a power, like 2 ** 3 = 8.",
+        render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.power} />,
       },
       quiz({
         line: "What is 4 ** 2?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.power }} />,
         options: neutral(["8", "16", "6"]),
         correctId: at(1),
         rightTitle: "Exactly!",
