@@ -20,6 +20,18 @@ export type TrayStand = { height: number; lip: number };
 /** Two 166 x 187 cards side by side (Figma `sequence_3`), with about 37 of tray above them (measured from the design's frame; the CSS's own 2 puts them against the tray's edge). */
 export const TRAY_PAIR: TrayStand = { height: 187, lip: 37 };
 
+/** Three 112 x 119 cards side by side, 8 apart (Figma "Frame 240"), with the same 37 of tray above them as the pair. */
+export const TRAY_TRIO: TrayStand = { height: 119, lip: 37 };
+
+/**
+ * The tray look's character: head and chest close up (see `PortraitFraming`), its box from
+ * Figma `top` 60 for this tall, which puts the head's top at about 198 (the title ends at 154);
+ * it carries on behind the tray, which is see-through at its top edge (as in the design), and
+ * only fades out (percent of its height) low down, under the answers, so it does not depend on
+ * where the tray's top is on a given screen's height.
+ */
+export const TRAY_CHARACTER = { top: 60, height: 690, fade: [84, 96] } as const;
+
 /** Three rows 76 tall (Figma `sequence_7`: 358 wide, 16 in from each side), the tray 40 over the first. They are `OPTION_GAP` apart: the design's 6 looked too close (asked for 2026-11-22). */
 export const TRAY_LIST_ROW = 76;
 export const TRAY_LIST_WIDTH = 358;

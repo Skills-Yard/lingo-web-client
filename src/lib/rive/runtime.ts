@@ -336,13 +336,16 @@ export const OPERATOR_INTRO = {
  *
  * `mode` picks the picture (seen on the file 2026-11-24): 0 "Combining Values ( + - )" (a wallet), 1 "Build Equal Groups ( * )"
  * (4 rows of 5 chairs), 2 "Sharing Equally ( / )" (20 chocolates, four children, "5 each", "20 / 4 = 5.0", "float"), 3 "Three
- * Division Results (23 ÷ 4)", 4 "Remainder Challenges ( % )". Modes 1 and 2 are static: no other field, and neither trigger,
- * changes anything there (probed in headless Chrome).
+ * Division Results (23 ÷ 4)", 4 "Remainder Challenges ( % )", 5 "Growing Bigger, Faster! ( ** )" (a 4 x 4 plant bed, "4 x 4 = 16
+ * Plants", a Power / Exponent card with "4 ** 2 = 16", "4 multiplied by itself 2 times" and the examples "2 ** 3 = 8", "3 ** 2 = 9",
+ * "5 ** 2 = 25"; 6 and up are the empty room). Modes 1, 2 and 5 are static: no other field, and neither trigger, changes anything
+ * there (probed in headless Chrome; mode 5's triggers were not fired, its fields were: `exprPow`, `step`, `section`, `highlight`,
+ * `pick`, `total`, `groupSize` and the strings changed nothing).
  */
 export const OPERATOR_ARITH = {
   artboard: "OP_A02_Arithmetic",
   stateMachine: "Arith_SM",
-  mode: { wallet: 0, groups: 1, sharing: 2, results: 3, remainders: 4 },
+  mode: { wallet: 0, groups: 1, sharing: 2, results: 3, remainders: 4, power: 5 },
 } as const;
 
 /**

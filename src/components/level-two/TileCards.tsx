@@ -32,10 +32,12 @@ const LAYOUT = {
   badges: { card: "h-[119px]", picture: "h-10 w-10", text: "text-[14px] leading-[120%]", box: "flex items-stretch gap-[11px]", inner: "gap-1.5" },
   /** Two 166 x 187 cards, 19 apart, their art (at most 83 x 56) in a 90 x 90 box: the 3D questions' tray look. */
   tray: { card: "h-[187px]", picture: "h-[90px] w-[90px]", text: "text-[16px] leading-none", box: "flex items-stretch gap-[19px]", inner: "gap-3.5", art: "h-[56px] w-[83px] object-contain" },
+  /** Three 112 x 119 cards, 8 apart, a 52px icon over a two-line word (Figma "Frame 240": Poppins 600 16px, line 120%): the 3D questions' tray look with three answers. */
+  trio: { card: "h-[119px]", picture: "h-[52px] w-[52px]", text: "max-w-[72px] text-[16px] leading-[120%]", box: "flex items-stretch gap-2", inner: "gap-1.5", art: "h-full w-full object-contain" },
 } as const;
 
 /** The layouts that are wider than the usual column (px): they stand centred. */
-const WIDTH: Partial<Record<keyof typeof LAYOUT, number>> = { big: 355, badges: 358, tray: 351 };
+const WIDTH: Partial<Record<keyof typeof LAYOUT, number>> = { big: 355, badges: 358, tray: 351, trio: 352 };
 
 type TileCardsProps = {
   layout: keyof typeof LAYOUT;
