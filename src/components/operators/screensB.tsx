@@ -4,12 +4,12 @@ import { MultiPickStage } from "@/components/datatypes/interactions";
 import { at, neutral, options, quiz, yesNo } from "./helpers";
 import { ExpressionStage, StepStage, SymbolStage, sumOfProducts } from "./interactions";
 import type { SceneTexts } from "@/lib/rive/operatorsHost";
-import { OPERATOR_COMBINING } from "@/lib/rive/runtime";
+import { OPERATOR_COMBINING, OPERATOR_STUDIO } from "@/lib/rive/runtime";
 import { STEP } from "./operators";
 import { P } from "./pictures";
-import type { ScreenDef } from "./screen";
+import type { QuizStage, ScreenDef } from "./screen";
 import { OperatorScene } from "./OperatorScene";
-import { SceneTurn } from "./StudioStage";
+import { SceneTurn, StudioVisual, type StudioCard } from "./StudioStage";
 import { CompareDemo, ExprBig, GateCard, LineScale, ValueCards, Versus } from "./visuals";
 
 /** The three marks 99, 100 and 101 (or 145, 150, 155) with the gate stood at the middle one. */
@@ -39,6 +39,23 @@ const COMPARE_BOTH: SceneTexts = {
   [OPERATOR_COMBINING.text.order.first]: "2 + 3 * 4 = ?",
   [OPERATOR_COMBINING.text.order.second]: "( 2 + 3 ) * 4 = ?",
 };
+
+/**
+ * A question of "Understand the Situation!" (screen 18): the studio (mode 0: the four calculating keys beside its card) stands over the
+ * three answers, its card naming the situation and its numbers, never the operator. Picking an answer lifts its key (`keys`, by the
+ * answer's place): the studio has + - * / and nothing else, so `//` and `/` both lift the divide key and `%` has none (nothing lifts).
+ * Check plays the studio's right or wrong. The three answers stand as one row of mini cards (`threeCards`), so the picture keeps its size.
+ */
+const OPERATOR_ASK = "Which operator is this?";
+const { add, subtract, multiply, divide, none } = OPERATOR_STUDIO.pick;
+const operatorQuiz = (card: StudioCard, keys: readonly number[], stage: Omit<QuizStage, "kind" | "visual" | "threeCards">) =>
+  quiz({
+    ...stage,
+    visual: ({ attempt, picked, checked, correct }) => (
+      <StudioVisual card={card} pick={(picked !== null ? keys[Number(picked)] : undefined) ?? none} verdict={checked ? (correct ? "correct" : "wrong") : null} attempt={attempt} />
+    ),
+    threeCards: true,
+  });
 
 /** Screens 15-28 (phases 4 to 6: combining operators, then comparison). */
 export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
@@ -184,7 +201,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
     step: STEP.makesSense,
     title: "Understand the *Situation!*",
     stages: [
-      quiz({
+      operatorQuiz({ title: "Spending money", meaning: OPERATOR_ASK, example: "₹200, spend ₹75" }, [add, subtract, multiply], {
         line: "A student has ₹200 and spends ₹75. Which expression finds what remains?",
         options: neutral(["200 + 75", "200 - 75", "200 * 75"]),
         correctId: at(1),
@@ -192,7 +209,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         right: "Spending takes money away: 200 - 75.",
         wrong: "Does the money grow, or go away?",
       }),
-      quiz({
+      operatorQuiz({ title: "Boxes of pencils", meaning: OPERATOR_ASK, example: "6 boxes of 8" }, [add, divide, multiply], {
         line: "There are 6 boxes, each with 8 pencils. Which expression finds all the pencils?",
         options: neutral(["6 + 8", "6 // 8", "6 * 8"]),
         correctId: at(2),
@@ -200,7 +217,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         right: "Equal boxes repeat: 6 * 8.",
         wrong: "Six equal groups of 8. Which operator repeats a group?",
       }),
-      quiz({
+      operatorQuiz({ title: "Sharing chocolates", meaning: OPERATOR_ASK, example: "17 among 5" }, [none, divide, divide], {
         line: "17 chocolates shared among 5 students. Whole chocolates each?",
         options: neutral(["17 % 5", "17 // 5", "17 / 5"]),
         correctId: at(1),
@@ -208,7 +225,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         right: "17 // 5 = 3 complete chocolates each.",
         wrong: "Which operator counts complete groups?",
       }),
-      quiz({
+      operatorQuiz({ title: "Sharing again", meaning: OPERATOR_ASK, example: "17 among 5" }, [divide, divide, none], {
         line: "Same 17 chocolates and 5 students. How many chocolates remain?",
         options: neutral(["17 // 5", "17 / 5", "17 % 5"]),
         correctId: at(2),

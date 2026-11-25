@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { fireScene, type OperatorSceneName, type SceneTexts } from "@/lib/rive/operatorsHost";
+import { OPERATOR_STUDIO } from "@/lib/rive/runtime";
 import { OperatorScene } from "./OperatorScene";
 import type { InteractionApi } from "./screen";
 import { useTurn } from "./SituationsStage";
@@ -15,13 +16,15 @@ export type StudioCard = { title: string; meaning: string; example: string };
  * nothing is picked, or when the picked answer has no key), and `verdict` plays the studio's `correct` / `wrong`
  * once the answer is checked. `attempt` is bumped on each try again, so the verdict plays again. `width` (a CSS length) draws it
  * smaller than the stage is wide, where Hex's line stays up after the answer and the room left to the picture is short.
+ * `mode` is the studio's (`OPERATOR_STUDIO.mode`, default 0, the four calculating keys beside the card): only mode 0 lifts a key
+ * for `pick`; mode 3 (every operator key) is static but for the card's words.
  */
-export function StudioVisual({ card, pick, verdict, attempt, width }: { card: StudioCard; pick: number; verdict: "correct" | "wrong" | null; attempt: number; width?: string }) {
+export function StudioVisual({ card, pick, verdict, attempt, width, mode = OPERATOR_STUDIO.mode.keys }: { card: StudioCard; pick: number; verdict: "correct" | "wrong" | null; attempt: number; width?: string; mode?: number }) {
   useEffect(() => {
     if (verdict) fireScene("studio", verdict);
   }, [verdict, attempt]);
 
-  return <OperatorScene scene="studio" width={width} values={{ mode: 0, pick, infoTitle: card.title, infoMeaning: card.meaning, infoExample: card.example, infoSay: "" }} />;
+  return <OperatorScene scene="studio" width={width} values={{ mode, pick, infoTitle: card.title, infoMeaning: card.meaning, infoExample: card.example, infoSay: "" }} />;
 }
 
 /**

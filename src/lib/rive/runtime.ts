@@ -300,6 +300,13 @@ export const OPERATOR_STUDIO = {
   height: 306,
   /** Mode 0's `pick`: which key is lifted. */
   pick: { none: 0, add: 1, subtract: 2, multiply: 3, divide: 4 },
+  /**
+   * The studio's modes: `keys` 0 (the four calculating keys and the card), `jobs` 1 (Calculate and Compare cards), `compare` 2
+   * (`exprLeft` / `exprRight` with six comparison keys), `operators` 3 (every operator key: + − × ÷ // % ** and > < = ≠ ≥ ≤, beside the card),
+   * `total` 4 ("Shopping total"). Mode 3's card takes `infoTitle` / `infoMeaning` / `infoExample` like mode 0's (probed 2026-11-25); its keys do
+   * not move: `pick`, `highlight` and `step` change nothing there.
+   */
+  mode: { keys: 0, jobs: 1, compare: 2, operators: 3, total: 4 },
 } as const;
 
 /**
