@@ -4,7 +4,7 @@ import { MultiPickStage } from "@/components/datatypes/interactions";
 import { at, neutral, options, quiz, yesNo } from "./helpers";
 import { ExpressionStage, StepStage, SymbolStage, sumOfProducts } from "./interactions";
 import type { SceneTexts } from "@/lib/rive/operatorsHost";
-import { OPERATOR_COMBINING, OPERATOR_STUDIO } from "@/lib/rive/runtime";
+import { OPERATOR_COMBINING, OPERATOR_SHOP, OPERATOR_STUDIO } from "@/lib/rive/runtime";
 import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { QuizStage, ScreenDef } from "./screen";
@@ -57,6 +57,23 @@ const operatorQuiz = (card: StudioCard, keys: readonly number[], stage: Omit<Qui
     threeCards: true,
   });
 
+/**
+ * Screen 15's picture: the shop counter ("VAR_Shop", as screens 3 and 4 use it) with the notebook at ₹20 and the pen at ₹10 (its file has
+ * 50 and 20), their names on ("3 Notebooks", "2 Pens": the counts, written over the file's names), no eraser, and the hanging board asking
+ * for the total bill, then saying it. Narrower than the stage, like screen 4's, since the blocks stand under it.
+ */
+function BillShop({ total }: { total: string }) {
+  const texts: SceneTexts = {
+    [OPERATOR_SHOP.text.boardAmount]: total,
+    [OPERATOR_SHOP.text.boardLabel]: "Total bill",
+    [OPERATOR_SHOP.text.notebookName]: "3 Notebooks",
+    [OPERATOR_SHOP.text.penName]: "2 Pens",
+    ...Object.fromEntries(OPERATOR_SHOP.text.notebookAmount.map((run) => [run, "20"])),
+    ...Object.fromEntries(OPERATOR_SHOP.text.penAmount.map((run) => [run, "10"])),
+  };
+  return <OperatorScene scene="shop" width="340px" values={{ showEraser: false, showNames: true, showTotal: true, highlight: 0 }} texts={texts} />;
+}
+
 /** Screens 15-28 (phases 4 to 6: combining operators, then comparison). */
 export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
   // 15. One problem, multiple operations.
@@ -70,14 +87,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         render: (api) => (
           <ExpressionStage
             api={api}
-            lead={
-              <ValueCards
-                items={[
-                  { pic: P.notebook, label: "3 notebooks", value: "₹20 each" },
-                  { pic: P.pen, label: "2 pens", value: "₹10 each" },
-                ]}
-              />
-            }
+            lead={<BillShop total={api.finished ? "80" : "?"} />}
             tokens={["3", "20", "2", "10", "*", "*", "+"]}
             accept={sumOfProducts(["3", "20"], ["2", "10"])}
             hint="Equal items are multiplied. Then the two totals are added."

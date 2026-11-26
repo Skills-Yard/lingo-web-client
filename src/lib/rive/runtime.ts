@@ -42,7 +42,7 @@ export const LIVE_PLATFORM = {
 } as const;
 
 /**
- * One piece of the road on the level screen (`/level`): "Artboard" of `progressBar.riv` (72x58, `State Machine 1`), the
+ * One piece of the road on the level screen (`/level`): "LadderPath" (was "Artboard", renamed 2026-11-26) of `progressBar.riv` (72x58, `State Machine 1`), the
  * isometric slab that runs from one level's tile to the next. It replaces `grid-road.svg`. The number `pathState` on its view
  * model (`StreakTickUnused`, which also has `day1`-`day7`, `streak` and `start`, none of them used here) turns it: 0 runs
  * down to the right (the picture `grid-road.svg` has mirrored), 1 runs down to the left (as the svg is). The slab is drawn
@@ -57,7 +57,7 @@ export const LIVE_PLATFORM = {
  */
 export const LEVEL_ROAD = {
   src: "/animations/progressBar.riv",
-  artboard: "Artboard",
+  artboard: "LadderPath",
   stateMachine: "State Machine 1",
   property: "pathState",
   width: 72,
@@ -420,6 +420,7 @@ export const OPERATOR_SHOP = {
     penAmount: [6, 12],
     notebookAmount: [8, 14],
     notebookName: 17,
+    penName: 16,
   },
 } as const;
 
