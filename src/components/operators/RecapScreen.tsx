@@ -7,6 +7,7 @@ import { Quote } from "lucide-react";
 import { GemPopup } from "@/components/level-one/GemPopup";
 import { LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { operatorsHref } from "@/lib/routes";
+import { BAR_W } from "./column";
 import { OPERATORS_STEPS, STEP, operatorsPrevious } from "./operators";
 import { parseTitle } from "./screen";
 import { CARD, LAVENDER } from "./visuals";
@@ -133,7 +134,7 @@ export function RecapScreen() {
         </span>
       </ScreenTitle>
 
-      <div className="absolute left-1/2 flex w-[340px] -translate-x-1/2 flex-col gap-2" style={{ top: 168 }}>
+      <div className="absolute left-1/2 flex -translate-x-1/2 flex-col gap-2" style={{ top: 168, width: BAR_W }}>
         <div className={`flex flex-col px-2.5 py-2.5 ${CARD} ${LAVENDER}`}>
           <div className="flex items-center gap-1.5">
             <FlowBox tone="plain" delay={0.2}>

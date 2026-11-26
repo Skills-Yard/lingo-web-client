@@ -260,7 +260,7 @@ export function ExpressionStage({
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-2.5">
       {lead}
       <motion.div
         ref={row}
@@ -376,7 +376,7 @@ export function ShareStage({ api, total, students, after }: { api: InteractionAp
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-3">
       <ShareScene pile={pile} trays={Array.from({ length: students }, () => rounds)} />
       {over ? (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-center gap-2">
@@ -423,7 +423,7 @@ export function FillRowsStage({ api, rows, per, after }: { api: InteractionApi; 
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-2.5">
       <div className={`flex w-full flex-col gap-1.5 px-2 py-2 ${CARD} ${CREAM}`}>
         {Array.from({ length: rows }, (_, row) => {
           const full = filled.includes(row);
@@ -538,7 +538,7 @@ export function SymbolStage({
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-2.5">
       {header?.(current)}
       {groups.map((group, index) => {
         const colors = KEY_COLORS[index % KEY_COLORS.length];
@@ -638,7 +638,7 @@ export function StepStage({ api, tokens, steps, after }: { api: InteractionApi; 
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-3">
       <div className={`flex w-full flex-col items-center gap-2 px-3 py-3 ${CARD} ${WHITE}`}>
         <ExprBig tokens={tokens} lit={step?.lit ?? []} result={step?.result} />
         <div className="flex items-center gap-1.5" aria-hidden>
@@ -703,7 +703,7 @@ export function OrderStage({
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-2.5">
       {lead}
       <div className="flex w-full flex-col gap-1.5">
         {shown.map((index) => {
@@ -764,7 +764,7 @@ export function ScenesStage({ api, scenes, columns = 2, prompt = "Tap each scene
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-3">
       <div className={`grid w-full gap-2.5 ${columns === 4 ? "grid-cols-4" : "grid-cols-2"}`}>
         {scenes.map((scene, index) => (
           <motion.button

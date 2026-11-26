@@ -5,6 +5,7 @@ import { ExpressionStage, OrderStage, SymbolStage, sumOfProducts } from "./inter
 import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { QuizStage, ScreenDef } from "./screen";
+import { ShopCounter } from "./ShopCounter";
 import { BillCard, CompareDemo, ExprBig, GateCard, TripFacts, ValueCards } from "./visuals";
 
 /** Reads a question about an expression: Step 1 says it, Step 2 decides if it is True. */
@@ -148,12 +149,10 @@ export const SCREENS_C: Readonly<Record<number, ScreenDef>> = {
           <ExpressionStage
             api={api}
             lead={
-              <ValueCards
-                items={[
-                  { pic: P.notebook, label: "4 notebooks", value: "₹25 each" },
-                  { pic: P.pen, label: "3 pens", value: "₹10 each" },
-                  { pic: P.money, label: "Pays", value: "₹150" },
-                ]}
+              <ShopCounter
+                notebook={{ name: "4 Notebooks", price: "25" }}
+                pen={{ name: "3 Pens", price: "10" }}
+                board={api.finished ? { label: "Change", amount: "20" } : { label: "Pays", amount: "150" }}
               />
             }
             tokens={["150", "4", "25", "3", "10", "*", "*", "+", "-", "(", ")"]}

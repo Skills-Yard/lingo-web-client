@@ -22,7 +22,7 @@ const TONE = {
  * chapter): a picture, the name, the value. A sign can stand between two
  * cards ("+", "vs").
  */
-export function ValueCards({ items, between, replay = 0, width = 316 }: { items: readonly ValueCard[]; between?: string; replay?: number; width?: number }) {
+export function ValueCards({ items, between, replay = 0, width = "var(--column-w)" }: { items: readonly ValueCard[]; between?: string; replay?: number; width?: number | string }) {
   return (
     <div key={replay} className="flex items-center justify-center gap-1.5" style={{ width }}>
       {items.map((item, index) => (
@@ -131,7 +131,7 @@ export function InfoSheet({
   const value = compact ? "text-[18px] leading-6" : "text-[20px] leading-6";
   const pad = compact ? "py-1" : "py-1.5";
   return (
-    <div key={replay} className={`flex w-[316px] flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
+    <div key={replay} className={`flex w-(--column-w) flex-col ${compact ? "gap-1.5" : "gap-2"}`}>
       {!compact && (
         <motion.span
           initial={{ opacity: 0, y: 8 }}
@@ -209,7 +209,7 @@ export function WalletScene({ amount, change, showTotal = false, replay = 0 }: {
   }, [replay]);
   const now = change.sign === "+" ? amount + change.value : amount - change.value;
   return (
-    <div className={`relative flex w-[316px] items-center gap-3 px-4 py-2.5 ${CARD} ${CREAM}`}>
+    <div className={`relative flex w-(--column-w) items-center gap-3 px-4 py-2.5 ${CARD} ${CREAM}`}>
       <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_2px_6px_rgba(0,0,0,0.12)] dark:bg-[#15181E]">
         <Pic src={P.iconWallet} className="size-10" />
       </span>
@@ -268,7 +268,7 @@ export function Versus({ left, right, replay = 0 }: { left: ValueCard; right: Va
 /** Two expressions side by side, each on its own card. */
 export function SideBySide({ left, right }: { left: readonly string[]; right: readonly string[] }) {
   return (
-    <div className="flex w-[316px] items-stretch justify-center gap-2">
+    <div className="flex w-(--column-w) items-stretch justify-center gap-2">
       {[left, right].map((tokens, index) => (
         <div key={index} className={`flex flex-1 items-center justify-center px-2 py-3 ${CARD} ${LAVENDER}`}>
           <ExprBig tokens={tokens} size={19} tight />
@@ -313,7 +313,7 @@ export function Tray({ label, count, lit = false, children }: { label: string; c
 /** The chocolates in a heap, and the students' trays (counts of each). */
 export function ShareScene({ pile, trays, label = "Student" }: { pile: number; trays: readonly number[]; label?: string }) {
   return (
-    <div className="flex w-[316px] flex-col items-center gap-2">
+    <div className="flex w-(--column-w) flex-col items-center gap-2">
       <div className={`flex min-h-[44px] items-center justify-center px-3 py-2 ${CARD} ${CREAM}`} style={{ minWidth: 150 }}>
         {pile > 0 ? <Pile count={pile} /> : <span className="text-[12px] font-semibold text-[#6B7480]">No chocolates left</span>}
       </div>
@@ -349,7 +349,7 @@ export function GroupsPicture({
   const entrance = (delay: number) => ({ initial: still ? false : { opacity: 0, scale: 0.7 }, animate: { opacity: 1, scale: 1 }, transition: { delay } }) as const;
   const fade = (faded: boolean) => `transition-opacity duration-300 ${faded ? "opacity-30" : ""}`;
   return (
-    <div key={replay} className="flex w-[316px] flex-wrap items-center justify-center gap-2">
+    <div key={replay} className="flex w-(--column-w) flex-wrap items-center justify-center gap-2">
       {Array.from({ length: groups }, (_, index) => (
         <motion.div key={index} {...entrance(0.15 + index * 0.25)}>
           <div className={`rounded-[10px] border-2 border-[#04ACAB] bg-[#E3F6F3] p-1.5 dark:bg-[#0F2B28] ${fade(emphasis === "left")}`}>
@@ -415,7 +415,7 @@ export function LineScale({
 }) {
   const size = small ? 26 : 38;
   return (
-    <div className={`flex w-[316px] flex-col items-center gap-1 px-2 pt-2 pb-3 ${CARD} ${WHITE}`}>
+    <div className={`flex w-(--column-w) flex-col items-center gap-1 px-2 pt-2 pb-3 ${CARD} ${WHITE}`}>
       <div className="relative flex w-full items-end justify-between" style={{ height: gate !== undefined ? 66 : size + 6 }}>
         {marks.map((mark) => (
           <div key={mark} className="relative flex flex-1 flex-col items-center justify-end gap-1">
@@ -490,7 +490,7 @@ export function GateCard({ score, open }: { score: number; open: boolean }) {
 /** The class trip's facts, as small cards. */
 export function TripFacts() {
   return (
-    <div className="grid w-[316px] grid-cols-2 gap-1.5">
+    <div className="grid w-(--column-w) grid-cols-2 gap-1.5">
       {[
         ["Students", "32", P.student, "bg-[#F6F4FE] dark:bg-[#1F1B3A]"],
         ["Per bus", "10", P.person, "bg-[#E6F0FF] dark:bg-[#15213A]"],
@@ -514,7 +514,7 @@ export function TripFacts() {
 /** A shopping bill: lines of what was bought, and the amount shown at the bottom. */
 export function BillCard({ lines, total, wrong = false }: { lines: readonly (readonly [string, string])[]; total: string; wrong?: boolean }) {
   return (
-    <div className={`flex w-[316px] flex-col gap-1 px-3 py-2 ${CARD} ${CREAM}`}>
+    <div className={`flex w-(--column-w) flex-col gap-1 px-3 py-2 ${CARD} ${CREAM}`}>
       {lines.map(([what, price]) => (
         <div key={what} className="flex items-baseline gap-2 text-[14px] leading-5 font-medium text-[#444444] dark:text-white">
           <span>{what}</span>

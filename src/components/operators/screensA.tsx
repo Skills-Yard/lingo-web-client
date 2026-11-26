@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { BAR_W } from "./column";
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
 import { FlipCarouselStage } from "./FlipCarousel";
 import { ExpressionStage } from "./interactions";
@@ -92,7 +93,7 @@ function ShopLead({ board, together = false }: { board: { label: string; amount:
   useEffect(() => {
     if (together) fireScene("shop", "calc");
   }, [together]);
-  return <OperatorScene scene="shop" width="340px" values={{ showNames: true, showTotal: true }} texts={shopTexts(board)} />;
+  return <OperatorScene scene="shop" width={BAR_W} values={{ showNames: true, showTotal: true }} texts={shopTexts(board)} />;
 }
 
 /** The four operators of "Meet the Operators!", in the order their questions come. */

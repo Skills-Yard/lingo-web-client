@@ -15,6 +15,7 @@ import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { COLUMN_STYLE, fittedColumn } from "./column";
 import { OPERATORS_STEPS, operatorsNext, operatorsPrevious } from "./operators";
 import { noteAnswer, noteStruggle } from "./operatorsScore";
 import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } from "./screen";
@@ -126,7 +127,20 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
     return () => observer.disconnect();
   }, []);
   const answersRise = OPTION.rise - RISE_TRIM + Math.max(0, panelHeight - PANEL_H);
-  const liveFit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
+  const wantedFit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
+  // The picture is laid out wider the smaller it is drawn (see `fittedColumn`), which can make it shorter, which would make it want to be
+  // drawn bigger, which makes it narrower and taller again: it flickered between the two every frame. So the size only goes down while
+  // the room is the same and it is the same stage and try: it grows again only when the room changes (Hex's line leaving, the panel).
+  const fitKey = `${screen.step}-${stageIndex}-${attempt}`;
+  const [settledFit, setSettledFit] = useState({ key: fitKey, room: roomHeight, fit: wantedFit });
+  let liveFit = settledFit.fit;
+  if (settledFit.key !== fitKey || Math.abs(settledFit.room - roomHeight) > 1) {
+    liveFit = wantedFit;
+    setSettledFit({ key: fitKey, room: roomHeight, fit: wantedFit });
+  } else if (wantedFit < settledFit.fit) {
+    liveFit = wantedFit;
+    setSettledFit({ ...settledFit, fit: wantedFit });
+  }
 
   const stage = screen.stages[stageIndex];
   const lastStage = stageIndex === screen.stages.length - 1;
@@ -308,6 +322,8 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
         </span>
       </ScreenTitle>
 
+      {/* Everything under the title is as wide as the top bar and the Continue button (see `column.ts`). */}
+      <div className="contents" style={COLUMN_STYLE}>
       <div
         className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding,bottom] duration-500 ease-out"
         style={{ top: titleEnd, bottom: bodyEnd, paddingBottom: gone ? risen : 0 }}
@@ -331,14 +347,23 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
             />
           </motion.div>
         )}
-        <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">
-          <div ref={pictureRef} className="flex flex-col items-center gap-2" style={{ transform: `scale(${fit})` }}>
+        {/* The picture stands right under Hex's line (the room's spare height goes under it), and is centred in the room only once the row answers
+          have faded, when nothing stands under it. It is scaled from its top and its box shortened by what the scale takes (the negative
+          margin), so its top edge is where it looks to be and the centring is true. */}
+        <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center">
+          <div aria-hidden className="shrink-0 basis-0 transition-[flex-grow] duration-500 ease-out" style={{ flexGrow: answersGone ? 1 : 0 }} />
+          <div
+            ref={pictureRef}
+            className="flex flex-col items-center gap-2"
+            style={{ transform: `scale(${fit})`, transformOrigin: "top center", marginBottom: -(1 - fit) * pictureHeight, ...fittedColumn(fit) }}
+          >
             {quiz ? (
               quiz.visual?.({ attempt, picked: selectedId, checked, correct })
             ) : (
               interaction && <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} finished={finished} lineTyped={lineTyped} holdButton={holdButton} next={next} />
             )}
           </div>
+          <div aria-hidden className="shrink-0 basis-0 grow" />
         </div>
       </div>
 
@@ -394,6 +419,7 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
           {answerHint.hand}
         </>
       )}
+      </div>
 
     </LevelTwoShell>
   );
