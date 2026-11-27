@@ -90,10 +90,7 @@ type Model = {
 };
 
 /**
- * The characters the learner can pick (see `characterLook.ts`). The girl's file has no
- * morph targets, so no lip-sync clip. It has one clip, used for both (her bones' axes
- * differ from other Mixamo rigs', so clips of another file don't play on her: more of
- * hers must be exported from Mixamo for her). The boy (`Male.glb`) is a Mixamo rig too,
+ * The characters the learner can pick (see `characterLook.ts`). The anime girl uses her embedded idle clip for both states and has no lip-sync clip. The boy (`Male.glb`) is a Mixamo rig too,
  * with no morph targets (no lip-sync) and his own clips: `Breathing.001` and `Talking`
  * (the file also has `Head Nod` and a few `mixamo.com` clips, unused). The anime
  * character is a VRoid-style model, not a Mixamo one: its bones are `J_Bip_…`, so
@@ -104,9 +101,9 @@ type Model = {
  */
 const MODELS: Readonly<Record<CharacterId, Model>> = {
   girl: {
-    src: "/animations/girl.glb",
-    bytes: 15_253_060,
-    animations: clipsOf({ "idle-b": "mixamo.com", talking: "mixamo.com" }),
+    src: "/animations/Anime_girl.glb",
+    bytes: 36_384_312,
+    animations: clipsOf({ "idle-b": "idle", talking: "idle" }),
   },
   boy: {
     src: "/animations/Male.glb",
