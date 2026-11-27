@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
+import { useHexStandIn } from "@/components/level-two/HexStandIn";
 import { OnboardingHex } from "./FeedbackPanel";
 import { LEAVE_FADE_DELAY_S } from "./HexStage";
 import { useLevelVoice } from "./LevelVoice";
@@ -59,6 +60,8 @@ export function TeacherSpeech({
   skipIntro?: boolean;
 }) {
   const { speaking, clipProgress, clipCount, status } = useLevelVoice();
+  // A route can put something else where Hex stands (the Command module: the character's face).
+  const standIn = useHexStandIn();
   // Typed to the intro clip unless the screen opens on the quiz, or the voice can't play.
   const synced = !skipIntro && clipCount > 0 && status !== "failed";
   const spokenPast = status === "done" || clipProgress >= TYPE_FROM_CLIP;
@@ -131,13 +134,19 @@ export function TeacherSpeech({
         // Below the options (z-10), so they cover him as they rise.
         className="pointer-events-none absolute top-0 left-0 z-[5]"
       >
-        <motion.div
-          animate={cued ? HEX_FLOAT : { y: 0 }}
-          transition={cued ? { ...HEX_FLOAT_TRANSITION, delay: 1.2 } : { duration: 0.2 }}
-          className="h-full w-full"
-        >
-          <OnboardingHex entryKey="teacher" leaving={hexAway} />
-        </motion.div>
+        {standIn ? (
+          // The character's face (see `HexStandIn`) takes Hex's place, centred across his slot and standing on its bottom (so it clears the
+          // bubble over it); it does not float: a box bobbing up and down looks odd.
+          <div className="flex h-full w-full items-end justify-center">{standIn}</div>
+        ) : (
+          <motion.div
+            animate={cued ? HEX_FLOAT : { y: 0 }}
+            transition={cued ? { ...HEX_FLOAT_TRANSITION, delay: 1.2 } : { duration: 0.2 }}
+            className="h-full w-full"
+          >
+            <OnboardingHex entryKey="teacher" leaving={hexAway} />
+          </motion.div>
+        )}
       </motion.div>
     </>
   );

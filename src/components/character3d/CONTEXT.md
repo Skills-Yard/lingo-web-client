@@ -382,6 +382,46 @@ right (panel, confetti, face and bubble leave on a check); 15 wrong → right; 5
 the 27 full run to the end, the Variable interactions' later stages (6, 7, 13, 16 second stage) by hand, `next build`, and the other characters
 (only the default one was in the browser).
 
+### The Command module with the 3D character (`/module/commands`, in place), 2026-11-27
+
+The user asked for the Variable module's kind of title screen plus the character on some question screens ("screen 3, 9, 11", three design
+pictures). Only those four screens changed; Hex and the robot stay on every other screen.
+
+- `src/app/module/commands/layout.tsx` wraps the route in `VariableCharacterGate` (loading bar until the shared character and canvas have drawn) and `CharacterFace`
+  (`sequenceFlow.tsx`: **only** the `HexStandInProvider` with `CharacterAvatar framing="face"` + `HexStandInKeepsBubble`, 2026-11-27 on request: "replace the bubble Hex too").
+  So **every `HexBubble` of the module (screens 2, 4, 5, 7, 8) shows the character's face in the small box with the bubble beside it**; the robot and the result panel's Hex
+  are unchanged. **Screens 12 and 13 ("Imagine Teacher Says..", "What teacher is doing?"; one `TeacherFlow`, so one Hex across both) too (2026-11-27, "replace hex on screen 12 too")**:
+  `TeacherSpeech` draws `useHexStandIn()` in Hex's 130 px slot (centred across, standing on the slot's bottom so the box clears the teacher's bubble, no float) instead of `OnboardingHex`;
+  it comes up beside the bubble at "open your notebook", stays through the pick and sinks behind the options on Check, as Hex did. Checked in headless Chrome 390×844 (girl, anime): 12, Continue → 13,
+  pick + Check → panel. Not checked: the intro moment (the face standing below the picture before the cue; the 14 s waits had already passed it), dark mode, a phone. Screens 14-16
+  (examples, video, Hex's game) still have Hex. **Not `CharacterLook`**: that also sets the 3D flow's flags (bounce, design slots, next/previous), which this module doesn't want.
+  **The face box has its own framing (`"face"` in `portraitHost.tsx`, `CharacterAvatar` `framing="face"`):** the avatar's default crop (head and shoulders cut from the full-length picture) put
+  the face small and, with the idle sway, off to the left; `face` is a camera at 1.75 m, level at y 1.62 and following the head bone's x (`HEAD_NAME`), showing 1.0 m of height, the slot 201 px
+  tall at top −53 so the 94 px inside the box show about 0.47 m (hair to chin about 0.33 m on all three characters, measured, with neck and collar under). Looked at zoomed (4×) for girl, boy and
+  anime on screen 4. **The Sequence 3D and Variable avatars still use the default crop** (not asked for); `<CharacterAvatar framing="face" />` would give them the same.
+  The box is the module-wide 100 px (`HEX_SLOT` − 10); the user's reference picture drew it smaller (about 80 px at 390 wide), not copied.
+- **Step 0 = "Let's Learn Commands"** (`CommandIntroScreen`: `CharacterIntro` alone. **No terminal tag on it: it sat over the character's hair and the user asked for it gone**;
+  `CommandTag` is still on screen 9). Step 0 on purpose, as in Variable:
+  screens keep their numbers, `MODULE_STEPS` stays 16, the bar starts empty, the battery spends from screen 1. `/module/commands` with no `?step` and the home path
+  (`HomeRoutes`, `commandsHref(0)`) open it; screen 1's Back goes to it.
+- **Screens 3 and 11** = `CharacterQuizScreen` (`level-two/`), the Sequence tray look (pattern backdrop, close-up character that opens low and rises as the answers come
+  in at 75 % of the voice, grey `AnswerTray`, three 76 px rows, rows go on Check) with the Command module's rules: `noteAnswer` / `nextAfter`
+  (a miss is not retried, it is asked again in the review), Check then Continue. **(2026-11-27, asked for) There is no main button until an answer is picked**
+  (`ctaHidden` on `LevelOneShell` / `ActionRow`, a new optional prop: faded and dropped 24 px, `inert`, slides up on the pick; no other screen passes it), and **the hint is the unchanged
+  `HintButton` (57 px, orange bulb, badge) standing over the tray's top right** (right edge 16 from the column's, 16 over the tray's top edge, popped in with the tray, folds
+  away on Check), not beside the main button. So the shell gets no `hint` here: the button is the full-width one and `withHint` is false in every `aboveButtons` call of the screen
+  (rows and tray stand about 7 px higher than the Sequence tray's). Screen 3's answers have no full stops (the design's), its icons are the old `step-4.x.svg`;
+  screen 11 keeps its rows and result texts and the old `/images/level-one/*.png` icons, with the title "Instructions are…" and no question badge. No robot move plays on screen 3 any more (there is no robot).
+- **Screen 9** = `MeetCommand3DScreen`: title, the pale circle (`IntroBackdrop` now exported with a `circle` prop), the character head to belt fading into the voice clip's pill,
+  the tag at the upper right. The design has no sentence under the clip, so "In Programming Languages, instructions are known as command." is only in the clip now.
+  The character only stands: no thumbs-up clip exists (as for Variable's intro), and it does not talk while the clip plays.
+- `MeetCommandScreen`, `InstructionQuizScreen` and `WHAT_JUST_HAPPENED` (`levelTwo.ts`) are no longer used by the route; left in place.
+- Checked in headless Chrome (girl, light, battery unlimited): 0, 3, 9, 11 at 390×844 (3 and 9 also 360×640); 3 right → panel → Continue → 4; 11 wrong → panel → Continue → 12;
+  `/module/commands` → 0 → Continue → 1; 9 → Continue → 10; 4 unchanged. `tsc` and eslint on the touched files pass (eslint reports `react-hooks/immutability` on `LevelOneShell.tsx` line 165, `stageScaleRef.current = …`: old, not from this work).
+  The hidden button and the hint over the tray were looked at on 3 and 11 at 390×844 (open: no button, hint in place; pick → Check up; Check → panel, hint gone; the hint pressed on 11: hand + tint on Command) and 3 at 360×640.
+  **Not checked:** dark mode, Boy/Anime, the voices
+  (headless has no sound), the review pass for a missed 3 / 11, Back from 1 to 0, a real phone, `next build`.
+
 ## Assets (`public/`)
 
 Used: `animations/Character_Final.glb` (3.9 MB, Blender export; 9 textured materials; 17 morph targets named

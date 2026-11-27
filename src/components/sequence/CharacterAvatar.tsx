@@ -14,10 +14,13 @@ import { HEX_SLOT } from "@/components/level-two/HexBubble";
  * the box's top. The rest is cut off by the box.
  */
 
-/** The slot's height: the canvas's 2.06 m of height at 200 px a metre. */
-const SLOT_HEIGHT = 412;
-/** The slot's top, over the box's top: the head starts 0.23 m under the canvas's top. */
-const SLOT_TOP = -34;
+/**
+ * The slot's height and its top (over the box's top). `full`: the canvas's 2.06 m of height at 200 px a metre, the head starting 0.23 m
+ * under the canvas's top. `face` (the closer camera, see `PortraitFraming`): the canvas's 1.0 m of height at 200 px a metre, so the 94 px
+ * inside the box show about 0.47 m: the head (hair to chin, about 0.33 m, measured on the three characters) over the box's middle, a hair's
+ * breadth under its top, and the neck and collar below it.
+ */
+const SLOTS = { full: { height: 412, top: -34 }, face: { height: 201, top: -53 } } as const;
 
 /** The talking pill's dots, light to green, as in the design. */
 const DOT_COLORS = ["#D5D9E3", "#9BD92A", "#01A17F"] as const;
@@ -25,15 +28,17 @@ const DOT_COLORS = ["#D5D9E3", "#9BD92A", "#01A17F"] as const;
 const DOT_PULSE_S = 0.9;
 const DOT_STAGGER_S = 0.18;
 
-export function CharacterAvatar() {
+/** `framing` "face" fills the box with the face (the Command module's); the default is the head and shoulders cropped from the full-length picture. */
+export function CharacterAvatar({ framing = "full" }: { framing?: "full" | "face" }) {
   const { speaking } = useLevelVoice();
+  const slot = SLOTS[framing];
   return (
     <div
       className="relative overflow-hidden rounded-[26px] border-[3px] border-white bg-[linear-gradient(160deg,#DDF6F4_0%,#E4E7FD_100%)] shadow-[0_3px_0_rgba(1,161,127,0.5)] dark:border-[#818185] dark:bg-[linear-gradient(160deg,#17353A_0%,#1F2347_100%)]"
       style={{ width: HEX_SLOT - 10, height: HEX_SLOT - 10, margin: 5 }}
     >
-      <div className="absolute inset-x-0" style={{ top: SLOT_TOP, height: SLOT_HEIGHT }}>
-        <CharacterPortrait animationId={speaking ? "talking" : "idle-b"} lipSync={speaking} />
+      <div className="absolute inset-x-0" style={{ top: slot.top, height: slot.height }}>
+        <CharacterPortrait animationId={speaking ? "talking" : "idle-b"} lipSync={speaking} framing={framing === "face" ? "face" : "full"} />
       </div>
       <AnimatePresence>{speaking && <TalkingDots />}</AnimatePresence>
     </div>

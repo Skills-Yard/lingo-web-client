@@ -100,6 +100,8 @@ type ActionRowProps = {
   ctaLight?: boolean;
   /** The `cube` property of the main button's artboard is on. */
   ctaCube?: boolean;
+  /** The main button is not there (faded and dropped a little, taking no taps): it slides up into place when this turns off. */
+  ctaHidden?: boolean;
   onContinue?: () => void;
 };
 
@@ -112,7 +114,7 @@ type ActionRowProps = {
  * of its height, standing on the row's bottom edge like the hint does, and the
  * two sit centred in the row together.
  */
-export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, ctaLight, ctaCube, onContinue }: ActionRowProps) {
+export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLocked, ctaLight, ctaCube, ctaHidden, onContinue }: ActionRowProps) {
   const withHint = !!hint?.visible;
   // The row is the stage's width (capped at `maxWidth`) less the padding at each
   // side. With the hint the button is shorter, so its art ends higher in the row.
@@ -122,7 +124,12 @@ export function ActionRow({ maxWidth, hint, answer, ctaLabel, ctaDisabled, ctaLo
       className="relative z-10 mx-auto w-full shrink-0 px-1.5 transition-[margin] duration-500 ease-out"
       style={{ maxWidth, marginBottom: buttonBottomMargin(rowWidth, withHint ? CTA_HEIGHT_WITH_HINT : 1) }}
     >
-      <div className="flex w-full items-end justify-center" style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}` }}>
+      {/* Hidden: no transform is set when shown (a transform would make this a containing block for the button's effects). */}
+      <div
+        inert={ctaHidden}
+        className="flex w-full items-end justify-center transition-[opacity,transform] duration-300 ease-out"
+        style={{ aspectRatio: `${RIVE_BUTTON_W} / ${RIVE_BUTTON_H}`, ...(ctaHidden ? { opacity: 0, transform: "translateY(24px)", pointerEvents: "none" } : null) }}
+      >
         {hint && (
           <HintButton
             visible={hint.visible}

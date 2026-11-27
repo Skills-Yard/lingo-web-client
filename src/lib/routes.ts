@@ -3,7 +3,7 @@
 export const onboardingHref = (step?: string) =>
   step ? `/onboarding?step=${step}` : "/onboarding";
 
-/** `/module/commands?step=` — one screen of the Command module (1-based, or `review` / `complete`). */
+/** `/module/commands?step=` — one screen of the Command module (0 is its title screen, 1-16 the rest, or `review` / `complete`). */
 export const commandsHref = (step: number | string) => `/module/commands?step=${step}`;
 
 /** `/module/sequence?step=` — one screen of the Sequence module (1-based, or `complete`). */

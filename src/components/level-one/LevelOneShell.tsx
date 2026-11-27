@@ -58,6 +58,8 @@ interface LevelOneShellProps {
   ctaCube?: boolean;
   /** Label of the main button (default "Continue"). */
   ctaLabel?: string;
+  /** The main button is not shown (a question whose button comes in once an answer is picked). */
+  ctaHidden?: boolean;
   /** Content between the header and the Continue button. */
   children: ReactNode;
   /** Drops the padding under the content, so it runs right down to Continue. */
@@ -82,7 +84,7 @@ interface LevelOneShellProps {
 }
 
 /** The frame every Level 1 screen shares: header, scrolling body, Continue. */
-export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLocked, ctaLight, ctaWaitsForVoice, ctaCube, ctaLabel = "Continue", children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
+export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, onBack, ctaDisabled, ctaLocked, ctaLight, ctaWaitsForVoice, ctaCube, ctaLabel = "Continue", ctaHidden, children, overlay, flush, voiceover, fit, answer, wash, hint, backdrop }: LevelOneShellProps) {
   const router = useRouter();
   // A question being asked again (see `moduleReview`): the bar is the review's, and
   // Back leaves the module rather than going to the screen before it.
@@ -267,6 +269,7 @@ export function LevelOneShell({ step, total = MODULE_STEPS, action, onContinue, 
             ctaLocked={ctaLocked}
             ctaLight={ctaLight}
             ctaCube={ctaCube}
+            ctaHidden={ctaHidden}
             onContinue={handleContinue}
           />
         )}

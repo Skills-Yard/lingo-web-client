@@ -56,7 +56,7 @@ export function LevelRoute() {
                   ? variableHref(0)
                   : module === SEQUENCE_LEVEL
                     ? sequence3dHref(1)
-                    : commandsHref(1);
+                    : commandsHref(0);
         router.push(open);
       }}
     />

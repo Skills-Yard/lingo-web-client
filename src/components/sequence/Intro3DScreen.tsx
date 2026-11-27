@@ -41,11 +41,11 @@ const Sparkle = ({ className }: { className: string }) => (
   </svg>
 );
 
-/** The pale wash and the circle (light mode only, like the other backdrops). */
-const IntroBackdrop = () => (
+/** The pale wash and the circle (light mode only, like the other backdrops); `circle` moves it, for a screen laid out like the intro. */
+export const IntroBackdrop = ({ circle = CIRCLE }: { circle?: typeof CIRCLE }) => (
   <div aria-hidden className="pointer-events-none absolute inset-0 -z-10 overflow-hidden bg-[linear-gradient(180deg,#F1F2FD_0%,#F5F7FD_45%,#F6F7FD_100%)] dark:hidden">
     <Column>
-      <div className="absolute rounded-full bg-[#E1E7FC]" style={{ left: CIRCLE.left, top: CIRCLE.top, width: CIRCLE.size, height: CIRCLE.size }} />
+      <div className="absolute rounded-full bg-[#E1E7FC]" style={{ left: circle.left, top: circle.top, width: circle.size, height: circle.size }} />
     </Column>
   </div>
 );

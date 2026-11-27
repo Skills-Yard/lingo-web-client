@@ -60,6 +60,19 @@ export function Sequence3dFlow({ children }: { children: ReactNode }) {
  * beside it, and the 3D design's empty drag slots and bounce for a right answer (the flags of `THREE_D`). The module keeps its own flow: its
  * screens never ask `useSequenceFlow` where to go next.
  */
+/**
+ * Only the face: the character's face where Hex stands beside his speech bubbles (with the bubble beside it, as in `CharacterLook`), and none of
+ * the 3D flow's other flags (bounce, design slots, the Sequence's next / previous). For a module that keeps its own look on every other
+ * screen (the Command module: its robot, its answer cards).
+ */
+export function CharacterFace({ children }: { children: ReactNode }) {
+  return (
+    <HexStandInProvider value={<CharacterAvatar framing="face" />}>
+      <HexStandInKeepsBubble value>{children}</HexStandInKeepsBubble>
+    </HexStandInProvider>
+  );
+}
+
 export function CharacterLook({ children }: { children: ReactNode }) {
   return (
     <SequenceFlowContext.Provider value={THREE_D}>

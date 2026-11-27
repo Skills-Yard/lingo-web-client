@@ -3,7 +3,7 @@ import type { RobotMove, RobotPose } from "@/lib/rive/robotHost";
 import { MODULE_AUDIO } from "@/lib/moduleAudio";
 import { commandsHref } from "@/lib/routes";
 
-/** The module's `step`th screen, or its "Lesson complete!". */
+/** The module's `step`th screen (0 is its title screen), or its "Lesson complete!". */
 export const levelTwoHref = (step: number | "complete") => commandsHref(step);
 
 /** The Figma frame is 390 x 844 with its own status bar; the Level 1 shell's

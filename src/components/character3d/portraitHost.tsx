@@ -21,8 +21,8 @@ import { useSharedCharacter } from "./sharedCharacter";
  * collapses.
  */
 
-/** How much of the character the camera shows: all of it, head to toe, or the head and chest, close up. */
-export type PortraitFraming = "full" | "bust";
+/** How much of the character the camera shows: all of it, head to toe, the head and chest, close up, or just the head and neck (`face`, for a small avatar box). */
+export type PortraitFraming = "full" | "bust" | "face";
 
 type Pose = { animationId: string; lipSync: boolean; framing: PortraitFraming };
 
@@ -161,19 +161,24 @@ const NO_ROTATION: [number, number, number] = [0, 0, 0];
  * higher: it shows 1.44 m of height (from 0.29 m over the head to the chest) instead of
  * 2.06, so the head and chest fill the box. The canvas's own size is the same (see
  * `HOST_WIDTH`), so it is drawn that much sharper than a picture scaled up would be.
+ * `face` is closer still and level with the head (the characters are all scaled to 1.8 m, so their heads are at about the same
+ * height): it shows 1.0 m of height, and follows the head's x (see `FramingCamera`).
  */
 const FRAMING_CAMERA: Record<PortraitFraming, readonly [number, number, number]> = {
   full: CAMERA_POSITION,
   bust: [0, 1.369, 2.507],
+  face: [0, 1.62, 1.75],
 };
 
 /** The hips bone, whatever the rig calls it (`mixamorigHips`, `J_Bip_C_Hips`). */
 const HIPS_NAME = /hips$/i;
+/** The head bone (`mixamorigHead`, `J_Bip_C_Head`; not the `…HeadTop_End` tip). */
+const HEAD_NAME = /head$/i;
 
-const hipsOf = (character: Character): Object3D | undefined => {
+const boneOf = (character: Character, name: RegExp): Object3D | undefined => {
   const found: Object3D[] = [];
   character.model.traverse((object) => {
-    if (HIPS_NAME.test(object.name)) found.push(object);
+    if (name.test(object.name)) found.push(object);
   });
   return found[0];
 };
@@ -184,13 +189,16 @@ const hipsOf = (character: Character): Object3D | undefined => {
  * from side to side, which at that distance would take the character out of the middle.
  */
 const FramingCamera = ({ framing, character }: { framing: PortraitFraming; character: Character }) => {
-  const hips = useMemo(() => hipsOf(character), [character]);
-  const hipsAt = useMemo(() => new Vector3(), []);
+  const hips = useMemo(() => boneOf(character, HIPS_NAME), [character]);
+  const head = useMemo(() => boneOf(character, HEAD_NAME), [character]);
+  const boneAt = useMemo(() => new Vector3(), []);
   useFrame(({ camera }) => {
     const [x, y, z] = FRAMING_CAMERA[framing];
-    if (framing === "bust" && hips) {
-      hips.getWorldPosition(hipsAt);
-      camera.position.set(hipsAt.x, y, z);
+    // Close up it follows the hips (`bust`) or the head (`face`) across.
+    const follows = framing === "bust" ? hips : framing === "face" ? head : undefined;
+    if (follows) {
+      follows.getWorldPosition(boneAt);
+      camera.position.set(boneAt.x, y, z);
     } else {
       camera.position.set(x, y, z);
     }
