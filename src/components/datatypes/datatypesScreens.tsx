@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Lightbulb, LogIn, UserCheck, Wallet } from "lucide-react";
-import { INK } from "./look";
+import { INK, tintAt } from "./look";
 import { ChooseTypeStage, TYPES } from "./interactions";
 import { SortStage, type SortBucket } from "./SortStage";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
@@ -23,19 +23,22 @@ const words = (rows: readonly (readonly [id: string, text: string])[]): Option[]
 const options = (texts: readonly string[]): Option[] => words(texts.map((text, index) => [String(index), text] as const));
 const at = (index: number) => String(index);
 
-/** The four types as answers (a card each, in the order the sorting screens have them). */
-const TYPE_OPTIONS: Option[] = words(TYPES.map((type) => [type.id, type.label] as const));
+/**
+ * The four types as answers: picture cards two by two (no value stands over them), each type with its icon and the tint its sorting button has (the
+ * order the sorting screens go round them in), so a type looks the same wherever it is chosen. `ids` is the order they stand in.
+ */
+const typeOptions = (ids: readonly (typeof TYPES)[number]["id"][]): Option[] =>
+  ids.map((id) => {
+    const index = TYPES.findIndex((type) => type.id === id);
+    return { id, text: TYPES[index].label, icon: TYPES[index].icon, tint: tintAt(index) };
+  });
+const TYPE_OPTIONS: Option[] = typeOptions(["integer", "float", "string", "boolean"]);
 const TYPE_BUCKETS: readonly SortBucket[] = TYPES.map((type) => ({ id: type.id, label: type.label, icon: type.icon }));
 /** The same four places in a scene: their number is the type's (1 Integer, 2 Float, 3 String, 4 Boolean). */
 const SCENE_TYPE_BUCKETS: readonly SceneSortBucket[] = TYPES.map((type, index) => ({ id: type.id, label: type.label, icon: type.icon, value: index + 1 }));
 
 /** Screen 8's four answers, in the design's order (Integer and Float, then Boolean and String). */
-const FLOAT_QUIZ_OPTIONS = words([
-  ["integer", "Integer"],
-  ["float", "Float"],
-  ["boolean", "Boolean"],
-  ["string", "String"],
-]);
+const FLOAT_QUIZ_OPTIONS = typeOptions(["integer", "float", "boolean", "string"]);
 
 /** A question: its answers, like screens 1 and 2's, come in once Hex has finished his line. */
 const quiz = (stage: Omit<QuizStage, "kind">): QuizStage => ({ kind: "quiz", optionsAfterHex: true, ...stage });
@@ -123,11 +126,8 @@ const SIMILAR_VALUES: readonly SceneSortItem[] = [
   { id: "true", label: "True", key: "drop4", bucket: "boolean", hint: "It is a yes/no state." },
 ];
 
-/** Screen 3's four bins as buttons: the type's words and place, without its picture. */
-const withoutIcons = (buckets: readonly SceneSortBucket[]): readonly SceneSortBucket[] => buckets.map((bucket) => ({ id: bucket.id, label: bucket.label, value: bucket.value }));
-const SIMILAR_BUCKETS = withoutIcons(SCENE_TYPE_BUCKETS);
-/** Screen 9's two bins as buttons, the same way (Integer and Float, words only). */
-const CLASSIFY_BUCKETS = withoutIcons(SCENE_TYPE_BUCKETS.filter((bucket) => bucket.id === "integer" || bucket.id === "float"));
+/** Screen 9's two bins as buttons: Integer and Float, with their icons. */
+const CLASSIFY_BUCKETS = SCENE_TYPE_BUCKETS.filter((bucket) => bucket.id === "integer" || bucket.id === "float");
 
 /** Screen 4's four groups, one for each bin of the lab: what Hex says about each once it is read, and the bin the scene lights (`highlight`). */
 const TOUR_GROUPS: readonly SceneTourGroup[] = [
@@ -296,8 +296,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 190,
         alignTop: true,
         scene: sorting({ ...BELT }, false),
-        // Each value has one right bin: the belt drops it there, a wrong bin shows red at once (with a hint) and the value stays to try again. The buttons are words only (no icons).
-        render: (api) => <SceneSortStage api={api} items={SIMILAR_VALUES} buckets={SIMILAR_BUCKETS} columns={2} plain slimCard prompt="Tap the bin it belongs to." />,
+        // Each value has one right bin: the belt drops it there, a wrong bin shows red at once (with a hint) and the value stays to try again. The four types stand in a row under the value, each with its icon, as on every sorting screen.
+        render: (api) => <SceneSortStage api={api} items={SIMILAR_VALUES} buckets={SCENE_TYPE_BUCKETS} slimCard prompt="Tap the bin it belongs to." />,
         finishPanel: { title: "Well matched!", text: "Each value has the type that fits what it is." },
       },
     ],
@@ -442,6 +442,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         bubbleWidth: 176,
         // The answers are types, not things on the ruler: no cross on a wrong pick, and the right one plays the lab's own right glow.
         scene: () => numbers({ mode: MODE.numbers.ruler, measure: 1 }, false),
+        // The four types, two by two, each with its icon (see `typeOptions`).
+        layout: "pictures",
         options: FLOAT_QUIZ_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
@@ -466,9 +468,7 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
             api={api}
             items={CLASSIFY_ITEMS}
             buckets={CLASSIFY_BUCKETS}
-            // As screen 3: words-only plain buttons, and the number to place on a slimmer card with the shine.
-            columns={2}
-            plain
+            // As screen 3: the two types in a row under the value, with their icons, and the number to place on a slimmer card with the shine.
             slimCard
             prompt="Tap the bin it belongs to."
           />
@@ -894,23 +894,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         // The four types stay when the panel comes (they rise above it, the right one has bounced), instead of fading out.
         keepOptions: true,
         scene: ({ checked }) => mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height, fixed: checked ? MASTERY.fixed : 0 }, true, RECORD_TEXTS),
-        // Three types as picture cards (Boolean is left out): Integer's 1-2-3, Float's ruler, String's alphabet picture.
-        render: (api) => (
-          <ChooseTypeStage
-            api={api}
-            field="Height"
-            value="148.5"
-            from="Integer"
-            correct="float"
-            hint="Which type holds decimal numbers?"
-            showCard={false}
-            cards={{
-              integer: { icon: P.allNumbers, tint: CARD_TINTS.blue },
-              float: { icon: P.needHeight, tint: CARD_TINTS.cream },
-              string: { icon: P.string, tint: CARD_TINTS.lavender },
-            }}
-          />
-        ),
+        // The four types two by two (there is no value above them), each with its icon.
+        render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" showCard={false} />,
         finishPanel: { title: "Fixed!", text: "Height is now a Float." },
       },
     ],
@@ -969,6 +954,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which data type suits a student’s age of 12?",
         scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.age, highlight: typeCard(picked) }),
+        // The four types, two by two, each with its icon (see `typeOptions`).
+        layout: "pictures",
         options: TYPE_OPTIONS,
         correctId: "integer",
         rightTitle: "Correct!",
@@ -986,6 +973,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which data type suits a height of 152.5 cm?",
         scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.height, highlight: typeCard(picked) }),
+        // The four types, two by two, each with its icon (see `typeOptions`).
+        layout: "pictures",
         options: TYPE_OPTIONS,
         correctId: "float",
         rightTitle: "Correct!",
@@ -1026,6 +1015,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which data type represents True or False?",
         scene: ({ picked }) => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.flag, highlight: typeCard(picked) }),
+        // The four types, two by two, each with its icon (see `typeOptions`).
+        layout: "pictures",
         options: TYPE_OPTIONS,
         correctId: "boolean",
         rightTitle: "Correct!",

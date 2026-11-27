@@ -469,10 +469,9 @@ the "Let's Learn Data types" title screen: character with arms crossed, no tag).
   request too:** it is the four-type sorting with its five values again; the sorting stages (19, 20) are not picture-card screens.
 - **Screen 23 ("Can you find the mistake?") has three picture cards in both stages (2026-11-27; the user pasted a summary line that said "Screen 23", and answered a popup with "both stages, 3 cards"):**
   23.1 (the question): Age (pink, `age.svg`), Height (cream, `measure.svg`, right), Is_present (green, traffic light); **"Name" was dropped (my choice)**; `layout: "pictures"`, ids unchanged so the pick
-  still lights its row of the record. 23.2 (replace the wrong type, `ChooseTypeStage` got a `cards` prop: only the types named are shown, three across, 92 tall, picture over words, 3D edge):
-  Integer (blue, `numbers.svg`), Float (cream, `measure.svg`, right), String (lavender, the alphabet picture); **Boolean was dropped (my choice, as on the undone screen 20)**. The stage keeps
-  its cards above the result panel (`keepOptions`) as before and the hint stands under them. Checked 390×844: open, wrong, right → Next → 23.2 open, wrong (red + hint), right ("Fixed!");
-  360×640: both stages open and 23.2 after the right pick. Not checked: dark mode, the 23.2 hint's hand (this stage has none), a real phone.
+  still lights its row of the record. **23.2 (replace the wrong type) first got three type cards with Boolean dropped, then (same day, see "The four types look the same everywhere" below) went back to all four types two by two
+  in the sorting buttons' format: the `cards` prop of `ChooseTypeStage` is gone.** The stage keeps its cards above the result panel (`keepOptions`) and the hint stands under them. Checked 390×844: open,
+  wrong, right → Next → 23.2 open, wrong (red + hint), right ("Fixed!"). Not checked: dark mode, a real phone.
 - **Screen 24's question (24.2, "Why is Player ID a String rather than an Integer?") is three picture cards (2026-11-27, asked for):** Identifies players (blue, `P.needName`, right), A yes/no value (green,
   `P.boolean`), A big number (lavender, `P.allNumbers`); **"A decimal number" was dropped (my choice: "A big number" is the better wrong answer against Integer)**. 24.1 (the five-value sorting with four
   type buttons) is unchanged: sorting stages are not picture-card screens (screens 19 and 20 were undone). Checked 390×844 and 360×640: wrong → Try again → right → Next (went to 20: the adaptive flow's
@@ -480,6 +479,19 @@ the "Let's Learn Data types" title screen: character with arms crossed, no tag).
 - **Screen 27's question ("Student ID “0045”: why is it treated as text?") is three picture cards (2026-11-27, asked for):** the same three as screen 18's: Identifies someone (blue, `P.needName`, right),
   A decimal number (lavender, `P.allNumbers`), True or False (green, `P.boolean`); **"A height" was dropped (my choice, as on 18)**. Checked 390×844 and 360×640: wrong → Try again → right ("Correct!") →
   Next (went to 12: the adaptive flow's detour after a miss on 27).
+- **The four types look the same everywhere they are chosen (2026-11-27, "change the icons for all types … everywhere the types are options … same format as screen 20; if there is a value above them keep them flex
+  (a row), if not 2 by 2"):**
+  - **Icons:** `P.integer` / `float` / `string` / `boolean` (`pictures.ts`) are now the user's `public/animations/svg/datatype-module/{intiger,float,string,boolean}.svg` (orange #, green =, purple quotes, blue ✓✗;
+    the Integer file is spelt `intiger`). They replace the cube, coins, alphabet and traffic-light pictures everywhere `P.*` is used, including the yes/no picture cards (screens 5, 14, 18, 24, 27, 23.1), screen 16's TRUE
+    button, screen 17's four cards, screen 19's "Calculate a total" (`P.integer`) and the tabs of screen 29's drag board.
+  - **A value above them** (the sorting stages: 3, 9, 18, 20, 21, 22, 24.1): the buttons in a row, `SceneSortStage`'s stacked format (screen 20's); the icon is 32 px (was 24). **Screens 3 and 9 were words-only 2×2
+    plain buttons and now have the row with icons** (3: four across; 9: its two types side by side); `withoutIcons`, `SIMILAR_BUCKETS` and the `plain` / `columns` props there are gone.
+  - **No value above them** (type quizzes 8.2, 25, 26, 28 and the type picker 23.2): two by two. The quizzes are `layout: "pictures"` with `typeOptions()` (each type's icon and its sorting button's tint: Integer blue,
+    Float lavender, String green, Boolean cream; all four types, same colour wherever); 23.2's `ChooseTypeStage` has the sorting buttons' own look (68 px, icon over word, 13 px) two by two.
+  - Not changed: screen 17's tap-to-see cards (four across, they are not an answer), screen 29's drag board (spots with the type's tab, not buttons), screen 4's groups. The quiz cards (108 × 92) and the
+    sorting buttons (81 × 68) are the same family but not the same size.
+  - Checked in headless Chrome: 390×844 every screen above opened (positions measured: sorting rows 4 px under the artboard, quizzes 12), 25 wrong → right → Next (went to 7: the adaptive detour), 23.2 wrong (red) →
+    right ("Fixed!"); 360×640 3, 9, 18, 20, 22, 24, 25, 26, 28, 23.1: all clear of the main button. Not checked: dark mode, 8.2 at 360×640 (opened while still bouncing in), a real phone.
 - **Every option hangs under what is above it, not on the main button (2026-11-27, "every options should attached to the artboard … if no artboard to the bubble … if no bubble to the question, header";
   replaces the 2026-11-15 "docked above Continue" rule).** Data Types only (Sequence and Variable already did this; Commands, Operators, Conditions were not touched).
   - Questions: all answer kinds hang at `answersTop` (`DataTypesScreen`): `underAbove(above + 12 + question)`, `above` = the scene's bottom, with no scene the bubble's, with no bubble the title's; never

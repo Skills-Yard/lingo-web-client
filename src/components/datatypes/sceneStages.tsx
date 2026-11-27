@@ -228,7 +228,7 @@ export function SceneSortStage({
                   plain ? plainLook(wrongBucket === bucket.id) : `${CARD_BODY_FLAT} ${buttonLook(wrongBucket === bucket.id ? "wrong" : "idle", index)}`
                 }`}
               >
-                {bucket.icon && <Pic src={bucket.icon} className={stacked ? "h-6 w-6" : "h-7 w-7"} />}
+                {bucket.icon && <Pic src={bucket.icon} className={stacked ? "h-8 w-8" : "h-7 w-7"} />}
                 <span className={`${plain ? "text-[16px]" : stacked ? "text-[13px]" : "text-[15px]"} leading-[110%] font-semibold text-[#444444] dark:text-white`}>{bucket.label}</span>
               </motion.button>
             </RightBounce>

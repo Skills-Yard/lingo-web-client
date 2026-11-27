@@ -1,5 +1,4 @@
 const SEQUENCE = "/images/sequence";
-const COMMAND = "/images/level-two";
 const LEVEL_ONE = "/images/level-one";
 const ROOT = "/images";
 const DATATYPES = "/images/datatypes";
@@ -38,7 +37,7 @@ export const P = {
   planTickets: `${DATATYPES}/datatypeModule-2.1.svg`,
   planPrizes: `${DATATYPES}/datatypeModule-2.3.svg`,
   // Screen 5.2's answers (what the counts have in common): quantities (the module's own icon), people's names (screen 1's person), yes/no
-  // answers (the Boolean type's traffic light: the folder has no picture for it).
+  // answers (the Boolean type's icon).
   quantities: "/animations/svg/datatype-module/quantities.svg",
   // Screen 6.2's answers (which values have a decimal part): height is screen 1's ruler (`needHeight`), weight the module's own scale, and
   // "Both" the Variable module's plus (the folder has no picture for it).
@@ -50,11 +49,11 @@ export const P = {
   valueTickets: `${DATATYPES}/datatypeModule-6.2.svg`,
   valueHeight: `${DATATYPES}/datatypeModule-6.3.svg`,
   valueWeight: `${DATATYPES}/datatypeModule-6.4.svg`,
-  // The four data types.
-  integer: `${COMMAND}/cube.png`,
-  float: `${ROOT}/coins.png`,
-  string: `${SEQUENCE}/icon-alphabet.svg`,
-  boolean: `${ROOT}/trafficSignal.png`,
+  // The four data types: the module's own icons, `public/animations/svg/datatype-module/` (the file for Integer is spelt "intiger"), the same wherever a type appears.
+  integer: "/animations/svg/datatype-module/intiger.svg",
+  float: "/animations/svg/datatype-module/float.svg",
+  string: "/animations/svg/datatype-module/string.svg",
+  boolean: "/animations/svg/datatype-module/boolean.svg",
   // Information and answers.
   think: `${SEQUENCE}/icon-think.svg`,
   order: `${SEQUENCE}/icon-order.svg`,
