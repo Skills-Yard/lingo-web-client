@@ -477,6 +477,9 @@ the "Let's Learn Data types" title screen: character with arms crossed, no tag).
   `P.boolean`), A big number (lavender, `P.allNumbers`); **"A decimal number" was dropped (my choice: "A big number" is the better wrong answer against Integer)**. 24.1 (the five-value sorting with four
   type buttons) is unchanged: sorting stages are not picture-card screens (screens 19 and 20 were undone). Checked 390×844 and 360×640: wrong → Try again → right → Next (went to 20: the adaptive flow's
   detour after a miss on 24).
+- **Screen 27's question ("Student ID “0045”: why is it treated as text?") is three picture cards (2026-11-27, asked for):** the same three as screen 18's: Identifies someone (blue, `P.needName`, right),
+  A decimal number (lavender, `P.allNumbers`), True or False (green, `P.boolean`); **"A height" was dropped (my choice, as on 18)**. Checked 390×844 and 360×640: wrong → Try again → right ("Correct!") →
+  Next (went to 12: the adaptive flow's detour after a miss on 27).
 - **Every option hangs under what is above it, not on the main button (2026-11-27, "every options should attached to the artboard … if no artboard to the bubble … if no bubble to the question, header";
   replaces the 2026-11-15 "docked above Continue" rule).** Data Types only (Sequence and Variable already did this; Commands, Operators, Conditions were not touched).
   - Questions: all answer kinds hang at `answersTop` (`DataTypesScreen`): `underAbove(above + 12 + question)`, `above` = the scene's bottom, with no scene the bubble's, with no bubble the title's; never

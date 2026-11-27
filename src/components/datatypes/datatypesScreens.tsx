@@ -1003,7 +1003,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Student ID “0045”: why is it treated as text?",
         scene: () => mastery({ mode: MASTERY.mode.value, q: MASTERY.value.studentId, highlight: MASTERY.highlight.card.string }, false),
-        options: options(["Identifies someone", "A height", "A decimal number", "True or False"]),
+        // Three tinted picture cards in one row, right under the scene: the same three, and pictures, as screen 18's ("A height" is left out).
+        layout: "pictures",
+        options: [
+          { id: at(0), text: "Identifies someone", icon: P.needName, tint: CARD_TINTS.blue },
+          { id: at(1), text: "A decimal number", icon: P.allNumbers, tint: CARD_TINTS.lavender },
+          { id: at(2), text: "True or False", icon: P.boolean, tint: CARD_TINTS.green },
+        ],
         correctId: at(0),
         rightTitle: "Correct!",
         right: "It identifies a student, not a quantity.",
