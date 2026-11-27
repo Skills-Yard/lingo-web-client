@@ -11,7 +11,8 @@ import { vibrateForAnswer } from "@/lib/haptics";
 import { boardHeight, HexBoard } from "./HexBoard";
 import { COMMAND_CHIP_HEIGHT, CommandChips, HexScreen } from "./HexScreen";
 import { endOf, GRID, GRID_START, tileName, trace, type Command, type Dir } from "./hexGrid";
-import { IMAGES, STEP, sequenceNext } from "./sequence";
+import { IMAGES, STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
@@ -82,6 +83,7 @@ const TEAL = "#04ACAB";
  */
 export function PredictScreen({ variant }: { variant: PredictVariant }) {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const config = CONFIG[variant];
   const { hex, play, reset } = useHexRun(GRID_START, GRID);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -131,7 +133,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
 
   const onContinue = () => {
     if (!checked) check();
-    else if (correct) router.push(sequenceNext(config.step));
+    else if (correct) router.push(flow.next(config.step));
     else tryAgain();
   };
 
@@ -179,6 +181,7 @@ export function PredictScreen({ variant }: { variant: PredictVariant }) {
         rise={OPTIONS_RISE}
         cardHeight={OPTION_HEIGHT}
         pictureHeight={OPTION_PICTURE_HEIGHT}
+        bounceRight={flow.bounceRight}
         onPick={pick}
       />
       {/* The hint's hand: taps the right answer; it goes as soon as the learner does something. */}

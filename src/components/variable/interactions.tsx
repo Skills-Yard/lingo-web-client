@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Sparkles } from "lucide-react";
 import { TipCard } from "@/components/sequence/HexScreen";
-import { ArrangeBoard, arrangeGeometry, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
+import { ArrangeBoard, arrangeGeometry, DESIGN_BADGE, useArrange, type ArrangeCardDef } from "@/components/sequence/ArrangeBoard";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
@@ -581,8 +581,8 @@ export function MatchPricesStage({ slip: slipped, done, finished, hint }: Intera
             onTap={tapName}
             onSlotTap={tapSpot}
             slotLabel={(index) => `Price ₹${MATCH_ITEMS[index].price}`}
-            // An empty spot shows only its amount: which name belongs on it is for the learner to work out from the shop counter.
-            slotContent={(index) => <span className="rounded-full bg-[#FFB300] px-3.5 py-1 text-[18px] leading-6 font-bold text-white">₹{MATCH_ITEMS[index].price}</span>}
+            // An empty spot shows only its amount, in the design's badge (Figma "Frame 351": a 40px #BFC7D5 circle, the amount in it Poppins 500 16px white, the same badge the numbered spots have): which name belongs on it is for the learner to work out from the shop counter.
+            slotContent={(index) => <span className={DESIGN_BADGE}>₹{MATCH_ITEMS[index].price}</span>}
           />
         </div>
         <p className="w-[340px] text-center text-[13px] leading-5 font-medium text-[#D42421]" style={{ height: MATCH_NOTE_H }}>

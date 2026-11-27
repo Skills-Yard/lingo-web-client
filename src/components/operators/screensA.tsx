@@ -1,32 +1,100 @@
 "use client";
 
+import { useEffect } from "react";
+import { BAR_W } from "./column";
 import { at, LOOK_AGAIN, neutral, options, quiz, yesNo } from "./helpers";
 import { FlipCarouselStage } from "./FlipCarousel";
-import { ExpressionStage, FillRowsStage, ShareStage, SymbolStage } from "./interactions";
-import { JobTurnStage, OperatorTurnStage, type JobItem, type OperatorItem } from "./OperatorCardsStage";
+import { ExpressionStage } from "./interactions";
+import type { OperatorItem } from "./OperatorCardsStage";
+import { fireScene, type SceneTexts } from "@/lib/rive/operatorsHost";
+import { OPERATOR_ARITH, OPERATOR_INTRO, OPERATOR_SHOP, OPERATOR_STUDIO } from "@/lib/rive/runtime";
+import { OperatorScene } from "./OperatorScene";
 import { STEP } from "./operators";
 import { P } from "./pictures";
 import type { InteractionStage, ScreenDef } from "./screen";
-import { SituationsStage, type SituationItem } from "./SituationsStage";
-import { BagIcon, ExprBig, GroupsPicture, InfoSheet, NotebookIcon, PenIcon, PlantGrid, Pic, ShareScene, ValueCards, Versus, WalletScene } from "./visuals";
+import { ArithmeticTurn, StudioJobs, StudioJobsTurn, StudioTurnStage, StudioVisual, type StudioCard } from "./StudioStage";
+import { GroupsPicture, ShareScene, ValueCards } from "./visuals";
 
-/** The four situations of "Explore the situations!", in the order their questions come. */
-const SITUATIONS: readonly SituationItem[] = [
-  { id: "money", icon: P.iconMoney, verb: "Combining", thing: "money", tint: "lavender" },
-  { id: "chocolate", icon: P.iconChocolate, verb: "Sharing", thing: "chocolate", tint: "cream" },
-  { id: "heights", icon: P.iconHeight, verb: "Comparing", thing: "heights", tint: "mint" },
-  { id: "spending", icon: P.iconWallet, verb: "Spending", thing: "money", tint: "blue" },
-];
+/** Which key of the studio each answer of "Explore the situations!" lifts, by the answer's place (Adding, Subtracting, Dividing, Comparing). Comparing has no key: the studio's keys are the four that calculate. */
+const ANSWER_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.divide, OPERATOR_STUDIO.pick.none] as const;
 
-/** What Hex says as each situation's turn comes. */
-const SITUATION_LINES: readonly string[] = ["We saw four situations. Let's find the action in each, starting here.", "Now the next situation.", "And another one.", "Now the last one."];
+/** What the studio's card says on each question: the situation, and what is asked (the numbers are the question's own). */
+const ASK = "Which action is this?";
+const SITUATION_CARDS = {
+  money: { title: "Combining money", meaning: ASK, example: "₹50 and ₹30" },
+  chocolate: { title: "Sharing chocolate", meaning: ASK, example: "20 for 4 students" },
+  heights: { title: "Comparing heights", meaning: ASK, example: "150 vs 140 cm" },
+  spending: { title: "Spending money", meaning: ASK, example: "₹500, spend ₹100" },
+} as const satisfies Record<string, StudioCard>;
 
-/** The turn of one situation: its card is picked out while Hex speaks, and Continue goes on to its question. */
-const situationTurn = (focus: number): InteractionStage => ({
-  kind: "interaction",
-  line: SITUATION_LINES[focus],
-  render: (api) => <SituationsStage api={api} situations={SITUATIONS} focus={focus} />,
+/**
+ * Screen 4's last question, "Which mathematical actions did we use?": the studio stands over the answers, its card with the money
+ * from the start to the end. Picking an answer lifts the key of its first action (Addition and subtraction: +, Multiplication
+ * and division: ×; Only comparing has none), as the studio lifts one key at a time.
+ */
+const ACTIONS_CARD: StudioCard = { title: "Money left ₹300", meaning: "Which actions did we use?", example: "₹500 to ₹300" };
+const ACTIONS_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.multiply, OPERATOR_STUDIO.pick.none] as const;
+
+/**
+ * Screen 7's stickers question ("Which operation finds the total?"): the studio stands over the answers (Add, Subtract, Divide),
+ * its card with the two numbers and no operation named. Picking an answer lifts its key.
+ */
+const STICKERS_CARD: StudioCard = { title: "Collecting stickers", meaning: "Which operation is this?", example: "12 and 5 more" };
+const STICKERS_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.divide] as const;
+
+/** Screen 7's sweets question ("Which operation finds how many are left?"), the same way: the answers are Multiply, Subtract, Add. */
+const SWEETS_CARD: StudioCard = { title: "Eating sweets", meaning: "Which operation is this?", example: "9 sweets, eat 4" };
+const SWEETS_KEY = [OPERATOR_STUDIO.pick.multiply, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.add] as const;
+
+/**
+ * A question of "Explore the situations!": the Operators studio stands over the four answers (Adding, Subtracting,
+ * Dividing, Comparing). Picking an answer lifts its key, and checking it plays the studio's right or wrong.
+ */
+const situationQuiz = (card: StudioCard, stage: { line: string; correctId: string; right: string; wrong: string }) =>
+  quiz({
+    ...stage,
+    visual: ({ attempt, picked, checked, correct }) => (
+      <StudioVisual
+        card={card}
+        pick={(picked !== null ? ANSWER_KEY[Number(picked)] : undefined) ?? OPERATOR_STUDIO.pick.none}
+        verdict={checked ? (correct ? "correct" : "wrong") : null}
+        attempt={attempt}
+      />
+    ),
+    options: neutral(["Adding", "Subtracting", "Dividing", "Comparing"]),
+    rightTitle: "Exactly!",
+  });
+
+/**
+ * The shop counter (the Variable module's "VAR_Shop") on screens 3 and 4, with the book and the pen priced as the money
+ * screens have them (its file has 50 and 20), their names on, and the hanging board saying one thing at a time: the money
+ * left that is not known yet, then what the book and the pen cost, then the money left.
+ */
+const shopTexts = (board: { label: string; amount: string }): SceneTexts => ({
+  [OPERATOR_SHOP.text.boardAmount]: board.amount,
+  [OPERATOR_SHOP.text.boardLabel]: board.label,
+  [OPERATOR_SHOP.text.notebookName]: "Book",
+  ...Object.fromEntries(OPERATOR_SHOP.text.notebookAmount.map((run) => [run, "150"])),
+  ...Object.fromEntries(OPERATOR_SHOP.text.penAmount.map((run) => [run, "50"])),
 });
+
+/** Screen 3's picture: the eraser too (its own ₹10), and the board asking for the money left. */
+const SHOP_FACTS = { showEraser: true, showNames: true, showTotal: true };
+const SHOP_TEXTS = shopTexts({ label: "Money left", amount: "?" });
+
+/** Screen 7's second picture: the intro's wallet (its file has ₹500 on the tag and on the note) with the ₹20 spent on the tag, and the ₹80 the question starts from on the note (the money in the wallet). */
+const WALLET_SPEND: SceneTexts = { [OPERATOR_INTRO.text.walletTag]: "₹20", [OPERATOR_INTRO.text.walletNote]: "₹80" };
+
+/**
+ * Screen 4's picture (the book and the pen only), drawn smaller than screen 3's since the blocks stand under it. `together`
+ * plays the prices joining with a plus (the book and the pen put together).
+ */
+function ShopLead({ board, together = false }: { board: { label: string; amount: string }; together?: boolean }) {
+  useEffect(() => {
+    if (together) fireScene("shop", "calc");
+  }, [together]);
+  return <OperatorScene scene="shop" width={BAR_W} values={{ showNames: true, showTotal: true }} texts={shopTexts(board)} />;
+}
 
 /** The four operators of "Meet the Operators!", in the order their questions come. */
 const OPERATORS: readonly OperatorItem[] = [
@@ -44,18 +112,28 @@ const OPERATOR_LINES: readonly string[] = [
   "Last, /: it divides one value by another.",
 ];
 
-/** The turn of one operator: its card is picked out while Hex introduces it, and Continue goes on to the next one. */
+/** The studio key of each of the four operators, in the same order (+, -, *, /). */
+const OPERATOR_KEY = [OPERATOR_STUDIO.pick.add, OPERATOR_STUDIO.pick.subtract, OPERATOR_STUDIO.pick.multiply, OPERATOR_STUDIO.pick.divide] as const;
+
+/**
+ * The turn of one operator: the Operators studio's key for it is lifted while Hex introduces it, its card saying the name,
+ * what it does and an example, and Continue goes on to the next one.
+ */
 const operatorTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: OPERATOR_LINES[focus],
-  render: (api) => <OperatorTurnStage api={api} operators={OPERATORS} focus={focus} />,
+  render: (api) => {
+    const operator = OPERATORS[focus];
+    return (
+      <StudioTurnStage
+        api={api}
+        card={{ title: operator.name, meaning: operator.title, example: operator.example }}
+        pick={OPERATOR_KEY[focus]}
+        before={focus > 0 ? OPERATOR_KEY[focus - 1] : OPERATOR_STUDIO.pick.none}
+      />
+    );
+  },
 });
-
-/** The two big jobs of "Calculate or Compare?", in the order they are introduced. */
-const JOBS: readonly JobItem[] = [
-  { id: "calculate", pic: P.computer, name: "Calculate", title: "How much? How many? What remains?", example: "20 + 5 = 25", tint: "mint" },
-  { id: "compare", pic: P.light, name: "Compare", title: "Which is greater? Are they equal?", example: "20 > 5", tint: "lavender" },
-];
 
 /** What Hex says as each job's turn comes. */
 const JOB_LINES: readonly string[] = [
@@ -63,44 +141,29 @@ const JOB_LINES: readonly string[] = [
   "The second big thing is to compare values, with comparison operators.",
 ];
 
-/** The turn of one job: its card is picked out while Hex introduces it, and Continue goes on to the next. */
+/** The turn of one job: the Operators studio's two cards (Calculate, Compare) as they are, while Hex introduces the job, and Continue goes on to the next. */
 const jobTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: JOB_LINES[focus],
-  render: (api) => <JobTurnStage api={api} jobs={JOBS} focus={focus} />,
+  render: (api) => <StudioJobsTurn api={api} />,
 });
 
-/** The three answers of "Same Numbers, Three Answers!" (23 chocolates in groups of 4), in the order they are introduced. */
-const DIVISIONS: readonly OperatorItem[] = [
-  { id: "div", symbol: "/", name: "Division", title: "Ordinary division, with decimals", example: "23 / 4 = 5.75", tint: "blue" },
-  { id: "floor", symbol: "//", name: "Floor division", title: "Floor division: complete groups", example: "23 // 4 = 5", tint: "mint" },
-  { id: "mod", symbol: "%", name: "Modulus", title: "Modulus: the remainder", example: "23 % 4 = 3", tint: "cream" },
-];
-
-/** What Hex says as each of them comes. */
+/** What Hex says as each of the three answers of "Same Numbers, Three Answers!" (23 chocolates in groups of 4) comes: /, //, %. */
 const DIVISION_LINES: readonly string[] = [
   "23 chocolates, 4 in each group. First, /: ordinary division, with decimals.",
   "Next, //: floor division. It counts the complete groups.",
   "Last, %: modulus. It gives what is left over.",
 ];
 
-/** The part of the chocolates each one is about: all of them, the complete groups, what is left over. */
-const DIVISION_PART = ["all", "groups", "left"] as const;
-
-/** The turn of one of them: its card is picked out while Hex introduces it (and the chocolates it is about), and Continue goes on to the next. */
+/**
+ * The turn of one of them: the arithmetic artboard in mode 3 ("Three Division Results", all three answers and the rule), the same
+ * picture on every turn and on the question (it is static, nothing in it can be picked out), while Hex introduces the answer.
+ * Continue goes on to the next once he has said his line.
+ */
 const divisionTurn = (focus: number): InteractionStage => ({
   kind: "interaction",
   line: DIVISION_LINES[focus],
-  render: (api) => (
-    <OperatorTurnStage
-      api={api}
-      operators={DIVISIONS}
-      focus={focus}
-      columns={3}
-      // Before its card is picked out the chocolates still show the turn before, so the change reads as a fade.
-      header={(lit) => <GroupsPicture total={23} size={4} emphasis={DIVISION_PART[lit ? focus : Math.max(0, focus - 1)]} still={focus > 0} />}
-    />
-  ),
+  render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.results} />,
 });
 
 /** Screens 1-14 (phases 1 to 3: everyday actions, meeting operators, arithmetic). */
@@ -134,71 +197,27 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     step: STEP.actions,
     title: "Explore the *situations!*",
     stages: [
-      situationTurn(0),
-      quiz({
+      situationQuiz(SITUATION_CARDS.money, {
         line: "You have ₹50 and receive another ₹30.",
-        visual: ({ attempt }) => (
-          <ValueCards
-            replay={attempt}
-            items={[
-              { pic: P.money, label: "You have", value: "₹50" },
-              { pic: P.money, label: "You get", value: "₹30" },
-            ]}
-          />
-        ),
-        layout: "grid",
-        options: neutral(["Adding", "Subtracting", "Dividing", "Comparing"]),
         correctId: at(0),
-        rightTitle: "Exactly!",
         right: "Adding: we put the two amounts together.",
         wrong: "Are the amounts put together, taken away, shared or compared?",
       }),
-      situationTurn(1),
-      quiz({
+      situationQuiz(SITUATION_CARDS.chocolate, {
         line: "You have 20 chocolates to share equally among 4 students.",
-        visual: ({ attempt }) => (
-          <ValueCards
-            replay={attempt}
-            items={[
-              { pic: P.chocolate, label: "Chocolates", value: "20" },
-              { pic: P.student, label: "Students", value: "4" },
-            ]}
-          />
-        ),
-        layout: "grid",
-        options: neutral(["Adding", "Subtracting", "Dividing", "Comparing"]),
         correctId: at(2),
-        rightTitle: "Exactly!",
         right: "Dividing: we share equally.",
         wrong: "Everyone should get the same. What do we do to share?",
       }),
-      situationTurn(2),
-      quiz({
+      situationQuiz(SITUATION_CARDS.heights, {
         line: "One student is 150 cm tall and another is 140 cm.",
-        visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.person, label: "Student 1", value: "150 cm" }} right={{ pic: P.person, label: "Student 2", value: "140 cm" }} />,
-        layout: "grid",
-        options: neutral(["Adding", "Subtracting", "Dividing", "Comparing"]),
         correctId: at(3),
-        rightTitle: "Exactly!",
         right: "Comparing: we see who is taller.",
         wrong: "We are not changing the heights. We are looking at the two.",
       }),
-      situationTurn(3),
-      quiz({
+      situationQuiz(SITUATION_CARDS.spending, {
         line: "You have ₹500 and spend ₹100.",
-        visual: ({ attempt }) => (
-          <ValueCards
-            replay={attempt}
-            items={[
-              { pic: P.money, label: "You have", value: "₹500" },
-              { pic: P.money, label: "You spend", value: "₹100" },
-            ]}
-          />
-        ),
-        layout: "grid",
-        options: neutral(["Adding", "Subtracting", "Dividing", "Comparing"]),
         correctId: at(1),
-        rightTitle: "Exactly!",
         right: "Subtracting: money is taken away. We add, subtract, divide or compare.",
         wrong: "Does the money grow, or does some go away?",
       }),
@@ -211,19 +230,8 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     title: "Remember What We *Learned?*",
     stages: [
       quiz({
-        line: "We have all this information. Can we find the money left without doing anything with it?",
-        visual: ({ attempt }) => (
-          <InfoSheet
-            replay={attempt}
-            rows={[
-              { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money available", value: "₹500" },
-              { icon: <NotebookIcon />, label: "Book price", value: "₹150" },
-              { icon: <PenIcon />, label: "Pen price", value: "₹50" },
-            ]}
-            missing={{ icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money left" }}
-          />
-        ),
-        layout: "grid",
+        line: "We have ₹500 and the price of every item. Can we find the money left without doing anything?",
+        visual: () => <OperatorScene scene="shop" values={SHOP_FACTS} texts={SHOP_TEXTS} />,
         options: yesNo(),
         correctId: at(1),
         rightTitle: "Correct!",
@@ -240,20 +248,11 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "First, what do the book and the pen cost together?",
+        line: "You have ₹500. First, what do the book and the pen cost together?",
         render: (api) => (
           <ExpressionStage
             api={api}
-            lead={
-              <InfoSheet
-                compact
-                rows={[
-                  { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Wallet", value: "₹500" },
-                  { icon: <NotebookIcon />, label: "Book", value: "₹150" },
-                  { icon: <PenIcon />, label: "Pen", value: "₹50" },
-                ]}
-              />
-            }
+            lead={<ShopLead board={{ label: "Money left", amount: "?" }} together={api.finished} />}
             tokens={["150", "50", "+", "-"]}
             accept={[
               ["150", "+", "50"],
@@ -267,20 +266,11 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       },
       {
         kind: "interaction",
-        line: "Now take that cost out of the wallet.",
+        line: "You have ₹500 in the wallet. Now take that cost out of it.",
         render: (api) => (
           <ExpressionStage
             api={api}
-            lead={
-              <InfoSheet
-                compact
-                rows={[
-                  { icon: <Pic src={P.iconWallet} className="size-full" />, label: "Wallet", value: "₹500" },
-                  { icon: <BagIcon />, label: "Book + Pen", value: "₹200" },
-                ]}
-                missing={{ icon: <Pic src={P.iconWallet} className="size-full" />, label: "Money left", value: api.finished ? "₹300" : undefined }}
-              />
-            }
+            lead={<ShopLead board={api.finished ? { label: "Money left", amount: "300" } : { label: "Book + Pen", amount: "200" }} />}
             tokens={["500", "200", "-", "+"]}
             accept={[["500", "-", "200"]]}
             hint="Money goes out of the wallet, so we take it away."
@@ -292,6 +282,16 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which mathematical actions did we use?",
         keepLine: true,
+        visual: ({ attempt, picked, checked, correct }) => (
+          <StudioVisual
+            card={ACTIONS_CARD}
+            pick={(picked !== null ? ACTIONS_KEY[Number(picked)] : undefined) ?? OPERATOR_STUDIO.pick.none}
+            verdict={checked ? (correct ? "correct" : "wrong") : null}
+            attempt={attempt}
+            // Hex's line stays up after the check here, so the room for the picture is short: it is drawn smaller, not cut by his bubble.
+            width="290px"
+          />
+        ),
         options: neutral(["Addition and subtraction.", "Multiplication and division.", "Only comparing."]),
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -322,7 +322,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       jobTurn(1),
       quiz({
         line: "Which job answers the question “Which is greater?”",
-        layout: "grid",
+        visual: () => <StudioJobs />,
         options: options([
           ["Calculate", P.order],
           ["Compare", P.actions],
@@ -342,7 +342,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "You have ₹50. Your friend gives you ₹30. How much now?",
-        visual: ({ attempt, checked, correct }) => <WalletScene replay={attempt} amount={50} change={{ sign: "+", value: 30 }} showTotal={checked && correct} />,
+        visual: () => <OperatorScene scene="intro" values={{ mode: 1, situation: OPERATOR_INTRO.situation.money }} />,
         options: options([
           ["₹70", P.money],
           ["₹80", P.money],
@@ -355,7 +355,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "Now you spend ₹20. How much is left?",
-        visual: ({ attempt, checked, correct }) => <WalletScene replay={attempt} amount={80} change={{ sign: "-", value: 20 }} showTotal={checked && correct} />,
+        visual: () => <OperatorScene scene="intro" values={{ mode: 1, situation: OPERATOR_INTRO.situation.wallet }} texts={WALLET_SPEND} />,
         options: options([
           ["₹100", P.money],
           ["₹60", P.money],
@@ -368,6 +368,14 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "You have 12 stickers and get 5 more. Which operation finds the total?",
+        visual: ({ attempt, picked, checked, correct }) => (
+          <StudioVisual
+            card={STICKERS_CARD}
+            pick={(picked !== null ? STICKERS_KEY[Number(picked)] : undefined) ?? OPERATOR_STUDIO.pick.none}
+            verdict={checked ? (correct ? "correct" : "wrong") : null}
+            attempt={attempt}
+          />
+        ),
         options: neutral(["Add (+)", "Subtract (-)", "Divide (/)"]),
         correctId: at(0),
         rightTitle: "Right!",
@@ -376,6 +384,14 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "You have 9 sweets and eat 4. Which operation finds how many are left?",
+        visual: ({ attempt, picked, checked, correct }) => (
+          <StudioVisual
+            card={SWEETS_CARD}
+            pick={(picked !== null ? SWEETS_KEY[Number(picked)] : undefined) ?? OPERATOR_STUDIO.pick.none}
+            verdict={checked ? (correct ? "correct" : "wrong") : null}
+            attempt={attempt}
+          />
+        ),
         options: neutral(["Multiply (*)", "Subtract (-)", "Add (+)"]),
         correctId: at(1),
         rightTitle: "Right!",
@@ -392,14 +408,13 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "4 rows, 5 chairs in each row. Tap a row to place its chairs.",
-        render: (api) => <FillRowsStage api={api} rows={4} per={5} />,
-        finishPanel: { title: "All set!", text: "Every row has 5 chairs. Now let's count them all." },
+        line: "4 rows, 5 chairs in each row. Now let's count them all.",
+        render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.groups} />,
       },
       quiz({
-        line: "Count the chairs in each row, then all of them.",
+        line: "Count the chairs in each row, then add all of them.",
         question: "How many chairs altogether?",
-        visual: () => <ExprBig tokens={["5", "+", "5", "+", "5", "+", "5"]} size={28} />,
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.groups }} />,
         options: options([
           ["9", P.chair],
           ["20", P.chair],
@@ -413,7 +428,10 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "There is a shortcut for adding equal groups.",
         question: "Which means 4 groups of 5?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.groups }} />,
         options: neutral(["4 * 5", "4 + 5", "4 - 5"]),
+        // One row of mini cards (not three rows), so the picture over them is not shrunk to the least.
+        threeCards: true,
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "4 * 5 = 20. Multiplication is a shortcut for adding equal groups.",
@@ -429,7 +447,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "20 chocolates, 4 students. How many does each one get?",
-        visual: () => <ShareScene pile={20} trays={[0, 0, 0, 0]} />,
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.sharing }} />,
         options: options([
           ["4", P.chocolate],
           ["5", P.chocolate],
@@ -442,12 +460,12 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       {
         kind: "interaction",
-        line: "Share them out, one to each student at a time.",
-        render: (api) => <ShareStage api={api} total={20} students={4} />,
-        finishPanel: { title: "5 each!", text: "20 / 4 = 5.0. Division shares a quantity equally." },
+        line: "Shared equally, each student gets 5. Division shares a quantity equally.",
+        render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.sharing} />,
       },
       quiz({
         line: "In Python, / gives a Float. What does 20 / 4 give?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.sharing }} />,
         options: neutral(["5", "5.0", "4.0"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -464,14 +482,15 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
     stages: [
       {
         kind: "interaction",
-        line: "23 chocolates, 4 students. Share one round at a time.",
-        render: (api) => <ShareStage api={api} total={23} students={4} />,
-        finishPanel: { title: "Each has 5!", text: "3 chocolates are left. They can't make another full round." },
+        line: "23 chocolates, 4 students. Each gets 5, and 3 are left over.",
+        render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.results} />,
       },
       quiz({
         line: "How many does each student get, and how many are left?",
-        visual: () => <ShareScene pile={3} trays={[5, 5, 5, 5]} />,
-        options: neutral(["5 each, 3 left.", "6 each, 0 left.", "5 each, 0 left."]),
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.results }} />,
+        // Non-breaking spaces inside each half, so a card's two lines break after the comma ("5 each," / "3 left.").
+        options: neutral(["5 each, 3 left.", "6 each, 0 left.", "5 each, 0 left."]),
+        threeCards: true,
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "5 each, and 3 are left over.",
@@ -479,7 +498,9 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       quiz({
         line: "Three results: 5.75, 5 and 3. Which expression gives the 3 left over?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.results }} />,
         options: neutral(["23 / 4", "23 // 4", "23 % 4"]),
+        threeCards: true,
         correctId: at(2),
         rightTitle: "Exactly!",
         right: "23 % 4 = 3. 23 / 4 = 5.75 and 23 // 4 = 5 answer other questions.",
@@ -498,6 +519,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       divisionTurn(2),
       quiz({
         line: "What does 23 // 4 = 5 tell us?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.results }} />,
         options: neutral(["5 complete groups of 4.", "5 chocolates are left over.", "The decimal answer, 5.75."]),
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -579,8 +601,10 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "12 chocolates. Each group needs 4.",
         question: "12 // 4 = ? and 12 % 4 = ?",
-        visual: ({ attempt }) => <GroupsPicture replay={attempt} total={12} size={4} />,
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.sharing }} />,
         options: neutral(["3 and 4", "2 and 4", "3 and 0"]),
+        // One row of mini cards, so the picture over them keeps its size.
+        threeCards: true,
         correctId: at(2),
         rightTitle: "Exactly!",
         right: "3 groups, nothing left. The remainder is always smaller than the divisor.",
@@ -597,7 +621,7 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "A square garden: 4 rows and 4 columns of plants.",
         question: "How many plants are there?",
-        visual: ({ attempt }) => <PlantGrid replay={attempt} />,
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.power }} />,
         options: neutral(["8", "16", "12"]),
         correctId: at(1),
         rightTitle: "Exactly!",
@@ -606,27 +630,12 @@ export const SCREENS_A: Readonly<Record<number, ScreenDef>> = {
       }),
       {
         kind: "interaction",
-        line: "** raises a number to a power. Tap the examples.",
-        render: (api) => (
-          <SymbolStage
-            api={api}
-            big={false}
-            groups={[
-              {
-                columns: 3,
-                items: [
-                  { id: "a", symbol: "2 ** 3", title: "2 * 2 * 2", example: "2 ** 3 = 8" },
-                  { id: "b", symbol: "3 ** 2", title: "3 * 3", example: "3 ** 2 = 9" },
-                  { id: "c", symbol: "5 ** 2", title: "5 * 5", example: "5 ** 2 = 25" },
-                ],
-              },
-            ]}
-          />
-        ),
-        finishPanel: { title: "Exponentiation!", text: "** is a compact way to multiply a number by itself." },
+        line: "** raises a number to a power, like 2 ** 3 = 8.",
+        render: (api) => <ArithmeticTurn api={api} mode={OPERATOR_ARITH.mode.power} />,
       },
       quiz({
         line: "What is 4 ** 2?",
+        visual: () => <OperatorScene scene="arithmetic" values={{ mode: OPERATOR_ARITH.mode.power }} />,
         options: neutral(["8", "16", "6"]),
         correctId: at(1),
         rightTitle: "Exactly!",

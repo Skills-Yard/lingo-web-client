@@ -4,6 +4,13 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { animate, motion, useMotionValue } from "framer-motion";
 
 /**
+ * When several buttons bounce together (the buttons of a finished Data Types stage), each bounces this many seconds after
+ * the one before it, so the bounce runs along them like a wave: `RightBounce` itself with `delay={index * WAVE_S}`. They
+ * overlap a lot; for a wider wave see `WAVE_ROLL_S`.
+ */
+export const WAVE_S = 0.12;
+
+/**
  * The bounce of a right answer. It shrinks a little first, about its middle (the top comes down and the bottom comes up
  * together, and it widens a touch), then springs out of it stretched tall as it leaves the ground, goes up high, comes
  * down and squashes flat on landing, hops up again (about two fifths as high), squashes a little, and hops once more,
@@ -18,6 +25,14 @@ const BOUNCE_S = 0.95;
 const BOUNCE_UP = [0, -36, 0, -14, 0, -5, 0];
 const BOUNCE_TIMES = [0, 0.26, 0.5, 0.67, 0.81, 0.91, 1];
 const BOUNCE_EASE = ["easeOut", "easeIn", "easeOut", "easeIn", "easeOut", "easeIn"] as const;
+/**
+ * A wave that runs along one after the other: when several things bounce as one answer is right (the blocks of a right
+ * expression), each starts its shrink as the one before it reaches the top of its jump (`delay={index * WAVE_ROLL_S}`), so
+ * the jump rolls from one to the next like a wave, with only a small difference between their start times (the one before is
+ * on its way down while the next goes up).
+ */
+export const WAVE_ROLL_S = BOUNCE_S * BOUNCE_TIMES[1];
+
 /** Its shape on the way: stretched tall as it rises and falls, squashed flat when it lands (height first, width the opposite way). The first value is the shrunk size it starts from. */
 const SHAPE_TIMES = [0, 0.1, 0.26, 0.4, 0.5, 0.58, 0.67, 0.81, 1];
 const SHAPE_Y = [SQUEEZE_Y, 1.1, 1, 1.05, 0.86, 1, 1, 0.95, 1];

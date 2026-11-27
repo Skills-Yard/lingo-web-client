@@ -60,7 +60,7 @@ export function SituationsStage({ api, situations, focus }: { api: InteractionAp
   const lit = useTurn(api);
 
   return (
-    <div className="pointer-events-auto grid w-[340px] grid-cols-2 gap-3">
+    <div className="pointer-events-auto grid w-(--column-w) grid-cols-2 gap-3">
       {situations.map((situation, index) => {
         const current = lit && index === focus;
         return (

@@ -5,6 +5,7 @@ import { animate, AnimatePresence, motion, useMotionValue } from "framer-motion"
 import { Check, FileText } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
+import { RightBounce } from "@/components/level-two/RightBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForTap } from "@/lib/haptics";
@@ -587,7 +588,10 @@ export function ToggleStage({ api, items }: { api: InteractionApi; items: readon
   );
 }
 
-/** A field marked as having the wrong type: tap the type it should have. */
+/** How long (ms) after the right type is tapped the stage is done: its whole bounce (about 1.1 s) is seen before the result panel comes. */
+const CHOOSE_FINISH_MS = 1200;
+
+/** A field marked as having the wrong type: tap the type it should have. The right one turns green and bounces at once, and stays (see `InteractionStage.keepOptions`). */
 export function ChooseTypeStage({
   api,
   field,
@@ -610,12 +614,13 @@ export function ChooseTypeStage({
   const [wrong, setWrong] = useState<string | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
   const choose = (id: string) => {
-    if (finished) return;
+    // Once the right one is tapped nothing else is taken (the bounce is playing).
+    if (finished || chosen) return;
     playClickSound();
     vibrateForTap();
     if (id === correct) {
       setChosen(id);
-      window.setTimeout(() => done(), 500);
+      window.setTimeout(() => done(), CHOOSE_FINISH_MS);
       return;
     }
     slip();
@@ -636,22 +641,24 @@ export function ChooseTypeStage({
       )}
       {/* The hint stands over the types, so they are the lowest thing: on the main button, as every screen's options are. */}
       <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
+      {/* Every box is the same size: the bounce box fills its cell (`flex-1`), or each box would only be as wide as its words. */}
       <div className="grid w-full grid-cols-2 gap-3.5">
         {TYPES.map((type, index) => (
-          <motion.button
-            key={type.id}
-            type="button"
-            onClick={() => choose(type.id)}
-            animate={{ x: wrong === type.id ? SHAKE : 0 }}
-            transition={{ duration: 0.35 }}
-            whileTap={{ scale: 0.97 }}
-            className={`${CARD_BODY_FLAT} ${RAISED} h-[64px] cursor-pointer gap-2 px-2 ${
-              chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
-            }`}
-          >
-            <Pic src={type.icon} className="h-8 w-8" />
-            <span className={CARD_TEXT}>{type.label}</span>
-          </motion.button>
+          <RightBounce key={type.id} play={chosen === type.id} radius={8} className="flex min-w-0 flex-1">
+            <motion.button
+              type="button"
+              onClick={() => choose(type.id)}
+              animate={{ x: wrong === type.id ? SHAKE : 0 }}
+              transition={{ duration: 0.35 }}
+              whileTap={{ scale: 0.97 }}
+              className={`${CARD_BODY_FLAT} ${RAISED} h-[64px] min-w-0 flex-1 cursor-pointer gap-2 px-2 ${
+                chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
+              }`}
+            >
+              <Pic src={type.icon} className="h-8 w-8" />
+              <span className={CARD_TEXT}>{type.label}</span>
+            </motion.button>
+          </RightBounce>
         ))}
       </div>
     </div>

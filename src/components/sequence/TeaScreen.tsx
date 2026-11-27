@@ -7,11 +7,13 @@ import { FeedbackPanel, XpBurst } from "@/components/level-one/FeedbackPanel";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { CentredRow, LevelTwoShell, ScreenTitle, SoftBackdrop, stageTop, Teal } from "@/components/level-two/LevelTwoShell";
 import type { BubbleSize, Span } from "@/components/level-two/levelTwo";
+import { robotBelowDialogue } from "@/components/level-two/RobotBackdrop";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, useArrange, type ArrangeCardDef } from "./ArrangeBoard";
-import { SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 
 const LINE: readonly Span[] = [{ text: "Time for tea! Arrange the steps in order." }];
@@ -32,11 +34,8 @@ const CARDS: readonly ArrangeCardDef[] = [
 
 /** In a row, as on "Arrange the instructions!": the slots across the top, the cards in a tray under them. */
 const GEO = arrangeGeometry({ mode: "rows", card: { width: 108, height: 124 }, count: 3, gap: 8, lane: 14, slotsOnTop: true, solidSlots: true });
-/**
- * Once checked the board rises this far (px): the filled slots (the tray is empty by then)
- * stand between Hex's line, which stays, and the result panel, so the learner's order stays in view.
- */
-const BOARD_RISE = 180;
+/** The slots start this far (px) under Hex's bubble. Up there they stay put once checked: the filled slots are clear of the result panel, so the learner's order stays in view. */
+const GAP_UNDER_HEX = 12;
 
 /**
  * "One last challenge.": the same idea away from the robot. Three tea-making
@@ -45,6 +44,7 @@ const BOARD_RISE = 180;
  */
 export function TeaScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const { slots, placeIn, tapCard, reset, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const [checked, setChecked] = useState(false);
   const [answer, setAnswer] = useState<AnswerResult | null>(null);
@@ -70,15 +70,15 @@ export function TeaScreen() {
 
   const onContinue = () => {
     if (!checked) check();
-    else if (correct) router.push(sequenceNext(STEP.tea));
+    else if (correct) router.push(flow.next(STEP.tea));
     else tryAgain();
   };
 
   return (
     <LevelTwoShell
-      step={STEP.tea}
-      total={SEQUENCE_STEPS}
-      onBack={() => router.push(sequencePrevious(STEP.tea))}
+      step={flow.position(STEP.tea)}
+      total={flow.total}
+      onBack={() => router.push(flow.previous(STEP.tea))}
       scene={<SoftBackdrop />}
       answer={answer}
       ctaDisabled={!full}
@@ -105,8 +105,9 @@ export function TeaScreen() {
       <CentredRow top={stageTop(BUBBLE_TOP)}>
         <HexBubble key={attempt} entryKey={`tea-${attempt}`} hex="left" line={LINE} size={BUBBLE} />
       </CentredRow>
-      <ArrangeDock geo={GEO} rise={checked ? BOARD_RISE : 0}>
-        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} onPlace={placeIn} onTap={tapCard} />
+      {/* The slots hang right under Hex's line; the cards stand on the button row. */}
+      <ArrangeDock geo={GEO} slotsTop={`${robotBelowDialogue(BUBBLE_TOP, BUBBLE) + GAP_UNDER_HEX}px`}>
+        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={checked} hideShadows={checked} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
       <Confetti active={checked && correct} />
       <XpBurst show={checked && correct} />

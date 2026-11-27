@@ -5,8 +5,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Check, type LucideIcon } from "lucide-react";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
-import { HexBubble } from "@/components/level-two/HexBubble";
-import { RightBounce } from "@/components/level-two/RightBounce";
+import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
+import { HEX_SLOT, SpeechBubble } from "@/components/level-two/HexBubble";
+import { RightBounce, WAVE_S } from "@/components/level-two/RightBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED } from "@/components/ui/raised";
 import { vibrateForTap } from "@/lib/haptics";
@@ -27,6 +28,11 @@ import { Pic } from "./visuals";
 const STAGE_W = "w-[354px]";
 const NOTE = "min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]";
 const PROMPT = "text-[#6B7480] dark:text-white/60";
+
+/**
+ * A stage of buttons to tap and find out (no question, so no result panel) is done when the main button turns to Next: its buttons then
+ * bounce, one after the other (not in step), each `WAVE_S` after the one before it, so the bounce runs along them like a wave.
+ */
 
 /** Hands `values` to the scene, and takes them back when the stage goes. */
 const useSceneValues = (api: InteractionApi, values: SceneValues) => {
@@ -100,6 +106,7 @@ export function SceneSortStage({
   columns,
   plain = false,
   slimCard = false,
+  wave = false,
   base,
   doneValues,
   slipValues,
@@ -109,6 +116,8 @@ export function SceneSortStage({
   items: readonly SceneSortItem[];
   buckets: readonly SceneSortBucket[];
   prompt?: string;
+  /** For a stage that has no result panel (so the main button turns to Next when it is done): the buttons then bounce one after the other, as a stage of tap-to-find-out buttons does (see `WAVE_S`). */
+  wave?: boolean;
   /** How many buttons stand across (default: all of them up to four, in one row). Four buttons in 2 columns are two by two. */
   columns?: 2 | 3 | 4;
   /** The buttons are plain (white, a thin grey line), as the Variable module's options are, instead of each in its own tint. */
@@ -206,20 +215,22 @@ export function SceneSortStage({
       <div className={`grid w-full gap-2.5 ${gridColumns}`}>
         {buckets.map((bucket, index) => (
           <BounceIn key={bucket.id} index={index} shown={hexSpoken} className="flex min-w-0">
-            <motion.button
-              type="button"
-              disabled={finished || all}
-              onClick={() => choose(bucket)}
-              animate={{ x: wrongBucket === bucket.id ? SHAKE : 0 }}
-              transition={{ duration: 0.35 }}
-              whileTap={{ scale: 0.97 }}
-              className={`${RAISED} min-w-0 flex-1 cursor-pointer gap-1.5 px-1 ${stacked ? "h-[68px] flex-col" : rows > 1 ? "h-[50px]" : "h-[58px]"} ${
-                plain ? plainLook(wrongBucket === bucket.id) : `${CARD_BODY_FLAT} ${buttonLook(wrongBucket === bucket.id ? "wrong" : "idle", index)}`
-              }`}
-            >
-              {bucket.icon && <Pic src={bucket.icon} className={stacked ? "h-6 w-6" : "h-7 w-7"} />}
-              <span className={`${plain ? "text-[16px]" : stacked ? "text-[13px]" : "text-[15px]"} leading-[110%] font-semibold text-[#444444] dark:text-white`}>{bucket.label}</span>
-            </motion.button>
+            <RightBounce play={wave && finished} delay={index * WAVE_S} radius={plain ? 16 : 8} className="flex min-w-0 flex-1">
+              <motion.button
+                type="button"
+                disabled={finished || all}
+                onClick={() => choose(bucket)}
+                animate={{ x: wrongBucket === bucket.id ? SHAKE : 0 }}
+                transition={{ duration: 0.35 }}
+                whileTap={{ scale: 0.97 }}
+                className={`${RAISED} min-w-0 flex-1 cursor-pointer gap-1.5 px-1 ${stacked ? "h-[68px] flex-col" : rows > 1 ? "h-[50px]" : "h-[58px]"} ${
+                  plain ? plainLook(wrongBucket === bucket.id) : `${CARD_BODY_FLAT} ${buttonLook(wrongBucket === bucket.id ? "wrong" : "idle", index)}`
+                }`}
+              >
+                {bucket.icon && <Pic src={bucket.icon} className={stacked ? "h-6 w-6" : "h-7 w-7"} />}
+                <span className={`${plain ? "text-[16px]" : stacked ? "text-[13px]" : "text-[15px]"} leading-[110%] font-semibold text-[#444444] dark:text-white`}>{bucket.label}</span>
+              </motion.button>
+            </RightBounce>
           </BounceIn>
         ))}
       </div>
@@ -399,9 +410,9 @@ export function SceneRevealStage({
   const small = columns >= 4;
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
-      {/* What is said stands over the buttons, so the buttons are the lowest thing: on the main button, as every screen's options are. */}
+      {/* What is said stands over the buttons, so the buttons are the lowest thing: on the main button, as every screen's options are. The room under it (`mb-7` and the gap) is as much as the buttons jump when they bounce (see `WAVE_S`), so they never cross its words. */}
       {(hasCaptions || footer) && (
-        <div className="flex min-h-[48px] w-full items-center justify-center">
+        <div className="mb-7 flex min-h-[48px] w-full items-center justify-center">
           <AnimatePresence mode="wait">
             {finished && footer ? (
               <motion.div key="footer" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
@@ -427,24 +438,27 @@ export function SceneRevealStage({
           const tapped = seen.includes(item.id);
           return (
             <BounceIn key={item.id} index={index} shown={hexSpoken} className="flex min-w-0">
-              <motion.button
-                type="button"
-                onClick={() => {
-                  playClickSound();
-                  vibrateForTap();
-                  setCurrent(item.id);
-                  setSeen((now) => (now.includes(item.id) ? now : [...now, item.id]));
-                }}
-                animate={{ scale: current === item.id ? [1, 0.96, 1.03, 1] : 1 }}
-                transition={{ duration: 0.35 }}
-                whileTap={{ scale: 0.97 }}
-                className={`${CARD_BODY_FLAT} ${RAISED} relative min-w-0 flex-1 cursor-pointer flex-col gap-0.5 px-1 ${small ? "min-h-[64px] py-1" : "min-h-[60px] py-1.5"} ${tintAt(index)} ${current === item.id ? `${EDGE_READING} ${EDGE.mint}` : `${EDGE_IDLE} ${EDGE.khaki}`}`}
-              >
-                {tapped && <Check aria-hidden className="absolute top-0.5 right-0.5 size-3.5 text-[#10B48C]" strokeWidth={3} />}
-                {item.icon && <Pic src={item.icon} className={small ? "h-6 w-6" : "h-7 w-7"} />}
-                <span className={small ? "text-[13px] leading-[110%] font-semibold text-[#444444] dark:text-white" : CARD_TEXT}>{item.label}</span>
-                {item.sub && <span className="text-[11px] leading-3 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
-              </motion.button>
+              {/* Done: the buttons bounce along the row, one after the other. */}
+              <RightBounce play={finished} delay={index * WAVE_S} radius={8} className="flex min-w-0 flex-1">
+                <motion.button
+                  type="button"
+                  onClick={() => {
+                    playClickSound();
+                    vibrateForTap();
+                    setCurrent(item.id);
+                    setSeen((now) => (now.includes(item.id) ? now : [...now, item.id]));
+                  }}
+                  animate={{ scale: current === item.id ? [1, 0.96, 1.03, 1] : 1 }}
+                  transition={{ duration: 0.35 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`${CARD_BODY_FLAT} ${RAISED} relative min-w-0 flex-1 cursor-pointer flex-col gap-0.5 px-1 ${small ? "min-h-[64px] py-1" : "min-h-[60px] py-1.5"} ${tintAt(index)} ${current === item.id ? `${EDGE_READING} ${EDGE.mint}` : `${EDGE_IDLE} ${EDGE.khaki}`}`}
+                >
+                  {tapped && <Check aria-hidden className="absolute top-0.5 right-0.5 size-3.5 text-[#10B48C]" strokeWidth={3} />}
+                  {item.icon && <Pic src={item.icon} className={small ? "h-6 w-6" : "h-7 w-7"} />}
+                  <span className={small ? "text-[13px] leading-[110%] font-semibold text-[#444444] dark:text-white" : CARD_TEXT}>{item.label}</span>
+                  {item.sub && <span className="text-[11px] leading-3 font-medium text-[#6B7480] dark:text-white/60">{item.sub}</span>}
+                </motion.button>
+              </RightBounce>
             </BounceIn>
           );
         })}
@@ -466,7 +480,7 @@ export type SceneToggleItem = {
 
 /** Tap each one to switch it between its two states (the scene switches with it); it is done once each has been switched. */
 export function SceneToggleStage({ api, items }: { api: InteractionApi; items: readonly SceneToggleItem[] }) {
-  const { done, hexSpoken } = api;
+  const { done, finished, hexSpoken } = api;
   const [on, setOn] = useState<Record<string, boolean>>({});
   const [flipped, setFlipped] = useState<readonly string[]>([]);
 
@@ -481,37 +495,40 @@ export function SceneToggleStage({ api, items }: { api: InteractionApi; items: r
         const Icon = item.icon;
         return (
           <BounceIn key={item.id} index={index} shown={hexSpoken} className="flex min-w-0">
-            <motion.button
-              type="button"
-              aria-pressed={state}
-              onClick={() => {
-                playClickSound();
-                vibrateForTap();
-                setOn((now) => ({ ...now, [item.id]: !now[item.id] }));
-                setFlipped((now) => (now.includes(item.id) ? now : [...now, item.id]));
-              }}
-              whileTap={{ scale: 0.96 }}
-              className={`${CARD_BODY_FLAT} ${RAISED} h-[66px] min-w-0 flex-1 cursor-pointer justify-start gap-2 px-2.5 text-left ${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`}
-            >
-              {/* The same tile on every card; it turns green with the card, as the scene's pill does. */}
-              <span
-                aria-hidden
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-300 ${state ? "bg-[#01A17F]/15 text-[#01A17F]" : "bg-white/70 text-[#6B7480] dark:bg-white/10 dark:text-white/70"}`}
+            {/* Done: the buttons bounce one after the other, in the order they stand. */}
+            <RightBounce play={finished} delay={index * WAVE_S} radius={8} className="flex min-w-0 flex-1">
+              <motion.button
+                type="button"
+                aria-pressed={state}
+                onClick={() => {
+                  playClickSound();
+                  vibrateForTap();
+                  setOn((now) => ({ ...now, [item.id]: !now[item.id] }));
+                  setFlipped((now) => (now.includes(item.id) ? now : [...now, item.id]));
+                }}
+                whileTap={{ scale: 0.96 }}
+                className={`${CARD_BODY_FLAT} ${RAISED} h-[66px] min-w-0 flex-1 cursor-pointer justify-start gap-2 px-2.5 text-left ${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`}
               >
-                <Icon className="size-5" strokeWidth={2.25} />
-              </span>
-              <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-                <span className="text-[12px] leading-3.5 font-semibold text-[#444444] dark:text-white/80">{item.title}</span>
-                <motion.span
-                  key={String(state)}
-                  initial={{ scale: 0.7, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  className={`rounded-full px-2.5 py-0.5 text-[12px] leading-4 font-bold whitespace-nowrap text-white ${state ? "bg-[#01A17F]" : "bg-[#8A94A0]"}`}
+                {/* The same tile on every card; it turns green with the card, as the scene's pill does. */}
+                <span
+                  aria-hidden
+                  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] transition-colors duration-300 ${state ? "bg-[#01A17F]/15 text-[#01A17F]" : "bg-white/70 text-[#6B7480] dark:bg-white/10 dark:text-white/70"}`}
                 >
-                  {state ? item.on : item.off}
-                </motion.span>
-              </span>
-            </motion.button>
+                  <Icon className="size-5" strokeWidth={2.25} />
+                </span>
+                <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+                  <span className="text-[12px] leading-3.5 font-semibold text-[#444444] dark:text-white/80">{item.title}</span>
+                  <motion.span
+                    key={String(state)}
+                    initial={{ scale: 0.7, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    className={`rounded-full px-2.5 py-0.5 text-[12px] leading-4 font-bold whitespace-nowrap text-white ${state ? "bg-[#01A17F]" : "bg-[#8A94A0]"}`}
+                  >
+                    {state ? item.on : item.off}
+                  </motion.span>
+                </span>
+              </motion.button>
+            </RightBounce>
           </BounceIn>
         );
       })}
@@ -536,6 +553,17 @@ const TOUR_ENTRY_KEY = "datatypes-groups-tour";
 const TOUR_W = 354;
 const TOUR_GAP = 10;
 const TOUR_BUBBLE_W = 220;
+/**
+ * Hex's row under the groups. He is one Hex that floats from group to group (he does not leave and come in again), so the row has
+ * the same height for every group and nothing under the scene moves when he does. His box is `HEX_SLOT` (110) square, and he is drawn
+ * in the middle of it with some air above him, so for the two groups between the first and last (his bubble is below him there) the
+ * box is pulled up by `TOUR_HEX_PULL` so that he stands close to the groups and the bubble ends higher (the bottom keeps its room).
+ */
+const TOUR_HEX_PULL = 30;
+const TOUR_BUBBLE_H = 86;
+const TOUR_ROW_H = HEX_SLOT - TOUR_HEX_PULL + TOUR_BUBBLE_H;
+/** How Hex floats from one group to the next. */
+const TOUR_FLOAT = { type: "spring", stiffness: 120, damping: 19 } as const;
 /** A group's glow is fired this long after its values are written, so the scene has them when it plays. */
 const GLOW_DELAY_MS = 250;
 
@@ -587,9 +615,18 @@ export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; gro
   const shownIndex = groups.findIndex((group) => group.id === current);
   const hexAt = shownIndex === 0 ? "left" : shownIndex === groups.length - 1 ? "right" : "top";
   const underGroup = Math.min(TOUR_W - TOUR_BUBBLE_W, Math.max(0, shownIndex * (columnWidth + TOUR_GAP) + columnWidth / 2 - TOUR_BUBBLE_W / 2));
+  // Hex's box and his bubble's place in the row (px from its top left): beside him, or (for a group in the middle) under him, centred on each other.
+  const hexBox = hexAt === "left" ? { x: 0, y: 0 } : hexAt === "right" ? { x: TOUR_W - HEX_SLOT, y: 0 } : { x: underGroup + (TOUR_BUBBLE_W - HEX_SLOT) / 2, y: -TOUR_HEX_PULL };
+  const bubbleBox =
+    hexAt === "left"
+      ? { left: HEX_SLOT, top: 0, height: HEX_SLOT, alignItems: "center" }
+      : hexAt === "right"
+        ? { left: TOUR_W - HEX_SLOT - TOUR_BUBBLE_W, top: 0, height: HEX_SLOT, alignItems: "center" }
+        : { left: underGroup, top: HEX_SLOT - TOUR_HEX_PULL, height: TOUR_BUBBLE_H, alignItems: "flex-start" };
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
-      <div className={`grid w-full gap-2.5 ${columns === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
+      {/* Above Hex's row, so his empty margin (pulled up over the groups) never takes a tap meant for a group. */}
+      <div className={`relative z-10 grid w-full gap-2.5 ${columns === 4 ? "grid-cols-4" : "grid-cols-3"}`}>
         {groups.map((group, index) => {
           const reading = current === group.id;
           return (
@@ -611,9 +648,20 @@ export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; gro
           );
         })}
       </div>
-      {/* Hex's row is kept free from the start (at least his own height), so little moves when he arrives. */}
-      <div className={`flex min-h-[110px] w-full items-start ${hexAt === "right" ? "justify-end" : "justify-start"}`} style={hexAt === "top" ? { paddingLeft: underGroup } : undefined}>
-        {shown && <HexBubble key={shown.id} entryKey={TOUR_ENTRY_KEY} hex={hexAt} line={[{ text: shown.caption }]} size={{ width: TOUR_BUBBLE_W }} />}
+      {/* Hex's row is kept free from the start, at the height the tallest place needs, so nothing moves when he arrives or goes on to the next group. */}
+      <div className="relative w-full" style={{ height: TOUR_ROW_H }}>
+        {shown && (
+          <>
+            {/* He comes in once (at the group first read); after that this box only moves, and he floats to the next group. */}
+            <motion.div aria-hidden className="absolute top-0 left-0" style={{ width: HEX_SLOT, height: HEX_SLOT }} initial={false} animate={hexBox} transition={TOUR_FLOAT}>
+              <OnboardingHex entryKey={TOUR_ENTRY_KEY} />
+            </motion.div>
+            {/* The bubble is a new one for each group (its line is typed afresh), beside or under him where he now stands. */}
+            <div key={shown.id} className="absolute flex justify-center" style={{ ...bubbleBox, width: TOUR_BUBBLE_W }}>
+              <SpeechBubble line={[{ text: shown.caption }]} size={{ width: TOUR_BUBBLE_W }} tail={hexAt} leaving={false} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

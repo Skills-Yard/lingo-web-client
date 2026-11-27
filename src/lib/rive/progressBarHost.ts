@@ -1,5 +1,6 @@
 import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
 import { BUTTON, configureRiveRuntime, PROGRESS_BAR } from "./runtime";
+import { fastForward } from "./fastForward";
 import { riveSource } from "./riveCache";
 
 // The one bar lives in this module. A hot reload would run it again beside the
@@ -277,6 +278,18 @@ export const startStrikeLoop = (seconds: number) => {
 export const stopStrikeLoop = () => {
   clearTimeout(loopTimer);
   if (host?.loaded) writeLoop(false);
+};
+
+/** More than the longest strike (and the loop's wind-down) takes to play out (s). */
+const STRIKE_PLAY_S = 4;
+
+/**
+ * Ends a strike that is still playing: the loop is switched off, and the bar is played on to the end of what it was doing, at once
+ * (see `fastForward`). The bar is shared by every screen, so a strike left to play on would carry on over the next one.
+ */
+export const skipStrikes = () => {
+  stopStrikeLoop();
+  if (host?.loaded) fastForward(host.rive, STRIKE_PLAY_S);
 };
 
 const RESULT_NAME = { correct: /correct|right|success|win/i, wrong: /wrong|incorrect|fail|lose|error/i } as const;

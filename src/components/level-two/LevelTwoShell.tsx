@@ -64,6 +64,16 @@ export const aboveButtons = (gap: number, withHint = false) =>
   `calc(${BUTTON_BOTTOM_GAP}px + ${ROW_HEIGHT} * ${BUTTON_DRAWN * (withHint ? CTA_HEIGHT_WITH_HINT : 1)} + ${gap}px)`;
 
 /**
+ * A CSS `top` for a block `height` px tall that stands right under what is above it (`under`: a CSS length, that
+ * thing's bottom edge from the stage's top, with whatever gap is wanted), instead of on the button row, so a tall screen
+ * (whose extra room is at the bottom) leaves its empty space above the buttons. It is never lower than it would stand on
+ * the button row (`aboveButtons(gap)`), so it can't reach them: where there is no room under what is above it, it
+ * stands on the row and overlaps it, as it always did.
+ */
+export const underAbove = (under: string, height: number, gap: number, withHint = false) =>
+  `min(${under}, calc(var(--stage-h, 844px) - ${aboveButtons(gap, withHint)} - ${height}px))`;
+
+/**
  * The Figma title: Poppins 600 28px / 134%, #444444, centred; `at` is its Figma `top` (116).
  * It wraps inside the column; with `oneLine` it never does (and stays centred even if a
  * line is a little wider than the column), so a title drawn on one line can't grow a second.

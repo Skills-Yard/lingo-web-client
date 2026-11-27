@@ -66,7 +66,7 @@ function TurnCardsStage({
   const focused = cards[focus];
   const three = columns === 3;
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-3">
       {header?.(lit)}
       <div className={`grid w-full ${three ? "grid-cols-3 gap-2.5" : "grid-cols-2 gap-3"}`}>
         {cards.map((card, index) => {

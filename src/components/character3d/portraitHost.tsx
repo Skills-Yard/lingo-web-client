@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { Canvas, useFrame } from "@react-three/fiber";
+import { Vector3, type Object3D } from "three";
+import type { Character } from "./character";
 import { AnimatedCharacter, SceneLights } from "./CharacterScene";
 import { useSharedCharacter } from "./sharedCharacter";
 
@@ -19,9 +21,12 @@ import { useSharedCharacter } from "./sharedCharacter";
  * collapses.
  */
 
-type Pose = { animationId: string; lipSync: boolean };
+/** How much of the character the camera shows: all of it, head to toe, or the head and chest, close up. */
+export type PortraitFraming = "full" | "bust";
 
-const REST: Pose = { animationId: "idle-b", lipSync: false };
+type Pose = { animationId: string; lipSync: boolean; framing: PortraitFraming };
+
+const REST: Pose = { animationId: "idle-b", lipSync: false, framing: "full" };
 
 let pose = REST;
 /** The canvas has drawn its first frames: shaders compiled, textures uploaded. */
@@ -39,7 +44,7 @@ const subscribe = (listener: () => void) => {
 
 /** What the character does: set by whichever screen has the canvas. */
 export const setPortraitPose = (next: Pose) => {
-  if (next.animationId === pose.animationId && next.lipSync === pose.lipSync) return;
+  if (next.animationId === pose.animationId && next.lipSync === pose.lipSync && next.framing === pose.framing) return;
   pose = next;
   emit();
 };
@@ -119,7 +124,7 @@ const DrawnAfterFrames = () => {
  */
 export function PortraitHost() {
   const { character } = useSharedCharacter();
-  const { animationId, lipSync } = useSyncExternalStore(subscribe, () => pose, () => REST);
+  const { animationId, lipSync, framing } = useSyncExternalStore(subscribe, () => pose, () => REST);
 
   useEffect(() => () => setDrawn(false), []);
 
@@ -133,8 +138,9 @@ export function PortraitHost() {
       resize={{ offsetSize: true }}
       flat
     >
-      <SceneLights />
+      <SceneLights lights={character.lights} />
       <AnimatedCharacter character={character} animationId={animationId} runToken={0} playing lipSync={lipSync} onLoop={ignoreLoop} />
+      <FramingCamera framing={framing} character={character} />
       <DrawnAfterFrames />
     </Canvas>,
     getHost(),
@@ -149,6 +155,48 @@ export function PortraitHost() {
  */
 const CAMERA_POSITION: [number, number, number] = [0, 1.0, 3.6];
 const NO_ROTATION: [number, number, number] = [0, 0, 0];
+
+/**
+ * Where the camera stands for each framing. `bust` is the same level camera, closer and
+ * higher: it shows 1.44 m of height (from 0.29 m over the head to the chest) instead of
+ * 2.06, so the head and chest fill the box. The canvas's own size is the same (see
+ * `HOST_WIDTH`), so it is drawn that much sharper than a picture scaled up would be.
+ */
+const FRAMING_CAMERA: Record<PortraitFraming, readonly [number, number, number]> = {
+  full: CAMERA_POSITION,
+  bust: [0, 1.369, 2.507],
+};
+
+/** The hips bone, whatever the rig calls it (`mixamorigHips`, `J_Bip_C_Hips`). */
+const HIPS_NAME = /hips$/i;
+
+const hipsOf = (character: Character): Object3D | undefined => {
+  const found: Object3D[] = [];
+  character.model.traverse((object) => {
+    if (HIPS_NAME.test(object.name)) found.push(object);
+  });
+  return found[0];
+};
+
+/**
+ * Moves the camera to the pose's framing (the canvas draws every frame, so it shows at
+ * once). Close up, it also follows the hips across: an idle animation shifts the weight
+ * from side to side, which at that distance would take the character out of the middle.
+ */
+const FramingCamera = ({ framing, character }: { framing: PortraitFraming; character: Character }) => {
+  const hips = useMemo(() => hipsOf(character), [character]);
+  const hipsAt = useMemo(() => new Vector3(), []);
+  useFrame(({ camera }) => {
+    const [x, y, z] = FRAMING_CAMERA[framing];
+    if (framing === "bust" && hips) {
+      hips.getWorldPosition(hipsAt);
+      camera.position.set(hipsAt.x, y, z);
+    } else {
+      camera.position.set(x, y, z);
+    }
+  });
+  return null;
+};
 
 /** Nothing here ever loops into anything: the screen picks the animation. */
 const ignoreLoop = () => {};

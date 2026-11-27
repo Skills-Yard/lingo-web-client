@@ -5,7 +5,7 @@ import { fireSceneTrigger, openBottleCap, rampBottleLevel, setBottleLevel, setSc
 import { CARD } from "./visuals";
 import { BridgeStage, ClassifyStage, FillSliderStage, MatchPricesStage, NameValueStage, NamesStage } from "./interactions";
 import { NAME_VALUE_CARDS, type VarCards } from "./scenes";
-import type { Option, QuizStage, ScreenDef, VisualContext } from "./quiz";
+import { CARD_TINTS, type Option, type QuizStage, type ScreenDef, type VisualContext } from "./quiz";
 import { STEP } from "./variable";
 
 /** Answers in words: an id for each (their place), and which one is right. */
@@ -532,7 +532,11 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "It held 500 ml, now 750 ml. What changed?",
         // The pair of cards is the screen's scene (see `VarCardBackdrop`).
         visual: (context) => <VarCardDrive cards={WATER_CHANGE_CARDS} context={context} />,
-        options: words(["The bottle", "Water amount", "Both"]),
+        options: [
+          { id: at(0), text: "The bottle", icon: "/animations/svg/variable-module/water.svg" },
+          { id: at(1), text: "Water amount", icon: "/animations/svg/variable-module/water-amount.svg" },
+          { id: at(2), text: "Nothing", icon: "/animations/svg/variable-module/nothing.svg" },
+        ],
         correctId: at(1),
         rightTitle: "Exactly!",
         right: "The bottle is the same; the amount changed.",
@@ -580,7 +584,11 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "All our bottles look the same. How can we tell ours?",
         // The bottles with their names are the screen's scene (see `NamesBackdrop`).
-        options: words(["Name label", "Its position", "Just guess"]),
+        options: [
+          { id: at(0), text: "Name label", icon: "/animations/svg/variable-module/name-lable.svg" },
+          { id: at(1), text: "Its position", icon: "/animations/svg/variable-module/position.svg" },
+          { id: at(2), text: "Just guess", icon: "/animations/svg/variable-module/guess.svg" },
+        ],
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "A name or label helps us identify things.",
@@ -639,7 +647,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Which variable tells us how many are absent?",
         // The classroom, its board showing the names, is the screen's scene (see `ClassroomBackdrop`); tapping a name lights its row.
         visual: (context) => <ClassroomDrive names context={context} />,
-        options: words(["total_students", "present_students", "absent_students"]),
+        // Three cards, each with its own light shade, as screen 2's cards have (the order is the board's, not a hint to the answer).
+        options: [
+          { id: at(0), text: "total_students", tint: CARD_TINTS.green },
+          { id: at(1), text: "present_students", tint: CARD_TINTS.orange },
+          { id: at(2), text: "absent_students", tint: CARD_TINTS.blue },
+        ],
         correctId: at(2),
         rightTitle: "Correct!",
         right: "absent_students counts the absent students.",
@@ -672,7 +685,11 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "We buy a notebook and a pen. What should we track?",
         visual: (context) => <ShoppingDrive context={context} />,
-        options: words(["Notebook price", "Pen price", "Both prices"]),
+        options: [
+          { id: at(0), text: "Notebook price", icon: "/animations/svg/variable-module/notebook.svg" },
+          { id: at(1), text: "Pen price", icon: "/animations/svg/variable-module/pen.svg" },
+          { id: at(2), text: "Both prices", icon: "/animations/svg/variable-module/both.svg" },
+        ],
         correctId: at(2),
         rightTitle: "Right!",
         right: "We need both prices for the total.",
@@ -824,7 +841,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "The app adds two numbers. What should it do first?",
         // The little app on a phone is the screen's scene (see `MiniAppBackdrop`).
         visual: (context) => <MiniAppDrive context={context} />,
-        options: words(["Show result", "Get numbers", "Close app"]),
+        options: [
+          { id: at(0), text: "Show result", icon: "/animations/svg/variable-module/store-data.svg" },
+          { id: at(1), text: "Get numbers", icon: "/animations/svg/variable-module/get-number.svg" },
+          // No icon was given for "Close app": the red cross (`nothing.svg`) stands in.
+          { id: at(2), text: "Close app", icon: "/animations/svg/variable-module/nothing.svg" },
+        ],
         correctId: at(1),
         rightTitle: "Exactly!",
         right: "First, it asks for the first number.",
@@ -842,7 +864,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Notebook ₹50 and pen ₹20, but the app shows ₹50. Why?",
         // The shop counter, with the app's wrong total on its Total board, is the screen's scene (see `ShopBackdrop`).
         visual: (context) => <ShopDebugDrive context={context} />,
-        options: words(["Only notebook", "Added both", "Notebook ₹20"]),
+        options: [
+          { id: at(0), text: "Only notebook", icon: "/animations/svg/variable-module/notebook.svg" },
+          { id: at(1), text: "Added both", icon: "/animations/svg/variable-module/both.svg" },
+          // Also about the notebook, so it has the notebook's icon too (no icon of its own was given).
+          { id: at(2), text: "Notebook ₹20", icon: "/animations/svg/variable-module/notebook.svg" },
+        ],
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "It used only the first price. ₹50 + ₹20 = ₹70.",
@@ -878,11 +905,18 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
 
   [STEP.reflectWhy]: {
     step: STEP.reflectWhy,
-    title: "Why *Variables?*",
+    // The 3D design's title is the question itself ("Why do we use Variables", as drawn, no question mark).
+    title: "Why do we use *Variables*",
     stages: [
       quiz({
         line: "Think of the bottle, board and wallet. Why?",
-        options: words(["Store data", "Run faster", "Delete data"]),
+        // The tray look: no scene, the character close up, three cards (an icon over two words) on a grey tray (see `QuizStage.look`). Not shown: `line`.
+        look: "tray",
+        options: [
+          { id: at(0), text: "Store data", icon: "/animations/svg/variable-module/store-data.svg", tint: CARD_TINTS.lavender },
+          { id: at(1), text: "Run faster", icon: "/animations/svg/variable-module/result.svg", tint: CARD_TINTS.cream },
+          { id: at(2), text: "Delete data", icon: "/animations/svg/variable-module/nothing.svg", tint: CARD_TINTS.pink },
+        ],
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "Variables store and track information.",
@@ -899,7 +933,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Think of the water and the wallet. Can a value change?",
         // The bottle and the wallet side by side (see `BottleWalletBackdrop`), their values changing.
         visual: (context) => <BottleWalletDrive context={context} />,
-        options: words(["Yes", "No", "Only once"]),
+        options: [
+          { id: at(0), text: "Yes", icon: "/animations/svg/variable-module/yes.svg" },
+          // No icon was given for "No": the red cross (`nothing.svg`) stands in.
+          { id: at(1), text: "No", icon: "/animations/svg/variable-module/nothing.svg" },
+          { id: at(2), text: "Only once", icon: "/animations/svg/variable-module/once.svg" },
+        ],
         correctId: at(0),
         rightTitle: "Yes!",
         right: "A value can grow, shrink or become zero.",
@@ -915,7 +954,11 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Remember the labelled bottles. Why name variables?",
         // The labelled bottles are the screen's scene (see `NamesBackdrop`), as on "Which bottle is mine?", standing still.
-        options: words(["Show meaning", "Save memory", "Avoid maths"]),
+        options: [
+          { id: at(0), text: "Show meaning", icon: "/animations/svg/variable-module/store-data.svg" },
+          { id: at(1), text: "Save memory", icon: "/animations/svg/variable-module/memory.svg" },
+          { id: at(2), text: "Avoid maths", icon: "/animations/svg/variable-module/get-number.svg" },
+        ],
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "A good name tells us what a value means.",
@@ -932,7 +975,12 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "An app must add two numbers. Why keep both?",
         // The addition app, both its numbers kept, is the screen's scene (see `MiniAppBackdrop`); nothing is lit for an answer (no part of the app is about only one of them), and the result shows once the answer is right.
         visual: (context) => <MiniAppDrive filled={2} lights={NO_LIGHTS} reveal context={context} />,
-        options: words(["Add them", "Show one", "Hide them"]),
+        options: [
+          { id: at(0), text: "Add them", icon: "/animations/svg/variable-module/add.svg" },
+          // Only the plus was given: "Show" has the show-data icon (store-data.svg) like screens 26 and 32 and "Hide" the red cross.
+          { id: at(1), text: "Show one", icon: "/animations/svg/variable-module/store-data.svg" },
+          { id: at(2), text: "Hide them", icon: "/animations/svg/variable-module/nothing.svg" },
+        ],
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "The app needs both numbers to add them.",

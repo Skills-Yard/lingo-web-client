@@ -11,8 +11,11 @@ export type { InteractionApi, InteractionStage, Option, VisualContext } from "@/
 /**
  * A question. `compact` sets the rows of answers shorter (56px), for answers that are only words, so four fit.
  * `keepLine` leaves Hex and his line where they are once the answer is checked, instead of the bubble going off to the left.
+ * `threeCards` puts three answers in one row of mini cards even when one has more than two "words" (an expression such as
+ * `4 * 5` is three to the word count but a short card's worth), so a picture over them keeps its room. (Not the base type's
+ * `cards`, which is a kind of grid tile.)
  */
-export type QuizStage = BaseQuizStage & { compact?: boolean; keepLine?: boolean };
+export type QuizStage = BaseQuizStage & { compact?: boolean; keepLine?: boolean; threeCards?: boolean };
 
 export type Stage = QuizStage | InteractionStage;
 

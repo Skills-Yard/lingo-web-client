@@ -5,6 +5,7 @@ import { motion, type Transition } from "framer-motion";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { useLevelVoice } from "@/components/level-one/LevelVoice";
 import { TYPE_DELAY_MS, useTyped } from "@/components/level-one/useTyped";
+import { useHexStandIn, useStandInKeepsBubble } from "./HexStandIn";
 import type { BubbleSize, Span } from "./levelTwo";
 
 /** Hex's slot, the one Module 2's old screens gave him. */
@@ -24,6 +25,8 @@ type HexBubbleProps = {
   onSpoken?: () => void;
   /** The same as `onSpoken`. */
   onTyped?: () => void;
+  /** Draws the bubble even where something stands in Hex's place (`HexStandIn`: the 3D route's face), for a screen whose design has one. */
+  withBubble?: boolean;
 };
 
 /** Hex starts his own exit this long after the bubble sets off. */
@@ -38,10 +41,14 @@ const BUBBLE_EXIT: Transition = { duration: 0.15, times: [0, 0.35, 1], ease: ["e
 const HEX_EXIT: Transition = { duration: 0.2, ease: "easeIn" };
 
 /** Hex beside his line: the line is typed in letter by letter, the way module
- * 1's teacher line is. */
-export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onSpoken, onTyped }: HexBubbleProps) {
+ * 1's teacher line is. Where a route puts something in Hex's place (`HexStandIn`: the 3D
+ * route's character), there is no bubble: it stands alone, at the same place in a row as
+ * wide as the two would be (the line is the voiceover there). */
+export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = false, onSpoken, onTyped, withBubble = false }: HexBubbleProps) {
   const hexAtLeft = hex === "left";
   const hexOnTop = hex === "top";
+  const standIn = useHexStandIn();
+  const standInKeepsBubble = useStandInKeepsBubble();
   const [hexLeaving, setHexLeaving] = useState(false);
   useEffect(() => {
     if (!leaving) return;
@@ -49,7 +56,10 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
     return () => window.clearTimeout(timer);
   }, [leaving]);
   return (
-    <div className={`flex w-fit max-w-full items-center ${hexOnTop ? "flex-col" : hexAtLeft ? "" : "flex-row-reverse"}`}>
+    <div
+      className={`flex w-fit max-w-full items-center ${hexOnTop ? "flex-col" : hexAtLeft ? "" : "flex-row-reverse"}`}
+      style={standIn ? { width: HEX_SLOT + size.width } : undefined}
+    >
       {/* Leaving, he is drawn over the bubble, so it passes behind him. */}
       <motion.div
         aria-hidden
@@ -60,9 +70,11 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
         animate={{ x: hexLeaving ? -2 * window.innerWidth : 0 }}
         transition={HEX_EXIT}
       >
-        <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />
+        {standIn ?? <OnboardingHex entryKey={entryKey} cue={cue} leaving={hexLeaving} exit="exitLeft" />}
       </motion.div>
-      <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tail={hex} leaving={leaving} onSpoken={onSpoken ?? onTyped} />
+      {(!standIn || withBubble || standInKeepsBubble) && (
+        <SpeechBubble key={line.map((span) => span.text).join("")} line={line} size={size} tail={hex} leaving={leaving} onSpoken={onSpoken ?? onTyped} />
+      )}
     </div>
   );
 }
@@ -74,7 +86,7 @@ export function HexBubble({ entryKey, hex, line, size, cue = null, leaving = fal
  * well as the box (Tailwind's `drop-shadow-*` takes only one, hence the
  * arbitrary `filter`). The green one comes first, so the top one is cast from
  * both and stays behind them. */
-function SpeechBubble({ line, size, tail, leaving, onSpoken }: { line: readonly Span[]; size: BubbleSize; tail: "left" | "right" | "top"; leaving: boolean; onSpoken?: () => void }) {
+export function SpeechBubble({ line, size, tail, leaving, onSpoken }: { line: readonly Span[]; size: BubbleSize; tail: "left" | "right" | "top"; leaving: boolean; onSpoken?: () => void }) {
   const tailAtLeft = tail === "left";
   const tailOnTop = tail === "top";
   // Where the bubble pops in from: beside Hex, or (Hex above it) from just under him.

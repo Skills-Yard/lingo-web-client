@@ -8,10 +8,15 @@ export const VARIABLE_STEPS = 34;
 export const VARIABLE_LEVEL = 3;
 
 /** Whether `step` (the URL's) is one of the module's screens. */
-export const isVariableStep = (step: string) => step === "complete" || (/^\d+$/.test(step) && Number(step) >= 1 && Number(step) <= VARIABLE_STEPS);
+export const isVariableStep = (step: string) => step === "complete" || (/^\d+$/.test(step) && Number(step) >= STEP.intro && Number(step) <= VARIABLE_STEPS);
 
-/** Where each screen sits in the module (`/module/variable?step=`); the PDF's screens 1-29, then its four questions, then the last one. */
+/**
+ * Where each screen sits in the module (`/module/variable?step=`); the PDF's screens 1-29, then its four questions, then the last one.
+ * The title screen "Let's Learn Variables" is 0, before them: it is not one of the PDF's screens, and numbering it 0 keeps every other
+ * screen's number, the progress bar's total (it starts empty there) and the battery's count (it restarts at screen 1) as they were.
+ */
 export const STEP = {
+  intro: 0,
   trek: 1,
   thirsty: 2,
   noWater: 3,
@@ -81,10 +86,10 @@ export const sceneOf = (step: number): SceneKind => {
 export const DRINK_HINT_STEPS: readonly number[] = [STEP.thirsty, STEP.noWater];
 
 /**
- * Where the main button goes after screen `step`: always the next one, 1 to 34 and then "Lesson complete!". No screen
+ * Where the main button goes after screen `step`: always the next one, 0 to 34 and then "Lesson complete!". No screen
  * is skipped and nobody is sent back to an earlier one, whatever they answered.
  */
 export const variableNext = (step: number) => variableHref(step >= VARIABLE_STEPS ? "complete" : step + 1);
 
-/** Where the Back arrow goes from screen `step`: the one before it (screen 1 goes to the path). */
-export const variablePrevious = (step: number) => (step <= 1 ? "/level" : variableHref(step - 1));
+/** Where the Back arrow goes from screen `step`: the one before it (the title screen, 0, goes to the path). */
+export const variablePrevious = (step: number) => (step <= STEP.intro ? "/level" : variableHref(step - 1));

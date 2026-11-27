@@ -13,7 +13,8 @@ import { vibrateForTap } from "@/lib/haptics";
 import { applyArtboardBleed, artboardBleedBox } from "@/lib/rive/bleed";
 import { configureRiveRuntime, FLIP_CARD } from "@/lib/rive/runtime";
 import { riveSource } from "@/lib/rive/riveCache";
-import { SEQUENCE_STEPS, STEP, sequenceNext, sequencePrevious } from "./sequence";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 
 configureRiveRuntime();
 
@@ -90,6 +91,7 @@ function OrderFlipCard({ onFlip }: { onFlip: () => void }) {
  */
 export function RevealCardScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const [muted] = useLevelMuted();
   const [revealed, setRevealed] = useState(false);
   // Which face is up: each tap turns it over.
@@ -124,12 +126,12 @@ export function RevealCardScreen() {
 
   return (
     <LevelTwoShell
-      step={STEP.reveal}
-      total={SEQUENCE_STEPS}
-      onBack={() => router.push(sequencePrevious(STEP.reveal))}
+      step={flow.position(STEP.reveal)}
+      total={flow.total}
+      onBack={() => router.push(flow.previous(STEP.reveal))}
       scene={<SoftBackdrop />}
       ctaDisabled={!revealed}
-      onContinue={() => router.push(sequenceNext(STEP.reveal))}
+      onContinue={() => router.push(flow.next(STEP.reveal))}
     >
       <ScreenTitle oneLine>
         Tap to <Teal>reveal</Teal>

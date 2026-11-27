@@ -3,15 +3,60 @@
 import { MultiPickStage } from "@/components/datatypes/interactions";
 import { at, neutral, options, quiz, yesNo } from "./helpers";
 import { ExpressionStage, StepStage, SymbolStage, sumOfProducts } from "./interactions";
+import type { SceneTexts } from "@/lib/rive/operatorsHost";
+import { OPERATOR_COMBINING, OPERATOR_STUDIO } from "@/lib/rive/runtime";
 import { STEP } from "./operators";
 import { P } from "./pictures";
-import type { ScreenDef } from "./screen";
-import { CompareDemo, ExprBig, GateCard, LineScale, SideBySide, ValueCards, Versus } from "./visuals";
+import type { QuizStage, ScreenDef } from "./screen";
+import { OperatorScene } from "./OperatorScene";
+import { ShopCounter } from "./ShopCounter";
+import { SceneTurn, StudioVisual, type StudioCard } from "./StudioStage";
+import { CompareDemo, ExprBig, GateCard, LineScale, ValueCards, Versus } from "./visuals";
 
 /** The three marks 99, 100 and 101 (or 145, 150, 155) with the gate stood at the middle one. */
 const gateLine = (marks: readonly number[], limit: string, picked: number | null) => (
   <LineScale marks={marks} picked={picked === null ? [] : [picked]} gate={marks[1]} gateLabel={limit} />
 );
+
+/**
+ * Screen 16.2's picture: the order artboard (see `OPERATOR_COMBINING`) draws `( 2 + 3 ) * 4`, which is 16.3's expression, so for
+ * 16.2's `2 + 3 * 4` its calendar card, its two step cards and its heading are written over with this expression's own.
+ */
+const MULTIPLY_FIRST: SceneTexts = {
+  [OPERATOR_COMBINING.text.order.expression]: "2 + 3 * 4",
+  [OPERATOR_COMBINING.text.order.heading]: "Order of Operations: * before +",
+  [OPERATOR_COMBINING.text.order.first]: "3 * 4 = 12",
+  [OPERATOR_COMBINING.text.order.second]: "2 + 12 = 14",
+};
+
+/**
+ * Screen 16.1's picture: both expressions of the question side by side (what `SideBySide` drew), written onto the order artboard,
+ * which has room for one: the green pill over it holds the two ("2 + 3 * 4  vs  ( 2 + 3 ) * 4"), the calendar card asks "Same result?",
+ * and the two step cards (badge 1 and 2) carry one expression each, with "= ?" since the result is what is asked.
+ */
+const COMPARE_BOTH: SceneTexts = {
+  [OPERATOR_COMBINING.text.order.heading]: "2 + 3 * 4  vs  ( 2 + 3 ) * 4",
+  [OPERATOR_COMBINING.text.order.expression]: "Same result?",
+  [OPERATOR_COMBINING.text.order.first]: "2 + 3 * 4 = ?",
+  [OPERATOR_COMBINING.text.order.second]: "( 2 + 3 ) * 4 = ?",
+};
+
+/**
+ * A question of "Understand the Situation!" (screen 18): the studio (mode 0: the four calculating keys beside its card) stands over the
+ * three answers, its card naming the situation and its numbers, never the operator. Picking an answer lifts its key (`keys`, by the
+ * answer's place): the studio has + - * / and nothing else, so `//` and `/` both lift the divide key and `%` has none (nothing lifts).
+ * Check plays the studio's right or wrong. The three answers stand as one row of mini cards (`threeCards`), so the picture keeps its size.
+ */
+const OPERATOR_ASK = "Which operator is this?";
+const { add, subtract, multiply, divide, none } = OPERATOR_STUDIO.pick;
+const operatorQuiz = (card: StudioCard, keys: readonly number[], stage: Omit<QuizStage, "kind" | "visual" | "threeCards">) =>
+  quiz({
+    ...stage,
+    visual: ({ attempt, picked, checked, correct }) => (
+      <StudioVisual card={card} pick={(picked !== null ? keys[Number(picked)] : undefined) ?? none} verdict={checked ? (correct ? "correct" : "wrong") : null} attempt={attempt} />
+    ),
+    threeCards: true,
+  });
 
 /** Screens 15-28 (phases 4 to 6: combining operators, then comparison). */
 export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
@@ -26,14 +71,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         render: (api) => (
           <ExpressionStage
             api={api}
-            lead={
-              <ValueCards
-                items={[
-                  { pic: P.notebook, label: "3 notebooks", value: "₹20 each" },
-                  { pic: P.pen, label: "2 pens", value: "₹10 each" },
-                ]}
-              />
-            }
+            lead={<ShopCounter notebook={{ name: "3 Notebooks", price: "20" }} pen={{ name: "2 Pens", price: "10" }} board={{ label: "Total bill", amount: api.finished ? "80" : "?" }} />}
             tokens={["3", "20", "2", "10", "*", "*", "+"]}
             accept={sumOfProducts(["3", "20"], ["2", "10"])}
             hint="Equal items are multiplied. Then the two totals are added."
@@ -60,8 +98,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
     stages: [
       quiz({
         line: "Do both expressions give the same result?",
-        visual: () => <SideBySide left={["2", "+", "3", "*", "4"]} right={["(", "2", "+", "3", ")", "*", "4"]} />,
-        layout: "grid",
+        visual: () => <OperatorScene scene="combining" values={{ mode: OPERATOR_COMBINING.mode.order }} texts={COMPARE_BOTH} bleed={OPERATOR_COMBINING.bleed} />,
         options: yesNo(),
         correctId: at(1),
         rightTitle: "No!",
@@ -70,34 +107,14 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
       }),
       {
         kind: "interaction",
-        line: "Watch how 2 + 3 * 4 is worked out.",
-        render: (api) => (
-          <StepStage
-            api={api}
-            tokens={["2", "+", "3", "*", "4"]}
-            steps={[
-              { lit: [2, 3, 4], text: "First, 3 * 4 is picked out." },
-              { lit: [2, 3, 4], text: "3 * 4 = 12." },
-              { lit: [0, 1], text: "Then add 2: 2 + 12.", result: "14" },
-            ]}
-          />
-        ),
+        line: "Watch how 2 + 3 * 4 is worked out: 3 * 4 = 12 first, then 2 + 12 = 14.",
+        render: (api) => <SceneTurn api={api} scene="combining" mode={OPERATOR_COMBINING.mode.order} texts={MULTIPLY_FIRST} bleed={OPERATOR_COMBINING.bleed} />,
       },
       {
         kind: "interaction",
-        line: "Now (2 + 3) * 4.",
-        render: (api) => (
-          <StepStage
-            api={api}
-            tokens={["(", "2", "+", "3", ")", "*", "4"]}
-            steps={[
-              { lit: [0, 1, 2, 3, 4], text: "First, the part inside the parentheses." },
-              { lit: [1, 2, 3], text: "2 + 3 = 5." },
-              { lit: [5, 6], text: "Then multiply 5 by 4.", result: "20" },
-            ]}
-          />
-        ),
-        finishPanel: { title: "14 and 20!", text: "Parentheses group values. They can change what is calculated first, and so the result." },
+        line: "Now (2 + 3) * 4. Parentheses go first, so the answer is 20, not 14.",
+        // The order artboard (mode 1) draws exactly this expression and its two steps, so it replaces the stepping.
+        render: (api) => <SceneTurn api={api} scene="combining" mode={OPERATOR_COMBINING.mode.order} bleed={OPERATOR_COMBINING.bleed} />,
       },
     ],
   },
@@ -178,7 +195,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
     step: STEP.makesSense,
     title: "Understand the *Situation!*",
     stages: [
-      quiz({
+      operatorQuiz({ title: "Spending money", meaning: OPERATOR_ASK, example: "₹200, spend ₹75" }, [add, subtract, multiply], {
         line: "A student has ₹200 and spends ₹75. Which expression finds what remains?",
         options: neutral(["200 + 75", "200 - 75", "200 * 75"]),
         correctId: at(1),
@@ -186,7 +203,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         right: "Spending takes money away: 200 - 75.",
         wrong: "Does the money grow, or go away?",
       }),
-      quiz({
+      operatorQuiz({ title: "Boxes of pencils", meaning: OPERATOR_ASK, example: "6 boxes of 8" }, [add, divide, multiply], {
         line: "There are 6 boxes, each with 8 pencils. Which expression finds all the pencils?",
         options: neutral(["6 + 8", "6 // 8", "6 * 8"]),
         correctId: at(2),
@@ -194,7 +211,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         right: "Equal boxes repeat: 6 * 8.",
         wrong: "Six equal groups of 8. Which operator repeats a group?",
       }),
-      quiz({
+      operatorQuiz({ title: "Sharing chocolates", meaning: OPERATOR_ASK, example: "17 among 5" }, [none, divide, divide], {
         line: "17 chocolates shared among 5 students. Whole chocolates each?",
         options: neutral(["17 % 5", "17 // 5", "17 / 5"]),
         correctId: at(1),
@@ -202,7 +219,7 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         right: "17 // 5 = 3 complete chocolates each.",
         wrong: "Which operator counts complete groups?",
       }),
-      quiz({
+      operatorQuiz({ title: "Sharing again", meaning: OPERATOR_ASK, example: "17 among 5" }, [divide, divide, none], {
         line: "Same 17 chocolates and 5 students. How many chocolates remain?",
         options: neutral(["17 // 5", "17 / 5", "17 % 5"]),
         correctId: at(2),
@@ -221,7 +238,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Is your teacher older than you?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.teacher, label: "Teacher", value: "35 years" }} right={{ pic: P.student, label: "Student", value: "13 years" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(0),
         rightTitle: "Yes!",
@@ -231,7 +247,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "“My age is greater than my teacher's age.” Is that correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.teacher, label: "Teacher", value: "35 years" }} right={{ pic: P.student, label: "Student", value: "13 years" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(1),
         rightTitle: "No!",
@@ -250,7 +265,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "My teacher is older than me.",
         question: "Is this statement correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.teacher, label: "Teacher", value: "35 years" }} right={{ pic: P.student, label: "Me", value: "13 years" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(0),
         rightTitle: "True!",
@@ -261,7 +275,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "A bicycle is faster than a walking person.",
         question: "Is this statement correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.person, label: "Bicycle" }} right={{ pic: P.student, label: "Walking person" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(0),
         rightTitle: "True!",
@@ -272,7 +285,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "A school bag is heavier than a pencil.",
         question: "Is this statement correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.bag, label: "School bag" }} right={{ pic: P.pen, label: "Pencil" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(0),
         rightTitle: "True!",
@@ -283,7 +295,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "A 5-metre rope is shorter than a 2-metre rope.",
         question: "Is this statement correct?",
         visual: ({ attempt }) => <Versus replay={attempt} left={{ pic: P.gift, label: "Rope", value: "5 m" }} right={{ pic: P.gift, label: "Rope", value: "2 m" }} />,
-        layout: "grid",
         options: yesNo(),
         correctId: at(1),
         rightTitle: "False!",
@@ -579,7 +590,6 @@ export const SCREENS_B: Readonly<Record<number, ScreenDef>> = {
         line: "Place the right symbol between 4 and 6.",
         visual: () => <LineScale marks={[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]} picked={[4]} second={[6]} small />,
         question: "4 ? 6",
-        layout: "grid",
         options: options([
           [">", P.order],
           ["<", P.actions],

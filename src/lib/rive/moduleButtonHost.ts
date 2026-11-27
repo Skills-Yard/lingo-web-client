@@ -3,6 +3,7 @@ import { BUTTON, configureRiveRuntime, MODULE_BUTTON } from "./runtime";
 import { riveSource } from "./riveCache";
 import { writeButtonStyle } from "./buttonStyle";
 import { applyArtboardBleed, artboardBleedBox } from "./bleed";
+import { fastForward } from "./fastForward";
 
 // Same as `progressBarHost`: a hot reload would leave a second, unloaded button beside the one on screen.
 import.meta.turbopackHot?.decline();
@@ -130,6 +131,14 @@ export const sweepModuleButtonShine = () => {
  * one would play after the strike it goes with is long over. */
 export const electrifyModuleButton = () => {
   if (host?.loaded && host.rive) fireTrigger(host.rive, BUTTON.electricTrigger);
+};
+
+/** More than the electric effect takes to play out (s). */
+const ELECTRIC_PLAY_S = 3;
+
+/** Ends the electric effect at once, if it is playing: the button is shared by every screen, so it would carry on over the next one (see `fastForward`). */
+export const skipModuleButtonElectric = () => {
+  if (host?.loaded) fastForward(host.rive, ELECTRIC_PLAY_S);
 };
 
 /** Plays the `click` trigger (the press). */

@@ -9,12 +9,16 @@ import { RAISED } from "@/components/ui/raised";
 import { CARDS_RISE, GAP_ABOVE_BUTTONS } from "./AnswerCards";
 import { BounceIn } from "./BounceIn";
 import { aboveButtons } from "./LevelTwoShell";
+import { RightBounce } from "./RightBounce";
 import { SlotImage } from "./SlotImage";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { COLUMN_LEFT, type Choice } from "./levelTwo";
 
 /** The result panel's own spring (see FeedbackPanel), so the cards rise as it arrives. */
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
+
+/** A row of cards' own height (px), for placing it (see `underAbove`): `cardHeight` where given, else the layout's. */
+export const TILE_HEIGHT: Record<"pair" | "tiles" | "badges", number> = { pair: 184, tiles: 110, badges: 119 };
 
 /** Each layout's card height, the picture's box and the text's size. */
 const LAYOUT = {
@@ -26,10 +30,14 @@ const LAYOUT = {
   big: { card: "h-[184px]", picture: "h-[62px] w-[62px]", text: "text-[16px] leading-5", box: "grid grid-cols-2 gap-x-[29px] gap-y-[31px]", inner: "gap-3" },
   /** Three 112 x 119 cards, each a coloured badge over its word. */
   badges: { card: "h-[119px]", picture: "h-10 w-10", text: "text-[14px] leading-[120%]", box: "flex items-stretch gap-[11px]", inner: "gap-1.5" },
+  /** Two 166 x 187 cards, 19 apart, their art (at most 83 x 56) in a 90 x 90 box: the 3D questions' tray look. */
+  tray: { card: "h-[187px]", picture: "h-[90px] w-[90px]", text: "text-[16px] leading-none", box: "flex items-stretch gap-[19px]", inner: "gap-3.5", art: "h-[56px] w-[83px] object-contain" },
+  /** Three 112 x 119 cards, 8 apart, a 52px icon over a two-line word (Figma "Frame 240": Poppins 600 16px, line 120%): the 3D questions' tray look with three answers. */
+  trio: { card: "h-[119px]", picture: "h-[52px] w-[52px]", text: "max-w-[72px] text-[16px] leading-[120%]", box: "flex items-stretch gap-2", inner: "gap-1.5", art: "h-full w-full object-contain" },
 } as const;
 
 /** The layouts that are wider than the usual column (px): they stand centred. */
-const WIDTH: Partial<Record<keyof typeof LAYOUT, number>> = { big: 355, badges: 358 };
+const WIDTH: Partial<Record<keyof typeof LAYOUT, number>> = { big: 355, badges: 358, tray: 351, trio: 352 };
 
 type TileCardsProps = {
   layout: keyof typeof LAYOUT;
@@ -50,8 +58,8 @@ type TileCardsProps = {
   pictureHeight?: number;
   /** The card's height (px), where it should differ from the layout's. */
   cardHeight?: number;
-  /** Stage px from the top, where the cards should stand there instead of on the button row; they still rise by `rise` once the result panel is up. */
-  top?: number;
+  /** Stage px (or a CSS length, see `underAbove`) from the top, where the cards should stand there instead of on the button row; they still rise by `rise` once the result panel is up. */
+  top?: number | string;
   /** The cards bounce in one by one instead of the whole row rising together. */
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
@@ -60,6 +68,8 @@ type TileCardsProps = {
   bottomGap?: number;
   /** How far they rise once the result panel is up (default `CARDS_RISE`). */
   rise?: number;
+  /** The right card (once it is shown as right) bounces once, with its shine and stars (`RightBounce`), as the match boards' right cards do. */
+  bounceRight?: boolean;
   onPick: (id: string) => void;
 };
 
@@ -68,7 +78,7 @@ type TileCardsProps = {
  * the same column as the rest of the screen (`SIDE_MARGIN` in from each side), standing on the button row.
  * Like the list, they rise once the result panel is up.
  */
-export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, onPick }: TileCardsProps) {
+export function TileCards({ layout, choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, longText, pictureWidth, pictureHeight, cardHeight, top, bounceIn = false, revealed = true, bottomGap = GAP_ABOVE_BUTTONS, rise = CARDS_RISE, bounceRight = false, onPick }: TileCardsProps) {
   const look = LAYOUT[layout];
   return (
     <motion.div
@@ -109,7 +119,7 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
                 <span className={`flex shrink-0 items-center justify-center rounded-[12px] text-[20px] leading-[120%] font-semibold whitespace-nowrap ${look.picture} ${choice.tag.look}`}>{choice.tag.text}</span>
               ) : (
                 <span className={`flex shrink-0 items-center justify-center ${look.picture}`} style={{ width: pictureWidth, height: pictureHeight }}>
-                  <SlotImage file={choice.icon} className={pictureHeight ? "h-full w-full object-contain" : "max-h-full max-w-full object-contain"} />
+                  <SlotImage file={choice.icon} className={"art" in look ? look.art : pictureHeight ? "h-full w-full object-contain" : "max-h-full max-w-full object-contain"} />
                 </span>
               )}
               <span
@@ -121,12 +131,20 @@ export function TileCards({ layout, choices, correctId, selectedId, checked, fad
             </motion.button>
           </div>
         );
-        return bounceIn ? (
-          <BounceIn key={choice.id} index={index} shown={revealed} className="flex min-w-0 flex-1">
+        // A little after the check, so the cards have risen above the result panel by the time it jumps. Cards that fade away (`fadeOut`) don't bounce: nobody would see it.
+        const tile = bounceRight ? (
+          <RightBounce key={choice.id} play={state === "correct" && !fadeOut} delay={0.2} radius={8} className="flex min-w-0 flex-1">
             {card}
-          </BounceIn>
+          </RightBounce>
         ) : (
           card
+        );
+        return bounceIn ? (
+          <BounceIn key={choice.id} index={index} shown={revealed} className="flex min-w-0 flex-1">
+            {tile}
+          </BounceIn>
+        ) : (
+          tile
         );
       })}
     </motion.div>

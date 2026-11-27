@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useRef, useState, type ReactNode } from "react";
+import { AnimatePresence, animate, motion, useMotionValue } from "framer-motion";
 import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
+import { RightBounce, WAVE_ROLL_S } from "@/components/level-two/RightBounce";
 import { SeenBadge } from "./FlipCarousel";
 import type { InteractionApi } from "./screen";
 import { EDGE, RAISED, RAISED_SMALL } from "@/components/ui/raised";
@@ -16,20 +17,18 @@ const SHAKE = [0, -7, 7, -5, 5, 0];
 const WRONG_MS = 800;
 const PILL = "cursor-pointer rounded-full bg-[#08A4AD] px-6 py-2 text-[16px] leading-6 font-bold text-white shadow-[0_3px_0_#067F86] active:translate-y-px active:shadow-[0_2px_0_#067F86]";
 
-type SlotKind = "value" | "operator" | "any";
-
-/** What each place of an expression takes, where every right way agrees: a value or an operator. */
-const slotKinds = (accept: readonly (readonly string[])[]): SlotKind[] =>
-  accept[0].map((_, place) => {
-    const operators = new Set(accept.map((way) => isOperator(way[place])));
-    return operators.size > 1 ? "any" : operators.has(true) ? "operator" : "value";
-  });
-
-/** The sizes of the places and blocks: long expressions (a * b + c * d) get smaller ones so they fit a line. */
+/** The sizes of the places and blocks: long expressions (a * b + c * d) get smaller ones so they fit a line. A place is at least `cell` big, and grows with the block in it. */
 const SIZE = {
-  roomy: { slot: "h-12 w-11", placed: "h-12 min-w-11 text-[21px]", tray: "h-12 min-w-12 text-[21px]" },
-  tight: { slot: "h-10 w-9", placed: "h-10 min-w-9 text-[17px]", tray: "h-11 min-w-11 text-[19px]" },
+  roomy: { cell: "h-12 min-w-11", placed: "h-12 min-w-11 text-[21px]", tray: "h-12 min-w-12 text-[21px]" },
+  tight: { cell: "h-10 min-w-9", placed: "h-10 min-w-9 text-[17px]", tray: "h-11 min-w-11 text-[19px]" },
 } as const;
+/** Below this far (px) a press and release is a tap, not a drag. */
+const TAP_SLOP = 6;
+/** A block let go within this far (px) of a place goes in it (the gap between two places is 6px). */
+const DROP_REACH = 14;
+/** The plain shadow a block leaves where it stands (its shape, with nothing in it). */
+const BLOCK_SHADOW = "bg-black/[0.09] dark:bg-white/[0.08]";
+const BLOCK_SPRING = { type: "spring", stiffness: 420, damping: 34 } as const;
 const VALUE_BLOCK = "border-2 border-[#E4DFF7] bg-[#F6F4FE] text-[#444444] shadow-[0_3px_0_#D3CCF0] dark:border-[#3B3670] dark:bg-[#2E2A5C] dark:text-white dark:shadow-[0_3px_0_#1B1840]";
 const OPERATOR_BLOCK = "bg-[#08A4AD] text-white shadow-[0_3px_0_#067F86]";
 
@@ -47,15 +46,118 @@ export const sumOfProducts = (a: readonly [string, string], b: readonly [string,
 };
 
 /**
- * Build an expression from blocks: tap a block to put it in the next place,
- * tap one in the expression to take it back out. When every place is filled it
- * is checked: a right one turns green and shows its result (the stage is done),
- * a wrong one shakes red with a hint and counts as a slip, then starts again.
+ * A block that can be tapped or dragged. A press that stays put is a tap (`onTap`); a drag follows the pointer (the stage
+ * is scaled as one piece, so the pointer's screen px are converted to the stage's), `onMove` is told where it is on the
+ * way (`null` once it is let go) and `onDrop` where it was let go: it says whether the block went somewhere (then the
+ * block that was dragged is already in its new place, and starts from its own at once), else it glides back.
+ */
+function DragBlock({
+  label,
+  disabled,
+  className,
+  popIn = false,
+  onTap,
+  onMove,
+  onDrop,
+  children,
+}: {
+  label: string;
+  disabled: boolean;
+  className: string;
+  /** It pops in (it has just been put in its place). */
+  popIn?: boolean;
+  onTap: () => void;
+  onMove: (point: { x: number; y: number } | null) => void;
+  onDrop: (point: { x: number; y: number }) => boolean;
+  children: ReactNode;
+}) {
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
+  const press = useRef<{ startX: number; startY: number; scale: number; moved: boolean } | null>(null);
+  const [state, setState] = useState<"rest" | "pressed" | "dragging">("rest");
+
+  const goHome = (glide: boolean) => {
+    if (glide) {
+      animate(x, 0, BLOCK_SPRING);
+      animate(y, 0, BLOCK_SPRING);
+    } else {
+      x.set(0);
+      y.set(0);
+    }
+  };
+
+  return (
+    <motion.button
+      type="button"
+      disabled={disabled}
+      aria-label={label}
+      onPointerDown={(event) => {
+        // A disabled button may still get pointer events.
+        if (disabled || (event.pointerType === "mouse" && event.button !== 0)) return;
+        const box = event.currentTarget;
+        box.setPointerCapture(event.pointerId);
+        press.current = { startX: event.clientX, startY: event.clientY, scale: box.getBoundingClientRect().width / box.offsetWidth || 1, moved: false };
+        setState("pressed");
+      }}
+      onPointerMove={(event) => {
+        const now = press.current;
+        if (!now) return;
+        const dx = event.clientX - now.startX;
+        const dy = event.clientY - now.startY;
+        if (!now.moved) {
+          if (Math.hypot(dx, dy) <= TAP_SLOP) return;
+          now.moved = true;
+          setState("dragging");
+        }
+        x.set(dx / now.scale);
+        y.set(dy / now.scale);
+        onMove({ x: event.clientX, y: event.clientY });
+      }}
+      onPointerUp={(event) => {
+        const now = press.current;
+        press.current = null;
+        setState("rest");
+        if (!now) return;
+        if (!now.moved) return onTap();
+        onMove(null);
+        goHome(!onDrop({ x: event.clientX, y: event.clientY }));
+      }}
+      onPointerCancel={() => {
+        const moved = press.current?.moved;
+        press.current = null;
+        setState("rest");
+        if (moved) {
+          onMove(null);
+          goHome(true);
+        }
+      }}
+      // The keyboard (Enter or Space is a click with no pointer: `detail` 0).
+      onClick={(event) => {
+        if (event.detail === 0 && !disabled) onTap();
+      }}
+      initial={popIn ? { scale: 0.6, opacity: 0 } : false}
+      animate={{ scale: state === "dragging" ? 1.08 : state === "pressed" ? 0.92 : 1, opacity: 1 }}
+      transition={popIn ? { type: "spring", stiffness: 420, damping: 22 } : { duration: 0.12 }}
+      style={{ x, y, zIndex: state === "rest" ? 0 : 20 }}
+      className={`relative touch-none rounded-[10px] leading-none font-bold enabled:cursor-grab enabled:active:cursor-grabbing disabled:cursor-default ${className}`}
+    >
+      {children}
+    </motion.button>
+  );
+}
+
+/**
+ * Build an expression from blocks. Tap a block and it goes to the first empty place, from the left, whatever it is (a
+ * value or an operator): no place is kept for a kind. Or drag a block from the tray onto a place: an empty place takes it,
+ * a taken one is replaced (the block that was there is out again). A block in the expression can be dragged to another
+ * place too, and swaps with what is there; tap one in the expression to take it back out (its place stays where it is).
+ * When every place is filled it is checked: a right one turns green and shows its result (the stage is done), a wrong one
+ * shakes red with a hint and counts as a slip, then starts again.
  */
 export function ExpressionStage({
   api,
   lead,
-  prompt = "Tap the blocks to build it.",
+  prompt = "Tap or drag the blocks to build it.",
   tokens,
   accept,
   hint,
@@ -75,16 +177,38 @@ export function ExpressionStage({
 }) {
   const { slip, done, finished } = api;
   const length = accept[0].length;
-  const kinds = slotKinds(accept);
   const size = SIZE[length > 5 ? "tight" : "roomy"];
-  const [chosen, setChosen] = useState<readonly number[]>([]);
+  // The block (its place in `tokens`) in each place of the expression, if there is one.
+  const [slots, setSlots] = useState<readonly (number | undefined)[]>(() => Array<number | undefined>(length).fill(undefined));
   const [ok, setOk] = useState(false);
   const [bad, setBad] = useState(false);
-  // The place the next block goes to, picked out while there is one to fill.
-  const nextPlace = ok || bad || finished || chosen.length >= length ? -1 : chosen.length;
+  // The place a dragged block is over, lit while it is.
+  const [over, setOver] = useState(-1);
+  // The place whose block is being dragged.
+  const [lifted, setLifted] = useState(-1);
+  const row = useRef<HTMLDivElement>(null);
+  const filled = slots.filter((entry) => entry !== undefined).length;
+  // The first empty place, picked out while there is one to fill.
+  const nextPlace = ok || bad || finished || filled >= length ? -1 : slots.findIndex((entry) => entry === undefined);
 
-  const check = (next: readonly number[]) => {
-    const written = next.map((index) => tokens[index]);
+  /** The place a point (screen px) is on, or within `DROP_REACH` of; -1 for none. */
+  const placeAt = (point: { x: number; y: number } | null) => {
+    if (!point || !row.current) return -1;
+    let nearest = -1;
+    let nearestDistance = DROP_REACH;
+    row.current.querySelectorAll<HTMLElement>("[data-place]").forEach((cell) => {
+      const box = cell.getBoundingClientRect();
+      const distance = Math.hypot(Math.max(box.left - point.x, 0, point.x - box.right), Math.max(box.top - point.y, 0, point.y - box.bottom));
+      if (distance <= nearestDistance) {
+        nearest = Number(cell.dataset.place);
+        nearestDistance = distance;
+      }
+    });
+    return nearest;
+  };
+
+  const check = (next: readonly (number | undefined)[]) => {
+    const written = next.map((index) => (index === undefined ? "" : tokens[index]));
     if (accept.some((way) => way.length === written.length && way.every((token, place) => token === written[place]))) {
       setOk(true);
       window.setTimeout(() => done(), 600);
@@ -94,59 +218,94 @@ export function ExpressionStage({
     setBad(true);
     window.setTimeout(() => {
       setBad(false);
-      setChosen([]);
+      setSlots(Array<number | undefined>(length).fill(undefined));
     }, WRONG_MS);
   };
 
-  const pick = (index: number) => {
-    if (ok || bad || finished || chosen.includes(index) || chosen.length >= length) return;
+  /** The expression with the blocks changed: it is checked once every place is filled. */
+  const commit = (next: readonly (number | undefined)[]) => {
     playClickSound();
     vibrateForTap();
-    const next = [...chosen, index];
-    setChosen(next);
-    if (next.length === length) check(next);
+    setSlots(next);
+    if (next.every((entry) => entry !== undefined)) check(next);
+  };
+
+  /** A tap on a block in the tray: it goes to the first empty place, from the left. */
+  const pick = (index: number) => {
+    if (ok || bad || finished || slots.includes(index)) return;
+    const place = slots.findIndex((entry) => entry === undefined);
+    if (place < 0) return;
+    commit(slots.map((entry, at) => (at === place ? index : entry)));
+  };
+
+  /**
+   * A block let go over a place. From the tray it takes the place (the block that was there is out again); from another
+   * place it swaps with what is there (or just moves, if it was empty). Whether it went anywhere.
+   */
+  const dropOn = (index: number, point: { x: number; y: number }) => {
+    const place = placeAt(point);
+    const from = slots.indexOf(index);
+    if (ok || bad || finished || place < 0 || place === from) return false;
+    const next = [...slots];
+    if (from >= 0) next[from] = slots[place];
+    next[place] = index;
+    commit(next);
+    return true;
   };
 
   const takeOut = (index: number) => {
     if (ok || bad || finished) return;
     playClickSound();
-    setChosen((now) => now.filter((entry) => entry !== index));
+    setSlots((now) => now.map((entry) => (entry === index ? undefined : entry)));
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-2.5">
       {lead}
       <motion.div
+        ref={row}
         animate={{ x: bad ? SHAKE : 0 }}
         transition={{ duration: 0.4 }}
         className={`flex min-h-[68px] w-full flex-wrap items-center justify-center gap-1.5 px-3 py-2 ${CARD} ${ok ? LOOKS.correct.card : bad ? LOOKS.wrong.card : WHITE}`}
       >
         {Array.from({ length }, (_, place) => {
-          const index = chosen[place];
-          return index === undefined ? (
-            <span
-              key={place}
-              className={`shrink-0 rounded-[10px] border-2 border-dashed transition-colors ${size.slot} ${
-                place === nextPlace
-                  ? "border-[#08A4AD] bg-[#08A4AD]/10 motion-safe:animate-pulse"
-                  : kinds[place] === "operator"
-                    ? "border-[#08A4AD]/40"
-                    : "border-[#C9CED6] dark:border-white/20"
-              }`}
-            />
-          ) : (
-            <motion.button
-              key={place}
-              type="button"
-              initial={{ scale: 0.6, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: "spring", stiffness: 420, damping: 22 }}
-              onClick={() => takeOut(index)}
-              aria-label={`${tokens[index]} (tap to take out)`}
-              className={`cursor-pointer rounded-[10px] px-2 leading-none font-bold ${size.placed} ${isOperator(tokens[index]) ? OPERATOR_BLOCK : VALUE_BLOCK}`}
-            >
-              {tokens[index]}
-            </motion.button>
+          const index = slots[place];
+          const lit = over === place;
+          return (
+            // A place is as big as its dashed outline (or its block, if that is wider) and stays where it is when its block is dragged off: what is left is the block's plain shadow.
+            <span key={place} data-place={place} className={`relative flex shrink-0 ${size.cell} ${lifted === place ? "z-30" : ""}`}>
+              <span
+                aria-hidden
+                className={`pointer-events-none absolute inset-0 rounded-[10px] transition-colors ${
+                  index === undefined
+                    ? `border-2 border-dashed ${lit ? "border-[#08A4AD] bg-[#08A4AD]/20" : place === nextPlace ? "border-[#08A4AD] bg-[#08A4AD]/10 motion-safe:animate-pulse" : "border-[#C9CED6] dark:border-white/20"}`
+                    : lit
+                      ? "bg-[#08A4AD]/30"
+                      : BLOCK_SHADOW
+                }`}
+              />
+              {index !== undefined && (
+                // Once the expression is right its blocks bounce as a wave from the left (a value, the operator, a value): each starts as the one before it reaches the top of its jump.
+                <RightBounce play={ok} delay={place * WAVE_ROLL_S} radius={10} className="flex shrink-0">
+                  <DragBlock
+                    key={index}
+                    popIn
+                    label={`${tokens[index]} (tap to take out, or drag to another place)`}
+                    disabled={ok || bad || finished}
+                    className={`px-2 ${size.placed} ${isOperator(tokens[index]) ? OPERATOR_BLOCK : VALUE_BLOCK}`}
+                    onTap={() => takeOut(index)}
+                    onMove={(point) => {
+                      setOver(placeAt(point));
+                      // The place whose block is being dragged stands over the others, so the block is not hidden behind the places to its right.
+                      setLifted(point ? place : -1);
+                    }}
+                    onDrop={(point) => dropOn(index, point)}
+                  >
+                    {tokens[index]}
+                  </DragBlock>
+                </RightBounce>
+              )}
+            </span>
           );
         })}
         {result !== undefined && (
@@ -170,19 +329,24 @@ export function ExpressionStage({
       </motion.div>
       <div className="flex flex-wrap justify-center gap-2">
         {tokens.map((token, index) => {
-          const used = chosen.includes(index);
+          const used = slots.includes(index);
           return (
-            <motion.button
-              key={index}
-              type="button"
-              onClick={() => pick(index)}
-              disabled={used}
-              animate={{ opacity: used ? 0.25 : 1, y: used ? 3 : 0 }}
-              whileTap={{ scale: 0.92, y: 2 }}
-              className={`cursor-pointer rounded-[10px] px-2.5 leading-none font-bold disabled:cursor-default ${size.tray} ${isOperator(token) ? OPERATOR_BLOCK : VALUE_BLOCK}`}
-            >
-              {token}
-            </motion.button>
+            // Each block has its plain shadow in its place in the tray from the start, behind it: the block can be dragged off it, and stays faded over it while it is in the expression.
+            <span key={index} className="relative flex">
+              <span aria-hidden className={`pointer-events-none absolute inset-0 rounded-[10px] ${BLOCK_SHADOW}`} />
+              <motion.span initial={false} animate={{ opacity: used ? 0.25 : 1 }} className="flex">
+                <DragBlock
+                  label={token}
+                  disabled={used || ok || bad || finished}
+                  className={`px-2.5 ${size.tray} ${isOperator(token) ? OPERATOR_BLOCK : VALUE_BLOCK}`}
+                  onTap={() => pick(index)}
+                  onMove={(point) => setOver(placeAt(point))}
+                  onDrop={(point) => dropOn(index, point)}
+                >
+                  {token}
+                </DragBlock>
+              </motion.span>
+            </span>
           );
         })}
       </div>
@@ -212,7 +376,7 @@ export function ShareStage({ api, total, students, after }: { api: InteractionAp
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-3">
       <ShareScene pile={pile} trays={Array.from({ length: students }, () => rounds)} />
       {over ? (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-wrap items-center justify-center gap-2">
@@ -259,7 +423,7 @@ export function FillRowsStage({ api, rows, per, after }: { api: InteractionApi; 
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-2.5">
       <div className={`flex w-full flex-col gap-1.5 px-2 py-2 ${CARD} ${CREAM}`}>
         {Array.from({ length: rows }, (_, row) => {
           const full = filled.includes(row);
@@ -374,7 +538,7 @@ export function SymbolStage({
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-2.5">
       {header?.(current)}
       {groups.map((group, index) => {
         const colors = KEY_COLORS[index % KEY_COLORS.length];
@@ -474,7 +638,7 @@ export function StepStage({ api, tokens, steps, after }: { api: InteractionApi; 
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-3">
       <div className={`flex w-full flex-col items-center gap-2 px-3 py-3 ${CARD} ${WHITE}`}>
         <ExprBig tokens={tokens} lit={step?.lit ?? []} result={step?.result} />
         <div className="flex items-center gap-1.5" aria-hidden>
@@ -539,7 +703,7 @@ export function OrderStage({
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-2.5">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-2.5">
       {lead}
       <div className="flex w-full flex-col gap-1.5">
         {shown.map((index) => {
@@ -600,7 +764,7 @@ export function ScenesStage({ api, scenes, columns = 2, prompt = "Tap each scene
   };
 
   return (
-    <div className="pointer-events-auto flex w-[340px] flex-col items-center gap-3">
+    <div className="pointer-events-auto flex w-(--column-w) flex-col items-center gap-3">
       <div className={`grid w-full gap-2.5 ${columns === 4 ? "grid-cols-4" : "grid-cols-2"}`}>
         {scenes.map((scene, index) => (
           <motion.button

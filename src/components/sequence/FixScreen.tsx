@@ -3,16 +3,17 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowUp, RotateCw } from "lucide-react";
 import { aboveButtons, Teal } from "@/components/level-two/LevelTwoShell";
+import { SlotImage } from "@/components/level-two/SlotImage";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { useBatteryClaim } from "@/components/level-one/useBatteryClaim";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { ArrangeBoard, ArrangeDock, arrangeGeometry, nextHintId, useArrange, type ArrangeCardDef, type Slots } from "./ArrangeBoard";
 import { HexBoard } from "./HexBoard";
 import { HexScreen, ReplayButton } from "./HexScreen";
-import { COMMAND_LABEL, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
-import { STEP, sequenceNext } from "./sequence";
+import { COMMAND_LABEL, COMMAND_PICTURE, GRID, GRID_START, sameTile, trace, type Command } from "./hexGrid";
+import { STEP } from "./sequence";
+import { useSequenceFlow } from "./sequenceFlow";
 import { noteFirstTry, noteStruggle } from "./sequenceScore";
 import { useHexRun } from "./useHexRun";
 
@@ -20,19 +21,19 @@ const BATTERY = { col: 1, row: 1 };
 
 const FORWARD_TINT = "bg-[#EDFAFE] dark:bg-[#15233A]";
 const RIGHT_TINT = "bg-[#FEF8EC] dark:bg-[#2A2218]";
+/** The game buttons' pictures (`COMMAND_PICTURE`), 44 px: the cards are 84 tall, so the picture, the gap and two lines of the name just fit. */
+const picture = (command: Command) => <SlotImage file={COMMAND_PICTURE[command]} className="size-11 max-h-none max-w-none shrink-0" />;
 const CARDS: readonly ArrangeCardDef[] = [
-  { id: "forward-1", kind: "forward", text: COMMAND_LABEL.forward, art: <ArrowUp aria-hidden className="size-7 shrink-0 text-[#0F88E5]" strokeWidth={3} />, tint: FORWARD_TINT },
-  { id: "forward-2", kind: "forward", text: COMMAND_LABEL.forward, art: <ArrowUp aria-hidden className="size-7 shrink-0 text-[#0F88E5]" strokeWidth={3} />, tint: FORWARD_TINT },
-  { id: "right-1", kind: "right", text: COMMAND_LABEL.right, art: <RotateCw aria-hidden className="size-7 shrink-0 text-[#E07B1F]" strokeWidth={3} />, tint: RIGHT_TINT },
+  { id: "forward-1", kind: "forward", text: COMMAND_LABEL.forward, art: picture("forward"), tint: FORWARD_TINT },
+  { id: "forward-2", kind: "forward", text: COMMAND_LABEL.forward, art: picture("forward"), tint: FORWARD_TINT },
+  { id: "right-1", kind: "right", text: COMMAND_LABEL.right, art: picture("right"), tint: RIGHT_TINT },
 ];
 /** The mistake it starts with: forward, forward, right takes Hex up to the corner. */
 const BROKEN: Slots = ["forward-1", "forward-2", "right-1"];
 /** The right order, first slot first. */
 const ANSWER: readonly Command[] = ["forward", "right", "forward"];
 const GEO = arrangeGeometry({ mode: "rows", card: { width: 108, height: 84 }, count: 3, gap: 8, lane: 12, slotsOnTop: true, solidSlots: true });
-/** Once checked the cards rise this far (px), to stand clear above the result panel, even with its longest text. */
-const BOARD_RISE = 200;
-/** How far (px) the cards and Replay stand above their usual place over the buttons. */
+/** How far (px) the cards and Replay stand above their usual place over the buttons. They stay there when the result panel comes up: it covers what is under it, they do not move. */
 const LIFT = 50;
 /** The pause before the broken sequence plays on its own, and how long Hex is left at the end of it. */
 const AUTOPLAY_MS = 800;
@@ -56,6 +57,7 @@ const kindsOf = (slots: Slots): Command[] =>
  */
 export function FixScreen() {
   const router = useRouter();
+  const flow = useSequenceFlow();
   const { slots, placeIn, tapCard, full } = useArrange(CARDS.map((card) => card.id), GEO.count);
   const { hex, running, play, reset } = useHexRun(GRID_START, GRID);
   const [phase, setPhase] = useState<Phase>("edit");
@@ -110,7 +112,7 @@ export function FixScreen() {
 
   const onContinue = () => {
     if (phase === "edit") run();
-    else if (correct) router.push(sequenceNext(STEP.fix));
+    else if (correct) router.push(flow.next(STEP.fix));
     else tryAgain();
   };
 
@@ -146,15 +148,15 @@ export function FixScreen() {
     >
       <motion.div
         initial={false}
-        animate={{ y: phase === "checked" ? -BOARD_RISE : 0, opacity: phase === "checked" ? 0 : 1 }}
+        animate={{ opacity: phase === "checked" ? 0 : 1 }}
         transition={{ type: "spring", stiffness: 360, damping: 32 }}
         className="absolute inset-x-0 flex justify-center"
         style={{ bottom: `calc(${aboveButtons(28, true)} + ${GEO.board.height + 16 + LIFT}px)` }}
       >
         <ReplayButton onPress={() => play(commands)} disabled={phase !== "edit" || running || commands.length === 0} />
       </motion.div>
-      <ArrangeDock geo={GEO} withHint rise={LIFT + (phase === "checked" ? BOARD_RISE : 0)}>
-        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={phase === "edit" && nextHintId(CARDS, slots, ANSWER) === hintCard ? hintCard : null} onPlace={placeIn} onTap={tapCard} />
+      <ArrangeDock geo={GEO} withHint rise={LIFT} behindPanel>
+        <ArrangeBoard cards={CARDS} slots={slots} geo={GEO} disabled={phase !== "edit"} hintedId={phase === "edit" && nextHintId(CARDS, slots, ANSWER) === hintCard ? hintCard : null} hideShadows={phase === "checked"} onPlace={placeIn} onTap={tapCard} />
       </ArrangeDock>
     </HexScreen>
   );

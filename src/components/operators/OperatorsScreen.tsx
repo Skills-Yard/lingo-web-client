@@ -4,32 +4,30 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { useAnswerHint } from "@/components/level-one/answerHint";
-import { useCelebrate } from "@/components/level-one/Celebration";
 import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
-import { AnswerCards, CARDS_RISE, GAP_ABOVE_BUTTONS } from "@/components/level-two/AnswerCards";
+import { acrossCards, answersHeight, optionFont, OptionGrid } from "@/components/datatypes/OptionCards";
+import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
 import { aboveButtons, LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT, type BubbleSize } from "@/components/level-two/levelTwo";
-import { TileCards } from "@/components/level-two/TileCards";
+import { IDLE_LOOK, OPTION } from "@/components/variable/quiz";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForAnswer } from "@/lib/haptics";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
+import { COLUMN_STYLE, fittedColumn } from "./column";
 import { OPERATORS_STEPS, operatorsNext, operatorsPrevious } from "./operators";
 import { noteAnswer, noteStruggle } from "./operatorsScore";
 import { parseTitle, type InteractionStage, type QuizStage, type ScreenDef } from "./screen";
 
-/** A row of the list of answers (a compact one, for words only), and the gap between rows (see `AnswerCards`). */
-const ROW_H = 76;
-const ROW_H_COMPACT = 56;
-const ROW_GAP = 6;
-/** The tiles: a card's height by how many there are, and the gap between rows. */
-const TILE_H = { 2: 184, 3: 110, 4: 104 } as const;
-const TILE_GAP = 14;
-/** How far the list of answers rises once the result panel is up (the tiles rise `CARDS_RISE`). */
-const LIST_RISE = 150;
 /** How much room the result panel takes from an interaction's area once it is up. */
 const PANEL_ROOM = 215;
+/** The result panel is this tall (px) for up to three lines of text, and taller for more. */
+const PANEL_H = 236;
+/** The gap (px) kept between a picture and the result panel once the answers under the picture have faded. */
+const PANEL_GAP = 10;
+/** `OPTION.rise` was made for a panel that tall and leaves the answers 13px clear of it on a 390x844 phone; they rise this much less (px), to stand 8px clear: no more than the panel needs. */
+const RISE_TRIM = 5;
 /** The least a picture is shrunk to fit its room. */
 const MIN_FIT = 0.6;
 const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
@@ -42,14 +40,12 @@ const QUESTION_CHARS = 36;
 
 const bubbleSize = (line: string): BubbleSize => ({ width: line.length <= 50 ? 190 : line.length <= 90 ? 240 : 262 });
 
-/** How the answers stand: rows, or tiles (two, three or four across and down). */
-const tileCount = (stage: QuizStage) => Math.min(4, Math.max(2, stage.options.length)) as 2 | 3 | 4;
-
-const answersHeight = (stage: QuizStage) => {
-  if (stage.layout === "grid") return tileCount(stage) === 4 ? TILE_H[4] * 2 + TILE_GAP : TILE_H[tileCount(stage)];
-  const row = stage.compact ? ROW_H_COMPACT : ROW_H;
-  return stage.options.length * row + (stage.options.length - 1) * ROW_GAP;
-};
+/**
+ * The answers of a question are the Variable and Data Types modules': words only (the pictures a screen's data may carry are
+ * not drawn), the same size, gap, padding, corners and text everywhere (see `OptionCards`). Three short answers are mini cards in one
+ * row, four short ones are cards two by two, and anything else is a list of 56px rows.
+ */
+const wordsOnly = (options: QuizStage["options"]) => options.map((option) => ({ id: option.id, text: option.text, icon: "" }));
 
 /** Hex's line is never sent away here. */
 const KEEP_HEX = () => {};
@@ -77,8 +73,8 @@ function InteractionHost({
 
 /**
  * An Operators screen, in the Sequence and Command modules' design: the
- * headline, Hex's short line, a picture, and the answers (rows with a picture,
- * or tiles). Continue checks the pick and the result panel (with Hex) slides
+ * headline, Hex's short line, a picture, and the answers (words only: cards
+ * or rows, as in the Data Types module). Continue checks the pick and the result panel (with Hex) slides
  * up; a right answer goes on and a wrong one is tried again, with the right one
  * never shown. A screen can have several stages (an interaction, then a
  * question, or several questions). An interaction stage is something to do (tap,
@@ -120,12 +116,42 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
     setPictureHeight(element.offsetHeight);
     return () => observer.disconnect();
   }, []);
-  const fit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
+  // The result panel's own height, so the answers rise by what it needs and no more (a longer text makes a taller panel).
+  const [panelHeight, setPanelHeight] = useState(0);
+  const overlayRef = useCallback((element: HTMLDivElement | null) => {
+    const sheet = element?.firstElementChild;
+    if (!(sheet instanceof HTMLElement)) return;
+    const observer = new ResizeObserver(() => setPanelHeight(sheet.offsetHeight));
+    observer.observe(sheet);
+    setPanelHeight(sheet.offsetHeight);
+    return () => observer.disconnect();
+  }, []);
+  const answersRise = OPTION.rise - RISE_TRIM + Math.max(0, panelHeight - PANEL_H);
+  const wantedFit = roomHeight > 0 && pictureHeight > 0 ? Math.max(MIN_FIT, Math.min(1, roomHeight / pictureHeight)) : 1;
+  // The picture is laid out wider the smaller it is drawn (see `fittedColumn`), which can make it shorter, which would make it want to be
+  // drawn bigger, which makes it narrower and taller again: it flickered between the two every frame. So the size only goes down while
+  // the room is the same and it is the same stage and try: it grows again only when the room changes (Hex's line leaving, the panel).
+  const fitKey = `${screen.step}-${stageIndex}-${attempt}`;
+  const [settledFit, setSettledFit] = useState({ key: fitKey, room: roomHeight, fit: wantedFit });
+  let liveFit = settledFit.fit;
+  if (settledFit.key !== fitKey || Math.abs(settledFit.room - roomHeight) > 1) {
+    liveFit = wantedFit;
+    setSettledFit({ key: fitKey, room: roomHeight, fit: wantedFit });
+  } else if (wantedFit < settledFit.fit) {
+    liveFit = wantedFit;
+    setSettledFit({ ...settledFit, fit: wantedFit });
+  }
 
   const stage = screen.stages[stageIndex];
   const lastStage = stageIndex === screen.stages.length - 1;
   const quiz = stage.kind === "quiz" ? stage : null;
   const interaction = stage.kind === "interaction" ? stage : null;
+  // A question's picture keeps the size it had until the check: Hex's line leaves then and the room grows, and a picture that grew with
+  // it jumped bigger the moment Continue was pressed (it looked stretched). It stays that size, and `bodyEnd` centres it.
+  const [heldFit, setHeldFit] = useState(liveFit);
+  const sizeHeld = !!quiz && checked;
+  if (!sizeHeld && heldFit !== liveFit) setHeldFit(liveFit);
+  const fit = sizeHeld ? heldFit : liveFit;
   const correct = !!quiz && selectedId === quiz.correctId;
   // Every question has the hint button.
   const hasHint = !!quiz;
@@ -229,19 +255,22 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
   const lineTyped = !line || lineIsTyped;
 
   // What stands under the line: the picture, the question and the answers (question stage), or the interaction.
-  const tiles = !!quiz && quiz.layout === "grid";
-  const answersBottom = quiz ? aboveButtons(GAP_ABOVE_BUTTONS, hasHint) : "0px";
+  // The answers are words only, in the shared option system (see `wordsOnly`).
+  const choices = quiz ? wordsOnly(quiz.options) : [];
+  const cards = !!quiz?.threeCards;
+  const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
   const questionLines = quiz?.question ? Math.ceil(quiz.question.length / QUESTION_CHARS) : 0;
   const questionHeight = questionLines ? questionLines * 22 + 14 : 0;
-  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz) + 10 + questionHeight + 8}px)` : aboveButtons(24);
+  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(choices, cards) + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
-  const risen = quiz ? (tiles ? CARDS_RISE : LIST_RISE) : interaction?.finishPanel ? PANEL_ROOM : 0;
-  const celebrate = panel?.right === true && (quiz ? checked : finished);
-  // The burst belongs to the module's layout, so it plays on when Next leaves this screen.
-  const startCelebration = useCelebrate();
-  useEffect(() => {
-    if (celebrate) startCelebration();
-  }, [celebrate, startCelebration]);
+  // Answers that stand line by line (more than one) disappear once the answer is checked, right or wrong: they fade where they stand and do
+  // not rise over the popup (cards, three or four across, rise and stay). The picture then keeps the room they had.
+  const rowsAway = !!quiz && choices.length > 1 && !acrossCards(choices, cards);
+  const answersGone = rowsAway && checked;
+  const risen = quiz ? (rowsAway ? 0 : answersRise) : interaction?.finishPanel ? PANEL_ROOM : 0;
+  // Once those answers have faded nothing stands under the picture, so its room runs down to the result panel (not to where the answers
+  // were) and the picture sits in the middle of it, instead of high over an empty gap.
+  const bodyEnd = answersGone ? `${(panelHeight || PANEL_H) + PANEL_GAP}px` : bodyBottom;
 
   return (
     <LevelTwoShell
@@ -265,7 +294,7 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
       hint={hasHint ? { visible: !checked, onUse: useHint } : undefined}
       onContinue={onContinue}
       overlay={
-        <div className="pointer-events-none absolute inset-0">
+        <div ref={overlayRef} className="pointer-events-none absolute inset-0">
           <FeedbackPanel
             correct={panel?.right ?? true}
             title={panel?.title}
@@ -293,9 +322,11 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
         </span>
       </ScreenTitle>
 
+      {/* Everything under the title is as wide as the top bar and the Continue button (see `column.ts`). */}
+      <div className="contents" style={COLUMN_STYLE}>
       <div
-        className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding] duration-500 ease-out"
-        style={{ top: titleEnd, bottom: bodyBottom, paddingBottom: gone ? risen : 0 }}
+        className="absolute inset-x-0 flex flex-col items-center gap-2 transition-[padding,bottom] duration-500 ease-out"
+        style={{ top: titleEnd, bottom: bodyEnd, paddingBottom: gone ? risen : 0 }}
       >
         {line && (
           <motion.div
@@ -316,14 +347,23 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
             />
           </motion.div>
         )}
-        <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center justify-center">
-          <div ref={pictureRef} className="flex flex-col items-center gap-2" style={{ transform: `scale(${fit})` }}>
+        {/* The picture stands right under Hex's line (the room's spare height goes under it), and is centred in the room only once the row answers
+          have faded, when nothing stands under it. It is scaled from its top and its box shortened by what the scale takes (the negative
+          margin), so its top edge is where it looks to be and the centring is true. */}
+        <div ref={roomRef} className="flex min-h-0 w-full flex-1 flex-col items-center">
+          <div aria-hidden className="shrink-0 basis-0 transition-[flex-grow] duration-500 ease-out" style={{ flexGrow: answersGone ? 1 : 0 }} />
+          <div
+            ref={pictureRef}
+            className="flex flex-col items-center gap-2"
+            style={{ transform: `scale(${fit})`, transformOrigin: "top center", marginBottom: -(1 - fit) * pictureHeight, ...fittedColumn(fit) }}
+          >
             {quiz ? (
               quiz.visual?.({ attempt, picked: selectedId, checked, correct })
             ) : (
               interaction && <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} finished={finished} lineTyped={lineTyped} holdButton={holdButton} next={next} />
             )}
           </div>
+          <div aria-hidden className="shrink-0 basis-0 grow" />
         </div>
       </div>
 
@@ -333,39 +373,45 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
             <motion.p
               key={`q-${stageIndex}`}
               initial={{ opacity: 0, y: 90 }}
-              animate={{ opacity: 1, y: checked ? -(tiles ? CARDS_RISE : LIST_RISE) : 0 }}
+              animate={{ opacity: answersGone ? 0 : 1, y: checked && !answersGone ? -answersRise : 0 }}
               transition={checked ? PANEL_SPRING : ANSWERS_IN}
               className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
-              style={{ bottom: `calc(${answersBottom} + ${answersHeight(quiz) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
+              style={{ bottom: `calc(${answersBottom} + ${answersHeight(choices, cards) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
             >
               {quiz.question}
             </motion.p>
           )}
-          {tiles ? (
-            <TileCards
-              key={`tiles-${stageIndex}`}
-              layout={tileCount(quiz) === 2 ? "pair" : tileCount(quiz) === 3 ? "tiles" : "grid"}
-              choices={quiz.options}
+          {acrossCards(choices, cards) ? (
+            <OptionGrid
+              key={`cards-${stageIndex}`}
+              options={choices}
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}
               checked={checked}
               fadeOut={false}
               pointedId={answerHint.pointedId}
               withHint={hasHint}
+              rise={answersRise}
+              revealed
               onPick={pick}
             />
           ) : (
             <AnswerCards
               key={`rows-${stageIndex}`}
-              choices={quiz.options}
+              choices={choices}
               correctId={checked && !correct ? "" : quiz.correctId}
               selectedId={selectedId}
               checked={checked}
-              fadeOut={false}
+              fadeOut={answersGone}
               pointedId={answerHint.pointedId}
               withHint={hasHint}
-              rise={LIST_RISE}
-              compact={quiz.compact}
+              rise={rowsAway ? 0 : answersRise}
+              bottomGap={OPTION.aboveButtons}
+              compact
+              tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
+              idleLook={IDLE_LOOK}
+              gap={OPTION.gap}
+              fontSize={Math.min(...choices.map((option) => optionFont(option.text)))}
               onPick={pick}
             />
           )}
@@ -373,6 +419,7 @@ export function OperatorsScreen({ screen }: { screen: ScreenDef }) {
           {answerHint.hand}
         </>
       )}
+      </div>
 
     </LevelTwoShell>
   );

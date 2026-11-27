@@ -1,4 +1,4 @@
-import { Alignment, Fit, Layout, Rive } from "@rive-app/canvas";
+import { Alignment, EventType, Fit, Layout, Rive } from "@rive-app/canvas";
 import { configureRiveRuntime, DATATYPES_SCENES, type DatatypesSceneName } from "./runtime";
 import { riveSource } from "./riveCache";
 
@@ -24,6 +24,17 @@ export type SceneTexts = Readonly<Record<number, string>>;
 type TextRuns = { textValueRunCount(): number; textValueRunByIndex(index: number): { text: string } | undefined };
 export type SceneTrigger = "correct" | "wrong" | "run" | "celebrate";
 
+/**
+ * What plays as a stage opens (see `playSceneIntro`). `trigger` is fired on the state machine. `lap` is one of the artboard's own
+ * animations that the machine has looping all the time (the sorting lab's belt, `SL_Belt`): it plays a single lap from the same frame,
+ * then holds its first frame, so the belt moves with the intro and then stands still.
+ */
+export type SceneIntro = { trigger?: SceneTrigger; lap?: string };
+
+/** The part of an animation the host drives by hand for a `lap` (the library keeps the animator private). */
+type LapAnimation = { name: string; time: number; apply(mix: number): void; animation: { duration: number; fps: number } };
+type Lap = { animation: LapAnimation; seconds: number; elapsed: number };
+
 type Host = {
   element: HTMLDivElement;
   rive: Rive | null;
@@ -42,6 +53,10 @@ type Host = {
   /** Triggers to fire, one at a time. */
   queue: SceneTrigger[];
   firing: boolean;
+  /** The intro a screen asked for (see `playSceneIntro`), until the machine has settled and it can start. */
+  pending: SceneIntro | null;
+  /** The animation being played one lap and then held (see `SceneIntro`). It is applied after the state machine on every frame, as the machine would otherwise put it back. */
+  lap: Lap | null;
   /** How many slots show it right now, and the timer that stops its drawing once none does. */
   slots: number;
   parked: number | undefined;
@@ -112,16 +127,47 @@ const readDefaults = (host: Host) => {
   });
 };
 
-const drain = (host: Host) => {
-  if (!host.settled || host.firing) return;
-  const name = host.queue.shift();
-  if (!name) return;
+/** Fires a trigger on the state machine now, and holds the next one back for a moment. */
+const fire = (host: Host, name: SceneTrigger) => {
   host.rive?.viewModelInstance?.trigger(name)?.trigger();
   host.firing = true;
   window.setTimeout(() => {
     host.firing = false;
     drain(host);
   }, TRIGGER_GAP_MS);
+};
+
+const drain = (host: Host) => {
+  if (!host.settled || host.firing) return;
+  const name = host.queue.shift();
+  if (name) fire(host, name);
+};
+
+/**
+ * Plays `name` one lap beside the state machine, from now. The machine has it looping underneath and writes it on every frame (a
+ * linear animation played the usual way is applied before the machine, so it is overwritten and nothing shows), so it is applied by
+ * hand after the machine on every frame instead (see `createHost`), and kept applied once the lap is over, at its first frame.
+ */
+const startLap = (host: Host, name: string) => {
+  const rive = host.rive;
+  if (!rive) return;
+  // Made by the library's animator, then paused so it does not also play the usual way.
+  rive.play(name);
+  rive.pause(name);
+  const animator = (rive as unknown as { animator?: { animations: LapAnimation[] } }).animator;
+  const animation = animator?.animations.find((candidate) => candidate.name === name);
+  if (!animation) return;
+  host.lap = { animation, seconds: animation.animation.duration / animation.animation.fps, elapsed: 0 };
+};
+
+/** Starts the intro a screen asked for, once the machine has settled: the trigger and the lap go out in the same tick, so they start on the same frame. */
+const startIntro = (host: Host) => {
+  const intro = host.pending;
+  if (!intro || !host.rive || !host.settled) return;
+  host.pending = null;
+  host.lap = null;
+  if (intro.lap) startLap(host, intro.lap);
+  if (intro.trigger) fire(host, intro.trigger);
 };
 
 const createHost = (scene: DatatypesSceneName): Host => {
@@ -131,7 +177,7 @@ const createHost = (scene: DatatypesSceneName): Host => {
   const canvas = document.createElement("canvas");
   canvas.style.cssText = "display:block;width:100%;height:100%";
   element.appendChild(canvas);
-  const host: Host = { element, rive: null, loaded: false, settled: false, defaults: {}, wanted: {}, defaultTexts: [], wantedTexts: {}, afterSettle: [], queue: [], firing: false, slots: 0, parked: undefined };
+  const host: Host = { element, rive: null, loaded: false, settled: false, defaults: {}, wanted: {}, defaultTexts: [], wantedTexts: {}, queue: [], firing: false, pending: null, lap: null, slots: 0, parked: undefined };
   // A cached file can finish loading before `new Rive` has returned, so wait for the instance.
   const onLoad = () => {
     const rive = host.rive;
@@ -148,6 +194,8 @@ const createHost = (scene: DatatypesSceneName): Host => {
     // Shown once the machine has settled on what was asked for, so the scene never opens on its first picture.
     window.setTimeout(() => {
       host.settled = true;
+      // Started as the scene fades in, so what first appears is the intro's first frames.
+      startIntro(host);
       element.style.opacity = "1";
       const waiting = host.afterSettle;
       host.afterSettle = [];
@@ -165,6 +213,15 @@ const createHost = (scene: DatatypesSceneName): Host => {
     layout: LAYOUT(),
     onLoad,
   });
+  // After the state machine has written its frame: the lap's animation is written over it, and the artboard brought up to date (a node's turn only shows once it has advanced).
+  host.rive.on(EventType.Advance, (event) => {
+    const lap = host.lap;
+    if (!lap) return;
+    lap.elapsed += event.data as number;
+    lap.animation.time = lap.elapsed < lap.seconds ? lap.elapsed : 0;
+    lap.animation.apply(1);
+    (host.rive as unknown as { artboard?: { advance(seconds: number): void } | null } | null)?.artboard?.advance(0);
+  });
   return host;
 };
 
@@ -174,6 +231,9 @@ const getHost = (scene: DatatypesSceneName): Host => (hosts[scene] ??= createHos
 export const attachScene = (scene: DatatypesSceneName, slot: HTMLElement) => {
   const host = getHost(scene);
   window.clearTimeout(host.parked);
+  // A screen that comes after one with an intro starts clean: no lap held over from it.
+  host.lap = null;
+  host.pending = null;
   host.slots += 1;
   slot.appendChild(host.element);
   host.rive?.startRendering();
@@ -202,11 +262,17 @@ export const showScene = (scene: DatatypesSceneName, values: SceneValues, texts:
 };
 
 /**
- * Fires a trigger on the scene, once its machine has settled. With `delayMs` it fires that long after the scene
- * is shown (not after the caller asked): a scene that loads slowly then still plays what comes before the trigger
- * in view. Returns a function that cancels a trigger not yet fired.
+ * Plays a stage's intro (see `SceneIntro`) as its scene shows. Safe to call before the scene has loaded: it starts as soon as
+ * the machine has settled.
  */
-export const fireSceneTrigger = (scene: DatatypesSceneName, trigger: SceneTrigger, delayMs = 0) => {
+export const playSceneIntro = (scene: DatatypesSceneName, intro: SceneIntro) => {
+  const host = getHost(scene);
+  host.pending = intro;
+  startIntro(host);
+};
+
+/** Fires a trigger on the scene, once its machine has settled. */
+export const fireSceneTrigger = (scene: DatatypesSceneName, trigger: SceneTrigger) => {
   const host = getHost(scene);
   let cancelled = false;
   let timer: number | undefined;

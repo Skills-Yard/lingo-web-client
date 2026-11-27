@@ -34,6 +34,12 @@ const ART_WIDTH_FITTED = 327.7 / 358;
 const ART_WIDTH_STRETCHED = 355.7 / 358;
 /** How much narrower the drawn button is than the row, which is 6px in from each edge. */
 const CTA_SOLO_TRIM = 2 * CTA_SOLO_GAP - 12;
+/**
+ * The drawn Continue button's width (a CSS length, in the stage's px) with no hint, for a row at most `maxWidth` wide: the stage's
+ * width (so far) less `CTA_SOLO_GAP` from each edge. The header is drawn to the same width (its cross and its battery count stand
+ * as far in), so this is the width a module's content is stretched to when it is to line up with both.
+ */
+export const soloDrawnWidth = (maxWidth: number) => `calc(min(var(--stage-w, 390px), ${maxWidth}px) - ${2 * CTA_SOLO_GAP}px)`;
 const CTA_SOLO_WIDTH = `calc((100% - ${CTA_SOLO_TRIM}px) / ${ART_WIDTH_FITTED})`;
 const CTA_SOLO_WIDTH_STRETCHED = `calc((100% - ${CTA_SOLO_TRIM}px) / ${ART_WIDTH_STRETCHED})`;
 const CTA_SOLO_HEIGHT = `calc((100% - ${CTA_SOLO_TRIM * (RIVE_BUTTON_H / RIVE_BUTTON_W)}px) / ${ART_WIDTH_FITTED})`;

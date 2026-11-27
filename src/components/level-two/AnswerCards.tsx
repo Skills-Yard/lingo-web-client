@@ -1,5 +1,6 @@
 "use client";
 
+import { useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { vibrateForTap } from "@/lib/haptics";
@@ -35,6 +36,8 @@ type AnswerCardsProps = {
   withHint: boolean;
   /** How far they rise once the result panel is up (default `CARDS_RISE`). */
   rise?: number;
+  /** Instead of a fixed `rise`: once the result panel is up the rows rise until their top is this many stage px from the top (measured from where they stand, so it holds on every screen height). */
+  riseTo?: number;
   /** Shorter rows (56px) for answers that are only words, so four fit above the button. */
   compact?: boolean;
   /**
@@ -52,6 +55,10 @@ type AnswerCardsProps = {
   fontSize?: number;
   /** How far (px) above the button the rows end, where it should differ from `GAP_ABOVE_BUTTONS`. */
   bottomGap?: number;
+  /** The rows' width (px, standing centred), where it should differ from the column's. */
+  width?: number;
+  /** The space (px) between a row's text and the empty spot at its end, where it should differ from the usual 34. */
+  endGap?: number;
   /**
    * For rows that cannot all stand in the room a check leaves them (a scene above, the result panel below). Pass it
    * (true or false) and each row goes in a box that can fold away; with `true`, once `checked`, every row but the
@@ -63,7 +70,11 @@ type AnswerCardsProps = {
   bounceIn?: boolean;
   /** With `bounceIn`: they stay hidden until this turns on (default: at once). */
   revealed?: boolean;
-  /** The right row (once it is shown as right) bounces once, as the match boards' right cards do. */
+  /** Stage px (or a CSS length, see `underAbove`) from the top, where the rows should hang (under a picture) instead of standing on the button row; they still rise by `rise` once the result panel is up. */
+  top?: number | string;
+  /** The space (px) between a row's picture and its text, where it should differ from the usual 22. */
+  iconGap?: number;
+  /** The right row (once it is shown as right) bounces once, with its shine and stars (`RightBounce`), as the match boards' right cards do. */
   bounceRight?: boolean;
   onPick: (id: string) => void;
 };
@@ -73,33 +84,28 @@ type AnswerCardsProps = {
  * as the column (`SIDE_MARGIN` in from each side), with a picture, the text and a radio. Pinned to the button row; once `checked` they
  * rise to make room for the result panel.
  */
-export function AnswerCards({
-  choices,
-  correctId,
-  selectedId,
-  checked,
-  fadeOut,
-  pointedId,
-  withHint,
-  rise = CARDS_RISE,
-  compact = false,
-  tight,
-  idleLook,
-  gap = 6,
-  fontSize,
-  bottomGap = GAP_ABOVE_BUTTONS,
-  onlyPicked,
-  bounceIn = false,
-  revealed = true,
-  bounceRight = false,
-  onPick,
-}: AnswerCardsProps) {
+export function AnswerCards({ choices, correctId, selectedId, checked, fadeOut, pointedId, withHint, rise = CARDS_RISE, riseTo, compact = false, tight, idleLook, gap = 6, fontSize, bottomGap = GAP_ABOVE_BUTTONS, width, endGap, onlyPicked, bounceIn = false, revealed = true, top, iconGap, bounceRight = false, onPick }: AnswerCardsProps) {
   const anyPicture = choices.some((choice) => !!choice.icon);
   const folding = onlyPicked !== undefined;
+  // With `riseTo`: where the rows stand now (stage px from the top), measured, so the rise is whatever takes them up to `riseTo`.
+  const box = useRef<HTMLDivElement>(null);
+  const [standingAt, setStandingAt] = useState<number | null>(null);
+  useLayoutEffect(() => {
+    const element = box.current;
+    if (!element || riseTo === undefined) return;
+    const measure = () => setStandingAt(element.offsetTop);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    if (element.offsetParent) observer.observe(element.offsetParent);
+    return () => observer.disconnect();
+  }, [riseTo]);
+  const lift = riseTo !== undefined && standingAt !== null ? Math.max(0, standingAt - riseTo) : rise;
   return (
     <motion.div
+      ref={box}
       initial={bounceIn ? false : { opacity: 0, y: 90 }}
-      animate={{ opacity: 1, y: checked ? -rise : 0 }}
+      animate={{ opacity: 1, y: checked ? -lift : 0 }}
       transition={
         checked
           ? PANEL_SPRING
@@ -110,12 +116,7 @@ export function AnswerCards({
       }
       className="pointer-events-auto absolute z-[1] flex flex-col"
       // Rows that can fold away carry their own gap (a top margin), so a folded row leaves none behind.
-      style={{
-        bottom: aboveButtons(bottomGap, withHint),
-        left: COLUMN_LEFT,
-        width: COLUMN_W,
-        gap: folding ? 0 : gap,
-      }}
+      style={{ ...(top === undefined ? { bottom: aboveButtons(bottomGap, withHint) } : { top }), left: width ? `calc(50% - ${width / 2}px)` : COLUMN_LEFT, width: width ?? COLUMN_W, gap: folding ? 0 : gap }}
     >
       {choices.map((choice, index) => {
         const state = optionState(choice.id, selectedId, checked, correctId);
@@ -139,26 +140,15 @@ export function AnswerCards({
               }}
               whileTap={{ scale: 0.97 }}
               transition={{ duration: 0.4, ease: "easeOut" }}
-              style={
-                tight
-                  ? {
-                      height: tight.height,
-                      paddingBlock: 6,
-                      paddingInline: tight.padX - 1,
-                      borderRadius: tight.radius,
-                    }
-                  : undefined
-              }
+              style={{
+                ...(tight && { height: tight.height, paddingBlock: 6, paddingInline: tight.padX - 1, borderRadius: tight.radius }),
+                ...(endGap !== undefined && { columnGap: endGap }),
+              }}
               className={`relative isolate flex ${compact ? "h-[56px] gap-3 py-1.5" : "h-[76px] gap-[34px] py-2.5"} w-full cursor-pointer items-center justify-between overflow-hidden rounded-[18px] border px-3.5 text-left ${RAISED} ${look.edge} ${
-                state === "idle"
-                  ? (idleLook ??
-                    "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]")
-                  : look.card
+                state === "idle" ? (idleLook ?? "border-black/4 bg-white dark:border-[#818185] dark:bg-[#15181E]") : look.card
               }`}
             >
-              <span
-                className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`}
-              >
+              <span className={`flex min-w-0 flex-1 items-center ${compact ? "gap-3" : "gap-[22px]"}`} style={iconGap !== undefined ? { columnGap: iconGap } : undefined}>
                 {/* Figma "image 360" (46.68 x 47.31): the text starts at the same place on every card. */}
                 {(!tight || anyPicture) && (
                   <span
@@ -197,15 +187,9 @@ export function AnswerCards({
             </motion.button>
           </div>
         );
-        // A little after the check, so the rows have risen above the result panel by the time it jumps.
+        // A little after the check, so the rows have risen above the result panel by the time it jumps. Rows that fade away (`fadeOut`) don't bounce: nobody would see it.
         const row = bounceRight ? (
-          <RightBounce
-            key={choice.id}
-            play={state === "correct"}
-            delay={0.2}
-            radius={tight?.radius ?? 18}
-            className="w-full"
-          >
+          <RightBounce key={choice.id} play={state === "correct" && !fadeOut} delay={0.2} radius={tight?.radius ?? 18} className="w-full">
             {plainRow}
           </RightBounce>
         ) : (

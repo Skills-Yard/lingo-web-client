@@ -31,11 +31,11 @@ const SIDE_SCALE = 0.9;
 /** Where a card sits that is neither centred nor a neighbour: out of sight, beyond the left one. */
 const HIDDEN = -2;
 const FLIP_S = 0.5;
-/** The first card turns over by itself, once, to show what a tap does: this long (ms) after Hex has finished his line, and held up this long (ms). */
+/** The carousel first plays through the cards by itself, once: how long each stays centred before it moves on (ms). The active dot's fill counts this down. */
+const AUTOPLAY_CARD_MS = 2600;
+/** Back on the first card, it turns over by itself, once, to show what a tap does: this long (ms) after the slideshow (and Hex's line) is done, and held up this long (ms). */
 const DEMO_DELAY_MS = 700;
 const DEMO_HOLD_MS = 2400;
-/** Once that is done the carousel plays through the cards, once: how long each stays centred before it moves on by itself (ms). */
-const AUTOPLAY_CARD_MS = 2600;
 /** After the last card is turned, how long its back stays up before the stage is done (ms). */
 const FLIP_DONE_MS = 1600;
 const SWIPE_OFFSET = 50;
@@ -143,16 +143,17 @@ function CardFaces({ card, active, flipped, seen }: { card: FlipCardItem; active
 
 /**
  * Scenes to explore as a looping carousel of flip cards: the centred card has
- * its neighbours peeking in at the sides. To show what a tap does, the first
- * card turns over by itself once, as soon as Hex has finished his line, shows its
- * back for a moment and turns face up again. Then the carousel plays through the
- * cards once on its own (the active dot fills as the countdown) and ends back on
- * the first. From then on the learner explores: swipe, tap a neighbour, tap a dot
- * or use the arrow keys to move, tap the centred card and it turns over to show
- * what is going on in the scene on its back, tap it again (or move on) to turn it
- * face up. The first touch ends the demonstration and the autoplay at once.
- * Done once every card has been turned over (the demonstration counts for the
- * first).
+ * its neighbours peeking in at the sides. It is a slideshow that never stops:
+ * it moves on to the next card by itself, round and round, and the active dot
+ * fills as the countdown to the next card. Any touch (a swipe, a tap on a card
+ * or a dot, an arrow key, turning a card over) moves the carousel as asked and
+ * restarts that countdown; it only waits while a finger is dragging. To show
+ * what a tap does, once the slideshow has come back round to the first card, that
+ * card turns over by itself, shows its back for a moment and turns face up again
+ * (skipped if the learner has already touched it). Tap the centred card and it
+ * turns over to show what is going on in the scene on its back; it turns face up
+ * again when tapped or when the carousel moves on. Done once every card has been
+ * turned over (the demonstration counts for the first).
  */
 export function FlipCarouselStage({ api, cards }: { api: InteractionApi; cards: readonly FlipCardItem[] }) {
   // A screen that does not say when Hex has finished is taken to have no line to wait for.
@@ -162,26 +163,34 @@ export function FlipCarouselStage({ api, cards }: { api: InteractionApi; cards: 
   const [move, setMove] = useState({ from: 0, to: 0 });
   const [seen, setSeen] = useState<readonly string[]>([]);
   const [flippedId, setFlippedId] = useState<string | null>(null);
-  // The one demonstration, then the one autoplay (how many cards it has moved on), and whether the learner has taken over before they ended.
+  // The one demonstration, how many cards the slideshow has moved on by itself, whether the learner has touched the carousel (that skips the demonstration), and whether a finger is dragging it.
   const [demo, setDemo] = useState<"waiting" | "showing" | "over">("waiting");
   const [autoSteps, setAutoSteps] = useState(0);
-  const [takenOver, setTakenOver] = useState(false);
+  const [touched, setTouched] = useState(false);
+  const [dragging, setDragging] = useState(false);
+  // Counts the touches, so each one restarts the countdown to the next card.
+  const [restart, setRestart] = useState(0);
   const reducedMotion = useReducedMotion();
   const active = move.to;
   const firstId = cards[0]?.id;
-  const autoplaying = demo === "over" && !takenOver && autoSteps < count && !reducedMotion && count > 1;
+  // The slideshow has gone all the way round (a single card has nothing to play through).
+  const slidesDone = autoSteps >= count || count < 2;
+  // It keeps going whatever the learner does, and waits only for a drag, and for the demonstration's card to be shown (until the learner touches).
+  const autoplaying = count > 1 && !reducedMotion && !dragging && !(demo === "showing" && !touched);
 
   useEffect(() => {
     if (!autoplaying) return;
     const timer = window.setTimeout(() => {
       setMove((current) => ({ from: current.to, to: (current.to + 1) % count }));
+      setFlippedId(null);
       setAutoSteps((steps) => steps + 1);
     }, AUTOPLAY_CARD_MS);
     return () => window.clearTimeout(timer);
-  }, [autoplaying, active, count]);
+  }, [autoplaying, active, count, restart]);
 
   useEffect(() => {
-    if (!lineTyped || takenOver || reducedMotion || demo === "over" || !firstId) return;
+    // The demonstration waits for the slideshow to come back round to the first card.
+    if (!slidesDone || !lineTyped || touched || reducedMotion || demo === "over" || !firstId) return;
     const showing = demo === "showing";
     const timer = window.setTimeout(
       () => {
@@ -197,7 +206,7 @@ export function FlipCarouselStage({ api, cards }: { api: InteractionApi; cards: 
       showing ? DEMO_HOLD_MS : DEMO_DELAY_MS,
     );
     return () => window.clearTimeout(timer);
-  }, [demo, lineTyped, takenOver, reducedMotion, firstId]);
+  }, [demo, slidesDone, lineTyped, touched, reducedMotion, firstId]);
 
   // Once every card has been turned over, the last one's back stays up a moment before the stage is done.
   useEffect(() => {
@@ -206,8 +215,14 @@ export function FlipCarouselStage({ api, cards }: { api: InteractionApi; cards: 
     return () => window.clearTimeout(timer);
   }, [seen.length, count, done]);
 
+  // Any touch: the demonstration is no longer needed, and the countdown to the next card starts over.
+  const touch = () => {
+    setTouched(true);
+    setRestart((touches) => touches + 1);
+  };
+
   const goTo = (index: number) => {
-    setTakenOver(true);
+    touch();
     const target = (index + count) % count;
     if (target === active) return;
     setMove({ from: active, to: target });
@@ -221,7 +236,7 @@ export function FlipCarouselStage({ api, cards }: { api: InteractionApi; cards: 
   };
 
   const press = (card: FlipCardItem, index: number) => {
-    setTakenOver(true);
+    touch();
     playClickSound();
     vibrateForTap();
     if (index === active) flip(card);
@@ -246,8 +261,14 @@ export function FlipCarouselStage({ api, cards }: { api: InteractionApi; cards: 
         dragConstraints={{ left: 0, right: 0 }}
         dragElastic={0.2}
         dragSnapToOrigin
-        onDragStart={() => setTakenOver(true)}
+        onDragStart={() => {
+          touch();
+          setDragging(true);
+        }}
         onDragEnd={(_, info) => {
+          // Let go: the countdown starts over, whether the swipe moved a card or snapped back.
+          touch();
+          setDragging(false);
           if (info.offset.x < -SWIPE_OFFSET || info.velocity.x < -SWIPE_VELOCITY) goTo(active + 1);
           else if (info.offset.x > SWIPE_OFFSET || info.velocity.x > SWIPE_VELOCITY) goTo(active - 1);
         }}
@@ -278,11 +299,11 @@ export function FlipCarouselStage({ api, cards }: { api: InteractionApi; cards: 
       <div className="absolute inset-x-0 bottom-3 z-10 flex items-center justify-center gap-1.5" role="tablist" aria-label="Scenes">
         {cards.map((card, index) => (
           <button key={card.id} type="button" role="tab" aria-selected={index === active} aria-label={`${card.verb} ${card.label}`} onClick={() => goTo(index)} className="flex h-4 cursor-pointer items-center">
-            <span className={`relative block h-2 overflow-hidden rounded-full transition-all duration-300 ease-out ${index === active ? "w-6 bg-[#08A4AD]/25" : "w-2 bg-[#BFC3C9] dark:bg-white/25"}`}>
-              {/* While it autoplays, the countdown to the next card: a teal fill that grows across the light track, restarting on every card. Otherwise the active dot is just full. */}
+            <span className={`relative block h-2 overflow-hidden rounded-full transition-all duration-300 ease-out ${index === active ? "w-10 bg-[#08A4AD]/25" : "w-2 bg-[#BFC3C9] dark:bg-white/25"}`}>
+              {/* While it autoplays, the countdown to the next card: a teal fill that grows across the light track, restarting on every card and every touch. Otherwise (a finger dragging, reduced motion) the active dot is just full. */}
               {index === active && (
                 <motion.span
-                  key={autoplaying ? "auto" : "still"}
+                  key={autoplaying ? `auto-${restart}` : "still"}
                   aria-hidden
                   className="absolute inset-0 origin-left rounded-full bg-[#08A4AD]"
                   initial={{ scaleX: autoplaying ? 0 : 1 }}
