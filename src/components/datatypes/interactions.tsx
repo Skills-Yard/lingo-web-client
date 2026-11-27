@@ -10,6 +10,7 @@ import { playClickSound } from "@/components/onboarding/clickSound";
 import { COLUMN_W } from "@/lib/questionColumn";
 import { vibrateForTap } from "@/lib/haptics";
 import { EDGE, RAISED, RAISED_DRAG } from "@/components/ui/raised";
+import { IDLE_LINE } from "@/components/variable/quiz";
 import { CARD_BODY, CARD_BODY_FLAT, CARD_TEXT, EDGE_IDLE, EDGE_PICKED, EDGE_READING, EMPTY_SLOT, INK, RECEIVING, TINTS, tintAt, type GroupTint } from "./look";
 import { P } from "./pictures";
 import type { InteractionApi } from "./screen";
@@ -600,6 +601,7 @@ export function ChooseTypeStage({
   correct,
   hint,
   showCard = true,
+  cards,
 }: {
   api: InteractionApi;
   field: string;
@@ -609,7 +611,10 @@ export function ChooseTypeStage({
   hint: string;
   /** Draws the field's own card above the types; off where a scene behind the stage already shows it. */
   showCard?: boolean;
+  /** The types to show as picture cards, three across, as the quizzes' answers are (only the types named here are shown): each one's picture and its light shade (one of `CARD_TINTS`). */
+  cards?: Partial<Record<(typeof TYPES)[number]["id"], { icon: string; tint: string }>>;
 }) {
+  const types = cards ? TYPES.filter((type) => cards[type.id]) : TYPES;
   const { slip, done, finished } = api;
   const [wrong, setWrong] = useState<string | null>(null);
   const [chosen, setChosen] = useState<string | null>(null);
@@ -639,28 +644,35 @@ export function ChooseTypeStage({
           </div>
         </WindowCard>
       )}
-      {/* The hint stands over the types, so they are the lowest thing: on the main button, as every screen's options are. */}
-      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
       {/* Every box is the same size: the bounce box fills its cell (`flex-1`), or each box would only be as wide as its words. */}
-      <div className="grid w-full grid-cols-2 gap-3.5">
-        {TYPES.map((type, index) => (
-          <RightBounce key={type.id} play={chosen === type.id} radius={8} className="flex min-w-0 flex-1">
+      <div className={`grid w-full ${cards ? "gap-3.5" : "grid-cols-2 gap-3.5"}`} style={cards ? { gridTemplateColumns: `repeat(${types.length === 3 ? 3 : 2}, minmax(0, 1fr))` } : undefined}>
+        {types.map((type, index) => (
+          <RightBounce key={type.id} play={chosen === type.id} radius={cards ? 16 : 8} className="flex min-w-0 flex-1">
             <motion.button
               type="button"
               onClick={() => choose(type.id)}
               animate={{ x: wrong === type.id ? SHAKE : 0 }}
               transition={{ duration: 0.35 }}
               whileTap={{ scale: 0.97 }}
-              className={`${CARD_BODY_FLAT} ${RAISED} h-[64px] min-w-0 flex-1 cursor-pointer gap-2 px-2 ${
-                chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
+              style={cards ? { height: 92 } : undefined}
+              className={`${RAISED} min-w-0 flex-1 cursor-pointer ${
+                cards
+                  ? `flex flex-col items-center justify-center gap-1 rounded-[16px] px-2 ${
+                      chosen === type.id ? `border-4 ${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `border-4 ${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `border ${IDLE_LINE} ${EDGE.khaki} ${cards[type.id]?.tint ?? ""}`
+                    }`
+                  : `${CARD_BODY_FLAT} h-[64px] gap-2 px-2 ${
+                      chosen === type.id ? `${LOOKS.correct.card} ${LOOKS.correct.edge}` : wrong === type.id ? `${LOOKS.wrong.card} ${LOOKS.wrong.edge}` : `${tintAt(index)} ${EDGE_IDLE} ${EDGE.khaki}`
+                    }`
               }`}
             >
-              <Pic src={type.icon} className="h-8 w-8" />
-              <span className={CARD_TEXT}>{type.label}</span>
+              <Pic src={cards ? (cards[type.id]?.icon ?? type.icon) : type.icon} className={cards ? "h-10 w-[52px]" : "h-8 w-8"} />
+              <span className={cards ? "text-center text-[16px] leading-5 font-semibold text-[#444444] dark:text-white" : CARD_TEXT}>{type.label}</span>
             </motion.button>
           </RightBounce>
         ))}
       </div>
+      {/* The hint stands under the types, so they hang right under the scene, as every screen's options do. */}
+      <p className="min-h-5 text-center text-[13px] leading-5 font-medium text-[#D42421]">{wrong ? hint : ""}</p>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { LOOKS } from "@/components/level-one/TeacherFlow";
 import { BounceIn } from "@/components/level-two/BounceIn";
 import { OnboardingHex } from "@/components/level-one/FeedbackPanel";
 import { HEX_SLOT, SpeechBubble } from "@/components/level-two/HexBubble";
+import { useHexStandIn } from "@/components/level-two/HexStandIn";
 import { RightBounce, WAVE_S } from "@/components/level-two/RightBounce";
 import { playClickSound } from "@/components/onboarding/clickSound";
 import { EDGE, RAISED } from "@/components/ui/raised";
@@ -209,7 +210,7 @@ export function SceneSortStage({
         </AnimatePresence>
       </div>
 
-      {/* The line under the card to place stands over the buttons, so the buttons are the lowest thing: on the main button, as every screen's options are. */}
+      {/* The card to place and the line under it stand over the buttons: the whole block hangs under the scene. */}
       <p className={NOTE}>{note || <span className={PROMPT}>{finished ? "" : prompt}</span>}</p>
 
       <div className={`grid w-full gap-2.5 ${gridColumns}`}>
@@ -312,28 +313,7 @@ export function ScenePickStage({
 
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-2`}>
-      {/* What is said stands over the buttons, in a room of its own (the same height whether it is a hint or a caption), so the buttons are the lowest thing: on the main button, as every screen's options are. */}
-      <div className="flex min-h-[48px] w-full items-center justify-center">
-        {hasCaptions ? (
-          <AnimatePresence mode="wait">
-            {/* Nothing before the first pick: the room is kept, so nothing moves when the first caption comes. */}
-            {shown?.caption && (
-              <motion.p
-                key={shown.id}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="rounded-[12px] bg-white px-3 py-2 text-center text-[15px] leading-5 font-semibold text-[#444444] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-white"
-              >
-                {shown.caption}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        ) : (
-          <p className={NOTE}>{note}</p>
-        )}
-      </div>
+      {/* The buttons come first, so they hang right under the scene, as every screen's options do; what is said stands under them. */}
       <div className={`grid w-full gap-2.5 ${columns === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
         {items.map((item, index) => (
           <BounceIn key={item.id} index={index} shown={hexSpoken} className="flex min-w-0">
@@ -354,6 +334,28 @@ export function ScenePickStage({
             </RightBounce>
           </BounceIn>
         ))}
+      </div>
+      {/* A room of its own (the same height whether it is a hint or a caption). */}
+      <div className="flex min-h-[48px] w-full items-center justify-center">
+        {hasCaptions ? (
+          <AnimatePresence mode="wait">
+            {/* Nothing before the first pick: the room is kept, so nothing moves when the first caption comes. */}
+            {shown?.caption && (
+              <motion.p
+                key={shown.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="rounded-[12px] bg-white px-3 py-2 text-center text-[15px] leading-5 font-semibold text-[#444444] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-white"
+              >
+                {shown.caption}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        ) : (
+          <p className={NOTE}>{note}</p>
+        )}
       </div>
     </div>
   );
@@ -410,29 +412,7 @@ export function SceneRevealStage({
   const small = columns >= 4;
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
-      {/* What is said stands over the buttons, so the buttons are the lowest thing: on the main button, as every screen's options are. The room under it (`mb-7` and the gap) is as much as the buttons jump when they bounce (see `WAVE_S`), so they never cross its words. */}
-      {(hasCaptions || footer) && (
-        <div className="mb-7 flex min-h-[48px] w-full items-center justify-center">
-          <AnimatePresence mode="wait">
-            {finished && footer ? (
-              <motion.div key="footer" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
-                {footer}
-              </motion.div>
-            ) : (
-              <motion.p
-                key={shown?.id ?? "none"}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className={`rounded-[12px] px-3 py-2 text-center text-[15px] leading-5 font-semibold ${shown?.caption ? "bg-white text-[#444444] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-white" : `${PROMPT}`}`}
-              >
-                {shown?.caption ?? "Tap each one."}
-              </motion.p>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
+      {/* The buttons come first, so they hang right under the scene, as every screen's options do; what is said stands under them (they jump up, away from it, when they bounce). */}
       <div className={`grid w-full ${small ? "gap-2" : "gap-2.5"} ${grid}`}>
         {items.map((item, index) => {
           const tapped = seen.includes(item.id);
@@ -463,6 +443,28 @@ export function SceneRevealStage({
           );
         })}
       </div>
+      {(hasCaptions || footer) && (
+        <div className="flex min-h-[48px] w-full items-center justify-center">
+          <AnimatePresence mode="wait">
+            {finished && footer ? (
+              <motion.div key="footer" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+                {footer}
+              </motion.div>
+            ) : (
+              <motion.p
+                key={shown?.id ?? "none"}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className={`rounded-[12px] px-3 py-2 text-center text-[15px] leading-5 font-semibold ${shown?.caption ? "bg-white text-[#444444] shadow-[0_2px_8px_rgba(31,42,68,0.12)] dark:bg-[#15181E] dark:text-white" : `${PROMPT}`}`}
+              >
+                {shown?.caption ?? "Tap each one."}
+              </motion.p>
+            )}
+          </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
@@ -558,10 +560,12 @@ const TOUR_BUBBLE_W = 220;
  * the same height for every group and nothing under the scene moves when he does. His box is `HEX_SLOT` (110) square, and he is drawn
  * in the middle of it with some air above him, so for the two groups between the first and last (his bubble is below him there) the
  * box is pulled up by `TOUR_HEX_PULL` so that he stands close to the groups and the bubble ends higher (the bottom keeps its room).
+ * A route's stand-in for Hex (the 3D character's face, see `HexStandIn`) fills its box edge to edge, so it cannot stand over his bubble
+ * in less room: it stays beside the bubble for every group (at its left for the first half, at its right for the rest, moving across the
+ * row a little with each), and the row is one box tall. So the tour stands whole under the scene, like every other stage.
  */
 const TOUR_HEX_PULL = 30;
 const TOUR_BUBBLE_H = 86;
-const TOUR_ROW_H = HEX_SLOT - TOUR_HEX_PULL + TOUR_BUBBLE_H;
 /** How Hex floats from one group to the next. */
 const TOUR_FLOAT = { type: "spring", stiffness: 120, damping: 19 } as const;
 /** A group's glow is fired this long after its values are written, so the scene has them when it plays. */
@@ -575,6 +579,8 @@ const GLOW_DELAY_MS = 250;
  */
 export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; groups: readonly SceneTourGroup[]; glow?: DatatypesSceneName }) {
   const { dismissHex, takeContinue, hexSpoken } = api;
+  const standIn = useHexStandIn();
+  const rowHeight = standIn ? HEX_SLOT : HEX_SLOT - TOUR_HEX_PULL + TOUR_BUBBLE_H;
   const [current, setCurrent] = useState<string | null>(null);
   const shown = groups.find((group) => group.id === current);
 
@@ -610,18 +616,22 @@ export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; gro
   }, [takeContinue, groups, current, read]);
 
   // Hex stands where the group being read does: at the left for the first group, at the right for the last, and for those between (the two in the middle of four) under the group, his bubble below him.
+  // A stand-in is always beside the bubble (see `TOUR_HEX_PULL`): `across` is how far the pair of them has moved along the row.
   const columns = groups.length >= 4 ? 4 : 3;
   const columnWidth = (TOUR_W - (columns - 1) * TOUR_GAP) / columns;
   const shownIndex = groups.findIndex((group) => group.id === current);
-  const hexAt = shownIndex === 0 ? "left" : shownIndex === groups.length - 1 ? "right" : "top";
+  const hexAt = standIn ? (shownIndex < groups.length / 2 ? "left" : "right") : shownIndex === 0 ? "left" : shownIndex === groups.length - 1 ? "right" : "top";
   const underGroup = Math.min(TOUR_W - TOUR_BUBBLE_W, Math.max(0, shownIndex * (columnWidth + TOUR_GAP) + columnWidth / 2 - TOUR_BUBBLE_W / 2));
+  const across = standIn ? (Math.max(0, shownIndex) / Math.max(1, groups.length - 1)) * (TOUR_W - HEX_SLOT - TOUR_BUBBLE_W) : 0;
+  // Where the pair beside each other starts and ends (the whole row, for Hex).
+  const pair = standIn ? { left: across, right: across + HEX_SLOT + TOUR_BUBBLE_W } : { left: 0, right: TOUR_W };
   // Hex's box and his bubble's place in the row (px from its top left): beside him, or (for a group in the middle) under him, centred on each other.
-  const hexBox = hexAt === "left" ? { x: 0, y: 0 } : hexAt === "right" ? { x: TOUR_W - HEX_SLOT, y: 0 } : { x: underGroup + (TOUR_BUBBLE_W - HEX_SLOT) / 2, y: -TOUR_HEX_PULL };
+  const hexBox = hexAt === "left" ? { x: pair.left, y: 0 } : hexAt === "right" ? { x: pair.right - HEX_SLOT, y: 0 } : { x: underGroup + (TOUR_BUBBLE_W - HEX_SLOT) / 2, y: -TOUR_HEX_PULL };
   const bubbleBox =
     hexAt === "left"
-      ? { left: HEX_SLOT, top: 0, height: HEX_SLOT, alignItems: "center" }
+      ? { left: pair.left + HEX_SLOT, top: 0, height: HEX_SLOT, alignItems: "center" }
       : hexAt === "right"
-        ? { left: TOUR_W - HEX_SLOT - TOUR_BUBBLE_W, top: 0, height: HEX_SLOT, alignItems: "center" }
+        ? { left: pair.right - HEX_SLOT - TOUR_BUBBLE_W, top: 0, height: HEX_SLOT, alignItems: "center" }
         : { left: underGroup, top: HEX_SLOT - TOUR_HEX_PULL, height: TOUR_BUBBLE_H, alignItems: "flex-start" };
   return (
     <div className={`pointer-events-auto flex ${STAGE_W} flex-col items-center gap-3`}>
@@ -649,12 +659,12 @@ export function SceneTourStage({ api, groups, glow }: { api: InteractionApi; gro
         })}
       </div>
       {/* Hex's row is kept free from the start, at the height the tallest place needs, so nothing moves when he arrives or goes on to the next group. */}
-      <div className="relative w-full" style={{ height: TOUR_ROW_H }}>
+      <div className="relative w-full" style={{ height: rowHeight }}>
         {shown && (
           <>
             {/* He comes in once (at the group first read); after that this box only moves, and he floats to the next group. */}
             <motion.div aria-hidden className="absolute top-0 left-0" style={{ width: HEX_SLOT, height: HEX_SLOT }} initial={false} animate={hexBox} transition={TOUR_FLOAT}>
-              <OnboardingHex entryKey={TOUR_ENTRY_KEY} />
+              {standIn ?? <OnboardingHex entryKey={TOUR_ENTRY_KEY} />}
             </motion.div>
             {/* The bubble is a new one for each group (its line is typed afresh), beside or under him where he now stands. */}
             <div key={shown.id} className="absolute flex justify-center" style={{ ...bubbleBox, width: TOUR_BUBBLE_W }}>

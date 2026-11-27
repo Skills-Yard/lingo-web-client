@@ -7,6 +7,7 @@ import { ChooseTypeStage, TYPES } from "./interactions";
 import { SortStage, type SortBucket } from "./SortStage";
 import { SceneRevealStage, ScenePickStage, SceneSortStage, SceneTourStage, SceneToggleStage, type SceneSortBucket, type SceneSortItem, type SceneTourGroup } from "./sceneStages";
 import { P } from "./pictures";
+import { CARD_TINTS } from "@/components/variable/quiz";
 import type { SceneIntro, SceneTexts, SceneValues } from "@/lib/rive/datatypesHost";
 import { BUILD_TEXT, MASTERY, MASTERY_TEXT, SCENE_MODE, STRINGS_EXAMPLE_TEXT, STRINGS_TWELVE_TEXT, type DatatypesSceneName } from "@/lib/rive/runtime";
 import type { Option, QuizStage, SceneSpec, ScreenDef } from "./screen";
@@ -143,8 +144,12 @@ const PLAN_ROWS: readonly InfoRow[] = [
   { id: "prizes", text: "How many prizes are available?", icon: P.planPrizes },
 ];
 
-/** Screen 5.2's four answers (what the values share). The first is right. */
-const SIMILAR_OPTIONS = options(["Quantities", "People’s names", "Colours", "Yes/no answers"]);
+/** Screen 5.2's three answers (what the values share), each a picture card. The first is right. */
+const SIMILAR_OPTIONS: Option[] = [
+  { id: "0", text: "Quantities", icon: P.quantities, tint: CARD_TINTS.lavender },
+  { id: "1", text: "People’s names", icon: P.needName, tint: CARD_TINTS.blue },
+  { id: "2", text: "Yes/no answers", icon: P.boolean, tint: CARD_TINTS.green },
+];
 
 /**
  * Screen 9 stands on the sorting lab, as screen 3 does: a belt of four numbers, left to right, over the lab's four bins
@@ -240,12 +245,14 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         // The pick outlines its row of the form; the right answer, all of them, fills the whole form in.
         scene: ({ picked, checked, correct }) => info({ mode: MODE.info.form, field: FORM_FIELD[picked as keyof typeof FORM_FIELD] ?? 0, fill: checked && correct ? 4 : 0 }),
         optionsAfterHex: true,
-        options: words([
-          ["name", "Student’s name"],
-          ["age", "Student’s age"],
-          ["height", "Student’s height"],
-          ["all", "All of these"],
-        ]),
+        // Four tinted cards two by two, each a picture over its word (the design's), hanging right under the scene.
+        layout: "pictures",
+        options: [
+          { id: "name", text: "Name", icon: P.needName, tint: CARD_TINTS.blue },
+          { id: "age", text: "Age", icon: P.needAge, tint: CARD_TINTS.pink },
+          { id: "height", text: "Height", icon: P.needHeight, tint: CARD_TINTS.cream },
+          { id: "all", text: "All", icon: P.needAll, tint: CARD_TINTS.lavender },
+        ],
         correctId: "all",
         rightTitle: "Exactly!",
         right: "The school needs different details of each student.",
@@ -263,12 +270,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         line: "Notice anything about these four values?",
         scene: () => info({ mode: MODE.info.aaravForm, fill: 4 }),
         optionsAfterHex: true,
-        options: words([
-          ["same", "All the same"],
-          ["different", "Different kinds"],
-          ["numbers", "All numbers"],
-          ["words", "All words"],
-        ]),
+        // Three answers, each with the module's own icon, as a column of rows (not the mini cards three short answers would be).
+        layout: "rows",
+        options: [
+          { id: "same", text: "All the same", icon: P.lookSame },
+          { id: "different", text: "Different kinds", icon: P.lookDifferent },
+          { id: "numbers", text: "All numbers", icon: P.allNumbers },
+        ],
         correctId: "different",
         rightTitle: "Exactly!",
         right: "Each value is a different kind of information.",
@@ -307,15 +315,17 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         scene: sorting({ ...BELT, ...BELT_SORTED }, false),
         // Nothing has to be tapped: once Hex has said his line, Continue reads the groups one by one, then goes on.
         ready: true,
-        // Hex stands under the groups and his bubble grows downward, so the groups hang from the scene (they must not move when he arrives).
-        follow: true,
         render: (api) => <SceneTourStage api={api} groups={TOUR_GROUPS} glow="sorting" />,
       },
       // The PDF's question after the groups: they are not the same kind of information.
       quiz({
         line: "Are these groups the same kind of information?",
         scene: () => sorting({ ...BELT, ...BELT_SORTED }),
-        options: options(["Same kind", "Different kinds"]),
+        // The same two pictures as screen 2's "All the same" and "Different kinds".
+        options: [
+          { id: at(0), text: "Same kind", icon: P.lookSame },
+          { id: at(1), text: "Different kinds", icon: P.lookDifferent },
+        ],
         correctId: at(1),
         rightTitle: "No!",
         right: "They represent different kinds of information.",
@@ -342,6 +352,8 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "What do all these values have in common?",
         scene: () => numbers({ mode: MODE.numbers.counts }),
+        // Three tinted picture cards in one row, right under the scene.
+        layout: "pictures",
         options: SIMILAR_OPTIONS,
         correctId: at(0),
         rightTitle: "Exactly!",
@@ -369,12 +381,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which numbers have a decimal part?",
         scene: ({ picked }) => numbers({ mode: MODE.numbers.values, ...(NUMBER_PICKS[picked as keyof typeof NUMBER_PICKS] ?? {}) }, false),
-        // Three one-word answers: mini cards in one row, all words (a number alone is set larger), so they share one size. Height (148.5 cm) and weight (36.7 kg) both have a decimal part, so "Both" is right.
-        options: words([
-          ["height", "Height"],
-          ["weight", "Weight"],
-          ["both", "Both"],
-        ]),
+        // Three tinted picture cards in one row, right under the scene. Height (148.5 cm) and weight (36.7 kg) both have a decimal part, so "Both" is right.
+        layout: "pictures",
+        options: [
+          { id: "height", text: "Height", icon: P.needHeight, tint: CARD_TINTS.cream },
+          { id: "weight", text: "Weight", icon: P.pickWeight, tint: CARD_TINTS.blue },
+          { id: "both", text: "Both", icon: P.pickBoth, tint: CARD_TINTS.lavender },
+        ],
         correctId: "both",
         rightTitle: "That’s right!",
         right: "148.5 cm and 36.7 kg both have a decimal part. 12 and 25 are whole numbers.",
@@ -589,7 +602,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "What kind of information is the teacher collecting?",
         scene: () => boolean({ mode: MODE.boolean.attendance }),
-        options: options(["Person’s name", "A quantity", "Yes/no status", "A measurement"]),
+        // Three tinted picture cards in one row, right under the scene: the same three kinds, and pictures, as screen 5's.
+        layout: "pictures",
+        options: [
+          { id: at(0), text: "Person’s name", icon: P.needName, tint: CARD_TINTS.blue },
+          { id: at(1), text: "A quantity", icon: P.quantities, tint: CARD_TINTS.lavender },
+          { id: at(2), text: "Yes/no status", icon: P.boolean, tint: CARD_TINTS.green },
+        ],
         correctId: at(2),
         rightTitle: "Exactly!",
         right: "It tells us whether something is true or false.",
@@ -718,7 +737,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Why is Student ID text, though it has digits?",
         scene: () => boolean({ mode: MODE.boolean.record, m1: 1, m2: 1, m3: 1, m4: 1 }),
-        options: options(["Identifies someone", "A decimal number", "A height", "True or False"]),
+        // Three tinted picture cards in one row, right under the scene.
+        layout: "pictures",
+        options: [
+          { id: at(0), text: "Identifies someone", icon: P.needName, tint: CARD_TINTS.blue },
+          { id: at(1), text: "A decimal number", icon: P.allNumbers, tint: CARD_TINTS.lavender },
+          { id: at(2), text: "True or False", icon: P.boolean, tint: CARD_TINTS.green },
+        ],
         correctId: at(0),
         rightTitle: "Exactly!",
         right: "It isn’t a quantity. It keeps its leading zero.",
@@ -851,12 +876,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Which field has been classified incorrectly?",
         scene: ({ picked }) => mastery({ mode: MASTERY.mode.record, highlight: recordRow(picked) }, true, RECORD_TEXTS),
-        options: words([
-          ["name", "Name"],
-          ["age", "Age"],
-          ["height", "Height"],
-          ["present", "Is_present"],
-        ]),
+        // Three tinted picture cards in one row, right under the scene ("Name" is left out). The ids still name the record's rows, so the pick lights its row.
+        layout: "pictures",
+        options: [
+          { id: "age", text: "Age", icon: P.needAge, tint: CARD_TINTS.pink },
+          { id: "height", text: "Height", icon: P.needHeight, tint: CARD_TINTS.cream },
+          { id: "present", text: "Is_present", icon: P.boolean, tint: CARD_TINTS.green },
+        ],
         correctId: "height",
         rightTitle: "Exactly!",
         right: "148.5 has a decimal part: it should be a Float.",
@@ -868,7 +894,23 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
         // The four types stay when the panel comes (they rise above it, the right one has bounced), instead of fading out.
         keepOptions: true,
         scene: ({ checked }) => mastery({ mode: MASTERY.mode.record, highlight: MASTERY.highlight.row.height, fixed: checked ? MASTERY.fixed : 0 }, true, RECORD_TEXTS),
-        render: (api) => <ChooseTypeStage api={api} field="Height" value="148.5" from="Integer" correct="float" hint="Which type holds decimal numbers?" showCard={false} />,
+        // Three types as picture cards (Boolean is left out): Integer's 1-2-3, Float's ruler, String's alphabet picture.
+        render: (api) => (
+          <ChooseTypeStage
+            api={api}
+            field="Height"
+            value="148.5"
+            from="Integer"
+            correct="float"
+            hint="Which type holds decimal numbers?"
+            showCard={false}
+            cards={{
+              integer: { icon: P.allNumbers, tint: CARD_TINTS.blue },
+              float: { icon: P.needHeight, tint: CARD_TINTS.cream },
+              string: { icon: P.string, tint: CARD_TINTS.lavender },
+            }}
+          />
+        ),
         finishPanel: { title: "Fixed!", text: "Height is now a Float." },
       },
     ],
@@ -904,7 +946,13 @@ export const SCREENS: Readonly<Record<number, ScreenDef>> = {
       quiz({
         line: "Why is Player ID a String rather than an Integer?",
         scene: () => mastery({ mode: MASTERY.mode.profile, highlight: MASTERY.highlight.profile.id, ...PLAYER_TYPES }, false, PLAYER_TEXTS),
-        options: options(["Identifies players", "A decimal number", "A yes/no value", "A big number"]),
+        // Three tinted picture cards in one row, right under the scene ("A decimal number" is left out).
+        layout: "pictures",
+        options: [
+          { id: at(0), text: "Identifies players", icon: P.needName, tint: CARD_TINTS.blue },
+          { id: at(1), text: "A yes/no value", icon: P.boolean, tint: CARD_TINTS.green },
+          { id: at(2), text: "A big number", icon: P.allNumbers, tint: CARD_TINTS.lavender },
+        ],
         correctId: at(0),
         rightTitle: "Excellent!",
         right: "You used data type thinking in a new app.",

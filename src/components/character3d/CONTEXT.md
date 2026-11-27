@@ -422,6 +422,81 @@ pictures). Only those four screens changed; Hex and the robot stay on every othe
   **Not checked:** dark mode, Boy/Anime, the voices
   (headless has no sound), the review pass for a missed 3 / 11, Back from 1 to 0, a real phone, `next build`.
 
+### The Data Types module with the 3D character (`/module/datatypes`, in place), 2026-11-27
+
+The user asked "do all the similar things with the datatypes too, replace hex everywhere with bubble with the character and also add an intro screen" (a picture of
+the "Let's Learn Data types" title screen: character with arms crossed, no tag). Same recipe as the Command module, no new character pieces:
+
+- `src/app/module/datatypes/layout.tsx` = `VariableCharacterGate` + `CharacterFace` (only the bubbles' Hex becomes the face box with its bubble beside it; **not** `CharacterLook`, so no
+  bounce / design-slot / next-previous flags: the module keeps its own flow, its adaptive `datatypesNext`). Every `HexBubble` of the module (the line under the title on every screen)
+  picks the face up through the context; none was edited.
+- **`SceneTourStage` (screen 4, "Group A-D")** had its own floating `OnboardingHex`: it now draws `useHexStandIn()` in that box when there is one. The face box is full to its edges (no
+  air above it as Hex had), so **with the stand-in the face is beside the bubble for every group** (left for A and B, right for C and D, the pair moving 0-24 px across with each) and the tour's
+  row is one box tall (110): a first try with the face over the bubble made the row 196 and the groups stood 35 px (390×844) to 86 px (360×640) over the artboard. `GroupTourStage` (the older tour
+  with `HexBubble`) is not on any screen. **Screen 4's quiz** ("Same kind" / "Different kinds") has the icons `all.svg` / `different.svg` (`P.lookSame` / `lookDifferent`, as screen 2).
+- **Step 0 = "Let's Learn Data types"** (`DataTypesIntroScreen` = `CharacterIntro` alone, word "Data types"). Step 0 on purpose (as Variable / Commands): the screens keep their numbers 1-30,
+  `DATATYPES_STEPS` stays 30, the bar starts empty, the battery spends from screen 1 (`STEP.intro` = 0; `isDatatypesStep` takes 0). `/module/datatypes` with no `?step` and the level
+  path (`HomeRoutes`, `datatypesHref(0)`) open it. `datatypesPrevious`: 0 → `/level`, 1 → 0, the rest as the adaptive flow. `datatypesNext(0)` goes to 1 through the same flow (no skip or detour touches 0).
+- **Screen 2 ("Meet Aarav!") has three answers as a column of rows with icons (2026-11-27, asked for):** "All the same", "Different kinds", "All numbers" ("All words" is gone; the right one is still
+  "Different kinds"), icons `public/animations/svg/datatype-module/{all,different,numbers}.svg` (the user added them, untracked until committed; 1.2 MB each, raster inside) via `P.lookSame` /
+  `lookDifferent` / `allNumbers`. `layout: "rows"` on the stage (an existing `QuizStage` field, which the Data Types screens had not used) makes `DataTypesScreen` use `AnswerCards` (the module's
+  56 px rows, 40 px icons) instead of `OptionGrid`, and `answersHeight(options, false, asRows)` counts them as rows (196 px) so the scene gives them room. Which word to drop was my choice
+  (the three icon names say numbers / different / all). Checked in headless Chrome 390×844: open, wrong ("Not quite" panel, rows rise) → Try again → right ("Exactly!") → Next → 3; 360×640: rows fit,
+  but the scene is cut at its floor (the form's "Permission" row is hidden, 70 px less room than the old 2×2 cards left it). Not checked: dark mode, the hint's hand on a row, a real phone.
+- **Screen 1 ("Let's organise our event!") has picture cards that hang from the artboard (2026-11-27, from a design picture):** four tinted cards two by two, each a picture over its word —
+  Name (blue), Age (pink), Height (cream), All (lavender; `CARD_TINTS`), with the app's raised 3D edge (`RAISED`) and the module's picked / right / wrong looks and bounce. The words are the
+  design's short ones ("Name", not "Student's name"); ids and the right answer ("all") are as before, so the form scene still outlines the picked row. `layout: "pictures"` on the stage →
+  `PictureGrid` / `PICTURE_CARD` (108 × 92, 14 apart, 52 × 40 picture, centred, narrower than the 340 column as in the design) in `OptionCards.tsx`; `answersHeight(options, three, layout)` counts them (198 px).
+  **Icons:** Age and Height are `public/animations/svg/datatype-module/age.svg` and `measure.svg` (the user's new files); that folder has **no icon for Name or All**, so those stay the first set
+  (`public/images/datatypes/datatypeModule-1.1.svg` person, `1.4` grid, `P.needName` / `P.needAll`), which is what the design picture shows (its All is the 2×2 grid; the folder's `all.svg` is the three
+  cards, used on screen 2). Checked in headless Chrome 390×844: open, wrong ("Not quite"), Try again, right ("Exactly!") → Next → 2, the hint (hand on All, orange tint); 360×640 open and wrong.
+  Not checked: dark mode, a real phone, the card sizes against the design to the pixel (read off a 218 px wide picture: 108 wide, gap 14 are estimates).
+- **Screen 5's question (5.2) has three picture cards in one row (2026-11-27, asked for):** Quantities (right), People's names, Yes/no answers ("Colours" removed); lavender / blue / green tints.
+  `PictureGrid` goes three across for exactly three options (equal columns of the 340 px, 110 tall = `OPTION.pictureHeight`, a two-line room for the words, every picture fitted in 52 × 40). Icons:
+  `datatype-module/quantities.svg` (the user's), the person `P.needName`, the Boolean type's traffic light `P.boolean` (**the folder has no icon for names or yes/no**; the traffic light looks thin).
+  5.1's three info rows are unchanged. Checked 390×844 and 360×640: wrong → Try again → right → Continue → 6.
+- **Screen 6's question (6.2) is the same three picture cards (2026-11-27, asked for):** Height (cream, `datatype-module/measure.svg`), Weight (blue, the user's new `datatype-module/weight.svg`),
+  Both (lavender, right). **The folder has no icon for "Both"**: it uses `variable-module/both.svg` (the plus), `P.pickBoth`. Ids are unchanged, so the pick still glows `sel3` / `sel4` in the lab.
+  Checked 390×844 and 360×640: open, wrong → Try again → right → Next → the third stage.
+- **Screen 14 ("Let's check attendance!") is three picture cards too (2026-11-27, asked for):** Person's name (blue, `P.needName`), A quantity (lavender, `P.quantities`), Yes/no status (green, right,
+  `P.boolean`: screen 5's three pictures). "A measurement" was removed (my choice: it overlaps "A quantity"). The ids and `correctId` `at(2)` are unchanged. Checked 390×844 and 360×640: wrong → Try
+  again → right → Next → 15.
+- **Screen 18's question (18.2, "Why is Student ID text…?") is three picture cards (2026-11-27, asked for):** Identifies someone (blue, `P.needName`, right), A decimal number (lavender, `P.allNumbers`
+  = `datatype-module/numbers.svg`), True or False (green, `P.boolean`). "A height" was removed (my choice: the weakest wrong answer). 18.1 (the sorting stage with four type buttons) is unchanged. Checked
+  390×844 and 360×640: wrong → Try again → right; Next then went to 17, which is the adaptive flow's detour after a miss on 18, not a bug.
+- **Screen 19's two uses were made picture cards and that was undone on request (2026-11-27):** `SceneSortStage`'s `cards` mode, `SORT_CARD` and the bucket `tint` are gone; the two buttons are as before
+  (the stage's usual tinted buttons with the cube and document pictures). Screen 19 is not a picture-card screen. **Screen 20 was tried the same way (three type cards, Boolean dropped) and undone on
+  request too:** it is the four-type sorting with its five values again; the sorting stages (19, 20) are not picture-card screens.
+- **Screen 23 ("Can you find the mistake?") has three picture cards in both stages (2026-11-27; the user pasted a summary line that said "Screen 23", and answered a popup with "both stages, 3 cards"):**
+  23.1 (the question): Age (pink, `age.svg`), Height (cream, `measure.svg`, right), Is_present (green, traffic light); **"Name" was dropped (my choice)**; `layout: "pictures"`, ids unchanged so the pick
+  still lights its row of the record. 23.2 (replace the wrong type, `ChooseTypeStage` got a `cards` prop: only the types named are shown, three across, 92 tall, picture over words, 3D edge):
+  Integer (blue, `numbers.svg`), Float (cream, `measure.svg`, right), String (lavender, the alphabet picture); **Boolean was dropped (my choice, as on the undone screen 20)**. The stage keeps
+  its cards above the result panel (`keepOptions`) as before and the hint stands under them. Checked 390×844: open, wrong, right → Next → 23.2 open, wrong (red + hint), right ("Fixed!");
+  360×640: both stages open and 23.2 after the right pick. Not checked: dark mode, the 23.2 hint's hand (this stage has none), a real phone.
+- **Screen 24's question (24.2, "Why is Player ID a String rather than an Integer?") is three picture cards (2026-11-27, asked for):** Identifies players (blue, `P.needName`, right), A yes/no value (green,
+  `P.boolean`), A big number (lavender, `P.allNumbers`); **"A decimal number" was dropped (my choice: "A big number" is the better wrong answer against Integer)**. 24.1 (the five-value sorting with four
+  type buttons) is unchanged: sorting stages are not picture-card screens (screens 19 and 20 were undone). Checked 390×844 and 360×640: wrong → Try again → right → Next (went to 20: the adaptive flow's
+  detour after a miss on 24).
+- **Every option hangs under what is above it, not on the main button (2026-11-27, "every options should attached to the artboard … if no artboard to the bubble … if no bubble to the question, header";
+  replaces the 2026-11-15 "docked above Continue" rule).** Data Types only (Sequence and Variable already did this; Commands, Operators, Conditions were not touched).
+  - Questions: all answer kinds hang at `answersTop` (`DataTypesScreen`): `underAbove(above + 12 + question)`, `above` = the scene's bottom, with no scene the bubble's, with no bubble the title's; never
+    lower than the button row; checked, they rise with the scene by CSS `top` (`liftCss`) and never lower than the old place above the result panel. A `quiz.question` hangs between. `OptionGrid` got
+    optional `top` / `move` (Operators, which shares it, passes neither) and `AnswerCards` optional `move`.
+  - The scene is cut at its floor only where the answers cannot hang under it: before a check not on a 390×844 phone, after a check by what the risen answers need (eased, `SceneBackdrop` `cutMove`).
+  - Interactions: `UnderScene` is one flex column to the button line with a spacer as tall as the scene that shrinks when the screen is short (so no measuring for the position), `SCENE_GAP` 4; the stage is
+    counted at least `DOCK_MIN_H` 186. A risen scene is cut `sceneLift` less. `follow` / `HangingUnderScene` are gone (only screen 4 used them; it is an ordinary stage now).
+  - What a stage says now stands **under** its buttons (`ScenePickStage`, `SceneRevealStage`, `ChooseTypeStage`). Sorting stages keep the card to place and "Tap the bin…" above the bins: that block hangs.
+  - Screen 29 (no scene) hangs from the bubble already; `SortStage` lost its 8 px top padding.
+  - Checked in headless Chrome by a script that opens every screen and stage (stage set through React's state) and measures: at 390×844, 360×640 and 390×932 questions are 12 stage px under the artboard
+    and interactions 4, and nothing is under the main button; stages hit by dev reloads during the run, and 4 and 29 after their fixes, were run again. Contact sheets looked at for 390×844 and 360×640.
+    On 360×640 the cut hides the lowest part of some artboards (screens 18 and 20 lose the bins' type tags; the formula is the same as before this change). Not checked: dark mode, Boy/Anime, a real phone,
+    desktop widths, finishing every interaction by hand.
+- The result panel's Hex (thumbs-up robot) and "Lesson complete" stay, as in the other modules ("everywhere" was read as every place Hex stands beside a bubble).
+- Checked in headless Chrome (girl, light, CDP): 0 at 390×844 (title, character, Continue → 1; battery 100 → 100 on 0, → 95 on 1); 1, 2, 3, 5, 6, 9, 10, 13, 14, 17, 19, 22, 24, 25, 29, 30 at rest
+  (face + bubble on all that have a line); 4 through all four groups at 390×844 and the middle two at 360×640; 1 right answer → "Exactly!" panel (Hex robot) → Next → 2. `tsc` and eslint on the touched files pass.
+  **Not checked:** dark mode, Boy/Anime, the Back arrow 1 → 0 (it is the battery hold menu's Back, read in code only), the other screens' interactions (drag and sort stages) end to end, voices
+  (headless has no sound), a real phone, `next build`.
+
 ## Assets (`public/`)
 
 Used: `animations/Character_Final.glb` (3.9 MB, Blender export; 9 textured materials; 17 morph targets named

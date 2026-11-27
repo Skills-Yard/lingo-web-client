@@ -237,7 +237,7 @@ export function SortStage({
   const taken = new Set(Object.values(placed));
 
   return (
-    <div className="pointer-events-auto flex flex-col items-center gap-3 pt-2" style={{ width: BOARD_W }}>
+    <div className="pointer-events-auto flex flex-col items-center gap-3" style={{ width: BOARD_W }}>
       <div className="relative" style={{ width: BOARD_W, height: boardHeight }}>
         {buckets.map((bucket, index) => {
           const at = spot(index);

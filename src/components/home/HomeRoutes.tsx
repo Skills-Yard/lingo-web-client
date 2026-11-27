@@ -51,7 +51,7 @@ export function LevelRoute() {
             : module === OPERATORS_LEVEL
               ? operatorsHref(1)
               : module === DATATYPES_LEVEL
-                ? datatypesHref(1)
+                ? datatypesHref(0)
                 : module === VARIABLE_LEVEL
                   ? variableHref(0)
                   : module === SEQUENCE_LEVEL

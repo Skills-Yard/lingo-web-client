@@ -16,13 +16,15 @@ export const P = {
   studentProfile: `${DATATYPES}/student-profile.webp`,
   // Screen 1's answers (what the event needs): name, age, height, all of them.
   needName: `${DATATYPES}/datatypeModule-1.1.svg`,
-  needAge: `${DATATYPES}/datatypeModule-1.2.svg`,
-  needHeight: `${DATATYPES}/datatypeModule-1.3.svg`,
+  // (age and height are the module's own icons, `public/animations/svg/datatype-module/`; name and all-of-them are still the first set, which that folder has no match for.)
+  needAge: "/animations/svg/datatype-module/age.svg",
+  needHeight: "/animations/svg/datatype-module/measure.svg",
   needAll: `${DATATYPES}/datatypeModule-1.4.svg`,
   // Screen 2's answers (what is noticed about Aarav's details).
-  lookSame: `${DATATYPES}/datatypeModule-2.1.svg`,
-  lookDifferent: `${DATATYPES}/datatypeModule-2.2.svg`,
-  allNumbers: `${DATATYPES}/datatypeModule-2.3.svg`,
+  // (the module's own icons, `public/animations/svg/datatype-module/`: three of a kind, a mix of kinds, 1-2-3.)
+  lookSame: "/animations/svg/datatype-module/all.svg",
+  lookDifferent: "/animations/svg/datatype-module/different.svg",
+  allNumbers: "/animations/svg/datatype-module/numbers.svg",
   // The empty slot on the grouping screen (3): the download-arrow mark.
   dropSlot: `${DATATYPES}/drop-slot.svg`,
   // Screen 8's picture: two students and their heights, with the decimal part of each picked out (the card is part of the art).
@@ -35,6 +37,13 @@ export const P = {
   planStudents: `${DATATYPES}/datatypeModule-2.2.svg`,
   planTickets: `${DATATYPES}/datatypeModule-2.1.svg`,
   planPrizes: `${DATATYPES}/datatypeModule-2.3.svg`,
+  // Screen 5.2's answers (what the counts have in common): quantities (the module's own icon), people's names (screen 1's person), yes/no
+  // answers (the Boolean type's traffic light: the folder has no picture for it).
+  quantities: "/animations/svg/datatype-module/quantities.svg",
+  // Screen 6.2's answers (which values have a decimal part): height is screen 1's ruler (`needHeight`), weight the module's own scale, and
+  // "Both" the Variable module's plus (the folder has no picture for it).
+  pickWeight: "/animations/svg/datatype-module/weight.svg",
+  pickBoth: "/animations/svg/variable-module/both.svg",
   // (Screen 5.2's number badges, 30 students, 45 tickets and 12 prizes, are drawn in code: see `SIMILAR_TILES`.)
   // Screen 6's four cards (values from different situations): students, tickets, height, weight.
   valueStudents: `${DATATYPES}/datatypeModule-6.1.svg`,

@@ -12,7 +12,7 @@ export const sequenceHref = (step: number | "complete") => `/module/sequence?ste
 /** `/module/variable?step=` — one screen of the Variable module (0 is its title screen, 1-34 the rest, or `complete`). */
 export const variableHref = (step: number | "complete") => `/module/variable?step=${step}`;
 
-/** `/module/datatypes?step=` — one screen of the Data Types module (1-based, or `complete`). */
+/** `/module/datatypes?step=` — one screen of the Data Types module (0 is its title screen, 1-30 the rest, or `complete`). */
 export const datatypesHref = (step: number | "complete") => `/module/datatypes?step=${step}`;
 
 /** `/module/operators?step=` — one screen of the Operators module (1-based, or `complete`). */

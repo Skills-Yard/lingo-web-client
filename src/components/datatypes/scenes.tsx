@@ -35,6 +35,12 @@ export const LIFT_DOWN: Transition = { duration: 0.4, ease: [0.22, 1, 0.36, 1] }
  */
 export const LARGE_SCENE = 1.3;
 
+/**
+ * `LIFT_UP` / `LIFT_DOWN` as a CSS transition of `property`, for what hangs from the scene (a question's answers, an interaction under
+ * it): it sets off and settles with the scene.
+ */
+export const liftCss = (property: string, lifted: boolean) => `${property} ${lifted ? 0.55 : 0.4}s cubic-bezier(0.22, 1, 0.36, 1) ${lifted ? 0.12 : 0}s`;
+
 /** How a scene's size changes from one stage to the next: slow and smooth, so it is watched settling. */
 const SCALE_EASE: Transition = { duration: 0.9, ease: [0.45, 0, 0.2, 1] };
 
@@ -81,6 +87,7 @@ export function SceneBackdrop({
   lifted = false,
   scale = 1,
   maxHeight,
+  cutMove,
   top: startsAt,
 }: {
   scene: DatatypesSceneName;
@@ -98,6 +105,8 @@ export function SceneBackdrop({
    * the controls leave it: it is then cut at that height, from the bottom (its floor), and fades out there, instead of the controls standing over it.
    */
   maxHeight?: string;
+  /** A CSS transition for `maxHeight`, where it changes with the stage (the scene gives way to the answers once checked), so the cut is eased in, not a jump. */
+  cutMove?: string;
 }) {
   const top = startsAt ?? sceneTop(titleEnd);
   const key = JSON.stringify(values);
@@ -120,7 +129,7 @@ export function SceneBackdrop({
       animate={{ y: lifted ? -sceneLift(titleEnd) : 0, scale }}
       transition={{ ...(lifted ? LIFT_UP : LIFT_DOWN), scale: SCALE_EASE }}
       className="pointer-events-none absolute inset-x-0 -z-10 flex justify-center overflow-hidden dark:brightness-[0.75]"
-      style={{ top, maxHeight, maskImage: FADE, WebkitMaskImage: FADE, transformOrigin: "50% 0%" }}
+      style={{ top, maxHeight, transition: cutMove, maskImage: FADE, WebkitMaskImage: FADE, transformOrigin: "50% 0%" }}
     >
       <div className="relative shrink-0" style={{ width: SCENE_WIDTH, aspectRatio: `${DATATYPES_SCENES.width} / ${DATATYPES_SCENES.height}` }}>
         <SceneSlot scene={scene} />

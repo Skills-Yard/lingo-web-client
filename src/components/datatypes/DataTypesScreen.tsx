@@ -7,7 +7,7 @@ import { useAnswerHint } from "@/components/level-one/answerHint";
 import { FeedbackPanel } from "@/components/level-one/FeedbackPanel";
 import { AnswerCards } from "@/components/level-two/AnswerCards";
 import { HexBubble } from "@/components/level-two/HexBubble";
-import { aboveButtons, LevelTwoShell, ScreenTitle, SoftBackdrop } from "@/components/level-two/LevelTwoShell";
+import { aboveButtons, LevelTwoShell, ScreenTitle, SoftBackdrop, underAbove } from "@/components/level-two/LevelTwoShell";
 import { COLUMN_LEFT, type BubbleSize } from "@/components/level-two/levelTwo";
 import type { AnswerResult } from "@/components/ui/RiveProgressBar";
 import { IDLE_LOOK, OPTION } from "@/components/variable/quiz";
@@ -17,8 +17,8 @@ import { fireSceneTrigger, type SceneValues } from "@/lib/rive/datatypesHost";
 import { HEX_ONBOARDING_TRIGGER } from "@/lib/rive/runtime";
 import { DATATYPES_STEPS, datatypesNext, datatypesPrevious } from "./datatypes";
 import { noteAnswer, noteStruggle } from "./datatypesScore";
-import { acrossCards, answersHeight, optionFont, OptionGrid } from "./OptionCards";
-import { HEX_LIFT, LARGE_SCENE, LIFT_DOWN, LIFT_UP, SceneBackdrop, sceneHeight, sceneLift, sceneTop } from "./scenes";
+import { acrossCards, answersHeight, optionFont, OptionGrid, PictureGrid } from "./OptionCards";
+import { HEX_LIFT, LARGE_SCENE, liftCss, SceneBackdrop, sceneHeight, sceneLift, sceneTop } from "./scenes";
 import { parseTitle, type InteractionStage, type ScreenDef, type VisualContext } from "./screen";
 
 /*
@@ -29,7 +29,6 @@ import { parseTitle, type InteractionStage, type ScreenDef, type VisualContext }
 const PANEL_ROOM = 215;
 /** The least a picture is shrunk to fit its room. */
 const MIN_FIT = 0.6;
-const PANEL_SPRING = { type: "spring", stiffness: 360, damping: 32 } as const;
 /** The answers' own way in, so a question standing on them comes in with them. */
 const ANSWERS_IN = { opacity: { duration: 0.3, delay: 0.3 }, y: { type: "spring", stiffness: 110, damping: 13, delay: 0.3 } } as const;
 /** The title block (px): where it ends, one line or two. */
@@ -67,46 +66,30 @@ function InteractionHost({
   return <>{stage.render?.({ slip, done, dismissHex, finished, hexSpoken, takeContinue, setScene })}</>;
 }
 
-/** How far (px) above the main button the lowest buttons stand under a scene: the same as a question's answers (`OPTION.aboveButtons`), so every screen's options are at the same place. */
+/** The least room (px) kept between what hangs under a scene and the main button, on a screen too short to hold both in full: the same as a question's answers (`OPTION.aboveButtons`). */
 const DOCK_GAP = OPTION.aboveButtons;
-/** The room (px) kept between the scene and what stands docked under it. */
+/** The room (px) kept between the scene's bottom edge and an interaction hanging under it. */
 const SCENE_GAP = 4;
 /**
- * The height (px) a docked stage is counted as at least when it is worked out how much room the scene may keep: the tallest of the
- * tap-the-buttons stages (two rows of 60px buttons and the caption's room, screen 12). So the scene is cut to the same height on every
- * one of them (11, 12, 15, 16, 17) whatever the screen's shape, not by how much its own stage happens to hold.
+ * The height (px) an interaction under a scene is counted as at least when it is worked out how much room the scene may keep: the tallest of the
+ * tap-the-buttons stages (two rows of 60px buttons and the caption's room, screen 12). So on a short screen the scene is cut to the same height on
+ * every one of them (11, 12, 15, 16, 17), and their buttons start at the same line, not by how much each stage happens to hold.
  */
 const DOCK_MIN_H = 186;
 /** The room (px) kept between the scene and a question's answers once they have risen above the result panel. */
 const ANSWERS_SCENE_GAP = 12;
 /** The least height (px) the scene is ever cut to. */
 const SCENE_MIN_H = 160;
-/** The least room (px) kept between what hangs from a scene and the main button's top edge. */
-const BUTTON_CLEAR = 6;
 
 /**
- * What an interaction draws under a scene. By default it stands on the main button (`DOCK_GAP` above it, like a question's
- * answers), so the buttons are at the same place on every screen, and it never goes under the button or over the scene (the
- * scene is cut short to leave it room: see `SceneBackdrop`). It rises with the scene when that rises into Hex's room, so the
- * space between them stays. `follow`: it hangs from the scene instead (`HangingUnderScene`).
+ * What an interaction draws under a scene. It hangs `SCENE_GAP` under the scene's bottom edge, as a question's answers do, and fades
+ * once its result panel is up. It never goes under the main button or over the scene: the room above it is a spacer as tall as the scene
+ * that gives way where the screen is too short (the stage then stands `DOCK_GAP` above the button), and it tells the screen how tall it is,
+ * so the scene is cut to the room it leaves (see `SceneBackdrop`). It rises with the scene when that rises into Hex's room, so the space
+ * between them stays. `rise` (px): its lowest place is this much higher, clear of the result panel (a stage that is kept, see
+ * `InteractionStage.keepOptions`).
  */
-function UnderScene({ titleEnd, lifted, hidden, rise, follow, onHeight, children }: { titleEnd: number; lifted: boolean; hidden: boolean; rise: number; follow: boolean; onHeight: (height: number) => void; children: ReactNode }) {
-  return follow ? (
-    <HangingUnderScene titleEnd={titleEnd} lifted={lifted} hidden={hidden}>
-      {children}
-    </HangingUnderScene>
-  ) : (
-    <DockedUnderScene titleEnd={titleEnd} lifted={lifted} hidden={hidden} rise={rise} onHeight={onHeight}>
-      {children}
-    </DockedUnderScene>
-  );
-}
-
-/**
- * A stage standing on the main button; it tells the screen how tall it is, so the scene can be cut to the room it leaves. `rise` (px): it
- * stands this much higher, above the result panel (the stage is kept, see `InteractionStage.keepOptions`), in place of rising with the scene.
- */
-function DockedUnderScene({ titleEnd, lifted, hidden, rise, onHeight, children }: { titleEnd: number; lifted: boolean; hidden: boolean; rise: number; onHeight: (height: number) => void; children: ReactNode }) {
+function UnderScene({ titleEnd, lifted, hidden, rise, onHeight, children }: { titleEnd: number; lifted: boolean; hidden: boolean; rise: number; onHeight: (height: number) => void; children: ReactNode }) {
   const content = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const element = content.current;
@@ -121,64 +104,18 @@ function DockedUnderScene({ titleEnd, lifted, hidden, rise, onHeight, children }
     };
   }, [onHeight]);
   return (
-    <motion.div
-      initial={false}
-      animate={{ y: rise > 0 ? -rise : lifted ? -sceneLift(titleEnd) : 0 }}
-      transition={rise > 0 ? PANEL_SPRING : lifted ? LIFT_UP : LIFT_DOWN}
-      className="absolute inset-x-0"
-      style={{ bottom: aboveButtons(DOCK_GAP) }}
-    >
-      <motion.div ref={content} initial={false} animate={{ opacity: hidden ? 0 : 1 }} transition={{ duration: 0.3 }} className="flex justify-center" style={{ pointerEvents: hidden ? "none" : "auto" }}>
-        {children}
-      </motion.div>
-    </motion.div>
-  );
-}
-
-/**
- * A stage that hangs from the scene (it stands right below it, and rises with it when Hex's line is sent away), for one whose parts
- * grow downward (screen 4's tour). Where the screen leaves it too little room (a wide window makes the main button taller), it
- * stands higher instead, over the scene's faded floor, so none of it is ever under the main button.
- */
-function HangingUnderScene({ titleEnd, lifted, hidden, children }: { titleEnd: number; lifted: boolean; hidden: boolean; children: ReactNode }) {
-  const box = useRef<HTMLDivElement>(null);
-  const content = useRef<HTMLDivElement>(null);
-  const edge = useRef<HTMLDivElement>(null);
-  // How far (px) it has to stand higher.
-  const [over, setOver] = useState(0);
-  // Once Hex's line has gone the whole box stands this much higher already (the scene rose into his room), so it needs no more room.
-  const lift = lifted ? sceneLift(titleEnd) : 0;
-  useLayoutEffect(() => {
-    const element = box.current;
-    const inner = content.current;
-    const line = edge.current;
-    const stage = element?.offsetParent;
-    if (!element || !inner || !line || !stage) return;
-    // Layout px of the stage, which the box's own move (the transform) does not change: its bottom (where it stands, as tall as what it holds, less the lift) against the line that stands `BUTTON_CLEAR` above the button.
-    const measure = () => setOver(Math.max(0, element.offsetTop + inner.offsetHeight - lift - line.offsetTop));
-    const observer = new ResizeObserver(measure);
-    observer.observe(inner);
-    observer.observe(stage);
-    measure();
-    return () => observer.disconnect();
-  }, [lift]);
-  return (
-    <>
-      <motion.div
-        ref={box}
-        initial={false}
-        // The lift and the extra room it needs are one move (not two that could pull against each other), so it never jumps.
-        animate={{ y: -(lift + over) }}
-        transition={lifted ? LIFT_UP : LIFT_DOWN}
-        className="absolute inset-x-0"
-        style={{ top: `calc(${sceneTop(titleEnd)}px + ${sceneHeight} + 4px)` }}
-      >
+    <div className="pointer-events-none absolute inset-x-0 top-0 flex flex-col" style={{ bottom: `calc(${aboveButtons(DOCK_GAP)} + ${rise}px)`, transition: liftCss("bottom", lifted) }}>
+      <div
+        aria-hidden
+        className="min-h-0 shrink"
+        style={{ height: `calc(${sceneTop(titleEnd) - (lifted ? sceneLift(titleEnd) : 0) + SCENE_GAP}px + ${sceneHeight})`, transition: liftCss("height", lifted) }}
+      />
+      <div className="shrink-0" style={{ minHeight: rise > 0 ? 0 : DOCK_MIN_H }}>
         <motion.div ref={content} initial={false} animate={{ opacity: hidden ? 0 : 1 }} transition={{ duration: 0.3 }} className="flex justify-center" style={{ pointerEvents: hidden ? "none" : "auto" }}>
           {children}
         </motion.div>
-      </motion.div>
-      <div ref={edge} aria-hidden className="pointer-events-none absolute inset-x-0" style={{ bottom: aboveButtons(BUTTON_CLEAR), height: 0 }} />
-    </>
+      </div>
+    </div>
   );
 }
 
@@ -365,25 +302,44 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
   const answersBottom = quiz ? aboveButtons(OPTION.aboveButtons, hasHint) : "0px";
   const questionLines = quiz?.question ? Math.ceil(quiz.question.length / QUESTION_CHARS) : 0;
   const questionHeight = questionLines ? questionLines * 22 + 14 : 0;
-  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersHeight(quiz.options) + 10 + questionHeight + 8}px)` : aboveButtons(24);
+  // The answers' own height: a column of rows (`layout: "rows"`) or picture cards (`"pictures"`) if the screen sets them so, else cards or rows by their words.
+  const answersAsRows = quiz?.layout === "rows";
+  const answersAsPictures = quiz?.layout === "pictures";
+  const answersTall = quiz ? answersHeight(quiz.options, false, quiz.layout) : 0;
+  // The room a question takes between what is above and its answers (its box and the space under it), 0 without one.
+  const questionRoom = questionHeight ? questionHeight + 8 : 0;
+  const bodyBottom = quiz ? `calc(${answersBottom} + ${answersTall + 10 + questionHeight + 8}px)` : aboveButtons(24);
   // The answers never go away on a check, right or wrong: they rise above the panel (the scene has risen clear of them), and on a right one the right card bounces.
   // They stand clear of the panel's top edge whatever its height (`ANSWERS_PANEL_GAP`, and the lines its text has taken beyond three).
   const answersRise = OPTION.rise + ANSWERS_PANEL_GAP + Math.max(0, panelHeight - PANEL_H);
   // Once the result panel is up, the answers rise and the room under the line shrinks by as much.
   const risen = quiz ? answersRise : interaction?.finishPanel ? PANEL_ROOM : 0;
 
-  // The scene fills the device's width, so on a short, wide screen it is taller than the room the buttons leave it. It is cut there (at its floor) instead of their standing over it:
-  // above a stage docked on the main button, and above a question's answers once they have risen over the result panel (the scene has risen too, by `sceneLift`).
-  const docked = !!scene && !!interaction?.render && !interaction.follow;
-  // A kept stage (`keepOptions`) stands above the result panel once it is up, as a question's answers do: it rises by `answersRise`, and the scene (risen too) is cut above it.
+  // What hangs under a scene stands right under it. The scene fills the device's width, so on a short, wide screen it is taller than the room the buttons leave it:
+  // it is then cut there (at its floor) instead of their standing over it, for an interaction and for a question's answers (once checked, for where they stand clear of the result panel).
+  const docked = !!scene && !!interaction?.render;
+  // A kept stage (`keepOptions`) stands clear of the result panel once it is up, as a question's answers do, and the scene (risen too) is cut above it.
   const keptRise = docked && !!panel && !!interaction?.keepOptions ? answersRise : 0;
   const sceneMaxHeight = docked
     ? keptRise > 0
       ? `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${aboveButtons(DOCK_GAP)} - ${dockHeight + keptRise + ANSWERS_SCENE_GAP - sceneLift(titleEnd)}px))`
-      : `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${aboveButtons(DOCK_GAP)} - ${Math.max(dockHeight, DOCK_MIN_H) + SCENE_GAP}px))`
+      : // A risen scene has that much more room above the stage, so it is cut that much less.
+        `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${aboveButtons(DOCK_GAP)} - ${Math.max(dockHeight, DOCK_MIN_H) + SCENE_GAP - (gone ? sceneLift(titleEnd) : 0)}px))`
     : scene && quiz
-      ? `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${answersBottom} - ${answersHeight(quiz.options) + answersRise + ANSWERS_SCENE_GAP - sceneLift(titleEnd)}px))`
+      ? `max(${SCENE_MIN_H}px, calc(100% - ${sceneTop(titleEnd)}px - ${answersBottom} - ${questionRoom + answersTall + ANSWERS_SCENE_GAP + (gone ? answersRise - sceneLift(titleEnd) : 0)}px))`
       : undefined;
+  // Where a question's answers hang: right under the scene's bottom edge (`ANSWERS_SCENE_GAP` clear of it); on a screen with no scene, under Hex's bubble; with no bubble either (it has left), under the title.
+  // The question, if there is one, comes between. They are never lower than the button row allows (`underAbove`), so a tall phone's spare room is above the button.
+  // Checked, the scene has risen (`gone`) and they rise with it, but never so low that the result panel covers them.
+  const above = scene
+    ? `calc(${sceneTop(titleEnd) - (gone ? sceneLift(titleEnd) : 0)}px + ${sceneHeight})`
+    : `${line && !gone ? sceneTop(titleEnd) + HEX_LIFT : titleEnd}px`;
+  const hangingTop = underAbove(`calc(${above} + ${ANSWERS_SCENE_GAP + questionRoom}px)`, answersTall, OPTION.aboveButtons, hasHint);
+  // A picture that is not a scene stands in the middle of the room: its answers stay on the button row, clear of it.
+  const standingTop = `calc(var(--stage-h, 844px) - ${answersBottom} - ${answersTall}px)`;
+  const restingTop = quiz?.visual && !scene ? standingTop : hangingTop;
+  const answersTop = gone ? `min(${restingTop}, calc(${standingTop} - ${answersRise}px))` : restingTop;
+  const answersMove = liftCss("top", gone);
 
   return (
     <LevelTwoShell
@@ -393,7 +349,7 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
       scene={
         <>
           <SoftBackdrop />
-          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} texts={scene.texts} intro={scene.intro} titleEnd={titleEnd} lifted={gone} scale={lookOnly ? (scene.lookScale ?? LARGE_SCENE) : 1} maxHeight={sceneMaxHeight} />}
+          {scene && <SceneBackdrop scene={scene.scene} values={scene.values} texts={scene.texts} intro={scene.intro} titleEnd={titleEnd} lifted={gone} scale={lookOnly ? (scene.lookScale ?? LARGE_SCENE) : 1} maxHeight={sceneMaxHeight} cutMove={liftCss("max-height", gone)} />}
           {screen.backdrop}
         </>
       }
@@ -476,9 +432,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
         )}
       </div>
 
-      {/* An interaction under a scene stands on the main button (see `UnderScene`), and fades once its result panel is up. Whenever the scene rises into Hex's room (his line sent away, or the stage done: see `SceneBackdrop`) it rises with it, so the space between them stays. */}
+      {/* An interaction under a scene hangs right under it (see `UnderScene`), and fades once its result panel is up. Whenever the scene rises into Hex's room (his line sent away, or the stage done: see `SceneBackdrop`) it rises with it, so the space between them stays. */}
       {scene && interaction && (
-        <UnderScene titleEnd={titleEnd} lifted={gone} hidden={!!panel && !interaction.keepOptions} rise={keptRise} follow={!!interaction.follow} onHeight={setDockHeight}>
+        <UnderScene titleEnd={titleEnd} lifted={gone} hidden={!!panel && !interaction.keepOptions} rise={keptRise} onHeight={setDockHeight}>
           <InteractionHost key={stageIndex} stage={interaction} slip={slip} done={done} dismissHex={dismissHex} finished={finished} hexSpoken={hexSpoken} takeContinue={takeContinue} setScene={setScene} />
         </UnderScene>
       )}
@@ -488,15 +444,28 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
           {quiz.question && (
             <motion.p
               initial={{ opacity: 0, y: 90 }}
-              animate={{ opacity: 1, y: checked ? -answersRise : 0 }}
-              transition={checked ? PANEL_SPRING : ANSWERS_IN}
+              animate={{ opacity: 1, y: 0 }}
+              transition={ANSWERS_IN}
               className="absolute z-[1] rounded-[12px] bg-white/85 px-3 py-1.5 text-center text-[16px] leading-[22px] font-semibold text-[#444444] dark:bg-[#15181E]/85 dark:text-white"
-              style={{ bottom: `calc(${answersBottom} + ${answersHeight(quiz.options) + 10}px)`, left: COLUMN_LEFT, width: COLUMN_W }}
+              style={{ top: `calc(${answersTop} - ${questionRoom}px)`, transition: answersMove, left: COLUMN_LEFT, width: COLUMN_W }}
             >
               {quiz.question}
             </motion.p>
           )}
-          {acrossCards(quiz.options) ? (
+          {answersAsPictures ? (
+            <PictureGrid
+              options={quiz.options}
+              correctId={checked && !correct ? "" : quiz.correctId}
+              selectedId={selectedId}
+              checked={checked}
+              pointedId={answerHint.pointedId}
+              top={answersTop}
+              move={answersMove}
+              bounceIn={quiz.optionsAfterHex}
+              revealed={hexSpoken}
+              onPick={pick}
+            />
+          ) : !answersAsRows && acrossCards(quiz.options) ? (
             <OptionGrid
               options={quiz.options}
               correctId={checked && !correct ? "" : quiz.correctId}
@@ -505,7 +474,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               fadeOut={false}
               pointedId={answerHint.pointedId}
               withHint={hasHint}
-              rise={answersRise}
+              rise={0}
+              top={answersTop}
+              move={answersMove}
               bounceIn={quiz.optionsAfterHex}
               revealed={hexSpoken}
               onPick={pick}
@@ -519,8 +490,9 @@ export function DataTypesScreen({ screen }: { screen: ScreenDef }) {
               fadeOut={false}
               pointedId={answerHint.pointedId}
               withHint={hasHint}
-              rise={answersRise}
-              bottomGap={OPTION.aboveButtons}
+              rise={0}
+              top={answersTop}
+              move={answersMove}
               compact
               tight={{ height: OPTION.height, padX: OPTION.padX, radius: OPTION.radius, iconSize: 40 }}
               idleLook={IDLE_LOOK}

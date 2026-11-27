@@ -56,11 +56,13 @@ export type QuizStage = StageTitle & {
   /** The picture between Hex's line and the answers. */
   visual?: (context: VisualContext) => ReactNode;
   /**
-   * `rows`: a list of answers; `grid`: tiles (two across for four or two answers, three for three). Only the Operators and
-   * Conditions modules, which share this type, set `layout` and `cards`: the Data Types screens' answers are the Variable
-   * module's, laid out by their words alone (see `OptionCards.tsx`).
+   * `rows`: a list of answers; `grid`: tiles (two across for four or two answers, three for three). The Operators and
+   * Conditions modules, which share this type, set `layout` and `cards`. The Data Types screens' answers are the Variable
+   * module's, laid out by their words alone (see `OptionCards.tsx`), except that `layout: "rows"` makes them a column of rows
+   * (with their icons) even where they are few and short enough to be cards (screen 2), and `layout: "pictures"` (Data Types only)
+   * makes them two-by-two tinted cards, each a picture over its word, hanging right under the scene (screen 1).
    */
-  layout?: "rows" | "grid";
+  layout?: "rows" | "grid" | "pictures";
   /** A `grid` of special cards that stand higher above the button than the usual tiles: `big` (four, screen 8), `badges` (three, each a badge over its word, screen 10). */
   cards?: "big" | "badges";
   options: readonly Option[];
@@ -123,12 +125,6 @@ export type InteractionStage = StageTitle & {
   keepOptions?: boolean;
   /** Nothing to do, only to look at (screens 5 and 6): Continue waits only for Hex to finish his line, and his line stays. */
   ready?: boolean;
-  /**
-   * Under a scene, what the stage draws stands on the main button by default (its lowest buttons the same 20px above it as a
-   * question's answers are, the scene cut short if it needs the room), the same place on every screen. `follow`: it hangs from the
-   * scene instead, as a stage does whose parts grow downward (screen 4's tour, with Hex standing under its groups).
-   */
-  follow?: boolean;
   /** What stands under the line (or under the scene). Left out where the scene is all there is to look at. */
   render?: (api: InteractionApi) => ReactNode;
   /** Hex's panel on finishing, if the interaction has one. */
